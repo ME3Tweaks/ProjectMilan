@@ -1,6 +1,8 @@
 ﻿using CommandLine;
+using LegendaryExplorerCore;
 using Newtonsoft.Json;
 using ProjectMilan.Pipelines.Startups;
+using ProjectMilan.Settings;
 
 // MAKE SURE YOU SET YOUR SETTINGS PATH IN YOUR RUN CONFIGURATION
 // DO NOT EDIT OTHERS! MAKE YOUR OWN AND SET YOUR SETTINGS PATH.
@@ -13,9 +15,9 @@ namespace ProjectMilan
     internal class Program
     {
         /// <summary>
-        /// The parsed pipeline settings.
+        /// The loaded settings configuration
         /// </summary>
-        public static MilanSettings Settings;
+        public static IMilanSettings Settings;
 
         static void Main(string[] args)
         {
@@ -31,43 +33,28 @@ namespace ProjectMilan
         private static void Init(CLIOptions obj)
         {
             MilanLog.CreateLogger();
-            // Maybe use ini files so it's easy to comment things out?
-            // More pain to set up but easier to work with than JSON...
-            if (File.Exists(obj.SettingsPath))
-            {
-                MilanLog.Information($"Loading settings from {obj.SettingsPath}");
-                Settings = JsonConvert.DeserializeObject<MilanSettings>(File.ReadAllText(obj.SettingsPath));
-                
-                // Update settings file to ensure it has all the content needed as we add more settings
-                // and pipelines.
-                //File.WriteAllText(obj.SettingsPath, JsonConvert.SerializeObject(Settings));
-            }
-            else
-            {
-                // Write blank settings file out.
-                try
-                {
-                    File.WriteAllText(obj.SettingsPath, JsonConvert.SerializeObject(new MilanSettings()));
-                    MilanLog.Information($"A blank settings file has been generated at {obj.SettingsPath}");
-                    Environment.Exit(0);
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    // App has died
-                    MilanLog.Exception(ex, $"Unable to write blank settings file to {obj.SettingsPath}:");
-                    Environment.Exit(1);
-                    return;
-                }
-            }
+            Settings = LoadSettingsConfig(obj);
+
+            // Initialize LEC
+            LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
 
             RunPipelines();
         }
 
+        private static IMilanSettings LoadSettingsConfig(CLIOptions cliOptions) => cliOptions.Config.ToLower() switch
+        {
+            "mgamerz" => new MilanSettingsMgamerz(),
+            "sircxyrtyx" => new MilanSettingsSirCxyrtyx(),
+            "kinkojiro" => new MilanSettingsKinkojiro(),
+            "henbagle" => new MilanSettingsHenBagle(),
+            "doot" => new MilanSettingsd00t(),
+            _ => throw new Exception($"Undefined configuration: {cliOptions.Config}")
+        };
+
         static void RunPipelines()
         {
             RunPipeline(Settings.RunSFXGameMPContentPipeline, MPCommon.RunPipeline, "SFXGameMPContent");
-            
+
         }
 
         /// <summary>

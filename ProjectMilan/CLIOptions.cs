@@ -12,7 +12,7 @@ namespace ProjectMilan
     /// </summary>
     internal class CLIOptions
     {
-        [Option('s', "settings-path", HelpText = "Indicates the path to the configuration json file for Project Milan. Specifying a file that does not exist will cause a blank one to be created that you can then fill out.", Required = true)]
-        public string SettingsPath { get; set; }
+        [Option('c', "config", HelpText = "Specifies which developer configuration to use.", Required = true)]
+        public string Config { get; set; }
     }
 }

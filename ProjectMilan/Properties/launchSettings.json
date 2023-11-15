@@ -2,7 +2,23 @@
   "profiles": {
     "ProjectMilan - Mgamerz": {
       "commandName": "Project",
-      "commandLineArgs": "--settings-path \"Z:\\ModLibrary\\LE3\\Project Milan\\MilanSettings.json\""
+      "commandLineArgs": "--config Mgamerz"
+    },
+    "ProjectMilan - SirCxyrtyx": {
+      "commandName": "Project",
+      "commandLineArgs": "--config SirCxyrtyx"
+    },
+    "ProjectMilan - Kinkojiro": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Kinkojiro"
+    },
+    "ProjectMilan - HenBagle": {
+      "commandName": "Project",
+      "commandLineArgs": "--config HenBagle"
+    },
+    "ProjectMilan - d00t": {
+      "commandName": "Project",
+      "commandLineArgs": "--config d00t"
     }
   }
 }

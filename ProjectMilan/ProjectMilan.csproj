@@ -13,7 +13,6 @@
     <Folder Include="ME3\Assets\" />
     <Folder Include="Pipelines\Levels\" />
     <Folder Include="Pipelines\Kits\" />
-    <Folder Include="Settings\" />
   </ItemGroup>
 
   <ItemGroup>
