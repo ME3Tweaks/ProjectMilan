@@ -11,6 +11,19 @@ using LegendaryExplorerCore.UnrealScript;
 namespace ProjectMilan.Pipelines.Startups
 {
     /// <summary>
+    /// Pass-throughable settings for MPCommon pipelne
+    /// </summary>
+    class MPCommonPipelineVars
+    {
+        public string OutputPath { get; set; }
+
+        /// <summary>
+        /// Package file being compiled
+        /// </summary>
+        public IMEPackage BuildingPackage { get; set; }
+    }
+
+    /// <summary>
     /// Pipeline that converts the 'BIOP_MP_COMMON' package from ME3 to LE3.
     /// </summary>
     internal class MPCommon
@@ -27,13 +40,35 @@ namespace ProjectMilan.Pipelines.Startups
 
         public static void RunPipeline()
         {
-            MilanLog.Information(@"Starting SFXGameMPContent pipeline");
+            // Setup pipeline
+            MPCommonPipelineVars vars = new MPCommonPipelineVars()
+            {
+                OutputPath = Path.Combine(Program.Settings.OutputPath, "SFXGameMPContent")
+            };
 
-
-
-            MilanLog.Information(@"SFXGameMPContent pipeline has completed");
+            InternalRunPipeline(vars);
         }
 
+        private static void InternalRunPipeline(MPCommonPipelineVars vars)
+        {
+            // Actually run pipeline
+            Directory.CreateDirectory(vars.OutputPath);
+            vars.BuildingPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(vars.OutputPath, "SFXGameMPContent.pcc"), MEGame.LE3);
+
+            // Port SFXGameMPContent over so it keeps the GUID
+
+            // Compile empty classes 
+
+            // Recompile classes with variables
+
+            // Recompile classes with scripts
+
+            // Recompile classes with default properties
+
+            // Profit
+
+            vars.BuildingPackage.Save();
+        }
 
 
         // These have now been dumped, so the code is no longer run... for now, anyways.

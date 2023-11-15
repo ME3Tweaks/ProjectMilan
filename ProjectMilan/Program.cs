@@ -3,6 +3,7 @@ using LegendaryExplorerCore;
 using Newtonsoft.Json;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Settings;
+using ProjectMilan.Utility;
 
 // MAKE SURE YOU SET YOUR SETTINGS PATH IN YOUR RUN CONFIGURATION
 // DO NOT EDIT OTHERS! MAKE YOUR OWN AND SET YOUR SETTINGS PATH.
@@ -34,6 +35,16 @@ namespace ProjectMilan
         {
             MilanLog.CreateLogger();
             Settings = LoadSettingsConfig(obj);
+
+            // Cleanup output directory before we start
+            if (Directory.Exists(Settings.OutputPath))
+            {
+                Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputPath, deleteDirectoryItself: false);
+            }
+            else
+            {
+                Directory.CreateDirectory(Settings.OutputPath);
+            }
 
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
