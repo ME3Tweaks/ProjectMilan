@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ProjectMilan - Mgamerz": {
+      "commandName": "Project",
+      "commandLineArgs": "--settings-path \"Z:\\ModLibrary\\LE3\\Project Milan\\MilanSettings.json\""
+    }
+  }
+}
