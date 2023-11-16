@@ -1,6 +1,9 @@
 ﻿using CommandLine;
 using LegendaryExplorerCore;
 using Newtonsoft.Json;
+using ProjectMilan.Pipelines.Config;
+using ProjectMilan.Pipelines.Kits;
+using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
@@ -64,7 +67,10 @@ namespace ProjectMilan
 
         static void RunPipelines()
         {
-            RunPipeline(Settings.RunSFXGameMPContentPipeline, MPCommon.RunPipeline, "SFXGameMPContent");
+            RunPipeline(Settings.RunConfigPipeline, MPConfig.RunPipeline, "Config");
+            RunPipeline(Settings.RunMPLobbyClassesPipeline, MPCommon.RunPipeline, "MPLobby");
+            RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits");
+            RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels");
 
         }
 
@@ -81,6 +87,7 @@ namespace ProjectMilan
             {
                 MilanLog.Information($"Running pipeline: {pipelineName}");
                 runPipeline();
+                MilanLog.Information($"Pipeline finished: {pipelineName}");
             }
             else
             {

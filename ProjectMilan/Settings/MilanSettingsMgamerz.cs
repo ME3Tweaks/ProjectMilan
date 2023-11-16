@@ -4,6 +4,9 @@
     internal class MilanSettingsMgamerz : IMilanSettings
     {
         public string OutputPath { get; set; } = @"Z:\ModLibrary\LE3\Project Milan\MilanOutput";
-        public bool RunSFXGameMPContentPipeline { get; set; } = true;
+        public bool RunMPLobbyClassesPipeline { get; set; } = true;
+        public bool RunConfigPipeline { get; set; } = true;
+        public bool RunKitsPipeline { get; set; } = true;
+        public bool RunLevelsPipeline { get; set; } = true;
     }
 }

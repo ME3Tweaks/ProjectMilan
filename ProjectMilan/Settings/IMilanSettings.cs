@@ -23,8 +23,23 @@ namespace ProjectMilan.Settings
 
         // Pipelines
         /// <summary>
-        /// If SFXGameMPContent should be ported across
+        /// If persistent classes should be built
         /// </summary>
-        public bool RunSFXGameMPContentPipeline { get; set; }
+        public bool RunMPLobbyClassesPipeline { get; set; }
+
+        /// <summary>
+        /// If configuration files should be built
+        /// </summary>
+        bool RunConfigPipeline { get; set; }
+
+        /// <summary>
+        /// If multiplayer archetype kits should be built
+        /// </summary>
+        bool RunKitsPipeline { get; set; }
+
+        /// <summary>
+        /// If multiplayer maps should be built
+        /// </summary>
+        bool RunLevelsPipeline { get; set; }
     }
 }
