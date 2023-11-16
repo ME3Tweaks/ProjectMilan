@@ -17,8 +17,7 @@ namespace ProjectMilan.Pipelines.Config
         //     1. Basegame
         //     2. When entering MPLobby -> DLC, in mount order
         //     3. When entering MPLobby -> LiveIni is applied while game is running
-        // MPLobby is the map name for the MP menu system both in and out of lobbies. It seems to be a 
-
+        // MPLobby is the map name for the MP menu system both in and out of lobbies. It's a persistent level.
 
         public static void RunPipeline()
         {

@@ -89,9 +89,10 @@ namespace ProjectMilan.Pipelines.Startups
         /// </summary>
         private static void PrepareClasses()
         {
-            // This only works in debug mode! As VS will put these in a specific folder.
             var outpath = Path.Combine(Program.Settings.OutputPath, "ME3", "Classes");
             Directory.CreateDirectory(outpath);
+
+            // Todo: Change this over to look for specifically named files in ME3 and enumerate them to build a list of all classes to extract
 
             var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(), "Default.sfar");
             if (!File.Exists(dlcInFile))
@@ -105,11 +106,11 @@ namespace ProjectMilan.Pipelines.Startups
             var dlc = new DLCPackage(dlcInFile);
             var dlcEntryIdx = dlc.FindFileEntry("MPLobby.pcc");
 
-            IMEPackage mpLobbyP;
+            IMEPackage parsingPackage;
             if (dlcEntryIdx >= 0)
             {
                 // File is in DLC
-                mpLobbyP = MEPackageHandler.OpenMEPackageFromStream(dlc.DecompressEntry(dlcEntryIdx), "MPLobby.pcc");
+                parsingPackage = MEPackageHandler.OpenMEPackageFromStream(dlc.DecompressEntry(dlcEntryIdx), "MPLobby.pcc");
             }
             else
             {
@@ -120,11 +121,11 @@ namespace ProjectMilan.Pipelines.Startups
                     throw new Exception("Could not find MPLobby in SFAR or on disk!");
                 }
 
-                mpLobbyP = MEPackageHandler.OpenMEPackage(filePath);
+                parsingPackage = MEPackageHandler.OpenMEPackage(filePath);
             }
 
             //initing filelib is expensive, so we only want to do it for files that have script
-            FileLib fileLib = new FileLib(mpLobbyP);
+            FileLib fileLib = new FileLib(parsingPackage);
             try
             {
                 fileLib.Initialize();
@@ -139,11 +140,17 @@ namespace ProjectMilan.Pipelines.Startups
             // These can be null depending on what package they resolve on. That's fine.
             var packagesToPort = new[]
             {
-                mpLobbyP.FindExport("SFXGameMPContent"),
-                mpLobbyP.FindExport("SFXGameMPContentDLC_Shared_MP") // This adds stuff for challenges in MP4. It is referenced by BioWorldInfo's game modes supported for Lobby DLC.
+                parsingPackage.FindExport("SFXGameMPContent"),
+                parsingPackage.FindExport("SFXGameMPContentDLC_Shared_MP"), // This adds stuff for challenges in MP4. It is referenced by BioWorldInfo's game modes supported for Lobby DLC.
+                
+                // These are in startup files.
+                parsingPackage.FindExport("SFXGameContentDLC_CON_MP2_Retrieve"), // Retrieve Objective was added in MP2
+                parsingPackage.FindExport("SFXGameContentDLC_CON_MP3_MobileAnnex"), // Mobile Annex Objective was added in MP3. Oh, the PTSD from this thing...
+                parsingPackage.FindExport("SFXGameContentDLC_CON_MP4_Horde"), // Adds CollectorHUDOverlay GUI class, Cerberus2/Geth2/Reaper2 faction classes (for config) and new collector faction class.
+
             };
 
-            foreach (var classExp in mpLobbyP.Exports.Where(x => x.IsClass && x.Parent != null && packagesToPort.Contains(x.Parent)))
+            foreach (var classExp in parsingPackage.Exports.Where(x => x.IsClass && x.Parent != null && packagesToPort.Contains(x.Parent)))
             {
                 MilanLog.Information($"Decompiling {classExp.InstancedFullPath}");
                 var packageOutputPath = Path.Combine(outpath, classExp.ParentName);
