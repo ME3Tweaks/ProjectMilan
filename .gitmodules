@@ -3,4 +3,4 @@
 	url = https://github.com/ME3Tweaks/LegendaryExplorer.git
 [submodule "WwiseTools"]
 	path = WwiseTools
-	url = https://github.com/ME3Tweaks/WwiseTools
+	url = https://github.com/ME3Tweaks/WwiseTools.git

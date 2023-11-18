@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
+    <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
   </ItemGroup>
 
 </Project>
