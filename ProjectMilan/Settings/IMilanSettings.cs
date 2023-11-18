@@ -21,6 +21,11 @@ namespace ProjectMilan.Settings
         /// </summary>
         public string OutputPath { get; set; }
 
+        /// <summary>
+        /// Directory where the source data is located that is synchronized from ME3Tweaks.com. The contents of this folder will be updated when ProjectMilan runs.
+        /// </summary>
+        public string InputSyncPath { get; set; }
+
         // Pipelines
         /// <summary>
         /// If persistent classes should be built
@@ -41,5 +46,16 @@ namespace ProjectMilan.Settings
         /// If multiplayer maps should be built
         /// </summary>
         bool RunLevelsPipeline { get; set; }
+
+        /// <summary>
+        /// If audio should be extracted and converted for use in the resulting mod
+        /// </summary>
+        bool RunAudioPipeline { get; set; }
+
+        /// <summary>
+        /// If TFC data should be built for the resulting mod
+        /// </summary>
+        bool RunTexturePipeline { get; set; }
+
     }
 }

@@ -1,10 +1,13 @@
 ﻿using CommandLine;
 using LegendaryExplorerCore;
 using Newtonsoft.Json;
+using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Config;
+using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Startups;
+using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
 
@@ -37,6 +40,7 @@ namespace ProjectMilan
         private static void Init(CLIOptions obj)
         {
             MilanLog.CreateLogger();
+            MilanLog.Information("Welcome to Project Milan");
             Settings = LoadSettingsConfig(obj);
 
             // Cleanup output directory before we start
@@ -67,11 +71,13 @@ namespace ProjectMilan
 
         static void RunPipelines()
         {
+            MilanInit.Init(); // Initialize shared pipeline data
             RunPipeline(Settings.RunConfigPipeline, MPConfig.RunPipeline, "Config");
             RunPipeline(Settings.RunMPLobbyClassesPipeline, MPCommon.RunPipeline, "MPLobby");
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits");
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels");
-
+            RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture");
+            RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio");
         }
 
         /// <summary>

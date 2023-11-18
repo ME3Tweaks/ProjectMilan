@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 
 namespace ProjectMilan.Utility
 {
@@ -64,6 +65,24 @@ namespace ProjectMilan.Utility
             }
 
             return result;
+        }
+
+        public static string GetJsonStringFromEndpoint(string url)
+        {
+            using var client = new HttpClient();
+            client.BaseAddress = new Uri(url);
+            // Add an Accept header for JSON format.
+            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            // Get data response
+            try
+            {
+                return client.GetStringAsync(url).Result;
+            }
+            catch (Exception e)
+            {
+                MilanLog.Error($@"Error fetching data {url}: {e.Message}");
+                return null;
+            }
         }
     }
 }
