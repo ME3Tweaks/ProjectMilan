@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.UnrealScript;
+using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 
 namespace ProjectMilan.Pipelines.Startups
 {
@@ -28,6 +30,8 @@ namespace ProjectMilan.Pipelines.Startups
     /// </summary>
     internal class MPCommon
     {
+        private const string LOG_CATEGORY = @"MILAN-MPCommon";
+
         // Some notes about MPCommon from ME3.
         // 1. This package is overriden via config files for every MP DLC. They always repoint to MPLobby.pcc which exists in every DLC.
         // 2. Some classes in this are overriden by DLC_TestPatch. We must use those classes instead as they will be patched. 
@@ -60,10 +64,9 @@ namespace ProjectMilan.Pipelines.Startups
         {
             // Actually run pipeline
             Directory.CreateDirectory(vars.OutputPath);
-            vars.BuildingPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(vars.OutputPath, "SFXGameMPContent.pcc"), MEGame.LE3);
 
             // Prepare classes for porting
-            PrepareClasses();
+            PrepareClasses(vars);
 
             // Port SFXGameMPContent over so it keeps the GUID
 
@@ -84,10 +87,46 @@ namespace ProjectMilan.Pipelines.Startups
         // These have now been dumped, so the code is no longer run... for now, anyways.
         // Mgamerz-specific.
 
+        private static object CompilePackage(string classFolder, string packagePath )
+        {
+            var classes = new List<UnrealScriptCompiler.LooseClass>();
+            foreach (string ucFilePath in Directory.EnumerateFiles(classFolder, "*.uc", SearchOption.AllDirectories))
+            {
+                string source = File.ReadAllText(ucFilePath);
+                //files must be named Classname.uc
+                classes.Add(new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(ucFilePath), source));
+            }
+
+            using IMEPackage pcc = MEPackageHandler.CreateAndOpenPackage(packagePath, MEGame.LE3);
+
+            //in real use, you would want a way to associate classes with the right packages (e.g. SFXGameContent).
+            //Perhaps this could be encoded in the directory structure of the loose files?
+            var looseClassPackages = new List<UnrealScriptCompiler.LooseClassPackage>
+            {
+                new("CompiledClasses", classes)
+            };
+
+            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(pcc, looseClassPackages, MissingObjectResolver);
+
+            if (log.HasErrors)
+            {
+                return (object)log;
+            }
+
+            pcc.Save();
+            return null;
+        }
+
+        private static IEntry MissingObjectResolver(IMEPackage package, string ifp)
+        {
+            Debug.WriteLine($"Missing object: {ifp}");
+            return null;
+        }
+
         /// <summary>
         /// Prepares classes for porting by reading their data out of ME3
         /// </summary>
-        private static void PrepareClasses()
+        private static void PrepareClasses(MPCommonPipelineVars vars)
         {
             var outpath = Path.Combine(Program.Settings.OutputPath, "ME3", "Classes");
             Directory.CreateDirectory(outpath);
@@ -100,7 +139,7 @@ namespace ProjectMilan.Pipelines.Startups
                 throw new Exception("MP5 is not installed in ME3 (Reckoning DLC). Please install it. It does not need to be unpacked.");
             }
 
-            MilanLog.Information($"Extracting MPLobby.pcc from {dlcInFile}");
+            MilanLog.Information($"Sourcing MPLobby.pcc from {dlcInFile}", customPrefix: LOG_CATEGORY);
 
 
             var dlc = new DLCPackage(dlcInFile);
@@ -147,17 +186,25 @@ namespace ProjectMilan.Pipelines.Startups
                 parsingPackage.FindExport("SFXGameContentDLC_CON_MP2_Retrieve"), // Retrieve Objective was added in MP2
                 parsingPackage.FindExport("SFXGameContentDLC_CON_MP3_MobileAnnex"), // Mobile Annex Objective was added in MP3. Oh, the PTSD from this thing...
                 parsingPackage.FindExport("SFXGameContentDLC_CON_MP4_Horde"), // Adds CollectorHUDOverlay GUI class, Cerberus2/Geth2/Reaper2 faction classes (for config) and new collector faction class.
-
             };
 
             foreach (var classExp in parsingPackage.Exports.Where(x => x.IsClass && x.Parent != null && packagesToPort.Contains(x.Parent)))
             {
-                MilanLog.Information($"Decompiling {classExp.InstancedFullPath}");
+                MilanLog.Information($"Decompiling {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
                 var packageOutputPath = Path.Combine(outpath, classExp.ParentName);
                 Directory.CreateDirectory(packageOutputPath);
                 var outName = Path.Combine(packageOutputPath, $"{classExp.ObjectName}.uc");
                 (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib);
                 File.WriteAllText(outName, functionText);
+            }
+
+            // Attempt compile
+            MilanLog.Information(@"Compiling classes in LE3", customPrefix: LOG_CATEGORY);
+            var outPackage = Path.Combine(Program.Settings.OutputPath, Path.Combine(vars.OutputPath, "MPContent.pcc"));
+            var outMsg = CompilePackage(outpath, outPackage);
+            if (outMsg != null)
+            {
+                Debugger.Break();
             }
         }
     }
