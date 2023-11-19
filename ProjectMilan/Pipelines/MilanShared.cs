@@ -97,9 +97,14 @@ namespace ProjectMilan.Pipelines
             }
         }
 
-        public static string GetSharedLooseClassesPath()
+        public static string GetAutoDonorClassesPath()
         {
-            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"ExtraClasses", @"Loose");
+            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"AutoDonor");
+        }
+
+        public static string GetInjectedFunctionsPath(string className)
+        {
+            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"Functions", className);
         }
 
         public static IMEPackage GetLE3Package(string packageFileName)
@@ -144,6 +149,14 @@ namespace ProjectMilan.Pipelines
                 return tpClass.Exports.FirstOrDefault(x => x.IsClass && x.ObjectName == classExp.ObjectName);
             }
 
+            return null;
+        }
+
+        public static string GetClassOverride(string className)
+        {
+            var path = Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"ClassOverride", $"{className}.uc");
+            if (File.Exists(path))
+                return path;
             return null;
         }
     }

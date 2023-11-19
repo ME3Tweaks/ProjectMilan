@@ -102,13 +102,14 @@ namespace ProjectMilan.Pipelines.Startups
         /// </summary>
         /// <param name="classFolder"></param>
         /// <param name="packagePath"></param>
+        /// <param name="packageCache"></param>
         /// <returns></returns>
-        private static bool CompilePackage(string classFolder, string packagePath)
+        private static bool CompilePackage(string classFolder, string packagePath, PackageCache cache)
         {
             MilanLog.Information("Compiling loose classes", customPrefix: LOG_CATEGORY);
             var classes = new List<UnrealScriptCompiler.LooseClass>();
             foreach (string ucFilePath in Directory.EnumerateFiles(classFolder, "*.uc", SearchOption.AllDirectories).Concat(
-                         Directory.EnumerateFiles(MilanShared.GetSharedLooseClassesPath(), "*.uc", SearchOption.AllDirectories)))
+                         Directory.EnumerateFiles(MilanShared.GetAutoDonorClassesPath(), "*.uc", SearchOption.AllDirectories)))
             {
                 string source = File.ReadAllText(ucFilePath);
                 //files must be named Classname.uc
@@ -136,7 +137,7 @@ namespace ProjectMilan.Pipelines.Startups
 
             if (log.HasErrors)
             {
-                if (AttemptToFindMissingClasses(log))
+                if (AttemptToFindMissingClasses(log, cache))
                     return true;
                 MilanLog.Error("COMPILATION OF CUSTOM CLASSES FAILED: ", customPrefix: LOG_CATEGORY);
                 foreach (var error in log.AllErrors)
@@ -151,7 +152,7 @@ namespace ProjectMilan.Pipelines.Startups
             return false;
         }
 
-        private static bool AttemptToFindMissingClasses(MessageLog log)
+        private static bool AttemptToFindMissingClasses(MessageLog log, PackageCache cache)
         {
             var commonBasePackages = new[]
             {
@@ -172,6 +173,14 @@ namespace ProjectMilan.Pipelines.Startups
                 else if (m.Message.Contains("Unable to resolve class '"))
                 {
                     className = m.Message.Substring(m.Message.IndexOf("Unable to resolve class '") + "Unable to resolve class '".Length);
+                }
+                else if (m.Message.StartsWith("The type '") && m.Message.Contains("' does not exist in the current scope"))
+                {
+                    className = m.Message.Substring("The type '".Length);
+                }
+                else if (m.Message.StartsWith("No type named '") && m.Message.Contains("' exists!"))
+                {
+                    className = m.Message.Substring("No type named '".Length);
                 }
                 else
                 {
@@ -207,7 +216,7 @@ namespace ProjectMilan.Pipelines.Startups
                             {
                                 MilanLog.Information($@"Found missing class '{className}' in ME3: {foundObj}");
                                 var export = package.FindExport(ifp);
-                                DecompileClass(export, null, true);
+                                DecompileClass(export, null, true, cache);
                                 return true;
                             }
                         }
@@ -277,8 +286,7 @@ namespace ProjectMilan.Pipelines.Startups
         /// </summary>
         private static void PrepareClasses(MPCommonPipelineVars vars)
         {
-            // Todo: Change this over to look for specifically named files in ME3 and enumerate them to build a list of all classes to extract
-
+            var cache = new PackageCache();
             var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(), "Default.sfar");
             if (!File.Exists(dlcInFile))
             {
@@ -291,7 +299,7 @@ namespace ProjectMilan.Pipelines.Startups
             FileLib fileLib = new FileLib(parsingPackage);
             try
             {
-                fileLib.Initialize();
+                fileLib.Initialize(cache);
             }
             catch
             {
@@ -314,19 +322,19 @@ namespace ProjectMilan.Pipelines.Startups
 
             foreach (var classExp in parsingPackage.Exports.Where(x => x.IsClass && x.Parent != null && packagesToPort.Contains(x.Parent)))
             {
-                DecompileClass(classExp, fileLib, false);
+                DecompileClass(classExp, fileLib, false, cache);
             }
 
             // Attempt compile
             var outPackage = Path.Combine(Program.Settings.OutputPath, Path.Combine(vars.OutputPath, "MPContent.pcc"));
 
-            while (CompilePackage(GetMPClassesFolder(), outPackage))
+            while (CompilePackage(GetMPClassesFolder(), outPackage, cache))
             {
 
             }
         }
 
-        private static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared)
+        private static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared, PackageCache cache)
         {
             if (classExp.Game == MEGame.ME3)
             {
@@ -341,11 +349,21 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
 
-            var outpath = toShared ? MilanShared.GetSharedLooseClassesPath() : GetMPClassesFolder();
+            var baseOutputPath = toShared ? MilanShared.GetAutoDonorClassesPath() : GetMPClassesFolder();
+            var packageOutputPath = Path.Combine(baseOutputPath, classExp.HasParent ? classExp.ParentName : classExp.FileRef.FileNameNoExtension);
+            Directory.CreateDirectory(packageOutputPath);
+            var ucOutPath = Path.Combine(packageOutputPath, $"{classExp.ObjectName}.uc");
+
+            // Check if override exists
+            var overridePath = MilanShared.GetClassOverride(classExp.ObjectName);
+            if (overridePath != null)
+            {
+                MilanLog.Information($"Using Milan class override for {classExp.ObjectName}", customPrefix: LOG_CATEGORY);
+                File.Copy(overridePath, ucOutPath);
+                return;
+            }
 
             MilanLog.Information($"Decompiling {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-            var packageOutputPath = Path.Combine(outpath, classExp.HasParent ? classExp.ParentName : classExp.FileRef.FileNameNoExtension);
-            Directory.CreateDirectory(packageOutputPath);
 
             if (fileLib == null)
             {
@@ -353,7 +371,7 @@ namespace ProjectMilan.Pipelines.Startups
                 try
                 {
                     fileLib = new FileLib(classExp.FileRef);
-                    fileLib.Initialize();
+                    fileLib.Initialize(cache);
                 }
                 catch
                 {
@@ -362,15 +380,14 @@ namespace ProjectMilan.Pipelines.Startups
                 }
             }
 
-            var outName = Path.Combine(packageOutputPath, $"{classExp.ObjectName}.uc");
-            (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib);
+            (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib, cache);
 
 
             // FUNCTION PATCHES
-            List<string> newFunction = PatchFunction(functionText);
+            List<string> newFunction = PatchFunction(classExp.ObjectName, functionText);
 
 
-            File.WriteAllLines(outName, newFunction);
+            File.WriteAllLines(ucOutPath, newFunction);
         }
 
         /// <summary>
@@ -379,18 +396,18 @@ namespace ProjectMilan.Pipelines.Startups
         /// <param name="functionText"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        private static List<string> PatchFunction(string functionText)
+        private static List<string> PatchFunction(string className, string functionText)
         {
-            var newFunction = functionText.Split('\n').ToList();
-            for (int i = newFunction.Count - 1; i > 0; i--)
+            var newClassText = functionText.Split('\n').ToList();
+            for (int i = newClassText.Count - 1; i > 0; i--)
             {
-                var line = newFunction[i].Trim();
+                var line = newClassText[i].Trim();
 
                 // TELEMETRY ========================================
-                if (line.StartsWith("Class'SFXTelemetry'.static.Send"))
+                if (line.StartsWith("Class'SFXTelemetry'.static.Send") || line.StartsWith("Class'SFXTelemetry'.static.AddAttributeToArray"))
                 {
-                    MilanLog.Information($"  Patching out telemetry call {line}");
-                    newFunction.RemoveAt(i);
+                    MilanLog.Information($"  Patching out telemetry call {line}", customPrefix: LOG_CATEGORY);
+                    newClassText.RemoveAt(i);
                     continue;
                 }
 
@@ -398,8 +415,8 @@ namespace ProjectMilan.Pipelines.Startups
                 // Hint system now uses console and pc strings.
                 if (line == "oGuiMgr.ShowHint(srStrictNatError, NatWarningShowDuration);")
                 {
-                    MilanLog.Information($"  Patching ShowHint {line}");
-                    newFunction[i] = "oGuiMgr.ShowHint(srStrictNatError, srStrictNatError, NatWarningShowDuration);";
+                    MilanLog.Information($"  Patching ShowHint {line}", customPrefix: LOG_CATEGORY);
+                    newClassText[i] = "oGuiMgr.ShowHint(srStrictNatError, srStrictNatError, NatWarningShowDuration);";
                     continue;
                 }
 
@@ -414,35 +431,59 @@ namespace ProjectMilan.Pipelines.Startups
                 // FIX LATER ============================================
                 if (line is "GAWAssetHandler.Cleanup();" or "GAWAssetHandler.RequestGAWRatings(OnGAWRequestFinished);")
                 {
-                    MilanLog.Information($"  Patching out GAWAssetHandler reference {line}");
-                    newFunction[i] = $"//{line}";
+                    MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
+                    newClassText[i] = $"//{line}";
                     continue;
                 }
 
                 if (line is "return GAWAssetsHandler.CachedGAWRatings[int(MatchResults.CurrentMatchData.ZoneID)] + MatchResults.CurrentMatchData.ZoneRatingIncrease;")
                 {
-                    MilanLog.Information($"  Patching out GAWAssetHandler reference {line}");
+                    MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
                     // Need to implement GAW system that can change zones
-                    newFunction[i] = "return 50 + MatchResults.CurrentMatchData.ZoneRatingIncrease;";
+                    newClassText[i] = "return 50 + MatchResults.CurrentMatchData.ZoneRatingIncrease;";
                     continue;
                 }
 
                 if (line is "if (Class'SFXGAWAssetsHandler'.static.GetGAWHandler().CachedGAWRatings[int(MatchResults.CurrentMatchData.ZoneID)] >= 100)")
                 {
-                    MilanLog.Information($"  Patching out GAWAssetHandler reference {line}");
+                    MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
                     // Need to implement GAW system that can change zones
-                    newFunction[i] = "if (true)";
+                    newClassText[i] = "if (true)";
+                    continue;
+                }
+
+                if (line.StartsWith("Class'SFXGAWAssetsHandler'.static.UpdateSecurityRating"))
+                {
+                    MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
+                    // Need to implement GAW system that can change zones
+                    newClassText[i] = "";
                     continue;
                 }
                 
 
+
                 if (line.Contains(".ShowHint("))
                 {
-                    MilanLog.Warning($@"Needs patched: {line}");
+                    MilanLog.Warning($@"Needs patched: {line}", customPrefix: LOG_CATEGORY);
                 }
             }
 
-            return newFunction;
+            // Inject any additional functions
+            var injectionFolder = MilanShared.GetInjectedFunctionsPath(className);
+            if (Directory.Exists(injectionFolder))
+            {
+                // We need to inject above 'defaultproperties'
+                var defaultPropertiesIdx = newClassText.IndexOf("defaultproperties");
+
+                foreach (var file in Directory.GetFiles(injectionFolder, "*.uc", SearchOption.TopDirectoryOnly))
+                {
+                    MilanLog.Information($"   Injecting function {Path.GetFileNameWithoutExtension(file)} into class {className}");
+                    var iFunction = File.ReadAllLines(file);
+                    newClassText.InsertRange(defaultPropertiesIdx - 1, iFunction);
+                }
+            }
+
+            return newClassText;
 
         }
 

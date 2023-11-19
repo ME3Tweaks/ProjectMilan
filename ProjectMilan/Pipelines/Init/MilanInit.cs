@@ -36,7 +36,7 @@ namespace ProjectMilan.Pipelines.Init
             CheckSettings();
 
             // Install all custom classes that are used for porting
-            InventoryCustomPackages();
+            // InventoryCustomPackages(); // Not currently used
 
             // Load object databases
             MilanShared.LE3ObjectDB = LoadObjectDB(MEGame.LE3);
@@ -51,7 +51,7 @@ namespace ProjectMilan.Pipelines.Init
         /// </summary>
         public static void InventoryCustomPackages()
         {
-            foreach (var packagePath in Directory.GetFiles(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"ExtraClasses"), "*.pcc", SearchOption.AllDirectories))
+            foreach (var packagePath in Directory.GetFiles(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling"), "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Inventorying custom package {packagePath}");
                 using var p = MEPackageHandler.OpenMEPackage(packagePath);
