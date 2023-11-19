@@ -71,6 +71,7 @@ namespace ProjectMilan.Pipelines.Startups
             Directory.CreateDirectory(vars.OutputPath);
 
             // Prepare classes for porting
+            HackPatchParents(); // Eventually this will be moved to a merge mod. But for compilation purposes, it needs to be done here.
             PrepareClasses(vars);
 
             // Port SFXGameMPContent over so it keeps the GUID
@@ -86,6 +87,24 @@ namespace ProjectMilan.Pipelines.Startups
             // Profit
 
             vars.BuildingPackage.Save();
+        }
+
+        private static void HackPatchParents()
+        {
+            if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, "SFXGame.pcc", out var sfxGameF))
+            {
+                var sfxgame = MEPackageHandler.OpenMEPackage(sfxGameF);
+                if (sfxgame.FindExport("SFXTelemetryGameSession.SetMPMatchSettings") == null)
+                {
+                    // Patch class
+                    MilanLog.Information("Patching in SFXGame.pcc 'SFXTelemetryGameSession' method stubs", customPrefix: LOG_CATEGORY);
+                    var classOverride = File.ReadAllText(MilanShared.GetClassOverride("SFXTelemetryGameSession"));
+                    var lib = new FileLib(sfxgame);
+                    lib.Initialize();
+                    var messages = UnrealScriptCompiler.CompileClass(sfxgame, classOverride, lib);
+                    sfxgame.Save();
+                }
+            }
         }
 
 
@@ -382,7 +401,6 @@ namespace ProjectMilan.Pipelines.Startups
 
             (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib, cache);
 
-
             // FUNCTION PATCHES
             List<string> newFunction = PatchFunction(classExp.ObjectName, functionText);
 
@@ -459,7 +477,7 @@ namespace ProjectMilan.Pipelines.Startups
                     newClassText[i] = "";
                     continue;
                 }
-                
+
 
 
                 if (line.Contains(".ShowHint("))
@@ -477,7 +495,7 @@ namespace ProjectMilan.Pipelines.Startups
 
                 foreach (var file in Directory.GetFiles(injectionFolder, "*.uc", SearchOption.TopDirectoryOnly))
                 {
-                    MilanLog.Information($"   Injecting function {Path.GetFileNameWithoutExtension(file)} into class {className}");
+                    MilanLog.Information($"   Injecting function {Path.GetFileNameWithoutExtension(file)} into class {className}", customPrefix: LOG_CATEGORY);
                     var iFunction = File.ReadAllLines(file);
                     newClassText.InsertRange(defaultPropertiesIdx - 1, iFunction);
                 }
