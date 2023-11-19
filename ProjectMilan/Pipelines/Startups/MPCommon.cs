@@ -292,6 +292,7 @@ namespace ProjectMilan.Pipelines.Startups
                     }
                 }
             }
+            MilanLog.Error($"Unable to find object {ifp} in {possibleDonors.Count} packages!");
             return null;
         }
 
