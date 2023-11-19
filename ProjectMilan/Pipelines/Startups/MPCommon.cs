@@ -12,6 +12,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
+using ProjectMilan.Utility;
 using Serilog;
 
 namespace ProjectMilan.Pipelines.Startups
@@ -140,7 +141,7 @@ namespace ProjectMilan.Pipelines.Startups
                 MilanLog.Error("COMPILATION OF CUSTOM CLASSES FAILED: ", customPrefix: LOG_CATEGORY);
                 foreach (var error in log.AllErrors)
                 {
-                    MilanLog.Error($"  {error.Message}", customPrefix: LOG_CATEGORY);
+                    MilanLog.Error($"  {error}", customPrefix: LOG_CATEGORY);
                 }
 
                 return false;
@@ -220,7 +221,55 @@ namespace ProjectMilan.Pipelines.Startups
         private static IEntry MissingObjectResolver(IMEPackage package, string ifp)
         {
             Debug.WriteLine($"Missing object: {ifp}");
+
+            var possibleDonors = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
+            if (possibleDonors == null)
+            {
+                MilanLog.Error($"Object '{ifp}' does not exist in LE3! We need to make a donor for this.");
+                var originalGameDonors = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
+                originalGameDonors = originalGameDonors.Select(x => Path.GetFileName(x)).ToList(); // we don't care about paths.
+                originalGameDonors.Sort(new ObjectSourceTierComparer());
+                foreach (var possibleDonor in originalGameDonors)
+                {
+                    var donorP = MilanShared.GetME3Package(possibleDonor);
+                    if (donorP != null)
+                    {
+                        var donorEntry = donorP.FindEntry(ifp);
+                        if (donorEntry != null)
+                        {
+                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}");
+                            return donorEntry;
+                        }
+                    }
+                }
+
+                return null;
+            }
+
+            // Sort by higher tier first
+            possibleDonors = possibleDonors.Select(x => Path.GetFileName(x)).ToList(); // we don't care about paths.
+            possibleDonors.Sort(new ObjectSourceTierComparer());
+
+            foreach (var possibleDonor in possibleDonors)
+            {
+                // Todo: Maybe use cache for this - with a max size
+                var donorP = MilanShared.GetLE3Package(possibleDonor);
+                if (donorP != null)
+                {
+                    var donorEntry = donorP.FindEntry(ifp);
+                    if (donorEntry != null)
+                    {
+                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}");
+                        return donorEntry;
+                    }
+                }
+            }
             return null;
+        }
+
+        private static void SortDonors(List<string> possibleDonors)
+        {
+
         }
 
         /// <summary>
@@ -236,29 +285,7 @@ namespace ProjectMilan.Pipelines.Startups
                 throw new Exception("MP5 is not installed in ME3 (Reckoning DLC). Please install it. It does not need to be unpacked.");
             }
 
-            MilanLog.Information($"Sourcing MPLobby.pcc from {dlcInFile}", customPrefix: LOG_CATEGORY);
-
-
-            var dlc = new DLCPackage(dlcInFile);
-            var dlcEntryIdx = dlc.FindFileEntry("MPLobby.pcc");
-
-            IMEPackage parsingPackage;
-            if (dlcEntryIdx >= 0)
-            {
-                // File is in DLC
-                parsingPackage = MEPackageHandler.OpenMEPackageFromStream(dlc.DecompressEntry(dlcEntryIdx), "MPLobby.pcc");
-            }
-            else
-            {
-                // Probably decompressed.
-                var filePath = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(), "MPLobby.pcc");
-                if (!File.Exists(filePath))
-                {
-                    throw new Exception("Could not find MPLobby in SFAR or on disk!");
-                }
-
-                parsingPackage = MEPackageHandler.OpenMEPackage(filePath);
-            }
+            var parsingPackage = MilanShared.GetME3Package("MPLobby.pcc");
 
             //initing filelib is expensive, so we only want to do it for files that have script
             FileLib fileLib = new FileLib(parsingPackage);
@@ -301,6 +328,19 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared)
         {
+            if (classExp.Game == MEGame.ME3)
+            {
+                // We must first see if this is in testpatch!!
+                var testPatchClass = MilanShared.GetTestPatchClass(classExp);
+                if (testPatchClass != null)
+                {
+                    MilanLog.Information($@"Using DLC_TestPatch version of {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                    classExp = testPatchClass;
+                    fileLib = null; // Must re-init
+                }
+            }
+
+
             var outpath = toShared ? MilanShared.GetSharedLooseClassesPath() : GetMPClassesFolder();
 
             MilanLog.Information($"Decompiling {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
@@ -324,7 +364,86 @@ namespace ProjectMilan.Pipelines.Startups
 
             var outName = Path.Combine(packageOutputPath, $"{classExp.ObjectName}.uc");
             (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib);
-            File.WriteAllText(outName, functionText);
+
+
+            // FUNCTION PATCHES
+            List<string> newFunction = PatchFunction(functionText);
+
+
+            File.WriteAllLines(outName, newFunction);
+        }
+
+        /// <summary>
+        /// Makes corrections for ME3 -> LE3
+        /// </summary>
+        /// <param name="functionText"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private static List<string> PatchFunction(string functionText)
+        {
+            var newFunction = functionText.Split('\n').ToList();
+            for (int i = newFunction.Count - 1; i > 0; i--)
+            {
+                var line = newFunction[i].Trim();
+
+                // TELEMETRY ========================================
+                if (line.StartsWith("Class'SFXTelemetry'.static.Send"))
+                {
+                    MilanLog.Information($"  Patching out telemetry call {line}");
+                    newFunction.RemoveAt(i);
+                    continue;
+                }
+
+                // HINT SYSTEM =======================================
+                // Hint system now uses console and pc strings.
+                if (line == "oGuiMgr.ShowHint(srStrictNatError, NatWarningShowDuration);")
+                {
+                    MilanLog.Information($"  Patching ShowHint {line}");
+                    newFunction[i] = "oGuiMgr.ShowHint(srStrictNatError, srStrictNatError, NatWarningShowDuration);";
+                    continue;
+                }
+
+                // To be fixed in LEX compiler =========================
+                //if (line == "KeepDecimal ? pos++ : pos--;")
+                //{
+                //    MilanLog.Information($"  Patching temporary LEX compiler issue {line}");
+                //    newFunction[i] = "if (KeepDecimal) { pos = pos + 1; } else { pos = pos - 1; }";
+                //    continue;
+                //}
+
+                // FIX LATER ============================================
+                if (line is "GAWAssetHandler.Cleanup();" or "GAWAssetHandler.RequestGAWRatings(OnGAWRequestFinished);")
+                {
+                    MilanLog.Information($"  Patching out GAWAssetHandler reference {line}");
+                    newFunction[i] = $"//{line}";
+                    continue;
+                }
+
+                if (line is "return GAWAssetsHandler.CachedGAWRatings[int(MatchResults.CurrentMatchData.ZoneID)] + MatchResults.CurrentMatchData.ZoneRatingIncrease;")
+                {
+                    MilanLog.Information($"  Patching out GAWAssetHandler reference {line}");
+                    // Need to implement GAW system that can change zones
+                    newFunction[i] = "return 50 + MatchResults.CurrentMatchData.ZoneRatingIncrease;";
+                    continue;
+                }
+
+                if (line is "if (Class'SFXGAWAssetsHandler'.static.GetGAWHandler().CachedGAWRatings[int(MatchResults.CurrentMatchData.ZoneID)] >= 100)")
+                {
+                    MilanLog.Information($"  Patching out GAWAssetHandler reference {line}");
+                    // Need to implement GAW system that can change zones
+                    newFunction[i] = "if (true)";
+                    continue;
+                }
+                
+
+                if (line.Contains(".ShowHint("))
+                {
+                    MilanLog.Warning($@"Needs patched: {line}");
+                }
+            }
+
+            return newFunction;
+
         }
 
         private static string GetMPClassesFolder()

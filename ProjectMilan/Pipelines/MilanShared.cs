@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
@@ -98,6 +100,51 @@ namespace ProjectMilan.Pipelines
         public static string GetSharedLooseClassesPath()
         {
             return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"ExtraClasses", @"Loose");
+        }
+
+        public static IMEPackage GetLE3Package(string packageFileName)
+        {
+            if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, packageFileName, out var filePath))
+            {
+                return MEPackageHandler.OpenMEPackage(filePath);
+            }
+
+            return null;
+        }
+
+
+        private static CaseInsensitiveDictionary<IMEPackage> TestPatchPackageMap;
+
+        public static ExportEntry GetTestPatchClass(ExportEntry classExp)
+        {
+            if (TestPatchPackageMap == null)
+            {
+                MilanLog.Information(@"Reading ME3 DLC_TestPatch");
+                var sfarPath = Path.Combine(ME3Directory.BioGamePath, @"Patches", @"PCConsole", @"Patch_001.sfar");
+                var sfar = new DLCPackage(sfarPath);
+                TestPatchPackageMap = new(sfar.Files.Count);
+
+                foreach (var fe in sfar.Files)
+                {
+                    if (fe.isActualFile && fe.FileName.RepresentsPackageFilePath())
+                    {
+                        var package = MEPackageHandler.OpenMEPackageFromStream(sfar.DecompressEntry(fe), fe.FileName);
+                        var inventoryClass = package.Exports.FirstOrDefault(x => x.IsClass);
+                        if (inventoryClass != null)
+                        {
+                            // Some TP things are not classes like GuidCache.
+                            TestPatchPackageMap[inventoryClass.ObjectName] = package;
+                        }
+                    }
+                }
+            }
+
+            if (TestPatchPackageMap.TryGetValue(classExp.ObjectName, out var tpClass))
+            {
+                return tpClass.Exports.FirstOrDefault(x => x.IsClass && x.ObjectName == classExp.ObjectName);
+            }
+
+            return null;
         }
     }
 }
