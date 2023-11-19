@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using LegendaryExplorerCore;
+using LegendaryExplorerCore.Packages;
 using Newtonsoft.Json;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Config;
@@ -55,6 +56,7 @@ namespace ProjectMilan
 
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
+            MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
 
             RunPipelines();
         }
@@ -99,7 +101,6 @@ namespace ProjectMilan
             {
                 MilanLog.Information($"Skipping pipeline: {pipelineName}, not selected for running in settings");
             }
-
         }
     }
 }

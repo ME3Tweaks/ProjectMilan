@@ -2,6 +2,8 @@
 using System.Net;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
 using ProjectMilan.Utility;
 
@@ -33,10 +35,39 @@ namespace ProjectMilan.Pipelines.Init
         {
             CheckSettings();
 
+            // Install all custom classes that are used for porting
+            InventoryCustomPackages();
+
             // Load object databases
             MilanShared.LE3ObjectDB = LoadObjectDB(MEGame.LE3);
             MilanShared.ME3ObjectDB = LoadObjectDB(MEGame.ME3);
+
+            // Sync files from ME3Tweaks so developers are all on the same fileset.
             MilanSync();
+        }
+
+        /// <summary>
+        /// Loads custom made packages e.g. premade assets
+        /// </summary>
+        public static void InventoryCustomPackages()
+        {
+            foreach (var packagePath in Directory.GetFiles(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"ExtraClasses"), "*.pcc", SearchOption.AllDirectories))
+            {
+                MilanLog.Information($"Inventorying custom package {packagePath}");
+                using var p = MEPackageHandler.OpenMEPackage(packagePath);
+                foreach (var ex in p.Exports.Where(x => x.IsClass))
+                {
+                    var classInfo = GlobalUnrealObjectInfo.generateClassInfo(ex);
+                    MilanLog.Information($@"  Inventorying class {ex.InstancedFullPath}");
+                    GlobalUnrealObjectInfo.InstallCustomClassInfo(ex.ObjectName, classInfo, ex.Game);
+
+                    if (ex.InheritsFrom("SequenceObject"))
+                    {
+                        var defaults = p.GetUExport(ObjectBinary.From<UClass>(ex).Defaults);
+                        GlobalUnrealObjectInfo.GenerateSequenceObjectInfoForClassDefaults(defaults);
+                    }
+                }
+            }
         }
 
         private static void CheckSettings()
