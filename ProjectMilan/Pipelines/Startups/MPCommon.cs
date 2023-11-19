@@ -101,7 +101,7 @@ namespace ProjectMilan.Pipelines.Startups
                     var classOverride = File.ReadAllText(MilanShared.GetClassOverride("SFXTelemetryGameSession"));
                     var lib = new FileLib(sfxgame);
                     lib.Initialize();
-                    var messages = UnrealScriptCompiler.CompileClass(sfxgame, classOverride, lib);
+                    var messages = UnrealScriptCompiler.CompileClass(sfxgame, classOverride, lib, sfxgame.FindExport("SFXTelemetryGameSession"));
                     sfxgame.Save();
                 }
             }
@@ -355,13 +355,14 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared, PackageCache cache)
         {
+            var usingTestPatch = false;
             if (classExp.Game == MEGame.ME3)
             {
                 // We must first see if this is in testpatch!!
                 var testPatchClass = MilanShared.GetTestPatchClass(classExp);
                 if (testPatchClass != null)
                 {
-                    MilanLog.Information($@"Using DLC_TestPatch version of {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                    usingTestPatch = true;
                     classExp = testPatchClass;
                     fileLib = null; // Must re-init
                 }
@@ -383,7 +384,10 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             MilanLog.Information($"Decompiling {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-
+            if (usingTestPatch)
+            {
+                MilanLog.Information($@"Using DLC_TestPatch version of {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+            }
             if (fileLib == null)
             {
                 // Initialize filelib if it wasn't.
