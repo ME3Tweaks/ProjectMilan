@@ -64,11 +64,13 @@ namespace ProjectMilan.Pipelines
                 {
                     return MEPackageHandler.OpenMEPackageFromStream(dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName)), sourceFileName);
                 }
-                else
+                if (MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath2) && filePath2.Contains("\\DLC_"))
                 {
-                    MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
+                    // Unpacked DLC
+                    return MEPackageHandler.OpenMEPackage(filePath2);
                 }
 
+                MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
             }
 
             return null;
@@ -99,7 +101,7 @@ namespace ProjectMilan.Pipelines
 
         public static string GetAutoDonorClassesPath()
         {
-            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"AutoDonor");
+            return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"AutoDonor")).FullName;
         }
 
         public static string GetInjectedFunctionsPath(string className)
