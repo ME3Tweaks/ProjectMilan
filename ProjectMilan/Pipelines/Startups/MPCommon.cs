@@ -133,7 +133,7 @@ namespace ProjectMilan.Pipelines.Startups
                 var overridePath = MilanShared.GetClassOverride(Path.GetFileNameWithoutExtension(ucFilePath));
                 string source = File.ReadAllText(overridePath ?? ucFilePath);
                 //files must be named Classname.uc
-                classes.Add(new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(ucFilePath), source, overridePath ?? ucFilePath));
+                classes.Add(new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(ucFilePath), source, ucFilePath)); // Always use ucFilePath as it will be in the proper package folder, even if it goes unused.
             }
 
             using IMEPackage pcc = MEPackageHandler.CreateAndOpenPackage(packagePath, MEGame.LE3);
@@ -167,7 +167,18 @@ namespace ProjectMilan.Pipelines.Startups
 
                 return false;
             }
+            MilanLog.Information(@"Compilation succeeded!", customPrefix: LOG_CATEGORY);
 
+
+            MilanLog.Information(@"Creating object referencer", customPrefix: LOG_CATEGORY);
+            PackageTools.CreateObjectReferencer(pcc, true);
+            foreach (var classExp in pcc.Exports.Where(x => x.IsClass))
+            {
+                // Yeah this is inefficient. 
+                PackageTools.AddToObjectReferencer(classExp);
+            }
+
+            MilanLog.Information($@"Saving {pcc.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
             pcc.Save();
             return false;
         }
@@ -203,6 +214,10 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     className = m.Message.Substring("No type named '".Length);
                 }
+                else if (m.Message.Contains(" has no member named '"))
+                {
+                    className = m.Message.Substring(m.Message.IndexOf(" has no member named '") + " has no member named '".Length);
+                }
                 else
                 {
                     // It's something else...
@@ -222,7 +237,36 @@ namespace ProjectMilan.Pipelines.Startups
                         ifp = $"{cbp}.{className}";
                     }
 
-                    var foundObjs = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp);
+                    // Look in LE3 for donor
+                    var foundObjs = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp);
+                    if (foundObjs != null)
+                    {
+                        foreach (var foundObj in foundObjs)
+                        {
+                            var sourceFileName = Path.GetFileName(foundObj);
+                            var package = MilanShared.GetLE3Package(sourceFileName);
+
+                            // DLC system Milan uses doesn't look in SP files
+                            // So if obj database has SP stuff this will fail
+                            // Just keep going.
+                            if (package != null)
+                            {
+                                MilanLog.Information($@"Found missing class '{className}' in LE3: {foundObj}");
+                                var export = package.FindExport(ifp);
+                                if (export != null)
+                                {
+                                    DecompileClass(export, null, true, cache);
+                                    return true;
+                                }
+
+                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC");
+
+                            }
+                        }
+                    }
+
+                    // Looking ME3 for crossgen
+                    foundObjs = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp);
                     if (foundObjs != null)
                     {
                         foreach (var foundObj in foundObjs)
@@ -237,11 +281,17 @@ namespace ProjectMilan.Pipelines.Startups
                             {
                                 MilanLog.Information($@"Found missing class '{className}' in ME3: {foundObj}");
                                 var export = package.FindExport(ifp);
-                                DecompileClass(export, null, true, cache);
-                                return true;
+                                if (export != null)
+                                {
+                                    DecompileClass(export, null, true, cache);
+                                    return true;
+                                }
+
+                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC");
                             }
                         }
                     }
+
                 }
             }
 
@@ -352,7 +402,7 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             // Attempt compile
-            var outPackage = Path.Combine(Program.Settings.OutputPath, Path.Combine(vars.OutputPath, "MPContent.pcc"));
+            var outPackage = Path.Combine(Program.Settings.OutputPath, Path.Combine(vars.OutputPath, "Startup_MOD_ProjectMilan.pcc"));
 
             while (CompilePackage(GetMPClassesFolder(), outPackage, cache))
             {
