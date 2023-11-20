@@ -396,42 +396,60 @@ namespace ProjectMilan.Pipelines.Startups
         private static void PrepareClasses(MPCommonPipelineVars vars)
         {
             var cache = new PackageCache();
-            var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(), "Default.sfar");
+            var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(),
+                "Default.sfar");
             if (!File.Exists(dlcInFile))
             {
-                throw new Exception("MP5 is not installed in ME3 (Reckoning DLC). Please install it. It does not need to be unpacked.");
+                throw new Exception(
+                    "MP5 is not installed in ME3 (Reckoning DLC). Please install it. It does not need to be unpacked.");
             }
 
-            var parsingPackage = MilanShared.GetME3Package("MPLobby.pcc");
-
-            //initing filelib is expensive, so we only want to do it for files that have script
-            FileLib fileLib = new FileLib(parsingPackage);
-            try
+            // Go in from latest DLC to earlier
+            var me3Packages = new[]
             {
-                fileLib.Initialize(cache);
-            }
-            catch
-            {
-                //we're not checking if it failed to initialize because we don't really care, since decompilation doesn't actually need an initialized filelib,
-                //it just makes the output a bit nicer (at the time of this writing all it does is resolve some integer literals into enum values)
-            }
-
-            // List of package level exports to port (ForcedExport)
-            // These can be null depending on what package they resolve on. That's fine.
-            var packagesToPort = new[]
-            {
-                parsingPackage.FindExport("SFXGameMPContent"),
-                parsingPackage.FindExport("SFXGameMPContentDLC_Shared_MP"), // This adds stuff for challenges in MP4. It is referenced by BioWorldInfo's game modes supported for Lobby DLC.
-                
-                // These are in startup files.
-                parsingPackage.FindExport("SFXGameContentDLC_CON_MP2_Retrieve"), // Retrieve Objective was added in MP2
-                parsingPackage.FindExport("SFXGameContentDLC_CON_MP3_MobileAnnex"), // Mobile Annex Objective was added in MP3. Oh, the PTSD from this thing...
-                parsingPackage.FindExport("SFXGameContentDLC_CON_MP4_Horde"), // Adds CollectorHUDOverlay GUI class, Cerberus2/Geth2/Reaper2 faction classes (for config) and new collector faction class.
+                "MPLobby.pcc", // MP5
+                "Startup_DLC_CON_MP4_INT.pcc", // Collector HUD, Faction
+                "SFXMobileAnnex.pcc", // Extra stuff
+                "Startup_DLC_CON_MP3_INT.pcc", // MobileAnnex
+                "Startup_DLC_CON_MP2_INT.pcc", // Retrieve
             };
 
-            foreach (var classExp in parsingPackage.Exports.Where(x => x.IsClass && x.Parent != null && packagesToPort.Contains(x.Parent)))
+            foreach (var package in me3Packages)
             {
-                DecompileClass(classExp, fileLib, false, cache);
+                MilanLog.Information($"Decompiling MP classes in {package} --------------------");
+                var parsingPackage = MilanShared.GetME3Package(package);
+
+                //initing filelib is expensive, so we only want to do it for files that have script
+                FileLib fileLib = new FileLib(parsingPackage);
+                try
+                {
+                    fileLib.Initialize(cache);
+                }
+                catch
+                {
+                    //we're not checking if it failed to initialize because we don't really care, since decompilation doesn't actually need an initialized filelib,
+                    //it just makes the output a bit nicer (at the time of this writing all it does is resolve some integer literals into enum values)
+                }
+
+                // List of package level exports to port (ForcedExport)
+                // These can be null depending on what package they resolve on. That's fine.
+                var packagesToPort = new[]
+                {
+                    parsingPackage.FindExport("SFXGameMPContent"),
+                    parsingPackage.FindExport("SFXGameMPContentDLC_Shared_MP"), // This adds stuff for challenges in MP4. It is referenced by BioWorldInfo's game modes supported for Lobby DLC.
+
+                    // These are in startup files.
+                    parsingPackage.FindExport("SFXGameContentDLC_CON_MP2_Retrieve"), // Retrieve Objective was added in MP2
+                    parsingPackage.FindExport("SFXGameContentDLC_CON_MP3_MobileAnnex"), // Mobile Annex Objective was added in MP3. Oh, the PTSD from this thing...
+                    parsingPackage.FindExport("SFXGameContentDLC_CON_MP4_Horde"), // Adds CollectorHUDOverlay GUI class, Cerberus2/Geth2/Reaper2 faction classes (for config) and new collector faction class.
+                    parsingPackage.FindExport("SFXGameContentDLC_CON_MP3"), // Some mobile annex stuff. Not sure if it's actually used. It gets patched though.
+                };
+
+                foreach (var classExp in parsingPackage.Exports.Where(x =>
+                             x.IsClass && x.Parent != null && packagesToPort.Contains(x.Parent) && ClassNeedsDecompiled(x)))
+                {
+                    DecompileClass(classExp, fileLib, false, cache);
+                }
             }
 
             // Attempt compile
@@ -441,6 +459,14 @@ namespace ProjectMilan.Pipelines.Startups
             {
 
             }
+        }
+
+        private static bool ClassNeedsDecompiled(ExportEntry classExp)
+        {
+            var packageOutputPath = Path.Combine(GetMPClassesFolder(), classExp.HasParent ? classExp.ParentName : classExp.FileRef.FileNameNoExtension);
+            var ucPath = Path.Combine(packageOutputPath, $"{classExp.ObjectName}.uc");
+            var needsDecompiled = !File.Exists(ucPath);
+            return needsDecompiled;
         }
 
         private static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared, PackageCache cache)
@@ -469,7 +495,7 @@ namespace ProjectMilan.Pipelines.Startups
             if (overridePath != null)
             {
                 MilanLog.Information($"Using Milan class override for {classExp.ObjectName}", customPrefix: LOG_CATEGORY);
-                File.Copy(overridePath, ucOutPath);
+                File.Copy(overridePath, ucOutPath, true);
                 return;
             }
 
