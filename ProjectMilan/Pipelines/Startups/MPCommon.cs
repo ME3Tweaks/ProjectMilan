@@ -409,9 +409,10 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 "MPLobby.pcc", // MP5
                 "Startup_DLC_CON_MP4_INT.pcc", // Collector HUD, Faction
-                "SFXMobileAnnex.pcc", // Extra stuff
+                // "SFXMobileAnnex.pcc", // Extra stuff
                 "Startup_DLC_CON_MP3_INT.pcc", // MobileAnnex
                 "Startup_DLC_CON_MP2_INT.pcc", // Retrieve
+                "BioP_MPCer.pcc" // SFXGameType_Horde_Operation
             };
 
             foreach (var package in me3Packages)

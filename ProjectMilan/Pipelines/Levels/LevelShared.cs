@@ -61,6 +61,7 @@ namespace ProjectMilan.Pipelines.Levels
             MEPackageHandler.CreateEmptyLevel(destPackagePath, MEGame.LE3);
 
             var destPackage = MEPackageHandler.OpenMEPackage(destPackagePath);
+            destPackage.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this file
             levelPipeline.LE3Packages[Path.GetFileNameWithoutExtension(destPackagePath)] = destPackage;
             if (sourcePackage == levelPipeline.ME3BioP)
             {

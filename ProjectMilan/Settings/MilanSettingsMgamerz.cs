@@ -9,7 +9,7 @@
         public bool RunMPLobbyClassesPipeline { get; set; } = true;
         public bool RunConfigPipeline { get; set; } = false;
         public bool RunKitsPipeline { get; set; } = true;
-        public bool RunLevelsPipeline { get; set; } = false;
+        public bool RunLevelsPipeline { get; set; } = true;
         public bool RunAudioPipeline { get; set; } = false;
         public bool RunTexturePipeline { get; set; }
     }

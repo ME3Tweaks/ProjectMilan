@@ -189,8 +189,8 @@ namespace ProjectMilan.Pipelines
             return Path.Combine(GetAutoDonorClassesPath(), package, className + ".uc");
         }
 
-        private const string MP_STARTUP_NAME = "Startup_MOD_Milan";
-        private const string MP_STARTUP_FILENAME = MP_STARTUP_NAME + ".pcc";
+        public const string MP_STARTUP_NAME = "Startup_MOD_ProjectMilan";
+        public const string MP_STARTUP_FILENAME = MP_STARTUP_NAME + ".pcc";
 
 
         /// <summary>
