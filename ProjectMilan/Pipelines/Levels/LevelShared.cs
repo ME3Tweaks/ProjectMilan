@@ -1,0 +1,198 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
+using LegendaryExplorerCore.Shaders;
+using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
+using ProjectMilan.Utility;
+
+namespace ProjectMilan.Pipelines.Levels
+{
+    public static class LevelShared
+    {
+        public static List<string> GetSublevelPackages(IMEPackage package)
+        {
+            if (package is MEPackage mePackage)
+            {
+                return mePackage.AdditionalPackagesToCook;
+            }
+
+            MilanLog.Error(@"Unsupported package type!");
+            return null;
+        }
+
+        public static ExportEntry CreateSPStartLocation(IMEPackage package, Point3D startLocation)
+        {
+            var pl = package.FindExport("TheWorld.PersistentLevel");
+            var startLoc = ExportCreator.CreateExport(package, "BioStartLocation", "BioStartLocation", pl);
+            startLoc.WriteProperty(new StructProperty("Vector", new PropertyCollection()
+            {
+                new FloatProperty(startLocation.X, "X"),
+                new FloatProperty(startLocation.Y, "Y"),
+                new FloatProperty(startLocation.Z, "Z"),
+            }, "location", true));
+
+
+            var collisionCylinder = ExportCreator.CreateExport(package, "CylinderComponent", "CylinderComponent", startLoc);
+            collisionCylinder.WritePrePropsAndProperties(new byte[4], collisionCylinder.GetProperties()); // Set up pre-prop binary
+
+            collisionCylinder.WriteProperty(new ObjectProperty(0, "ReplacementPrimitive"));
+            // Technically should do lighting channels.
+
+            startLoc.WriteProperty(new ObjectProperty(collisionCylinder, "CollisionComponent"));
+            startLoc.WriteProperty(new NameProperty("start_milanSP", "Tag"));
+
+
+
+            return startLoc;
+        }
+
+        public static IMEPackage PortLevel(LevelSpecificPipeline levelPipeline, IMEPackage sourcePackage)
+        {
+            var packageBaseName = Path.GetFileNameWithoutExtension(sourcePackage.FileNameNoExtension);
+            MilanLog.Information($"Porting level file {packageBaseName}.pcc", customPrefix: levelPipeline.LogCategory);
+
+            // The current level set file
+            var destPackagePath = Path.Combine(levelPipeline.LevelOutputDir, $"{packageBaseName}.pcc");
+            MEPackageHandler.CreateEmptyLevel(destPackagePath, MEGame.LE3);
+
+            var destPackage = MEPackageHandler.OpenMEPackage(destPackagePath);
+            levelPipeline.LE3Packages[Path.GetFileNameWithoutExtension(destPackagePath)] = destPackage;
+            if (sourcePackage == levelPipeline.ME3BioP)
+            {
+                // Mark the LE3 BioP
+                levelPipeline.LE3BioP = destPackage;
+            }
+
+            var destLevel = destPackage.FindExport(@"TheWorld.PersistentLevel");
+            var sourcePersistentLevel = sourcePackage.GetLevelBinary();
+            var levelObjects = sourcePersistentLevel.Actors.Where(x => x > 0).Select(x => sourcePackage.GetUExport(x)).ToList();
+
+            var model = levelObjects.FirstOrDefault(x => x.ClassName == @"Model");
+
+            if (model != null)
+            {
+                if (levelObjects.Count(x => x.ClassName == @"Model") == 1)
+                {
+                    model.indexValue = 4; // Match the dest package
+                }
+                else
+                {
+                    MilanLog.Warning(@"    HAVE TO FIX MODEL MANUALLY!!");
+                }
+            }
+            else
+            {
+                // No model. Might need hooked up in level?
+            }
+
+            //var staticMeshes = sourcePackage.Exports.Where(x =>
+            //        x.ClassName is @"StaticMeshActor"
+            //         or @"SkeletalMeshActor"
+
+            //         // LE3 ONLY
+            //         or @"BlockingVolume"
+            //         or @"InterpActor"
+            //         or @"HeightFog"
+            //         or @"LensFlareSource"
+            //         or @"DecalActor"
+            //         //or @"Emitter"
+            //         or @"StaticLightCollectionActor"
+            //         or @"StaticMeshCollectionActor")
+            //    .ToList();
+
+            var actors = sourcePackage.GetLevelBinary().Actors.Where(x =>
+            {
+                if (sourcePackage.TryGetUExport(x, out var exp))
+                {
+                    // Will be brought in automatically
+                    if (exp.ClassName == "Model") return false;
+                    if (exp.ClassName == "Polys") return false;
+
+                    // Already in the file
+                    if (exp.ClassName == "BioWorldInfo") return false;
+                    return true;
+                }
+
+                return false;
+            }).Select(x => sourcePackage.GetUExport(x));
+
+            foreach (var sm in actors)
+            {
+                // Ensure it's unique to the dest
+
+                if (destPackage.FindExport(sm.InstancedFullPath) != null)
+                {
+                    // Console.WriteLine($@" > Already exists: {sm.InstancedFullPath}");
+                }
+                else
+                {
+                    MilanLog.Information($"  Porting {sm.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
+                    var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, sm, destPackage, destLevel, true, new RelinkerOptionsPackage() { IsCrossGame = true, TargetGameDonorDB = MilanShared.LE3ObjectDB, Cache = levelPipeline.Cache }, out var _);
+                    if (badLinks.Any())
+                    {
+                        // uh oh
+                    }
+                }
+            }
+
+            // Sequencing needs ported over eventually. This controls the shuttle flying away. Requires MP classes though.
+
+            foreach (var export in destPackage.Exports)
+            {
+                var cachedDataVer = export.GetProperty<IntProperty>("CachedPhysBrushDataVersion");
+                if (cachedDataVer != null && cachedDataVer == 34079634) // OT version
+                {
+                    MilanLog.Information($"  Fixing collision data for {export.InstancedFullPath}");
+
+                    // Get rid of it
+                    //export.RemoveProperty("CachedPhysBrushDataVersion");
+                    //export.WriteBinary(BrushComponent.Create());
+
+                    // Change version
+                    cachedDataVer.Value = 34079762; // Newer version of PhysX?
+                    export.WriteProperty(cachedDataVer);
+                }
+            }
+
+            // Map the stuff in PersistentLevel
+            var destLevelBin = destPackage.GetLevelBinary();
+            if (sourcePersistentLevel.CoverListStart > 0)
+            {
+                destLevelBin.CoverListStart =
+                    destPackage.FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListStart).InstancedFullPath).UIndex;
+                destLevelBin.CoverListEnd = destPackage
+                    .FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListEnd).InstancedFullPath).UIndex;
+            }
+
+            if (sourcePersistentLevel.NavListStart > 0)
+            {
+                destLevelBin.NavListStart = destPackage
+                    .FindExport(sourcePackage.GetUExport(sourcePersistentLevel.NavListStart).InstancedFullPath).UIndex;
+                destLevelBin.NavListEnd = destPackage
+                    .FindExport(sourcePackage.GetUExport(sourcePersistentLevel.NavListEnd).InstancedFullPath).UIndex;
+            }
+
+            // NavRefs, CoverRefs
+            // CrossLevelActors
+            destPackage.GetLevel().WriteBinary(destLevelBin);
+
+            LevelTools.RebuildPersistentLevelChildren(destLevel);
+
+            MilanLog.Information($"  Saving ported package {packageBaseName}.pcc", customPrefix: levelPipeline.LogCategory);
+            destPackage.Save();
+
+            var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(destPackage);
+            foreach (var v in brokenMaterials)
+            {
+                MilanLog.Warning($@"  Material has no shader in game and will need donor: {v.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
+            }
+
+            return destPackage;
+        }
+    }
+}
