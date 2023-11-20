@@ -20,7 +20,7 @@ namespace ProjectMilan.Utility
             }
 
             bool result = true;
-            foreach (string file in Directory.GetFiles(targetDirectory))
+            foreach (string file in Directory.EnumerateFiles(targetDirectory))
             {
                 File.SetAttributes(file, FileAttributes.Normal); //remove read only
                 try

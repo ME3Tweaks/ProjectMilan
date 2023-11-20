@@ -64,11 +64,13 @@ namespace ProjectMilan.Pipelines
                 {
                     return MEPackageHandler.OpenMEPackageFromStream(dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName)), sourceFileName);
                 }
-                else
+                if (MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath2) && filePath2.Contains("\\DLC_"))
                 {
-                    MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
+                    // Unpacked DLC
+                    return MEPackageHandler.OpenMEPackage(filePath2);
                 }
 
+                MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
             }
 
             return null;
@@ -99,7 +101,7 @@ namespace ProjectMilan.Pipelines
 
         public static string GetAutoDonorClassesPath()
         {
-            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"AutoDonor");
+            return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"AutoDonor")).FullName;
         }
 
         public static string GetInjectedFunctionsPath(string className)
@@ -157,6 +159,28 @@ namespace ProjectMilan.Pipelines
             var path = Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"ClassOverride", $"{className}.uc");
             if (File.Exists(path))
                 return path;
+            return null;
+        }
+
+        public static MemoryStream GetME3SFARFile(string sourceFileName)
+        {
+            if (MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath))
+            {
+                return null; // Found on disk
+            }
+            else
+            {
+                // May be in SFAR
+                if (ME3DLCFileMap == null)
+                    LoadME3DLCTOCs();
+                if (ME3DLCFileMap.TryGetValue(sourceFileName, out var dlcPackage))
+                {
+                    MilanLog.Information($"Extracting {sourceFileName} from {dlcPackage.FileName}");
+                    return dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName));
+                }
+
+            }
+            MilanLog.Warning($"Could not locate ME3 DLC file: {sourceFileName}");
             return null;
         }
     }

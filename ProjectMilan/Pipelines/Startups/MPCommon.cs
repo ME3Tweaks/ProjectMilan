@@ -290,8 +290,13 @@ namespace ProjectMilan.Pipelines.Startups
                         MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}");
                         return donorEntry;
                     }
+                    else
+                    {
+                        MilanLog.Warning($"  LE3 donor package {possibleDonor} does not contain {ifp}");
+                    }
                 }
             }
+            MilanLog.Error($"Unable to find object {ifp} in {possibleDonors.Count} packages!");
             return null;
         }
 

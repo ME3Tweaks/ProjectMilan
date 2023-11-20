@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProjectMilan.Pipelines.Startups;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ namespace ProjectMilan.Pipelines.Texture
     /// </summary>
     internal class TFCBuild
     {
+        private const string LOG_CATEGORY = @"MILAN-Texture";
         // Expected pipeline:
         // 1. Go through ME3 package files and find all used Texture2Ds that are not in LE (using object database?). Hopefully things did not get renamed.
         // 2. Make LE3 package file that will be the 'host' for all textures during build (LE1R/LE2R uses this and it works well) - called TFCPackage
@@ -19,9 +21,19 @@ namespace ProjectMilan.Pipelines.Texture
         //        -> During this step it will build the TFC
         // 5. Run a pass over the compiled DLC and replace all stubbed textures with versions from TFCPackage.
         // This pipeline must be run after level and kit compiler
+
         public static void RunPipeline()
         {
+            InternalRunPipeline();
+        }
 
+        private static void InternalRunPipeline()
+        {
+            // Setup pipeline
+            MPCommonPipelineVars vars = new MPCommonPipelineVars()
+            {
+                OutputPath = Path.Combine(Program.Settings.OutputPath, "LE3", "MPCommon")
+            };
         }
     }
 }

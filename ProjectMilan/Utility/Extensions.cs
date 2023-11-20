@@ -4,6 +4,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Utility
 {
@@ -22,6 +24,19 @@ namespace ProjectMilan.Utility
             decomp.CopyTo(ms);
             ms.Position = 0;
             return ms;
+        }
+    }
+
+    public static class PackageExtensions
+    {
+        public static ExportEntry GetLevel(this IMEPackage package)
+        {
+            return package.FindExport("TheWorld.PersistentLevel");
+        }
+
+        public static Level GetLevelBinary(this IMEPackage package)
+        {
+            return ObjectBinary.From<Level>(package.GetLevel());
         }
     }
 }
