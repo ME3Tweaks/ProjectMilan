@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
@@ -53,17 +54,33 @@ namespace ProjectMilan.Pipelines.Startups
         // MP5 is a superset of MP4 but doesn't seem to activate the new features if MP4 is not installed... I think.
         // There are some startup files for each MP DLC. They probably will need loaded.
 
+        /// <summary>
+        /// Global lookup for LE3
+        /// </summary>
+        public static PackageCache LE3GlobalCache { get; set; }
+
+        /// <summary>
+        /// Global lookup for ME3
+        /// </summary>
+        public static PackageCache ME3GlobalCache { get; set; }
 
         public static void RunPipeline()
         {
             // Setup pipeline
+            ME3GlobalCache = new PackageCache();
+            LE3GlobalCache = new PackageCache();
             MPCommonPipelineVars vars = new MPCommonPipelineVars()
             {
                 OutputPath = Path.Combine(Program.Settings.OutputPath, "LE3", "MPCommon")
             };
 
             InternalRunPipeline(vars);
+
+            ME3GlobalCache.Dispose();
+            LE3GlobalCache.Dispose();
         }
+
+
 
         private static void InternalRunPipeline(MPCommonPipelineVars vars)
         {
@@ -300,12 +317,11 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static IEntry MissingObjectResolver(IMEPackage package, string ifp)
         {
-            Debug.WriteLine($"Missing object: {ifp}");
-
             var possibleDonors = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
             if (possibleDonors == null)
             {
-                MilanLog.Error($"Object '{ifp}' does not exist in LE3! We need to make a donor for this.");
+                // ME3 port
+                MilanLog.Error($"Object '{ifp}' does not exist in LE3! We need to make a donor for this.", customPrefix: LOG_CATEGORY);
                 var originalGameDonors = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
                 originalGameDonors = originalGameDonors.Select(x => Path.GetFileName(x)).ToList(); // we don't care about paths.
                 originalGameDonors.Sort(new ObjectSourceTierComparer());
@@ -317,8 +333,8 @@ namespace ProjectMilan.Pipelines.Startups
                         var donorEntry = donorP.FindEntry(ifp);
                         if (donorEntry != null)
                         {
-                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}");
-                            return donorEntry;
+                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY);
+                            return PortDonorIntoPackage(ME3GlobalCache, donorEntry, package);
                         }
                     }
                 }
@@ -339,16 +355,33 @@ namespace ProjectMilan.Pipelines.Startups
                     var donorEntry = donorP.FindEntry(ifp);
                     if (donorEntry != null)
                     {
-                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}");
-                        return donorEntry;
+                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY);
+                        return PortDonorIntoPackage(LE3GlobalCache, donorEntry, package);
                     }
                     else
                     {
-                        MilanLog.Warning($"  LE3 donor package {possibleDonor} does not contain {ifp}");
+                        MilanLog.Warning($"  LE3 donor package {possibleDonor} does not contain {ifp}", customPrefix: LOG_CATEGORY);
                     }
                 }
             }
-            MilanLog.Error($"Unable to find object {ifp} in {possibleDonors.Count} packages!");
+            MilanLog.Error($"Unable to find object {ifp} in {possibleDonors.Count} packages!", customPrefix: LOG_CATEGORY);
+            return null;
+        }
+
+        private static IEntry PortDonorIntoPackage(PackageCache globalCache, IEntry donorEntry, IMEPackage package)
+        {
+
+            if (donorEntry is ImportEntry donorImport)
+            {
+                // uh
+            }
+            else if (donorEntry is ExportEntry donorExport)
+            {
+                MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+                var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, globalCache);
+                return newExp;
+            }
+
             return null;
         }
 
