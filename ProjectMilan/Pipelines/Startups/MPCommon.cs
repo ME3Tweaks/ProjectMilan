@@ -386,7 +386,7 @@ namespace ProjectMilan.Pipelines.Startups
             MilanLog.Information($"Decompiling {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
             if (usingTestPatch)
             {
-                MilanLog.Information($@"Using DLC_TestPatch version of {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                MilanLog.Information($@"  Using DLC_TestPatch version of {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
             }
             if (fileLib == null)
             {
