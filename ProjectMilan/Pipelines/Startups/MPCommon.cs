@@ -130,9 +130,10 @@ namespace ProjectMilan.Pipelines.Startups
             foreach (string ucFilePath in Directory.EnumerateFiles(classFolder, "*.uc", SearchOption.AllDirectories).Concat(
                          Directory.EnumerateFiles(MilanShared.GetAutoDonorClassesPath(), "*.uc", SearchOption.AllDirectories)))
             {
-                string source = File.ReadAllText(ucFilePath);
+                var overridePath = MilanShared.GetClassOverride(Path.GetFileNameWithoutExtension(ucFilePath));
+                string source = File.ReadAllText(overridePath ?? ucFilePath);
                 //files must be named Classname.uc
-                classes.Add(new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(ucFilePath), source, ucFilePath));
+                classes.Add(new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(ucFilePath), source, overridePath ?? ucFilePath));
             }
 
             using IMEPackage pcc = MEPackageHandler.CreateAndOpenPackage(packagePath, MEGame.LE3);
@@ -176,6 +177,7 @@ namespace ProjectMilan.Pipelines.Startups
             var commonBasePackages = new[]
             {
                 null,
+                "SFXGame",
                 "SFXGameContent",
                 "SFXGameMPContent",
             };
@@ -204,7 +206,7 @@ namespace ProjectMilan.Pipelines.Startups
                 else
                 {
                     // It's something else...
-                    return false;
+                    continue;
                 }
 
                 className = className.Substring(0, className.IndexOf('\''));
