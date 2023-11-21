@@ -20,6 +20,27 @@
 		</Section>
 
 
+		<!-- MP MAPS-->
+		<Section name="sfxgamempcontent.sfxprimp">
+			<Property name="mapsettings">
+				<!-- MP1-->
+				<Value type="3">(MapName="BioP_MPMoon",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_InnerCouncil,ZoneIncrease=7)</Value>
+				<Value type="3">(MapName="BioP_MPGeth",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Attican,ZoneIncrease=7)</Value>
+			</Property>
+		</Section>
+		<Section name="sfxonlinefoundation.sfxonlinegamesettings">
+			<Property name="availablemaps">
+				<!-- MP1-->
+				<Value type="3">BioP_MPGeth</Value>
+				<Value type="3">BioP_MPMoon</Value>
+			</Property>
+			<Property name="mastermaplist">
+				<!-- MP1-->
+				<Value type="3">(ID=9, PackageName="BioP_MPMoon", PrettyName=727479, Description=, Image="DLC_MPImages.Map.OptMapMoon", GalaxyAtWarMapPosition=(X=170,Y=420), GalaxyAtWarMapSubtitle=506972, MusicEventName="Set_mus_map_mpslum")</Value>
+				<Value type="3">(ID=10, PackageName="BioP_MPGeth", PrettyName=728069, Description=, Image="DLC_MPImages.Map.OptMapGeth", GalaxyAtWarMapPosition=(X=435,Y=211), GalaxyAtWarMapSubtitle=326824, MusicEventName="Set_mus_map_mpdish")</Value>
+			</Property>
+		</Section>
+
 		<Section name="sfxgame.sfxaccomplishmentmanager">
 			<Property name="accomplishmentprogressdata">
 				<!-- Unsure if we need to clear this list so it's in order.-->

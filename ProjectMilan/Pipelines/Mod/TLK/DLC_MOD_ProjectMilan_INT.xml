@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tlkFile TLKToolVersion="4.0.0.0">
+    <!--Male entries section begin-->
+    <String id="49875622">Project Milan DLC</String>
+    <String id="49875623">DLC_MOD_ProjectMilan</String>
+    <String id="49875624">en-us</String>
+    <String id="49875625">Male</String>
+    <!--Male entries section end-->
+    <!--Female entries section begin-->
+    <String id="49875625">Female</String>
+    <!--Female entries section end-->
+</tlkFile>
