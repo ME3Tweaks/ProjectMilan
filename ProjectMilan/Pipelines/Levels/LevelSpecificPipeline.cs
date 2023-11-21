@@ -25,9 +25,14 @@ namespace ProjectMilan.Pipelines.Levels
         public bool Enabled { get; set; }
 
         /// <summary>
+        /// Which function should run before porting the level - after default precorrections
+        /// </summary>
+        public Action<LevelSpecificPipeline> SpecialPrePortingDelegate { get; set; }
+
+        /// <summary>
         /// Which function should run to port the level
         /// </summary>
-        public Action<string> SpecialPortingDelegate { get; set; }
+        public Action SpecialPortingDelegate { get; set; }
 
         /// <summary>
         /// Map of filename -> loaded ME3 packages
@@ -64,7 +69,7 @@ namespace ProjectMilan.Pipelines.Levels
         /// Level output directory
         /// </summary>
 
-        public string LevelOutputDir => Path.Combine(Program.Settings.OutputModPath, @"LE3", @"Levels", BioP);
+        public string LevelOutputDir => Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Levels", BioP);
 
         /// <summary>
         /// Pipeline package cache

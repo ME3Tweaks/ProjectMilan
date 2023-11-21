@@ -71,7 +71,8 @@ namespace ProjectMilan.Pipelines.Startups
             LE3GlobalCache = new PackageCache();
             MPCommonPipelineVars vars = new MPCommonPipelineVars()
             {
-                OutputPath = Path.Combine(Program.Settings.OutputModPath, "LE3", "MPCommon")
+                // This used to be different
+                OutputPath = Program.Settings.OutputModPath
             };
 
             InternalRunPipeline(vars);
@@ -170,7 +171,7 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             MilanLog.Information(@"Compiling LE3 class package", customPrefix: LOG_CATEGORY);
-            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(pcc, looseClassPackages, MissingObjectResolver);
+            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(pcc, looseClassPackages, MissingObjectResolver, cache: cache);
 
             if (log.HasErrors)
             {
@@ -378,7 +379,7 @@ namespace ProjectMilan.Pipelines.Startups
             else if (donorEntry is ExportEntry donorExport)
             {
                 MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
-                var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, globalCache);
+                var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, packageCache: globalCache);
                 return newExp;
             }
 
@@ -454,7 +455,7 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             // Attempt compile
-            var outPackage = Path.Combine(Program.Settings.OutputModPath, Path.Combine(vars.OutputPath, "Startup_MOD_ProjectMilan.pcc"));
+            var outPackage = Path.Combine(Program.Settings.OutputModPath, Path.Combine(vars.OutputPath, @"CookedPCConsole", MilanShared.MP_STARTUP_FILENAME));
 
             while (CompilePackage(GetMPClassesFolder(), outPackage, cache))
             {
@@ -628,7 +629,7 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static string GetMPClassesFolder()
         {
-            return Path.Combine(Program.Settings.OutputModPath, "ME3", "Classes");
+            return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"LooseClasses", @"MPCommon")).FullName;
         }
     }
 }

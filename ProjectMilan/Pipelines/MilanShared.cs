@@ -189,7 +189,7 @@ namespace ProjectMilan.Pipelines
             return Path.Combine(GetAutoDonorClassesPath(), package, className + ".uc");
         }
 
-        public const string MP_STARTUP_NAME = "Startup_MOD_ProjectMilan";
+        public const string MP_STARTUP_NAME = "BIOP_MP_COMMON";
         public const string MP_STARTUP_FILENAME = MP_STARTUP_NAME + ".pcc";
 
 

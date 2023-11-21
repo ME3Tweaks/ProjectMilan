@@ -8,6 +8,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Utility;
 
@@ -53,6 +54,8 @@ namespace ProjectMilan.Pipelines.Levels
 
                 // MP5 Reckoning
                 // No maps
+                // We use MPLobby.pcc level from here
+                new LevelSpecificPipeline() { BioP="MPLobby", Enabled=true, SpecialPrePortingDelegate = MPLobbySpecific.PreCorrect}, 
 
                 // Prototype and unused maps
                 // These are named that were assigned to the maps for ModMaker
@@ -127,7 +130,7 @@ namespace ProjectMilan.Pipelines.Levels
             // Initialize cache
             levelPipeline.Cache = new PackageCache();
 
-            var outputPath = Path.Combine(Program.Settings.OutputModPath, @"LE3", @"Levels", levelPipeline.BioP);
+            var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Levels", levelPipeline.BioP);
             Directory.CreateDirectory(outputPath);
 
             // Get BioP package
@@ -138,10 +141,13 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Get list of subpackages
             var subLevels = LevelShared.GetSublevelPackages(me3BioP);
-            foreach (var level in subLevels)
+            if (subLevels != null)
             {
-                MilanLog.Information($"Loading sublevel package {level}", customPrefix: levelPipeline.LogCategory);
-                levelPipeline.ME3Packages[level] = MilanShared.GetME3Package($"{level}.pcc");
+                foreach (var level in subLevels)
+                {
+                    MilanLog.Information($"Loading sublevel package {level}", customPrefix: levelPipeline.LogCategory);
+                    levelPipeline.ME3Packages[level] = MilanShared.GetME3Package($"{level}.pcc");
+                }
             }
 
             PrecorrectPackages(levelPipeline);
@@ -186,7 +192,11 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Port over the BioTriggerStream
             var bts = levelPipeline.ME3BioP.Exports.FirstOrDefault(x => x.ClassName == @"BioTriggerStream");
-            EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, bts, levelPipeline.LE3BioP, destPersistentLevel, true, new RelinkerOptionsPackage(), out var portedBts);
+            if (bts != null)
+            {
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, bts,
+                    levelPipeline.LE3BioP, destPersistentLevel, true, new RelinkerOptionsPackage(), out var portedBts);
+            }
 
             // Set the KillZ
             var sourceKillZ = levelPipeline.ME3BioP.GetBioWorldInfo().GetProperty<FloatProperty>("KillZ");
@@ -268,15 +278,29 @@ namespace ProjectMilan.Pipelines.Levels
 
                 // Convert game modes to imports as that's how they will be in the target game
                 var biop = levelPipeline.ME3BioP;
-                var infoMP = biop.FindExport("SFXGameMPContent.SFXGameInfoMP");
-                var hordeGameType = biop.FindExport("SFXGameMPContent.SFXGameType_Horde_Operation");
+                var bwi = biop.GetBioWorldInfo();
+                var gameTypes = bwi.GetProperty<ArrayProperty<ObjectProperty>>("GameTypesSupportedOnThisMap");
+                if (gameTypes != null)
+                {
+                    List<IEntry> newTypes = new List<IEntry>();
+                    foreach (var gameType in gameTypes)
+                    {
+                        var entry = gameType.ResolveToEntry(biop);
+                        if (entry is ImportEntry)
+                            continue; // Don't care
+                        if (entry is ExportEntry exp)
+                        {
+                            newTypes.Add(EntryImporter.ConvertExportToImport(exp));
+                        }
+                    }
 
-                if (infoMP != null)
-                    EntryImporter.ConvertExportToImport(infoMP);
-                if (hordeGameType != null)
-                    EntryImporter.ConvertExportToImport(hordeGameType);
-
+                    // Write it back
+                    bwi.WriteProperty(new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
+                    { Values = newTypes.Select(x => new ObjectProperty(x)).ToList() });
+                }
             }
+
+            levelPipeline.SpecialPrePortingDelegate?.Invoke(levelPipeline);
         }
     }
 }

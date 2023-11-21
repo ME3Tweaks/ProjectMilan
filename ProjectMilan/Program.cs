@@ -3,10 +3,10 @@ using LegendaryExplorerCore;
 using LegendaryExplorerCore.Packages;
 using Newtonsoft.Json;
 using ProjectMilan.Pipelines.Audio;
-using ProjectMilan.Pipelines.Config;
 using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
+using ProjectMilan.Pipelines.Mod;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Settings;
@@ -44,6 +44,8 @@ namespace ProjectMilan
             MilanLog.Information("Welcome to Project Milan");
             Settings = LoadSettingsConfig(obj);
 
+            VerifySettings();
+
             // Cleanup output directory before we start
             if (Directory.Exists(Settings.OutputModPath))
             {
@@ -61,6 +63,16 @@ namespace ProjectMilan
             RunPipelines();
         }
 
+        private static void VerifySettings()
+        {
+            if (Settings.OutputModPath == null || Path.GetFileName(Settings.OutputModPath) != @"DLC_MOD_ProjectMilan")
+            {
+                MilanLog.Error($"Output directory must be named 'DLC_MOD_ProjectMilan', point it to either mod in M3 mod library or DLC folder in-game (yours: {Path.GetFileName(Settings.OutputModPath)})");
+                Environment.Exit(1);
+                return;
+            }
+        }
+
         private static IMilanSettings LoadSettingsConfig(CLIOptions cliOptions) => cliOptions.Config.ToLower() switch
         {
             "mgamerz" => new MilanSettingsMgamerz(),
@@ -74,12 +86,18 @@ namespace ProjectMilan
         static void RunPipelines()
         {
             MilanInit.Init(); // Initialize shared pipeline data
-            RunPipeline(Settings.RunConfigPipeline, MPConfig.RunPipeline, "Config");
-            RunPipeline(Settings.RunMPLobbyClassesPipeline, MPCommon.RunPipeline, "MPLobby");
-            RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits");
-            RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels");
-            RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture");
-            RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio");
+
+            // Pre-build pipelines
+            RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
+            RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
+
+            // Content build pipelines
+            RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
+            RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
+
+            // Post-build pipelines
+            RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
+            RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio"); // Fixes audio
         }
 
         /// <summary>

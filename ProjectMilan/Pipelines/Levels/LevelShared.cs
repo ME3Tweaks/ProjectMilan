@@ -56,6 +56,8 @@ namespace ProjectMilan.Pipelines.Levels
             var packageBaseName = Path.GetFileNameWithoutExtension(sourcePackage.FileNameNoExtension);
             MilanLog.Information($"Porting level file {packageBaseName}.pcc", customPrefix: levelPipeline.LogCategory);
 
+            Directory.CreateDirectory(levelPipeline.LevelOutputDir);
+
             // The current level set file
             var destPackagePath = Path.Combine(levelPipeline.LevelOutputDir, $"{packageBaseName}.pcc");
             MEPackageHandler.CreateEmptyLevel(destPackagePath, MEGame.LE3);
