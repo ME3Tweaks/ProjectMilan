@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioUI" name="bioui.ini" source="..\..\biogame\config\bioui.ini">
+	<Sections>
+		<!-- Skipping things related to MP voice chat. Not worth our time. -->
+
+	</Sections>
+</CoalesceAsset>

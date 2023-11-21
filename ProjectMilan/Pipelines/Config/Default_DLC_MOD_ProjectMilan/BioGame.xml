@@ -1,0 +1,302 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioGame" name="biogame.ini" source="..\..\biogame\config\biogame.ini">
+	<Sections>
+		<Section name="engine.gameinfo">
+			<Property name="defaultmapprefixes">
+				<!-- Remove this so we have correct ordering-->
+				<Value type="4">(Prefix="Bio",bUsesCommonPackage=TRUE,GameType="SFXGameContent.SFXGameInfoSP",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
+				<Value type="3">(Prefix="BioP_MP",bIsMultiplayer=TRUE,bUsesCommonPackage=TRUE,GameType="SFXGameMPContent.SFXGameType_Horde_Operation",AdditionalGameTypes=("SFXGameContent.SFXGameInfoSP"),ForcedObjects=("BioGlobalResources.BioGlobalResources","BioGlobalResources.BioGlobalMPResources"))</Value>
+				<!-- Put below BioP_MPt-->
+				<Value type="3">(Prefix="Bio",bUsesCommonPackage=TRUE,GameType="SFXGameContent.SFXGameInfoSP",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
+				<Value type="3">(Prefix="MPLobby",bIsMultiplayer=TRUE,bUsesCommonPackage=TRUE,GameType="SFXGameMPContent.SFXGameInfoMP_Lobby",OverrideCommonPackage="BIOP_MP_COMMON",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
+			</Property>
+			<Property name="gameinfoclassaliases">
+				<Value type="3">(ShortName="MP",GameClassName="SFXGameMPContent.SFXGameType_Horde_Operation")</Value>
+				<Value type="3">(ShortName="MPLobby",GameClassName="SFXGameMPContent.SFXGameInfoMP_Lobby")</Value>
+				<!-- Unsure if these are used. -->
+				<Value type="3">(ShortName="MPHordeOnly",GameClassName="SFXGameMPContent.SFXGameType_Horde")</Value>
+				<Value type="3">(ShortName="MPNoEnemies",GameClassName="SFXGameMPContent.SFXGameInfoMP")</Value>
+			</Property>
+		</Section>
+
+
+		<Section name="sfxgame.sfxaccomplishmentmanager">
+			<Property name="accomplishmentprogressdata">
+				<!-- Unsure if we need to clear this list so it's in order.-->
+				<Value type="3">(Index=2,Name=LEVELCOUNT, LinkedProfileSetting=Setting_SPLevel)</Value>
+				<Value type="3">(Index=3,Name=MPLEVELCOUNT)</Value>
+				<Value type="3">(Index=4,Name=KILLCOUNT, LinkedProfileSetting=Setting_NumKills)</Value>
+				<Value type="3">(Index=5,Name=MELEEKILLCOUNT, LinkedProfileSetting=Setting_NumMeleeKills)</Value>
+				
+				<Value type="3">(Index=11,Name=SPPLAYEDMAPS, LinkedProfileSetting=Setting_SPMaps)</Value>
+				<Value type="3">(Index=12,Name=SPMAPSCOUNT, LinkedProfileSetting=Setting_SPMapsCount)</Value>
+				<Value type="3">(Index=13,Name=MPPLAYEDMAPS)</Value>
+				<Value type="3">(Index=14,Name=MPMAPSCOUNT)</Value>
+				<Value type="3">(Index=15,Name=SPPLAYEDMAPSINSANE, LinkedProfileSetting=Setting_SPMapsInsane)</Value>
+				<Value type="3">(Index=16,Name=SPMAPSINSANECOUNT, LinkedProfileSetting=Setting_SPMapsInsaneCount)</Value>
+				<Value type="3">(Index=17,Name=MPPLAYEDMAPSGOLD)</Value>
+				<Value type="3">(Index=18,Name=MPMAPSGOLDCOUNT)</Value>
+			</Property>
+
+			<!-- skipping grinderaccomplishmentdata -->
+		</Section>
+		<Section name="sfxgamempcontent.sfxplayercustomizationmp">
+			<Property name="emissiveappearances">
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=1.000000, B=0.000000,A=1.000000),ParameterName="Emissive")),Id=0,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=0.000000, B=0.000000,A=1.000000),ParameterName="Emissive")),Id=1,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.952941, G=0.396078, B=0.137255,A=1.000000),ParameterName="Emissive")),Id=2,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.650980, B=0.321569,A=1.000000),ParameterName="Emissive")),Id=3,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.572549, G=0.152941, B=0.560784,A=1.000000),ParameterName="Emissive")),Id=4,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=0.000000, B=1.000000,A=1.000000),ParameterName="Emissive")),Id=5,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.996078, G=0.949020, B=0.000000,A=1.000000),ParameterName="Emissive")),Id=6,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.678431, B=0.937255,A=1.000000),ParameterName="Emissive")),Id=7,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=1.000000, B=1.000000,A=1.000000),ParameterName="Emissive")),Id=8,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=1.000000, B=1.000000,A=1.000000),ParameterName="Emissive")),Id=9,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.000000, B=0.000000,A=1.000000),ParameterName="Emissive")),Id=10,Type=CustomizableType_Tint))</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.000000, B=1.000000,A=1.000000),ParameterName="Emissive")),Id=11,Type=CustomizableType_Tint))</Value>
+			</Property>
+			<Property name="patternappearances">
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_01"),Stripe2Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_02"),Stripe3Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_03")),Id=0,Type=CustomizableType_Pattern)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=1.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_01"),Stripe2Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_02"),Stripe3Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_03")),Id=1,Type=CustomizableType_Pattern)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000,G=1.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_01"),Stripe2Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_02"),Stripe3Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_03")),Id=2,Type=CustomizableType_Pattern)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000,G=0.000000,B=1.000000,A=1.000000),ParameterName="Stripe_Parameter_01"),Stripe2Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_02"),Stripe3Param=(ParameterValue=(R=0.000000,G=0.000000,B=0.000000,A=1.000000),ParameterName="Stripe_Parameter_03")),Id=3,Type=CustomizableType_Pattern)</Value>
+			</Property>
+			<Property name="patterncolorappearances">
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.478431, G=0.000000, B=0.003922,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.478431, G=0.000000, B=0.003922,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.478431, G=0.000000, B=0.003922,A=1.000000),ParameterName="Stripe_Color_03")),Id=0,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.929412, G=0.105882, B=0.141176,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.929412, G=0.105882, B=0.141176,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.929412, G=0.105882, B=0.141176,A=1.000000),ParameterName="Stripe_Color_03")),Id=1,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.964706, G=0.592157, B=0.474510,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.964706, G=0.592157, B=0.474510,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.964706, G=0.592157, B=0.474510,A=1.000000),ParameterName="Stripe_Color_03")),Id=2,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.482353, G=0.180392, B=0.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.482353, G=0.180392, B=0.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.482353, G=0.180392, B=0.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=3,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.952941, G=0.396078, B=0.137255,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.952941, G=0.396078, B=0.137255,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.952941, G=0.396078, B=0.137255,A=1.000000),ParameterName="Stripe_Color_03")),Id=4,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.980392, G=0.678431, B=0.505882,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.980392, G=0.678431, B=0.505882,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.980392, G=0.678431, B=0.505882,A=1.000000),ParameterName="Stripe_Color_03")),Id=5,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.490196, G=0.286275, B=0.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.490196, G=0.286275, B=0.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.490196, G=0.286275, B=0.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=6,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.968627, G=0.580392, B=0.113725,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.968627, G=0.580392, B=0.113725,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.968627, G=0.580392, B=0.113725,A=1.000000),ParameterName="Stripe_Color_03")),Id=7,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.992157, G=0.780392, B=0.545098,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.992157, G=0.780392, B=0.545098,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.992157, G=0.780392, B=0.545098,A=1.000000),ParameterName="Stripe_Color_03")),Id=8,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.513725, G=0.482353, B=0.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.513725, G=0.482353, B=0.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.513725, G=0.482353, B=0.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=9,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.996078, G=0.949020, B=0.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.996078, G=0.949020, B=0.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.996078, G=0.949020, B=0.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=10,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=1.000000, G=0.968627, B=0.603922,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=1.000000, G=0.968627, B=0.603922,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=1.000000, G=0.968627, B=0.603922,A=1.000000),ParameterName="Stripe_Color_03")),Id=11,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.250980, G=0.403922, B=0.094118,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.250980, G=0.403922, B=0.094118,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.250980, G=0.403922, B=0.094118,A=1.000000),ParameterName="Stripe_Color_03")),Id=12,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.552941, G=0.780392, B=0.247059,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.552941, G=0.780392, B=0.247059,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.552941, G=0.780392, B=0.247059,A=1.000000),ParameterName="Stripe_Color_03")),Id=13,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.768627, G=0.874510, B=0.611765,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.768627, G=0.874510, B=0.611765,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.768627, G=0.874510, B=0.611765,A=1.000000),ParameterName="Stripe_Color_03")),Id=14,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=0.368627, B=0.125490,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=0.368627, B=0.125490,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=0.368627, B=0.125490,A=1.000000),ParameterName="Stripe_Color_03")),Id=15,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.227451, G=0.709804, B=0.290196,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.227451, G=0.709804, B=0.290196,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.227451, G=0.709804, B=0.290196,A=1.000000),ParameterName="Stripe_Color_03")),Id=16,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.635294, G=0.827451, B=0.611765,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.635294, G=0.827451, B=0.611765,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.635294, G=0.827451, B=0.611765,A=1.000000),ParameterName="Stripe_Color_03")),Id=17,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=0.349020, B=0.325490,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=0.349020, B=0.325490,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=0.349020, B=0.325490,A=1.000000),ParameterName="Stripe_Color_03")),Id=18,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.003922, G=0.658824, B=0.619608,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.003922, G=0.658824, B=0.619608,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.003922, G=0.658824, B=0.619608,A=1.000000),ParameterName="Stripe_Color_03")),Id=19,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.482353, G=0.803922, B=0.780392,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.482353, G=0.803922, B=0.780392,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.482353, G=0.803922, B=0.780392,A=1.000000),ParameterName="Stripe_Color_03")),Id=20,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=1.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=1.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=1.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=21,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=0.650980, B=0.321569,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=0.650980, B=0.321569,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=0.650980, B=0.321569,A=1.000000),ParameterName="Stripe_Color_03")),Id=22,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=1.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=1.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=1.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=23,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=0.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=0.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=0.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=24,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=1.000000, G=0.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=1.000000, G=0.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=1.000000, G=0.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=25,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=1.000000, G=0.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=1.000000, G=0.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=1.000000, G=0.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=26,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.003922, G=0.356863, B=0.494118,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.003922, G=0.356863, B=0.494118,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.003922, G=0.356863, B=0.494118,A=1.000000),ParameterName="Stripe_Color_03")),Id=27,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=0.678431, B=0.937255,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=0.678431, B=0.937255,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=0.678431, B=0.937255,A=1.000000),ParameterName="Stripe_Color_03")),Id=28,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.431373, G=0.815686, B=0.968627,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.431373, G=0.815686, B=0.968627,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.431373, G=0.815686, B=0.968627,A=1.000000),ParameterName="Stripe_Color_03")),Id=29,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=0.211765, B=0.392157,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=0.211765, B=0.392157,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=0.211765, B=0.392157,A=1.000000),ParameterName="Stripe_Color_03")),Id=30,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=0.447059, B=0.733333,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=0.447059, B=0.733333,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=0.447059, B=0.733333,A=1.000000),ParameterName="Stripe_Color_03")),Id=31,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.494118, G=0.650980, B=0.843137,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.494118, G=0.650980, B=0.843137,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.494118, G=0.650980, B=0.843137,A=1.000000),ParameterName="Stripe_Color_03")),Id=32,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.050980, G=0.003922, B=0.301961,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.050980, G=0.003922, B=0.301961,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.050980, G=0.003922, B=0.301961,A=1.000000),ParameterName="Stripe_Color_03")),Id=33,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.180392, G=0.192157, B=0.572549,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.180392, G=0.192157, B=0.572549,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.180392, G=0.192157, B=0.572549,A=1.000000),ParameterName="Stripe_Color_03")),Id=34,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.533333, G=0.509804, B=0.745098,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.533333, G=0.509804, B=0.745098,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.533333, G=0.509804, B=0.745098,A=1.000000),ParameterName="Stripe_Color_03")),Id=35,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.200000, G=0.000000, B=0.294118,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.200000, G=0.000000, B=0.294118,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.200000, G=0.000000, B=0.294118,A=1.000000),ParameterName="Stripe_Color_03")),Id=36,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.400000, G=0.180392, B=0.568627,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.400000, G=0.180392, B=0.568627,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.400000, G=0.180392, B=0.568627,A=1.000000),ParameterName="Stripe_Color_03")),Id=37,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.635294, G=0.529412, B=0.745098,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.635294, G=0.529412, B=0.745098,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.635294, G=0.529412, B=0.745098,A=1.000000),ParameterName="Stripe_Color_03")),Id=38,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.298039, G=0.000000, B=0.290196,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.298039, G=0.000000, B=0.290196,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.298039, G=0.000000, B=0.290196,A=1.000000),ParameterName="Stripe_Color_03")),Id=39,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.572549, G=0.152941, B=0.560784,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.572549, G=0.152941, B=0.560784,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.572549, G=0.152941, B=0.560784,A=1.000000),ParameterName="Stripe_Color_03")),Id=40,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.737255, G=0.556863, B=0.749020,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.737255, G=0.556863, B=0.749020,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.737255, G=0.556863, B=0.749020,A=1.000000),ParameterName="Stripe_Color_03")),Id=41,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.478431, G=0.000000, B=0.145098,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.478431, G=0.000000, B=0.145098,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.478431, G=0.000000, B=0.145098,A=1.000000),ParameterName="Stripe_Color_03")),Id=42,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.929412, G=0.078431, B=0.356863,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.929412, G=0.078431, B=0.356863,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.929412, G=0.078431, B=0.356863,A=1.000000),ParameterName="Stripe_Color_03")),Id=43,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.968627, G=0.596078, B=0.619608,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.968627, G=0.596078, B=0.619608,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.968627, G=0.596078, B=0.619608,A=1.000000),ParameterName="Stripe_Color_03")),Id=44,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.000000, G=0.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.000000, G=0.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.000000, G=0.000000, B=0.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=45,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.384314, G=0.384314, B=0.384314,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.384314, G=0.384314, B=0.384314,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.384314, G=0.384314, B=0.384314,A=1.000000),ParameterName="Stripe_Color_03")),Id=46,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=1.000000, G=1.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=1.000000, G=1.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=1.000000, G=1.000000, B=1.000000,A=1.000000),ParameterName="Stripe_Color_03")),Id=47,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.219608, G=0.188235, B=0.176471,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.219608, G=0.188235, B=0.176471,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.219608, G=0.188235, B=0.176471,A=1.000000),ParameterName="Stripe_Color_03")),Id=48,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.450980, G=0.388235, B=0.337255,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.450980, G=0.388235, B=0.337255,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.450980, G=0.388235, B=0.337255,A=1.000000),ParameterName="Stripe_Color_03")),Id=49,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.780392, G=0.694118, B=0.600000,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.780392, G=0.694118, B=0.600000,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.780392, G=0.694118, B=0.600000,A=1.000000),ParameterName="Stripe_Color_03")),Id=50,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.376471, G=0.223529, B=0.070588,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.376471, G=0.223529, B=0.070588,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.376471, G=0.223529, B=0.070588,A=1.000000),ParameterName="Stripe_Color_03")),Id=51,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.549020, G=0.384314, B=0.219608,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.549020, G=0.384314, B=0.219608,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.549020, G=0.384314, B=0.219608,A=1.000000),ParameterName="Stripe_Color_03")),Id=52,Type=CustomizableType_PatternColor)</Value>
+				<Value type="2">(Pattern=(Stripe1Param=(ParameterValue=(R=0.776471, G=0.607843, B=0.431373,A=1.000000),ParameterName="Stripe_Color_01"),Stripe2Param=(ParameterValue=(R=0.776471, G=0.607843, B=0.431373,A=1.000000),ParameterName="Stripe_Color_02"),Stripe3Param=(ParameterValue=(R=0.776471, G=0.607843, B=0.431373,A=1.000000),ParameterName="Stripe_Color_03")),Id=53,Type=CustomizableType_PatternColor)</Value>
+			</Property>
+			<Property name="phongappearances">
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.478431, G=0.000000, B=0.003922, A=1.000000),ParameterName="Phong_Spec_Color")),Id=0,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.929412, G=0.105882, B=0.141176, A=1.000000),ParameterName="Phong_Spec_Color")),Id=1,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.964706, G=0.592157, B=0.474510, A=1.000000),ParameterName="Phong_Spec_Color")),Id=2,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.482353, G=0.180392, B=0.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=3,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.952941, G=0.396078, B=0.137255, A=1.000000),ParameterName="Phong_Spec_Color")),Id=4,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.980392, G=0.678431, B=0.505882, A=1.000000),ParameterName="Phong_Spec_Color")),Id=5,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.490196, G=0.286275, B=0.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=6,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.968627, G=0.580392, B=0.113725, A=1.000000),ParameterName="Phong_Spec_Color")),Id=7,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.992157, G=0.780392, B=0.545098, A=1.000000),ParameterName="Phong_Spec_Color")),Id=8,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.513725, G=0.482353, B=0.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=9,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.996078, G=0.949020, B=0.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=10,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=1.000000, G=0.968627, B=0.603922, A=1.000000),ParameterName="Phong_Spec_Color")),Id=11,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.250980, G=0.403922, B=0.094118, A=1.000000),ParameterName="Phong_Spec_Color")),Id=12,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.552941, G=0.780392, B=0.247059, A=1.000000),ParameterName="Phong_Spec_Color")),Id=13,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.768627, G=0.874510, B=0.611765, A=1.000000),ParameterName="Phong_Spec_Color")),Id=14,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=0.368627, B=0.125490, A=1.000000),ParameterName="Phong_Spec_Color")),Id=15,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.227451, G=0.709804, B=0.290196, A=1.000000),ParameterName="Phong_Spec_Color")),Id=16,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.635294, G=0.827451, B=0.611765, A=1.000000),ParameterName="Phong_Spec_Color")),Id=17,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=0.349020, B=0.325490, A=1.000000),ParameterName="Phong_Spec_Color")),Id=18,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.003922, G=0.658824, B=0.619608, A=1.000000),ParameterName="Phong_Spec_Color")),Id=19,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.482353, G=0.803922, B=0.780392, A=1.000000),ParameterName="Phong_Spec_Color")),Id=20,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=1.000000, B=0.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=21,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=0.650980, B=0.321569, A=1.000000),ParameterName="Phong_Spec_Color")),Id=22,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=1.000000, B=1.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=23,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=0.000000, B=1.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=24,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=1.000000, G=0.000000, B=0.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=25,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=1.000000, G=0.000000, B=1.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=26,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.003922, G=0.356863, B=0.494118, A=1.000000),ParameterName="Phong_Spec_Color")),Id=27,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=0.678431, B=0.937255, A=1.000000),ParameterName="Phong_Spec_Color")),Id=28,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.431373, G=0.815686, B=0.968627, A=1.000000),ParameterName="Phong_Spec_Color")),Id=29,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=0.211765, B=0.392157, A=1.000000),ParameterName="Phong_Spec_Color")),Id=30,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=0.447059, B=0.733333, A=1.000000),ParameterName="Phong_Spec_Color")),Id=31,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.494118, G=0.650980, B=0.843137, A=1.000000),ParameterName="Phong_Spec_Color")),Id=32,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.050980, G=0.003922, B=0.301961, A=1.000000),ParameterName="Phong_Spec_Color")),Id=33,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.180392, G=0.192157, B=0.572549, A=1.000000),ParameterName="Phong_Spec_Color")),Id=34,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.533333, G=0.509804, B=0.745098, A=1.000000),ParameterName="Phong_Spec_Color")),Id=35,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.200000, G=0.000000, B=0.294118, A=1.000000),ParameterName="Phong_Spec_Color")),Id=36,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.400000, G=0.180392, B=0.568627, A=1.000000),ParameterName="Phong_Spec_Color")),Id=37,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.635294, G=0.529412, B=0.745098, A=1.000000),ParameterName="Phong_Spec_Color")),Id=38,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.298039, G=0.000000, B=0.290196, A=1.000000),ParameterName="Phong_Spec_Color")),Id=39,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.572549, G=0.152941, B=0.560784, A=1.000000),ParameterName="Phong_Spec_Color")),Id=40,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.737255, G=0.556863, B=0.749020, A=1.000000),ParameterName="Phong_Spec_Color")),Id=41,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.478431, G=0.000000, B=0.145098, A=1.000000),ParameterName="Phong_Spec_Color")),Id=42,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.929412, G=0.078431, B=0.356863, A=1.000000),ParameterName="Phong_Spec_Color")),Id=43,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.968627, G=0.596078, B=0.619608, A=1.000000),ParameterName="Phong_Spec_Color")),Id=44,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.000000, G=0.000000, B=0.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=45,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.384314, G=0.384314, B=0.384314, A=1.000000),ParameterName="Phong_Spec_Color")),Id=46,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=1.000000, G=1.000000, B=1.000000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=47,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.219608, G=0.188235, B=0.176471, A=1.000000),ParameterName="Phong_Spec_Color")),Id=48,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.450980, G=0.388235, B=0.337255, A=1.000000),ParameterName="Phong_Spec_Color")),Id=49,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.780392, G=0.694118, B=0.600000, A=1.000000),ParameterName="Phong_Spec_Color")),Id=50,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.376471, G=0.223529, B=0.070588, A=1.000000),ParameterName="Phong_Spec_Color")),Id=51,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.549020, G=0.384314, B=0.219608, A=1.000000),ParameterName="Phong_Spec_Color")),Id=52,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(PhongParam=(ParameterValue=(R=0.776471, G=0.607843, B=0.431373, A=1.000000),ParameterName="Phong_Spec_Color")),Id=53,Type=CustomizableType_Tint)</Value>
+			</Property>
+			<Property name="skintoneappearances">
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.631373, G=0.858824, B=0.945098, A=1.000000),ParameterName="SkinTone")),Id=0,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.658824, G=0.627451, B=0.850980, A=1.000000),ParameterName="SkinTone")),Id=1,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.870588, G=0.729412, B=0.870588, A=1.000000),ParameterName="SkinTone")),Id=2,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.600000, G=0.737255, B=0.901961, A=1.000000),ParameterName="SkinTone")),Id=3,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.635294, G=0.827451, B=0.611765, A=1.000000),ParameterName="SkinTone")),Id=4,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.729412, G=0.901961, B=0.709804, A=1.000000),ParameterName="SkinTone")),Id=5,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.839216, G=0.933333, B=0.690196, A=1.000000),ParameterName="SkinTone")),Id=6,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.780392, G=0.694118, B=0.600000, A=1.000000),ParameterName="SkinTone")),Id=7,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.941176, G=0.815686, B=0.592157, A=1.000000),ParameterName="SkinTone")),Id=8,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=1.000000, B=1.000000, A=1.000000),ParameterName="SkinTone")),Id=9,Type=CustomizableType_Tint)</Value>
+			</Property>
+			<Property name="tint1appearances">
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.478431, G=0.000000, B=0.003922, A=1.000000),ParameterName="Tint_Color01")),Id=0,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.929412, G=0.105882, B=0.141176, A=1.000000),ParameterName="Tint_Color01")),Id=1,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.964706, G=0.592157, B=0.474510, A=1.000000),ParameterName="Tint_Color01")),Id=2,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.482353, G=0.180392, B=0.000000, A=1.000000),ParameterName="Tint_Color01")),Id=3,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.952941, G=0.396078, B=0.137255, A=1.000000),ParameterName="Tint_Color01")),Id=4,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.980392, G=0.678431, B=0.505882, A=1.000000),ParameterName="Tint_Color01")),Id=5,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.490196, G=0.286275, B=0.000000, A=1.000000),ParameterName="Tint_Color01")),Id=6,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.968627, G=0.580392, B=0.113725, A=1.000000),ParameterName="Tint_Color01")),Id=7,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.992157, G=0.780392, B=0.545098, A=1.000000),ParameterName="Tint_Color01")),Id=8,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.513725, G=0.482353, B=0.000000, A=1.000000),ParameterName="Tint_Color01")),Id=9,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.996078, G=0.949020, B=0.000000, A=1.000000),ParameterName="Tint_Color01")),Id=10,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=0.968627, B=0.603922, A=1.000000),ParameterName="Tint_Color01")),Id=11,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.250980, G=0.403922, B=0.094118, A=1.000000),ParameterName="Tint_Color01")),Id=12,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.552941, G=0.780392, B=0.247059, A=1.000000),ParameterName="Tint_Color01")),Id=13,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.768627, G=0.874510, B=0.611765, A=1.000000),ParameterName="Tint_Color01")),Id=14,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.368627, B=0.125490, A=1.000000),ParameterName="Tint_Color01")),Id=15,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.227451, G=0.709804, B=0.290196, A=1.000000),ParameterName="Tint_Color01")),Id=16,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.635294, G=0.827451, B=0.611765, A=1.000000),ParameterName="Tint_Color01")),Id=17,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.349020, B=0.325490, A=1.000000),ParameterName="Tint_Color01")),Id=18,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.003922, G=0.658824, B=0.619608, A=1.000000),ParameterName="Tint_Color01")),Id=19,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.482353, G=0.803922, B=0.780392, A=1.000000),ParameterName="Tint_Color01")),Id=20,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=1.000000, B=0.000000, A=1.000000),ParameterName="Tint_Color01")),Id=21,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.650980, B=0.321569, A=1.000000),ParameterName="Tint_Color01")),Id=22,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=1.000000, B=1.000000, A=1.000000),ParameterName="Tint_Color01")),Id=23,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.000000, B=1.000000, A=1.000000),ParameterName="Tint_Color01")),Id=24,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=0.000000, B=0.000000, A=1.000000),ParameterName="Tint_Color01")),Id=25,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=0.000000, B=1.000000, A=1.000000),ParameterName="Tint_Color01")),Id=26,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.003922, G=0.356863, B=0.494118, A=1.000000),ParameterName="Tint_Color01")),Id=27,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.678431, B=0.937255, A=1.000000),ParameterName="Tint_Color01")),Id=28,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.431373, G=0.815686, B=0.968627, A=1.000000),ParameterName="Tint_Color01")),Id=29,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.211765, B=0.392157, A=1.000000),ParameterName="Tint_Color01")),Id=30,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.447059, B=0.733333, A=1.000000),ParameterName="Tint_Color01")),Id=31,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.494118, G=0.650980, B=0.843137, A=1.000000),ParameterName="Tint_Color01")),Id=32,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.050980, G=0.003922, B=0.301961, A=1.000000),ParameterName="Tint_Color01")),Id=33,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.180392, G=0.192157, B=0.572549, A=1.000000),ParameterName="Tint_Color01")),Id=34,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.533333, G=0.509804, B=0.745098, A=1.000000),ParameterName="Tint_Color01")),Id=35,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.200000, G=0.000000, B=0.294118, A=1.000000),ParameterName="Tint_Color01")),Id=36,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.400000, G=0.180392, B=0.568627, A=1.000000),ParameterName="Tint_Color01")),Id=37,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.635294, G=0.529412, B=0.745098, A=1.000000),ParameterName="Tint_Color01")),Id=38,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.298039, G=0.000000, B=0.290196, A=1.000000),ParameterName="Tint_Color01")),Id=39,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.572549, G=0.152941, B=0.560784, A=1.000000),ParameterName="Tint_Color01")),Id=40,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.737255, G=0.556863, B=0.749020, A=1.000000),ParameterName="Tint_Color01")),Id=41,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.478431, G=0.000000, B=0.145098, A=1.000000),ParameterName="Tint_Color01")),Id=42,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.929412, G=0.078431, B=0.356863, A=1.000000),ParameterName="Tint_Color01")),Id=43,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.968627, G=0.596078, B=0.619608, A=1.000000),ParameterName="Tint_Color01")),Id=44,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.000000, B=0.000000, A=1.000000),ParameterName="Tint_Color01")),Id=45,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.384314, G=0.384314, B=0.384314, A=1.000000),ParameterName="Tint_Color01")),Id=46,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=1.000000, B=1.000000, A=1.000000),ParameterName="Tint_Color01")),Id=47,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.219608, G=0.188235, B=0.176471, A=1.000000),ParameterName="Tint_Color01")),Id=48,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.450980, G=0.388235, B=0.337255, A=1.000000),ParameterName="Tint_Color01")),Id=49,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.780392, G=0.694118, B=0.600000, A=1.000000),ParameterName="Tint_Color01")),Id=50,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.376471, G=0.223529, B=0.070588, A=1.000000),ParameterName="Tint_Color01")),Id=51,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.549020, G=0.384314, B=0.219608, A=1.000000),ParameterName="Tint_Color01")),Id=52,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.776471, G=0.607843, B=0.431373, A=1.000000),ParameterName="Tint_Color01")),Id=53,Type=CustomizableType_Tint)</Value>
+			</Property>
+			<Property name="tint2appearances">
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.478431, G=0.000000, B=0.003922, A=1.000000),ParameterName="Tint_Color02")),Id=0,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.929412, G=0.105882, B=0.141176, A=1.000000),ParameterName="Tint_Color02")),Id=1,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.964706, G=0.592157, B=0.474510, A=1.000000),ParameterName="Tint_Color02")),Id=2,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.482353, G=0.180392, B=0.000000, A=1.000000),ParameterName="Tint_Color02")),Id=3,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.952941, G=0.396078, B=0.137255, A=1.000000),ParameterName="Tint_Color02")),Id=4,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.980392, G=0.678431, B=0.505882, A=1.000000),ParameterName="Tint_Color02")),Id=5,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.490196, G=0.286275, B=0.000000, A=1.000000),ParameterName="Tint_Color02")),Id=6,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.968627, G=0.580392, B=0.113725, A=1.000000),ParameterName="Tint_Color02")),Id=7,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.992157, G=0.780392, B=0.545098, A=1.000000),ParameterName="Tint_Color02")),Id=8,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.513725, G=0.482353, B=0.000000, A=1.000000),ParameterName="Tint_Color02")),Id=9,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.996078, G=0.949020, B=0.000000, A=1.000000),ParameterName="Tint_Color02")),Id=10,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=0.968627, B=0.603922, A=1.000000),ParameterName="Tint_Color02")),Id=11,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.250980, G=0.403922, B=0.094118, A=1.000000),ParameterName="Tint_Color02")),Id=12,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.552941, G=0.780392, B=0.247059, A=1.000000),ParameterName="Tint_Color02")),Id=13,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.768627, G=0.874510, B=0.611765, A=1.000000),ParameterName="Tint_Color02")),Id=14,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.368627, B=0.125490, A=1.000000),ParameterName="Tint_Color02")),Id=15,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.227451, G=0.709804, B=0.290196, A=1.000000),ParameterName="Tint_Color02")),Id=16,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.635294, G=0.827451, B=0.611765, A=1.000000),ParameterName="Tint_Color02")),Id=17,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.349020, B=0.325490, A=1.000000),ParameterName="Tint_Color02")),Id=18,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.003922, G=0.658824, B=0.619608, A=1.000000),ParameterName="Tint_Color02")),Id=19,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.482353, G=0.803922, B=0.780392, A=1.000000),ParameterName="Tint_Color02")),Id=20,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=1.000000, B=0.000000, A=1.000000),ParameterName="Tint_Color02")),Id=21,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.650980, B=0.321569, A=1.000000),ParameterName="Tint_Color02")),Id=22,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=1.000000, B=1.000000, A=1.000000),ParameterName="Tint_Color02")),Id=23,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.000000, B=1.000000, A=1.000000),ParameterName="Tint_Color02")),Id=24,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=0.000000, B=0.000000, A=1.000000),ParameterName="Tint_Color02")),Id=25,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=0.000000, B=1.000000, A=1.000000),ParameterName="Tint_Color02")),Id=26,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.003922, G=0.356863, B=0.494118, A=1.000000),ParameterName="Tint_Color02")),Id=27,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.678431, B=0.937255, A=1.000000),ParameterName="Tint_Color02")),Id=28,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.431373, G=0.815686, B=0.968627, A=1.000000),ParameterName="Tint_Color02")),Id=29,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.211765, B=0.392157, A=1.000000),ParameterName="Tint_Color02")),Id=30,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.447059, B=0.733333, A=1.000000),ParameterName="Tint_Color02")),Id=31,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.494118, G=0.650980, B=0.843137, A=1.000000),ParameterName="Tint_Color02")),Id=32,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.050980, G=0.003922, B=0.301961, A=1.000000),ParameterName="Tint_Color02")),Id=33,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.180392, G=0.192157, B=0.572549, A=1.000000),ParameterName="Tint_Color02")),Id=34,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.533333, G=0.509804, B=0.745098, A=1.000000),ParameterName="Tint_Color02")),Id=35,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.200000, G=0.000000, B=0.294118, A=1.000000),ParameterName="Tint_Color02")),Id=36,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.400000, G=0.180392, B=0.568627, A=1.000000),ParameterName="Tint_Color02")),Id=37,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.635294, G=0.529412, B=0.745098, A=1.000000),ParameterName="Tint_Color02")),Id=38,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.298039, G=0.000000, B=0.290196, A=1.000000),ParameterName="Tint_Color02")),Id=39,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.572549, G=0.152941, B=0.560784, A=1.000000),ParameterName="Tint_Color02")),Id=40,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.737255, G=0.556863, B=0.749020, A=1.000000),ParameterName="Tint_Color02")),Id=41,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.478431, G=0.000000, B=0.145098, A=1.000000),ParameterName="Tint_Color02")),Id=42,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.929412, G=0.078431, B=0.356863, A=1.000000),ParameterName="Tint_Color02")),Id=43,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.968627, G=0.596078, B=0.619608, A=1.000000),ParameterName="Tint_Color02")),Id=44,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.000000, G=0.000000, B=0.000000, A=1.000000),ParameterName="Tint_Color02")),Id=45,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.384314, G=0.384314, B=0.384314, A=1.000000),ParameterName="Tint_Color02")),Id=46,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=1.000000, G=1.000000, B=1.000000, A=1.000000),ParameterName="Tint_Color02")),Id=47,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.219608, G=0.188235, B=0.176471, A=1.000000),ParameterName="Tint_Color02")),Id=48,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.450980, G=0.388235, B=0.337255, A=1.000000),ParameterName="Tint_Color02")),Id=49,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.780392, G=0.694118, B=0.600000, A=1.000000),ParameterName="Tint_Color02")),Id=50,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.376471, G=0.223529, B=0.070588, A=1.000000),ParameterName="Tint_Color02")),Id=51,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.549020, G=0.384314, B=0.219608, A=1.000000),ParameterName="Tint_Color02")),Id=52,Type=CustomizableType_Tint)</Value>
+				<Value type="2">(Tint=(TintParam=(ParameterValue=(R=0.776471, G=0.607843, B=0.431373, A=1.000000),ParameterName="Tint_Color02")),Id=53,Type=CustomizableType_Tint)</Value>
+			</Property>
+		</Section>
+	</Sections>
+</CoalesceAsset>
