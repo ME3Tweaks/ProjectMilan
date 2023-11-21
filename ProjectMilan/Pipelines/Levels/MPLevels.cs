@@ -127,7 +127,7 @@ namespace ProjectMilan.Pipelines.Levels
             // Initialize cache
             levelPipeline.Cache = new PackageCache();
 
-            var outputPath = Path.Combine(Program.Settings.OutputPath, @"LE3", @"Levels", levelPipeline.BioP);
+            var outputPath = Path.Combine(Program.Settings.OutputModPath, @"LE3", @"Levels", levelPipeline.BioP);
             Directory.CreateDirectory(outputPath);
 
             // Get BioP package

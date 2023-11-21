@@ -66,7 +66,7 @@ namespace ProjectMilan.Pipelines.Audio
             if (export.Game != MEGame.ME3)
                 throw new Exception("This method is only for extracting ME3 WwiseBanks!");
 
-            var outPath = Path.Combine(Program.Settings.OutputPath, @"ME3", @"WwiseBanks", export.ObjectName);
+            var outPath = Path.Combine(Program.Settings.OutputModPath, @"ME3", @"WwiseBanks", export.ObjectName);
             var outBankPath = Path.Combine(outPath, $"{export.ObjectName}.bnk");
             if (File.Exists(outBankPath))
                 return;

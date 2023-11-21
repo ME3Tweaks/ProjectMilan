@@ -71,7 +71,7 @@ namespace ProjectMilan.Pipelines.Startups
             LE3GlobalCache = new PackageCache();
             MPCommonPipelineVars vars = new MPCommonPipelineVars()
             {
-                OutputPath = Path.Combine(Program.Settings.OutputPath, "LE3", "MPCommon")
+                OutputPath = Path.Combine(Program.Settings.OutputModPath, "LE3", "MPCommon")
             };
 
             InternalRunPipeline(vars);
@@ -454,7 +454,7 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             // Attempt compile
-            var outPackage = Path.Combine(Program.Settings.OutputPath, Path.Combine(vars.OutputPath, "Startup_MOD_ProjectMilan.pcc"));
+            var outPackage = Path.Combine(Program.Settings.OutputModPath, Path.Combine(vars.OutputPath, "Startup_MOD_ProjectMilan.pcc"));
 
             while (CompilePackage(GetMPClassesFolder(), outPackage, cache))
             {
@@ -628,7 +628,7 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static string GetMPClassesFolder()
         {
-            return Path.Combine(Program.Settings.OutputPath, "ME3", "Classes");
+            return Path.Combine(Program.Settings.OutputModPath, "ME3", "Classes");
         }
     }
 }

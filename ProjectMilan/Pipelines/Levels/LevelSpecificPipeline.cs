@@ -64,7 +64,7 @@ namespace ProjectMilan.Pipelines.Levels
         /// Level output directory
         /// </summary>
 
-        public string LevelOutputDir => Path.Combine(Program.Settings.OutputPath, @"LE3", @"Levels", BioP);
+        public string LevelOutputDir => Path.Combine(Program.Settings.OutputModPath, @"LE3", @"Levels", BioP);
 
         /// <summary>
         /// Pipeline package cache

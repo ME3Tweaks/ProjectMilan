@@ -32,7 +32,7 @@ namespace ProjectMilan.Pipelines.Texture
             // Setup pipeline
             MPCommonPipelineVars vars = new MPCommonPipelineVars()
             {
-                OutputPath = Path.Combine(Program.Settings.OutputPath, "LE3", "MPCommon")
+                OutputPath = Path.Combine(Program.Settings.OutputModPath, "LE3", "MPCommon")
             };
         }
     }

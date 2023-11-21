@@ -200,7 +200,7 @@ namespace ProjectMilan.Pipelines
         {
             if (!MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, MP_STARTUP_FILENAME, out var foundF))
             {
-                var startups = Directory.GetFiles(Program.Settings.OutputPath, MP_STARTUP_FILENAME, SearchOption.AllDirectories);
+                var startups = Directory.GetFiles(Program.Settings.OutputModPath, MP_STARTUP_FILENAME, SearchOption.AllDirectories);
                 if (!startups.Any())
                 {
                     MilanLog.Error($"{MP_STARTUP_FILENAME} was not found - this pipeline cannot run, it depends on this being built");

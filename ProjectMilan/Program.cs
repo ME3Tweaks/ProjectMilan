@@ -45,13 +45,13 @@ namespace ProjectMilan
             Settings = LoadSettingsConfig(obj);
 
             // Cleanup output directory before we start
-            if (Directory.Exists(Settings.OutputPath))
+            if (Directory.Exists(Settings.OutputModPath))
             {
-                Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputPath, deleteDirectoryItself: false);
+                Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputModPath, deleteDirectoryItself: false);
             }
             else
             {
-                Directory.CreateDirectory(Settings.OutputPath);
+                Directory.CreateDirectory(Settings.OutputModPath);
             }
 
             // Initialize LEC

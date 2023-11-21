@@ -50,7 +50,7 @@ namespace ProjectMilan.Pipelines.Kits
             // Initialize cache
             kitPipeline.Cache = new PackageCache();
 
-            var outputPath = Path.Combine(Program.Settings.OutputPath, @"LE3", @"Kits");
+            var outputPath = Path.Combine(Program.Settings.OutputModPath, @"LE3", @"Kits");
             Directory.CreateDirectory(outputPath);
 
             var finalPackagePath = Path.Combine(outputPath, kitPipeline.PackageName + ".pcc");

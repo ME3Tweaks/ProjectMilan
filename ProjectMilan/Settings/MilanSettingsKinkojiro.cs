@@ -3,7 +3,7 @@
     // Settings for Kinkojiro's system build
     internal class MilanSettingsKinkojiro : IMilanSettings
     {
-        public string OutputPath { get; set; } = @"UNDEFINED"; // Z:\ModLibrary\LE3\Project Milan\MilanOutput
+        public string OutputModPath { get; set; } = @"UNDEFINED"; // Z:\ModLibrary\LE3\Project Milan\MilanOutput
         public string InputSyncPath { get; set; } // must be defined
         public bool RunMPLobbyClassesPipeline { get; set; }
         public bool RunConfigPipeline { get; set; }

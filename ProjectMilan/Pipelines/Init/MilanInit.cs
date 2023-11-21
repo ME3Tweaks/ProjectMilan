@@ -23,7 +23,7 @@ namespace ProjectMilan.Pipelines.Init
         {
             [JsonProperty("name")]
             public string FileName { get; set; }
-            
+
             [JsonProperty("size")]
             public int FileSize { get; set; }
 
@@ -44,6 +44,16 @@ namespace ProjectMilan.Pipelines.Init
 
             // Sync files from ME3Tweaks so developers are all on the same fileset.
             MilanSync();
+        }
+
+        /// <summary>
+        /// Gets the path of a file located in the specific sync directory
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public static string GetSyncFile(string filename)
+        {
+            return Path.Combine(Program.Settings.InputSyncPath, filename);
         }
 
         /// <summary>
@@ -72,7 +82,7 @@ namespace ProjectMilan.Pipelines.Init
 
         private static void CheckSettings()
         {
-            if (Program.Settings.OutputPath == null)
+            if (Program.Settings.OutputModPath == null)
             {
                 MilanLog.Error(@"You must specify an output path in your settings class.");
                 Environment.Exit(1);
@@ -97,12 +107,12 @@ namespace ProjectMilan.Pipelines.Init
             {
                 MilanLog.Warning(@"Unable to get manifest from ME3Tweaks. Skipping MilanSync");
             }
-            
+
             Directory.CreateDirectory(Program.Settings.InputSyncPath);
             var files = JsonConvert.DeserializeObject<List<SyncFile>>(manifest);
             foreach (var file in files)
             {
-                var localFile = Path.Combine(Program.Settings.InputSyncPath, file.FileName);
+                var localFile = GetSyncFile(file.FileName);
                 bool shouldSync = !File.Exists(localFile);
                 if (!shouldSync)
                 {

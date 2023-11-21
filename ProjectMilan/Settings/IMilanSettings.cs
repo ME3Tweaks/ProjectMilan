@@ -17,9 +17,9 @@ namespace ProjectMilan.Settings
     public interface IMilanSettings
     {
         /// <summary>
-        /// The base output folder for Project Milan.
+        /// The base output folder for Project Milan. It should point to the DLC_MOD_Milan folder, in game, or in mod manager
         /// </summary>
-        public string OutputPath { get; set; }
+        public string OutputModPath { get; set; }
 
         /// <summary>
         /// Directory where the source data is located that is synchronized from ME3Tweaks.com. The contents of this folder will be updated when ProjectMilan runs.
