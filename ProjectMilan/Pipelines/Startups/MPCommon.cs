@@ -269,7 +269,7 @@ namespace ProjectMilan.Pipelines.Startups
                             // Just keep going.
                             if (package != null)
                             {
-                                MilanLog.Information($@"Found missing class '{className}' in LE3: {foundObj}");
+                                MilanLog.Information($@"Found missing class '{className}' in LE3: {foundObj}", customPrefix: LOG_CATEGORY);
                                 var export = package.FindExport(ifp);
                                 if (export != null)
                                 {
@@ -277,7 +277,7 @@ namespace ProjectMilan.Pipelines.Startups
                                     return true;
                                 }
 
-                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC");
+                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
 
                             }
                         }
@@ -459,7 +459,7 @@ namespace ProjectMilan.Pipelines.Startups
 
             while (CompilePackage(GetMPClassesFolder(), outPackage, cache))
             {
-
+                MilanLog.Information("Attempting recompile with new class data----------------------", customPrefix: LOG_CATEGORY);
             }
         }
 

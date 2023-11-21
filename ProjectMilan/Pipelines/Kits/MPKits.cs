@@ -90,6 +90,7 @@ namespace ProjectMilan.Pipelines.Kits
             {
                 // Recompile all ported classes so vtables are updated
                 MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: kitPipeline.LogCategory);
+                // This is broken!!
                 (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, kitPipeline.Cache);
                 UnrealScriptCompiler.CompileClass(kitDestPackage, text, lib, f, packageCache: kitPipeline.Cache);
             }
