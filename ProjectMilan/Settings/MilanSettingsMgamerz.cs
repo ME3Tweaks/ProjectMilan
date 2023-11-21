@@ -6,7 +6,7 @@
         public string OutputModPath { get; set; } = @"Z:\ModLibrary\LE3\Project Milan\DLC_MOD_ProjectMilan";
         public string InputSyncPath { get; set; } = @"Z:\ModLibrary\LE3\Project Milan\MilanSync";
 
-        public bool RunMPCommonPipeline { get; set; } = true;
+        public bool RunMPCommonPipeline { get; set; } = false;
         public bool RunKitsPipeline { get; set; } = true;
         public bool RunLevelsPipeline { get; set; } = true;
         public bool RunAudioPipeline { get; set; }

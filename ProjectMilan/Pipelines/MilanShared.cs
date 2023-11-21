@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 
 namespace ProjectMilan.Pipelines
 {
@@ -200,17 +201,29 @@ namespace ProjectMilan.Pipelines
         {
             if (!MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, MP_STARTUP_FILENAME, out var foundF))
             {
-                var startups = Directory.GetFiles(Program.Settings.OutputModPath, MP_STARTUP_FILENAME, SearchOption.AllDirectories);
-                if (!startups.Any())
+                var versions = Directory.GetFiles(Program.Settings.OutputModPath, MP_STARTUP_FILENAME, SearchOption.AllDirectories);
+                if (!versions.Any())
                 {
-                    MilanLog.Error($"{MP_STARTUP_FILENAME} was not found - this pipeline cannot run, it depends on this being built");
+                    MilanLog.Error($"{MP_STARTUP_FILENAME} was not found - content pipelines cannot run, they depend on BIOP_MP_COMMON. Turn on MPCommon pipeline");
                     return false;
                 }
 
                 // Copy to basegame. Eventually move to DLC only
-                File.Copy(startups[0], Path.Combine(ME3Directory.CookedPCPath, MP_STARTUP_FILENAME), true);
+                foundF = versions[0];
+                File.Copy(versions[0], Path.Combine(ME3Directory.CookedPCPath, MP_STARTUP_FILENAME), true);
             }
+
             EntryImporter.AddUserSafeToImportFromFile(MEGame.LE3, MP_STARTUP_FILENAME);
+
+            // Inventory package
+            var cache = new PackageCache();
+            var mpCommon = MEPackageHandler.OpenMEPackage(foundF);
+            foreach (var exp in mpCommon.Exports.Where(x => x.IsClass))
+            {
+                GlobalUnrealObjectInfo.generateClassInfo(exp, packageCache: cache);
+            }
+
+
             return true;
         }
     }

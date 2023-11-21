@@ -2,6 +2,7 @@
 using LegendaryExplorerCore;
 using LegendaryExplorerCore.Packages;
 using Newtonsoft.Json;
+using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
@@ -92,6 +93,9 @@ namespace ProjectMilan
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
 
             // Content build pipelines
+            if (!MilanShared.EnsureMPCommonInGame()) // These require BIOP_MP_COMMON
+                return;
+
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 

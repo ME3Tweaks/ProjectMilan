@@ -26,10 +26,6 @@ namespace ProjectMilan.Pipelines.Kits
         {
             // Extract TFCs from SFAR
             //ExtractTFCs();
-
-            if (!MilanShared.EnsureMPCommonInGame())
-                return;
-
             foreach (var kit in vars.KitPipelines)
             {
                 if (!kit.Enabled)
@@ -58,6 +54,23 @@ namespace ProjectMilan.Pipelines.Kits
             kitDestPackage.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this for importing.
 
             var kitSourcePackage = MilanShared.GetME3Package(kitPipeline.PackageName + ".pcc");
+
+            // Port classes first - this works around weird issue in tools where you're porting across games
+            // an entirely new class which doesn't exist in the destination game
+
+            //foreach (var cls in kitSourcePackage.Exports.Where(x => x.IsClass))
+            //{
+            //    if (kitDestPackage.FindExport(cls.InstancedFullPath) == null)
+            //    {
+            //        var rop2 = new RelinkerOptionsPackage() { Cache = kitPipeline.Cache, TargetGameDonorDB = MilanShared.LE3ObjectDB };
+            //        var results2 = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, cls,
+            //            kitDestPackage, null, true,
+            //            rop2,
+            //            out var newEntry2);
+            //    }
+            //}
+
+
 
             var objReferencer = kitSourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
