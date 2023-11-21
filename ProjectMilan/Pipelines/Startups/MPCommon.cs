@@ -189,7 +189,7 @@ namespace ProjectMilan.Pipelines.Startups
 
 
             MilanLog.Information(@"Creating object referencer", customPrefix: LOG_CATEGORY);
-            PackageTools.CreateObjectReferencer(pcc, true);
+            PackageTools.CreateObjectReferencer(pcc, false);
             foreach (var classExp in pcc.Exports.Where(x => x.IsClass))
             {
                 // Yeah this is inefficient. 
