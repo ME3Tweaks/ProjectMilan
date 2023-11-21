@@ -17,7 +17,7 @@ namespace ProjectMilan.Settings
     public interface IMilanSettings
     {
         /// <summary>
-        /// The base output folder for Project Milan. It should point to the DLC_MOD_Milan folder, in game, or in mod manager
+        /// The base output folder for Project Milan. It should point to a DLC_MOD_Milan folder - in game DLC dir, or in mod manager. Contents will be deleted.
         /// </summary>
         public string OutputModPath { get; set; }
 
@@ -30,12 +30,7 @@ namespace ProjectMilan.Settings
         /// <summary>
         /// If persistent classes should be built
         /// </summary>
-        public bool RunMPLobbyClassesPipeline { get; set; }
-
-        /// <summary>
-        /// If configuration files should be built
-        /// </summary>
-        bool RunConfigPipeline { get; set; }
+        bool RunMPCommonPipeline { get; set; }
 
         /// <summary>
         /// If multiplayer archetype kits should be built

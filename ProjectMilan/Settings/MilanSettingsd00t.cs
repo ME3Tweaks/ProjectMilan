@@ -5,7 +5,7 @@
     {
         public string OutputModPath { get; set; } = @"UNDEFINED"; // Z:\ModLibrary\LE3\Project Milan\MilanOutput
         public string InputSyncPath { get; set; } // must be defined
-        public bool RunMPLobbyClassesPipeline { get; set; }
+        public bool RunMPCommonPipeline { get; set; }
         public bool RunConfigPipeline { get; set; }
         public bool RunKitsPipeline { get; set; }
         public bool RunLevelsPipeline { get; set; }
