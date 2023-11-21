@@ -28,28 +28,28 @@ namespace ProjectMilan.Pipelines.Levels
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
                 // MP1 Resurgence
-                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= true, SpecialPortingDelegate = null}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= false, SpecialPortingDelegate = null}, // Condor
                 new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null}, // Hydra
 
                 // MP2 Rebellion
-                new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= true, SpecialPortingDelegate = null}, // Jade
-                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled= true, SpecialPortingDelegate = null}, // Goddess
+                new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade
+                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled= false, SpecialPortingDelegate = null}, // Goddess
 
                 // MP3 Earth
-                new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled=true, SpecialPortingDelegate = null}, // Rio
-                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled=true, SpecialPortingDelegate = null}, // Vancouver
-                new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled=true, SpecialPortingDelegate = null}, // London
+                new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled=false, SpecialPortingDelegate = null}, // Rio
+                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled=false, SpecialPortingDelegate = null}, // Vancouver
+                new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled=false, SpecialPortingDelegate = null}, // London
 
                 // MP4 Retalition
-                new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled=true, SpecialPortingDelegate = null}, // Glacier - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPCer3", Enabled=true, SpecialPortingDelegate = null}, // Glacier - Rework (replaces MPCer in ME3)
-                new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled=true, SpecialPortingDelegate = null}, // Dagger - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPNov2", Enabled=true, SpecialPortingDelegate = null}, // White - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPNov3", Enabled=true, SpecialPortingDelegate = null}, // White - Rework (replaces MPNov in ME3)
-                new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled=true, SpecialPortingDelegate = null}, // Reactor - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled=true, SpecialPortingDelegate = null}, // Ghost - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled=true, SpecialPortingDelegate = null}, // Giant - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPTowr3", Enabled=true, SpecialPortingDelegate = null}, // Giant - Rework (replaces MPTowr in ME3) - this is a spawn bugfix. MPTowr will be broken in vanilla, we should only use this version.
+                new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled=false, SpecialPortingDelegate = null}, // Glacier - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPCer3", Enabled=false, SpecialPortingDelegate = null}, // Glacier - Rework (replaces MPCer in ME3)
+                new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled=false, SpecialPortingDelegate = null}, // Dagger - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPNov2", Enabled=false, SpecialPortingDelegate = null}, // White - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPNov3", Enabled=false, SpecialPortingDelegate = null}, // White - Rework (replaces MPNov in ME3)
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled=false, SpecialPortingDelegate = null}, // Reactor - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled=false, SpecialPortingDelegate = null}, // Ghost - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled=false, SpecialPortingDelegate = null}, // Giant - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPTowr3", Enabled=false, SpecialPortingDelegate = null}, // Giant - Rework (replaces MPTowr in ME3) - this is a spawn bugfix. MPTowr will be broken in vanilla, we should only use this version.
 
                 // MP5 Reckoning
                 // No maps
@@ -57,13 +57,13 @@ namespace ProjectMilan.Pipelines.Levels
                 // Prototype and unused maps
                 // These are named that were assigned to the maps for ModMaker
                 // There are technically 2 additional variations of MPSub if you swap to a different unused BioD
-                new LevelSpecificPipeline() { BioP="BioP_MPThes2", Enabled=true, SpecialPortingDelegate = null}, // Athena (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPBrdg", Enabled=true, SpecialPortingDelegate = null}, // Gauntlet (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPFoun", Enabled=true, SpecialPortingDelegate = null}, // Dragon (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPPump", Enabled=true, SpecialPortingDelegate = null}, // Forge (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPRays", Enabled=true, SpecialPortingDelegate = null}, // Maelstrom (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPSub", Enabled=true, SpecialPortingDelegate = null}, // Neptune (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPTest", Enabled=true, SpecialPortingDelegate = null}, // Scorpion (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPThes2", Enabled=false, SpecialPortingDelegate = null}, // Athena (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPBrdg", Enabled=false, SpecialPortingDelegate = null}, // Gauntlet (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPFoun", Enabled=false, SpecialPortingDelegate = null}, // Dragon (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPPump", Enabled=false, SpecialPortingDelegate = null}, // Forge (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPRays", Enabled=false, SpecialPortingDelegate = null}, // Maelstrom (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPSub", Enabled=false, SpecialPortingDelegate = null}, // Neptune (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPTest", Enabled=false, SpecialPortingDelegate = null}, // Scorpion (prototype)
             };
         }
 
@@ -168,7 +168,10 @@ namespace ProjectMilan.Pipelines.Levels
             MilanLog.Information($@"Configuring LE3 BioP", customPrefix: levelPipeline.LogCategory);
 
             // Add SP start location for testing.
-            LevelShared.CreateSPStartLocation(levelPipeline.LE3BioP, levelPipeline.SPStartLocation);
+            if (levelPipeline.IsSP)
+            {
+                LevelShared.CreateSPStartLocation(levelPipeline.LE3BioP, levelPipeline.SPStartLocation);
+            }
 
             int lskIndex = 1;
             var destPersistentLevel = levelPipeline.LE3BioP.GetLevel();
@@ -186,11 +189,36 @@ namespace ProjectMilan.Pipelines.Levels
             EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, bts, levelPipeline.LE3BioP, destPersistentLevel, true, new RelinkerOptionsPackage(), out var portedBts);
 
             // Set the KillZ
-            var sourceKillZ = levelPipeline.ME3BioP.Exports.FirstOrDefault(x => x.ClassName == "BioWorldInfo").GetProperty<FloatProperty>("KillZ");
+            var sourceKillZ = levelPipeline.ME3BioP.GetBioWorldInfo().GetProperty<FloatProperty>("KillZ");
             if (sourceKillZ != null)
             {
                 levelPipeline.LE3BioP.FindExport(@"TheWorld.PersistentLevel.BioWorldInfo_2").WriteProperty(sourceKillZ);
             }
+
+            // Set game modes
+            if (!levelPipeline.IsSP)
+            {
+                var mpContent = levelPipeline.LE3BioP.FindEntry("SFXGameMPContent") ?? ExportCreator.CreatePackageExport(levelPipeline.LE3BioP, "SFXGameMPContent");
+                ImportEntry infoMP = new ImportEntry(levelPipeline.LE3BioP) { ObjectName = "SFXGameInfoMP", idxLink = mpContent.UIndex, ClassName = "Class", PackageFile = "Core" };
+                ImportEntry gameTypeHorde = new ImportEntry(levelPipeline.LE3BioP) { ObjectName = "SFXGameType_Horde_Operation", idxLink = mpContent.UIndex, ClassName = "Class", PackageFile = "Core" };
+                levelPipeline.LE3BioP.AddImport(infoMP);
+                levelPipeline.LE3BioP.AddImport(gameTypeHorde);
+                levelPipeline.LE3BioP.FindExport(@"TheWorld.PersistentLevel.BioWorldInfo_2").WriteProperty(
+                    new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
+                    {
+                        new ObjectProperty(infoMP),
+                        new ObjectProperty(gameTypeHorde)
+                    });
+            }
+
+            // Default post processing
+            var ppStruct = levelPipeline.ME3BioP.GetBioWorldInfo().GetProperty<StructProperty>("DefaultPostProcessSettings");
+            if (ppStruct != null)
+            {
+                levelPipeline.LE3BioP.GetBioWorldInfo().WriteProperty(ppStruct);
+            }
+
+
 
             LevelTools.RebuildPersistentLevelChildren(destPersistentLevel);
         }
@@ -203,34 +231,51 @@ namespace ProjectMilan.Pipelines.Levels
         /// <param name="levelPipeline"></param>
         private static void PrecorrectPackages(LevelSpecificPipeline levelPipeline)
         {
-            foreach (var package in levelPipeline.ME3Packages)
+            if (levelPipeline.IsSP)
             {
-                MilanLog.Information($@"Precorrecting {package.Key}", customPrefix: levelPipeline.LogCategory);
-
-                // Todo: once MPCommon is functional, this will no longer be necessary.
-                var bwi = package.Value.Exports.FirstOrDefault(x => x.ClassName == "BioWorldInfo");
-                bwi.RemoveProperty("GameTypesSupportedOnThisMap");
-
-                if (BioTier.IsPersistentPackage(package.Value.FileNameNoExtension + ".pcc"))
+                foreach (var package in levelPipeline.ME3Packages)
                 {
-                    // Change to SP for testing
-                    var startLoc1 = package.Value.Exports.FirstOrDefault(x => !x.IsDefaultObject && x.ClassName == "BioStartLocationMP");
-                    if (startLoc1 == null) startLoc1 = package.Value.Exports.FirstOrDefault(x => !x.IsDefaultObject && x.ClassName == "PlayerStart"); // Hydra uses this. idk why
-                    levelPipeline.SPStartLocation = LevelTools.GetLocation(startLoc1);
+                    MilanLog.Information($@"Precorrecting {package.Key}", customPrefix: levelPipeline.LogCategory);
 
-                    var level = package.Value.GetLevelBinary();
-                    for (int i = level.Actors.Count - 1; i > 0; i--)
+                    // Todo: once MPCommon is functional, this will no longer be necessary.
+                    package.Value.GetBioWorldInfo().RemoveProperty("GameTypesSupportedOnThisMap");
+
+                    if (BioTier.IsPersistentPackage(package.Value.FileNameNoExtension + ".pcc"))
                     {
-                        if (level.Actors[i] == 0)
-                            continue; // Skip.
-                        var entry = package.Value.GetUExport(level.Actors[i]);
-                        if (entry.ClassName == "BioStartLocationMP")
+                        // Change to SP for testing
+                        var startLoc1 = package.Value.Exports.FirstOrDefault(x => !x.IsDefaultObject && x.ClassName == "BioStartLocationMP");
+                        if (startLoc1 == null) startLoc1 = package.Value.Exports.FirstOrDefault(x => !x.IsDefaultObject && x.ClassName == "PlayerStart"); // Hydra uses this. idk why
+                        levelPipeline.SPStartLocation = LevelTools.GetLocation(startLoc1);
+
+                        var level = package.Value.GetLevelBinary();
+                        for (int i = level.Actors.Count - 1; i > 0; i--)
                         {
-                            MilanLog.Information($"Stripping BioStartLocationMP {entry.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
-                            level.Actors.RemoveAt(i);
+                            if (level.Actors[i] == 0)
+                                continue; // Skip.
+                            var entry = package.Value.GetUExport(level.Actors[i]);
+                            if (entry.ClassName == "BioStartLocationMP")
+                            {
+                                MilanLog.Information($"Stripping BioStartLocationMP {entry.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
+                                level.Actors.RemoveAt(i);
+                            }
                         }
                     }
                 }
+            }
+            else
+            {
+                // MP mode
+
+                // Convert game modes to imports as that's how they will be in the target game
+                var biop = levelPipeline.ME3BioP;
+                var infoMP = biop.FindExport("SFXGameMPContent.SFXGameInfoMP");
+                var hordeGameType = biop.FindExport("SFXGameMPContent.SFXGameType_Horde_Operation");
+
+                if (infoMP != null)
+                    EntryImporter.ConvertExportToImport(infoMP);
+                if (hordeGameType != null)
+                    EntryImporter.ConvertExportToImport(hordeGameType);
+
             }
         }
     }

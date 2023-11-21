@@ -183,5 +183,35 @@ namespace ProjectMilan.Pipelines
             MilanLog.Warning($"Could not locate ME3 DLC file: {sourceFileName}");
             return null;
         }
+
+        public static string GetAutoDonorClassPath(string package, string className)
+        {
+            return Path.Combine(GetAutoDonorClassesPath(), package, className + ".uc");
+        }
+
+        public const string MP_STARTUP_NAME = "Startup_MOD_ProjectMilan";
+        public const string MP_STARTUP_FILENAME = MP_STARTUP_NAME + ".pcc";
+
+
+        /// <summary>
+        /// Ensures the MPCommon package is in the game so tooling can use it
+        /// </summary>
+        public static bool EnsureMPCommonInGame()
+        {
+            if (!MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, MP_STARTUP_FILENAME, out var foundF))
+            {
+                var startups = Directory.GetFiles(Program.Settings.OutputPath, MP_STARTUP_FILENAME, SearchOption.AllDirectories);
+                if (!startups.Any())
+                {
+                    MilanLog.Error($"{MP_STARTUP_FILENAME} was not found - this pipeline cannot run, it depends on this being built");
+                    return false;
+                }
+
+                // Copy to basegame. Eventually move to DLC only
+                File.Copy(startups[0], Path.Combine(ME3Directory.CookedPCPath, MP_STARTUP_FILENAME), true);
+            }
+            EntryImporter.AddUserSafeToImportFromFile(MEGame.LE3, MP_STARTUP_FILENAME);
+            return true;
+        }
     }
 }

@@ -11,6 +11,7 @@
   <ItemGroup>
     <Folder Include="ME3\Classes\SFXGameMPContent\" />
     <Folder Include="ME3\Assets\" />
+    <Folder Include="Pipelines\Shared\Compiling\AutoDonor\SFXGame\" />
   </ItemGroup>
 
   <ItemGroup>

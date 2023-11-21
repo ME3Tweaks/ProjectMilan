@@ -38,5 +38,10 @@ namespace ProjectMilan.Utility
         {
             return ObjectBinary.From<Level>(package.GetLevel());
         }
+
+        public static ExportEntry GetBioWorldInfo(this IMEPackage package)
+        {
+            return package.Exports.FirstOrDefault(x => !x.IsDefaultObject && x.ClassName == "BioWorldInfo");
+        }
     }
 }

@@ -10,6 +10,11 @@ namespace ProjectMilan.Pipelines.Levels
     public class LevelSpecificPipeline
     {
         /// <summary>
+        /// If the result of this pipeline is an SP map
+        /// </summary>
+        public bool IsSP { get; set; }
+
+        /// <summary>
         /// Name of the persistent level package, without extension
         /// </summary>
         public string BioP { get; set; }
