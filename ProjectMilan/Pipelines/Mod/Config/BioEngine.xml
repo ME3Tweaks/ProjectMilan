@@ -7,38 +7,43 @@
 		<Section name="core.system">
 			<Property name="cookpaths">
 				<Value type="1">null</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Content</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Script</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\ScriptFinalRelease</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Content</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Script</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\ScriptFinalRelease</Value>
 			</Property>
 			<Property name="frscriptpaths">
-				<Value type="2">..\..\BIOGame\DLC\DLC_Shared\ScriptFinalRelease</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\ScriptFinalRelease</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_Shared\ScriptFinalRelease</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\ScriptFinalRelease</Value>
 			</Property>
 			<Property name="paths">
-				<Value type="2">..\..\BIOGame\DLC\DLC_Shared\__Trashcan</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_Shared\Content</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_Shared\TestContent</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\__Trashcan</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Content</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\TestContent</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_Shared\__Trashcan</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_Shared\Content</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_Shared\TestContent</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\__Trashcan</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Content</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\TestContent</Value>
 			</Property>
 			<Property name="scriptpaths">
-				<Value type="2">..\..\BIOGame\DLC\DLC_Shared\Script</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Script</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_Shared\Script</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Script</Value>
 			</Property>
 			<Property name="seekfreepcpaths">
-				<Value type="2">..\..\BIOGame\DLC\DLC_Shared\CookedPCConsole</Value>
-				<Value type="2">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_Shared\CookedPCConsole</Value>
+				<Value type="3">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole</Value>
 			</Property>
 		</Section>
 		<Section name="engine.startuppackages">
-			<Property name="dlcstartuppackage" type="3">Startup_MOD_ProjectMilan</Property>
+			<Property name="dlcstartuppackage">
+				<Value type="3">GuidCache_DLC_CON_MP1</Value>
+			</Property>
+			<Property name="package">
+				<Value type="3">SFXGUI_WeaponUIDataDLC_CON_MP1</Value>
+			</Property>
 		</Section>
 		<Section name="unrealed.editorengine">
 			<Property name="editpackages">
-				<Value type="2">SFXGameContentDLC_Shared</Value>
-				<Value type="2">SFXGameContentDLC_MOD_ProjectMilan</Value>
+				<Value type="3">SFXGameContentDLC_Shared</Value>
+				<Value type="3">SFXGameContentDLC_MOD_ProjectMilan</Value>
 			</Property>
 		</Section>
 		<Section name="engine.engine">
@@ -155,351 +160,477 @@
 				<Value type="3">(ObjectName="SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Revive",SeekFreePackageName="SFXPowerMP_Consumables")</Value>
 				<Value type="3">(ObjectName="SFXGameMPContent.SFXPowerCustomActionMP_ConsumableAmmoPower",SeekFreePackageName="SFXPowerMP_Consumables")</Value>
 
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_AssaultRifle",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SniperRifle",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Shotgun",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Pistol",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SMG",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_SpeedBonus",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
-				<Value type="2">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_AssaultRifle",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SniperRifle",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Shotgun",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Pistol",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SMG",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_SpeedBonus",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus",SeekFreePackageName="SFXGE_MatchConsumables")</Value>
 
-				<Value type="2">(ObjectName="BioDpl_Multiplayer.ProtheanObject",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioDpl_Multiplayer.SupplyDrop",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioDpl_Multiplayer.TechScanner",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioDpl_Multiplayer.ReaperIndocDevice",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Ind_ReaperProto.ReaperProto",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Uti_Computer01.Computer01",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Uti_Computer02.Computer02",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Ind_EnginePart01.EnginePart01",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Ind_Canister02.Canister02",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Ind_Beacon02.Beacon02",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Cbt_Bomb02.Bomb02",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Sea_Cake01.Cake01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Sea_Fireworks01.Fireworks01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Sea_Basket01.Basket01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Sea_Heart01.Heart01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Sea_Present01.Present01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="BioApl_Sea_Pumpkin01.Pumpkin01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.AdeptHumanFemale",SeekFreePackageName="SFXMPKitImagesAdept")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.AdeptHumanMale",SeekFreePackageName="SFXMPKitImagesAdept")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.EngineerHumanFemale",SeekFreePackageName="SFXMPKitImagesEngineer")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.EngineerHumanMale",SeekFreePackageName="SFXMPKitImagesEngineer")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.InfiltratorHumanFemale",SeekFreePackageName="SFXMPKitImagesInfiltrator")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.InfiltratorHumanMale",SeekFreePackageName="SFXMPKitImagesInfiltrator")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.SentinelHumanFemale",SeekFreePackageName="SFXMPKitImagesSentinel")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.SentinelHumanMale",SeekFreePackageName="SFXMPKitImagesSentinel")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.SoldierHumanFemale",SeekFreePackageName="SFXMPKitImagesSoldier")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.SoldierHumanMale",SeekFreePackageName="SFXMPKitImagesSoldier")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.VanguardHumanFemale",SeekFreePackageName="SFXMPKitImagesVanguard")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.VanguardHumanMale",SeekFreePackageName="SFXMPKitImagesVanguard")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.MP_Krogan0",SeekFreePackageName="SFXMPKitImagesOther1")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.MP_Asari0",SeekFreePackageName="SFXMPKitImagesOther1")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.MP_Salarian0",SeekFreePackageName="SFXMPKitImagesOther1")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.MP_Drell0",SeekFreePackageName="SFXMPKitImagesOther2")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.MP_Quarian0",SeekFreePackageName="SFXMPKitImagesOther2")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.MP_Turian0",SeekFreePackageName="SFXMPKitImagesOther2")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AddAmmo", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AddGalaxy", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AddRevive", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AddRockets", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AddShield", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AmmoCryo", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AmmoDisrupt", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AmmoIncendiary", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AmmoPiercing", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.AmmoWarp", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.BoostPower", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.BoostShields", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.BoostSpeed", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.BoostTime", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.Credits", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.DamageAssault", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.DamagePistol", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.DamageShotgun", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.DamageSMG", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.DamageSniper", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.EquipAmmo", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.EquipGalaxy", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.EquipRevive", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.EquipRocket", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.EquipShield", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.Talent", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.XP", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitAgent", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitAgentMale", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitBiotic", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitBioticMale", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitSoldier", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitSoldierMale", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitAsari", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitDrell", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitKrogan", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitQuarian", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitSalarian", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Cards.KitTurian", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.MP_BF_HFM0", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Kits.MP_BF_HMM0", SeekFreePackageName="SFXMPCardImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptTeamPublic",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptTeamPrivate",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptEmyRandom",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptEmyGeth",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptEmyCerberus",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptEmyReapers",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptChallgRandom",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptChallgBrnz",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptChallgSilver",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptChallgGold",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptChallgPlatinum",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapRandom",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapDish",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapSlum",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapTowr",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapRctr",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapRail",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapCer",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapNoveria",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon2",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon3",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.MatchSettings.OptMapGeth",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.StoreItems.Store001",SeekFreePackageName="SFXMPImagesStore")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.StoreItems.Store002",SeekFreePackageName="SFXMPImagesStore")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.StoreItems.Store003",SeekFreePackageName="SFXMPImagesStore")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.StoreItems.Store004",SeekFreePackageName="SFXMPImagesStore")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.StoreItems.Store005",SeekFreePackageName="SFXMPImagesStore")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.Alliance",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.AllianceHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.Box",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.box2",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.box2Holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.box3",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.box3Holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.box4",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.box4holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.box5",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.box5holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.BoxHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.Camo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.CamoHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.Cerberus",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.CerberusHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.Geth",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.GethHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.Military",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.MilitaryHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.N7",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.N7Holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.Present",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.PresentHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.Reaper",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Creates.ReaperHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPCer",SeekFreePackageName="SFXMPImagesMaps1")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPCnfl",SeekFreePackageName="SFXMPImagesMaps1")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPDefault",SeekFreePackageName="SFXMPImagesMaps1")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPDish",SeekFreePackageName="SFXMPImagesMaps1")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPNov",SeekFreePackageName="SFXMPImagesMaps1")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPrail",SeekFreePackageName="SFXMPImagesMaps2")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPRctr",SeekFreePackageName="SFXMPImagesMaps2")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPSlum",SeekFreePackageName="SFXMPImagesMaps2")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Maps.MPTowr",SeekFreePackageName="SFXMPImagesMaps2")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.combat-action_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.combat-action_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.combat-action_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.close-quarters-combat_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.close-quarters-combat_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.close-quarters-combat_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.headshot_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.headshot_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.headshot_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.assault-rifle_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.assault-rifle_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.assault-rifle_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.sniper-rifle_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.sniper-rifle_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.sniper-rifle_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.shotgun_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.shotgun_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.shotgun_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.pistol_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.pistol_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.pistol_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.smg_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.smg_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.smg_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.biotics-mastery_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.biotics-mastery_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.biotics-mastery_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.tech-mastery_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.tech-mastery_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.tech-mastery_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.combat-medic_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.combat-medic_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.combat-medic_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.assist_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.assist_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.assist_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.cover-grab_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.cover-grab_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.cover-grab_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.survival_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.survival_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.survival_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.challenge_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.challenge_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.challenge_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.extraction_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.extraction_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.extraction_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.killstreak_1_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.killstreak_2_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.killstreak_3_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.random-map_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
-				<Value type="2">(ObjectName="GUI_MPImages.Medals.random-faction_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="BioDpl_Multiplayer.ProtheanObject",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioDpl_Multiplayer.SupplyDrop",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioDpl_Multiplayer.TechScanner",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioDpl_Multiplayer.ReaperIndocDevice",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Ind_ReaperProto.ReaperProto",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Uti_Computer01.Computer01",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Uti_Computer02.Computer02",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Ind_EnginePart01.EnginePart01",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Ind_Canister02.Canister02",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Ind_Beacon02.Beacon02",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Cbt_Bomb02.Bomb02",SeekFreePackageName="SFXMPObjectives", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Sea_Cake01.Cake01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Sea_Fireworks01.Fireworks01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Sea_Basket01.Basket01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Sea_Heart01.Heart01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Sea_Present01.Present01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioApl_Sea_Pumpkin01.Pumpkin01",SeekFreePackageName="SFXMPObjectives_Special", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.AdeptHumanFemale",SeekFreePackageName="SFXMPKitImagesAdept")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.AdeptHumanMale",SeekFreePackageName="SFXMPKitImagesAdept")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.EngineerHumanFemale",SeekFreePackageName="SFXMPKitImagesEngineer")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.EngineerHumanMale",SeekFreePackageName="SFXMPKitImagesEngineer")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.InfiltratorHumanFemale",SeekFreePackageName="SFXMPKitImagesInfiltrator")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.InfiltratorHumanMale",SeekFreePackageName="SFXMPKitImagesInfiltrator")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.SentinelHumanFemale",SeekFreePackageName="SFXMPKitImagesSentinel")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.SentinelHumanMale",SeekFreePackageName="SFXMPKitImagesSentinel")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.SoldierHumanFemale",SeekFreePackageName="SFXMPKitImagesSoldier")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.SoldierHumanMale",SeekFreePackageName="SFXMPKitImagesSoldier")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.VanguardHumanFemale",SeekFreePackageName="SFXMPKitImagesVanguard")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.VanguardHumanMale",SeekFreePackageName="SFXMPKitImagesVanguard")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.MP_Krogan0",SeekFreePackageName="SFXMPKitImagesOther1")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.MP_Asari0",SeekFreePackageName="SFXMPKitImagesOther1")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.MP_Salarian0",SeekFreePackageName="SFXMPKitImagesOther1")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.MP_Drell0",SeekFreePackageName="SFXMPKitImagesOther2")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.MP_Quarian0",SeekFreePackageName="SFXMPKitImagesOther2")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.MP_Turian0",SeekFreePackageName="SFXMPKitImagesOther2")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AddAmmo", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AddGalaxy", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AddRevive", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AddRockets", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AddShield", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AmmoCryo", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AmmoDisrupt", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AmmoIncendiary", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AmmoPiercing", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.AmmoWarp", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.BoostPower", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.BoostShields", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.BoostSpeed", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.BoostTime", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.Credits", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.DamageAssault", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.DamagePistol", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.DamageShotgun", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.DamageSMG", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.DamageSniper", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.EquipAmmo", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.EquipGalaxy", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.EquipRevive", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.EquipRocket", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.EquipShield", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.Talent", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.XP", SeekFreePackageName="SFXMPSupplyCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitAgent", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitAgentMale", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitBiotic", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitBioticMale", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitSoldier", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitSoldierMale", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitAsari", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitDrell", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitKrogan", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitQuarian", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitSalarian", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Cards.KitTurian", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.MP_BF_HFM0", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Kits.MP_BF_HMM0", SeekFreePackageName="SFXMPCardImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptTeamPublic",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptTeamPrivate",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptEmyRandom",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptEmyGeth",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptEmyCerberus",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptEmyReapers",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptChallgRandom",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptChallgBrnz",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptChallgSilver",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptChallgGold",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptChallgPlatinum",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapRandom",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapDish",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapSlum",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapTowr",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapRctr",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapRail",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapCer",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapNoveria",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon2",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon3",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapGeth",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.StoreItems.Store001",SeekFreePackageName="SFXMPImagesStore")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.StoreItems.Store002",SeekFreePackageName="SFXMPImagesStore")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.StoreItems.Store003",SeekFreePackageName="SFXMPImagesStore")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.StoreItems.Store004",SeekFreePackageName="SFXMPImagesStore")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.StoreItems.Store005",SeekFreePackageName="SFXMPImagesStore")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.Alliance",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.AllianceHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.Box",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.box2",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.box2Holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.box3",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.box3Holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.box4",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.box4holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.box5",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.box5holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.BoxHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.Camo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.CamoHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.Cerberus",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.CerberusHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.Geth",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.GethHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.Military",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.MilitaryHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.N7",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.N7Holo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.Present",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.PresentHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.Reaper",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Creates.ReaperHolo",SeekFreePackageName="SFXMPImagesCrates")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPCer",SeekFreePackageName="SFXMPImagesMaps1")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPCnfl",SeekFreePackageName="SFXMPImagesMaps1")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPDefault",SeekFreePackageName="SFXMPImagesMaps1")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPDish",SeekFreePackageName="SFXMPImagesMaps1")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPNov",SeekFreePackageName="SFXMPImagesMaps1")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPrail",SeekFreePackageName="SFXMPImagesMaps2")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPRctr",SeekFreePackageName="SFXMPImagesMaps2")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPSlum",SeekFreePackageName="SFXMPImagesMaps2")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Maps.MPTowr",SeekFreePackageName="SFXMPImagesMaps2")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.combat-action_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.combat-action_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.combat-action_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.close-quarters-combat_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.close-quarters-combat_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.close-quarters-combat_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.headshot_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.headshot_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.headshot_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.assault-rifle_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.assault-rifle_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.assault-rifle_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.sniper-rifle_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.sniper-rifle_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.sniper-rifle_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.shotgun_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.shotgun_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.shotgun_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.pistol_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.pistol_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.pistol_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.smg_marksman_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.smg_sharpshooter_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.smg_expert_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.biotics-mastery_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.biotics-mastery_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.biotics-mastery_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.tech-mastery_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.tech-mastery_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.tech-mastery_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.combat-medic_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.combat-medic_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.combat-medic_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.assist_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.assist_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.assist_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.cover-grab_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.cover-grab_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.cover-grab_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.survival_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.survival_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.survival_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.challenge_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.challenge_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.challenge_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.extraction_bronze_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.extraction_silver_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.extraction_gold_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.killstreak_1_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.killstreak_2_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.killstreak_3_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.random-map_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages.Medals.random-faction_256x256",SeekFreePackageName="SFXMPMedalImages")</Value>
+
+				<!-- MP1 -->
+				<Value type="3">(ObjectName="BIOG_GesturesConfigDLC.RuntimeData",SeekFreePackageName="GesturesConfigDLC")</Value>
+				<Value type="3">(ObjectName="GUI_MPImages_MP1.Maps.MP1",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Weapons.asl_krogan_256x128",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Weapons.asl_krogan_512x256",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.DLC_Headshot",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.DLC_MeleeDamage",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.DLC_ShieldRegen",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.DLC_Stability",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.DLCHealthRegen",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.KitBatarian",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.KitGethEngineer",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.KitGethInfiltrator",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Kits.MP_Batarian",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Kits.MP_GethEngineer",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Kits.MP_GethInfiltrator",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Weapons.smg_geth_256x128",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Weapons.smg_geth_512x256",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Weapons.snp_batarian_256x128",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Weapons.snp_batarian_512x256",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.KitAsariCommando",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Cards.KitKroganBM",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Kits.MP_AsariComm",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Kits.MP_KroganBM",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Map.OptMapMoon",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="DLC_MPImages.Map.OptMapGeth",SeekFreePackageName="MP1Images")</Value>
+				<Value type="3">(ObjectName="GUI_SF_DLC1_PowerIcons.DLC1_PowerIcons",SeekFreePackageName="MP1PowerIcons")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethPassive",SeekFreePackageName="SFXPower_GethPassive")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethMeleePassive",SeekFreePackageName="SFXPower_GethMeleePassive")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethSentryTurret",SeekFreePackageName="SFXPower_GethSentryTurret")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethTurretAttack",SeekFreePackageName="SFXPower_GethSentryTurret")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethTurretHeal",SeekFreePackageName="SFXPower_GethSentryTurret")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Supercharge",SeekFreePackageName="SFXPower_Supercharge")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Overload_Geth",SeekFreePackageName="SFXPower_GethOverload")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Cloak_Geth",SeekFreePackageName="SFXPower_GethCloak")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_ProximityMine_Geth",SeekFreePackageName="SFXPower_GethMine")</Value>
+				<Value type="3">(ObjectName="BioChar_DLC_MP1_MPPlayers.Archetypes.Geth_Engineer",SeekFreePackageName="Geth_Engineer_MP", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioChar_DLC_MP1_MPPlayers.Archetypes.Geth_Infiltrator",SeekFreePackageName="Geth_Infiltrator_MP", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianPassive",SeekFreePackageName="SFXPower_BatarianPassive")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianMeleePassive",SeekFreePackageName="SFXPower_BatarianMPassive")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianArmor",SeekFreePackageName="SFXPower_BatarianArmor")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianAttack",SeekFreePackageName="SFXPower_BatarianAttack")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianNet",SeekFreePackageName="SFXPower_BatarianNet")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_InfernoGrenade_Batarian",SeekFreePackageName="SFXPower_BatarianInfernoGrenade")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Shockwave_Batarian",SeekFreePackageName="SFXPower_BatarianShockwave")</Value>
+				<Value type="3">(ObjectName="BioChar_DLC_MP1_MPPlayers.Archetypes.Batarian_Soldier",SeekFreePackageName="Batarian_Soldier_MP", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="BioChar_DLC_MP1_MPPlayers.Archetypes.Batarian_Sentinel",SeekFreePackageName="Batarian_Sentinel_MP", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BioticCharge_Krogan",SeekFreePackageName="SFXPower_KroganBioticCharge")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_KroganPassive_Vanguard",SeekFreePackageName="SFXPower_KroganVanguardPassive")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Carnage_KroganVanguard",SeekFreePackageName="SFXPower_KroganVanguardCarnage")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Barrier_KroganVanguard",SeekFreePackageName="SFXPower_KroganVanguardBarrier")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_KroganMeleePassive_Vanguard",SeekFreePackageName="SFXPower_KroVanMeleePassive")</Value>
+				<Value type="3">(ObjectName="BioChar_DLC_MP1_MPPlayers.Archetypes.Krogan_Vanguard",SeekFreePackageName="Krogan_Vanguard_MP", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BubbleShield",SeekFreePackageName="SFXPower_BubbleShield")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Reave_Asari",SeekFreePackageName="SFXPower_AsariReave")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Pull_Asari",SeekFreePackageName="SFXPower_AsariPull")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_AsariCommandoPassive",SeekFreePackageName="SFXPower_AsariCommandoPassive")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_AsariMeleePassive_Commando",SeekFreePackageName="SFXPower_AsariComMeleePassive")</Value>
+				<Value type="3">(ObjectName="BioChar_DLC_MP1_MPPlayers.Archetypes.AsariCommando_Adept",SeekFreePackageName="AsariCommando_Adept_MP", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXWeapon_AssaultRifle_Krogan",SeekFreePackageName="SFXWeapon_AssaultRifles_KroganDLC", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXWeapon_SMG_Geth",SeekFreePackageName="SFXWeapon_SMG_GethDLC", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXWeapon_SniperRifle_Batarian",SeekFreePackageName="SFXWeapon_SniperRifle_BatarianDLC", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_StabilityBonus",SeekFreePackageName="SFXGE_MP1_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_ShieldRegenBonus",SeekFreePackageName="SFXGE_MP1_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_MeleeDamage",SeekFreePackageName="SFXGE_MP1_MatchConsumables")</Value>
+				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_HeadshotDamage",SeekFreePackageName="SFXGE_MP1_MatchConsumables")</Value>
+
 			</Property>
 			<Property name="seekfreecommonpackagemap">
-				<Value type="2">(SeekfreeName="Asari_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Asari_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Drell_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Drell_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanFemale_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanFemale_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanFemale_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanFemale_InfBF3_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanFemale_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanFemale_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanFemale_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanMale_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanMale_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanMale_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanMale_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanMale_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanMale_SoldierBF3_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="HumanMale_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Krogan_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Krogan_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Quarian_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Quarian_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Salarian_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Salar_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Turian_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="Turian_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharacterClassMP_Adept", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharacterClassMP_Engineer", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharacterClassMP_Sentinel", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharacterClassMP_Soldier", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharacterClassMP_Vanguard", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Adept_Asari", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Adept_Drell", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Eng_FQuarian", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Eng_Salar", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Infiltrator", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Inf_FQuarian", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Inf_Salar", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Sentinel_Krogan", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Sentinel_Turian", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Soldier_Krogan", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Soldier_Turian", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Vanguard_Asari", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXCharClassMP_Vanguard_Drell", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXEngagement_Assassination", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXEngagement_Annex_Upload", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXEngagement_Annex_Hack", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXEngagement_Disarm_Disable", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXEngagement_Disarm_Enable", CommonName="BIOP_MP_COMMON")</Value>
-				<Value type="2">(SeekfreeName="SFXPowerMP_Consumables", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Asari_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Asari_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Drell_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Drell_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanFemale_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanFemale_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanFemale_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanFemale_InfBF3_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanFemale_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanFemale_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanFemale_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanMale_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanMale_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanMale_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanMale_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanMale_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanMale_SoldierBF3_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="HumanMale_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Krogan_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Krogan_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Quarian_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Quarian_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Salarian_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Salar_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Turian_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Turian_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharacterClassMP_Adept", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharacterClassMP_Engineer", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharacterClassMP_Sentinel", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharacterClassMP_Soldier", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharacterClassMP_Vanguard", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Adept_Asari", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Adept_Drell", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Eng_FQuarian", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Eng_Salar", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Infiltrator", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Inf_FQuarian", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Inf_Salar", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Sentinel_Krogan", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Sentinel_Turian", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Soldier_Krogan", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Soldier_Turian", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Vanguard_Asari", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXCharClassMP_Vanguard_Drell", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXEngagement_Assassination", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXEngagement_Annex_Upload", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXEngagement_Annex_Hack", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXEngagement_Disarm_Disable", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXEngagement_Disarm_Enable", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXPowerMP_Consumables", CommonName="BIOP_MP_COMMON")</Value>
+
+				<!-- MP1 -->
+				<Value type="3">(SeekfreeName="AsariCommando_Adept_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Krogan_Vanguard_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Batarian_Soldier_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Batarian_Sentinel_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Geth_Engineer_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="Geth_Infiltrator_MP", CommonName="BIOP_MP_COMMON")</Value>
+				<Value type="3">(SeekfreeName="SFXPower_Supercharge", CommonName="BIOP_MP_COMMON")</Value>
+
+				<!-- MP2 -->
+				<!-- MP3 -->
+				<!-- MP4 -->
+				<!-- MP5 -->
 			</Property>
 			<Property name="sfxuniqueids">
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_AdrenalineRush</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_AIHacking</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_AsariPassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_AsariMeleePassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Barrier</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_BioticCharge</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_BioticGrenade</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Carnage</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Cloak</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_CombatDrone</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_ConcussiveShot</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_CryoBlast</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_DarkChannel</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Decoy</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Discharge</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_DrellPassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_DrellMeleePassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_EnergyDrain</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_FemQuarianPassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_FemQuarianMeleePassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Fortification</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_FragGrenade</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_GethShieldBoost</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_HumanPassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassiveBase</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Soldier</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Adept</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Engineer</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Sentinel</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Vanguard</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Infiltrator</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Incinerate</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_InfernoGrenade</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_KroganPassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_KroganMeleePassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_LiftGrenade</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Marksman</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Overload</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_ProximityMine</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Pull</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Reave</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_SalarianPassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_SalarianMeleePassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_SentryTurret</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Shockwave</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Singularity</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Slam</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Stasis</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_StickyGrenade</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_TechArmor</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_TechArmor_Turian</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_TechArmor_Krogan</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Throw</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_TurianPassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_TurianMeleePassive</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Warp</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Consumable</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Ammo</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Shield</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Rocket</Value>
-				<Value type="2">SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Revive</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_SpeedBonus</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_AssaultRifle</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Pistol</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Shotgun</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SMG</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SniperRifle</Value>
-				<Value type="2">SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage</Value>
-				<Value type="2">MatchConsumable_ActiveXPBonusMultiplierIndex</Value>
-				<Value type="2">SPPLAYEDMAPS</Value>
-				<Value type="2">SPMAPSCOUNT</Value>
-				<Value type="2">MPPLAYEDMAPS</Value>
-				<Value type="2">MPMAPSCOUNT</Value>
-				<Value type="2">SPPLAYEDMAPSINSANE</Value>
-				<Value type="2">SPMAPSINSANECOUNT</Value>
-				<Value type="2">MPPLAYEDMAPSGOLD</Value>
-				<Value type="2">MPMAPSGOLDCOUNT</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_AdrenalineRush</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_AIHacking</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_AsariPassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_AsariMeleePassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Barrier</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_BioticCharge</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_BioticGrenade</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Carnage</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Cloak</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_CombatDrone</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_ConcussiveShot</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_CryoBlast</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_DarkChannel</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Decoy</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Discharge</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_DrellPassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_DrellMeleePassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_EnergyDrain</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_FemQuarianPassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_FemQuarianMeleePassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Fortification</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_FragGrenade</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_GethShieldBoost</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_HumanPassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassiveBase</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Soldier</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Adept</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Engineer</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Sentinel</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Vanguard</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Infiltrator</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Incinerate</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_InfernoGrenade</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_KroganPassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_KroganMeleePassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_LiftGrenade</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Marksman</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Overload</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_ProximityMine</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Pull</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Reave</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_SalarianPassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_SalarianMeleePassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_SentryTurret</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Shockwave</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Singularity</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Slam</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Stasis</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_StickyGrenade</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_TechArmor</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_TechArmor_Turian</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_TechArmor_Krogan</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Throw</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_TurianPassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_TurianMeleePassive</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Warp</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Consumable</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Ammo</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Shield</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Rocket</Value>
+				<Value type="3">SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Revive</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_SpeedBonus</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_AssaultRifle</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Pistol</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Shotgun</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SMG</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SniperRifle</Value>
+				<Value type="3">SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage</Value>
+				<Value type="3">MatchConsumable_ActiveXPBonusMultiplierIndex</Value>
+				<Value type="3">SPPLAYEDMAPS</Value>
+				<Value type="3">SPMAPSCOUNT</Value>
+				<Value type="3">MPPLAYEDMAPS</Value>
+				<Value type="3">MPMAPSCOUNT</Value>
+				<Value type="3">SPPLAYEDMAPSINSANE</Value>
+				<Value type="3">SPMAPSINSANECOUNT</Value>
+				<Value type="3">MPPLAYEDMAPSGOLD</Value>
+				<Value type="3">MPMAPSGOLDCOUNT</Value>
+
+				<!-- MP1 -->
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXWeapon_AssaultRifle_Krogan</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXWeapon_SMG_Geth</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXWeapon_SniperRifle_Batarian</Value>
+				<Value type="3">EngineerGeth</Value>
+				<Value type="3">InfiltratorGeth</Value>
+				<Value type="3">SoldierBatarian</Value>
+				<Value type="3">SentinelBatarian</Value>
+				<Value type="3">VanguardKrogan</Value>
+				<Value type="3">AdeptAsariCommando</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethPassive</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethMeleePassive</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethSentryTurret</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Supercharge</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Overload_Geth</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Cloak_Geth</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_ProximityMine_Geth</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianPassive</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianMeleePassive</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianArmor</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianAttack</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianNet</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_InfernoGrenade_Batarian</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Shockwave_Batarian</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BioticCharge_Krogan</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_KroganPassive_Vanguard</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Carnage_KroganVanguard</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Barrier_KroganVanguard</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_KroganMeleePassive_Vanguard</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BubbleShield</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_AsariCommandoPassive</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Reave_Asari</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Pull_Asari</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_AsariMeleePassive_Commando</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_StabilityBonus</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_ShieldRegenBonus</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_MeleeDamage</Value>
+				<Value type="3">SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_HeadshotDamage</Value>
+
+				<!-- MP2 -->
+				<!-- MP3 -->
+				<!-- MP4 -->
+				<!-- MP5 -->
 			</Property>
 		</Section>
 		<Section name="sfxonlinefoundation.sfxonlinecomponentblazehub">

@@ -2,6 +2,20 @@
 <CoalesceAsset id="BioUI" name="bioui.ini" source="..\..\biogame\config\bioui.ini">
 	<Sections>
 		<!-- Skipping things related to MP voice chat. Not worth our time. -->
+		<Section name="sfxgame.biosfhandler_mainmenu">
+			<Property name="srfriendbeatbyme" type="2">718193</Property>
+			<Property name="srfriendbeatme" type="2">718192</Property>
+		</Section>
 
+		<Section name="sfxgame.biosfhandler_options">
+			<Property name="mpoptionpages">
+				<Value type="2">(label=163117, story=163118, options=(OPTION_MPAutoLvlUp, OPTION_Subtitles, OPTION_Hints, OPTION_ActionUIHints))</Value>
+				<Value type="2">(label=282879, story=282880, options=(OPTION_ControlBindings))</Value>
+				<Value type="2">(label=338302, story=338303, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
+				<Value type="2">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_Gamma, OPTION_AntiAliasing, OPTION_DynShadows) )</Value>
+				<Value type="2">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice) )</Value>
+				<Value type="2">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>
+			</Property>
+		</Section>
 	</Sections>
 </CoalesceAsset>
