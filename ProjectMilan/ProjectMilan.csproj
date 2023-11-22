@@ -6,13 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Platforms>x64</Platforms>
+	  <EnableSourceControlManagerQueries>true</EnableSourceControlManagerQueries>
   </PropertyGroup>
 
   <ItemGroup>
     <Folder Include="ME3\Classes\SFXGameMPContent\" />
     <Folder Include="ME3\Assets\" />
-    <Folder Include="Pipelines\Shared\Compiling\AutoDonor\SFXGame\" />
-    <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />
+    <Folder Include="Pipelines\Shared\Compiling\AutoDonor\Engine\" />
   </ItemGroup>
 
   <ItemGroup>

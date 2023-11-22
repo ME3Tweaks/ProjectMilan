@@ -225,6 +225,8 @@ namespace ProjectMilan.Pipelines
                 GlobalUnrealObjectInfo.generateClassInfo(exp, packageCache: cache);
             }
 
+            // Add to object database for porting
+            MilanShared.LE3ObjectDB.AddFileToDB(mpCommon, foundF);
 
             return true;
         }

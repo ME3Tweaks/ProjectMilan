@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 
 namespace ProjectMilan.Utility
 {
@@ -65,8 +67,11 @@ namespace ProjectMilan.Utility
         }
     }
 
-
-    class ObjectSourceTierComparer : Comparer<string>
+    /// <summary>
+    /// Comparer for preference of sourcing files
+    /// </summary>
+    /// <param name="game"></param>
+    class ObjectSourceTierComparer(MEGame game, string destFileName) : Comparer<string>
     {
         public override int Compare(string file1, string file2)
         {
@@ -76,6 +81,8 @@ namespace ProjectMilan.Utility
 
         private int GetScore(string file)
         {
+            if (EntryImporter.IsSafeToImportFrom(file, game, destFileName)) 
+                return -1; // Imports are always preferred
             if (BioTier.IsSFXPackage(file)) return 0;
             if (BioTier.IsPersistentPackage(file)) return 1;
             if (BioTier.IsMasterTierPackage(file)) return 2;

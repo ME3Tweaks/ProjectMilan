@@ -75,7 +75,13 @@ namespace ProjectMilan.Pipelines.Kits
             var objReferencer = kitSourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
             MilanLog.Information("Porting object referencer", customPrefix: kitPipeline.LogCategory);
-            var rop = new RelinkerOptionsPackage() { Cache = kitPipeline.Cache, TargetGameDonorDB = MilanShared.LE3ObjectDB, PortExportsAsImportsWhenPossible = true };
+            var rop = new RelinkerOptionsPackage()
+            {
+                Cache = kitPipeline.Cache,
+                TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                PortExportsAsImportsWhenPossible = true,
+                GenerateImportsForGlobalFiles = true
+            };
             var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
                 kitDestPackage, null, true,
                 rop,
@@ -91,8 +97,15 @@ namespace ProjectMilan.Pipelines.Kits
                 // Recompile all ported classes so vtables are updated
                 MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: kitPipeline.LogCategory);
                 // This is broken!!
-                (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, kitPipeline.Cache);
-                UnrealScriptCompiler.CompileClass(kitDestPackage, text, lib, f, packageCache: kitPipeline.Cache);
+                try
+                {
+                    (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, kitPipeline.Cache);
+                    UnrealScriptCompiler.CompileClass(kitDestPackage, text, lib, f, packageCache: kitPipeline.Cache);
+                }
+                catch (Exception e)
+                {
+                    MilanLog.Exception(e, "  Error recompiling function:");
+                }
             }
 
             MilanLog.Information("Saving package", customPrefix: kitPipeline.LogCategory);
@@ -106,7 +119,7 @@ namespace ProjectMilan.Pipelines.Kits
     {
         public readonly List<KitSpecificPipeline> KitPipelines = new()
         {
-            new KitSpecificPipeline() { PackageName="HumanMale_Adept_MP", Enabled=true}
+            new KitSpecificPipeline() { PackageName = "HumanMale_Adept_MP", Enabled = true}
         };
     }
 }
