@@ -75,7 +75,7 @@ namespace ProjectMilan.Pipelines.Kits
             var objReferencer = kitSourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
             MilanLog.Information("Porting object referencer", customPrefix: kitPipeline.LogCategory);
-            var rop = new RelinkerOptionsPackage() { Cache = kitPipeline.Cache, TargetGameDonorDB = MilanShared.LE3ObjectDB };
+            var rop = new RelinkerOptionsPackage() { Cache = kitPipeline.Cache, TargetGameDonorDB = MilanShared.LE3ObjectDB, PortExportsAsImportsWhenPossible = true };
             var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
                 kitDestPackage, null, true,
                 rop,

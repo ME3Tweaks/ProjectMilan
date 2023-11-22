@@ -216,15 +216,51 @@ namespace ProjectMilan.Pipelines
             EntryImporter.AddUserSafeToImportFromFile(MEGame.LE3, MP_STARTUP_FILENAME);
 
             // Inventory package
+            MilanLog.Information($"Inventorying classes in {MP_STARTUP_FILENAME}");
             var cache = new PackageCache();
             var mpCommon = MEPackageHandler.OpenMEPackage(foundF);
             foreach (var exp in mpCommon.Exports.Where(x => x.IsClass))
             {
+                MilanLog.Information($"  Inventorying {exp.InstancedFullPath}");
                 GlobalUnrealObjectInfo.generateClassInfo(exp, packageCache: cache);
             }
 
 
             return true;
+        }
+
+        internal static void EnsureTFCsAvailable()
+        {
+            var tfcs = new[]
+            {
+                "Textures_DLC_CON_MP1.tfc",
+                "Textures_DLC_CON_MP2.tfc",
+                "Textures_DLC_CON_MP3.tfc",
+                "Textures_DLC_CON_MP4.tfc",
+                "Textures_DLC_CON_MP5.tfc",
+            };
+
+            // We have to fake a dlc dir for Texture2D's  'get files loaded in game'
+            var fakePath = Directory.CreateDirectory(Path.Combine(ME3Directory.DLCPath, "DLC_Milan")).FullName;
+            var fakeCooked = Directory.CreateDirectory(Path.Combine(fakePath, "CookedPCConsole")).FullName;
+            MountFile mf = new MountFile() { Game = MEGame.LE3, MountPriority = 50000, MountFlags = new MountFlag(EME3MountFileFlag.LoadsInMultiplayer) };
+            mf.WriteMountFile(Path.Combine(fakeCooked, "mount.dlc"));
+
+            var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, includeTFCs: true);
+            foreach (var tfcN in tfcs)
+            {
+                if (loadedFiles.ContainsKey(tfcN))
+                {
+                    MilanLog.Information($"{tfcN} already exists in game - skipping extraction");
+                    continue; // Already exists
+                }
+                var data = MilanShared.GetME3SFARFile(tfcN);
+                if (data == null)
+                    continue; // On disk already
+
+                using var outF = File.OpenWrite(Path.Combine(fakeCooked, tfcN));
+                data.CopyTo(outF);
+            }
         }
     }
 }

@@ -78,9 +78,6 @@ namespace ProjectMilan.Pipelines.Levels
 
         private static void InternalRunPipeline(MPLevelsVars levelVars)
         {
-            // Extract TFCs from SFAR
-            ExtractTFCs();
-
             foreach (var level in levelVars.LevelPipelines)
             {
                 if (!level.Enabled)
@@ -94,33 +91,7 @@ namespace ProjectMilan.Pipelines.Levels
             }
         }
 
-        private static void ExtractTFCs()
-        {
-            var tfcs = new[]
-            {
-                "Textures_DLC_CON_MP1.tfc",
-                "Textures_DLC_CON_MP2.tfc",
-                "Textures_DLC_CON_MP3.tfc",
-                "Textures_DLC_CON_MP4.tfc",
-                "Textures_DLC_CON_MP5.tfc",
-            };
-
-            // We have to fake a dlc dir for Texture2D's  'get files loaded in game'
-            var fakePath = Directory.CreateDirectory(Path.Combine(ME3Directory.DLCPath, "DLC_Milan")).FullName;
-            var fakeCooked = Directory.CreateDirectory(Path.Combine(fakePath, "CookedPCConsole")).FullName;
-            MountFile mf = new MountFile() { Game = MEGame.LE3, MountPriority = 50000, MountFlags = new MountFlag(EME3MountFileFlag.LoadsInMultiplayer) };
-            mf.WriteMountFile(Path.Combine(fakeCooked, "mount.dlc"));
-
-            foreach (var tfcN in tfcs)
-            {
-                var data = MilanShared.GetME3SFARFile(tfcN);
-                if (data == null)
-                    continue; // On disk already
-
-                using var outF = File.OpenWrite(Path.Combine(fakeCooked, tfcN));
-                data.CopyTo(outF);
-            }
-        }
+        
 
         private static void BeginPorting(LevelSpecificPipeline levelPipeline)
         {
