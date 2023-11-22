@@ -59,9 +59,9 @@ namespace ProjectMilan.Pipelines.Mod
             //     3. When entering MPLobby -> LiveIni is applied while game is running
             // MPLobby is the map name for the MP menu system both in and out of lobbies. It's a persistent level.
 
-            var manifest = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"Config", @"Default_DLC_MOD_ProjectMilan.xml");
-            var dest = Path.Combine(outDir, @"Default_DLC_MOD_ProjectMilan.bin");
-            MilanLog.Information("Compiling DLC_MOD_ProjectMilan.bin", customPrefix: LOG_CATEGORY);
+            var manifest = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"Config", $@"Default_{MilanShared.DLC_NAME}.xml");
+            var dest = Path.Combine(outDir, $@"Default_{MilanShared.DLC_NAME}.bin");
+            MilanLog.Information($"Compiling {MilanShared.DLC_NAME}.bin", customPrefix: LOG_CATEGORY);
             CoalescedConverter.ConvertToBin(manifest, dest);
         }
     }

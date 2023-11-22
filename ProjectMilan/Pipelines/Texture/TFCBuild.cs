@@ -1,9 +1,10 @@
-﻿using ProjectMilan.Pipelines.Startups;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Textures;
+using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ProjectMilan.Pipelines.Texture
 {
@@ -29,11 +30,132 @@ namespace ProjectMilan.Pipelines.Texture
 
         private static void InternalRunPipeline()
         {
-            // Setup pipeline
-            MPCommonPipelineVars vars = new MPCommonPipelineVars()
+            // Todo: Upscaled override
+
+            // Pass 1: Bring over all textures to TFC
+            MoveTexturesToExternalTFC(MilanShared.DLC_NAME);
+
+            // Pass 2: Use TFC Compactor to shrink size
+
+        }
+
+        /// <summary>
+        /// This will probably be moved to LEC
+        /// </summary>
+        private static void MoveTexturesToExternalTFC(string dlcName)
+        {
+            var inputFolder = @"Z:\ModLibrary\LE3\Project Milan\Cache\Kits";
+            var tfcName = $"Textures_{dlcName}";
+            var tfcPath = Path.Combine(inputFolder, $"{tfcName}.tfc");
+            using (var tfcStream = File.Create(tfcPath))
             {
-                OutputPath = Path.Combine(Program.Settings.OutputModPath, "LE3", "MPCommon")
+                var guid = Guid.NewGuid();
+                tfcStream.WriteGuid(guid);
+
+                foreach (var package in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
+                {
+                    MilanLog.Information($"Checking package {Path.GetFileName(package)}", customPrefix: LOG_CATEGORY);
+                    //var me3File = MilanShared.GetME3Package(Path.GetFileName(package));
+                    var le3File = MEPackageHandler.OpenMEPackage(package);
+
+                    foreach (var tex in le3File.Exports.Where(x => x.IsTexture()))
+                    {
+                        if (tex.ObjectName.Name.StartsWith("Cubemap", StringComparison.InvariantCultureIgnoreCase))
+                            continue; // These are never moved to TFC
+
+                        var bin = ObjectBinary.From<UTexture2D>(tex);
+                        if (bin.Mips.Count <= 6)
+                            continue;
+
+                        var startedMovingTexture = false;
+                        var changedMips = bin.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty);
+                        bool updateTFCName = false;
+                        for (int i = 0; i < bin.Mips.Count - 6; i++)
+                        {
+                            // Move data to external
+                            var mip = bin.Mips[i];
+                            if (mip.StorageType == StorageTypes.pccUnc)
+                            {
+                                MilanLog.Information($"  Moving texture to external TFC: {tex.InstancedFullPath}",
+                                    !startedMovingTexture, customPrefix: LOG_CATEGORY);
+                                startedMovingTexture = true;
+
+                                var compressed = TextureCompression.CompressTexture(mip.Mip, StorageTypes.extOodle);
+                                var offset = tfcStream.Position;
+                                tfcStream.Write(compressed);
+                                mip.StorageType = StorageTypes.extOodle;
+                                mip.DataOffset = (int)offset;
+                                mip.CompressedSize = compressed.Length;
+                                changedMips++;
+                                updateTFCName = true;
+                            }
+                        }
+
+                        if (updateTFCName)
+                        {
+                            // Update TFC properties
+                            var properties = tex.GetProperties();
+                            properties.AddOrReplaceProp(new FGuid(guid).ToStructProperty("TFCFileGuid"));
+                            properties.AddOrReplaceProp(new NameProperty(tfcName, "TextureFileCacheName"));
+                            tex.WriteProperties(properties);
+                        }
+
+                        if (changedMips > 0)
+                        {
+                            tex.WriteBinary(bin);
+                        }
+
+                        //var me3Tex = me3File.FindExport(tex.InstancedFullPath);
+                        //if (me3Tex != null)
+                        //{
+                        //    var le3Bin = 
+                        //}
+
+                    }
+
+                    if (le3File.IsModified)
+                    {
+                        MilanLog.Information("  Saving package", customPrefix: LOG_CATEGORY);
+                        le3File.Save();
+                    }
+                }
+            }
+
+
+            // Step 2: TFC Compactor
+            var staging = Directory.CreateDirectory(Path.Combine(inputFolder, "Staging")).FullName;
+            TFCCompactorInfoPackage info = new TFCCompactorInfoPackage()
+            {
+                Game = MEGame.LE3,
+                BaseCompactionPath = inputFolder,
+                DLCName = MilanShared.DLC_NAME,
+                GamePath = LE3Directory.DefaultGamePath,
+                TFCsToCompact = new List<string>()
+                {
+                    $"Textures_{MilanShared.DLC_NAME}"
+                },
+                UseIndexing = false,
+                StagingPath = staging
             };
+
+            MilanLog.Information("Compacting TFC", customPrefix: LOG_CATEGORY);
+            TFCCompactor.CompactTFC(info, x => MilanLog.Error(x, customPrefix: LOG_CATEGORY), (text, done, total) =>
+            {
+                if (text != null)
+                {
+                    MilanLog.Information($"  {text}", customPrefix: LOG_CATEGORY);
+                }
+                if (total > 0)
+                {
+                    MilanLog.Information($"  Progress: {done}/{total}", customPrefix: LOG_CATEGORY);
+                }
+                else if (done == -1 && total == -1)
+                {
+
+                }
+            });
+
+            // Delete staging?
         }
     }
 }

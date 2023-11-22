@@ -170,6 +170,14 @@ namespace ProjectMilan.Pipelines.Levels
                     destPackage.FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListStart).InstancedFullPath).UIndex;
                 destLevelBin.CoverListEnd = destPackage
                     .FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListEnd).InstancedFullPath).UIndex;
+
+                // Don't know if these matter
+                // Don't copy version - use LE version
+                destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
+                destLevelBin.CachedPhysBSPData = sourcePersistentLevel.CachedPhysBSPData;
+                destLevelBin.CachedPhysPerTriSMDataMap = sourcePersistentLevel.CachedPhysPerTriSMDataMap;
+                destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
+                destLevelBin.CachedPhysSMDataMap = sourcePersistentLevel.CachedPhysSMDataMap;
             }
 
             if (sourcePersistentLevel.NavListStart > 0)

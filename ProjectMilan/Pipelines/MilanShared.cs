@@ -39,10 +39,12 @@ namespace ProjectMilan.Pipelines
             }
         }
 
+        public static string DLC_NAME { get; } = @"DLC_MOD_ProjectMilan";
+
         /// <summary>
         /// Maps files in a DLC to their respective DLC, using the TOC file of the DLC
         /// </summary>
-        private static Dictionary<string, DLCPackage> ME3DLCFileMap;
+        internal static Dictionary<string, DLCPackage> ME3DLCFileMap;
 
         /// <summary>
         /// Fetches an ME3 package - from disk or SFAR
@@ -77,9 +79,12 @@ namespace ProjectMilan.Pipelines
             return null;
         }
 
-        private static void LoadME3DLCTOCs()
+        public static void LoadME3DLCTOCs()
         {
-            MilanLog.Information(@"Loading ME3 DLC TOC files for lookups");
+            if (ME3DLCFileMap != null)
+                return;
+
+            MilanLog.Information(@"Loading ME3 DLC SFARs for lookups");
             ME3DLCFileMap = new Dictionary<string, DLCPackage>();
             foreach (var f in MEDirectories.OfficialDLC(MEGame.ME3))
             {
@@ -172,8 +177,7 @@ namespace ProjectMilan.Pipelines
             else
             {
                 // May be in SFAR
-                if (ME3DLCFileMap == null)
-                    LoadME3DLCTOCs();
+                LoadME3DLCTOCs();
                 if (ME3DLCFileMap.TryGetValue(sourceFileName, out var dlcPackage))
                 {
                     MilanLog.Information($"Extracting {sourceFileName} from {dlcPackage.FileName}");

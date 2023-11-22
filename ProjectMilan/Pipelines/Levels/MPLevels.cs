@@ -34,7 +34,7 @@ namespace ProjectMilan.Pipelines.Levels
 
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade
-                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled= false, SpecialPortingDelegate = null}, // Goddess
+                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled= true, SpecialPortingDelegate = null}, // Goddess
 
                 // MP3 Earth
                 new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled=false, SpecialPortingDelegate = null}, // Rio
@@ -91,7 +91,7 @@ namespace ProjectMilan.Pipelines.Levels
             }
         }
 
-        
+
 
         private static void BeginPorting(LevelSpecificPipeline levelPipeline)
         {

@@ -65,9 +65,9 @@ namespace ProjectMilan
 
         private static void VerifySettings()
         {
-            if (Settings.OutputModPath == null || Path.GetFileName(Settings.OutputModPath) != @"DLC_MOD_ProjectMilan")
+            if (Settings.OutputModPath == null || Path.GetFileName(Settings.OutputModPath) != MilanShared.DLC_NAME)
             {
-                MilanLog.Error($"Output directory must be named 'DLC_MOD_ProjectMilan', point it to either mod in M3 mod library or DLC folder in-game (yours: {Path.GetFileName(Settings.OutputModPath)})");
+                MilanLog.Error($"Output directory must be named '{MilanShared.DLC_NAME}', point it to either mod in M3 mod library or DLC folder in-game (yours: {Path.GetFileName(Settings.OutputModPath)})");
                 Environment.Exit(1);
                 return;
             }
