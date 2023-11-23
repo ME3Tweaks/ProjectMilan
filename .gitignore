@@ -363,3 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 /ProjectMilan/Pipelines/Shared/Compiling/AutoDonor
 /ProjectMilan/Pipelines/Shared/Compiling/LooseClasses/MPCommon
+/ProjectMilan/Pipelines/Audio/DecompiledBanks/
+/ProjectMilan/Pipelines/Audio/VGMStream
+/ProjectMilan/Pipelines/Audio/Wwise/Projects/
