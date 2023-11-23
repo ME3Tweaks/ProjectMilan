@@ -13,10 +13,14 @@
     <Folder Include="ME3\Classes\SFXGameMPContent\" />
     <Folder Include="ME3\Assets\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\Engine\" />
+    <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
+    <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CliWrap" Version="3.6.4" />
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
   </ItemGroup>

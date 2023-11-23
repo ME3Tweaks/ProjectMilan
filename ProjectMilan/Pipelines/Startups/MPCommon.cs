@@ -361,6 +361,7 @@ namespace ProjectMilan.Pipelines.Startups
                     }
                 }
 
+                MilanLog.Error($"  No donor! Returning null!!", customPrefix: LOG_CATEGORY);
                 return null;
             }
 
@@ -446,7 +447,6 @@ namespace ProjectMilan.Pipelines.Startups
                 "Startup_DLC_CON_MP3_INT.pcc", // MobileAnnex
                 "Startup_DLC_CON_MP2_INT.pcc", // Retrieve
                 "BioP_MPCer.pcc", // SFXGameType_Horde_Operation
-                "BioSimpleDlgContainer_Horde.pcc" // Contains the VO controller for the shuttle pilot
             };
 
             foreach (var package in me3Packages)
