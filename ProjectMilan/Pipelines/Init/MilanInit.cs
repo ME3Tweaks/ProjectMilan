@@ -14,7 +14,7 @@ namespace ProjectMilan.Pipelines.Init
     /// </summary>
     internal class MilanInit
     {
-        private const string LOG_CATEGORY = @"MILAN-Sync";
+        private const string LOG_CATEGORY = @"MILAN-Init";
 
         /// <summary>
         /// JSON Definition that is served by project server endpoint
@@ -44,6 +44,14 @@ namespace ProjectMilan.Pipelines.Init
 
             // Sync files from ME3Tweaks so developers are all on the same fileset.
             MilanSync();
+
+            // Add global donors
+            foreach (var donorF in Directory.GetFiles(Path.Combine(MilanShared.PipelineRoot, "Shared", "GlobalDonors"), "*.pcc", SearchOption.AllDirectories))
+            {
+                MilanLog.Information($"Inventorying donor package {Path.GetFileName(donorF)}");
+                var donorP = MEPackageHandler.UnsafePartialLoad(donorF, x => false);
+                MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
+            }
         }
 
         /// <summary>

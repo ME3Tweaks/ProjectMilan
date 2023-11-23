@@ -63,6 +63,14 @@ namespace ProjectMilan.Pipelines.Mod
             var dest = Path.Combine(outDir, $@"Default_{MilanShared.DLC_NAME}.bin");
             MilanLog.Information($"Compiling {MilanShared.DLC_NAME}.bin", customPrefix: LOG_CATEGORY);
             CoalescedConverter.ConvertToBin(manifest, dest);
+
+            // Add precomputed files
+            var afcPath = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"Precomputed");
+            foreach (var file in Directory.GetFiles(afcPath, "*.*", SearchOption.AllDirectories))
+            {
+                MilanLog.Information($"Copying precomputed file {Path.GetFileName(file)} to mod", customPrefix: LOG_CATEGORY);
+                File.Copy(file, Path.Combine(outDir, Path.GetFileName(file)), true);
+            }
         }
     }
 }
