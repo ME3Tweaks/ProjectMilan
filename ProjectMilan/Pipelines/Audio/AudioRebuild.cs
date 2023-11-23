@@ -68,7 +68,33 @@ namespace ProjectMilan.Pipelines.Audio
                     }
                 }
             }
+        }
 
+        private static void PatchWwise()
+        {
+            // Patches Wwise to allow more than 200 items in project
+            var patchedHash = "cc53c44bd910450e491ba58ad7cfbf23";
+            var originalHash = "2047479374e10c4d49cb09d6cf233a73";
+
+            var fileToPatch = Environment.ExpandEnvironmentVariables("%WWISEROOT%\\Authoring\\x64\\Release\\bin\\LicenceMgr.dll");
+            var hash = Utilities.CalculateHash(fileToPatch);
+            if (hash == patchedHash)
+                return; // No need
+            if (hash == originalHash)
+            {
+                MilanLog.Information($"Backing up {Path.GetFileName(fileToPatch)}", customPrefix: LOG_CATEGORY);
+                var savePath = Path.Combine(MilanShared.PipelineRoot, "Audio", "WwiseBackup");
+                Directory.CreateDirectory(savePath);
+                File.Copy(fileToPatch, Path.Combine(savePath, Path.GetFileName(fileToPatch)));
+
+                MilanLog.Information($"Patching {Path.GetFileName(fileToPatch)}", customPrefix: LOG_CATEGORY);
+                var data = new MemoryStream(File.ReadAllBytes(fileToPatch));
+                data.Seek(0x39DE, SeekOrigin.Begin);
+                data.WriteInt32(100000);
+
+                // May require admin rights for this operation to succeed.
+                data.WriteToFile(fileToPatch);
+            }
         }
 
         /// <summary>

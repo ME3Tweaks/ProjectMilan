@@ -8,6 +8,7 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines.Levels
@@ -147,19 +148,28 @@ namespace ProjectMilan.Pipelines.Levels
 
             foreach (var export in destPackage.Exports)
             {
-                var cachedDataVer = export.GetProperty<IntProperty>("CachedPhysBrushDataVersion");
+                var cachedDataVer = export.GetProperty<IntProperty>("CachedPhysBrushDataVersion") ?? export.GetProperty<IntProperty>("PreCachedPhysDataVersion");
                 if (cachedDataVer != null && cachedDataVer == 34079634) // OT version
                 {
                     MilanLog.Information($"  Fixing collision data for {export.InstancedFullPath}");
 
                     // Get rid of it
-                    //export.RemoveProperty("CachedPhysBrushDataVersion");
+                    // This doesn't fix anything
+                    //export.RemoveProperty(cachedDataVer.Name);
                     //export.WriteBinary(BrushComponent.Create());
 
                     // Change version
+                    // This partially fixes collision
                     cachedDataVer.Value = 34079762; // Newer version of PhysX?
                     export.WriteProperty(cachedDataVer);
+
+                    export.WriteProperty(new BoolProperty(true, "BlockRigidBody"));
+                    export.WriteProperty(new BoolProperty(true, "BlockZeroExtent"));
+                    export.WriteProperty(new BoolProperty(true, "BlockNonZeroExtent"));
+                    export.WriteProperty(new BoolProperty(true, "BlockActors"));
                 }
+
+
             }
 
             // Map the stuff in PersistentLevel

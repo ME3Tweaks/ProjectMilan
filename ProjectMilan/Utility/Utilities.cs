@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using Serilog;
+using System.Diagnostics;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
 
 namespace ProjectMilan.Utility
 {
@@ -82,6 +84,71 @@ namespace ProjectMilan.Utility
             {
                 MilanLog.Error($@"Error fetching data {url}: {e.Message}");
                 return null;
+            }
+        }
+
+
+        /// <summary>
+        /// Calculates the MD5 of the specified file on disk
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <param name="algorithm">Algorithm to use. Use null for MD5.</param>
+        /// <returns></returns>
+        public static string CalculateHash(string filename, string algorithm = null)
+        {
+            try
+            {
+                using var stream = File.OpenRead(filename);
+                return CalculateHash(stream, algorithm);
+            }
+            catch (IOException e)
+            {
+                MilanLog.Error($@"I/O ERROR CALCULATING {(algorithm == null ? @"md5" : algorithm.GetType())} OF FILE: " + filename); // do not localize
+                MilanLog.Error(e);
+                return "";
+            }
+        }
+
+        /// <summary>
+        /// Calculates the hash of the stream from the beginning. Resets the stream to the beginning at the end.
+        /// </summary>
+        /// <param name="stream">Stream to hash</param>
+        /// <param name="algorithm">Algorithm to use. Use null for MD5.</param>
+        /// <returns></returns>
+        public static string CalculateHash(Stream stream, string algorithm = null)
+        {
+            HashAlgorithm algo = null;
+
+            try
+            {
+                switch (algorithm)
+                {
+                    case @"sha":
+                    case @"sha1":
+                        algo = SHA1.Create();
+                        break;
+                    case @"sha256":
+                        algo = SHA256.Create();
+                        break;
+                    default:
+                        algo = MD5.Create();
+                        break;
+                }
+
+                stream.Position = 0;
+                var hash = algo.ComputeHash(stream);
+                stream.Position = 0; // reset stream
+                return BitConverter.ToString(hash).Replace(@"-", "").ToLowerInvariant();
+            }
+            catch (Exception e)
+            {
+                MilanLog.Error($@"I/O ERROR CALCULATING {algo.GetType()} OF STREAM");
+                MilanLog.Error(e);
+                return "";
+            }
+            finally
+            {
+                algo.Dispose();
             }
         }
     }
