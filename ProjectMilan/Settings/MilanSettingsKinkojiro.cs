@@ -1,10 +1,12 @@
-﻿namespace ProjectMilan.Settings
+﻿using ProjectMilan.Pipelines;
+
+namespace ProjectMilan.Settings
 {
     // Settings for Kinkojiro's system build
     internal class MilanSettingsKinkojiro : IMilanSettings
     {
-        public string OutputModPath { get; set; } = @"UNDEFINED"; // Z:\ModLibrary\LE3\Project Milan\MilanOutput
-        public string InputSyncPath { get; set; } // must be defined
+        public string OutputModPath { get; set; } = $@"E:\Modding\LE3\Project Milan\{MilanShared.DLC_NAME}";
+        public string InputSyncPath { get; set; } = $@"E:\Modding\LE3\Project Milan\InputSync";
         public bool RunMPCommonPipeline { get; set; }
         public bool RunConfigPipeline { get; set; }
         public bool RunKitsPipeline { get; set; }
