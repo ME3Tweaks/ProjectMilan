@@ -441,7 +441,7 @@ namespace ProjectMilan.Pipelines.Startups
             // Go in from latest DLC to earlier
             var me3Packages = new[]
             {
-                "MPLobby.pcc", // MP5
+                "MPLobby.pcc", // Holds pretty much all MP classes
                 "Startup_DLC_CON_MP4_INT.pcc", // Collector HUD, Faction
                 // "SFXMobileAnnex.pcc", // Extra stuff
                 "Startup_DLC_CON_MP3_INT.pcc", // MobileAnnex

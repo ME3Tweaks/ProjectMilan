@@ -182,6 +182,20 @@ namespace ProjectMilan.Pipelines.Levels
                     cachedDataVer.Value = 34079762; // Newer version of PhysX?
                     export.WriteProperty(cachedDataVer);
 
+                    // Todo: Static mesh Rigid Body?
+                    // Level BioP
+
+                    if (export.IsA("BrushComponent"))
+                    {
+                        BrushComponent bc = ObjectBinary.From(export, levelPipeline.Cache) as BrushComponent;
+
+                        foreach (var ch in bc.CachedPhysBrushData.CachedConvexElements)
+                        {
+                            ch.ConvexElementData = ch.ConvexElementData.Skip(0x10).ToArray(); // Trim off first 16 bytes
+                        }
+                        export.WriteBinary(bc);
+                    }
+
                     // export.WriteProperty(new BoolProperty(true, "BlockRigidBody"));
                     // export.WriteProperty(new BoolProperty(true, "BlockZeroExtent"));
                     // export.WriteProperty(new BoolProperty(true, "BlockNonZeroExtent"));
