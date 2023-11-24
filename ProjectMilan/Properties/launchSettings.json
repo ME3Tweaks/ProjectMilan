@@ -1,9 +1,5 @@
 {
   "profiles": {
-    "ProjectMilan - Mgamerz": {
-      "commandName": "Project",
-      "commandLineArgs": "--config Mgamerz"
-    },
     "ProjectMilan - SirCxyrtyx": {
       "commandName": "Project",
       "commandLineArgs": "--config SirCxyrtyx"
@@ -19,6 +15,20 @@
     "ProjectMilan - d00t": {
       "commandName": "Project",
       "commandLineArgs": "--config d00t"
+    },
+    "ProjectMilan - Mgamerz Laptop": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Mgamerz",
+      "environmentVariables": {
+        "MAXTHREADS": "4"
+      }
+    },
+    "ProjectMilan - Mgamerz Desktop": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Mgamerz",
+      "environmentVariables": {
+        "MAXTHREADS": "12"
+      }
     }
   }
 }

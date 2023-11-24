@@ -52,5 +52,9 @@ namespace ProjectMilan.Settings
         /// </summary>
         bool RunTexturePipeline { get; set; }
 
+        /// <summary>
+        /// Maximum number of threads to run. Tune to your system.
+        /// </summary>
+        int MaxThreads { get; set; }
     }
 }

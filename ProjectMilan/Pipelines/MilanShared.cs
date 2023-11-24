@@ -46,6 +46,8 @@ namespace ProjectMilan.Pipelines
         /// </summary>
         internal static Dictionary<string, DLCPackage> ME3DLCFileMap;
 
+        private static object syncObj = new();
+
         /// <summary>
         /// Fetches an ME3 package - from disk or SFAR
         /// </summary>
@@ -54,28 +56,34 @@ namespace ProjectMilan.Pipelines
         {
             bool forceUseDLC = sourceFileName == "MPLobby.pcc"; // Do not use basegame version.
 
-            if (!forceUseDLC && MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath))
-            {
-                return MEPackageHandler.OpenMEPackage(filePath);
-            }
-            else
-            {
-                // May be in SFAR
-                if (ME3DLCFileMap == null)
-                    LoadME3DLCTOCs();
-                if (ME3DLCFileMap.TryGetValue(sourceFileName, out var dlcPackage))
-                {
-                    return MEPackageHandler.OpenMEPackageFromStream(dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName)), sourceFileName);
-                }
-                if (MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath2) && filePath2.Contains("\\DLC_"))
-                {
-                    // Unpacked DLC
-                    return MEPackageHandler.OpenMEPackage(filePath2);
-                }
+            lock (syncObj) {
 
-                MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
-            }
+                if (!forceUseDLC &&
+                    MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath))
+                {
+                    return MEPackageHandler.OpenMEPackage(filePath);
+                }
+                else
+                {
+                    // May be in SFAR
+                    if (ME3DLCFileMap == null)
+                        LoadME3DLCTOCs();
+                    if (ME3DLCFileMap.TryGetValue(sourceFileName, out var dlcPackage))
+                    {
+                        return MEPackageHandler.OpenMEPackageFromStream(
+                            dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName)), sourceFileName);
+                    }
 
+                    if (MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath2) &&
+                        filePath2.Contains("\\DLC_"))
+                    {
+                        // Unpacked DLC
+                        return MEPackageHandler.OpenMEPackage(filePath2);
+                    }
+
+                    MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
+                }
+            }
             return null;
         }
 
