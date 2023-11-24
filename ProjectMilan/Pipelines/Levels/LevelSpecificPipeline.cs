@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Pipelines.Levels
 {
@@ -75,5 +76,16 @@ namespace ProjectMilan.Pipelines.Levels
         /// Pipeline package cache
         /// </summary>
         public PackageCache Cache { get; set; }
+
+        /// <summary>
+        /// Gets the path that holds donors specific for this level
+        /// </summary>
+        /// <param name="pipeline"></param>
+        /// <returns></returns>
+        public string GetTemporaryDonorPath()
+        {
+            return Path.Combine(MilanShared.PipelineRoot, "Levels", BioP, "Donors");
+        }
+
     }
 }

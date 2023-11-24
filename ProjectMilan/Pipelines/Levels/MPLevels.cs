@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ProjectMilan.Pipelines.Levels.MPLobby;
+using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Utility;
 
@@ -29,12 +30,12 @@ namespace ProjectMilan.Pipelines.Levels
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
                 // MP1 Resurgence
-                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= false, SpecialPortingDelegate = null}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null}, // Hydra
+                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= true, SpecialPortingDelegate = null}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = false, SpecialPortingDelegate = null}, // Hydra
 
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade
-                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled= true, SpecialPortingDelegate = null}, // Goddess
+                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled= false, SpecialPortingDelegate = null}, // Goddess
 
                 // MP3 Earth
                 new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled=false, SpecialPortingDelegate = null}, // Rio
@@ -91,8 +92,6 @@ namespace ProjectMilan.Pipelines.Levels
             }
         }
 
-
-
         private static void BeginPorting(LevelSpecificPipeline levelPipeline)
         {
             levelPipeline.LogCategory = $"{LOG_CATEGORY}-{levelPipeline.BioP}";
@@ -103,6 +102,9 @@ namespace ProjectMilan.Pipelines.Levels
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Levels", levelPipeline.BioP);
             Directory.CreateDirectory(outputPath);
+
+            // Register donors
+            SharedMaterialDonor.RegisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
 
             // Get BioP package
             MilanLog.Information($"Loading ME3 BioP", customPrefix: levelPipeline.LogCategory);
@@ -134,6 +136,9 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Save BioP
             levelPipeline.LE3BioP.Save();
+
+            // Unregister donors
+            SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
 
             // Delete cache
             levelPipeline.Cache.Dispose();

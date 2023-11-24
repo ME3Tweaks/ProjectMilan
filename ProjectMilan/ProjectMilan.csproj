@@ -12,6 +12,8 @@
   <ItemGroup>
     <Folder Include="ME3\Classes\SFXGameMPContent\" />
     <Folder Include="ME3\Assets\" />
+    <Folder Include="Pipelines\Levels\BioP_MPGeth\Donors\" />
+    <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\Engine\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
@@ -29,5 +31,9 @@
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
     <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
   </ItemGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(SolutionDir)x64\Debug\AggGeomRecooker.dll&quot; &quot;$(TargetDir)AggGeomRecooker.dll&quot; /y" />
+  </Target>
 
 </Project>

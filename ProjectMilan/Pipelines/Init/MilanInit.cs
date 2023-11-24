@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
+using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines.Init
@@ -45,13 +46,7 @@ namespace ProjectMilan.Pipelines.Init
             // Sync files from ME3Tweaks so developers are all on the same fileset.
             MilanSync();
 
-            // Add global donors
-            foreach (var donorF in Directory.GetFiles(Path.Combine(MilanShared.PipelineRoot, "Shared", "GlobalDonors"), "*.pcc", SearchOption.AllDirectories))
-            {
-                MilanLog.Information($"Inventorying donor package {Path.GetFileName(donorF)}");
-                var donorP = MEPackageHandler.UnsafePartialLoad(donorF, x => false);
-                MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
-            }
+            SharedMaterialDonor.RegisterSharedDonors();
         }
 
         /// <summary>

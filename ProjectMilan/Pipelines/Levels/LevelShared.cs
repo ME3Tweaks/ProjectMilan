@@ -136,7 +136,14 @@ namespace ProjectMilan.Pipelines.Levels
                 else
                 {
                     MilanLog.Information($"  Porting {sm.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
-                    var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, sm, destPackage, destLevel, true, new RelinkerOptionsPackage() { IsCrossGame = true, TargetGameDonorDB = MilanShared.LE3ObjectDB, Cache = levelPipeline.Cache }, out var _);
+                    var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, 
+                        sm, destPackage, destLevel, true, 
+                        new RelinkerOptionsPackage() { 
+                            IsCrossGame = true, 
+                            TargetGameDonorDB = MilanShared.LE3ObjectDB, 
+                            Cache = levelPipeline.Cache,
+                            PortExportsAsImportsWhenPossible = true
+                        }, out var _);
                     if (badLinks.Any())
                     {
                         // uh oh
@@ -148,6 +155,18 @@ namespace ProjectMilan.Pipelines.Levels
 
             foreach (var export in destPackage.Exports)
             {
+                if (export.HasStack)
+                {
+                    var orig = sourcePackage.FindExport(export.InstancedFullPath);
+                    if (orig == null)
+                        continue;
+                    var binPreOrig = orig.GetPrePropBinary();
+                    var binPost = export.GetPrePropBinary();
+                    binPost[0x10] = binPreOrig[0x10];
+                    binPost[0x11] = binPreOrig[0x11];
+                    export.WritePrePropsAndProperties(binPost, export.GetProperties());
+                }
+
                 var cachedDataVer = export.GetProperty<IntProperty>("CachedPhysBrushDataVersion") ?? export.GetProperty<IntProperty>("PreCachedPhysDataVersion");
                 if (cachedDataVer != null && cachedDataVer == 34079634) // OT version
                 {
@@ -156,17 +175,17 @@ namespace ProjectMilan.Pipelines.Levels
                     // Get rid of it
                     // This doesn't fix anything
                     //export.RemoveProperty(cachedDataVer.Name);
-                    //export.WriteBinary(BrushComponent.Create());
+                    //export.WriteBinary(levelPipeline.donorBrush);
 
                     // Change version
                     // This partially fixes collision
                     cachedDataVer.Value = 34079762; // Newer version of PhysX?
                     export.WriteProperty(cachedDataVer);
 
-                    export.WriteProperty(new BoolProperty(true, "BlockRigidBody"));
-                    export.WriteProperty(new BoolProperty(true, "BlockZeroExtent"));
-                    export.WriteProperty(new BoolProperty(true, "BlockNonZeroExtent"));
-                    export.WriteProperty(new BoolProperty(true, "BlockActors"));
+                    // export.WriteProperty(new BoolProperty(true, "BlockRigidBody"));
+                    // export.WriteProperty(new BoolProperty(true, "BlockZeroExtent"));
+                    // export.WriteProperty(new BoolProperty(true, "BlockNonZeroExtent"));
+                    // export.WriteProperty(new BoolProperty(true, "BlockActors"));
                 }
 
 
@@ -183,11 +202,11 @@ namespace ProjectMilan.Pipelines.Levels
 
                 // Don't know if these matter
                 // Don't copy version - use LE version
-                destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
-                destLevelBin.CachedPhysBSPData = sourcePersistentLevel.CachedPhysBSPData;
-                destLevelBin.CachedPhysPerTriSMDataMap = sourcePersistentLevel.CachedPhysPerTriSMDataMap;
-                destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
-                destLevelBin.CachedPhysSMDataMap = sourcePersistentLevel.CachedPhysSMDataMap;
+                //destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
+                //destLevelBin.CachedPhysBSPData = sourcePersistentLevel.CachedPhysBSPData;
+                //destLevelBin.CachedPhysPerTriSMDataMap = sourcePersistentLevel.CachedPhysPerTriSMDataMap;
+                //destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
+                //destLevelBin.CachedPhysSMDataMap = sourcePersistentLevel.CachedPhysSMDataMap;
             }
 
             if (sourcePersistentLevel.NavListStart > 0)
@@ -201,6 +220,18 @@ namespace ProjectMilan.Pipelines.Levels
             // NavRefs, CoverRefs
             // CrossLevelActors
             destPackage.GetLevel().WriteBinary(destLevelBin);
+
+            // Port sequence
+            var srcSeq = sourcePackage.FindExport("TheWorld.PersistentLevel.Main_Sequence");
+            var destSeq = destPackage.FindExport("TheWorld.PersistentLevel.Main_Sequence");
+
+            if (srcSeq != null && destSeq != null)
+            {
+                MilanLog.Information("  Porting Main_Sequence", customPrefix: levelPipeline.LogCategory);
+                var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, srcSeq, destPackage, destSeq
+                    , true, new RelinkerOptionsPackage() { IsCrossGame = true, TargetGameDonorDB = MilanShared.LE3ObjectDB, Cache = levelPipeline.Cache }, out var _);
+
+            }
 
             LevelTools.RebuildPersistentLevelChildren(destLevel);
 
