@@ -46,6 +46,7 @@ namespace ProjectMilan.Pipelines.Init
             // Sync files from ME3Tweaks so developers are all on the same fileset.
             MilanSync();
 
+            WriteDonorOutputPath(); // For development
             SharedMaterialDonor.RegisterSharedDonors();
         }
 
@@ -57,6 +58,22 @@ namespace ProjectMilan.Pipelines.Init
         public static string GetSyncFile(string filename)
         {
             return Path.Combine(Program.Settings.InputSyncPath, filename);
+        }
+
+        /// <summary>
+        /// Writes the location of the global donor folder for use in LEX - so it is not stored in a repo visible to people.
+        /// Hello someone from the future reading this
+        /// </summary>
+        public static void WriteDonorOutputPath()
+        {
+            try
+            {
+                Utilities.WriteRegistryKey(@"HKEY_CURRENT_USER\Software\ME3Tweaks", @"DonorOutputPath", SharedMaterialDonor.GetGlobalDonorPath());
+            }
+            catch (Exception e)
+            {
+                MilanLog.Error($@"Could not write donor output location to registry: {e.Message}");
+            }
         }
 
         /// <summary>
