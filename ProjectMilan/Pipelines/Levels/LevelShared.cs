@@ -255,7 +255,11 @@ namespace ProjectMilan.Pipelines.Levels
             var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(destPackage);
             foreach (var v in brokenMaterials)
             {
-                MilanLog.Warning($@"  Material has no shader in game and will need donor: {v.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
+                var matchingME3 = sourcePackage.FindExport(v.InstancedFullPath);
+                if (!levelPipeline.MaterialsNeedingDonors.Contains(matchingME3))
+                {
+                    levelPipeline.MaterialsNeedingDonors.Add(matchingME3);
+                }
             }
 
             return destPackage;

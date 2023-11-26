@@ -32,7 +32,7 @@ namespace ProjectMilan.Utility
             // Feed data to NxCooking and get the result
             byte[] newCachedData = new byte[0]; // Todo
 
-            brush.WriteBinary(BrushComponent.Create(newCachedData));
+            brush.WriteBinary(BrushComponent.Create());
         }
     }
 }

@@ -7,6 +7,7 @@ using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Mod;
+using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Settings;
@@ -86,7 +87,7 @@ namespace ProjectMilan
         static void RunPipelines()
         {
             MilanInit.Init(); // Initialize shared pipeline data
-
+            
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files

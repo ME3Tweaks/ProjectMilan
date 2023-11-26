@@ -56,7 +56,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // MP5 Reckoning
                 // No maps
                 // We use MPLobby.pcc level from here
-                new LevelSpecificPipeline() { BioP="MPLobby", Enabled=true, SpecialPrePortingDelegate = MPLobbySpecific.PreCorrect}, 
+                // new LevelSpecificPipeline() { BioP="MPLobby", Enabled=true, SpecialPrePortingDelegate = MPLobbySpecific.PreCorrect}, 
 
                 // Prototype and unused maps
                 // These are named that were assigned to the maps for ModMaker
@@ -143,6 +143,15 @@ namespace ProjectMilan.Pipelines.Levels
             // Delete cache
             levelPipeline.Cache.Dispose();
             levelPipeline.Cache = null;
+
+            // Print donors
+            MilanLog.Information("Material donors required: ", customPrefix: levelPipeline.LogCategory);
+            foreach (var me3BrokenMat in levelPipeline.MaterialsNeedingDonors)
+            {
+                MilanLog.Warning(me3BrokenMat.InstancedFullPath, customPrefix: levelPipeline.LogCategory);
+                DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath());
+            }
+            // levelPipeline.MaterialsNeedingDonors.Clear();
         }
 
         private static void ConfigureBioP(LevelSpecificPipeline levelPipeline)

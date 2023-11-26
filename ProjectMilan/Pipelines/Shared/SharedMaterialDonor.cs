@@ -45,7 +45,7 @@ namespace ProjectMilan.Pipelines.Shared
             MilanLog.Information($"Registering global donor packages", customPrefix: LOG_CATEGORY);
 
             // Add global donors
-            var globalPath = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, "Shared", "GlobalDonors")).FullName;
+            var globalPath = Directory.CreateDirectory(GetGlobalDonorPath()).FullName;
 
             foreach (var donorF in Directory.GetFiles(globalPath, "*.pcc", SearchOption.AllDirectories))
             {
@@ -53,6 +53,22 @@ namespace ProjectMilan.Pipelines.Shared
                 var donorP = MEPackageHandler.UnsafePartialLoad(donorF, x => false);
                 MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
             }
+        }
+
+        public static string GetGlobalDonorPath()
+        {
+            return Path.Combine(MilanShared.PipelineRoot, "Shared", "GlobalDonors");
+        }
+
+        public static void TryFindDonorsFor(ExportEntry matExp)
+        {
+            if (matExp.Game != MEGame.ME3)
+            {
+                // We dont need donors
+                throw new Exception("Don't need donors except for ME3!");
+            }
+
+
         }
     }
 }

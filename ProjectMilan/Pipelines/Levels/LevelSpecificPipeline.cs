@@ -78,6 +78,11 @@ namespace ProjectMilan.Pipelines.Levels
         public PackageCache Cache { get; set; }
 
         /// <summary>
+        /// List of ME3 Export Entries that do not work in LE3
+        /// </summary>
+        public List<ExportEntry> MaterialsNeedingDonors { get; } = new();
+
+        /// <summary>
         /// Gets the path that holds donors specific for this level
         /// </summary>
         /// <param name="pipeline"></param>
@@ -87,5 +92,9 @@ namespace ProjectMilan.Pipelines.Levels
             return Path.Combine(MilanShared.PipelineRoot, "Levels", BioP, "Donors");
         }
 
+        public string GetStagingTemporaryDonorPath()
+        {
+            return Directory.CreateDirectory(Path.Combine(GetTemporaryDonorPath(), "Auto")).FullName;
+        }
     }
 }
