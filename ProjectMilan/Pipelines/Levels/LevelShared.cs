@@ -170,7 +170,7 @@ namespace ProjectMilan.Pipelines.Levels
                 var cachedDataVer = export.GetProperty<IntProperty>("CachedPhysBrushDataVersion") ?? export.GetProperty<IntProperty>("PreCachedPhysDataVersion");
                 if (cachedDataVer != null && cachedDataVer == 34079634) // OT version
                 {
-                    MilanLog.Information($"  Fixing collision data for {export.InstancedFullPath}");
+                    MilanLog.Information($"  Fixing collision data for {export.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
 
                     // Get rid of it
                     // This doesn't fix anything

@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices.Marshalling;
 using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
+using LegendaryExplorerCore.Localization;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
 
@@ -155,110 +158,147 @@ namespace ProjectMilan.Pipelines.Shared
             }
 
             MilanLog.Information($"  We have parent info. There are {parentInfo.Children.Count} children");
-
-            var donorChoice = parentInfo.Children.Count > 0 ? parentInfo.Children[0] : parentInfo;
-            // Load package with that donor
-            var files = MilanShared.LE3ObjectDB.GetFilesContainingObject(donorChoice.InstancedFullPath);
-            var le3DonorPackage = MilanShared.GetLE3Package(Path.GetFileName(files[0]));
-            var exp = le3DonorPackage.FindExport(donorChoice.InstancedFullPath);
-
-            // This is no where near finished
-            // Create donor
-            var donorPath = Path.Combine(outPath, $"{originalMaterial.InstancedFullPath}.pcc");
-            MEPackageHandler.CreateAndSavePackage(donorPath, MEGame.LE3);
-            using var destDonorPackage = MEPackageHandler.OpenMEPackage(donorPath);
-
-            var parts = originalMaterial.InstancedFullPath.Split('.');
-            ExportEntry parent = null;
-            IEntry portedEntry = null;
-            for (int i = 0; i < parts.Length; i++)
+            var donorIdx = 0;
+            bool keepAttempting = true;
+            while (keepAttempting)
             {
-                if (i < parts.Length - 1)
-                {
-                    parent = ExportCreator.CreatePackageExport(destDonorPackage, parts[i], parent);
-                    parent.indexValue = 0;
-                }
-                else
-                {
-                    exp.ObjectName = parts[i];
-                    EntryExporter.ExportExportToPackage(exp, destDonorPackage, out portedEntry);
-                    portedEntry.idxLink = parent?.UIndex ?? 0;
-                    //EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, exp, donorPackage, parent, true, new RelinkerOptionsPackage() { ImportExportDependencies = true }, out var newDonor);
-                }
-            }
+                keepAttempting = false;
+                var donorChoice = parentInfo.Children.Count > 0 ? parentInfo.Children[donorIdx] : parentInfo;
 
-            var portedExport = portedEntry as ExportEntry;
-            if (originalMaterial.IsA("MaterialInstanceConstant"))
-            {
-                // If this is multi-layered this won't work fully
-                // But we will try it here anyways
-                // Port expressions over from the original material
+                // Load package with that donor
+                var files = MilanShared.LE3ObjectDB.GetFilesContainingObject(donorChoice.InstancedFullPath);
+                var le3DonorPackage = MilanShared.GetLE3Package(Path.GetFileName(files[0]));
+                var exp = le3DonorPackage.FindExport(donorChoice.InstancedFullPath);
 
-                // Vectors
-                var paramsProp = originalMaterial.GetProperty<ArrayProperty<StructProperty>>("VectorParameterValues");
-                if (paramsProp != null)
-                {
-                    portedExport.WriteProperty(paramsProp);
-                }
-                else
-                {
-                    // Should these match the original?
-                    portedExport.RemoveProperty("VectorParameterValues");
-                }
+                // This is no where near finished
+                // Create donor
+                var donorPath = Path.Combine(outPath, $"{originalMaterial.InstancedFullPath}.pcc");
+                MEPackageHandler.CreateAndSavePackage(donorPath, MEGame.LE3);
+                using var destDonorPackage = MEPackageHandler.OpenMEPackage(donorPath);
 
-                // Scalars
-                paramsProp = originalMaterial.GetProperty<ArrayProperty<StructProperty>>("ScalarParameterValues");
-                if (paramsProp != null)
+                var parts = originalMaterial.InstancedFullPath.Split('.');
+                ExportEntry parent = null;
+                IEntry portedEntry = null;
+                for (int i = 0; i < parts.Length; i++)
                 {
-                    portedExport.WriteProperty(paramsProp);
-                }
-                else
-                {
-                    // Should these match the original?
-                    portedExport.RemoveProperty("ScalarParameterValues");
-                }
-                // Textures
-                paramsProp = originalMaterial.GetProperty<ArrayProperty<StructProperty>>("TextureParameterValues");
-                if (paramsProp != null)
-                {
-                    // Update object references
-                    foreach (var prop in paramsProp)
+                    if (i < parts.Length - 1)
                     {
-                        var paramValue = prop.GetProp<ObjectProperty>("ParameterValue");
-                        if (originalMaterial.FileRef.TryGetEntry(paramValue.Value, out var originalTexture))
-                        {
-                            ExportEntry texture = originalTexture as ExportEntry;
-                            if (originalTexture is ImportEntry imp)
-                            {
-                                texture = EntryImporter.ResolveImport(imp);
-                            }
+                        parent = ExportCreator.CreatePackageExport(destDonorPackage, parts[i], parent);
+                        parent.indexValue = 0;
+                    }
+                    else
+                    {
+                        exp.ObjectName = parts[i];
+                        EntryExporter.ExportExportToPackage(exp, destDonorPackage, out portedEntry);
+                        portedEntry.idxLink = parent?.UIndex ?? 0;
+                        //EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, exp, donorPackage, parent, true, new RelinkerOptionsPackage() { ImportExportDependencies = true }, out var newDonor);
+                    }
+                }
 
-                            if (texture == null)
-                            {
-                                // We're in bad shape
-                                Debugger.Break();
-                            }
+                var portedExport = portedEntry as ExportEntry;
+                if (originalMaterial.IsA("MaterialInstanceConstant"))
+                {
+                    // If this is multi-layered this won't work fully
+                    // But we will try it here anyways
+                    // Port expressions over from the original material
 
-                            EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, null, new PackageCache(), MilanShared.LE3ObjectDB);
-                            paramValue.Value = _le3Texture.UIndex; // Since this is not relinked we will relink it here.
-                        }
-                        else
-                        {
-                            // Auto donor failed!!! This requires a manual relink
-
-                        }
+                    // Vectors
+                    var paramsProp =
+                        originalMaterial.GetProperty<ArrayProperty<StructProperty>>("VectorParameterValues");
+                    if (paramsProp != null)
+                    {
+                        portedExport.WriteProperty(paramsProp);
+                    }
+                    else
+                    {
+                        // Should these match the original?
+                        portedExport.RemoveProperty("VectorParameterValues");
                     }
 
-                    portedExport.WriteProperty(paramsProp);
+                    // Scalars
+                    paramsProp = originalMaterial.GetProperty<ArrayProperty<StructProperty>>("ScalarParameterValues");
+                    if (paramsProp != null)
+                    {
+                        portedExport.WriteProperty(paramsProp);
+                    }
+                    else
+                    {
+                        // Should these match the original?
+                        portedExport.RemoveProperty("ScalarParameterValues");
+                    }
+
+                    // Textures
+                    paramsProp = originalMaterial.GetProperty<ArrayProperty<StructProperty>>("TextureParameterValues");
+                    if (paramsProp != null)
+                    {
+                        // Update object references
+                        foreach (var prop in paramsProp)
+                        {
+                            var paramValue = prop.GetProp<ObjectProperty>("ParameterValue");
+                            if (originalMaterial.FileRef.TryGetEntry(paramValue.Value, out var originalTexture))
+                            {
+                                ExportEntry texture = originalTexture as ExportEntry;
+                                if (originalTexture is ImportEntry imp)
+                                {
+                                    texture = EntryImporter.ResolveImport(imp);
+
+                                    if (texture == null)
+                                    {
+                                        var containingPackageF =
+                                            MilanShared.LE3ObjectDB.GetFilesContainingObject(imp.InstancedFullPath)[0];
+                                        var containingPackageP =
+                                            MilanShared.GetME3Package(Path.GetFileName(containingPackageF));
+                                        texture = containingPackageP.FindExport(imp.InstancedFullPath);
+                                    }
+
+                                    if (texture == null)
+                                        Debugger.Break();
+                                }
+
+                                if (texture == null)
+                                    Debugger.Break();
+
+                                EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, null, new PackageCache(), MilanShared.LE3ObjectDB);
+                                paramValue.Value = _le3Texture.UIndex; // Since this is not relinked we will relink it here.
+                            }
+                            else
+                            {
+                                // Auto donor failed!!! This requires a manual relink
+                            }
+                        }
+                        portedExport.WriteProperty(paramsProp);
+                    }
+                    else
+                    {
+                        // Should these match the original?
+                        portedExport.RemoveProperty("TextureParameterValues");
+                    }
+
+                    donorIdx++;
                 }
-                else
+
+                if (!keepAttempting)
                 {
-                    // Should these match the original?
-                    portedExport.RemoveProperty("TextureParameterValues");
+                    var package = new ReferenceCheckPackage();
+                    EntryChecker.CheckReferences(package, destDonorPackage, LECLocalizationShim.NonLocalizedStringConverter);
+                    if (package.GetInfoWarnings().Any())
+                    {
+                        keepAttempting = true;
+                        continue;
+                    }
+
+                    foreach (var f in destDonorPackage.Exports.Where(x => x.IsTexture()))
+                    {
+                        // Unsure how this fixes things.
+                        var tex = ObjectBinary.From<UTexture2D>(f);
+                        tex.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty);
+                        f.WriteBinary(tex);
+                    }
+
+                    MilanLog.Information($"  Made an autodonor", customPrefix: LOG_CATEGORY);
+                    destDonorPackage.Save();
                 }
             }
-
-            destDonorPackage.Save();
         }
 
         // This can easily be optimized with a dictionary. Just doing proof of concept right now.
