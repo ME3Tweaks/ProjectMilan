@@ -40,6 +40,7 @@ namespace ProjectMilan.Pipelines.Init
             // InventoryCustomPackages(); // Not currently used
 
             // Load object databases
+
             MilanShared.LE3ObjectDB = LoadObjectDB(MEGame.LE3);
             MilanShared.ME3ObjectDB = LoadObjectDB(MEGame.ME3);
 
