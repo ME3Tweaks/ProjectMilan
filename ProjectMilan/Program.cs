@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.Collections;
+using CommandLine;
 using LegendaryExplorerCore;
 using LegendaryExplorerCore.Packages;
 using ProjectMilan.Pipelines;
@@ -28,6 +29,15 @@ namespace ProjectMilan
         /// </summary>
         public static IMilanSettings Settings;
 
+        public static readonly MELocalization[] SupportedVOLanguages = new[]
+        {
+            MELocalization.INT,
+            MELocalization.FRA,
+            MELocalization.DEU,
+            MELocalization.ITA,
+            // Any other languages that had VO?
+        };
+
         static void Main(string[] args)
         {
             // Parse command line options. If it succeeds, run the specified delegate
@@ -48,13 +58,16 @@ namespace ProjectMilan
             VerifySettings();
 
             // Cleanup output directory before we start
-            if (Directory.Exists(Settings.OutputModPath))
+            if (!Settings.DontDeleteModFolder)
             {
-                Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputModPath, deleteDirectoryItself: false);
-            }
-            else
-            {
-                Directory.CreateDirectory(Settings.OutputModPath);
+                if (Directory.Exists(Settings.OutputModPath))
+                {
+                    Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputModPath, deleteDirectoryItself: false);
+                }
+                else
+                {
+                    Directory.CreateDirectory(Settings.OutputModPath);
+                }
             }
 
             // Initialize LEC
@@ -87,7 +100,11 @@ namespace ProjectMilan
         static void RunPipelines()
         {
             MilanInit.Init(); // Initialize shared pipeline data
-            
+
+            // Uncomment to run DonorDB build
+            //DonorTooling.BuildDonorDB();
+            //return;
+
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
@@ -96,15 +113,23 @@ namespace ProjectMilan
             if (!MilanShared.EnsureMPCommonInGame()) // These require BIOP_MP_COMMON
                 return;
 
-            // Content pipelines will use textures during porting
+            // Content pipelines will use the milan ME3 cache
             MilanShared.EnsureTFCsAvailable();
+            MilanShared.EnsureAFCsAvailable();
+
+            // Post pipelines require additional items to load
+            // We load them here so you don't find out later and have to run it again
+            MilanShared.EnsureVGMStreamAvailable();
+            AudioRebuild.EnsureWwise7110();
+
 
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
+            
 
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
-            RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio"); // Fixes audio
+            RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio"); // Converts audio
         }
 
         /// <summary>

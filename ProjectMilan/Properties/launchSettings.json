@@ -27,7 +27,7 @@
       "commandName": "Project",
       "commandLineArgs": "--config Mgamerz",
       "environmentVariables": {
-        "MAXTHREADS": "12"
+        "MAXTHREADS": "18"
       }
     }
   }

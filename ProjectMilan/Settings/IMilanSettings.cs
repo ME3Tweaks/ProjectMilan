@@ -56,5 +56,10 @@ namespace ProjectMilan.Settings
         /// Maximum number of threads to run. Tune to your system.
         /// </summary>
         int MaxThreads { get; set; }
+
+        /// <summary>
+        /// If the mod folder should not be deleted
+        /// </summary>
+        bool DontDeleteModFolder { get; set; }
     }
 }

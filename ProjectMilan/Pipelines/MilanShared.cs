@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Linq;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
@@ -6,6 +7,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Pipelines.Audio.Extension;
 
 namespace ProjectMilan.Pipelines
 {
@@ -56,7 +58,8 @@ namespace ProjectMilan.Pipelines
         {
             bool forceUseDLC = sourceFileName == "MPLobby.pcc"; // Do not use basegame version.
 
-            lock (syncObj) {
+            lock (syncObj)
+            {
 
                 if (!forceUseDLC &&
                     MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath))
@@ -272,8 +275,61 @@ namespace ProjectMilan.Pipelines
                 if (data == null)
                     continue; // On disk already
 
+                MilanLog.Information($"{tfcN} is being copied to the direct access cache");
                 using var outF = File.OpenWrite(Path.Combine(fakeCooked, tfcN));
                 data.CopyTo(outF);
+            }
+        }
+
+        internal static void EnsureAFCsAvailable()
+        {
+            var afcBaseNames = new[]
+            {
+                "DLC_CON_MP1",
+                "DLC_CON_MP2",
+                "DLC_CON_MP3",
+                "DLC_CON_MP4",
+                "DLC_CON_MP5",
+            };
+
+            // We have to fake a dlc dir for AFC's  'get files loaded in game'
+            var fakePath = Directory.CreateDirectory(Path.Combine(ME3Directory.DLCPath, "DLC_Milan")).FullName;
+            var fakeCooked = Directory.CreateDirectory(Path.Combine(fakePath, "CookedPCConsole")).FullName;
+            MountFile mf = new MountFile() { Game = MEGame.LE3, MountPriority = 50000, MountFlags = new MountFlag(EME3MountFileFlag.LoadsInMultiplayer) };
+            mf.WriteMountFile(Path.Combine(fakeCooked, "mount.dlc"));
+
+            // List of all suffixes to ensure
+            var audioSuffixes = Program.SupportedVOLanguages.Select(x => x.ToString()).Concat(new[] { "SFX" });
+
+            var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, includeAFCs: true); // This will also force reload the list of files.
+            foreach (var afcN in afcBaseNames)
+            {
+                foreach (var loc in audioSuffixes)
+                {
+                    var locF = $"{afcN}_{loc}.afc";
+                    if (loadedFiles.ContainsKey(locF))
+                    {
+                        MilanLog.Information($"{locF} already exists in game - skipping extraction");
+                        continue; // Already exists
+                    }
+
+                    var data = MilanShared.GetME3SFARFile(locF);
+                    if (data == null)
+                        continue; // On disk already
+
+                    MilanLog.Information($"{locF} is being copied to the direct access cache");
+                    using var outF = File.OpenWrite(Path.Combine(fakeCooked, afcN));
+                    data.CopyTo(outF);
+                }
+            }
+        }
+
+        public static void EnsureVGMStreamAvailable()
+        {
+            if (!VGMAudioStreamHelper.EnsureVGMStream())
+            {
+                MilanLog.Fatal("Could not ensure VGMStream is available. This should be automatically corrected by MilanSync from the ME3Tweaks server.");
+                Environment.Exit(1);
             }
         }
     }

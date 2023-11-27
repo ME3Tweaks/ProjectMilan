@@ -9,11 +9,14 @@ namespace ProjectMilan.Settings
         public string InputSyncPath { get; set; } = @"Z:\ModLibrary\LE3\Project Milan\MilanSync";
 
         public bool RunMPCommonPipeline { get; set; } = false;
-        public bool RunKitsPipeline { get; set; } = false;
+        public bool RunKitsPipeline { get; set; } = true;
         public bool RunLevelsPipeline { get; set; } = true;
-        public bool RunAudioPipeline { get; set; } = false;
+        public bool RunAudioPipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = false;
         // Defined in my launch profiles
         public int MaxThreads { get; set; } = int.Parse(Environment.GetEnvironmentVariable("MAXTHREADS"));
+
+        // Set when you want to work on the mod folder without it deleting it every time
+        public bool DontDeleteModFolder { get; set; } = false;
     }
 }

@@ -12,5 +12,6 @@
         public bool RunAudioPipeline { get; set; }
         public bool RunTexturePipeline { get; set; }
         public int MaxThreads { get; set; } = 1;
+        public bool DontDeleteModFolder { get; set; }
     }
 }

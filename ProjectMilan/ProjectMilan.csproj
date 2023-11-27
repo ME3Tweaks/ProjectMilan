@@ -15,7 +15,6 @@
     <Folder Include="Pipelines\Levels\BioP_MPGeth\Donors\" />
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\Engine\" />
-    <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
   </ItemGroup>
 
