@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices.Marshalling;
-using System.Text;
-using System.Threading.Tasks;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
 using LegendaryExplorerCore.Localization;
@@ -13,7 +7,6 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
 
@@ -28,24 +21,29 @@ namespace ProjectMilan.Pipelines.Shared
             // Scan all materials and build info for them.
             foreach (var file in MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3))
             {
+                MilanLog.Information($"Inventorying {file.Key}", customPrefix: LOG_CATEGORY);
                 var package = MEPackageHandler.UnsafePartialLoad(file.Value,
                     x => x.IsA("MaterialInterface") || x.ObjectName.Name.StartsWith("MaterialExpression"));
                 foreach (var matExp in package.Exports.Where(x => x.IsDataLoaded()))
                 {
-                    if (matExp.IsA("MaterialInterface") && !materialInfos.ContainsKey(matExp.InstancedFullPath))
+                    if (!matExp.IsDefaultObject && matExp.IsA("MaterialInterface") && !materialInfos.ContainsKey(matExp.InstancedFullPath))
                     {
                         var matInfo = new MatInfo();
-                        var expressions = matExp.GetProperty<ArrayProperty<ObjectProperty>>("Expressions");
-                        if (expressions != null)
+                        if (matExp.ClassName == "Material")
                         {
-                            // This is a Material
-                            InventoryExpressions(matExp, matInfo, expressions);
-                            var bin = ObjectBinary.From<Material>(matExp);
-                            foreach (var tex in bin.SM3MaterialResource.UniformExpressionTextures)
+                            matInfo.AddShaderId(matExp);
+                            var expressions = matExp.GetProperty<ArrayProperty<ObjectProperty>>("Expressions");
+                            if (expressions != null)
                             {
-                                if (package.TryGetEntry(tex, out var entr))
+                                // This is a Material
+                                InventoryExpressions(matExp, matInfo, expressions);
+                                var bin = ObjectBinary.From<Material>(matExp);
+                                foreach (var tex in bin.SM3MaterialResource.UniformExpressionTextures)
                                 {
-                                    matInfo.Textures.Add(entr.InstancedFullPath);
+                                    if (package.TryGetEntry(tex, out var entr))
+                                    {
+                                        matInfo.Textures.Add(entr.InstancedFullPath);
+                                    }
                                 }
                             }
                         }
@@ -54,8 +52,11 @@ namespace ProjectMilan.Pipelines.Shared
                             // Not a root material
                             matInfo.VectorExpressions.ReplaceAll(InventoryParameters(matExp, "VectorParameterValues"));
                             matInfo.ScalarExpressions.ReplaceAll(InventoryParameters(matExp, "ScalarParameterValues"));
-                            matInfo.TextureExpressions.ReplaceAll(InventoryParameters(matExp,
-                                "TextureParameterValues"));
+                            matInfo.TextureExpressions.ReplaceAll(InventoryParameters(matExp, "TextureParameterValues"));
+                            if (matExp.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true)
+                            {
+                                matInfo.AddShaderId(matExp);
+                            }
                         }
 
                         // This will need updated for receiver effects as they use Base
@@ -68,6 +69,7 @@ namespace ProjectMilan.Pipelines.Shared
             }
 
             // Link children to parent
+            MilanLog.Information($"Building relationships between materials", customPrefix: LOG_CATEGORY);
             foreach (var matExp in materialInfos)
             {
                 if (matExp.Value.ParentIFP != null && materialInfos.TryGetValue(matExp.Value.ParentIFP, out var parentInfo))
@@ -331,6 +333,9 @@ namespace ProjectMilan.Pipelines.Shared
         [JsonProperty("children")]
         public ObservableCollection<MatInfo> Children { get; set; } = new();
 
+        [JsonProperty("shaderid")]
+        public Guid? ShaderId { get; set; }
+
         [JsonIgnore]
         public MatInfo Parent { get; set; }
 
@@ -343,5 +348,16 @@ namespace ProjectMilan.Pipelines.Shared
         [JsonIgnore]
         public string ParentIFP { get; set; }
 
+        public void AddShaderId(ExportEntry matExp)
+        {
+            if (matExp.ClassName == "Material")
+            {
+                ShaderId = ObjectBinary.From<Material>(matExp).SM3MaterialResource.ID;
+            }
+            else
+            {
+                ShaderId = ObjectBinary.From<MaterialInstance>(matExp).SM3StaticPermutationResource.ID;
+            }
+        }
     }
 }

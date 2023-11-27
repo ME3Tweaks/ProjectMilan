@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,8 +31,8 @@ namespace ProjectMilan.Pipelines.Levels
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
                 // MP1 Resurgence
-                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= true, SpecialPortingDelegate = null}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = false, SpecialPortingDelegate = null}, // Hydra
+                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= false, SpecialPortingDelegate = null}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null}, // Hydra
 
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade
@@ -104,7 +105,7 @@ namespace ProjectMilan.Pipelines.Levels
             Directory.CreateDirectory(outputPath);
 
             // Register donors
-            SharedMaterialDonor.RegisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
+            // SharedMaterialDonor.RegisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
 
             // Get BioP package
             MilanLog.Information($"Loading ME3 BioP", customPrefix: levelPipeline.LogCategory);
@@ -138,7 +139,7 @@ namespace ProjectMilan.Pipelines.Levels
             levelPipeline.LE3BioP.Save();
 
             // Unregister donors
-            SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
+            //SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
 
             // Delete cache
             levelPipeline.Cache.Dispose();
@@ -146,10 +147,19 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Print donors
             MilanLog.Information("Material donors required: ", customPrefix: levelPipeline.LogCategory);
+            List<string> shadersListed = new List<string>();
             foreach (var me3BrokenMat in levelPipeline.MaterialsNeedingDonors)
             {
-                MilanLog.Warning(me3BrokenMat.InstancedFullPath, customPrefix: levelPipeline.LogCategory);
-                DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath());
+                //MilanLog.Warning(me3BrokenMat.InstancedFullPath, customPrefix: levelPipeline.LogCategory);
+                var shaderId = SharedMaterialDonor.GetShaderIdString(me3BrokenMat);
+                if (!shadersListed.Contains(shaderId))
+                {
+                    // Seems some materials share shaders...?
+                    shadersListed.Add(shaderId);
+                    Debug.WriteLine($"// {me3BrokenMat.InstancedFullPath} -> ??? (??)");
+                    Debug.WriteLine($"{{\"{shaderId}\", null}},");
+                }
+                // DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath());
             }
             // levelPipeline.MaterialsNeedingDonors.Clear();
         }

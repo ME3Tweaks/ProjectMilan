@@ -4,6 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Pipelines.Shared.GlobalDonors.Material;
 
 namespace ProjectMilan.Pipelines.Shared
 {
@@ -24,8 +28,8 @@ namespace ProjectMilan.Pipelines.Shared
             foreach (var file in files)
             {
                 MilanLog.Information($"Registering temporary donor package {file}", customPrefix: LOG_CATEGORY);
-                var package = MEPackageHandler.UnsafePartialLoad(file, x => false);
-                MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath);
+                //var package = MEPackageHandler.UnsafePartialLoad(file, x => false);
+                //MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath);
             }
         }
 
@@ -42,16 +46,23 @@ namespace ProjectMilan.Pipelines.Shared
 
         public static void RegisterSharedDonors()
         {
-            MilanLog.Information($"Registering global donor packages", customPrefix: LOG_CATEGORY);
+            MilanLog.Information($"Registering global donors", customPrefix: LOG_CATEGORY);
+            ShaderMapping = GlobalMaterial.GetMapping(); // This returns a clone
 
+            return;
+
+            // Old code
             // Add global donors
             var globalPath = Directory.CreateDirectory(GetGlobalDonorPath()).FullName;
 
             foreach (var donorF in Directory.GetFiles(globalPath, "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"  Registering global donor package {Path.GetFileName(donorF)}", customPrefix: LOG_CATEGORY);
-                var donorP = MEPackageHandler.UnsafePartialLoad(donorF, x => false);
-                MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
+
+
+
+                //var donorP = MEPackageHandler.UnsafePartialLoad(donorF, x => false);
+                //MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
             }
         }
 
@@ -67,8 +78,79 @@ namespace ProjectMilan.Pipelines.Shared
                 // We dont need donors
                 throw new Exception("Don't need donors except for ME3!");
             }
+        }
 
 
+
+        /// <summary>
+        /// Maps shaders between games. This effectively is the material donor.
+        /// </summary>
+        private static Dictionary<Guid, Guid> ShaderMapping = new();
+        public static bool GetDonorForShader(Guid ogShader, out Guid leShader)
+        {
+            if (ShaderMapping.TryGetValue(ogShader, out leShader))
+            {
+                return true;
+            }
+
+            /*
+            if (TemporaryShaderMapping.TryGetValue(ogShader, out var leShader))
+            {
+                return leShader;
+            }*/
+
+            // MilanLog.Warning($"Could not find mapping for OG shader {ogShader}");
+            return false;
+        }
+
+        public static void UpdateMaterialShaders(IMEPackage package)
+        {
+            MilanLog.Information("Updating shader ids", customPrefix: LOG_CATEGORY);
+            foreach (var export in package.Exports.Where(x => !x.IsDefaultObject && x.IsA("MaterialInterface")))
+            {
+                if (export.ClassName == "Material")
+                {
+                    var bin = ObjectBinary.From<Material>(export);
+                    if (GetDonorForShader(bin.SM3MaterialResource.ID, out var leShader))
+                    {
+                        MilanLog.Information($"  Updated shader for {export.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                        bin.SM3MaterialResource.ID = leShader;
+                        export.WriteBinary(bin);
+                    }
+                }
+                else if (export.IsA("MaterialInstance") && export.GetProperty<BoolProperty>("bHasStaticPermutationResource"))
+                {
+                    var bin = ObjectBinary.From<MaterialInstance>(export);
+                    if (GetDonorForShader(bin.SM3StaticPermutationResource.ID, out var leShader))
+                    {
+                        MilanLog.Information($"  Updated shader for {export.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                        bin.SM3StaticPermutationResource.ID = leShader;
+                        export.WriteBinary(bin);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the shader ID of the given material in string form.
+        /// </summary>
+        /// <param name="export"></param>
+        /// <returns></returns>
+        public static string GetShaderIdString(ExportEntry export)
+        {
+            if (export.ClassName == "Material")
+            {
+                var bin = ObjectBinary.From<Material>(export);
+                return bin.SM3MaterialResource.ID.ToString().Replace(" ", "");
+            }
+
+            if (export.IsA("MaterialInstance") && export.GetProperty<BoolProperty>("bHasStaticPermutationResource"))
+            {
+                var bin = ObjectBinary.From<MaterialInstance>(export);
+                return bin.SM3StaticPermutationResource.ID.ToString().Replace(" ", "");
+            }
+
+            return null;
         }
     }
 }

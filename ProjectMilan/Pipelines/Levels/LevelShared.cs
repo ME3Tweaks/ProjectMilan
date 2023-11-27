@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines.Levels
@@ -249,14 +250,18 @@ namespace ProjectMilan.Pipelines.Levels
 
             LevelTools.RebuildPersistentLevelChildren(destLevel);
 
+            // Correct shaders
+            SharedMaterialDonor.UpdateMaterialShaders(destPackage);
+
             MilanLog.Information($"  Saving ported package {packageBaseName}.pcc", customPrefix: levelPipeline.LogCategory);
             destPackage.Save();
 
+            // Detect remaining shaders
             var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(destPackage);
             foreach (var v in brokenMaterials)
             {
                 var matchingME3 = sourcePackage.FindExport(v.InstancedFullPath);
-                if (!levelPipeline.MaterialsNeedingDonors.Contains(matchingME3))
+                if (levelPipeline.MaterialsNeedingDonors.All(x => x.InstancedFullPath != matchingME3.InstancedFullPath))
                 {
                     levelPipeline.MaterialsNeedingDonors.Add(matchingME3);
                 }

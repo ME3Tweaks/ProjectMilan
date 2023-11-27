@@ -27,9 +27,10 @@ namespace ProjectMilan.Pipelines.Kits
             //DotTrace.EnsurePrerequisite();
             //DotTrace.Attach();
             // foreach (var kit in vars.KitPipelines)
-            Parallel.ForEach(vars.KitPipelines, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads}, kit =>
+            Parallel.ForEach(vars.KitPipelines, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, kit =>
             {
-                if (false && !kit.Enabled)
+                // Uncomment this to port everything
+                if (/*false &&*/ !kit.Enabled)
                 {
                     // This level is not marked for porting currently.
                     MilanLog.Information($"Skipping kit {kit.PackageName}, pipeline is not enabled", customPrefix: LOG_CATEGORY);
@@ -119,7 +120,48 @@ namespace ProjectMilan.Pipelines.Kits
             MilanLog.Information("Saving package", customPrefix: kitPipeline.LogCategory);
             kitDestPackage.Save();
 
+            PortLocalizations(kitPipeline);
+
             kitPipeline.Cache.Dispose();
+        }
+
+        private static void PortLocalizations(KitSpecificPipeline kitPipeline)
+        {
+            MilanLog.Information("Porting localized files for kit", customPrefix: kitPipeline.LogCategory);
+            foreach (var lang in Program.SupportedVOLanguages)
+            {
+                var packageName = $"{kitPipeline.PackageName}_LOC_{lang}.pcc";
+                var me3Package = MilanShared.GetME3Package(packageName);
+                if (me3Package == null)
+                {
+                    MilanLog.Warning($"Could not find localized package {packageName}", customPrefix: kitPipeline.LogCategory);
+                    continue;
+                }
+                
+                var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Kits");
+                var finalPackagePath = Path.Combine(outputPath, packageName);
+                var kitLocDestPackage = MEPackageHandler.CreateAndOpenPackage(finalPackagePath, MEGame.LE3);
+
+                var objReferencer = me3Package.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
+
+                MilanLog.Information("Porting object referencer", customPrefix: kitPipeline.LogCategory);
+                //DotTrace.StartCollectingData(); // Start profiling
+                var sw = new Stopwatch();
+                sw.Start();
+                var rop = new RelinkerOptionsPackage()
+                {
+                    Cache = kitPipeline.Cache,
+                    TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                    PortExportsAsImportsWhenPossible = true,
+                    GenerateImportsForGlobalFiles = true
+                };
+                var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
+                    kitLocDestPackage, null, true,
+                    rop,
+                    out var newEntry);
+
+                kitLocDestPackage.Save();
+            }
         }
 
         // Used to find kits
@@ -179,7 +221,7 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "HumanFemale_Sentinel_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "HumanFemale_Soldier_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "HumanFemale_Vanguard_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "HumanMale_Adept_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "HumanMale_Adept_MP", Enabled  = true}, // Default option
             new KitSpecificPipeline() { PackageName = "HumanMale_Engineer_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "HumanMale_Infiltrator_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "HumanMale_Sentinel_MP", Enabled  = false},
@@ -212,12 +254,12 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "Cerberus_Vanguard_MP", Enabled  = false},
 
             // MP3
-            new KitSpecificPipeline() { PackageName = "N7_Vanguard_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "N7_Soldier_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "N7_Adept_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "N7_Sentinel_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "N7_Infiltrator_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "N7_Engineer_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "N7_Vanguard_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "N7_Soldier_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "N7_Adept_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "N7_Sentinel_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "N7_Infiltrator_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "N7_Engineer_MP", Enabled  = false},
 
             // MP4
             new KitSpecificPipeline() { PackageName = "Krogan_Adept_MP", Enabled  = false},
@@ -240,7 +282,7 @@ namespace ProjectMilan.Pipelines.Kits
 
             // MP5
             new KitSpecificPipeline() { PackageName = "Merc_Engineer_MP", Enabled  = false}, // This kit is soooo broken due to him using different input system
-            new KitSpecificPipeline() { PackageName = "Collector_Adept_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "Collector_Adept_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "Fembot_Infiltrator_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "GethDest_Soldier_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "KroganWarlord_Sentinel_MP", Enabled  = false},
