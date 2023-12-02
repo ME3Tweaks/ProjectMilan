@@ -28,8 +28,8 @@ namespace ProjectMilan.Pipelines.Shared
             foreach (var file in files)
             {
                 MilanLog.Information($"Registering temporary donor package {file}", customPrefix: LOG_CATEGORY);
-                //var package = MEPackageHandler.UnsafePartialLoad(file, x => false);
-                //MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath);
+                var package = MEPackageHandler.UnsafePartialLoad(file, x => false);
+                MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath);
             }
         }
 
@@ -47,9 +47,9 @@ namespace ProjectMilan.Pipelines.Shared
         public static void RegisterSharedDonors()
         {
             MilanLog.Information($"Registering global donors", customPrefix: LOG_CATEGORY);
+            
+            // Material swaps directly.
             ShaderMapping = GlobalMaterial.GetMapping(); // This returns a clone
-
-            return;
 
             // Old code
             // Add global donors
@@ -58,11 +58,8 @@ namespace ProjectMilan.Pipelines.Shared
             foreach (var donorF in Directory.GetFiles(globalPath, "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"  Registering global donor package {Path.GetFileName(donorF)}", customPrefix: LOG_CATEGORY);
-
-
-
-                //var donorP = MEPackageHandler.UnsafePartialLoad(donorF, x => false);
-                //MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
+                var donorP = MEPackageHandler.UnsafePartialLoad(donorF, x => false);
+                MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
             }
         }
 
@@ -103,6 +100,10 @@ namespace ProjectMilan.Pipelines.Shared
             return false;
         }
 
+        /// <summary>
+        /// Uses the known direct material shader id converter for materials that support it.
+        /// </summary>
+        /// <param name="package"></param>
         public static void UpdateMaterialShaders(IMEPackage package)
         {
             MilanLog.Information("Updating shader ids", customPrefix: LOG_CATEGORY);

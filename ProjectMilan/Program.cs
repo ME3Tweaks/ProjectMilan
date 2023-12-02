@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using CommandLine;
+﻿using CommandLine;
 using LegendaryExplorerCore;
 using LegendaryExplorerCore.Packages;
 using ProjectMilan.Pipelines;
@@ -8,7 +7,6 @@ using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Mod;
-using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Settings;
@@ -73,7 +71,6 @@ namespace ProjectMilan
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
-
             RunPipelines();
         }
 
@@ -125,7 +122,7 @@ namespace ProjectMilan
 
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
-            
+
 
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades

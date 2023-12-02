@@ -105,7 +105,7 @@ namespace ProjectMilan.Pipelines.Levels
             Directory.CreateDirectory(outputPath);
 
             // Register donors
-            // SharedMaterialDonor.RegisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
+            SharedMaterialDonor.RegisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
 
             // Get BioP package
             MilanLog.Information($"Loading ME3 BioP", customPrefix: levelPipeline.LogCategory);
@@ -139,13 +139,13 @@ namespace ProjectMilan.Pipelines.Levels
             levelPipeline.LE3BioP.Save();
 
             // Unregister donors
-            //SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
+            SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
 
             // Delete cache
             levelPipeline.Cache.Dispose();
             levelPipeline.Cache = null;
 
-            // Print donors
+            // Print donors for global shader converter.
             MilanLog.Information("Material donors required: ", customPrefix: levelPipeline.LogCategory);
             List<string> shadersListed = new List<string>();
             foreach (var me3BrokenMat in levelPipeline.MaterialsNeedingDonors)

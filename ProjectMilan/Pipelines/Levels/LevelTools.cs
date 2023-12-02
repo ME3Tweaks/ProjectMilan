@@ -227,9 +227,14 @@ namespace ProjectMilan.Pipelines.Levels
             pl.WriteBinary(level);
         }
 
-        public static void RebuildStreamingLevels(IMEPackage Pcc, LevelSpecificPipeline lsp)
+        /// <summary>
+        /// Rebuilds the stream levels list for the package
+        /// </summary>
+        /// <param name="Pcc"></param>
+        /// <param name="lsp">Used for logging. Can be null</param>
+        public static void RebuildStreamingLevels(IMEPackage Pcc, LevelSpecificPipeline lsp = null)
         {
-            MilanLog.Information("Rebuilding streaming levels list", customPrefix: lsp.LogCategory);
+            MilanLog.Information("Rebuilding streaming levels list", customPrefix: lsp?.LogCategory);
 
             try
             {
@@ -265,12 +270,12 @@ namespace ProjectMilan.Pipelines.Levels
                 }
                 else
                 {
-                    MilanLog.Warning("No BioWorldInfo object found in this file", customPrefix: lsp.LogCategory);
+                    MilanLog.Warning("No BioWorldInfo object found in this file", customPrefix: lsp?.LogCategory);
                 }
             }
             catch (Exception ex)
             {
-                MilanLog.Exception(ex, "Error setting streaming levels:", customPrefix: lsp.LogCategory);
+                MilanLog.Exception(ex, "Error setting streaming levels:", customPrefix: lsp?.LogCategory);
             }
         }
 

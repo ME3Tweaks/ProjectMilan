@@ -14,6 +14,9 @@ namespace ProjectMilan.Pipelines.Shared.GlobalDonors.Material
                 // // OT NAME -> LE NAME AND FUNCTION
                 // {ME3GUID, LE3GUID},
                 
+                // Null values are not returned.
+                // Only set values if you have a direct LE shader you can use,
+                // otherwise use a donor object.
 
                 // MPGETH ------------------------------------------------------------------------------
                 // BioT_GthMP.Sky_Mat -> BioT_Thessia.Clouds (MPGeth Sky)
