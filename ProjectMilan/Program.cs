@@ -105,6 +105,7 @@ namespace ProjectMilan
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
+            RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports pacakges that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
 
             // Content build pipelines
             if (!MilanShared.EnsureMPCommonInGame()) // These require BIOP_MP_COMMON

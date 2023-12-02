@@ -164,7 +164,7 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             MilanLog.Information(@"Compiling LE3 class package", customPrefix: LOG_CATEGORY);
-            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(pcc, looseClassPackages, MissingObjectResolver, cache: cache);
+            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(pcc, looseClassPackages, MissingObjectResolver, vtableDonorGetter: VTableDonorGetter, cache: cache);
 
             if (log.HasErrors)
             {
@@ -192,6 +192,30 @@ namespace ProjectMilan.Pipelines.Startups
             MilanLog.Information($@"Saving {pcc.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
             pcc.Save();
             return false;
+        }
+
+        //terrible function, there are better ways of implementing it.
+        private static List<string> VTableDonorGetter(string className)
+        {
+            var classInfo = GlobalUnrealObjectInfo.GetClassOrStructInfo(MEGame.LE3, className);
+            if (classInfo is not null)
+            {
+                string path = Path.Combine(MEDirectories.GetBioGamePath(MEGame.LE3), classInfo.pccPath);
+                if (File.Exists(path))
+                {
+                    IMEPackage partialLoad = MEPackageHandler.UnsafePartialLoad(path, exp => exp.IsClass && exp.ObjectName == className);
+                    foreach (ExportEntry export in partialLoad.Exports)
+                    {
+                        if (export.IsClass && export.ObjectName == className)
+                        {
+                            var obj = export.GetBinaryData<UClass>();
+                            return obj.VirtualFunctionTable.Select(uIdx => partialLoad.GetEntry(uIdx).ObjectName.Name).ToList();
+                        }
+                    }
+                }
+            }
+            
+            return null;
         }
 
         /// <summary>

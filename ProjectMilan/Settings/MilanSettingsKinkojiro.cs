@@ -14,5 +14,6 @@ namespace ProjectMilan.Settings
         public bool RunTexturePipeline { get; set; }
         public int MaxThreads { get; set; } = 1;
         public bool DontDeleteModFolder { get; set; }
+        public bool RunNonStartupPipeline { get; set; }
     }
 }

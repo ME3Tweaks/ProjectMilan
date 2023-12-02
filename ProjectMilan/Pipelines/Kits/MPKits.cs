@@ -75,93 +75,10 @@ namespace ProjectMilan.Pipelines.Kits
 
 
 
-            var objReferencer = kitSourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
-
-            MilanLog.Information("Porting object referencer", customPrefix: kitPipeline.LogCategory);
-            //DotTrace.StartCollectingData(); // Start profiling
-            var sw = new Stopwatch();
-            sw.Start();
-            var rop = new RelinkerOptionsPackage()
-            {
-                Cache = kitPipeline.Cache,
-                TargetGameDonorDB = MilanShared.LE3ObjectDB,
-                PortExportsAsImportsWhenPossible = true,
-                GenerateImportsForGlobalFiles = true
-            };
-            var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
-                kitDestPackage, null, true,
-                rop,
-                out var newEntry);
-
-            sw.Stop();
-            //DotTrace.SaveData();
-
-            // Not sure - do we need to make sure this needs done recursively in order? Topmost to bottommost
-            MilanLog.Information("Recompiling ported classes", customPrefix: kitPipeline.LogCategory);
-            FileLib lib = new FileLib(kitDestPackage);
-            lib.Initialize(kitPipeline.Cache);
-
-            foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
-            {
-                // Recompile all ported classes so vtables are updated
-                MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: kitPipeline.LogCategory);
-                // This is broken!!
-                try
-                {
-                    (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, kitPipeline.Cache);
-                    UnrealScriptCompiler.CompileClass(kitDestPackage, text, lib, f, packageCache: kitPipeline.Cache);
-                }
-                catch (Exception e)
-                {
-                    MilanLog.Exception(e, "  Error recompiling function:");
-                }
-            }
-
-            MilanLog.Information("Saving package", customPrefix: kitPipeline.LogCategory);
-            kitDestPackage.Save();
-
-            PortLocalizations(kitPipeline);
+            MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory);
+            MilanShared.PortLocalizations(kitPipeline.PackageName, outputPath, kitPipeline.Cache, kitPipeline.LogCategory);
 
             kitPipeline.Cache.Dispose();
-        }
-
-        private static void PortLocalizations(KitSpecificPipeline kitPipeline)
-        {
-            MilanLog.Information("Porting localized files for kit", customPrefix: kitPipeline.LogCategory);
-            foreach (var lang in Program.SupportedVOLanguages)
-            {
-                var packageName = $"{kitPipeline.PackageName}_LOC_{lang}.pcc";
-                var me3Package = MilanShared.GetME3Package(packageName);
-                if (me3Package == null)
-                {
-                    MilanLog.Warning($"Could not find localized package {packageName}", customPrefix: kitPipeline.LogCategory);
-                    continue;
-                }
-                
-                var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Kits");
-                var finalPackagePath = Path.Combine(outputPath, packageName);
-                var kitLocDestPackage = MEPackageHandler.CreateAndOpenPackage(finalPackagePath, MEGame.LE3);
-
-                var objReferencer = me3Package.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
-
-                MilanLog.Information("Porting object referencer", customPrefix: kitPipeline.LogCategory);
-                //DotTrace.StartCollectingData(); // Start profiling
-                var sw = new Stopwatch();
-                sw.Start();
-                var rop = new RelinkerOptionsPackage()
-                {
-                    Cache = kitPipeline.Cache,
-                    TargetGameDonorDB = MilanShared.LE3ObjectDB,
-                    PortExportsAsImportsWhenPossible = true,
-                    GenerateImportsForGlobalFiles = true
-                };
-                var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
-                    kitLocDestPackage, null, true,
-                    rop,
-                    out var newEntry);
-
-                kitLocDestPackage.Save();
-            }
         }
 
         // Used to find kits

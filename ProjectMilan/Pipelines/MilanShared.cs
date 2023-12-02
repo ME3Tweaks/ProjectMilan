@@ -7,7 +7,9 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan.Pipelines.Audio.Extension;
+using ProjectMilan.Pipelines.Kits;
 
 namespace ProjectMilan.Pipelines
 {
@@ -331,6 +333,107 @@ namespace ProjectMilan.Pipelines
                 MilanLog.Fatal("Could not ensure VGMStream is available. This should be automatically corrected by MilanSync from the ME3Tweaks server.");
                 Environment.Exit(1);
             }
+        }
+
+        /// <summary>
+        /// Ports localized files 
+        /// </summary>
+        /// <param name="basePackageName"></param>
+        /// <param name="outputFolder"></param>
+        /// <param name="cache"></param>
+        /// <param name="logCategory"></param>
+        internal static void PortLocalizations(string basePackageName, string outputFolder, PackageCache cache, string logCategory)
+        {
+            MilanLog.Information($"Porting localized files for {basePackageName}", customPrefix: logCategory);
+            foreach (var lang in Program.SupportedVOLanguages)
+            {
+                var packageName = $"{basePackageName}_LOC_{lang}.pcc";
+                var me3Package = MilanShared.GetME3Package(packageName);
+                if (me3Package == null)
+                {
+                    MilanLog.Warning($"Could not find localized package {packageName}", customPrefix: logCategory);
+                    continue;
+                }
+
+                var finalPackagePath = Path.Combine(outputFolder, packageName);
+                var locDestPackage = MEPackageHandler.CreateAndOpenPackage(finalPackagePath, MEGame.LE3);
+
+                MilanLog.Information($"Porting localized file {me3Package.FileNameNoExtension}", customPrefix: logCategory);
+                PortObjectReferencer(me3Package, locDestPackage, cache, logCategory);
+                //var objReferencer = me3Package.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
+
+                ////DotTrace.StartCollectingData(); // Start profiling
+                //var sw = new Stopwatch();
+                //sw.Start();
+                //var rop = new RelinkerOptionsPackage()
+                //{
+                //    Cache = cache,
+                //    TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                //    PortExportsAsImportsWhenPossible = true,
+                //    GenerateImportsForGlobalFiles = true
+                //};
+                //var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
+                //    locDestPackage, null, true,
+                //    rop,
+                //    out var newEntry);
+
+                //locDestPackage.Save();
+            }
+        }
+
+        /// <summary>
+        /// Ports an object referencer across games.
+        /// </summary>
+        /// <param name="kitSourcePackage"></param>
+        /// <param name="destPackage"></param>
+        /// <param name="cache"></param>
+        /// <param name="logCategory"></param>
+        public static void PortObjectReferencer(IMEPackage kitSourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory)
+        {
+            var objReferencer = kitSourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
+
+            MilanLog.Information("Porting object referencer", customPrefix: logCategory);
+            //DotTrace.StartCollectingData(); // Start profiling
+            var sw = new Stopwatch();
+            sw.Start();
+            var rop = new RelinkerOptionsPackage()
+            {
+                Cache = cache,
+                TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                PortExportsAsImportsWhenPossible = true,
+                GenerateImportsForGlobalFiles = true
+            };
+            var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
+                destPackage, null, true,
+                rop,
+                out var newEntry);
+
+            sw.Stop();
+            //DotTrace.SaveData();
+
+            // Not sure - do we need to make sure this needs done recursively in order? Topmost to bottommost
+            MilanLog.Information("Recompiling ported classes", customPrefix: logCategory);
+            FileLib lib = new FileLib(destPackage);
+            lib.Initialize(cache);
+
+            foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
+            {
+                // Recompile all ported classes so vtables are updated
+                MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: logCategory);
+                // This is broken!!
+                try
+                {
+                    (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, cache);
+                    UnrealScriptCompiler.CompileClass(destPackage, text, lib, f, packageCache: cache);
+                }
+                catch (Exception e)
+                {
+                    MilanLog.Exception(e, "  Error recompiling function:");
+                }
+            }
+
+            MilanLog.Information("Saving package", customPrefix: logCategory);
+            destPackage.Save();
         }
     }
 }

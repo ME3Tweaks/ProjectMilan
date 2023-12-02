@@ -61,5 +61,10 @@ namespace ProjectMilan.Settings
         /// If the mod folder should not be deleted
         /// </summary>
         bool DontDeleteModFolder { get; set; }
+
+        /// <summary>
+        /// If the NonStartup pipeline should run - things like horde VO, objectives, etc.
+        /// </summary>
+        bool RunNonStartupPipeline { get; set; }
     }
 }
