@@ -17,5 +17,12 @@
 				<Value type="2">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>
 			</Property>
 		</Section>
+
+		<Section name="sfxgame.sfxweaponuidatamanager">
+			<Property name="weaponuidataresources">
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP1SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP1.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP2SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP2.Data")</Value>
+			</Property>
+		</Section>
 	</Sections>
 </CoalesceAsset>

@@ -103,6 +103,149 @@
 			</Property>
 		</Section>
 
+		<!-- MP OBJECTIVES -->
+		<Section name="sfxgamecontentdlc_con_mp2.sfxobjective_retrieve_dropofflocation_dlc">
+			<Property name="activateobjectiveonspawn" type="0">false</Property>
+			<Property name="instructionreminderfrequency" type="0">25.0f</Property>
+			<Property name="lastremindertime" type="0">270.0f</Property>
+			<Property name="objectdroppedvolines">
+				<Value type="3">0</Value>
+				<Value type="3">2</Value>
+				<Value type="3">3</Value>
+			</Property>
+			<Property name="playerdownedvolines">
+				<Value type="3">1</Value>
+				<Value type="3">4</Value>
+				<Value type="3">5</Value>
+				<Value type="3">6</Value>
+				<Value type="3">7</Value>
+			</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_con_mp2.sfxobjective_retrieve_pickupobject_dlc">
+			<Property name="activateobjectiveonspawn" type="0">false</Property>
+			<Property name="benablecombatzone" type="0">true</Property>
+			<Property name="checkfordropfrequency" type="0">0.25f</Property>
+			<Property name="dropobjectcustomactions">
+				<Value type="3">SFXPowerCustomAction_BioticCharge</Value>
+				<Value type="3">SFXCustomAction_PlayerEvadeBase</Value>
+				<Value type="3">SFXCustomAction_N7TeleportPunchBase</Value>
+			</Property>
+			<Property name="ignorestealthflagtime" type="0">1.5f</Property>
+			<Property name="movementspeeddecrease" type="0">-0.25f</Property>
+			<Property name="movementspeedoverrides">
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Sentinel_Krogan",MovementSpeedDecrease=0.f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Soldier_Krogan",MovementSpeedDecrease=0.f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Vanguard_Krogan",MovementSpeedDecrease=0.f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Sentinel_Batarian",MovementSpeedDecrease=-0.10f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Soldier_Batarian",MovementSpeedDecrease=-0.10f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Sentinel_Turian",MovementSpeedDecrease=-0.15f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Soldier_Turian",MovementSpeedDecrease=-0.15f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Adept_Drell",MovementSpeedDecrease=-0.35f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Vanguard_Drell",MovementSpeedDecrease=-0.35f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Sentinel_Vorcha",MovementSpeedDecrease=-0.35f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Soldier_Vorcha",MovementSpeedDecrease=-0.35f)</Value>
+			</Property>
+			<Property name="waveinstructionvodelay" type="0">4.0f</Property>
+		</Section>
+		<Section name="sfxengagement_retrieve_dlc_0 sfxengagement_retrieve_dlc">
+			<Property name="activateobjectivedelay" type="0">4.0f</Property>
+			<Property name="dropoffzoneobjectivetype" type="0">RetrieveDropOffDLC</Property>
+			<Property name="dropoffzonespawntag" type="0">ExtractionPoint</Property>
+			<Property name="mindistancetodropoffzone" type="0">2500.0f</Property>
+			<Property name="numdropoffsrequired" type="0">2</Property>
+			<Property name="objectivesrequired">
+				<Value type="3">(ObjectiveType=RetrieveDropOffDLC, MinimumObjectivesRequired=1, MaximumObjectivesAllowed=1)</Value>
+				<Value type="3">(ObjectiveType=RetrievePickupDLC1, MinimumObjectivesRequired=1, MaximumObjectivesAllowed=1)</Value>
+				<Value type="3">(ObjectiveType=RetrievePickupDLC2, MinimumObjectivesRequired=1, MaximumObjectivesAllowed=1)</Value>
+			</Property>
+			<Property name="objectreturnedvolines">
+				<Value type="3">0</Value>
+				<Value type="3">1</Value>
+				<Value type="3">2</Value>
+				<Value type="3">3</Value>
+				<Value type="3">4</Value>
+				<Value type="3">5</Value>
+			</Property>
+			<Property name="spawndistanceideal" type="0">3000</Property>
+			<Property name="spawnpenaltylongdistance" type="0">0.2</Property>
+			<Property name="spawnpenaltyshortdistance" type="0">0.8</Property>
+			<Property name="srbeginwavemessage" type="0">596061</Property>
+			<Property name="srendwavemessage" type="0">596062</Property>
+			<Property name="srpickupdroppedoff" type="0">731646</Property>
+			<Property name="srscorehudobjectivetitle" type="0">731647</Property>
+			<Property name="weightedchanceofselection" type="0">1.0f</Property>
+		</Section>
+		<Section name="sfxobjdata_retrieve_dropoff_dlc sfxoperation_objectivedata">
+			<Property name="assetpath" type="0">SFXGameContentDLC_CON_MP2.SFXObjective_Retrieve_DropOffLocation_DLC</Property>
+			<Property name="objectivetype" type="0">RetrieveDropOffDLC</Property>
+			<Property name="requiredspawntags" type="0">ExtractionPoint</Property>
+		</Section>
+		<Section name="sfxobjdata_retrieve_pickup_dlc1 sfxoperation_objectivedata">
+			<Property name="assetpath" type="0">SFXGameContentDLC_CON_MP2.SFXObjective_Retrieve_PickupObject_DLC</Property>
+			<Property name="meshassets">
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation1",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Ind_Canister02.Canister02",GameName=733484,Scale=1.5f,MeshVOLine=0,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation2",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Ind_Canister02.Canister02",GameName=733484,Scale=1.5f,MeshVOLine=1,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation4",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Uti_Computer02.Computer02",GameName=733608,MeshVOLine=3,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation5",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Uti_Computer02.Computer02",GameName=733608,MeshVOLine=4,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation7",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioDpl_Multiplayer.DisarmBomb",Scale=0.5f,GameName=733609,MeshVOLine=6,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation8",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Cra_Crate02_M.Crate02_M",GameName=733610,Scale=0.75f,MeshVOLine=7,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation9",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Cra_Crate02_M.Crate02_M",GameName=733610,Scale=0.75f,MeshVOLine=8,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation11",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Cra_Crate02_M.Crate02_M",GameName=733611,Scale=0.75f,MeshVOLine=10,TipText=6)</Value>
+			</Property>
+			<Property name="objectivetype" type="0">RetrievePickupDLC1</Property>
+			<Property name="requiredspawntags" type="0">Disarm</Property>
+		</Section>
+		<Section name="sfxobjdata_retrieve_pickup_dlc2 sfxoperation_objectivedata">
+			<Property name="assetpath" type="0">SFXGameContentDLC_CON_MP2.SFXObjective_Retrieve_PickupObject_DLC</Property>
+			<Property name="meshassets">
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation3",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Uti_Computer02.Computer02",GameName=733612,MeshVOLine=2,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation6",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Cra_Crate02_M.Crate02_M",GameName=733613,Scale=0.75f,MeshVOLine=5,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation10",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Cra_Crate02_M.Crate02_M",GameName=733614,Scale=0.75f,MeshVOLine=9,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation12",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Cbt_GethMine01.GethMine01",GameName=733615,MeshVOLine=11,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation13",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Cbt_GethMine01.GethMine01",GameName=733615,MeshVOLine=12,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation14",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Ind_ReaperProto.ReaperProto",GameName=733607,MeshVOLine=13,TipText=6)</Value>
+				<Value type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation15",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Ind_ReaperProto.ReaperProto",GameName=733607,MeshVOLine=14,TipText=6)</Value>
+			</Property>
+			<Property name="objectivetype" type="0">RetrievePickupDLC2</Property>
+			<Property name="requiredspawntags" type="0">Disarm</Property>
+		</Section>
+		<Section name="sfxengagement_mobileannex_0 sfxengagement_mobileannex">
+			<Property name="objectivesrequired" type="3">(ObjectiveType=MobileAnnex, MinimumObjectivesRequired=1, MaximumObjectivesAllowed=1)</Property>
+			<Property name="spawndistanceideal" type="0">3000</Property>
+			<Property name="spawnpenaltylongdistance" type="0">0.2</Property>
+			<Property name="spawnpenaltyshortdistance" type="0">0.8</Property>
+			<Property name="srbeginwavemessage" type="0">744350</Property>
+			<Property name="srendwavemessage" type="0">596062</Property>
+			<Property name="srscorehudobjectivetitle" type="0">744361</Property>
+			<Property name="weightedchanceofselection" type="0">1.0f</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_con_mp3.sfxpawn_mobileannex">
+			<Property name="destroydelay" type="0">1.5f</Property>
+			<Property name="fullspeed">
+				<Value type="3">0.6f</Value>
+				<Value type="3">0.625f</Value>
+				<Value type="3">0.65f</Value>
+				<Value type="3">0.675f</Value>
+			</Property>
+			<Property name="lowpowerthreshold" type="0">0.5f</Property>
+			<Property name="spawnvodelay" type="0">0.25f</Property>
+		</Section>
+		<Section name="sfxobjdata_mobileannex1 sfxoperation_objectivedata">
+			<Property name="assetpath" type="0">SFXGameContentDLC_CON_MP3.SFXObjective_MobileAnnex</Property>
+			<Property name="meshassets" type="3">(UniqueString="SFXOperation_ObjectiveData_Retrieve_Variation1",SpawnLocation=EObjectiveLocation_Floor,MeshPath="BioApl_Uti_Computer01.Computer01",GameName=744362,MeshVOLine=0,TipText=3)</Property>
+			<Property name="objectivetype" type="0">MobileAnnex</Property>
+			<Property name="requiredspawntags" type="0">Disarm</Property>
+		</Section>
+		
+		<!-- Platinum difficulty -->
+		<Section name="sfxgamempcontent.sfxwave_horde">
+			<Property name="berserkstartcounts" type="3">(Difficulty=DO_Level4,EnemiesLeft=10)</Property>
+		</Section>
+		<Section name="sfxgamempcontent.sfxwavemanager_horde">
+			<Property name="wavepointsranges" type="3">(Difficulty=DO_Level4,PointRange=(X=900,Y=2000))</Property>
+		</Section>
+
+		<!-- Accomplishments -->
 		<Section name="sfxgame.sfxaccomplishmentmanager">
 			<Property name="accomplishmentprogressdata">
 				<!-- Unsure if we need to clear this list so it's in order.-->
