@@ -135,7 +135,8 @@ namespace ProjectMilan.Pipelines.Texture
                     $"Textures_{MilanShared.DLC_NAME}"
                 },
                 UseIndexing = false,
-                StagingPath = staging
+                StagingPath = staging,
+                TFCType = "Textures",
             };
 
             MilanLog.Information("Compacting TFC", customPrefix: LOG_CATEGORY);

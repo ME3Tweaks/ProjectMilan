@@ -9,6 +9,7 @@ using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Mod;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
+using ProjectMilan.Pipelines.Verify;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
 
@@ -128,6 +129,9 @@ namespace ProjectMilan
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
             RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio"); // Converts audio
+
+            // Verification
+            RunPipeline(true, VerifyMod.RunPipeline, "Verify");
         }
 
         /// <summary>
