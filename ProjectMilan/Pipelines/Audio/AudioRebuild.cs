@@ -251,7 +251,8 @@ namespace ProjectMilan.Pipelines.Audio
         {
             foreach (var bankInfo in bankInventory)
             {
-                AddWwiseBankToProject(vars, bankInfo);
+                if (bankInfo.LocalizedInfo.Localization is MELocalization.None or MELocalization.INT) // Todo: Requires fixes to this method for locs
+                    AddWwiseBankToProject(vars, bankInfo);
             }
         }
 
