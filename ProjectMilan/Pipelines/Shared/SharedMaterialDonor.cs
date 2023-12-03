@@ -51,8 +51,7 @@ namespace ProjectMilan.Pipelines.Shared
             // Material swaps directly.
             ShaderMapping = GlobalMaterial.GetMapping(); // This returns a clone
 
-            // Old code
-            // Add global donors
+            // Add global donor packages
             var globalPath = Directory.CreateDirectory(GetGlobalDonorPath()).FullName;
 
             foreach (var donorF in Directory.GetFiles(globalPath, "*.pcc", SearchOption.AllDirectories))

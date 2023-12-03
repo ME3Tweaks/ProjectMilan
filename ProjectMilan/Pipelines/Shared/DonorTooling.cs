@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
+using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Localization;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
@@ -16,55 +17,30 @@ namespace ProjectMilan.Pipelines.Shared
     {
         public static void BuildDonorDB()
         {
+            var game = MEGame.ME3;
             Dictionary<string, MatInfo> materialInfos = new();
 
+            // Speeds up loading.
+            Func<ExportEntry, bool> unsafePredicate = x => x.IsA("MaterialInterface") || x.ObjectName.Name.StartsWith("MaterialExpression");
+
             // Scan all materials and build info for them.
-            foreach (var file in MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3))
+            foreach (var file in MELoadedFiles.GetFilesLoadedInGame(game))
             {
                 MilanLog.Information($"Inventorying {file.Key}", customPrefix: LOG_CATEGORY);
-                var package = MEPackageHandler.UnsafePartialLoad(file.Value,
-                    x => x.IsA("MaterialInterface") || x.ObjectName.Name.StartsWith("MaterialExpression"));
-                foreach (var matExp in package.Exports.Where(x => x.IsDataLoaded()))
-                {
-                    if (!matExp.IsDefaultObject && matExp.IsA("MaterialInterface") && !materialInfos.ContainsKey(matExp.InstancedFullPath))
-                    {
-                        var matInfo = new MatInfo();
-                        if (matExp.ClassName == "Material")
-                        {
-                            matInfo.AddShaderId(matExp);
-                            var expressions = matExp.GetProperty<ArrayProperty<ObjectProperty>>("Expressions");
-                            if (expressions != null)
-                            {
-                                // This is a Material
-                                InventoryExpressions(matExp, matInfo, expressions);
-                                var bin = ObjectBinary.From<Material>(matExp);
-                                foreach (var tex in bin.SM3MaterialResource.UniformExpressionTextures)
-                                {
-                                    if (package.TryGetEntry(tex, out var entr))
-                                    {
-                                        matInfo.Textures.Add(entr.InstancedFullPath);
-                                    }
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Not a root material
-                            matInfo.VectorExpressions.ReplaceAll(InventoryParameters(matExp, "VectorParameterValues"));
-                            matInfo.ScalarExpressions.ReplaceAll(InventoryParameters(matExp, "ScalarParameterValues"));
-                            matInfo.TextureExpressions.ReplaceAll(InventoryParameters(matExp, "TextureParameterValues"));
-                            if (matExp.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true)
-                            {
-                                matInfo.AddShaderId(matExp);
-                            }
-                        }
+                var package = MEPackageHandler.UnsafePartialLoad(file.Value, unsafePredicate);
+                InventoryMaterials(package, materialInfos);
+            }
 
-                        // This will need updated for receiver effects as they use Base
-                        matInfo.InstancedFullPath = matExp.InstancedFullPath;
-                        matInfo.ParentIFP = matExp.GetProperty<ObjectProperty>("Parent")?.ResolveToEntry(matExp.FileRef)?.InstancedFullPath;
-                        matInfo.ExportClass = matExp.ClassName;
-                        materialInfos[matExp.InstancedFullPath] = matInfo;
-                    }
+            if (game == MEGame.ME3)
+            {
+                MilanShared.LoadME3DLCTOCs();
+                foreach (var fileMap in MilanShared.ME3DLCFileMap)
+                {
+                    if (!fileMap.Key.RepresentsPackageFilePath())
+                        continue;
+                    MilanLog.Information($"Inventorying file {fileMap.Key}", customPrefix: LOG_CATEGORY);
+                    var me3P = MilanShared.GetME3Package(fileMap.Key, unsafePredicate);
+                    InventoryMaterials(me3P, materialInfos);
                 }
             }
 
@@ -86,7 +62,53 @@ namespace ProjectMilan.Pipelines.Shared
             List<MatInfo> roots = materialInfos.Where(x => x.Value.ParentIFP == null).Select(x => x.Value).ToList();
 
             var json = JsonConvert.SerializeObject(roots, Formatting.Indented);
-            File.WriteAllText(GetMaterialDBPath(), json);
+            File.WriteAllText(GetMaterialDBPath(game), json);
+        }
+
+        private static void InventoryMaterials(IMEPackage package, Dictionary<string, MatInfo> materialInfos)
+        {
+            foreach (var matExp in package.Exports.Where(x => x.IsDataLoaded()))
+            {
+                if (!matExp.IsDefaultObject && matExp.IsA("MaterialInterface") && !materialInfos.ContainsKey(matExp.InstancedFullPath))
+                {
+                    var matInfo = new MatInfo();
+                    if (matExp.ClassName == "Material")
+                    {
+                        matInfo.AddShaderId(matExp);
+                        var expressions = matExp.GetProperty<ArrayProperty<ObjectProperty>>("Expressions");
+                        if (expressions != null)
+                        {
+                            // This is a Material
+                            InventoryExpressions(matExp, matInfo, expressions);
+                            var bin = ObjectBinary.From<Material>(matExp);
+                            foreach (var tex in bin.SM3MaterialResource.UniformExpressionTextures)
+                            {
+                                if (package.TryGetEntry(tex, out var entr))
+                                {
+                                    matInfo.Textures.Add(entr.InstancedFullPath);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Not a root material
+                        matInfo.VectorExpressions.ReplaceAll(InventoryParameters(matExp, "VectorParameterValues"));
+                        matInfo.ScalarExpressions.ReplaceAll(InventoryParameters(matExp, "ScalarParameterValues"));
+                        matInfo.TextureExpressions.ReplaceAll(InventoryParameters(matExp, "TextureParameterValues"));
+                        if (matExp.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true)
+                        {
+                            matInfo.AddShaderId(matExp);
+                        }
+                    }
+
+                    // This will need updated for receiver effects as they use Base
+                    matInfo.InstancedFullPath = matExp.InstancedFullPath;
+                    matInfo.ParentIFP = matExp.GetProperty<ObjectProperty>("Parent")?.ResolveToEntry(matExp.FileRef)?.InstancedFullPath;
+                    matInfo.ExportClass = matExp.ClassName;
+                    materialInfos[matExp.InstancedFullPath] = matInfo;
+                }
+            }
         }
 
         private static IEnumerable<string> InventoryParameters(ExportEntry exportEntry, string listName)
@@ -138,7 +160,7 @@ namespace ProjectMilan.Pipelines.Shared
             if (_materialDB == null)
             {
                 MilanLog.Information("Loading material donor database", customPrefix: LOG_CATEGORY);
-                _materialDB = JsonConvert.DeserializeObject<List<MatInfo>>(File.ReadAllText(GetMaterialDBPath()));
+                _materialDB = JsonConvert.DeserializeObject<List<MatInfo>>(File.ReadAllText(GetMaterialDBPath(MEGame.LE3)));
             }
 
             // Look at parent of incoming material.
@@ -306,9 +328,9 @@ namespace ProjectMilan.Pipelines.Shared
         // This can easily be optimized with a dictionary. Just doing proof of concept right now.
         private static MatInfo FindMaterial(string parentMaterial) => _materialDB.FirstOrDefault(x => x.InstancedFullPath == parentMaterial);
 
-        private static string GetMaterialDBPath()
+        private static string GetMaterialDBPath(MEGame game)
         {
-            return Path.Combine(SharedMaterialDonor.GetGlobalDonorPath(), "matDonorInfo.json");
+            return Path.Combine(SharedMaterialDonor.GetGlobalDonorPath(), $"{game}DonorInfo.json");
         }
     }
 

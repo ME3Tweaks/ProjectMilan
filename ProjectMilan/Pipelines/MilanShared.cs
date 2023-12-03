@@ -56,7 +56,7 @@ namespace ProjectMilan.Pipelines
         /// Fetches an ME3 package - from disk or SFAR
         /// </summary>
         /// <param name="sourceFileName"></param>
-        public static IMEPackage GetME3Package(string sourceFileName)
+        public static IMEPackage GetME3Package(string sourceFileName, Func<ExportEntry, bool> unsafePredicate = null)
         {
             bool forceUseDLC = sourceFileName == "MPLobby.pcc"; // Do not use basegame version.
 
@@ -66,6 +66,10 @@ namespace ProjectMilan.Pipelines
                 if (!forceUseDLC &&
                     MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath))
                 {
+                    if (unsafePredicate != null)
+                    {
+                        return MEPackageHandler.UnsafePartialLoad(filePath, unsafePredicate);
+                    }
                     return MEPackageHandler.OpenMEPackage(filePath);
                 }
                 else
@@ -75,14 +79,21 @@ namespace ProjectMilan.Pipelines
                         LoadME3DLCTOCs();
                     if (ME3DLCFileMap.TryGetValue(sourceFileName, out var dlcPackage))
                     {
-                        return MEPackageHandler.OpenMEPackageFromStream(
-                            dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName)), sourceFileName);
+                        if (unsafePredicate != null)
+                        {
+                            return MEPackageHandler.UnsafePartialLoadFromStream(dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName)), sourceFileName, unsafePredicate);
+                        }
+                        return MEPackageHandler.OpenMEPackageFromStream(dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName)), sourceFileName);
                     }
 
                     if (MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath2) &&
                         filePath2.Contains("\\DLC_"))
                     {
                         // Unpacked DLC
+                        if (unsafePredicate != null)
+                        {
+                            return MEPackageHandler.UnsafePartialLoad(filePath2, unsafePredicate);
+                        }
                         return MEPackageHandler.OpenMEPackage(filePath2);
                     }
 
