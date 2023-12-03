@@ -44,7 +44,7 @@ namespace ProjectMilan.Pipelines.Texture
         /// </summary>
         private static void MoveTexturesToExternalTFC(string dlcName)
         {
-            var inputFolder = @"Z:\ModLibrary\LE3\Project Milan\Cache\Kits";
+            var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
             var tfcName = $"Textures_{dlcName}";
             var tfcPath = Path.Combine(inputFolder, $"{tfcName}.tfc");
             using (var tfcStream = File.Create(tfcPath))

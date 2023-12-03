@@ -51,6 +51,38 @@ namespace ProjectMilan.Pipelines.Startups
             "SFXMPObjectives",
             "SFXMPObjectives_Special",
             "SFXMPSupplyCardImages",
+
+            // MP1
+
+            // MP2
+            "MP2Images",
+            "MP2PowerIcons",
+            "SFX_GUI_PR_Images_1",
+            "SFXEngagement_RetrieveDLC",
+            // there's more here that need done
+
+            // MP3
+            "SFXMobileAnnex", // I hate you
+            // Phantom2 does not need ported - it was a shader update
+            "SFXMP3Gear", // SFXMods I think were broken for MP3 and were shipped in MP4?
+            // some other shared stuff
+
+            // MP4
+            "GUI_CollectorHUDOverlay", // This might be useful porting to SP since BioWare never did (especially for LE3R)
+            "MP_DLC_SFResources_Cooked",
+            "MP4GUIImages",
+            "MP4Images",
+            "SFXHazardMapImages",
+            "SFXGUI_W_S_Collector",
+            // MP3 mods
+            "SFXPawn_Atlas2", // Different movement speed
+            // Banshee2 // Not entirely sure what changed
+            // Cannibal2 // Can eat players
+            // Marauder2 // Can stomp players
+            // GethPyro2 // Can't be grabbed
+            // Collector pawns (probably can use SP)
+            // SFXWeapon_SniperRifle_Collector // This is MP only, never was in SP. We may get more accurate port with Wwiser than EGMs version.
+
         };
 
         // If other options are ever needed for pass through they will be defined here
