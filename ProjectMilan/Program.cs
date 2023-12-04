@@ -94,6 +94,7 @@ namespace ProjectMilan
             "kinkojiro" => new MilanSettingsKinkojiro(),
             "henbagle" => new MilanSettingsHenBagle(),
             "doot" => new MilanSettingsd00t(),
+            "dropthesquid" => new MilanSettingsDropTheSquid(),
             _ => throw new Exception($"Undefined configuration: {cliOptions.Config}")
         };
 
