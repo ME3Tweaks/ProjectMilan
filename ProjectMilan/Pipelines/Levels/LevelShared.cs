@@ -269,5 +269,24 @@ namespace ProjectMilan.Pipelines.Levels
 
             return destPackage;
         }
+
+        /// <summary>
+        /// Sets the game modes on BioWorldInfo
+        /// </summary>
+        /// <param name="bioP"></param>
+        public static void SetupHordeModes(IMEPackage bioP)
+        {
+            var mpContent = bioP.FindEntry("SFXGameMPContent") ?? ExportCreator.CreatePackageExport(bioP, "SFXGameMPContent");
+            ImportEntry infoMP = new ImportEntry(bioP) { ObjectName = "SFXGameInfoMP", idxLink = mpContent.UIndex, ClassName = "Class", PackageFile = "Core" };
+            ImportEntry gameTypeHorde = new ImportEntry(bioP) { ObjectName = "SFXGameType_Horde_Operation", idxLink = mpContent.UIndex, ClassName = "Class", PackageFile = "Core" };
+            bioP.AddImport(infoMP);
+            bioP.AddImport(gameTypeHorde);
+            bioP.GetBioWorldInfo().WriteProperty(
+                new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
+                {
+                    new ObjectProperty(infoMP),
+                    new ObjectProperty(gameTypeHorde)
+                });
+        }
     }
 }

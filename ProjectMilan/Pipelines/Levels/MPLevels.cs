@@ -30,6 +30,16 @@ namespace ProjectMilan.Pipelines.Levels
             /// </summary>
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
+                // Vanilla 
+                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
+                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+
+
+
                 // MP1 Resurgence
                 new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= false, SpecialPortingDelegate = null}, // Condor
                 new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null}, // Hydra
@@ -70,6 +80,8 @@ namespace ProjectMilan.Pipelines.Levels
                 new LevelSpecificPipeline() { BioP="BioP_MPSub", Enabled=false, SpecialPortingDelegate = null}, // Neptune (prototype)
                 new LevelSpecificPipeline() { BioP="BioP_MPTest", Enabled=false, SpecialPortingDelegate = null}, // Scorpion (prototype)
             };
+
+
         }
 
         public static void RunPipeline()
@@ -89,11 +101,68 @@ namespace ProjectMilan.Pipelines.Levels
                     continue;
                 }
 
-                BeginPorting(level);
+                if (level.SpecialPortingDelegate != null)
+                {
+                    level.SpecialPortingDelegate?.Invoke(level);
+                }
+                else
+                {
+                    BeginPortingGeneric(level);
+                }
+
+                level.ClearReferences();
             }
         }
 
-        private static void BeginPorting(LevelSpecificPipeline levelPipeline)
+
+        /// <summary>
+        /// Fixes up the 5 usable basegame MP maps that ship with LE
+        /// </summary>
+        /// <param name="levelPipeline"></param>
+        /// <exception cref="NotImplementedException"></exception>
+        private static void BasegameMapPorting(LevelSpecificPipeline levelPipeline)
+        {
+            levelPipeline.LogCategory = $"{LOG_CATEGORY}-{levelPipeline.BioP}";
+            MilanLog.Information($@"Beginning generic level port: {levelPipeline.BioP}", customPrefix: levelPipeline.LogCategory);
+
+            // Initialize cache
+            levelPipeline.Cache = new PackageCache();
+
+            var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Levels", levelPipeline.BioP);
+            Directory.CreateDirectory(outputPath);
+
+            // Get BioP package
+            MilanLog.Information($"Loading ME3 BioP", customPrefix: levelPipeline.LogCategory);
+            var me3BioP = MilanShared.GetME3Package($"{levelPipeline.BioP}.pcc");
+            levelPipeline.ME3BioP = me3BioP;
+            levelPipeline.ME3Packages[levelPipeline.BioP] = me3BioP;
+            levelPipeline.LE3BioP = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, $@"{levelPipeline.BioP}.pcc")); // This file is not patched in METR
+            levelPipeline.LE3BioP.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this file
+
+            // Add start locations
+            var level = levelPipeline.LE3BioP.GetLevel();
+            foreach (var startLoc in me3BioP.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "BioStartLocationMP"))
+            {
+                var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies,
+                    startLoc, level.FileRef, level, true,
+                    new RelinkerOptionsPackage()
+                    {
+                        IsCrossGame = true,
+                        TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                        Cache = levelPipeline.Cache,
+                        PortExportsAsImportsWhenPossible = true
+                    }, out var _);
+            }
+
+            LevelTools.RebuildPersistentLevelChildren(level);
+            LevelShared.SetupHordeModes(levelPipeline.LE3BioP);
+
+
+            // Save BioP into folder
+            levelPipeline.LE3BioP.Save(Path.Combine(outputPath, Path.GetFileName(levelPipeline.LE3BioP.FilePath)));
+        }
+
+        private static void BeginPortingGeneric(LevelSpecificPipeline levelPipeline)
         {
             levelPipeline.LogCategory = $"{LOG_CATEGORY}-{levelPipeline.BioP}";
             MilanLog.Information($@"Beginning generic level port: {levelPipeline.BioP}", customPrefix: levelPipeline.LogCategory);
@@ -141,25 +210,21 @@ namespace ProjectMilan.Pipelines.Levels
             // Unregister donors
             SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
 
-            // Delete cache
-            levelPipeline.Cache.Dispose();
-            levelPipeline.Cache = null;
-
             // Print donors for global shader converter.
             MilanLog.Information("Material donors required: ", customPrefix: levelPipeline.LogCategory);
-            List<string> shadersListed = new List<string>();
+            //List<string> shadersListed = new List<string>();
             foreach (var me3BrokenMat in levelPipeline.MaterialsNeedingDonors)
             {
-                //MilanLog.Warning(me3BrokenMat.InstancedFullPath, customPrefix: levelPipeline.LogCategory);
-                var shaderId = SharedMaterialDonor.GetShaderIdString(me3BrokenMat);
-                if (!shadersListed.Contains(shaderId))
-                {
-                    // Seems some materials share shaders...?
-                    shadersListed.Add(shaderId);
-                    Debug.WriteLine($"// {me3BrokenMat.InstancedFullPath} -> ??? (??)");
-                    Debug.WriteLine($"{{\"{shaderId}\", null}},");
-                }
-                // DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath());
+                ////MilanLog.Warning(me3BrokenMat.InstancedFullPath, customPrefix: levelPipeline.LogCategory);
+                //var shaderId = SharedMaterialDonor.GetShaderIdString(me3BrokenMat);
+                //if (!shadersListed.Contains(shaderId))
+                //{
+                //    // Seems some materials share shaders...?
+                //    shadersListed.Add(shaderId);
+                //    Debug.WriteLine($"// {me3BrokenMat.InstancedFullPath} -> ??? (??)");
+                //    Debug.WriteLine($"{{\"{shaderId}\", null}},");
+                //}
+                DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath());
             }
             // levelPipeline.MaterialsNeedingDonors.Clear();
         }
@@ -203,17 +268,7 @@ namespace ProjectMilan.Pipelines.Levels
             // Set game modes
             if (!levelPipeline.IsSP)
             {
-                var mpContent = levelPipeline.LE3BioP.FindEntry("SFXGameMPContent") ?? ExportCreator.CreatePackageExport(levelPipeline.LE3BioP, "SFXGameMPContent");
-                ImportEntry infoMP = new ImportEntry(levelPipeline.LE3BioP) { ObjectName = "SFXGameInfoMP", idxLink = mpContent.UIndex, ClassName = "Class", PackageFile = "Core" };
-                ImportEntry gameTypeHorde = new ImportEntry(levelPipeline.LE3BioP) { ObjectName = "SFXGameType_Horde_Operation", idxLink = mpContent.UIndex, ClassName = "Class", PackageFile = "Core" };
-                levelPipeline.LE3BioP.AddImport(infoMP);
-                levelPipeline.LE3BioP.AddImport(gameTypeHorde);
-                levelPipeline.LE3BioP.FindExport(@"TheWorld.PersistentLevel.BioWorldInfo_2").WriteProperty(
-                    new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
-                    {
-                        new ObjectProperty(infoMP),
-                        new ObjectProperty(gameTypeHorde)
-                    });
+                LevelShared.SetupHordeModes(levelPipeline.LE3BioP);
             }
 
             // Default post processing

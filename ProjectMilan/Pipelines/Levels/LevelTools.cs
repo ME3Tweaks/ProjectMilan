@@ -4,6 +4,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines.Levels
 {
@@ -192,8 +193,15 @@ namespace ProjectMilan.Pipelines.Levels
             ExportEntry[] actorsToAdd = pl.FileRef.Exports.Where(exp => exp.Parent == pl && exp.IsA("Actor")).ToArray();
             Level level = ObjectBinary.From<Level>(pl);
             level.Actors.Clear();
+
+            var bwi = pl.FileRef.GetBioWorldInfo();
+            level.Actors.Add(bwi.UIndex); // Must be first
+
+
             foreach (var actor in actorsToAdd)
             {
+                if (actor == bwi)
+                    continue; // Already added.
                 // Old Wardle code
                 //if (vTestOptions != null && (!vTestOptions.debugBuild || !vTestOptions.debugConvertStaticLightingToNonStatic))
                 //{

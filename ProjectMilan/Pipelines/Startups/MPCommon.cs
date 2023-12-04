@@ -101,7 +101,10 @@ namespace ProjectMilan.Pipelines.Startups
             }
         }
 
-        private static void HackPatchParents()
+        /// <summary>
+        /// This is required to make the build work. This will eventually need to go into a merge mod or be patched out.
+        /// </summary>
+        public static void HackPatchParents()
         {
             if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, "SFXGame.pcc", out var sfxGameF))
             {

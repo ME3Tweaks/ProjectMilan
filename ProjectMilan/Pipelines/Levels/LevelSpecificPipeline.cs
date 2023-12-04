@@ -33,7 +33,7 @@ namespace ProjectMilan.Pipelines.Levels
         /// <summary>
         /// Which function should run to port the level
         /// </summary>
-        public Action SpecialPortingDelegate { get; set; }
+        public Action<LevelSpecificPipeline> SpecialPortingDelegate { get; set; }
 
         /// <summary>
         /// Map of filename -> loaded ME3 packages
@@ -95,6 +95,19 @@ namespace ProjectMilan.Pipelines.Levels
         public string GetStagingTemporaryDonorPath()
         {
             return Directory.CreateDirectory(Path.Combine(GetTemporaryDonorPath(), "Auto")).FullName;
+        }
+
+        /// <summary>
+        /// Removes all object references to release memory
+        /// </summary>
+        public void ClearReferences()
+        {
+            Cache?.Dispose();
+            MaterialsNeedingDonors?.Clear();
+            LE3Packages?.Clear();
+            ME3Packages?.Clear();
+            ME3BioP = null;
+            LE3BioP = null;
         }
     }
 }

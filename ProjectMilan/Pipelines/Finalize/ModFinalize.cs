@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Collections;
+using ProjectMilan.Pipelines.Startups;
 
 namespace ProjectMilan.Pipelines.Finalize
 {
@@ -27,6 +28,9 @@ namespace ProjectMilan.Pipelines.Finalize
         {
             ConformPackagesWithGuidCache();
             // AssignNetIndexes(); // No idea how to do this.
+
+            // Ensure SFXGame is patched.
+            MPCommon.HackPatchParents();
         }
 
         /// <summary>
