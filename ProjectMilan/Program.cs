@@ -3,6 +3,7 @@ using LegendaryExplorerCore;
 using LegendaryExplorerCore.Packages;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
+using ProjectMilan.Pipelines.Finalize;
 using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
@@ -122,17 +123,20 @@ namespace ProjectMilan
             MilanShared.EnsureVGMStreamAvailable();
             AudioRebuild.EnsureWwise7110();
 
-
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
-
 
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
             RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio"); // Converts audio
 
+            // Finalize
+            RunPipeline(true, ModFinalize.RunPipeline, "Finalize");
+
             // Verification
             RunPipeline(true, VerifyMod.RunPipeline, "Verify");
+
+
         }
 
         /// <summary>

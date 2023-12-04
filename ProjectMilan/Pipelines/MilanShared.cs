@@ -48,7 +48,7 @@ namespace ProjectMilan.Pipelines
         /// <summary>
         /// Maps files in a DLC to their respective DLC, using the TOC file of the DLC
         /// </summary>
-        internal static Dictionary<string, DLCPackage> ME3DLCFileMap;
+        internal static CaseInsensitiveDictionary<DLCPackage> ME3DLCFileMap;
 
         private static object syncObj = new();
 
@@ -109,7 +109,7 @@ namespace ProjectMilan.Pipelines
                 return;
 
             MilanLog.Information(@"Loading ME3 DLC SFARs for lookups");
-            ME3DLCFileMap = new Dictionary<string, DLCPackage>();
+            ME3DLCFileMap = new CaseInsensitiveDictionary<DLCPackage>();
             foreach (var f in MEDirectories.OfficialDLC(MEGame.ME3))
             {
                 // This will go from MP1->MP5 so we can override entries in the map.
@@ -194,21 +194,21 @@ namespace ProjectMilan.Pipelines
 
         public static MemoryStream GetME3SFARFile(string sourceFileName)
         {
-            if (MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath))
+            if (MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, false,
+                    Path.GetExtension(sourceFileName) == ".tfc", Path.GetExtension(sourceFileName) == ".afc")
+                .TryGetValue(sourceFileName, out var filePath))
             {
                 return null; // Found on disk
             }
-            else
-            {
-                // May be in SFAR
-                LoadME3DLCTOCs();
-                if (ME3DLCFileMap.TryGetValue(sourceFileName, out var dlcPackage))
-                {
-                    MilanLog.Information($"Extracting {sourceFileName} from {dlcPackage.FileName}");
-                    return dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName));
-                }
 
+            // May be in SFAR
+            LoadME3DLCTOCs();
+            if (ME3DLCFileMap.TryGetValue(sourceFileName, out var dlcPackage))
+            {
+                MilanLog.Information($"Extracting {sourceFileName} from {dlcPackage.FileName}");
+                return dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName));
             }
+
             MilanLog.Warning($"Could not locate ME3 DLC file: {sourceFileName}");
             return null;
         }
@@ -331,7 +331,7 @@ namespace ProjectMilan.Pipelines
                         continue; // On disk already
 
                     MilanLog.Information($"{locF} is being copied to the direct access cache");
-                    using var outF = File.OpenWrite(Path.Combine(fakeCooked, afcN));
+                    using var outF = File.OpenWrite(Path.Combine(fakeCooked, locF));
                     data.CopyTo(outF);
                 }
             }

@@ -1,0 +1,153 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using CommandLine;
+using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.Collections;
+
+namespace ProjectMilan.Pipelines.Finalize
+{
+    /// <summary>
+    /// Finalizes the mod by doing things such as package conformance and building the guid cache.
+    /// </summary>
+    internal class ModFinalize
+    {
+        private const string LOG_CATEGORY = @"MILAN-Finalize";
+        public static void RunPipeline()
+        {
+            InternalRunPipeline();
+        }
+
+        private static void InternalRunPipeline()
+        {
+            ConformPackagesWithGuidCache();
+            // AssignNetIndexes(); // No idea how to do this.
+        }
+
+        /// <summary>
+        /// Builds the package guid cache which is used with replication. Makes all package guids conform.
+        /// </summary>
+        private static void ConformPackagesWithGuidCache()
+        {
+            // WIP
+            var guidCacheP = MEPackageHandler.CreateAndOpenPackage(
+                Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole",
+                    $"GuidCache_{MilanShared.DLC_NAME}.pcc"), MEGame.LE3);
+
+            var guidCache = ExportCreator.CreateExport(guidCacheP, "GuidCache", "GuidCache", indexed: false);
+            var packageGuidMap = new Dictionary<string, Guid>();
+            var GuidPackageMap = new Dictionary<Guid, string>();
+
+            var allPackages = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories).ToList();
+
+            // Step 1: Ensure all packages have guids that are not LOC files.
+            foreach (var p in allPackages)
+            {
+                if (p.GetUnrealLocalization() == MELocalization.None)
+                {
+                    using var package = (MEPackage)MEPackageHandler.OpenMEPackage(p);
+                    var packageGuid = package.PackageGuid;
+                    if (packageGuid == Guid.Empty)
+                    {
+                        packageGuid = Guid.NewGuid();
+                    }
+
+                    // Map package file GUID
+                    packageGuidMap[package.FileNameNoExtension] = packageGuid;
+
+                    var sameNamedExport = package.FindExport(package.FileNameNoExtension);
+                    if (sameNamedExport == null)
+                    {
+                        // Generate it?
+                        sameNamedExport = ExportCreator.CreatePackageExport(package, package.FileNameNoExtension);
+                    }
+
+                    sameNamedExport.PackageGUID = packageGuid;
+
+                    if (package.IsModified)
+                    {
+                        package.Save();
+                    }
+                }
+            }
+
+            // Need to find GUIDs for all forced export packages
+            // Need to also figure out how to know if it needs guid or not
+            // e.g. WwiseBank (loc) folders don't have guids.
+            // Do nothing in LOCs have a guid?
+
+
+            //foreach (var file in allPackages)
+            //{
+            //    if (file.Contains("_LOC_"))
+            //    {
+            //        Debug.WriteLine($"--> Skipping {file}");
+            //        continue; //skip localizations
+            //    }
+
+            //    Debug.WriteLine(Path.GetFileName(file));
+            //    bool hasPackageNamingItself = false;
+            //    using (var package = MEPackageHandler.OpenMEPackage(file))
+            //    {
+            //        foreach (ExportEntry exp in package.Exports)
+            //        {
+            //            if (exp.ClassName == "Package" && exp.idxLink == 0 &&
+            //                !filesToSkip.Contains(exp.ObjectName.Name))
+            //            {
+            //                if (string.Equals(exp.ObjectName.Name, fname,
+            //                    StringComparison.InvariantCultureIgnoreCase))
+            //                {
+            //                    hasPackageNamingItself = true;
+            //                }
+
+            //                Guid guid = exp.PackageGUID;
+            //                if (guid != Guid.Empty)
+            //                {
+            //                    GuidPackageMap.TryGetValue(guid, out string packagename);
+            //                    if (packagename != null && packagename != exp.ObjectName.Name)
+            //                    {
+            //                        Debug.WriteLine(
+            //                            $"-> {exp.UIndex} {exp.ObjectName.Name} has a guid different from already found one ({packagename})! {guid}");
+            //                    }
+
+            //                    if (packagename == null)
+            //                    {
+            //                        GuidPackageMap[guid] = exp.ObjectName.Name;
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+
+            //    if (!hasPackageNamingItself)
+            //    {
+            //        Debug.WriteLine("----HAS NO SELF NAMING EXPORT");
+            //    }
+            //}
+
+            //foreach (KeyValuePair<Guid, string> entry in GuidPackageMap)
+            //{
+            //    // do something with entry.Value or entry.Key
+            //    Debug.WriteLine($"  {entry.Value} {entry.Key}");
+            //}
+
+            // Build guid map.
+            var map = new UMultiMap<NameReference, Guid>();
+            foreach (var mapItem in packageGuidMap)
+            {
+                map.TryAddUnique(mapItem.Key, mapItem.Value);
+            }
+
+            GuidCache gc = new GuidCache();
+            gc.PackageGuidMap = map;
+
+            guidCache.WriteBinary(gc);
+            guidCacheP.Save();
+        }
+    }
+}
