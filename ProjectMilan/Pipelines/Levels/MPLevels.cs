@@ -42,7 +42,7 @@ namespace ProjectMilan.Pipelines.Levels
 
                 // MP1 Resurgence
                 new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= false, SpecialPortingDelegate = null}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null}, // Hydra
+                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null, StripShadowMaps = true}, // Hydra
 
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade

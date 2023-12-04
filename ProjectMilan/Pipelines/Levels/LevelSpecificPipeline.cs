@@ -83,6 +83,11 @@ namespace ProjectMilan.Pipelines.Levels
         public List<ExportEntry> MaterialsNeedingDonors { get; } = new();
 
         /// <summary>
+        /// If all shadowmaps on the level should be stripped. This is useful for things like donor testing as shadowmaps in dev appear to be broken.
+        /// </summary>
+        public bool StripShadowMaps { get; set; }
+
+        /// <summary>
         /// Gets the path that holds donors specific for this level
         /// </summary>
         /// <param name="pipeline"></param>

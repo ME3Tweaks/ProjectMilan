@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.Packages;
@@ -137,11 +138,12 @@ namespace ProjectMilan.Pipelines.Levels
                 else
                 {
                     MilanLog.Information($"  Porting {sm.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
-                    var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, 
-                        sm, destPackage, destLevel, true, 
-                        new RelinkerOptionsPackage() { 
-                            IsCrossGame = true, 
-                            TargetGameDonorDB = MilanShared.LE3ObjectDB, 
+                    var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies,
+                        sm, destPackage, destLevel, true,
+                        new RelinkerOptionsPackage()
+                        {
+                            IsCrossGame = true,
+                            TargetGameDonorDB = MilanShared.LE3ObjectDB,
                             Cache = levelPipeline.Cache,
                             PortExportsAsImportsWhenPossible = true
                         }, out var _);
@@ -249,6 +251,19 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             LevelTools.RebuildPersistentLevelChildren(destLevel);
+
+            if (levelPipeline.StripShadowMaps)
+            {
+                foreach (var exp in destPackage.Exports.Where(x => x.ClassName == "StaticMeshComponent"))
+                {
+                    var b = ObjectBinary.From<StaticMeshComponent>(exp);
+                    foreach (var lod in b.LODData)
+                    {
+                        lod.ShadowMaps = Array.Empty<int>();
+                    }
+                    exp.WriteBinary(b);
+                }
+            }
 
             // Correct shaders
             SharedMaterialDonor.UpdateMaterialShaders(destPackage);
