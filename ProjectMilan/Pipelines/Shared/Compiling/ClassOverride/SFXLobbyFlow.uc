@@ -56,8 +56,13 @@ var ELobbySubscreen PreviousSubScreen;
 public event function Destroyed()
 {
     Super(Actor).Destroyed();
-    DataManager.Clear();
-    DataManager.__OnDataLoadedDelegate__Delegate = None;
+    // MILAN CHANGE - 12/03/2023 - Mgamerz
+    // Fix for map changes. Datamanger can be null, this will crash game
+    // Add if check before access
+    if (DataManager != None){
+        DataManager.Clear();
+        DataManager.__OnDataLoadedDelegate__Delegate = None;
+    } // END MILAN
     DataManager = None;
 }
 public function PlayGuiSound(Name SoundName)
