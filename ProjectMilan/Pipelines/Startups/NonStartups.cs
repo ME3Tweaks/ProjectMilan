@@ -105,18 +105,20 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
-            foreach (var packageBaseName in vars.PackageFiles)
-            {
-                var cache = new PackageCache();
-                MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
-                var packageName = $"{packageBaseName}.pcc";
-                var me3File = MilanShared.GetME3Package(packageName);
-                var le3File = MEPackageHandler.CreateAndOpenPackage(Path.Combine(vars.OutputPath, packageName), MEGame.LE3);
-                le3File.LECLTagData.ImportHintFiles.Add("BIOP_MP_COMMON.pcc"); // Hint common package
+            Parallel.ForEach(vars.PackageFiles,
+                new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
+                {
+                    var cache = new PackageCache();
+                    MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
+                    var packageName = $"{packageBaseName}.pcc";
+                    var me3File = MilanShared.GetME3Package(packageName);
+                    var le3File = MEPackageHandler.CreateAndOpenPackage(Path.Combine(vars.OutputPath, packageName), MEGame.LE3);
+                    le3File.LECLTagData.ImportHintFiles.Add("BIOP_MP_COMMON.pcc"); // Hint common package
 
-                MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY);
-                MilanShared.PortLocalizations(packageBaseName, vars.OutputPath, cache, LOG_CATEGORY);
-            }
+                    MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY);
+                    MilanShared.PortLocalizations(packageBaseName, vars.OutputPath, cache, LOG_CATEGORY);
+
+                });
         }
     }
 }
