@@ -29,6 +29,13 @@
       "environmentVariables": {
         "MAXTHREADS": "18"
       }
+    },
+    "ProjectMilan - DropTheSquid": {
+      "commandName": "Project",
+      "commandLineArgs": "--config DropTheSquid",
+      "environmentVariables": {
+        "MAXTHREADS": "18"
+      }
     }
   }
 }
