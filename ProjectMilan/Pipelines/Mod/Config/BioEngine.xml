@@ -34,7 +34,7 @@
 		</Section>
 		<Section name="engine.startuppackages">
 			<Property name="dlcstartuppackage">
-				<Value type="3">GuidCache_DLC_CON_MP1</Value>
+				<Value type="3">GuidCache_DLC_MOD_ProjectMilan</Value>
 			</Property>
 			<Property name="package">
 				<Value type="3">SFXGUI_WeaponUIDataDLC_CON_MP1</Value>
