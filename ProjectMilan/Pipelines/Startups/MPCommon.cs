@@ -25,7 +25,7 @@ namespace ProjectMilan.Pipelines.Startups
     {
         public string OutputPath { get; set; }
 
-        
+
         // Not used
         /// <summary>
         /// Package file being compiled
@@ -217,7 +217,7 @@ namespace ProjectMilan.Pipelines.Startups
                     }
                 }
             }
-            
+
             return null;
         }
 
@@ -265,10 +265,20 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     className = m.Message.Substring("No type named '".Length);
                 }
-                //else if (m.Message.Contains(" has no member named '"))
-                //{
-                //    className = m.Message.Substring(m.Message.IndexOf(" has no member named '") + " has no member named '".Length);
-                //}
+                else if (m.Message.Contains(" has no member named '"))
+                {
+                    if (m.Message.Contains("SFXWeapon_AssaultRifle_SentryTurret") ||
+                        false
+                        
+                        )
+                    {
+                        className = m.Message.Substring(m.Message.IndexOf(" has no member named '") + " has no member named '".Length);
+                    }
+                    else
+                    {
+                        continue; // Something else...
+                    }
+                }
                 else
                 {
                     // It's something else...
