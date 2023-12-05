@@ -4,6 +4,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.Classes;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace ProjectMilan.Pipelines.Texture
@@ -30,14 +31,79 @@ namespace ProjectMilan.Pipelines.Texture
 
         private static void InternalRunPipeline()
         {
+            ConvertTextures();
+
             // Todo: Upscaled override
 
-            // Pass 1: Bring over all textures to TFC
-            MoveTexturesToExternalTFC(MilanShared.DLC_NAME);
-
-            // Pass 2: Use TFC Compactor to shrink size
-
+            // Commented out: Not reliable right now
+            // Bring over all textures to TFC
+            // MoveTexturesToExternalTFC(MilanShared.DLC_NAME);
         }
+
+        /// <summary>
+        /// Converts texture formats that only work in ME3 to LE3
+        /// </summary>
+        private static void ConvertTextures()
+        {
+            var texCategory = $"{LOG_CATEGORY}-Conversion";
+            // ME3 V8U8 norms don't work in LE3, it seems V8U8 support was removed, they appear as black
+            // Convert them all to BC7
+            var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
+
+            foreach (var pf in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
+            {
+                MilanLog.Information($"Checking package {Path.GetFileName(pf)}", customPrefix: texCategory);
+                var p = MEPackageHandler.OpenMEPackage(pf);
+
+                foreach (var tex in p.Exports.Where(x => x.IsTexture()))
+                {
+                    var format = tex.GetProperty<EnumProperty>("Format");
+                    if (format.Value == "PF_V8U8")
+                    {
+                        // Needs converted
+                        MilanLog.Information($"  Converting texture {tex.InstancedFullPath} from {format.Value} to BC7", customPrefix: texCategory);
+                        try
+                        {
+                            ConvertTexture(tex, PixelFormat.BC7);
+                        }
+                        catch (Exception ex)
+                        {
+                            // This may be expected in a few cases. For example if TFC for texture data cannot be found.
+                            // This may happen during dev as textures will be broken on and off
+                            MilanLog.Error($"  Unable to convert texture: {ex.Message}");
+                        }
+                    }
+                }
+
+                if (p.IsModified)
+                {
+                    MilanLog.Information($"  Saving package", customPrefix: texCategory);
+                    p.Save();
+                }
+            }
+        }
+
+        private static void ConvertTexture(ExportEntry tex, PixelFormat destFormat)
+        {
+
+            var props = tex.GetProperties();
+            var texture = new Texture2D(tex);
+            var convertedImage = texture.ToImage(destFormat);
+            props.AddOrReplaceProp(new EnumProperty($"PF_{destFormat}", "EPixelFormat", MEGame.LE3, "Format"));
+            if (destFormat == PixelFormat.BC7)
+            {
+                props.AddOrReplaceProp(new EnumProperty("TC_NormalmapBC7", "TextureCompressionSettings", MEGame.LE3, "CompressionSettings"));
+            }
+            else
+            {
+                // Implement the rest if necessary
+                props.AddOrReplaceProp(new EnumProperty("TC_NormalMap", "TextureCompressionSettings", MEGame.LE3, "CompressionSettings"));
+            }
+
+            texture.TextureFormat = $"PF_{destFormat}"; // Required for conversion
+            texture.Replace(convertedImage, props, isPackageStored: true);
+        }
+
 
         /// <summary>
         /// This will probably be moved to LEC
