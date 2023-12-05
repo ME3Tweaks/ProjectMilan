@@ -40,7 +40,7 @@ namespace ProjectMilan.Pipelines.Shared
             {
                 MilanLog.Information($"Unregistering temporary donor package {file}", customPrefix: LOG_CATEGORY);
                 var package = MEPackageHandler.UnsafePartialLoad(file, x => false);
-                MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath);
+                MilanShared.LE3ObjectDB.RemoveFileFromDB(package);
             }
         }
 
