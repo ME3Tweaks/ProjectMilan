@@ -403,13 +403,13 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             // Sort by higher tier first
-            possibleDonors = possibleDonors.Select(x => Path.GetFileName(x)).ToList(); // we don't care about paths.
             possibleDonors.Sort(new ObjectSourceTierComparer(MEGame.LE3, package.FilePath));
 
             foreach (var possibleDonor in possibleDonors)
             {
                 // Todo: Maybe use cache for this - with a max size
-                var donorP = MilanShared.GetLE3Package(possibleDonor);
+                var donorP = MilanShared.GetLE3Package(Path.GetFileName(possibleDonor));
+                donorP ??= MilanShared.GetLE3Package(possibleDonor);
                 if (donorP != null)
                 {
                     var donorEntry = donorP.FindEntry(ifp);

@@ -55,10 +55,14 @@ namespace ProjectMilan.Pipelines.Verify
                 var vTable = GetVTable(f);
                 var parentVTable = GetVTable(parent);
 
+                if (vTable.Count < parentVTable.Count)
+                {
+                    MilanLog.Error($@"  Invalid VTable size detected in {f.InstancedFullPath}: local count = {vTable.Count}, parent count = {parentVTable.Count}", customPrefix: LOG_CATEGORY);
+                }
                 int i = 0;
                 for (; i < parentVTable.Count; i++)
                 {
-                    if (vTable[i] != parentVTable[i])
+                    if (i < vTable.Count && vTable[i] != parentVTable[i])
                     {
                         MilanLog.Error($@"  Bad VTable detected in {f.InstancedFullPath}: Local[{i}] = {vTable[i]}, Parent[{i}]={parentVTable[i]}", customPrefix: LOG_CATEGORY);
                     }
