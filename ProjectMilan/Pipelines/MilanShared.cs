@@ -99,6 +99,16 @@ namespace ProjectMilan.Pipelines
 
                     MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
                 }
+
+                // Donors will have full path
+                if (File.Exists(sourceFileName))
+                {
+                    if (unsafePredicate != null)
+                    {
+                        return MEPackageHandler.UnsafePartialLoad(sourceFileName, unsafePredicate);
+                    }
+                    return MEPackageHandler.OpenMEPackage(sourceFileName);
+                }
             }
             return null;
         }
@@ -144,6 +154,12 @@ namespace ProjectMilan.Pipelines
             if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, packageFileName, out var filePath))
             {
                 return MEPackageHandler.OpenMEPackage(filePath);
+            }
+
+            // Donors will have full path
+            if (File.Exists(packageFileName))
+            {
+                return MEPackageHandler.OpenMEPackage(packageFileName);
             }
 
             return null;

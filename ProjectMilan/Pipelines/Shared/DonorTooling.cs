@@ -268,10 +268,8 @@ namespace ProjectMilan.Pipelines.Shared
 
                                     if (texture == null)
                                     {
-                                        var containingPackageF =
-                                            MilanShared.LE3ObjectDB.GetFilesContainingObject(imp.InstancedFullPath)[0];
-                                        var containingPackageP =
-                                            MilanShared.GetME3Package(Path.GetFileName(containingPackageF));
+                                        var containingPackageF = MilanShared.LE3ObjectDB.GetFilesContainingObject(imp.InstancedFullPath)[0];
+                                        var containingPackageP = MilanShared.GetLE3Package(Path.GetFileName(containingPackageF));
                                         texture = containingPackageP.FindExport(imp.InstancedFullPath);
                                     }
 
