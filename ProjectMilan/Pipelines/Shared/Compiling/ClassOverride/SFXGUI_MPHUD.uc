@@ -91,6 +91,7 @@ public event function HandleButtonRefresh(bool usingGamepad)
 }
 public final function Initialize()
 {
+    HandleButtonRefresh(bUsingGamepad);
     InitializeDPadPowerIcons();
     InitializeCenterPowerIcons();
     SFXPawn_Player(GetPC().Pawn).PowerManager.RegisterPowerReleasedCallback(OnPawnPowerUsed);
@@ -104,7 +105,6 @@ public event function OnControllerProfileSettingChange()
 }
 public event function OnStart()
 {
-    LogInternal("SFXGUI_MPHUD OnStart", );
     Super(SFXGUIMovie).OnStart();
     DPadIconTop = SFXGUIValue_HUDPowerIcon(GetVariableObject("DPadMap.DPadPowerIcons.PowerTop", Class'SFXGUIValue_HUDPowerIcon'));
     DPadIconTop.sPath = "DPadMap.DPadPowerIcons.PowerTop";
@@ -216,7 +216,6 @@ public event function OnClose()
 {
     local SFXPawn_Player oPlayer;
     
-    LogInternal("SFXGUI_MPHUD OnClose", );
     oPlayer = SFXPawn_Player(GetPC().Pawn);
     DPadIconTop.Cleanup();
     DPadIconTop = None;
