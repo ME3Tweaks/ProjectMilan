@@ -53,35 +53,124 @@ namespace ProjectMilan.Pipelines.Startups
             "SFXMPSupplyCardImages",
 
             // MP1
+            "MP1Images",
+            "MP1PowerIcons",
+            "SFXGE_MP1_MatchConsumables",
+            "SFXGUI_WeaponUIDataDLC_CON_MP1SF",
+            "SFXGUI_W_A_Krogan",
+            "SFXGUI_W_SMG_Geth",
+            "SFXGUI_W_S_Batarian",
 
             // MP2
             "MP2Images",
             "MP2PowerIcons",
-            "SFX_GUI_PR_Images_1",
             "SFXEngagement_RetrieveDLC",
-            // there's more here that need done
+            "SFXGUI_WeaponUIDataDLC_CON_MP2SF",
+            "SFXGUI_W_A_Cerberus",
+            "SFXGUI_W_A_Prothean_MP",
+            "SFXGUI_W_SG_Quarian",
+            "SFXGUI_W_S_Turian",
+            "SFXMP2Gear1",
+            "SFXMP2Gear2",
+            "SFXMP2GearImages1",
+            "SFXMPObjectiveRetrieve",
+            "SFX_GUI_PR_Images_1",
 
             // MP3
-            "SFXMobileAnnex", // I hate you
-            // Phantom2 does not need ported - it was a shader update
-            "SFXMP3Gear", // SFXMods I think were broken for MP3 and were shipped in MP4?
-            // some other shared stuff
+            "MP3GearImages",
+            "MP3Images",
+            "MP3PowerIcons",
+            "SFXGUI_WeaponUIDataDLC_CON_MP3SF",
+            "SFXGUI_WeaponUIDataDLC_SharedSF",
+            "SFXGUI_WMod_AssaultRifleMelee",
+            "SFXGUI_WMod_AssaultRifleSuperPen",
+            "SFXGUI_WMod_AssaultRifleSuperScope",
+            "SFXGUI_WMod_PistolHeadShot",
+            "SFXGUI_WMod_PistolSuperDamage",
+            "SFXGUI_WMod_ShotgunDamageAndPen",
+            "SFXGUI_WMod_ShotgunSuperMelee",
+            "SFXGUI_WMod_SMGPenetration",
+            "SFXGUI_WMod_SniperRifleDamageAndPen",
+            "SFXGUI_WMod_SniperRifleSuperScope",
+            "SFXGUI_W_A_LMG",
+            "SFXGUI_W_P_Asari",
+            "SFXGUI_W_SG_Assault",
+            "SFXMobileAnnex",
+
+            // These were redone in MP4 as they don't work properly in MP3
+            /*"SFXModsMP3_AssaultRifle",
+            "SFXModsMP3_Pistol",
+            "SFXModsMP3_Shotgun",
+            "SFXModsMP3_SMG",
+            "SFXModsMP3_SniperRifle",*/
+            "SFXMP3Gear",
+            "SFXSharedGear",
+            "SFXSharedModGameEffects",
+            "SFXSharedModImages",
+
 
             // MP4
-            "GUI_CollectorHUDOverlay", // This might be useful porting to SP since BioWare never did (especially for LE3R)
-            "MP_DLC_SFResources_Cooked",
+            "GUI_CollectorHUDOverlay", // We should port this to SP
+            "GUI_MPChallengeImages",
             "MP4GUIImages",
             "MP4Images",
-            "SFXHazardMapImages",
+            "MP_DLC_SFResources_Cooked",
+            "SFXGUI_FontsJPN_DLC",
+            "SFXGUI_Fonts_DLC",
+            "SFXGUI_WeaponUIDataDLC_CON_MP4SF",
+            "SFXGUI_W_SMG_Collector",
             "SFXGUI_W_S_Collector",
-            // MP3 mods
-            "SFXPawn_Atlas2", // Different movement speed
-            // Banshee2 // Not entirely sure what changed
-            // Cannibal2 // Can eat players
-            // Marauder2 // Can stomp players
-            // GethPyro2 // Can't be grabbed
-            // Collector pawns (probably can use SP)
-            // SFXWeapon_SniperRifle_Collector // This is MP only, never was in SP. We may get more accurate port with Wwiser than EGMs version.
+            "SFXHazardMapImages",
+            "SFXModsMP3_AssaultRifle", // These fix MP3 versions
+            "SFXModsMP3_Pistol",
+            "SFXModsMP3_Shotgun",
+            "SFXModsMP3_SMG",
+            "SFXModsMP3_SniperRifle",
+            "SFXMP4AmmoImages",
+            "SFXMP4AmmoPowers",
+            "SFXMP4CardImages",
+            "SFXMP4Gear",
+            "SFXMP4GearImages",
+            "SFXMP4KitImages",
+            "SFXPawn_Abomination", // Collector faction, Geth, Cerb new enemy
+            "SFXPawn_Atlas2", // Faster, more armor pieces
+            "SFXPawn_Banshee2", // I think changes to warp ball?
+            "SFXPawn_Cannibal2", // Can eat players
+            "SFXPawn_CollectorCaptain",
+            "SFXPawn_CollectorTrooper",
+            "SFXPawn_GethBomber",
+            "SFXPawn_GethPyro2", // Cannot be grabbed
+            "SFXPawn_Marauder2", // Can stomp players
+            "SFXPawn_Phoenix",
+            "SFXPawn_Praetorian",
+            "SFXPawn_Scion",
+            "SFXSharedModGameEffects",
+            "SFXSharedModImages",
+            "SFXWeapon_SniperRifle_Collector", // Use this version instead of EGM's as it may improve audio and/or other things with newer tooling
+
+            // MP5
+            "GUI_MPChallengeImages",
+            "MP_DLC_SFResources_Cooked",
+            "SFXGUI_WeaponUIDataDLC_CON_MP5SF",
+            "SFXGUI_WMod_PistolPowerDamage_MP5",
+            "SFXGUI_WMod_SMGPowerDamage_MP5",
+            "SFXGUI_W_A_Adas_MP",
+            "SFXGUI_W_A_Lancer_MP",
+            "SFXGUI_W_A_Spitfire",
+            "SFXGUI_W_P_Bloodpack_MP",
+            "SFXGUI_W_P_Silencer_MP",
+            "SFXGUI_W_SG_Salarian_MP",
+            "SFXGUI_W_SMG_Bloodpack_MP",
+            "SFXMP5Gear",
+            "SFXMP5GearImages",
+            "SFXMP5KitImages",
+            "SFXMP5ModImages",
+            "SFXMP5Mods",
+            "SFXMP5PowerImages",
+            "SFXMP5WeaponImages",
+            "SFXPawn_GethPrime2", // Changes to stagger, I think?
+
+
 
         };
 
@@ -105,7 +194,8 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
-            Parallel.ForEach(vars.PackageFiles,
+            // We use .Distince() cause list might have duplicates due to duplicates in DLC folders
+            Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
                 {
                     var cache = new PackageCache();
@@ -117,7 +207,6 @@ namespace ProjectMilan.Pipelines.Startups
 
                     MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY);
                     MilanShared.PortLocalizations(packageBaseName, vars.OutputPath, cache, LOG_CATEGORY);
-
                 });
         }
     }
