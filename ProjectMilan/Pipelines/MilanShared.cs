@@ -436,26 +436,34 @@ namespace ProjectMilan.Pipelines
                 out var newEntry);
 
             sw.Stop();
+            foreach (var r in results)
+            {
+                MilanLog.Warning($"Relink result: {r.Message} for {r.Entry?.InstancedFullPath}", customPrefix: logCategory);
+            }
+
             //DotTrace.SaveData();
 
             // Not sure - do we need to make sure this needs done recursively in order? Topmost to bottommost
-            MilanLog.Information("Recompiling ported classes", customPrefix: logCategory);
-            FileLib lib = new FileLib(destPackage);
-            lib.Initialize(cache);
-
-            foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
+            if (false)
             {
-                // Recompile all ported classes so vtables are updated
-                MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: logCategory);
-                // This is broken!!
-                try
+                MilanLog.Information("Recompiling ported classes", customPrefix: logCategory);
+                FileLib lib = new FileLib(destPackage);
+                lib.Initialize(cache);
+
+                foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
                 {
-                    (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, cache);
-                    UnrealScriptCompiler.CompileClass(destPackage, text, lib, f, packageCache: cache);
-                }
-                catch (Exception e)
-                {
-                    MilanLog.Exception(e, "  Error recompiling function:");
+                    // Recompile all ported classes so vtables are updated
+                    MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: logCategory);
+                    // This is broken!!
+                    try
+                    {
+                        (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, cache);
+                        UnrealScriptCompiler.CompileClass(destPackage, text, lib, f, packageCache: cache);
+                    }
+                    catch (Exception e)
+                    {
+                        MilanLog.Exception(e, "  Error recompiling function:");
+                    }
                 }
             }
 

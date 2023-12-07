@@ -200,6 +200,7 @@ namespace ProjectMilan.Pipelines.Startups
         //terrible function, there are better ways of implementing it.
         private static List<string> VTableDonorGetter(string className)
         {
+           
             var classInfo = GlobalUnrealObjectInfo.GetClassOrStructInfo(MEGame.LE3, className);
             if (classInfo is not null)
             {
@@ -212,7 +213,13 @@ namespace ProjectMilan.Pipelines.Startups
                         if (export.IsClass && export.ObjectName == className)
                         {
                             var obj = export.GetBinaryData<UClass>();
-                            return obj.VirtualFunctionTable.Select(uIdx => partialLoad.GetEntry(uIdx).ObjectName.Name).ToList();
+                            var list = obj.VirtualFunctionTable.Select(uIdx => partialLoad.GetEntry(uIdx).ObjectName.Name).ToList();
+                            if (className == "SFXProjectile_PowerCustomAction_SuperSeeking")
+                            {
+                                // Debugger.Break();
+                            }
+
+                            return list;
                         }
                     }
                 }
