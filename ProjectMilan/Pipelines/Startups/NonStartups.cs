@@ -132,21 +132,21 @@ namespace ProjectMilan.Pipelines.Startups
             "SFXMP4Gear",
             "SFXMP4GearImages",
             "SFXMP4KitImages",
-            "SFXPawn_Abomination", // Collector faction, Geth, Cerb new enemy
-            "SFXPawn_Atlas2", // Faster, more armor pieces
-            "SFXPawn_Banshee2", // I think changes to warp ball?
-            "SFXPawn_Cannibal2", // Can eat players
-            "SFXPawn_CollectorCaptain",
-            "SFXPawn_CollectorTrooper",
-            "SFXPawn_GethBomber",
-            "SFXPawn_GethPyro2", // Cannot be grabbed
-            "SFXPawn_Marauder2", // Can stomp players
-            "SFXPawn_Phoenix",
-            "SFXPawn_Praetorian",
-            "SFXPawn_Scion",
+            //"SFXPawn_Abomination", // Collector faction, Geth, Cerb new enemy
+            //"SFXPawn_Atlas2", // Faster, more armor pieces
+            //"SFXPawn_Banshee2", // I think changes to warp ball?
+            //"SFXPawn_Cannibal2", // Can eat players
+            //"SFXPawn_CollectorCaptain",
+            //"SFXPawn_CollectorTrooper",
+            //"SFXPawn_GethBomber",
+            //"SFXPawn_GethPyro2", // Cannot be grabbed
+            //"SFXPawn_Marauder2", // Can stomp players
+            //"SFXPawn_Phoenix",
+            //"SFXPawn_Praetorian",
+            //"SFXPawn_Scion",
             "SFXSharedModGameEffects",
             "SFXSharedModImages",
-            "SFXWeapon_SniperRifle_Collector", // Use this version instead of EGM's as it may improve audio and/or other things with newer tooling
+            // "SFXWeapon_SniperRifle_Collector", // Use this version instead of EGM's as it may improve audio and/or other things with newer tooling
 
             // MP5
             "GUI_MPChallengeImages",
@@ -198,6 +198,8 @@ namespace ProjectMilan.Pipelines.Startups
             Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
                 {
+                    //if (packageBaseName != "SFXEngagement_Extraction")
+                    //    return;
                     var cache = new PackageCache();
                     MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
                     var packageName = $"{packageBaseName}.pcc";
