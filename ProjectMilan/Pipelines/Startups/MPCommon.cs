@@ -200,7 +200,7 @@ namespace ProjectMilan.Pipelines.Startups
         //terrible function, there are better ways of implementing it.
         private static List<string> VTableDonorGetter(string className)
         {
-           
+
             var classInfo = GlobalUnrealObjectInfo.GetClassOrStructInfo(MEGame.LE3, className);
             if (classInfo is not null)
             {
@@ -276,7 +276,7 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     if (m.Message.Contains("SFXWeapon_AssaultRifle_SentryTurret") ||
                         false
-                        
+
                         )
                     {
                         className = m.Message.Substring(m.Message.IndexOf(" has no member named '") + " has no member named '".Length);
@@ -726,6 +726,30 @@ namespace ProjectMilan.Pipelines.Startups
                 if (line.Contains(".ShowHint("))
                 {
                     MilanLog.Warning($@"Needs patched: {line}", customPrefix: LOG_CATEGORY);
+                }
+
+                // Not sure if this covers if there's any variable versions.
+                if (line.Contains("SetGameMode(TRUE, ") || line.Contains("SetGameMode(FALSE, "))
+                {
+                    var idx = line.IndexOf(@"SetGameMode(") + @"SetGameMode(".Length;
+                    var subl = line.Substring(idx);
+                    idx = subl.IndexOf(",");
+                    if (idx > 0)
+                    {
+                        subl = subl.Substring(idx + 1).Trim(); // should now start with a number
+                        subl = subl.Substring(0, subl.IndexOf(')'));
+                        if (int.TryParse(subl, out var modeIdx))
+                        {
+                            if (modeIdx >= 14)
+                            {
+                                // This is kind of a weak way of doing this and could easily break
+                                // Needs patched to increment by 1 - skip photo mode.
+                                MilanLog.Information($"  Patching SetGameMode index +1 for {line}", customPrefix: LOG_CATEGORY);
+                                newClassText[i] = line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString());
+                            }
+                        }
+                        Debug.WriteLine(subl);
+                    }
                 }
             }
 
