@@ -106,6 +106,9 @@ namespace ProjectMilan
             //DonorTooling.BuildDonorDB();
             //return;
 
+            // Requirements
+            MPCommon.HackPatchParents();
+
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files

@@ -428,7 +428,8 @@ namespace ProjectMilan.Pipelines
                 Cache = cache,
                 TargetGameDonorDB = MilanShared.LE3ObjectDB,
                 PortExportsAsImportsWhenPossible = true,
-                GenerateImportsForGlobalFiles = true
+                GenerateImportsForGlobalFiles = true,
+                CustomImportFileResolver = ImportResolver
             };
             var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
                 destPackage, null, true,
@@ -444,11 +445,11 @@ namespace ProjectMilan.Pipelines
             //DotTrace.SaveData();
 
             // Not sure - do we need to make sure this needs done recursively in order? Topmost to bottommost
-            if (false)
+            if (true)
             {
                 MilanLog.Information("Recompiling ported classes", customPrefix: logCategory);
                 FileLib lib = new FileLib(destPackage);
-                lib.Initialize(cache);
+                lib.Initialize(cache, customFileResolver: MilanShared.ImportResolver);
 
                 foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
                 {
@@ -457,6 +458,8 @@ namespace ProjectMilan.Pipelines
                     // This is broken!!
                     try
                     {
+                        //var sourceObj = rop.CrossPackageMap.FirstOrDefault(x => x.Value == f).Key as ExportEntry;
+                        //(_, string text) = UnrealScriptCompiler.DecompileExport(sourceObj, lib, cache);
                         (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, cache);
                         UnrealScriptCompiler.CompileClass(destPackage, text, lib, f, packageCache: cache);
                     }
@@ -469,6 +472,39 @@ namespace ProjectMilan.Pipelines
 
             MilanLog.Information("Saving package", customPrefix: logCategory);
             destPackage.Save();
+        }
+
+        private static readonly object _globalDirEnumerator = new object();
+
+        /// <summary>
+        /// Resolves a package name to package in the Milan DLC
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        internal static IMEPackage ImportResolver(string filename, PackageCache cache)
+        {
+            string matching = null;
+            lock (_globalDirEnumerator)
+            {
+                matching = Directory.GetFiles(Program.Settings.OutputModPath, filename, SearchOption.AllDirectories).FirstOrDefault();
+            }
+            if (matching != null)
+            {
+                // Multi thread file read can cause issues.
+                lock (_globalDirEnumerator)
+                {
+                    if (cache != null)
+                    {
+                        return cache.GetCachedPackage(matching);
+                    }
+
+                    var package = MEPackageHandler.OpenMEPackage(matching);
+                    return package;
+                }
+            }
+
+            // Not in Milan DLC
+            return null;
         }
     }
 }

@@ -150,7 +150,8 @@ namespace ProjectMilan.Pipelines.Levels
                         IsCrossGame = true,
                         TargetGameDonorDB = MilanShared.LE3ObjectDB,
                         Cache = levelPipeline.Cache,
-                        PortExportsAsImportsWhenPossible = true
+                        PortExportsAsImportsWhenPossible = true,
+                        CustomImportFileResolver = MilanShared.ImportResolver,
                     }, out var _);
             }
 
@@ -244,7 +245,10 @@ namespace ProjectMilan.Pipelines.Levels
             foreach (var ol in levelPipeline.ME3Packages.Where(x => x.Value != levelPipeline.ME3BioP))
             {
                 var itemToClone = levelPipeline.ME3BioP.Exports.FirstOrDefault(x => x.ClassName == @"LevelStreamingKismet");
-                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, itemToClone, levelPipeline.LE3BioP, destPersistentLevel, true, new RelinkerOptionsPackage(), out var portedLSK);
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, 
+                    itemToClone, 
+                    levelPipeline.LE3BioP, destPersistentLevel, true, new RelinkerOptionsPackage(),
+                    out var portedLSK);
                 portedLSK.indexValue += 1 + lskIndex++;
                 (portedLSK as ExportEntry).WriteProperty(new NameProperty(LevelTools.GetLevelFileName(ol.Key), "PackageName"));
             }

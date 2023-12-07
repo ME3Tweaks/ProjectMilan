@@ -246,7 +246,12 @@ namespace ProjectMilan.Pipelines.Levels
             {
                 MilanLog.Information("  Porting Main_Sequence", customPrefix: levelPipeline.LogCategory);
                 var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, srcSeq, destPackage, destSeq
-                    , true, new RelinkerOptionsPackage() { IsCrossGame = true, TargetGameDonorDB = MilanShared.LE3ObjectDB, Cache = levelPipeline.Cache }, out var _);
+                    , true, new RelinkerOptionsPackage() { IsCrossGame = true, 
+                        TargetGameDonorDB = MilanShared.LE3ObjectDB, 
+                        Cache = levelPipeline.Cache,
+                        PortExportsAsImportsWhenPossible = true,
+                        CustomImportFileResolver = MilanShared.ImportResolver,
+                    }, out var _);
 
             }
 
