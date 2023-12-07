@@ -45,7 +45,7 @@ namespace ProjectMilan.Pipelines.Verify
                 ExportEntry parent = null;
                 if (f.SuperClass is ImportEntry imp)
                 {
-                    parent = EntryImporter.ResolveImport(imp, cache);
+                    parent = EntryImporter.ResolveImport(imp, cache, fileResolver: getModPackage);
                 }
                 else
                 {
@@ -68,6 +68,22 @@ namespace ProjectMilan.Pipelines.Verify
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Resolves a package name to package 
+        /// </summary>
+        /// <param name="packageName"></param>
+        /// <returns></returns>
+        private static IMEPackage getModPackage(string packageName)
+        {
+            var matching = Directory.GetFiles(Program.Settings.OutputModPath, packageName, SearchOption.AllDirectories).FirstOrDefault();
+            if (matching != null)
+            {
+                return MEPackageHandler.OpenMEPackage(matching);
+            }
+
+            return null;
         }
 
         private static List<string> GetVTable(ExportEntry export)
