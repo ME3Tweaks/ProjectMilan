@@ -78,6 +78,7 @@ var transient bool CenterPowersVisible;
 var transient bool CenterBarVisible;
 var config bool DPadFadeOut;
 var transient bool m_bSpectatorHUDVisible;
+var transient bool PCPowersInitialized;
 
 // Functions
 public final function LogFromAS(string Message)
@@ -210,6 +211,36 @@ public event function Update(float fDeltaT)
         UpdateCountdownTimer(fDeltaT);
         UpdateCenterProgressBar(fDeltaT);
         UpdateObjectiveCircles(fDeltaT);
+    }
+    initPCPowers();
+}
+private final function initPCPowers()
+{
+    local SFXGUIInteraction oGM;
+    local SFXSFHandler_PCPowerWheel oPowerWheel;
+    local BioPlayerController BPC;
+    local int i;
+    local SFXPowerCustomActionBase oPower;
+    
+    if (!PCPowersInitialized)
+    {
+        BPC = BioPlayerController(GetPC());
+        oGM = Class'SFXGUIInteraction'.static.GetInstance();
+        oPowerWheel = SFXSFHandler_PCPowerWheel(oGM.GetMovie(BPC, oGM.MovieTag_PowerWheel));
+        if ((oGM == None || oPowerWheel == None) || BPC == None)
+        {
+            return;
+        }
+        for (i = 0; i < oPowerWheel.m_aPowerIcons.Length; i++)
+        {
+            oPower = oPowerWheel.m_aPowerIcons[i].pPower;
+            if (oPower != None)
+            {
+                SFXPawn_Player(GetPC().Pawn).AutoMap();
+                PCPowersInitialized = TRUE;
+                return;
+            }
+        }
     }
 }
 public event function OnClose()
