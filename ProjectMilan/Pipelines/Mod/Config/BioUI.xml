@@ -30,7 +30,7 @@
 				<!-- MILAN change DropTheSquid 12/10/2023 -->
 				<!-- redirect PlayerCountdown UI to the version shipped by MILAN that fixes input switching, prompt text -->
 				<Value type="4">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_PlayerCountdown",\tGFxResource="GUI_SF_MPPlayerCountdown.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
-				<Value type="3">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_PlayerCountdown_Milan",\tGFxResource="SFXGameContent_Milan.GUI_SF_MPPlayerCountdown_Milan.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
+				<Value type="3">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_PlayerCountdown_Milan",\tGFxResource="GUI_SF_MPPlayerCountdown_Milan.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
 				<!-- END MILAN -->
 			</Property>
 		</Section>
