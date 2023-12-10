@@ -81,6 +81,9 @@ var transient bool m_bSpectatorHUDVisible;
 var transient bool PCPowersInitialized;
 
 // Functions
+// MILAN CHANGE - 12/10/2023 - DropTheSquid
+//  added function to log from ActionScript (nonessential, can be entirely removed before shipping, or changed to do nothing)
+//  added function to react to input mode change and update the UI (needed to dynamically support keyboard/mouse and controller)
 public final function LogFromAS(string Message)
 {
     LogInternal("LogFromAS:" @ Message, );
@@ -89,10 +92,13 @@ public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
     ActionScriptVoid("RefreshButtonHelp");
-}
+}// END MILAN
 public final function Initialize()
 {
+    // MILAN CHANGE - 12/10/2023 - DropTheSquid
+    // added a call to HandleButtonRefresh during initialization to ensure the UI starts in the correct input mode.
     HandleButtonRefresh(bUsingGamepad);
+    // END MILAN
     InitializeDPadPowerIcons();
     InitializeCenterPowerIcons();
     SFXPawn_Player(GetPC().Pawn).PowerManager.RegisterPowerReleasedCallback(OnPawnPowerUsed);
@@ -152,8 +158,8 @@ public event function Update(float fDeltaT)
     local bool bUpdateHUD;
     
     PC = BioPlayerController(GetPC());
-    bSpectator = PC.GameModeManager2.IsActive(19);
-    bDying = PC.GameModeManager2.IsActive(20);
+    bSpectator = PC.GameModeManager2.IsActive(20); // MILAN Patched: GameMode Enum Index
+    bDying = PC.GameModeManager2.IsActive(21); // MILAN Patched: GameMode Enum Index
     bInPauseMenu = PC.GameModeManager2.IsActive(9);
     bShowHUD = !bInPauseMenu && ((PC.GameModeManager2.ShouldShowHUD() || bSpectator == TRUE) || bDying == TRUE);
     bUpdateHUD = bShowHUD || bInPauseMenu;
@@ -212,6 +218,13 @@ public event function Update(float fDeltaT)
         UpdateCenterProgressBar(fDeltaT);
         UpdateObjectiveCircles(fDeltaT);
     }
+    // MILAN CHANGE - 12/10/2023 - DropTheSquid
+    // added a new function to handle an edge case in input switching
+    // specifically, player pawn PostBeginePlay sets a timer to run AutoMap after one second
+    // AutoMap calls AutoMapPC, which checks for the PC Power wheel handler, and returns early if it is not found (expected if you are using a controller)
+    // this means the initialization of the quickslots does not happen, and if you start with controller then switch to keyboard/mouse, you will not be able to use power hotkeys.
+    // this function checks for the PC power wheel UI being present and properly initialized (the init happens somewhere in native code)
+    // then runs AutoMap again. It will only do this once. after that it should work even if you switch inputs more. 
     initPCPowers();
 }
 private final function initPCPowers()
@@ -242,7 +255,7 @@ private final function initPCPowers()
             }
         }
     }
-}
+} // END MILAN
 public event function OnClose()
 {
     local SFXPawn_Player oPlayer;
