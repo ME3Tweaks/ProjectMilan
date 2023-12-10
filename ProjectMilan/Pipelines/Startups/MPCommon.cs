@@ -194,6 +194,23 @@ namespace ProjectMilan.Pipelines.Startups
                 PackageTools.AddToObjectReferencer(classExp);
             }
 
+            // Override functions - this is because some classes are huge
+            // and we just want to change small segments. Due to patch function
+            // This is more desirable for large classes that just need some functions patched
+            FileLib fl = new FileLib(pcc);
+            fl.Initialize(cache);
+            foreach (var file in Directory.GetFiles(GetMPCommonFunctionOverrideFolder(), "*.uc", SearchOption.AllDirectories))
+            {
+                var funcName = Path.GetFileNameWithoutExtension(file);
+                var className = Directory.GetParent(file).Name;
+                var classToUpdate = pcc.Exports.FirstOrDefault(x => x.ObjectName == className && x.IsClass);
+                MilanLog.Information($"Overriding function {funcName} in class {className} with override", customPrefix: LOG_CATEGORY);
+                var ucText = File.ReadAllText(file);
+                UnrealScriptCompiler.AddOrReplaceInClass(classToUpdate, ucText, fl, cache);
+            }
+
+
+            // Inject additional assets via object referencer merge
             foreach (var file in Directory.GetFiles(GetMPCommonAddinFolder(), "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Merging Milan MPCommon Addin {Path.GetFileName(file)}", customPrefix: LOG_CATEGORY);
@@ -206,6 +223,13 @@ namespace ProjectMilan.Pipelines.Startups
             MilanShared.RefreshMilanFiles = true;
             return false;
         }
+
+
+        private static string GetMPCommonFunctionOverrideFolder()
+        {
+            return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"FunctionOverride")).FullName;
+        }
+
 
         private static string GetMPCommonAddinFolder()
         {
