@@ -161,6 +161,7 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Save BioP into folder
             levelPipeline.LE3BioP.Save(Path.Combine(outputPath, Path.GetFileName(levelPipeline.LE3BioP.FilePath)));
+            MilanShared.RefreshMilanFiles = true;
         }
 
         private static void BeginPortingGeneric(LevelSpecificPipeline levelPipeline)
@@ -207,6 +208,7 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Save BioP
             levelPipeline.LE3BioP.Save();
+            MilanShared.RefreshMilanFiles = true;
 
             // Unregister donors
             SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetTemporaryDonorPath());

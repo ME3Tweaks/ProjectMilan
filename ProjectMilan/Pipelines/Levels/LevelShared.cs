@@ -145,7 +145,8 @@ namespace ProjectMilan.Pipelines.Levels
                             IsCrossGame = true,
                             TargetGameDonorDB = MilanShared.LE3ObjectDB,
                             Cache = levelPipeline.Cache,
-                            PortExportsAsImportsWhenPossible = true
+                            PortExportsAsImportsWhenPossible = true,
+                            CustomImportFileResolver = MilanShared.ImportResolver,
                         }, out var _);
                     if (badLinks.Any())
                     {
@@ -275,6 +276,7 @@ namespace ProjectMilan.Pipelines.Levels
 
             MilanLog.Information($"  Saving ported package {packageBaseName}.pcc", customPrefix: levelPipeline.LogCategory);
             destPackage.Save();
+            MilanShared.RefreshMilanFiles = true;
 
             // Detect remaining shaders
             var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(destPackage);
