@@ -1,5 +1,6 @@
 // Manually made: 12/09/2023
 // By: DropTheSquid
+// Purpose: Fixes controller/kbm input UI switching while in player countdown
 Class SFXGUI_PlayerCountdown_Milan extends SFXGUI_PlayerCountdown
     config(UI);
 
