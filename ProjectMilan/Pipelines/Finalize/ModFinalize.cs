@@ -76,6 +76,7 @@ namespace ProjectMilan.Pipelines.Finalize
                     if (package.IsModified)
                     {
                         package.Save();
+                        MilanShared.RefreshMilanFiles = true;
                     }
                 }
             }
@@ -152,6 +153,7 @@ namespace ProjectMilan.Pipelines.Finalize
 
             guidCache.WriteBinary(gc);
             guidCacheP.Save();
+            MilanShared.RefreshMilanFiles = true;
         }
     }
 }

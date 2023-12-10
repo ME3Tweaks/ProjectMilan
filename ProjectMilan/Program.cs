@@ -137,6 +137,9 @@ namespace ProjectMilan
             // Finalize
             RunPipeline(true, ModFinalize.RunPipeline, "Finalize");
 
+            // Package resynthesis
+            RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
+
             // Verification
             RunPipeline(true, VerifyMod.RunPipeline, "Verify");
 

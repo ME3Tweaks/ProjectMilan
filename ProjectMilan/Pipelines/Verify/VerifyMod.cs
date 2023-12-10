@@ -52,6 +52,8 @@ namespace ProjectMilan.Pipelines.Verify
                     parent = f.SuperClass as ExportEntry;
                 }
 
+                if (parent == null)
+                    Debugger.Break();
                 var vTable = GetVTable(f);
                 var parentVTable = GetVTable(parent);
 

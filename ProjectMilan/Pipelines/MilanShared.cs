@@ -10,6 +10,7 @@ using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan.Pipelines.Audio.Extension;
 using ProjectMilan.Pipelines.Kits;
+using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines
 {
@@ -151,6 +152,10 @@ namespace ProjectMilan.Pipelines
 
         public static IMEPackage GetLE3Package(string packageFileName)
         {
+            var gp = GetGlobalCachedPackage(packageFileName);
+            if (gp != null)
+                return gp;
+
             if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, packageFileName, out var filePath))
             {
                 return MEPackageHandler.OpenMEPackage(filePath);
@@ -472,9 +477,22 @@ namespace ProjectMilan.Pipelines
 
             MilanLog.Information("Saving package", customPrefix: logCategory);
             destPackage.Save();
+            MilanShared.RefreshMilanFiles = true;
         }
 
         private static readonly object _globalDirEnumerator = new object();
+
+        /// <summary>
+        /// Set to true to force the ImportResolver to enumerate the source files directory again.
+        /// </summary>
+        public static bool RefreshMilanFiles = true;
+
+        /// <summary>
+        /// The list of files in the Milan DLC folder
+        /// </summary>
+        private static string[] MilanFiles;
+
+        private static MilanPackageCache globalCache;
 
         /// <summary>
         /// Resolves a package name to package in the Milan DLC
@@ -486,7 +504,13 @@ namespace ProjectMilan.Pipelines
             string matching = null;
             lock (_globalDirEnumerator)
             {
-                matching = Directory.GetFiles(Program.Settings.OutputModPath, filename, SearchOption.AllDirectories).FirstOrDefault();
+                if (RefreshMilanFiles)
+                {
+                    MilanFiles = Directory.GetFiles(Program.Settings.OutputModPath, "*", SearchOption.AllDirectories);
+                    RefreshMilanFiles = false;
+                }
+
+                matching = MilanFiles.FirstOrDefault(x => Path.GetFileName(x).CaseInsensitiveEquals(filename));
             }
             if (matching != null)
             {
@@ -495,7 +519,7 @@ namespace ProjectMilan.Pipelines
                 {
                     if (cache != null)
                     {
-                        return cache.GetCachedPackage(matching);
+                        return cache.GetCachedPackage(matching, openPackageMethod: GetLE3Package);
                     }
 
                     var package = MEPackageHandler.OpenMEPackage(matching);
@@ -503,8 +527,26 @@ namespace ProjectMilan.Pipelines
                 }
             }
 
-            // Not in Milan DLC
-            return null;
+            return GetGlobalCachedPackage(filename);
+        }
+
+        /// <summary>
+        /// Returns a package from the global cache if found. Searched based on the filename
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        private static IMEPackage GetGlobalCachedPackage(string filename)
+        {
+            // If build is being done on NAS looking for local files will be slow
+            // We should 
+            if (globalCache == null)
+            {
+                globalCache = new MilanPackageCache();
+                globalCache.InsertIntoCache(MEPackageHandler.OpenMEPackages(EntryImporter.FilesSafeToImportFrom(MEGame.LE3).Select(x => Path.Combine(MEDirectories.GetCookedPath(MEGame.LE3), x))));
+            }
+
+            // Return cache or empty if not in the global cache.
+            return globalCache.GetCachedPackage(filename, false);
         }
     }
 }

@@ -59,18 +59,18 @@ namespace ProjectMilan.Pipelines.Startups
         /// <summary>
         /// Global lookup for LE3
         /// </summary>
-        public static PackageCache LE3GlobalCache { get; set; }
+        public static MilanPackageCache LE3GlobalCache { get; set; }
 
         /// <summary>
         /// Global lookup for ME3
         /// </summary>
-        public static PackageCache ME3GlobalCache { get; set; }
+        public static MilanPackageCache ME3GlobalCache { get; set; }
 
         public static void RunPipeline()
         {
             // Setup pipeline
-            ME3GlobalCache = new PackageCache();
-            LE3GlobalCache = new PackageCache();
+            ME3GlobalCache = new MilanPackageCache();
+            LE3GlobalCache = new MilanPackageCache();
             MPCommonPipelineVars vars = new MPCommonPipelineVars()
             {
                 // This used to be different
@@ -81,6 +81,9 @@ namespace ProjectMilan.Pipelines.Startups
 
             ME3GlobalCache.Dispose();
             LE3GlobalCache.Dispose();
+
+            ME3GlobalCache = null;
+            LE3GlobalCache = null;
         }
 
 
@@ -194,6 +197,7 @@ namespace ProjectMilan.Pipelines.Startups
 
             MilanLog.Information($@"Saving {pcc.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
             pcc.Save();
+            MilanShared.RefreshMilanFiles = true;
             return false;
         }
 
@@ -415,8 +419,7 @@ namespace ProjectMilan.Pipelines.Startups
             foreach (var possibleDonor in possibleDonors)
             {
                 // Todo: Maybe use cache for this - with a max size
-                var donorP = MilanShared.GetLE3Package(Path.GetFileName(possibleDonor));
-                donorP ??= MilanShared.GetLE3Package(possibleDonor);
+                var donorP = LE3GlobalCache.GetCachedPackage(Path.Combine(LE3Directory.DefaultGamePath, possibleDonor), openPackageMethod: MilanShared.GetLE3Package);
                 if (donorP != null)
                 {
                     var donorEntry = donorP.FindEntry(ifp);
@@ -492,6 +495,8 @@ namespace ProjectMilan.Pipelines.Startups
                 "Startup_DLC_CON_MP2_INT.pcc", // Retrieve
                 "BioP_MPCer.pcc", // SFXGameType_Horde_Operation
             };
+
+            cache.InsertIntoCache(MilanShared.GetME3Package("Startup.pcc")); // This significantly improves performance by preventing opening it a ton
 
             foreach (var package in me3Packages)
             {
@@ -668,7 +673,7 @@ namespace ProjectMilan.Pipelines.Startups
                 if (line.StartsWith("Class'SFXTelemetry'.static.Send") || line.StartsWith("Class'SFXTelemetry'.static.AddAttributeToArray"))
                 {
                     MilanLog.Information($"  Patching out telemetry call {line}", customPrefix: LOG_CATEGORY);
-                    newClassText.RemoveAt(i);
+                    newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + " // MILAN Patched: Remove calls to SFXTelemetry";
                     continue;
                 }
 
@@ -677,7 +682,7 @@ namespace ProjectMilan.Pipelines.Startups
                 if (line == "oGuiMgr.ShowHint(srStrictNatError, NatWarningShowDuration);")
                 {
                     MilanLog.Information($"  Patching ShowHint {line}", customPrefix: LOG_CATEGORY);
-                    newClassText[i] = "oGuiMgr.ShowHint(srStrictNatError, srStrictNatError, NatWarningShowDuration);";
+                    newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + "oGuiMgr.ShowHint(srStrictNatError, srStrictNatError, NatWarningShowDuration); // MILAN Patched: Change method signature for controller/KBM strings";
                     continue;
                 }
 
@@ -693,7 +698,7 @@ namespace ProjectMilan.Pipelines.Startups
                 if (line is "GAWAssetHandler.Cleanup();" or "GAWAssetHandler.RequestGAWRatings(OnGAWRequestFinished);")
                 {
                     MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
-                    newClassText[i] = $"//{line}";
+                    newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + $"//{line.Trim()} // MILAN Patched: Remove Galaxy At War calls";
                     continue;
                 }
 
@@ -701,7 +706,7 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
                     // Need to implement GAW system that can change zones
-                    newClassText[i] = "return 50 + MatchResults.CurrentMatchData.ZoneRatingIncrease;";
+                    newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + "return 50 + MatchResults.CurrentMatchData.ZoneRatingIncrease; // MILAN Patched: Remove Galaxy At War calls";
                     continue;
                 }
 
@@ -709,7 +714,7 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
                     // Need to implement GAW system that can change zones
-                    newClassText[i] = "if (true)";
+                    newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + "if (true) // MILAN Patched: Remove Galaxy At War calls";
                     continue;
                 }
 
@@ -717,7 +722,7 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
                     // Need to implement GAW system that can change zones
-                    newClassText[i] = "";
+                    newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + "// MILAN Patched: Remove Galaxy At War calls";
                     continue;
                 }
 
@@ -728,6 +733,7 @@ namespace ProjectMilan.Pipelines.Startups
                     MilanLog.Warning($@"Needs patched: {line}", customPrefix: LOG_CATEGORY);
                 }
 
+                // PHOTO GAME MODE ----------------------------------------------------------------
                 // Not sure if this covers if there's any variable versions.
                 if (line.Contains("SetGameMode(TRUE, ") || line.Contains("SetGameMode(FALSE, "))
                 {
@@ -745,11 +751,45 @@ namespace ProjectMilan.Pipelines.Startups
                                 // This is kind of a weak way of doing this and could easily break
                                 // Needs patched to increment by 1 - skip photo mode.
                                 MilanLog.Information($"  Patching SetGameMode index +1 for {line}", customPrefix: LOG_CATEGORY);
-                                newClassText[i] = line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString());
+                                newClassText[i] = line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
                             }
                         }
-                        Debug.WriteLine(subl);
+                        //Debug.WriteLine(subl);
                     }
+                }
+                else if (line.Contains("GameModeManager2.EnableMode(") || line.Contains("GameModeManager2.DisabledMode("))
+                {
+                    var idx = line.IndexOf(@"Mode(") + @"Mode(".Length;
+                    var subl = line.Substring(idx);
+                    subl = subl.Substring(0, subl.IndexOf(')')); // should now start with a number
+                    if (int.TryParse(subl, out var modeIdx))
+                    {
+                        if (modeIdx >= 14)
+                        {
+                            // This is kind of a weak way of doing this and could easily break
+                            // Needs patched to increment by 1 - skip photo mode.
+                            MilanLog.Information($"  Patching Enable/DisableMode index +1 for {line}", customPrefix: LOG_CATEGORY);
+                            newClassText[i] = line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
+                        }
+                    }
+                    //Debug.WriteLine(subl);
+                }
+                if (line.Contains("GameModeManager2.IsActive(") || line.Contains("GameModeManager2.IsActive("))
+                {
+                    var idx = line.IndexOf(@"IsActive(") + @"IsActive(".Length;
+                    var subl = line.Substring(idx);
+                    subl = subl.Substring(0, subl.IndexOf(')')); // should now start with a number
+                    if (int.TryParse(subl, out var modeIdx))
+                    {
+                        if (modeIdx >= 14)
+                        {
+                            // This is kind of a weak way of doing this and could easily break
+                            // Needs patched to increment by 1 - skip photo mode.
+                            MilanLog.Information($"  Patching IsActive(mode) index +1 for {line}", customPrefix: LOG_CATEGORY);
+                            newClassText[i] = line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
+                        }
+                    }
+                    //Debug.WriteLine(subl);
                 }
             }
 
@@ -770,6 +810,29 @@ namespace ProjectMilan.Pipelines.Startups
 
             return newClassText;
 
+        }
+
+        /// <summary>
+        /// Generates a blank string representing the beginning of a line of text that may be trimmed
+        /// </summary>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        private static string GetWhiteSpaceStart(string line)
+        {
+            int numWhiteSpace = 0;
+            while (numWhiteSpace < line.Length)
+            {
+                if (line[numWhiteSpace] == ' ')
+                {
+                    numWhiteSpace++;
+                }
+                else
+                {
+                    break;
+                }
+            }
+
+            return "".PadLeft(numWhiteSpace);
         }
 
         /// <summary>

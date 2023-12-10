@@ -79,6 +79,7 @@ namespace ProjectMilan.Pipelines.Texture
                 {
                     MilanLog.Information($"  Saving package", customPrefix: texCategory);
                     p.Save();
+                    MilanShared.RefreshMilanFiles = true;
                 }
             }
         }
@@ -183,6 +184,7 @@ namespace ProjectMilan.Pipelines.Texture
                     {
                         MilanLog.Information("  Saving package", customPrefix: LOG_CATEGORY);
                         le3File.Save();
+                        MilanShared.RefreshMilanFiles = true;
                     }
                 }
             }

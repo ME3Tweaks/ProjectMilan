@@ -142,6 +142,7 @@ namespace ProjectMilan.Pipelines.Audio
                 //}
 
                 bankPackage.Save();
+                MilanShared.RefreshMilanFiles = true;
             }
 
             // Non localized package
@@ -189,6 +190,7 @@ namespace ProjectMilan.Pipelines.Audio
             {
                 MilanLog.Information($"  Saving updated package {package.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
                 package.Save();
+                MilanShared.RefreshMilanFiles = true;
             }
         }
 

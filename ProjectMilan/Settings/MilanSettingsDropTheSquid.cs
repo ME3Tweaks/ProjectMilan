@@ -13,5 +13,6 @@
         public int MaxThreads { get; set; } = 2;
         public bool DontDeleteModFolder { get; set; }
         public bool RunNonStartupPipeline { get; set; } = false;
+        public bool RunResynthesis { get; set; }
     }
 }

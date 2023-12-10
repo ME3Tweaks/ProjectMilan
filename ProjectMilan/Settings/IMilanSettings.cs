@@ -66,5 +66,10 @@ namespace ProjectMilan.Settings
         /// If the NonStartup pipeline should run - things like horde VO, objectives, etc.
         /// </summary>
         bool RunNonStartupPipeline { get; set; }
+
+        /// <summary>
+        /// If packages should be reconstructed at the end of pipelines to be more vanilla-organized.
+        /// </summary>
+        bool RunResynthesis { get; set; }
     }
 }
