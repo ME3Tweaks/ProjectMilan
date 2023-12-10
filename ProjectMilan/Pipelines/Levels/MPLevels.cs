@@ -67,7 +67,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // MP5 Reckoning
                 // No maps
                 // We use MPLobby.pcc level from here
-                // new LevelSpecificPipeline() { BioP="MPLobby", Enabled=true, SpecialPrePortingDelegate = MPLobbySpecific.PreCorrect}, 
+                new LevelSpecificPipeline() { BioP="MPLobby", Enabled=true, SpecialPrePortingDelegate = MPLobbySpecific.PreCorrect}, 
 
                 // Prototype and unused maps
                 // These are named that were assigned to the maps for ModMaker
@@ -156,7 +156,7 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             LevelTools.RebuildPersistentLevelChildren(level);
-            LevelShared.SetupHordeModes(levelPipeline.LE3BioP);
+            LevelShared.SetupHordeModes(levelPipeline.LE3BioP, false);
 
 
             // Save BioP into folder
@@ -247,8 +247,8 @@ namespace ProjectMilan.Pipelines.Levels
             foreach (var ol in levelPipeline.ME3Packages.Where(x => x.Value != levelPipeline.ME3BioP))
             {
                 var itemToClone = levelPipeline.ME3BioP.Exports.FirstOrDefault(x => x.ClassName == @"LevelStreamingKismet");
-                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, 
-                    itemToClone, 
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies,
+                    itemToClone,
                     levelPipeline.LE3BioP, destPersistentLevel, true, new RelinkerOptionsPackage(),
                     out var portedLSK);
                 portedLSK.indexValue += 1 + lskIndex++;
@@ -274,7 +274,7 @@ namespace ProjectMilan.Pipelines.Levels
             // Set game modes
             if (!levelPipeline.IsSP)
             {
-                LevelShared.SetupHordeModes(levelPipeline.LE3BioP);
+                LevelShared.SetupHordeModes(levelPipeline.LE3BioP, levelPipeline.BioP == "MPLobby");
             }
 
             // Default post processing
