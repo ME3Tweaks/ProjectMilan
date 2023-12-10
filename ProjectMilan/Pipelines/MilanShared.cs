@@ -553,5 +553,31 @@ namespace ProjectMilan.Pipelines
         {
             return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"MPCommonAdditionalClasses")).FullName;
         }
+
+        public static void MergeObjectReferencers(IMEPackage source, IMEPackage target)
+        {
+            var sourceRef = source.Exports.FirstOrDefault(x => x.idxLink == 0 && x.ObjectName == "ObjectReferencer" && x.ClassName == "ObjectReferencer");
+            var destRef = target.Exports.FirstOrDefault(x => x.idxLink == 0 && x.ObjectName == "ObjectReferencer" && x.ClassName == "ObjectReferencer");
+
+            // We are going to do a replace with relink to pull in all referenced content. We don't want to trash 
+            // anything if possible, so we will use the existing referencer
+            // First we must cache the contents.
+            var originalReferences = destRef.GetProperty<ArrayProperty<ObjectProperty>>("ReferencedObjects").Select(x => target.GetEntry(x.Value)).ToList();
+
+            EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceRef,
+                target, destRef, true, new RelinkerOptionsPackage()
+                {
+                    CustomImportFileResolver = MilanShared.ImportResolver,
+                    PortExportsAsImportsWhenPossible = true,
+                    Cache = new PackageCache(),
+                    
+                }, out _);
+
+            var newReferences = destRef.GetProperty<ArrayProperty<ObjectProperty>>("ReferencedObjects").Select(x => target.GetEntry(x.Value)).ToList();
+
+            var allReferences = originalReferences.Concat(newReferences).Distinct();
+            destRef.WriteProperty(new ArrayProperty<ObjectProperty>(allReferences.Select(x => new ObjectProperty(x)), "ReferencedObjects"));
+
+        }
     }
 }

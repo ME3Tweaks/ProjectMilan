@@ -184,8 +184,7 @@ namespace ProjectMilan.Pipelines.Startups
 
                 return false;
             }
-            MilanLog.Information(@"Compilation succeeded!", customPrefix: LOG_CATEGORY);
-
+            MilanLog.Information(@"Loose class compilation succeeded!", customPrefix: LOG_CATEGORY);
 
             MilanLog.Information(@"Creating object referencer", customPrefix: LOG_CATEGORY);
             PackageTools.CreateObjectReferencer(pcc, false);
@@ -195,10 +194,22 @@ namespace ProjectMilan.Pipelines.Startups
                 PackageTools.AddToObjectReferencer(classExp);
             }
 
+            foreach (var file in Directory.GetFiles(GetMPCommonAddinFolder(), "*.pcc", SearchOption.AllDirectories))
+            {
+                MilanLog.Information($"Merging Milan MPCommon Addin {Path.GetFileName(file)}", customPrefix: LOG_CATEGORY);
+                var mPackage = MEPackageHandler.OpenMEPackage(file);
+                MilanShared.MergeObjectReferencers(mPackage, pcc);
+            }
+
             MilanLog.Information($@"Saving {pcc.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
             pcc.Save();
             MilanShared.RefreshMilanFiles = true;
             return false;
+        }
+
+        private static string GetMPCommonAddinFolder()
+        {
+            return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"MPCommonAddins")).FullName;
         }
 
         //terrible function, there are better ways of implementing it.
@@ -658,6 +669,11 @@ namespace ProjectMilan.Pipelines.Startups
         }
 
         /// <summary>
+        /// Photo mode was inserted at this index into EGameModes enum for LE3
+        /// </summary>
+        private const int PHOTO_MODE_LE3_GAMEMODEIDX = 14;
+
+        /// <summary>
         /// Makes corrections for ME3 -> LE3
         /// </summary>
         /// <param name="functionText"></param>
@@ -747,47 +763,47 @@ namespace ProjectMilan.Pipelines.Startups
                         subl = subl.Substring(0, subl.IndexOf(')'));
                         if (int.TryParse(subl, out var modeIdx))
                         {
-                            if (modeIdx >= 14)
+                            if (modeIdx >= PHOTO_MODE_LE3_GAMEMODEIDX)
                             {
                                 // This is kind of a weak way of doing this and could easily break
                                 // Needs patched to increment by 1 - skip photo mode.
                                 MilanLog.Information($"  Patching SetGameMode index +1 for {line}", customPrefix: LOG_CATEGORY);
-                                newClassText[i] = line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
+                                newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
                             }
                         }
                         //Debug.WriteLine(subl);
                     }
                 }
-                else if (line.Contains("GameModeManager2.EnableMode(") || line.Contains("GameModeManager2.DisabledMode("))
+                else if (line.Contains("GameModeManager2.EnableMode(") || line.Contains("GameModeManager2.DisableMode("))
                 {
                     var idx = line.IndexOf(@"Mode(") + @"Mode(".Length;
                     var subl = line.Substring(idx);
                     subl = subl.Substring(0, subl.IndexOf(')')); // should now start with a number
                     if (int.TryParse(subl, out var modeIdx))
                     {
-                        if (modeIdx >= 14)
+                        if (modeIdx >= PHOTO_MODE_LE3_GAMEMODEIDX)
                         {
                             // This is kind of a weak way of doing this and could easily break
                             // Needs patched to increment by 1 - skip photo mode.
                             MilanLog.Information($"  Patching Enable/DisableMode index +1 for {line}", customPrefix: LOG_CATEGORY);
-                            newClassText[i] = line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
+                            newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
                         }
                     }
                     //Debug.WriteLine(subl);
                 }
-                if (line.Contains("GameModeManager2.IsActive(") || line.Contains("GameModeManager2.IsActive("))
+                if (line.Contains("GameModeManager2.IsActive("))
                 {
                     var idx = line.IndexOf(@"IsActive(") + @"IsActive(".Length;
                     var subl = line.Substring(idx);
                     subl = subl.Substring(0, subl.IndexOf(')')); // should now start with a number
                     if (int.TryParse(subl, out var modeIdx))
                     {
-                        if (modeIdx >= 14)
+                        if (modeIdx >= PHOTO_MODE_LE3_GAMEMODEIDX)
                         {
                             // This is kind of a weak way of doing this and could easily break
                             // Needs patched to increment by 1 - skip photo mode.
                             MilanLog.Information($"  Patching IsActive(mode) index +1 for {line}", customPrefix: LOG_CATEGORY);
-                            newClassText[i] = line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
+                            newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + line.Replace(modeIdx.ToString(), (modeIdx + 1).ToString()) + " // MILAN Patched: GameMode Enum Index";
                         }
                     }
                     //Debug.WriteLine(subl);
