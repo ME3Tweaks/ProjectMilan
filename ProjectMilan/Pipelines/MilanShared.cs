@@ -548,5 +548,10 @@ namespace ProjectMilan.Pipelines
             // Return cache or empty if not in the global cache.
             return globalCache.GetCachedPackage(filename, false);
         }
+
+        public static string GetMilanNewMPCommonClassesPath()
+        {
+            return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"MPCommonAdditionalClasses")).FullName;
+        }
     }
 }

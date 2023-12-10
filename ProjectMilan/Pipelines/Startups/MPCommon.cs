@@ -239,7 +239,8 @@ namespace ProjectMilan.Pipelines.Startups
         private static IEnumerable<string> GetMPCommonClassFiles()
         {
             return Directory.EnumerateFiles(GetMPClassesFolder(), "*.uc", SearchOption.AllDirectories).Concat(
-                Directory.EnumerateFiles(MilanShared.GetAutoDonorClassesPath(), "*.uc", SearchOption.AllDirectories));
+                Directory.EnumerateFiles(MilanShared.GetAutoDonorClassesPath(), "*.uc", SearchOption.AllDirectories)).Concat(
+                Directory.EnumerateFiles(MilanShared.GetMilanNewMPCommonClassesPath(), "*.uc", SearchOption.AllDirectories));
 
         }
 
