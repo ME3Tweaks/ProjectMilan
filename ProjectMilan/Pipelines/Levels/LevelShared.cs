@@ -74,44 +74,9 @@ namespace ProjectMilan.Pipelines.Levels
                 levelPipeline.LE3BioP = destPackage;
             }
 
-            var destLevel = destPackage.FindExport(@"TheWorld.PersistentLevel");
+            var destLevel = destPackage.GetLevel();
             var sourcePersistentLevel = sourcePackage.GetLevelBinary();
-            var levelObjects = sourcePersistentLevel.Actors.Where(x => x > 0).Select(x => sourcePackage.GetUExport(x)).ToList();
-
-            var model = levelObjects.FirstOrDefault(x => x.ClassName == @"Model");
-
-            if (model != null)
-            {
-                if (levelObjects.Count(x => x.ClassName == @"Model") == 1)
-                {
-                    model.indexValue = 4; // Match the dest package
-                }
-                else
-                {
-                    MilanLog.Warning(@"    HAVE TO FIX MODEL MANUALLY!!");
-                }
-            }
-            else
-            {
-                // No model. Might need hooked up in level?
-            }
-
-            //var staticMeshes = sourcePackage.Exports.Where(x =>
-            //        x.ClassName is @"StaticMeshActor"
-            //         or @"SkeletalMeshActor"
-
-            //         // LE3 ONLY
-            //         or @"BlockingVolume"
-            //         or @"InterpActor"
-            //         or @"HeightFog"
-            //         or @"LensFlareSource"
-            //         or @"DecalActor"
-            //         //or @"Emitter"
-            //         or @"StaticLightCollectionActor"
-            //         or @"StaticMeshCollectionActor")
-            //    .ToList();
-
-            var actors = sourcePackage.GetLevelBinary().Actors.Where(x =>
+            var actors = sourcePersistentLevel.Actors.Where(x =>
             {
                 if (sourcePackage.TryGetUExport(x, out var exp))
                 {
@@ -156,11 +121,11 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             // Sequencing needs ported over eventually. This controls the shuttle flying away. Requires MP classes though.
-
             foreach (var export in destPackage.Exports)
             {
                 if (export.HasStack)
                 {
+                    // Copy stack data. Not sure if this does anything useful.
                     var orig = sourcePackage.FindExport(export.InstancedFullPath);
                     if (orig == null)
                         continue;
@@ -211,6 +176,59 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Map the stuff in PersistentLevel
             var destLevelBin = destPackage.GetLevelBinary();
+
+            // Bring over models
+            var oModelIdx = sourcePersistentLevel.Model;
+            var destModelIdx = destLevelBin.Model;
+
+            // MODEL =============
+            if (oModelIdx > 0)
+            {
+                var sourcemodel = sourcePackage.GetUExport(oModelIdx);
+                var destmodel = destPackage.GetUExport(destModelIdx);
+                MilanLog.Information($"  Porting level model {sourcemodel.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourcemodel,
+                    destPackage, destmodel, true, new RelinkerOptionsPackage()
+                    {
+                        Cache = levelPipeline.Cache,
+                        CustomImportFileResolver = MilanShared.ImportResolver,
+                        TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                        PortExportsAsImportsWhenPossible = true,
+                    }, out _);
+            }
+            else
+            {
+                destLevelBin.Model = 0;
+            }
+
+            // MODEL COMPONENTS ===============
+            var oModelComponentsIdxs = sourcePersistentLevel.ModelComponents;
+            if (oModelComponentsIdxs.Length > 0)
+            {
+                List<ExportEntry> modelComponents = new List<ExportEntry>();
+                foreach (var oModelCompIdx in oModelComponentsIdxs)
+                {
+                    var sModelComp = sourcePackage.GetUExport(oModelCompIdx);
+                    MilanLog.Information($"  Porting level model component {sModelComp.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
+                    EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, sModelComp, 
+                        destPackage, destLevel, true, new RelinkerOptionsPackage()
+                        {
+                            Cache = levelPipeline.Cache,
+                            CustomImportFileResolver = MilanShared.ImportResolver,
+                            TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                            PortExportsAsImportsWhenPossible = true,
+                        }, out var newModelComp);
+                    modelComponents.Add(newModelComp as ExportEntry);
+                }
+
+                destLevelBin.ModelComponents = modelComponents.Select(x => x.UIndex).ToArray();
+            }
+            else
+            {
+                destLevelBin.Model = 0;
+            }
+
+            // Bring over cover
             if (sourcePersistentLevel.CoverListStart > 0)
             {
                 destLevelBin.CoverListStart =
@@ -247,8 +265,10 @@ namespace ProjectMilan.Pipelines.Levels
             {
                 MilanLog.Information("  Porting Main_Sequence", customPrefix: levelPipeline.LogCategory);
                 var badLinks = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, srcSeq, destPackage, destSeq
-                    , true, new RelinkerOptionsPackage() { IsCrossGame = true, 
-                        TargetGameDonorDB = MilanShared.LE3ObjectDB, 
+                    , true, new RelinkerOptionsPackage()
+                    {
+                        IsCrossGame = true,
+                        TargetGameDonorDB = MilanShared.LE3ObjectDB,
                         Cache = levelPipeline.Cache,
                         PortExportsAsImportsWhenPossible = true,
                         CustomImportFileResolver = MilanShared.ImportResolver,
@@ -296,19 +316,52 @@ namespace ProjectMilan.Pipelines.Levels
         /// Sets the game modes on BioWorldInfo
         /// </summary>
         /// <param name="bioP"></param>
-        public static void SetupHordeModes(IMEPackage bioP)
+        public static void SetupHordeModes(IMEPackage bioP, bool isLobby)
         {
-            var mpContent = bioP.FindEntry("SFXGameMPContent") ?? ExportCreator.CreatePackageExport(bioP, "SFXGameMPContent");
-            ImportEntry infoMP = new ImportEntry(bioP) { ObjectName = "SFXGameInfoMP", idxLink = mpContent.UIndex, ClassName = "Class", PackageFile = "Core" };
-            ImportEntry gameTypeHorde = new ImportEntry(bioP) { ObjectName = "SFXGameType_Horde_Operation", idxLink = mpContent.UIndex, ClassName = "Class", PackageFile = "Core" };
-            bioP.AddImport(infoMP);
-            bioP.AddImport(gameTypeHorde);
-            bioP.GetBioWorldInfo().WriteProperty(
-                new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
+            if (isLobby)
+            {
+                var mpContent = bioP.FindEntry("SFXGameMPContentDLC_Shared_MP") ?? ExportCreator.CreatePackageExport(bioP, "SFXGameMPContentDLC_Shared_MP");
+                ImportEntry lobbyMode = new ImportEntry(bioP)
                 {
-                    new ObjectProperty(infoMP),
-                    new ObjectProperty(gameTypeHorde)
-                });
+                    ObjectName = "SFXGameInfoMP_Lobby_DLC",
+                    idxLink = mpContent.UIndex,
+                    ClassName = "Class",
+                    PackageFile = "Core"
+                };
+                bioP.AddImport(lobbyMode);
+                bioP.GetBioWorldInfo().WriteProperty(
+                    new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
+                    {
+                        new ObjectProperty(lobbyMode),
+                    });
+            }
+            else
+            {
+                var mpContent = bioP.FindEntry("SFXGameMPContent") ?? ExportCreator.CreatePackageExport(bioP, "SFXGameMPContent");
+
+                ImportEntry infoMP = new ImportEntry(bioP)
+                {
+                    ObjectName = "SFXGameInfoMP",
+                    idxLink = mpContent.UIndex,
+                    ClassName = "Class",
+                    PackageFile = "Core"
+                };
+                ImportEntry gameTypeHorde = new ImportEntry(bioP)
+                {
+                    ObjectName = "SFXGameType_Horde_Operation",
+                    idxLink = mpContent.UIndex,
+                    ClassName = "Class",
+                    PackageFile = "Core"
+                };
+                bioP.AddImport(infoMP);
+                bioP.AddImport(gameTypeHorde);
+                bioP.GetBioWorldInfo().WriteProperty(
+                    new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
+                    {
+                        new ObjectProperty(infoMP),
+                        new ObjectProperty(gameTypeHorde)
+                    });
+            }
         }
     }
 }

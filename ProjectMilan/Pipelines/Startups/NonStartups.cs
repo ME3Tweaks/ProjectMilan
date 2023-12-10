@@ -115,8 +115,6 @@ namespace ProjectMilan.Pipelines.Startups
             "MP4GUIImages",
             "MP4Images",
             "MP_DLC_SFResources_Cooked",
-            "SFXGUI_FontsJPN_DLC",
-            "SFXGUI_Fonts_DLC",
             "SFXGUI_WeaponUIDataDLC_CON_MP4SF",
             "SFXGUI_W_SMG_Collector",
             "SFXGUI_W_S_Collector",
