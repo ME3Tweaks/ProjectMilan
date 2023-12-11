@@ -154,7 +154,7 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             using IMEPackage pcc = MEPackageHandler.CreateAndOpenPackage(packagePath, MEGame.LE3);
-
+            pcc.LECLTagData.IsPostLoadFile = false;
             // Different forced export packages
             var looseClassPackages = new List<UnrealScriptCompiler.LooseClassPackage>();
             foreach (var classEx in classes)
@@ -206,7 +206,19 @@ namespace ProjectMilan.Pipelines.Startups
                 var classToUpdate = pcc.Exports.FirstOrDefault(x => x.ObjectName == className && x.IsClass);
                 MilanLog.Information($"Overriding function {funcName} in class {className} with override", customPrefix: LOG_CATEGORY);
                 var ucText = File.ReadAllText(file);
-                UnrealScriptCompiler.AddOrReplaceInClass(classToUpdate, ucText, fl, cache);
+                var periodCount = funcName.Split('.').Length;
+
+                if (periodCount > 1)
+                {
+                    // It's a sub function like a in a state
+                    var function = pcc.FindExport($"{classToUpdate.InstancedFullPath}.{funcName}");
+                    UnrealScriptCompiler.CompileFunction(function, ucText, fl);
+                }
+                else
+                {
+                    // Add or replace to class
+                    UnrealScriptCompiler.AddOrReplaceInClass(classToUpdate, ucText, fl, cache);
+                }
             }
 
 
