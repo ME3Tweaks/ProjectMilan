@@ -112,11 +112,8 @@ namespace ProjectMilan.Pipelines.Startups
         private static void BuildMergeMod()
         {
             var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
-            var functions = Path.Combine(compilingPath, "Functions");
-
             var stagingPath = Path.Combine(compilingPath, "Staging");
             Utilities.DeleteFilesAndFoldersRecursively(stagingPath, deleteDirectoryItself: false);
-
             var manifest = Path.Combine(stagingPath, "mprequiredchanges.json");
 
             MergeMod1 mm1 = new MergeMod1();
@@ -127,12 +124,14 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     ApplyToAllLocalizations = false,
                     FileName = "SFXGame.pcc",
-                    MergeChanges = new List<MergeFileChange1>()
-                    {
-                        // Add MP menu back
-                        AddMergeScriptFileChange(functions, stagingPath, "SFXGame", "SFXGUI_MainMenu_RTT.ShowList.uc"),
-                    }
-                }
+                    MergeChanges = new List<MergeFileChange1>(GetMergeChangesFor("SFXGame", stagingPath))
+                },
+                //new MergeFile1()
+                //{
+                //    ApplyToAllLocalizations = false,
+                //    FileName = "SFXOnlineFoundation.pcc",
+                //    MergeChanges = new List<MergeFileChange1>(GetMergeChangesFor("SFXOnlineFoundation", stagingPath))
+                //}
             };
 
             // Output
@@ -146,13 +145,30 @@ namespace ProjectMilan.Pipelines.Startups
             });
             File.WriteAllText(manifest, json);
             MergeModLoader.SerializeManifest(fs, json, stagingPath);
-            
+
         }
 
-        private static MergeFileChange1 AddMergeScriptFileChange(string functionsFolder, string stagingPath, string packageFile, string ucName)
+        private static IEnumerable<MergeFileChange1> GetMergeChangesFor(string packageName, string stagingPath)
         {
+            var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
+            var functions = Path.Combine(compilingPath, "Functions", packageName);
+
+            List<MergeFileChange1> files = new List<MergeFileChange1>();
+
+
+            // FUNCTIONS
+            foreach (var f in Directory.GetFiles(functions, "*.uc", SearchOption.AllDirectories))
+            {
+                files.Add(AddMergeScriptFileChange(f, stagingPath));
+            }
+            
+            return files;
+        }
+
+        private static MergeFileChange1 AddMergeScriptFileChange(string sourceFile, string stagingPath)
+        {
+            var ucName = Path.GetFileName(sourceFile);
             Directory.CreateDirectory(stagingPath);
-            var sourceFile = Path.Combine(functionsFolder, packageFile, ucName);
             var destFile = Path.Combine(stagingPath, ucName);
             MilanLog.Information($"Adding script to merge mod: {ucName}");
             File.Copy(sourceFile, destFile, true);
@@ -294,6 +310,7 @@ namespace ProjectMilan.Pipelines.Startups
 
             MilanLog.Information($@"Saving {pcc.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
             pcc.Save();
+            MilanShared.AddGlobalCachedPackage(pcc);
             MilanShared.RefreshMilanFiles = true;
             return false;
         }

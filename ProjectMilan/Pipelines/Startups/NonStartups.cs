@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.Packages;
+using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines.Startups
 {
@@ -192,18 +193,24 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
-            // We use .Distince() cause list might have duplicates due to duplicates in DLC folders
+            // We use .Distinct() cause list might have duplicates due to duplicates in DLC folders
             Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
                 {
-                    //if (packageBaseName != "SFXEngagement_Extraction")
+                    //if (packageBaseName is not "SFXMobileAnnex" and not "SFXMPObjectiveRetrieve")
                     //    return;
                     var cache = new PackageCache();
+                    cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
                     MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
                     var packageName = $"{packageBaseName}.pcc";
                     var me3File = MilanShared.GetME3Package(packageName);
+                    me3File.LECLTagData.ImportHintFiles.Add("Startup_DLC_CON_MP2_INT.pcc"); // Fix some decomp issues
+                    me3File.LECLTagData.ImportHintFiles.Add("Startup_DLC_CON_MP3_INT.pcc");
+                    me3File.LECLTagData.ImportHintFiles.Add("Startup_DLC_CON_MP4_INT.pcc");
+
                     var le3File = MEPackageHandler.CreateAndOpenPackage(Path.Combine(vars.OutputPath, packageName), MEGame.LE3);
                     le3File.LECLTagData.ImportHintFiles.Add("BIOP_MP_COMMON.pcc"); // Hint common package
+                    le3File.LECLTagData.IsPostLoadFile = false;
 
                     MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY);
                     MilanShared.PortLocalizations(packageBaseName, vars.OutputPath, cache, LOG_CATEGORY);
