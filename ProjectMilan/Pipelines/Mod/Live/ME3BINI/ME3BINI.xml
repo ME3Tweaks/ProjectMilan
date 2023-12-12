@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceFile id="ME3BINI" name="ME3BINI.bin">
+	<Assets>
+		<Asset source="BioAI.xml" />
+		<Asset source="BioDifficulty.xml" />
+		<Asset source="BioEngine.xml" />
+		<Asset source="BioGame.xml" />
+		<Asset source="BioInput.xml" />
+		<Asset source="BioUI.xml" />
+		<Asset source="BioWeapon.xml" />
+	</Assets>
+</CoalesceFile>
