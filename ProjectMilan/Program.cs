@@ -81,7 +81,15 @@ namespace ProjectMilan
         {
             if (Settings.OutputModPath == null || Path.GetFileName(Settings.OutputModPath) != MilanShared.DLC_NAME)
             {
-                MilanLog.Error($"Output directory must be named '{MilanShared.DLC_NAME}', point it to either mod in M3 mod library or DLC folder in-game (yours: {Path.GetFileName(Settings.OutputModPath)})");
+                MilanLog.Error($"Output directory must be named '{MilanShared.DLC_NAME}', point it to the DLC mod folder in your M3 mod library. Invalid value: {Path.GetFileName(Settings.OutputModPath)})");
+                Environment.Exit(1);
+                return;
+            }
+
+            var moddescCheck = Path.Combine(Settings.OutputModPath, "..", "moddesc.ini");
+            if (!File.Exists(moddescCheck))
+            {
+                MilanLog.Error($"Must point your settings at your mod library version of the DLC folder! Make sure you import the template from December 11 2023 (or newer) in #links.");
                 Environment.Exit(1);
                 return;
             }
