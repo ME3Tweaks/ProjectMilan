@@ -13,6 +13,9 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
+using ME3TweaksModManager.modmanager.objects.mod.merge;
+using ME3TweaksModManager.modmanager.objects.mod.merge.v1;
+using Newtonsoft.Json;
 using ProjectMilan.Utility;
 using Serilog;
 
@@ -102,6 +105,81 @@ namespace ProjectMilan.Pipelines.Startups
                 MilanLog.Fatal($"Failed to compile {MilanShared.MP_STARTUP_NAME}", customPrefix: LOG_CATEGORY);
                 Environment.Exit(1);
             }
+
+            BuildMergeMod();
+        }
+
+        private static void BuildMergeMod()
+        {
+            var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
+            var stagingPath = Path.Combine(compilingPath, "Staging");
+            Utilities.DeleteFilesAndFoldersRecursively(stagingPath, deleteDirectoryItself: false);
+            var manifest = Path.Combine(stagingPath, "mprequiredchanges.json");
+
+            MergeMod1 mm1 = new MergeMod1();
+            mm1.Game = MEGame.LE3;
+            mm1.FilesToMergeInto = new List<MergeFile1>()
+            {
+                new MergeFile1()
+                {
+                    ApplyToAllLocalizations = false,
+                    FileName = "SFXGame.pcc",
+                    MergeChanges = new List<MergeFileChange1>(GetMergeChangesFor("SFXGame", stagingPath))
+                },
+                //new MergeFile1()
+                //{
+                //    ApplyToAllLocalizations = false,
+                //    FileName = "SFXOnlineFoundation.pcc",
+                //    MergeChanges = new List<MergeFileChange1>(GetMergeChangesFor("SFXOnlineFoundation", stagingPath))
+                //}
+            };
+
+            // Output
+            var mergeModsPath = Path.Combine(Directory.GetParent(Program.Settings.OutputModPath).FullName, "MergeMods");
+            Directory.CreateDirectory(mergeModsPath);
+            var m3mPath = Path.Combine(mergeModsPath, "mprequiredchanges.m3m");
+            using var fs = File.Open(m3mPath, FileMode.Create, FileAccess.ReadWrite);
+            var json = JsonConvert.SerializeObject(mm1, Formatting.Indented, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            });
+            File.WriteAllText(manifest, json);
+            MergeModLoader.SerializeManifest(fs, json, stagingPath);
+
+        }
+
+        private static IEnumerable<MergeFileChange1> GetMergeChangesFor(string packageName, string stagingPath)
+        {
+            var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
+            var functions = Path.Combine(compilingPath, "Functions", packageName);
+
+            List<MergeFileChange1> files = new List<MergeFileChange1>();
+
+
+            // FUNCTIONS
+            foreach (var f in Directory.GetFiles(functions, "*.uc", SearchOption.AllDirectories))
+            {
+                files.Add(AddMergeScriptFileChange(f, stagingPath));
+            }
+            
+            return files;
+        }
+
+        private static MergeFileChange1 AddMergeScriptFileChange(string sourceFile, string stagingPath)
+        {
+            var ucName = Path.GetFileName(sourceFile);
+            Directory.CreateDirectory(stagingPath);
+            var destFile = Path.Combine(stagingPath, ucName);
+            MilanLog.Information($"Adding script to merge mod: {ucName}");
+            File.Copy(sourceFile, destFile, true);
+            return new MergeFileChange1()
+            {
+                EntryName = Path.GetFileNameWithoutExtension(ucName),
+                ScriptUpdate = new ScriptUpdate1()
+                {
+                    ScriptFileName = ucName,
+                }
+            };
         }
 
         /// <summary>
@@ -232,6 +310,7 @@ namespace ProjectMilan.Pipelines.Startups
 
             MilanLog.Information($@"Saving {pcc.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
             pcc.Save();
+            MilanShared.AddGlobalCachedPackage(pcc);
             MilanShared.RefreshMilanFiles = true;
             return false;
         }

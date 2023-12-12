@@ -45,7 +45,7 @@ namespace ProjectMilan.Pipelines.Verify
                 ExportEntry parent = null;
                 if (f.SuperClass is ImportEntry imp)
                 {
-                    parent = EntryImporter.ResolveImport(imp, cache, fileResolver: MilanShared.ImportResolver);
+                    parent = EntryImporter.ResolveImport(imp, cache, fileResolver: MilanShared.LE3ImportResolver);
                 }
                 else
                 {

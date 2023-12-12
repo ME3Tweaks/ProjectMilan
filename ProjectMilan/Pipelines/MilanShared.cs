@@ -152,7 +152,7 @@ namespace ProjectMilan.Pipelines
 
         public static IMEPackage GetLE3Package(string packageFileName)
         {
-            var gp = GetGlobalCachedPackage(packageFileName);
+            var gp = GetLE3GlobalCachedPackage(packageFileName);
             if (gp != null)
                 return gp;
 
@@ -389,6 +389,8 @@ namespace ProjectMilan.Pipelines
 
                 var finalPackagePath = Path.Combine(outputFolder, packageName);
                 var locDestPackage = MEPackageHandler.CreateAndOpenPackage(finalPackagePath, MEGame.LE3);
+                locDestPackage.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this for importing.
+                locDestPackage.LECLTagData.IsPostLoadFile = false;
 
                 MilanLog.Information($"Porting localized file {me3Package.FileNameNoExtension}", customPrefix: logCategory);
                 PortObjectReferencer(me3Package, locDestPackage, cache, logCategory);
@@ -416,13 +418,13 @@ namespace ProjectMilan.Pipelines
         /// <summary>
         /// Ports an object referencer across games.
         /// </summary>
-        /// <param name="kitSourcePackage"></param>
+        /// <param name="sourcePackage"></param>
         /// <param name="destPackage"></param>
         /// <param name="cache"></param>
         /// <param name="logCategory"></param>
-        public static void PortObjectReferencer(IMEPackage kitSourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory)
+        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory)
         {
-            var objReferencer = kitSourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
+            var objReferencer = sourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
             MilanLog.Information("Porting object referencer", customPrefix: logCategory);
             //DotTrace.StartCollectingData(); // Start profiling
@@ -434,7 +436,8 @@ namespace ProjectMilan.Pipelines
                 TargetGameDonorDB = MilanShared.LE3ObjectDB,
                 PortExportsAsImportsWhenPossible = true,
                 GenerateImportsForGlobalFiles = true,
-                CustomImportFileResolver = ImportResolver
+                DestinationCustomImportFileResolver = LE3ImportResolver,
+                SourceCustomImportFileResolver = ME3ImportResolver
             };
             var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
                 destPackage, null, true,
@@ -452,9 +455,10 @@ namespace ProjectMilan.Pipelines
             // Not sure - do we need to make sure this needs done recursively in order? Topmost to bottommost
             if (true)
             {
+                destPackage.Save();
                 MilanLog.Information("Recompiling ported classes", customPrefix: logCategory);
                 FileLib lib = new FileLib(destPackage);
-                lib.Initialize(cache, customFileResolver: MilanShared.ImportResolver);
+                lib.Initialize(cache, customFileResolver: MilanShared.LE3ImportResolver);
 
                 foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
                 {
@@ -480,10 +484,15 @@ namespace ProjectMilan.Pipelines
             MilanShared.RefreshMilanFiles = true;
         }
 
+        private static IMEPackage GetME3Package(string arg)
+        {
+            return GetME3Package(arg, null);
+        }
+
         private static readonly object _globalDirEnumerator = new object();
 
         /// <summary>
-        /// Set to true to force the ImportResolver to enumerate the source files directory again.
+        /// Set to true to force the LE3ImportResolver to enumerate the source files directory again.
         /// </summary>
         public static bool RefreshMilanFiles = true;
 
@@ -492,14 +501,33 @@ namespace ProjectMilan.Pipelines
         /// </summary>
         private static string[] MilanFiles;
 
-        private static MilanPackageCache globalCache;
+        private static MilanPackageCache le3GlobalCache;
+
+        /// <summary>
+        /// Cache that holds the common ME3 packages - including MP startups
+        /// </summary>
+        private static MilanPackageCache me3GlobalCache;
+
+        public static void AddGlobalCachedPackage(IMEPackage package)
+        {
+            if (package.Game == MEGame.LE3)
+            {
+                if (le3GlobalCache == null) InitGlobalPackages(MEGame.LE3);
+                le3GlobalCache.InsertIntoCache(package);
+            }
+            else
+            {
+                if (me3GlobalCache == null) InitGlobalPackages(MEGame.ME3);
+                me3GlobalCache.InsertIntoCache(package);
+            }
+        }
 
         /// <summary>
         /// Resolves a package name to package in the Milan DLC
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        internal static IMEPackage ImportResolver(string filename, PackageCache cache)
+        internal static IMEPackage LE3ImportResolver(string filename, PackageCache cache)
         {
             string matching = null;
             lock (_globalDirEnumerator)
@@ -514,6 +542,11 @@ namespace ProjectMilan.Pipelines
             }
             if (matching != null)
             {
+                // See if this package is already loaded
+                var global = GetLE3GlobalCachedPackage(matching);
+                if (global != null)
+                    return global;
+
                 // Multi thread file read can cause issues.
                 lock (_globalDirEnumerator)
                 {
@@ -527,7 +560,13 @@ namespace ProjectMilan.Pipelines
                 }
             }
 
-            return GetGlobalCachedPackage(filename);
+            return GetLE3GlobalCachedPackage(filename); // Try with full filename - Core, SFXGame, etc.
+        }
+
+        public static IMEPackage ME3ImportResolver(string filename, PackageCache cache)
+        {
+            // Lookup in ME3 global. We don't force to use specific packages
+            return GetME3GlobalCachedPackage(filename);
         }
 
         /// <summary>
@@ -535,18 +574,32 @@ namespace ProjectMilan.Pipelines
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        private static IMEPackage GetGlobalCachedPackage(string filename)
+        private static IMEPackage GetLE3GlobalCachedPackage(string filename)
         {
             // If build is being done on NAS looking for local files will be slow
             // We should 
-            if (globalCache == null)
+            if (le3GlobalCache == null)
             {
-                globalCache = new MilanPackageCache();
-                globalCache.InsertIntoCache(MEPackageHandler.OpenMEPackages(EntryImporter.FilesSafeToImportFrom(MEGame.LE3).Select(x => Path.Combine(MEDirectories.GetCookedPath(MEGame.LE3), x))));
+                le3GlobalCache = InitGlobalPackages(MEGame.LE3);
             }
 
             // Return cache or empty if not in the global cache.
-            return globalCache.GetCachedPackage(filename, false);
+            return le3GlobalCache.GetCachedPackage(filename, false);
+        }
+
+        private static object _me3CacheSync = new Object();
+        private static IMEPackage GetME3GlobalCachedPackage(string filename)
+        {
+            lock (_me3CacheSync)
+            {
+                if (me3GlobalCache == null)
+                {
+                    me3GlobalCache = InitGlobalPackages(MEGame.ME3);
+                }
+            }
+
+            // Return cache or empty if not in the global cache.
+            return me3GlobalCache.GetCachedPackage(filename, false);
         }
 
         public static string GetMilanNewMPCommonClassesPath()
@@ -567,10 +620,11 @@ namespace ProjectMilan.Pipelines
             EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceRef,
                 target, destRef, true, new RelinkerOptionsPackage()
                 {
-                    CustomImportFileResolver = MilanShared.ImportResolver,
-                    PortExportsAsImportsWhenPossible = true,
+                    SourceCustomImportFileResolver = MilanShared.LE3ImportResolver, // Optimized file lookup
+                    DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                    // PortExportsAsImportsWhenPossible = true, // Object referencer merge should have packages already set up properly
                     Cache = new PackageCache(),
-                    
+
                 }, out _);
 
             var newReferences = destRef.GetProperty<ArrayProperty<ObjectProperty>>("ReferencedObjects").Select(x => target.GetEntry(x.Value)).ToList();
@@ -578,6 +632,32 @@ namespace ProjectMilan.Pipelines
             var allReferences = originalReferences.Concat(newReferences).Distinct();
             destRef.WriteProperty(new ArrayProperty<ObjectProperty>(allReferences.Select(x => new ObjectProperty(x)), "ReferencedObjects"));
 
+        }
+
+        public static IEnumerable<IMEPackage> GetLE3GlobalPackages()
+        {
+            if (le3GlobalCache == null) InitGlobalPackages(MEGame.LE3);
+            return le3GlobalCache.GetPackages();
+        }
+
+        private static MilanPackageCache InitGlobalPackages(MEGame game)
+        {
+            MilanPackageCache cache = new MilanPackageCache();
+            if (game == MEGame.ME3)
+            {
+                cache.InsertIntoCache(MEPackageHandler.OpenMEPackages(EntryImporter
+                    .FilesSafeToImportFrom(MEGame.ME3)
+                    .Select(x => Path.Combine(MEDirectories.GetCookedPath(MEGame.ME3), x))));
+                cache.InsertIntoCache(GetME3Package("Startup_DLC_CON_MP2_INT.pcc")); // Add DLC startups
+                cache.InsertIntoCache(GetME3Package("Startup_DLC_CON_MP3_INT.pcc"));
+                cache.InsertIntoCache(GetME3Package("Startup_DLC_CON_MP4_INT.pcc"));
+            }
+            else
+            {
+                cache.InsertIntoCache(MEPackageHandler.OpenMEPackages(EntryImporter.FilesSafeToImportFrom(MEGame.LE3).Select(x => Path.Combine(MEDirectories.GetCookedPath(MEGame.LE3), x))));
+            }
+
+            return cache;
         }
     }
 }

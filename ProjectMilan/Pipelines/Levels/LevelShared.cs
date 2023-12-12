@@ -111,7 +111,8 @@ namespace ProjectMilan.Pipelines.Levels
                             TargetGameDonorDB = MilanShared.LE3ObjectDB,
                             Cache = levelPipeline.Cache,
                             PortExportsAsImportsWhenPossible = true,
-                            CustomImportFileResolver = MilanShared.ImportResolver,
+                            DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                            SourceCustomImportFileResolver = MilanShared.ME3ImportResolver,
                         }, out var _);
                     if (badLinks.Any())
                     {
@@ -191,7 +192,8 @@ namespace ProjectMilan.Pipelines.Levels
                     destPackage, destmodel, true, new RelinkerOptionsPackage()
                     {
                         Cache = levelPipeline.Cache,
-                        CustomImportFileResolver = MilanShared.ImportResolver,
+                        DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                        SourceCustomImportFileResolver = MilanShared.ME3ImportResolver,
                         TargetGameDonorDB = MilanShared.LE3ObjectDB,
                         PortExportsAsImportsWhenPossible = true,
                     }, out _);
@@ -214,7 +216,7 @@ namespace ProjectMilan.Pipelines.Levels
                         destPackage, destLevel, true, new RelinkerOptionsPackage()
                         {
                             Cache = levelPipeline.Cache,
-                            CustomImportFileResolver = MilanShared.ImportResolver,
+                            DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
                             TargetGameDonorDB = MilanShared.LE3ObjectDB,
                             PortExportsAsImportsWhenPossible = true,
                         }, out var newModelComp);
@@ -271,7 +273,8 @@ namespace ProjectMilan.Pipelines.Levels
                         TargetGameDonorDB = MilanShared.LE3ObjectDB,
                         Cache = levelPipeline.Cache,
                         PortExportsAsImportsWhenPossible = true,
-                        CustomImportFileResolver = MilanShared.ImportResolver,
+                        DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                        SourceCustomImportFileResolver = MilanShared.ME3ImportResolver,
                     }, out var _);
 
             }

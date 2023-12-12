@@ -14,6 +14,7 @@
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
+    <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,6 +23,7 @@
     <PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
     <PackageReference Include="JetBrains.Profiler.SelfApi" Version="2.5.0" />
+    <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
   </ItemGroup>
