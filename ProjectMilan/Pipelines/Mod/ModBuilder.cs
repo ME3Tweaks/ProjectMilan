@@ -7,6 +7,7 @@ using LegendaryExplorerCore.Coalesced;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.TLK.ME2ME3;
+using ProjectMilan.Pipelines.TLK;
 
 namespace ProjectMilan.Pipelines.Mod
 {
@@ -71,6 +72,8 @@ namespace ProjectMilan.Pipelines.Mod
                 MilanLog.Information($"Copying precomputed file {Path.GetFileName(file)} to mod", customPrefix: LOG_CATEGORY);
                 File.Copy(file, Path.Combine(outDir, Path.GetFileName(file)), true);
             }
+
+            TLKPipeline.RunPipeline();
         }
     }
 }
