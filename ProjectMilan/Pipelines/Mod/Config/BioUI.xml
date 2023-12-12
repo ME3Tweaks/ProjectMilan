@@ -37,23 +37,23 @@
 				<Value type="3">(Tag=MPWeaponSelect,\tZOrder=180,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPWeaponSelection_DLC",\t\tGFxResource="GUI_SF_WeaponSelect_DLC.WeaponSelect");</Value>
 				<Value type="3">(Tag=MPChallenges,\tZOrder=244,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPChallenges",\t\tGFxResource="GUI_SF_MPChallenges_DLC.MPChallenges")</Value>
 
-			</Property>
-		</Section>
-
-		<Section name="sfxgame.sfxweaponuidatamanager">
-			<Property name="weaponuidataresources">
-				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP1SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP1.Data")</Value>
-				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP2SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP2.Data")</Value>
-			</Property>
-		</Section>
-
-		<Section name="sfxgame.sfxguiinteraction">
-			<Property name="movielibrary">
 				<!-- MILAN change DropTheSquid 12/10/2023 -->
 				<!-- redirect PlayerCountdown UI to the version shipped by MILAN that fixes input switching, prompt text -->
 				<Value type="4">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_PlayerCountdown",\tGFxResource="GUI_SF_MPPlayerCountdown.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
 				<Value type="3">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_PlayerCountdown_Milan",\tGFxResource="GUI_SF_MPPlayerCountdown_Milan.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
 				<!-- END MILAN -->
+			</Property>
+		</Section>
+		<Section name="sfxgamempcontent.sfxgui_mplobby">
+			<!-- MP4 -->
+			<Property name="srchallengetracking" type="0">769618</Property>
+			<Property name="srmatchsettingcreditmodifier" type="0">770265</Property>
+			<Property name="srmatchsettingxpmodifier" type="0">770264</Property>
+		</Section>
+		<Section name="sfxgame.sfxweaponuidatamanager">
+			<Property name="weaponuidataresources">
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP1SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP1.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP2SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP2.Data")</Value>
 			</Property>
 		</Section>
 	</Sections>
