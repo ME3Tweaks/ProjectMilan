@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
+    <Folder Include="Pipelines\Mod\Live\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
