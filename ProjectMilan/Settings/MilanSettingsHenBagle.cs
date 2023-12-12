@@ -1,19 +1,21 @@
-﻿namespace ProjectMilan.Settings
+﻿using ProjectMilan.Pipelines;
+
+namespace ProjectMilan.Settings
 {
     // Settings for HenBagle's system build
     internal class MilanSettingsHenBagle : IMilanSettings
     {
-        public string OutputModPath { get; set; } = @"UNDEFINED"; // Z:\ModLibrary\LE3\Project Milan\MilanOutput
-        public string InputSyncPath { get; set; } // must be defined
-        public bool RunMPCommonPipeline { get; set; }
-        public bool RunConfigPipeline { get; set; }
-        public bool RunKitsPipeline { get; set; }
-        public bool RunLevelsPipeline { get; set; }
-        public bool RunAudioPipeline { get; set; }
-        public bool RunTexturePipeline { get; set; }
+        public string OutputModPath { get; set; } = $@"D:\Mass Effect Modding\ME3TweaksModManager\mods\LE3\Project Milan\{MilanShared.DLC_NAME}";
+        public string InputSyncPath { get; set; } = @"D:\Mass Effect Modding\ME3TweaksModManager\mods\LE3\Project Milan\MilanSync";
+        public bool RunMPCommonPipeline { get; set; } = false;
+        public bool RunConfigPipeline { get; set; } = false;
+        public bool RunKitsPipeline { get; set; } = false;
+        public bool RunLevelsPipeline { get; set; } = false;
+        public bool RunAudioPipeline { get; set; } = true;
+        public bool RunTexturePipeline { get; set; } = false;
         public int MaxThreads { get; set; } = 1;
-        public bool DontDeleteModFolder { get; set; }
-        public bool RunNonStartupPipeline { get; set; }
-        public bool RunResynthesis { get; set; }
+        public bool DontDeleteModFolder { get; set; } = false;
+        public bool RunNonStartupPipeline { get; set; } = false;
+        public bool RunResynthesis { get; set; } = false;
     }
 }
