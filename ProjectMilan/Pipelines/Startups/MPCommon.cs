@@ -161,7 +161,7 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 files.Add(AddMergeScriptFileChange(f, stagingPath));
             }
-            
+
             return files;
         }
 
@@ -514,6 +514,28 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static IEntry MissingObjectResolver(IMEPackage package, string ifp)
         {
+            // Redirect base GUI assets to DLC assets so we don't port unused GUI assets
+            if (ifp == "GUI_SF_MPNewLobby.MPNewLobby")
+                ifp = "GUI_SF_MPNewLobby_DLC.MPNewLobby";
+            
+            if (ifp == "GUI_SF_MPSelectKit.MPSelectKit")
+                ifp = "GUI_SF_MPSelectKit_DLC.MPSelectKit";
+            
+            if (ifp == "GUI_SF_Leaderboard.Leaderboard")
+                ifp = "GUI_SF_Leaderboard_DLC.Leaderboard";
+            
+            if (ifp == "GUI_SF_MPMatchConsumables.MPMatchConsumables")
+                ifp = "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables";
+            
+            if (ifp == "GUI_SF_MPStore.MPStore")
+                ifp = "GUI_SF_MPStore_DLC.MPStore";
+
+            if (ifp == "GUI_SF_MPPromotion.MPPromotion")
+                ifp = "GUI_SF_MPPromotion_DLC.MPPromotion";
+            
+            if (ifp == "GUI_SF_MPReinforcementsReveal.MPReinforcementsReveal")
+                ifp = "GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal";
+
             var possibleDonors = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
             if (possibleDonors == null)
             {
@@ -586,7 +608,14 @@ namespace ProjectMilan.Pipelines.Startups
                 if (donorExport.FileRef.FileNameNoExtension == "SFXGame")
                     Debugger.Break();
                 MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
-                var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, packageCache: globalCache);
+                var rop = new RelinkerOptionsPackage()
+                {
+                    Cache = globalCache,
+                    TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                    DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                    PortImportsMemorySafe = true, // MPCommon might try to reference BIO_COMMON which we do not want.
+                };
+                var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, customROP: rop);
                 return newExp;
             }
 

@@ -280,7 +280,13 @@ namespace ProjectMilan.Pipelines.Shared
                                 if (texture == null)
                                     Debugger.Break();
 
-                                EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, null, new PackageCache(), MilanShared.LE3ObjectDB);
+                                var rop = new RelinkerOptionsPackage()
+                                {
+                                    DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                                    TargetGameDonorDB = MilanShared.LE3ObjectDB
+                                };
+
+                                EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, null, new PackageCache(), rop);
                                 paramValue.Value = _le3Texture.UIndex; // Since this is not relinked we will relink it here.
                             }
                             else
