@@ -39,7 +39,7 @@ namespace ProjectMilan.Pipelines.TLK
                 }
 
                 // Add LiveTLK
-                var liveTLK = new ME2ME3TalkFile(Path.Combine(MilanShared.PipelineRoot, "Mod", "Live", $"ME3TLK_{loc}.tlk"));
+                var liveTLK = new ME2ME3TalkFile(Path.Combine(MilanShared.PipelineRoot, "Mod", "Live", "DLC_LiveIni", "CookedPCConsole", $"ME3TLK_{loc}.tlk"));
                 foreach (var f in liveTLK.StringRefs)
                 {
                     tlkF.ReplaceString(f.StringID, f.Data, true); // Todo: Support Male/Female system for non-INT, if necessary.
