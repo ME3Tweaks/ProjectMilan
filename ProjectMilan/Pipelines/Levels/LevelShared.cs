@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -212,7 +213,7 @@ namespace ProjectMilan.Pipelines.Levels
                 {
                     var sModelComp = sourcePackage.GetUExport(oModelCompIdx);
                     MilanLog.Information($"  Porting level model component {sModelComp.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
-                    EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, sModelComp, 
+                    EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, sModelComp,
                         destPackage, destLevel, true, new RelinkerOptionsPackage()
                         {
                             Cache = levelPipeline.Cache,
@@ -220,14 +221,14 @@ namespace ProjectMilan.Pipelines.Levels
                             TargetGameDonorDB = MilanShared.LE3ObjectDB,
                             PortExportsAsImportsWhenPossible = true,
                         }, out var newModelComp);
-                    modelComponents.Add(newModelComp as ExportEntry);
+                    var newModelExp = newModelComp as ExportEntry;
+                    modelComponents.Add(newModelExp);
+                    var mc = ObjectBinary.From<ModelComponent>(newModelExp);
+                    mc.Model = destLevelBin.Model;
+                    newModelExp.WriteBinary(mc);
                 }
 
                 destLevelBin.ModelComponents = modelComponents.Select(x => x.UIndex).ToArray();
-            }
-            else
-            {
-                destLevelBin.Model = 0;
             }
 
             // Bring over cover
@@ -249,10 +250,13 @@ namespace ProjectMilan.Pipelines.Levels
 
             if (sourcePersistentLevel.NavListStart > 0)
             {
-                destLevelBin.NavListStart = destPackage
-                    .FindExport(sourcePackage.GetUExport(sourcePersistentLevel.NavListStart).InstancedFullPath).UIndex;
-                destLevelBin.NavListEnd = destPackage
-                    .FindExport(sourcePackage.GetUExport(sourcePersistentLevel.NavListEnd).InstancedFullPath).UIndex;
+                var sStart = sourcePackage.GetUExport(sourcePersistentLevel.NavListStart);
+                var sEnd = sourcePackage.GetUExport(sourcePersistentLevel.NavListEnd);
+
+                var dStart = destPackage.FindExport(sStart.InstancedFullPath);
+                var dEnd = destPackage.FindExport(sEnd.InstancedFullPath);
+                destLevelBin.NavListStart = dStart.UIndex;
+                destLevelBin.NavListEnd = dEnd.UIndex;
             }
 
             // NavRefs, CoverRefs
