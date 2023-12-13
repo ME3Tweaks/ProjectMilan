@@ -24,7 +24,7 @@ namespace ProjectMilan.Pipelines.Mod
         {
             // Generate a basic working mod.
             var outDir = Directory.CreateDirectory(Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole")).FullName;
-
+            
             // Write mount.dlc
             MilanLog.Information($@"Compiling mount.dlc", customPrefix: LOG_CATEGORY);
             MountFile mf = new MountFile()
@@ -60,7 +60,7 @@ namespace ProjectMilan.Pipelines.Mod
             //     3. When entering MPLobby -> LiveIni is applied while game is running
             // MPLobby is the map name for the MP menu system both in and out of lobbies. It's a persistent level.
 
-            var manifest = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"Config", $@"Default_{MilanShared.DLC_NAME}.xml");
+            var manifest = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"MergedConfig", $@"Default_{MilanShared.DLC_NAME}.xml");
             var dest = Path.Combine(outDir, $@"Default_{MilanShared.DLC_NAME}.bin");
             MilanLog.Information($"Compiling {MilanShared.DLC_NAME}.bin", customPrefix: LOG_CATEGORY);
             CoalescedConverter.ConvertToBin(manifest, dest);
@@ -72,6 +72,19 @@ namespace ProjectMilan.Pipelines.Mod
                 MilanLog.Information($"Copying precomputed file {Path.GetFileName(file)} to mod", customPrefix: LOG_CATEGORY);
                 File.Copy(file, Path.Combine(outDir, Path.GetFileName(file)), true);
             }
+            
+            // Where does TestPatch go in here? First or last?
+            // Build merged config file from vanilla ME3 DLC
+            // Patch01/02 is not included here and I am unsure how it will affect the results of this
+            // Not sure this is a good idea...
+            //ConfigAssetBundle bundle = ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC_TestPatch\CookedPCConsole", "DLC_TestPatch");
+            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP1\CookedPCConsole", "DLC_CON_MP1").MergeInto(bundle);
+            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP2\CookedPCConsole", "DLC_CON_MP2").MergeInto(bundle);
+            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP3\CookedPCConsole", "DLC_CON_MP3").MergeInto(bundle);
+            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP4\CookedPCConsole", "DLC_CON_MP4").MergeInto(bundle);
+            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP5\CookedPCConsole", "DLC_CON_MP5").MergeInto(bundle);
+            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"B:\UserProfile\source\repos\ME3Tweaks\ProjectMilan\ProjectMilan\Pipelines\Mod\Live\DLC_LiveIni\CookedPCConsole", "DLC_LiveIni").MergeInto(bundle);
+            //bundle.CommitDLCAssets(outDir, "DLC_MOD_ProjectMilan");
 
             TLKPipeline.RunPipeline();
         }
