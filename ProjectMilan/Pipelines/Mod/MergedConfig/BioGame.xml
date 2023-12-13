@@ -6,8 +6,20 @@
 		</Section>
 		<Section name="engine.gameinfo">
 			<Property name="defaultmapprefixes">
-				<Value type="4">(Prefix="MPLobby",bIsMultiplayer=TRUE,bUsesCommonPackage=TRUE,GameType="SFXGameMPContent.SFXGameInfoMP_Lobby",OverrideCommonPackage="BIOP_MP_COMMON",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
+				<!-- MILAN CHANGE for LE -->
+				<!-- Remove this so we have correct ordering-->
+				<Value type="4">(Prefix="Bio",bUsesCommonPackage=TRUE,GameType="SFXGameContent.SFXGameInfoSP",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
+				<Value type="3">(Prefix="BioP_MP",bIsMultiplayer=TRUE,bUsesCommonPackage=TRUE,GameType="SFXGameMPContent.SFXGameType_Horde_Operation",AdditionalGameTypes=("SFXGameContent.SFXGameInfoSP"),ForcedObjects=("BioGlobalResources.BioGlobalResources","BioGlobalResources.BioGlobalMPResources"))</Value>
+				<!-- Put below BioP_MP-->
+				<Value type="3">(Prefix="Bio",bUsesCommonPackage=TRUE,GameType="SFXGameContent.SFXGameInfoSP",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
 				<Value type="3">(Prefix="MPLobby",bIsMultiplayer=TRUE,bUsesCommonPackage=TRUE,GameType="SFXGameMPContentDLC_Shared_MP.SFXGameInfoMP_Lobby_DLC",OverrideCommonPackage="BIOP_MP_COMMON",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
+			</Property>
+			<Property name="gameinfoclassaliases">
+				<Value type="3">(ShortName="MP",GameClassName="SFXGameMPContent.SFXGameType_Horde_Operation")</Value>
+				<Value type="3">(ShortName="MPLobby",GameClassName="SFXGameMPContentDLC_Shared_MP.SFXGameInfoMP_Lobby_DLC")</Value>
+				<!-- Unsure if these are used. -->
+				<Value type="3">(ShortName="MPHordeOnly",GameClassName="SFXGameMPContent.SFXGameType_Horde")</Value>
+				<Value type="3">(ShortName="MPNoEnemies",GameClassName="SFXGameMPContent.SFXGameInfoMP")</Value>
 			</Property>
 		</Section>
 		<Section name="sfxengagement_mobileannex_0 sfxengagement_mobileannex">
