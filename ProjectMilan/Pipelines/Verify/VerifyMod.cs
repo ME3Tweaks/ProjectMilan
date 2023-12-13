@@ -29,7 +29,17 @@ namespace ProjectMilan.Pipelines.Verify
                     // Package file checks
                     var package = MEPackageHandler.OpenMEPackage(f);
                     VerifyVTables(package);
+                    CheckForDuplicates(package);
                 }
+            }
+        }
+
+        private static void CheckForDuplicates(IMEPackage package)
+        {
+            var dupes = EntryChecker.CheckForDuplicateIndices(package);
+            foreach (var dupe in dupes)
+            {
+                MilanLog.Error($"  Duplicate object found: {dupe.Entry?.InstancedFullPath}", customPrefix: LOG_CATEGORY);
             }
         }
 
