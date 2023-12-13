@@ -2295,7 +2295,8 @@
 			<Property name="mgrantachievementstimeout" type="0">25000</Property>
 			<Property name="mqueryachievementstimeout" type="0">25000</Property>
 		</Section>
-		<Section name="sfxpatch">
+		<!-- We do not use TestPatch in LE -->
+		<!--<Section name="sfxpatch">
 			<Property name="version" type="0">1</Property>
 		</Section>
 		<Section name="sfxpatchobjects">
@@ -2544,14 +2545,16 @@
 			<Property name="sfxonlinefoundation.sfxonlinejobsavesettings" type="0">Patch_SFXOnlineJobSaveSettings</Property>
 			<Property name="sfxonlinefoundation.sfxonlinestatswrite" type="0">Patch_SFXOnlineStatsWrite</Property>
 			<Property name="sfxonlinefoundation.sfxonlinesubsystem" type="0">Patch_SFXOnlineSubsystem</Property>
-		</Section>
-		<Section name="systemsettings">
+		</Section>-->
+		<!-- Don't care about this -->
+		<!--<Section name="systemsettings">
 			<Property name="alienfxconfiguration" type="0">2</Property>
-		</Section>
+		</Section>-->
 		<Section name="tooltipstringids">
 			<Property name="wait" type="0">813935</Property>
 		</Section>
-		<Section name="unrealed.editorengine">
+		<!-- Don't care about these -->
+		<!--<Section name="unrealed.editorengine">
 			<Property name="editpackages">
 				<Value type="3">SFXGameMPContentDLC_Shared_MP</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP1</Value>
@@ -2575,6 +2578,6 @@
 				<Value type="3">..\..\BIOGame\DLC\DLC_CON_MP4\Content\WwiseBundles</Value>
 				<Value type="3">..\..\BIOGame\DLC\DLC_CON_MP5\Content\WwiseBundles</Value>
 			</Property>
-		</Section>
+		</Section>-->
 	</Sections>
 </CoalesceAsset>

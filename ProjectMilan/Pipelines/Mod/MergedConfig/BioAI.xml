@@ -2,7 +2,7 @@
 <CoalesceAsset id="BioAI" name="bioai.ini" source="..\..\biogame\config\bioai.ini">
 	<Sections>
 		<Section name="configuration">
-			<Property name="basedon" type="0">..\..\BIOGame\DLC\DLC_Shared\Config\DefaultAI.ini</Property>
+			<Property name="basedon" type="0">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Config\DefaultAI.ini</Property>
 		</Section>
 		<Section name="sfxgamecontent.sfxweapon_ai_gethassaultrifle">
 			<Property name="damage" type="0">(X=35.0,Y=35.0)</Property>

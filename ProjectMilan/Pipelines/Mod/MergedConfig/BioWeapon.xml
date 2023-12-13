@@ -52,6 +52,7 @@
 				<Value type="3">(ModEffectClass=SFXGameEffect_WeaponMod_WeightBonus_Shared, ConversionMultiplier=-1.0f)</Value>
 			</Property>
 		</Section>
+		<!-- Unless we rename all weapons, we will have to ensure our changes ONLY apply when MP DLC is mounted. Otherwise it will affect SP-->
 		<Section name="sfxgamecontent.sfxweapon_assaultrifle_argus">
 			<Property name="damage" type="0">(X=164.8,Y=206.0)</Property>
 			<Property name="statbardamage" type="0">(X=164.8,Y=206.0)</Property>

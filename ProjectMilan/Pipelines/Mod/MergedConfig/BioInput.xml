@@ -4,6 +4,7 @@
 		<Section name="configuration">
 			<Property name="basedon" type="0">..\..\BIOGame\DLC\DLC_Shared\Config\DefaultInput.ini</Property>
 		</Section>
+		<!-- @Squid: Do these need changed, or even used? 12/13/2023 Mgamerz-->
 		<Section name="sfxgame.sfxgamemodebase">
 			<Property name="bindings">
 				<Value type="2">( Name="Shared_ViewPrevPlayer", Command="viewprevplayer true")</Value>
@@ -15,6 +16,7 @@
 				<Value type="4">( Name="PC_Talk", Command="BioTalk" );</Value>
 			</Property>
 		</Section>
+		<!-- This kit is going to need extensive changes. It is horrible. Talon Mercenary from MP5-->
 		<Section name="sfxgame.sfxgamemodedefault_merc_00000409">
 			<Property name="localizedbindings">
 				<Value type="2">( Name="A", Command="PC_StrafeLeft" )</Value>
@@ -63,7 +65,8 @@
 				<Value type="2">( Name="MouseScrollDown", Command="Shared_ViewPrevPlayer" )</Value>
 			</Property>
 		</Section>
-		<Section name="sfxgame.sfxgamemodegalaxy_00000409">
+		<!-- Don't care about in MP -->
+		<!--<Section name="sfxgame.sfxgamemodegalaxy_00000409">
 			<Property name="localizedbindings">
 				<Value type="4">( Name="A", Command="PC_GalaxyKeyStrafeLeft" )</Value>
 				<Value type="4">( Name="D", Command="PC_GalaxyKeyStrafeRight" )</Value>
@@ -78,7 +81,7 @@
 				<Value type="4">( Name="Z", Command="PC_GalaxyKeyMoveForward" )</Value>
 				<Value type="4">( Name="S", Command="PC_GalaxyKeyMoveBackward" )</Value>
 			</Property>
-		</Section>
+		</Section>-->
 		<Section name="sfxgame.sfxgamemodespectator">
 			<Property name="bindings">
 				<Value type="4">( Name="SpaceBar", Command="ViewNextPlayer true" )</Value>

@@ -2,36 +2,39 @@
 <CoalesceAsset id="BioUI" name="bioui.ini" source="..\..\biogame\config\bioui.ini">
 	<Sections>
 		<Section name="configuration">
-			<Property name="basedon" type="0">..\..\BIOGame\DLC\DLC_Shared_MP\Config\DefaultUI.ini</Property>
+			<Property name="basedon" type="0">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Config\DefaultUI.ini</Property>
 		</Section>
 		<Section name="sfxgame.biosfhandler_mainmenu">
 			<Property name="srfriendbeatbyme" type="4">718193</Property>
 			<Property name="srfriendbeatme" type="4">718192</Property>
 		</Section>
 		<Section name="sfxgame.biosfhandler_options">
+			<!-- We need to figure out which ones of these we want to use -->
 			<Property name="mpoptionpages">
-				<Value type="1">null</Value>
+				<!--<Value type="1">null</Value>
 				<Value type="3">(label=163117, story=163118, options=(OPTION_MPAutoLvlUp, OPTION_Subtitles, OPTION_Hints, OPTION_ActionUIHints, OPTION_CONTENT_1))</Value>
 				<Value type="3">(label=282879, story=282880, options=(OPTION_ControlBindings))</Value>
 				<Value type="3">(label=338302, story=338303, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
 				<Value type="3">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_Gamma, OPTION_AntiAliasing, OPTION_DynShadows) )</Value>
 				<Value type="3">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice) )</Value>
-				<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>
+				<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>-->
 			</Property>
 			<Property name="optionpages">
-				<Value type="1">null</Value>
+				<!--<Value type="1">null</Value>
 				<Value type="3">(label=163117, story=163118, options=(OPTION_Difficulty, OPTION_AutoLvlUp, OPTION_SquadPower, OPTION_AutoSave, OPTION_Hints, OPTION_ActionUIHints, OPTION_CONTENT_1))</Value>
 				<Value type="3">(label=163187, story=722109, options=(OPTION_AutoReplyMode, OPTION_Subtitles, OPTION_HideCinematicHelmet, OPTION_HenchHelmetOption, OPTION_VOLanguage, OPTION_TextLanguage))</Value>
 				<Value type="3">(label=282879, story=282880, options=(OPTION_ControlBindings))</Value>
 				<Value type="3">(label=338302, story=338303, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
 				<Value type="3">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_Gamma, OPTION_AntiAliasing, OPTION_DynShadows) )</Value>
 				<Value type="3">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice) )</Value>
-				<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>
+				<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>-->
 			</Property>
-			<Property name="textslideroptions" type="3">(id=OPTION_CONTENT_1, label=767420, story=0, TelemetryKey="alfx", defaultVal=0, values=((label=767421,story=767422),(label=767423,story=767424),(label=767425,story=767426)))</Property>
+			<!-- I think this was a mistake by bioware -->
+			<!--<Property name="textslideroptions" type="3">(id=OPTION_CONTENT_1, label=767420, story=0, TelemetryKey="alfx", defaultVal=0, values=((label=767421,story=767422),(label=767423,story=767424),(label=767425,story=767426)))</Property>-->
 		</Section>
 		<Section name="sfxgame.biosfhandler_pcoptions">
-			<Property name="aliasmap">
+			<!-- We don't want this from merge. -->
+			<!--<Property name="aliasmap">
 				<Value type="4">(Name=337733,bCategory=true)</Value>
 				<Value type="4">(Alias="PC_MoveForward",Name=337894,Subordinates=((Alias="PC_MoveForward",GameMode=GameMode_Vehicle),(Alias="PC_MoveForward",GameMode=GameMode_Atlas),(Alias="PC_GalaxyKeyMoveForward",GameMode=GameMode_Galaxy),(Alias="PC_MoveForward",GameMode=GameMode_DreamSequence),(Alias="PC_MoveForward",GameMode=GameMode_InjuredShepard)))</Value>
 				<Value type="4">(Alias="PC_MoveBackward",Name=337895,Subordinates=((Alias="PC_MoveBackward",GameMode=GameMode_Vehicle),(Alias="PC_MoveBackward",GameMode=GameMode_Atlas),(Alias="PC_GalaxyKeyMoveBackward",GameMode=GameMode_Galaxy),(Alias="PC_MoveBackward",GameMode=GameMode_DreamSequence),(Alias="PC_MoveBackward",GameMode=GameMode_InjuredShepard)))</Value>
@@ -71,7 +74,7 @@
 				<Value type="4">(Alias="Shared_ExitAtlas",Name=687216,GameMode=GameMode_Atlas)</Value>
 				<Value type="4">(Name=687431,bCategory=true)</Value>
 				<Value type="4">(Alias="Shared_ExitMountedGun",Name=687432,GameMode=GameMode_Vehicle)</Value>
-			</Property>
+			</Property>-->
 		</Section>
 		<Section name="sfxgame.sfxgui_leaderboard">
 			<Property name="recordsperrequest" type="0">60</Property>
@@ -80,38 +83,41 @@
 			<Property name="srunavailable" type="0">765459</Property>
 		</Section>
 		<Section name="sfxgame.sfxguiinteraction">
+			<!-- What's this? -->
 			<Property name="additionalresourceslibrary" type="3">MP_DLC_SFResources.MP_DLC_Sound_Mappings</Property>
+
+			<!-- We don't need this as it's already in LE
 			<Property name="controltokens" type="3">(Token=PC_Control_Unbound,TexturePath="None", Width=2, Height=2, VAlign="bottom")</Property>
 			<Property name="fontmap">
 				<Value type="3">(Locale="JPN",\tFontExportName="BioMass Shared",\tSubstituteFont="Biomass+DFGSoGei-W7",\t\tFontGFxResource="GUI_SF_FontsJPN_DLC.gfxfonts")</Value>
 				<Value type="3">(Locale="JPN",\tFontExportName="AeroLight Shared",\tSubstituteFont="Myriad Pro+DFGGothicP-W5",\tFontGFxResource="GUI_SF_FontsJPN_DLC.gfxfonts")</Value>
 				<Value type="3">(Locale="*", FontExportName="BioMass Shared",\tSubstituteFont="Biomass+DFGSoGei-W7",\t\tFontGFxResource="GUI_SF_Fonts_DLC.gfxfonts")</Value>
 				<Value type="3">(Locale="*", FontExportName="AeroLight Shared",\tSubstituteFont="Myriad Pro+DFGGothicP-W5",\tFontGFxResource="GUI_SF_Fonts_DLC.gfxfonts")</Value>
-			</Property>
+			</Property>-->
 			<Property name="movielibrary">
+				<!-- MILAN CHANGE Custom UI libraries-->
 				<Value type="4">(Tag=MPSelectKit,\t\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPSelectKit",\t\t\tGFxResource="GUI_SF_MPSelectKit.MPSelectKit")</Value>
-				<Value type="4">(Tag=MPSelectKit,\t\t\tZOrder=32,\tPlatform=CONSOLE_Xbox360,\tMovieClass="SFXGameMPContent.SFXGUI_MPSelectKit",\t\tGFxResource="GUI_SF_MPSelectKit.MPSelectKit")</Value>
-				<Value type="4">(Tag=MPSelectKit,\t\t\tZOrder=32,\tPlatform=CONSOLE_PS3,\tMovieClass="SFXGameMPContent.SFXGUI_MPSelectKit",\t\t\tGFxResource="GUI_SF_MPSelectKit.MPSelectKit")</Value>
-				<Value type="3">(Tag=MPSelectKit,\t\t\tZOrder=32,  MovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPSelectKit_DLC",\tGFxResource="GUI_SF_MPSelectKit_DLC.MPSelectKit")</Value>
-				<Value type="3">(Tag=MPSelectKit,\t\t\tZOrder=32,\tPlatform=CONSOLE_PS3,\t\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPSelectKit_DLC",\tGFxResource="GUI_SF_MPSelectKit_DLC.MPSelectKit")</Value>
-				<Value type="3">(Tag=MPSelectKit,\t\t\tZOrder=32,\tPlatform=CONSOLE_Xbox360,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPSelectKit_DLC",\tGFxResource="GUI_SF_MPSelectKit_DLC.MPSelectKit")</Value>
-				<Value type="3">(Tag=DLC_Docks,\t\tZOrder=300,\tMovieClass="SFXGameContentDLC_Shared.SFXGUI_DLC_Docks",\t\tGFxResource="GUI_SF_DLC_Docks.DLC_Docks")</Value>
 				<Value type="4">(Tag=MPMatchConsumables,\tZOrder=32, MovieClass="SFXGameMPContent.SFXGUI_MPMatchConsumables",\tGFxResource="GUI_SF_MPMatchConsumables.MPMatchConsumables")</Value>
 				<Value type="4">(Tag=MPNewLobby,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPLobby",\t\t\t\tGFxResource="GUI_SF_MPNewLobby.MPNewLobby")</Value>
 				<Value type="4">(Tag=MPReinforcementsReveal,\t\tZOrder=367,\tMovieClass="SFXGameMPContent.SFXGUI_MPReinforcementsReveal",\t\tGFxResource="GUI_SF_MPReinforcementsReveal.MPReinforcementsReveal")</Value>
+				<Value type="4">(Tag=MPStore,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPStore",\t\tGFxResource="GUI_SF_MPStore.MPStore");</Value>
+				<Value type="4">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_Leaderboard",\t\tGFxResource="GUI_SF_Leaderboard.Leaderboard")</Value>
+
+				<Value type="3">(Tag=MPSelectKit,\t\t\tZOrder=32,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPSelectKit_DLC",\t\t\tGFxResource="GUI_SF_MPSelectKit_DLC.MPSelectKit")</Value>
 				<Value type="3">(Tag=MPMatchConsumables,\tZOrder=32, MovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPMatchConsumables_DLC",\tGFxResource="GUI_SF_MPMatchConsum_DLC.MPMatchConsumables")</Value>
 				<Value type="3">(Tag=MPNewLobby,\t\tZOrder=32,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPLobby_DLC",\t\t\t\tGFxResource="GUI_SF_MPNewLobby_DLC.MPNewLobby")</Value>
 				<Value type="3">(Tag=MPReinforcementsReveal,\t\tZOrder=367,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPReinforcementsReveal_DLC",\t\tGFxResource="GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal")</Value>
-				<Value type="4">(Tag=MPStore,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPStore",\t\tGFxResource="GUI_SF_MPStore.MPStore");</Value>
 				<Value type="3">(Tag=MPStore,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPStore",\t\tGFxResource="GUI_SF_MPStore_DLC.MPStore");</Value>
-				<Value type="4">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_Leaderboard",\t\tGFxResource="GUI_SF_Leaderboard.Leaderboard")</Value>
+				<Value type="3">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_Leaderboard",\t\tGFxResource="GUI_SF_Leaderboard_DLC.Leaderboard")</Value>
+
 				<Value type="3">(Tag=MPWeaponSelect,\tZOrder=180,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPWeaponSelection_DLC",\t\tGFxResource="GUI_SF_WeaponSelect_DLC.WeaponSelect");</Value>
 				<Value type="3">(Tag=MPChallenges,\tZOrder=244,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPChallenges",\t\tGFxResource="GUI_SF_MPChallenges_DLC.MPChallenges")</Value>
-				<Value type="3">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_Leaderboard",\t\tGFxResource="GUI_SF_Leaderboard_DLC.Leaderboard",\tbSwfDevAutoReopen=false)</Value>
-				<Value type="3">(Tag=MPCollectorHUD,\tZOrder=37,\tMovieClass="SFXGameContentDLC_CON_MP4_Horde.SFXGUI_CollectorHUDOverlay",\t\tGFxResource="GUI_SF_DLC_MP4_CollectorHUD.DLC_MP4_CollectorHUD", HUDTypeToAutoLoadFor="SFXGameMPContent.SFXHUDMP")</Value>
-				<Value type="3">(Tag=DLC_Docks,\t\t\t\tZOrder=300,\tMovieClass="SFXGameContentDLC_Shared.SFXGUI_DLC_Docks",\t\tGFxResource="GUI_SF_DLC_Docks.DLC_Docks")</Value>
-				<Value type="3">(Tag=Store_NoPurchase,\t\t\tZOrder=300,\tMovieClass="SFXGameContentDLC_EXP_Pack003.SFXGUI_Store_NoPurchase",\t\tGFxResource="GUI_SF_Store_NoPurchase.Store_NoPurchase")</Value>
-				<Value type="3">(Tag=PersonalTerminalApt,\t\tZOrder=164, \tMovieClass="SFXGame.SFXGUI_Terminal",\t\tGFxResource="GUI_SF_PersonalTerminalApt.PersonalTerminalApt");</Value>
+
+				<!-- MILAN change DropTheSquid 12/10/2023 -->
+				<!-- redirect PlayerCountdown UI to the version shipped by MILAN that fixes input switching, prompt text -->
+				<Value type="4">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_PlayerCountdown",\tGFxResource="GUI_SF_MPPlayerCountdown.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
+				<Value type="3">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_PlayerCountdown_Milan",\tGFxResource="GUI_SF_MPPlayerCountdown_Milan.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
+				<!-- END MILAN -->
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxguivalue_markerplayer">
@@ -128,6 +134,7 @@
 			</Property>
 		</Section>
 		<Section name="sfxgamecontentdlc_con_mp4_horde.sfxgui_collectorhudoverlay">
+			<!-- This should be ported to SP for Armax-->
 			<Property name="dronefrequency" type="0">15</Property>
 			<Property name="flashfrequency" type="0">15</Property>
 			<Property name="mphudiconoffset" type="0">(X=8,Y=-10)</Property>
@@ -141,7 +148,8 @@
 			<Property name="swarmfrequency" type="0">5</Property>
 			<Property name="sweepfrequency" type="0">15</Property>
 		</Section>
-		<Section name="sfxgamecontentdlc_shared.sfxgui_dlc_docks">
+		<!-- Don't care about -->
+		<!--<Section name="sfxgamecontentdlc_shared.sfxgui_dlc_docks">
 			<Property name="biscancelallowed" type="0">false</Property>
 			<Property name="dockbuttons">
 				<Value type="3">(ButtonID="MainDock", srLabel=0, VisibilityConditional=13)</Value>
@@ -151,7 +159,7 @@
 			<Property name="srcancel" type="0">181674</Property>
 			<Property name="srselect" type="0">136217</Property>
 			<Property name="srtitle" type="0">135823</Property>
-		</Section>
+		</Section>-->
 		<Section name="sfxgamempcontent.sfxgui_mphud">
 			<Property name="srspectatorhuddescriptionpc" type="0">738901</Property>
 		</Section>
@@ -162,7 +170,9 @@
 			<Property name="srmatchsettingxpmodifier" type="0">770264</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mpmatchconsumables">
-			<Property name="bliveiniforpatch4arelive" type="0">false</Property>
+			<!-- Set to true to swap things over for things like singularity-->
+			<!-- We may want to investigate singularity for its patch4 changes, they might not have come to LE... -->
+			<Property name="bliveiniforpatch4arelive" type="0">true</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mpreinforcementsreveal">
 			<Property name="cardtypetextdata" type="3">(CardType="gearUpgrade", GUIType=724441 )</Property>
@@ -488,10 +498,11 @@
 				<Value type="3">(AccomplishmentIndex=743, Parent=104)</Value>
 				<Value type="3">(AccomplishmentIndex=744, Parent=104)</Value>
 				<Value type="3">(AccomplishmentIndex=639,VisibilityEntitlement=1500114)</Value>
-				<Value type="3">(AccomplishmentIndex=640,Parent=639);</Value>
-				<Value type="3">(AccomplishmentIndex=641,Parent=639);</Value>
-				<Value type="3">(AccomplishmentIndex=642,Parent=639);</Value>
-				<Value type="3">(AccomplishmentIndex=643,Parent=639);</Value>
+				<!-- MILAN Change - remove trailing ; on next 4 lines to make this more consistent for parsing-->
+				<Value type="3">(AccomplishmentIndex=640,Parent=639)</Value>
+				<Value type="3">(AccomplishmentIndex=641,Parent=639)</Value>
+				<Value type="3">(AccomplishmentIndex=642,Parent=639)</Value>
+				<Value type="3">(AccomplishmentIndex=643,Parent=639)</Value>
 			</Property>
 			<Property name="markallviewedtext" type="0">769624</Property>
 			<Property name="settitleconfirmstring" type="0">778511</Property>
@@ -652,11 +663,12 @@
 				<Value type="3">(AccomplishmentIndex=396,Parent=120)</Value>
 				<Value type="3">(AccomplishmentIndex=397,Parent=120)</Value>
 				<Value type="3">(AccomplishmentIndex=398,Parent=120)</Value>
-				<Value type="3">(AccomplishmentIndex=713,Parent=108); Geth Spitfire in Weapons</Value>
-				<Value type="3">(AccomplishmentIndex=714,Parent=108); Adas in Weapons</Value>
-				<Value type="3">(AccomplishmentIndex=715,Parent=110); Blood Pack Punisher in SMG</Value>
-				<Value type="3">(AccomplishmentIndex=716,Parent=107); Venom Shotgun in Shotgun</Value>
-				<Value type="3">(AccomplishmentIndex=717,Parent=109); Executioner in Pistol</Value>
+				<!-- MILAN CHANGE - move comments to XML from ini. ENSURE IT STAYS ON THE SAME LINE!! -->
+				<Value type="3">(AccomplishmentIndex=713,Parent=108)</Value> <!-- ; Geth Spitfire in Weapons-->
+				<Value type="3">(AccomplishmentIndex=714,Parent=108)</Value> <!-- ; Adas in Weapons-->
+				<Value type="3">(AccomplishmentIndex=715,Parent=110)</Value> <!-- ; Bloodpack Punisher in Weapons-->
+				<Value type="3">(AccomplishmentIndex=716,Parent=107)</Value> <!-- Venom Shotgun in Shotgun -->
+				<Value type="3">(AccomplishmentIndex=717,Parent=109)</Value> <!-- ; Executioner in Pistol-->
 				<Value type="3">(AccomplishmentIndex=610,Parent=111)</Value>
 				<Value type="3">(AccomplishmentIndex=611,Parent=108)</Value>
 				<Value type="3">(AccomplishmentIndex=612,Parent=107)</Value>
@@ -761,8 +773,9 @@
 			<Property name="srcharacterinfo" type="0">728029</Property>
 			<Property name="srformattedclasspromotion" type="0">770262</Property>
 		</Section>
-		<Section name="system.saveload">
+		<!-- Not used in MP -->
+		<!--<Section name="system.saveload">
 			<Property name="unknowndlcpackagestring" type="0">766341</Property>
-		</Section>
+		</Section>-->
 	</Sections>
 </CoalesceAsset>

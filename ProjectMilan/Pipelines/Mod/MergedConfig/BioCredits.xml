@@ -2,6 +2,7 @@
 <CoalesceAsset id="BioCredits" name="biocredits.ini" source="..\..\biogame\config\biocredits.ini">
 	<Sections>
 		<Section name="sfxgame.sfxgui_credits">
+			<!-- We should check and see what these are. I would like to make sure the original credits are in. We should also add ourselves-->
 			<Property name="dlccredits">
 				<Value type="3">(Type=Credit_Heading, Title=757804, BreakSpace=100)</Value>
 				<Value type="3">(Type=Credit_Scrolling, Title=757941, Names=727462)</Value>
