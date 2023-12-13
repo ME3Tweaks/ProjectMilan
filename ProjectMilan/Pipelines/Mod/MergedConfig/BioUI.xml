@@ -1,0 +1,768 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioUI" name="bioui.ini" source="..\..\biogame\config\bioui.ini">
+	<Sections>
+		<Section name="configuration">
+			<Property name="basedon" type="0">..\..\BIOGame\DLC\DLC_Shared_MP\Config\DefaultUI.ini</Property>
+		</Section>
+		<Section name="sfxgame.biosfhandler_mainmenu">
+			<Property name="srfriendbeatbyme" type="4">718193</Property>
+			<Property name="srfriendbeatme" type="4">718192</Property>
+		</Section>
+		<Section name="sfxgame.biosfhandler_options">
+			<Property name="mpoptionpages">
+				<Value type="1">null</Value>
+				<Value type="3">(label=163117, story=163118, options=(OPTION_MPAutoLvlUp, OPTION_Subtitles, OPTION_Hints, OPTION_ActionUIHints, OPTION_CONTENT_1))</Value>
+				<Value type="3">(label=282879, story=282880, options=(OPTION_ControlBindings))</Value>
+				<Value type="3">(label=338302, story=338303, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
+				<Value type="3">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_Gamma, OPTION_AntiAliasing, OPTION_DynShadows) )</Value>
+				<Value type="3">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice) )</Value>
+				<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>
+			</Property>
+			<Property name="optionpages">
+				<Value type="1">null</Value>
+				<Value type="3">(label=163117, story=163118, options=(OPTION_Difficulty, OPTION_AutoLvlUp, OPTION_SquadPower, OPTION_AutoSave, OPTION_Hints, OPTION_ActionUIHints, OPTION_CONTENT_1))</Value>
+				<Value type="3">(label=163187, story=722109, options=(OPTION_AutoReplyMode, OPTION_Subtitles, OPTION_HideCinematicHelmet, OPTION_HenchHelmetOption, OPTION_VOLanguage, OPTION_TextLanguage))</Value>
+				<Value type="3">(label=282879, story=282880, options=(OPTION_ControlBindings))</Value>
+				<Value type="3">(label=338302, story=338303, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
+				<Value type="3">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_Gamma, OPTION_AntiAliasing, OPTION_DynShadows) )</Value>
+				<Value type="3">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice) )</Value>
+				<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>
+			</Property>
+			<Property name="textslideroptions" type="3">(id=OPTION_CONTENT_1, label=767420, story=0, TelemetryKey="alfx", defaultVal=0, values=((label=767421,story=767422),(label=767423,story=767424),(label=767425,story=767426)))</Property>
+		</Section>
+		<Section name="sfxgame.biosfhandler_pcoptions">
+			<Property name="aliasmap">
+				<Value type="4">(Name=337733,bCategory=true)</Value>
+				<Value type="4">(Alias="PC_MoveForward",Name=337894,Subordinates=((Alias="PC_MoveForward",GameMode=GameMode_Vehicle),(Alias="PC_MoveForward",GameMode=GameMode_Atlas),(Alias="PC_GalaxyKeyMoveForward",GameMode=GameMode_Galaxy),(Alias="PC_MoveForward",GameMode=GameMode_DreamSequence),(Alias="PC_MoveForward",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="PC_MoveBackward",Name=337895,Subordinates=((Alias="PC_MoveBackward",GameMode=GameMode_Vehicle),(Alias="PC_MoveBackward",GameMode=GameMode_Atlas),(Alias="PC_GalaxyKeyMoveBackward",GameMode=GameMode_Galaxy),(Alias="PC_MoveBackward",GameMode=GameMode_DreamSequence),(Alias="PC_MoveBackward",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="PC_StrafeLeft",Name=337896,Subordinates=((Alias="PC_StrafeLeft",GameMode=GameMode_Vehicle),(Alias="PC_StrafeLeft",GameMode=GameMode_Atlas),(Alias="PC_GalaxyKeyStrafeLeft",GameMode=GameMode_Galaxy),(Alias="PC_StrafeLeft",GameMode=GameMode_DreamSequence),(Alias="PC_StrafeLeft",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="PC_StrafeRight",Name=337897,Subordinates=((Alias="PC_StrafeRight",GameMode=GameMode_Vehicle),(Alias="PC_StrafeRight",GameMode=GameMode_Atlas),(Alias="PC_GalaxyKeyStrafeRight",GameMode=GameMode_Galaxy),(Alias="PC_StrafeRight",GameMode=GameMode_DreamSequence),(Alias="PC_StrafeRight",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="Walking",Name=174852)</Value>
+				<Value type="4">(Alias="Shared_Action",Name=337962,Subordinates=((Alias="Shared_Action",GameMode=GameMode_Vehicle),(Alias="Shared_Action",GameMode=GameMode_Atlas),(Alias="Shared_Action",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="Shared_ShowMap",Name=708554,Subordinates=((Alias="Shared_ShowMap",bAllGameModes=true),(Alias="Shared_HideMap",GameMode=GameMode_GUI),(Alias="Shared_ShowMap",GameMode=GameMode_Atlas),(Alias="Shared_ShowMap",GameMode=GameMode_Vehicle),(Alias="Shared_ShowMap",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="Shared_CoverTurn",Name=708967)</Value>
+				<Value type="4">(Alias="Shared_QuickSave",Name=282869,Subordinates=((Alias="Shared_QuickSave",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="PC_QuickLoad",Name=282870,Subordinates=((Alias="PC_QuickLoad",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Name=337781,bCategory=true)</Value>
+				<Value type="4">(Alias="Shared_Shoot",Name=337963,Subordinates=((Alias="Shared_Shoot",GameMode=GameMode_Vehicle),(Alias="Shared_Shoot",GameMode=GameMode_Atlas),(Alias="Shared_Shoot",GameMode=GameMode_IllusiveManConflict),(Alias="Shared_Shoot",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="Shared_Aim",Name=282873,Subordinates=((Alias="Shared_Aim",GameMode=GameMode_Vehicle),(Alias="Shared_Aim",GameMode=GameMode_Atlas),(Alias="PC_CommandToggleCam",GameMode=GameMode_Command),(Alias="Shared_Aim",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="PC_Reload",Name=282875,Subordinates=((Alias="PC_Reload",GameMode=GameMode_Atlas),(Alias="PC_Reload",GameMode=GameMode_Vehicle),(Alias="PC_Reload",GameMode=GameMode_InjuredShepard)))</Value>
+				<Value type="4">(Alias="Shared_Melee",Name=282877,Subordinates=((Alias="Shared_Melee",GameMode=GameMode_Atlas)))</Value>
+				<Value type="4">(Alias="PC_SwapWeapon",Name=337964)</Value>
+				<Value type="4">(Alias="PC_NextWeapon",Name=282872)</Value>
+				<Value type="4">(Alias="PC_PrevWeapon",Name=282871)</Value>
+				<Value type="4">(Alias="PC_EnterCommandMenu",Name=282856,Subordinates=((Alias="PC_EnterCommandMenu",GameMode=GameMode_Vehicle),(Alias="PC_EnterCommandMenu",GameMode=GameMode_Atlas),(Alias="PC_ExitCommandMenu",GameMode=GameMode_Command)))</Value>
+				<Value type="4">(Alias="Shared_SquadFollow",Name=337965,Subordinates=((Alias="Shared_SquadFollow",GameMode=GameMode_Vehicle),(Alias="Shared_SquadFollow",GameMode=GameMode_Atlas),(Alias="Shared_SquadFollow",GameMode=GameMode_Command)))</Value>
+				<Value type="4">(Alias="Shared_SquadMove1",Name=337966,Subordinates=((Alias="Shared_SquadMove1",GameMode=GameMode_Vehicle),(Alias="Shared_SquadMove1",GameMode=GameMode_Atlas),(Alias="Shared_SquadMove1",GameMode=GameMode_Command)))</Value>
+				<Value type="4">(Alias="Shared_SquadMove2",Name=337967,Subordinates=((Alias="Shared_SquadMove2",GameMode=GameMode_Vehicle),(Alias="Shared_SquadMove2",GameMode=GameMode_Atlas),(Alias="Shared_SquadMove2",GameMode=GameMode_Command)))</Value>
+				<Value type="4">(Alias="Shared_SquadAttack",Name=708968,Subordinates=((Alias="Shared_SquadAttack",GameMode=GameMode_Vehicle),(Alias="Shared_SquadAttack",GameMode=GameMode_Atlas),(Alias="Shared_SquadAttack",GameMode=GameMode_Command)))</Value>
+				<Value type="4">(Alias="PC_HotKey1",Name=337973)</Value>
+				<Value type="4">(Alias="PC_HotKey2",Name=337974)</Value>
+				<Value type="4">(Alias="PC_HotKey3",Name=337975)</Value>
+				<Value type="4">(Alias="PC_HotKey4",Name=337976)</Value>
+				<Value type="4">(Alias="PC_HotKey5",Name=337977)</Value>
+				<Value type="4">(Alias="PC_HotKey6",Name=337978)</Value>
+				<Value type="4">(Alias="PC_HotKey7",Name=337979,Subordinates=((Alias="UseRevivePower",GameMode=GameMode_Dying)))</Value>
+				<Value type="4">(Alias="PC_HotKey8",Name=337980)</Value>
+				<Value type="4">(Name=708645,bCategory=true)</Value>
+				<Value type="4">(Alias="PC_PushToTalk",Name=711401,Subordinates=((Alias="PC_PushToTalk",GameMode=GameMode_GUI),(Alias="PC_PushToTalk",GameMode=GameMode_Lobby),(Alias="PC_PushToTalk",GameMode=GameMode_Dying),(Alias="PC_PushToTalk",GameMode=GameMode_Spectator))))</Value>
+				<Value type="4">(Alias="ProlongLife",Name=724510,GameMode=GameMode_Dying)</Value>
+				<Value type="4">(Name=687215,bCategory=true)</Value>
+				<Value type="4">(Alias="Shared_ExitAtlas",Name=687216,GameMode=GameMode_Atlas)</Value>
+				<Value type="4">(Name=687431,bCategory=true)</Value>
+				<Value type="4">(Alias="Shared_ExitMountedGun",Name=687432,GameMode=GameMode_Vehicle)</Value>
+			</Property>
+		</Section>
+		<Section name="sfxgame.sfxgui_leaderboard">
+			<Property name="recordsperrequest" type="0">60</Property>
+		</Section>
+		<Section name="sfxgame.sfxguiext_weaponmods">
+			<Property name="srunavailable" type="0">765459</Property>
+		</Section>
+		<Section name="sfxgame.sfxguiinteraction">
+			<Property name="additionalresourceslibrary" type="3">MP_DLC_SFResources.MP_DLC_Sound_Mappings</Property>
+			<Property name="controltokens" type="3">(Token=PC_Control_Unbound,TexturePath="None", Width=2, Height=2, VAlign="bottom")</Property>
+			<Property name="fontmap">
+				<Value type="3">(Locale="JPN",\tFontExportName="BioMass Shared",\tSubstituteFont="Biomass+DFGSoGei-W7",\t\tFontGFxResource="GUI_SF_FontsJPN_DLC.gfxfonts")</Value>
+				<Value type="3">(Locale="JPN",\tFontExportName="AeroLight Shared",\tSubstituteFont="Myriad Pro+DFGGothicP-W5",\tFontGFxResource="GUI_SF_FontsJPN_DLC.gfxfonts")</Value>
+				<Value type="3">(Locale="*", FontExportName="BioMass Shared",\tSubstituteFont="Biomass+DFGSoGei-W7",\t\tFontGFxResource="GUI_SF_Fonts_DLC.gfxfonts")</Value>
+				<Value type="3">(Locale="*", FontExportName="AeroLight Shared",\tSubstituteFont="Myriad Pro+DFGGothicP-W5",\tFontGFxResource="GUI_SF_Fonts_DLC.gfxfonts")</Value>
+			</Property>
+			<Property name="movielibrary">
+				<Value type="4">(Tag=MPSelectKit,\t\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPSelectKit",\t\t\tGFxResource="GUI_SF_MPSelectKit.MPSelectKit")</Value>
+				<Value type="4">(Tag=MPSelectKit,\t\t\tZOrder=32,\tPlatform=CONSOLE_Xbox360,\tMovieClass="SFXGameMPContent.SFXGUI_MPSelectKit",\t\tGFxResource="GUI_SF_MPSelectKit.MPSelectKit")</Value>
+				<Value type="4">(Tag=MPSelectKit,\t\t\tZOrder=32,\tPlatform=CONSOLE_PS3,\tMovieClass="SFXGameMPContent.SFXGUI_MPSelectKit",\t\t\tGFxResource="GUI_SF_MPSelectKit.MPSelectKit")</Value>
+				<Value type="3">(Tag=MPSelectKit,\t\t\tZOrder=32,  MovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPSelectKit_DLC",\tGFxResource="GUI_SF_MPSelectKit_DLC.MPSelectKit")</Value>
+				<Value type="3">(Tag=MPSelectKit,\t\t\tZOrder=32,\tPlatform=CONSOLE_PS3,\t\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPSelectKit_DLC",\tGFxResource="GUI_SF_MPSelectKit_DLC.MPSelectKit")</Value>
+				<Value type="3">(Tag=MPSelectKit,\t\t\tZOrder=32,\tPlatform=CONSOLE_Xbox360,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPSelectKit_DLC",\tGFxResource="GUI_SF_MPSelectKit_DLC.MPSelectKit")</Value>
+				<Value type="3">(Tag=DLC_Docks,\t\tZOrder=300,\tMovieClass="SFXGameContentDLC_Shared.SFXGUI_DLC_Docks",\t\tGFxResource="GUI_SF_DLC_Docks.DLC_Docks")</Value>
+				<Value type="4">(Tag=MPMatchConsumables,\tZOrder=32, MovieClass="SFXGameMPContent.SFXGUI_MPMatchConsumables",\tGFxResource="GUI_SF_MPMatchConsumables.MPMatchConsumables")</Value>
+				<Value type="4">(Tag=MPNewLobby,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPLobby",\t\t\t\tGFxResource="GUI_SF_MPNewLobby.MPNewLobby")</Value>
+				<Value type="4">(Tag=MPReinforcementsReveal,\t\tZOrder=367,\tMovieClass="SFXGameMPContent.SFXGUI_MPReinforcementsReveal",\t\tGFxResource="GUI_SF_MPReinforcementsReveal.MPReinforcementsReveal")</Value>
+				<Value type="3">(Tag=MPMatchConsumables,\tZOrder=32, MovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPMatchConsumables_DLC",\tGFxResource="GUI_SF_MPMatchConsum_DLC.MPMatchConsumables")</Value>
+				<Value type="3">(Tag=MPNewLobby,\t\tZOrder=32,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPLobby_DLC",\t\t\t\tGFxResource="GUI_SF_MPNewLobby_DLC.MPNewLobby")</Value>
+				<Value type="3">(Tag=MPReinforcementsReveal,\t\tZOrder=367,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPReinforcementsReveal_DLC",\t\tGFxResource="GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal")</Value>
+				<Value type="4">(Tag=MPStore,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPStore",\t\tGFxResource="GUI_SF_MPStore.MPStore");</Value>
+				<Value type="3">(Tag=MPStore,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPStore",\t\tGFxResource="GUI_SF_MPStore_DLC.MPStore");</Value>
+				<Value type="4">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_Leaderboard",\t\tGFxResource="GUI_SF_Leaderboard.Leaderboard")</Value>
+				<Value type="3">(Tag=MPWeaponSelect,\tZOrder=180,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPWeaponSelection_DLC",\t\tGFxResource="GUI_SF_WeaponSelect_DLC.WeaponSelect");</Value>
+				<Value type="3">(Tag=MPChallenges,\tZOrder=244,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPChallenges",\t\tGFxResource="GUI_SF_MPChallenges_DLC.MPChallenges")</Value>
+				<Value type="3">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_Leaderboard",\t\tGFxResource="GUI_SF_Leaderboard_DLC.Leaderboard",\tbSwfDevAutoReopen=false)</Value>
+				<Value type="3">(Tag=MPCollectorHUD,\tZOrder=37,\tMovieClass="SFXGameContentDLC_CON_MP4_Horde.SFXGUI_CollectorHUDOverlay",\t\tGFxResource="GUI_SF_DLC_MP4_CollectorHUD.DLC_MP4_CollectorHUD", HUDTypeToAutoLoadFor="SFXGameMPContent.SFXHUDMP")</Value>
+				<Value type="3">(Tag=DLC_Docks,\t\t\t\tZOrder=300,\tMovieClass="SFXGameContentDLC_Shared.SFXGUI_DLC_Docks",\t\tGFxResource="GUI_SF_DLC_Docks.DLC_Docks")</Value>
+				<Value type="3">(Tag=Store_NoPurchase,\t\t\tZOrder=300,\tMovieClass="SFXGameContentDLC_EXP_Pack003.SFXGUI_Store_NoPurchase",\t\tGFxResource="GUI_SF_Store_NoPurchase.Store_NoPurchase")</Value>
+				<Value type="3">(Tag=PersonalTerminalApt,\t\tZOrder=164, \tMovieClass="SFXGame.SFXGUI_Terminal",\t\tGFxResource="GUI_SF_PersonalTerminalApt.PersonalTerminalApt");</Value>
+			</Property>
+		</Section>
+		<Section name="sfxgame.sfxguivalue_markerplayer">
+			<Property name="titletextdelaytime" type="0">1.0</Property>
+		</Section>
+		<Section name="sfxgame.sfxweaponuidatamanager">
+			<Property name="weaponuidataresources">
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP1SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP1.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP2SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP2.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP3SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP3.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_SharedSF, Resource="SFXGUI_WeaponUIDataDLC_Shared.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP4SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP4.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP5SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP5.Data")</Value>
+			</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_con_mp4_horde.sfxgui_collectorhudoverlay">
+			<Property name="dronefrequency" type="0">15</Property>
+			<Property name="flashfrequency" type="0">15</Property>
+			<Property name="mphudiconoffset" type="0">(X=8,Y=-10)</Property>
+			<Property name="mphudiconscale" type="0">100</Property>
+			<Property name="numdrones" type="0">3</Property>
+			<Property name="numflashes" type="0">3</Property>
+			<Property name="numsweeps" type="0">0</Property>
+			<Property name="pcquickslotoffset" type="0">(X=18,Y=24)</Property>
+			<Property name="pcquickslotscale" type="0">65</Property>
+			<Property name="positionpowericonoverlaysperiod" type="0">0.1</Property>
+			<Property name="swarmfrequency" type="0">5</Property>
+			<Property name="sweepfrequency" type="0">15</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_shared.sfxgui_dlc_docks">
+			<Property name="biscancelallowed" type="0">false</Property>
+			<Property name="dockbuttons">
+				<Value type="3">(ButtonID="MainDock", srLabel=0, VisibilityConditional=13)</Value>
+				<Value type="4">(ButtonID="MainDock", srLabel=746026, VisibilityConditional=13)</Value>
+				<Value type="3">(ButtonID="MainDock", srLabel=746026, srButtonLabel=174644, VisibilityConditional=13)</Value>
+			</Property>
+			<Property name="srcancel" type="0">181674</Property>
+			<Property name="srselect" type="0">136217</Property>
+			<Property name="srtitle" type="0">135823</Property>
+		</Section>
+		<Section name="sfxgamempcontent.sfxgui_mphud">
+			<Property name="srspectatorhuddescriptionpc" type="0">738901</Property>
+		</Section>
+		<Section name="sfxgamempcontent.sfxgui_mplobby">
+			<Property name="maxonlineimages" type="0">20</Property>
+			<Property name="srchallengetracking" type="0">769618</Property>
+			<Property name="srmatchsettingcreditmodifier" type="0">770265</Property>
+			<Property name="srmatchsettingxpmodifier" type="0">770264</Property>
+		</Section>
+		<Section name="sfxgamempcontent.sfxgui_mpmatchconsumables">
+			<Property name="bliveiniforpatch4arelive" type="0">false</Property>
+		</Section>
+		<Section name="sfxgamempcontent.sfxgui_mpreinforcementsreveal">
+			<Property name="cardtypetextdata" type="3">(CardType="gearUpgrade", GUIType=724441 )</Property>
+		</Section>
+		<Section name="sfxgamempcontent.sfxgui_mpstore">
+			<Property name="srexpiresindaystext" type="0">751310</Property>
+			<Property name="srshowreinforcements" type="0">757970</Property>
+		</Section>
+		<Section name="sfxgamempcontentdlc_shared_mp.sfxgui_mpchallenges">
+			<Property name="alienchallenges">
+				<Value type="3">(AccomplishmentIndex=112)</Value>
+				<Value type="3">(AccomplishmentIndex=237,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=238,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=239,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=240,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=241,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=242,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=243,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=244,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=245,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=246,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=405,Parent=112)</Value>
+				<Value type="3">(AccomplishmentIndex=113)</Value>
+				<Value type="3">(AccomplishmentIndex=251,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=252,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=253,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=254,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=255,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=256,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=257,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=258,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=259,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=260,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=261,Parent=113)</Value>
+				<Value type="3">(AccomplishmentIndex=114)</Value>
+				<Value type="3">(AccomplishmentIndex=266,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=267,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=268,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=269,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=270,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=271,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=272,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=273,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=274,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=275,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=276,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=277,Parent=114)</Value>
+				<Value type="3">(AccomplishmentIndex=115)</Value>
+				<Value type="3">(AccomplishmentIndex=282,Parent=115)</Value>
+				<Value type="3">(AccomplishmentIndex=283,Parent=115)</Value>
+				<Value type="3">(AccomplishmentIndex=284,Parent=115)</Value>
+				<Value type="3">(AccomplishmentIndex=287,Parent=115)</Value>
+				<Value type="3">(AccomplishmentIndex=288,Parent=115)</Value>
+				<Value type="3">(AccomplishmentIndex=289,Parent=115)</Value>
+				<Value type="3">(AccomplishmentIndex=290,Parent=115)</Value>
+				<Value type="3">(AccomplishmentIndex=291,Parent=115)</Value>
+				<Value type="3">(AccomplishmentIndex=121)</Value>
+				<Value type="3">(AccomplishmentIndex=404,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=408,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=409,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=410,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=411,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=412,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=413,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=414,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=415,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=416,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=417,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=122)</Value>
+				<Value type="3">(AccomplishmentIndex=422,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=423,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=424,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=425,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=426,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=427,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=428,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=429,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=430,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=582,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=589,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=433,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=434,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=435,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=123)</Value>
+				<Value type="3">(AccomplishmentIndex=440,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=442,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=443,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=445,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=446,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=447,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=448,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=449,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=451,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=579,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=124)</Value>
+				<Value type="3">(AccomplishmentIndex=457,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=458,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=459,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=460,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=461,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=462,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=463,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=464,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=465,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=690)</Value>
+				<Value type="3">(AccomplishmentIndex=691, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=692, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=693, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=694, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=695, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=696, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=698, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=699, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=700, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=701, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=702, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=684, Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=685, Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=686, Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=687, Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=688, Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=689, Parent=675)</Value>
+				<Value type="3">(AccomplishmentIndex=580,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=588,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=593,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=583,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=586,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=587,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=591,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=584,Parent=123)</Value>
+				<Value type="3">(AccomplishmentIndex=585,Parent=122)</Value>
+				<Value type="3">(AccomplishmentIndex=592,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=581,Parent=121)</Value>
+				<Value type="3">(AccomplishmentIndex=590,Parent=124)</Value>
+				<Value type="3">(AccomplishmentIndex=703, Parent=690)</Value>
+				<Value type="3">(AccomplishmentIndex=697, Parent=690)</Value>
+			</Property>
+			<Property name="backtext" type="0">103236</Property>
+			<Property name="bodytemplatestring" type="0">769623</Property>
+			<Property name="challengepointsstring" type="0">778498</Property>
+			<Property name="closesublisttext" type="0">163668</Property>
+			<Property name="continuetext" type="0">163589</Property>
+			<Property name="exittext" type="0">529360</Property>
+			<Property name="generalchallenges">
+				<Value type="3">(AccomplishmentIndex=100)</Value>
+				<Value type="3">(AccomplishmentIndex=104,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=105,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=106,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=107,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=108,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=109,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=110,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=111,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=112,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=113,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=114,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=115,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=116,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=117,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=118,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=119,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=120,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=121,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=122,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=123,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=124,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=125,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=126,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=127,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=128,Parent=100)</Value>
+				<Value type="3">(AccomplishmentIndex=104)</Value>
+				<Value type="3">(AccomplishmentIndex=133,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=134,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=135,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=136,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=137,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=138,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=139,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=140,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=141,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=142,Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=105)</Value>
+				<Value type="3">(AccomplishmentIndex=147,Parent=105)</Value>
+				<Value type="3">(AccomplishmentIndex=148,Parent=105)</Value>
+				<Value type="3">(AccomplishmentIndex=149,Parent=105)</Value>
+				<Value type="3">(AccomplishmentIndex=106)</Value>
+				<Value type="3">(AccomplishmentIndex=154,Parent=106)</Value>
+				<Value type="3">(AccomplishmentIndex=155,Parent=106)</Value>
+				<Value type="3">(AccomplishmentIndex=156,Parent=106)</Value>
+				<Value type="3">(AccomplishmentIndex=157,Parent=106)</Value>
+				<Value type="3">(AccomplishmentIndex=125)</Value>
+				<Value type="3">(AccomplishmentIndex=470,Parent=125)</Value>
+				<Value type="3">(AccomplishmentIndex=471,Parent=125)</Value>
+				<Value type="3">(AccomplishmentIndex=472,Parent=125)</Value>
+				<Value type="3">(AccomplishmentIndex=473,Parent=125)</Value>
+				<Value type="3">(AccomplishmentIndex=474,Parent=125)</Value>
+				<Value type="3">(AccomplishmentIndex=475,Parent=125)</Value>
+				<Value type="3">(AccomplishmentIndex=126)</Value>
+				<Value type="3">(AccomplishmentIndex=480,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=481,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=482,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=483,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=484,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=485,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=486,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=487,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=488,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=489,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=490,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=491,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=492,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=493,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=494,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=495,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=496,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=497,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=498,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=499,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=500,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=501,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=502,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=503,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=504,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=505,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=506,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=507,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=508,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=509,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=510,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=511,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=512,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=513,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=514,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=515,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=516,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=517,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=518,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=519,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=520,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=521,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=522,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=523,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=524,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=525,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=526,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=527,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=528,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=529,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=530,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=531,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=532,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=533,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=534,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=535,Parent=126)</Value>
+				<Value type="3">(AccomplishmentIndex=127)</Value>
+				<Value type="3">(AccomplishmentIndex=540,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=541,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=542,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=543,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=544,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=545,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=546,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=547,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=548,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=549,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=550,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=552,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=553,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=554,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=555,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=556,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=128)</Value>
+				<Value type="3">(AccomplishmentIndex=561,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=562,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=563,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=564,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=565,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=567,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=568,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=569,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=570,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=571,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=572,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=574,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=575,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=576,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=577,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=578,Parent=128)</Value>
+				<Value type="3">(AccomplishmentIndex=704,Parent=127); Dark Sphere - Biotic Mastery</Value>
+				<Value type="3">(AccomplishmentIndex=705,Parent=127); Seeker Swarm - Biotic Mastery</Value>
+				<Value type="3">(AccomplishmentIndex=706,Parent=127); Biotic Hammer - Biotic Mastery</Value>
+				<Value type="3">(AccomplishmentIndex=707,Parent=127); Poison Strike - Biotic Mastery</Value>
+				<Value type="3">(AccomplishmentIndex=708,Parent=128); Siege Pulse -Tech Mastery</Value>
+				<Value type="3">(AccomplishmentIndex=709,Parent=128); Hex Shield - Tech Mastery</Value>
+				<Value type="3">(AccomplishmentIndex=712,Parent=128); Tech Hammer - Tech Mastery</Value>
+				<Value type="3">(AccomplishmentIndex=600, VisibilityStartTime=1350072000, VisibilityEndTime=1350907200)</Value>
+				<Value type="3">(AccomplishmentIndex=601,Parent=600, VisibilityStartTime=1350072000, VisibilityEndTime=1350907200)</Value>
+				<Value type="3">(AccomplishmentIndex=602,VisibilityStartTime=1350845952,VisibilityEndTime=1351537280)</Value>
+				<Value type="3">(AccomplishmentIndex=603,Parent=602,VisibilityStartTime=1350845952,VisibilityEndTime=1351537280)</Value>
+				<Value type="3">(AccomplishmentIndex=604,VisibilityStartTime=1351493888,VisibilityEndTime=1352141952)</Value>
+				<Value type="3">(AccomplishmentIndex=605,Parent=604,VisibilityStartTime=1351493888,VisibilityEndTime=1352141952)</Value>
+				<Value type="3">(AccomplishmentIndex=606, VisibilityEntitlement=1500103)</Value>
+				<Value type="3">(AccomplishmentIndex=607,Parent=606)</Value>
+				<Value type="3">(AccomplishmentIndex=608,Parent=606)</Value>
+				<Value type="3">(AccomplishmentIndex=609,Parent=606)</Value>
+				<Value type="3">(AccomplishmentIndex=615,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=616,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=617,Parent=127)</Value>
+				<Value type="3">(AccomplishmentIndex=618,VisibilityEntitlement=1500106)</Value>
+				<Value type="3">(AccomplishmentIndex=619,Parent=618)</Value>
+				<Value type="3">(AccomplishmentIndex=625,VisibilityEntitlement=1500108)</Value>
+				<Value type="3">(AccomplishmentIndex=626,Parent=625)</Value>
+				<Value type="3">(AccomplishmentIndex=724,VisibilityEntitlement=1500118)</Value>
+				<Value type="3">(AccomplishmentIndex=725,Parent=724)</Value>
+				<Value type="3">(AccomplishmentIndex=726,VisibilityEntitlement=1500119)</Value>
+				<Value type="3">(AccomplishmentIndex=727,Parent=726)</Value>
+				<Value type="3">(AccomplishmentIndex=728,Parent=726)</Value>
+				<Value type="3">(AccomplishmentIndex=733,VisibilityEntitlement=1500121)</Value>
+				<Value type="3">(AccomplishmentIndex=734,Parent=733)</Value>
+				<Value type="3">(AccomplishmentIndex=735,Parent=733)</Value>
+				<Value type="3">(AccomplishmentIndex=736,Parent=733)</Value>
+				<Value type="3">(AccomplishmentIndex=737,Parent=733)</Value>
+				<Value type="3">(AccomplishmentIndex=743, Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=744, Parent=104)</Value>
+				<Value type="3">(AccomplishmentIndex=639,VisibilityEntitlement=1500114)</Value>
+				<Value type="3">(AccomplishmentIndex=640,Parent=639);</Value>
+				<Value type="3">(AccomplishmentIndex=641,Parent=639);</Value>
+				<Value type="3">(AccomplishmentIndex=642,Parent=639);</Value>
+				<Value type="3">(AccomplishmentIndex=643,Parent=639);</Value>
+			</Property>
+			<Property name="markallviewedtext" type="0">769624</Property>
+			<Property name="settitleconfirmstring" type="0">778511</Property>
+			<Property name="tab1text" type="0">769619</Property>
+			<Property name="tab2text" type="0">769620</Property>
+			<Property name="tab3text" type="0">769621</Property>
+			<Property name="timescompletedstring" type="0">778497</Property>
+			<Property name="titletemplatestring" type="0">769622</Property>
+			<Property name="titletext" type="0">769618</Property>
+			<Property name="viewtext" type="0">244393</Property>
+			<Property name="weaponchallenges">
+				<Value type="3">(AccomplishmentIndex=107)</Value>
+				<Value type="3">(AccomplishmentIndex=162,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=163,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=164,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=165,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=166,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=167,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=168,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=169,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=170,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=171,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=172,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=173,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=108)</Value>
+				<Value type="3">(AccomplishmentIndex=178,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=179,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=180,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=181,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=182,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=183,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=184,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=185,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=186,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=187,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=188,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=189,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=595,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=190,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=111)</Value>
+				<Value type="3">(AccomplishmentIndex=195,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=196,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=197,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=198,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=199,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=200,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=201,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=202,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=203,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=204,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=205,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=206,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=110)</Value>
+				<Value type="3">(AccomplishmentIndex=211,Parent=110)</Value>
+				<Value type="3">(AccomplishmentIndex=212,Parent=110)</Value>
+				<Value type="3">(AccomplishmentIndex=213,Parent=110)</Value>
+				<Value type="3">(AccomplishmentIndex=214,Parent=110)</Value>
+				<Value type="3">(AccomplishmentIndex=215,Parent=110)</Value>
+				<Value type="3">(AccomplishmentIndex=216,Parent=110)</Value>
+				<Value type="3">(AccomplishmentIndex=217,Parent=110)</Value>
+				<Value type="3">(AccomplishmentIndex=109)</Value>
+				<Value type="3">(AccomplishmentIndex=222,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=223,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=224,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=225,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=226,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=227,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=228,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=229,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=230,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=231,Parent=109)</Value>
+				<Value type="3">(AccomplishmentIndex=116)</Value>
+				<Value type="3">(AccomplishmentIndex=296,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=297,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=298,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=299,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=300,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=301,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=302,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=303,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=304,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=305,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=306,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=307,Parent=116)</Value>
+				<Value type="3">(AccomplishmentIndex=117)</Value>
+				<Value type="3">(AccomplishmentIndex=315,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=316,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=317,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=318,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=319,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=320,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=321,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=322,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=323,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=324,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=325,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=326,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=327,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=328,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=329,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=330,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=331,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=332,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=333,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=334,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=335,Parent=117)</Value>
+				<Value type="3">(AccomplishmentIndex=118)</Value>
+				<Value type="3">(AccomplishmentIndex=340,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=341,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=342,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=343,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=344,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=345,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=346,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=347,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=348,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=349,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=350,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=351,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=352,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=353,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=354,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=355,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=356,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=357,Parent=118)</Value>
+				<Value type="3">(AccomplishmentIndex=119)</Value>
+				<Value type="3">(AccomplishmentIndex=362,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=363,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=364,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=365,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=366,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=367,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=368,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=369,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=370,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=371,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=372,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=373,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=374,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=375,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=376,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=377,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=378,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=379,Parent=119)</Value>
+				<Value type="3">(AccomplishmentIndex=120)</Value>
+				<Value type="3">(AccomplishmentIndex=384,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=385,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=386,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=387,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=388,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=389,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=390,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=391,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=392,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=393,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=394,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=395,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=396,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=397,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=398,Parent=120)</Value>
+				<Value type="3">(AccomplishmentIndex=713,Parent=108); Geth Spitfire in Weapons</Value>
+				<Value type="3">(AccomplishmentIndex=714,Parent=108); Adas in Weapons</Value>
+				<Value type="3">(AccomplishmentIndex=715,Parent=110); Blood Pack Punisher in SMG</Value>
+				<Value type="3">(AccomplishmentIndex=716,Parent=107); Venom Shotgun in Shotgun</Value>
+				<Value type="3">(AccomplishmentIndex=717,Parent=109); Executioner in Pistol</Value>
+				<Value type="3">(AccomplishmentIndex=610,Parent=111)</Value>
+				<Value type="3">(AccomplishmentIndex=611,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=612,Parent=107)</Value>
+				<Value type="3">(AccomplishmentIndex=613,Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=614,Parent=110)</Value>
+				<Value type="3">(AccomplishmentIndex=729, Parent=108)</Value>
+				<Value type="3">(AccomplishmentIndex=730, Parent=109)</Value>
+			</Property>
+		</Section>
+		<Section name="sfxgamempcontentdlc_shared_mp.sfxgui_mpmatchconsumables_dlc">
+			<Property name="bliveiniforpatch4arelive" type="0">true</Property>
+			<Property name="cardlistsupplemental">
+				<Value type="3">(GUIDescription=676662, GUIDescription_GoBig=758588)</Value>
+				<Value type="3">(GUIDescription=676663, GUIDescription_GoBig=758589)</Value>
+				<Value type="3">(GUIDescription=676664, GUIDescription_GoBig=758590)</Value>
+				<Value type="3">(GUIDescription=676665, GUIDescription_GoBig=758591)</Value>
+				<Value type="3">(GUIDescription=676666, GUIDescription_GoBig=758592)</Value>
+				<Value type="3">(GUIDescription=676667, GUIDescription_GoBig=758593)</Value>
+				<Value type="3">(GUIDescription=676668, GUIDescription_GoBig=758594)</Value>
+				<Value type="3">(GUIDescription=676669, GUIDescription_GoBig=758568)</Value>
+				<Value type="3">(GUIDescription=676670, GUIDescription_GoBig=758569)</Value>
+				<Value type="3">(GUIDescription=676671, GUIDescription_GoBig=758570)</Value>
+				<Value type="3">(GUIDescription=676672, GUIDescription_GoBig=758571)</Value>
+				<Value type="3">(GUIDescription=676673, GUIDescription_GoBig=758572)</Value>
+				<Value type="3">(GUIDescription=676674, GUIDescription_GoBig=758573)</Value>
+				<Value type="3">(GUIDescription=676675, GUIDescription_GoBig=758574)</Value>
+				<Value type="3">(GUIDescription=750416, GUIDescription_GoBig=771273)</Value>
+				<Value type="3">(GUIDescription=750438, GUIDescription_GoBig=771274)</Value>
+				<Value type="3">(GUIDescription=750420, GUIDescription_GoBig=771275)</Value>
+				<Value type="3">(GUIDescription=750422, GUIDescription_GoBig=771276)</Value>
+			</Property>
+		</Section>
+		<Section name="sfxgamempcontentdlc_shared_mp.sfxgui_mpselectkit_dlc">
+			<Property name="kitdescriptions">
+				<Value type="3">(KitName="SoldierHumanMale",ClassString=727964,IPNameString=0,IPEntryString=727970,GameplayEntryString=727979,StatsString1=728002,StatsString2=728011,StatsString3=728024,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelHumanMale",ClassString=727965,IPNameString=0,IPEntryString=727970,GameplayEntryString=727980,StatsString1=728002,StatsString2=728011,StatsString3=728015,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerHumanMale",ClassString=727966,IPNameString=0,IPEntryString=727970,GameplayEntryString=727981,StatsString1=728002,StatsString2=728011,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorHumanMale",ClassString=727967,IPNameString=0,IPEntryString=727970,GameplayEntryString=727982,StatsString1=728002,StatsString2=728011,StatsString3=728014,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="VanguardHumanMale",ClassString=727968,IPNameString=0,IPEntryString=727970,GameplayEntryString=727983,StatsString1=728002,StatsString2=728011,StatsString3=728009,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="AdeptHumanMale",ClassString=727969,IPNameString=0,IPEntryString=727970,GameplayEntryString=727984,StatsString1=728002,StatsString2=728011,StatsString3=728007,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SoldierHumanFemale",ClassString=727964,IPNameString=0,IPEntryString=727970,GameplayEntryString=727979,StatsString1=728002,StatsString2=728011,StatsString3=728024,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelHumanFemale",ClassString=727965,IPNameString=0,IPEntryString=727970,GameplayEntryString=727980,StatsString1=728002,StatsString2=728011,StatsString3=728015,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerHumanFemale",ClassString=727966,IPNameString=0,IPEntryString=727970,GameplayEntryString=727981,StatsString1=728002,StatsString2=728011,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorHumanFemale",ClassString=727967,IPNameString=0,IPEntryString=727970,GameplayEntryString=727982,StatsString1=728002,StatsString2=728011,StatsString3=728014,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="VanguardHumanFemale",ClassString=727968,IPNameString=0,IPEntryString=727970,GameplayEntryString=727983,StatsString1=728002,StatsString2=728011,StatsString3=728009,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="AdeptHumanFemale",ClassString=727969,IPNameString=0,IPEntryString=727970,GameplayEntryString=727984,StatsString1=728002,StatsString2=728011,StatsString3=728007,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="AdeptAsari",ClassString=711376,IPNameString=0,IPEntryString=727971,GameplayEntryString=727985,StatsString1=728001,StatsString2=728008,StatsString3=728018,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="AdeptDrell",ClassString=711377,IPNameString=0,IPEntryString=727974,GameplayEntryString=727990,StatsString1=728000,StatsString2=728006,StatsString3=728023,StatsString4=728020,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerQuarian",ClassString=711378,IPNameString=0,IPEntryString=727976,GameplayEntryString=727994,StatsString1=728003,StatsString2=728010,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerSalarian",ClassString=711379,IPNameString=0,IPEntryString=727975,GameplayEntryString=727992,StatsString1=728003,StatsString2=728010,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorSalarian",ClassString=711380,IPNameString=0,IPEntryString=727975,GameplayEntryString=727991,StatsString1=728003,StatsString2=728010,StatsString3=728014,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorQuarian",ClassString=711381,IPNameString=0,IPEntryString=727976,GameplayEntryString=727993,StatsString1=728003,StatsString2=728010,StatsString3=728014,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelTurian",ClassString=711382,IPNameString=0,IPEntryString=727972,GameplayEntryString=727987,StatsString1=728004,StatsString2=728015,StatsString3=728028,StatsString4=728026,StatsString5=728012)</Value>
+				<Value type="3">(KitName="SentinelKrogan",ClassString=711383,IPNameString=0,IPEntryString=727973,GameplayEntryString=727988,StatsString1=728005,StatsString2=728021,StatsString3=728022,StatsString4=728027,StatsString5=728012)</Value>
+				<Value type="3">(KitName="SoldierKrogan",ClassString=711384,IPNameString=0,IPEntryString=727973,GameplayEntryString=727988,StatsString1=728005,StatsString2=728021,StatsString3=728022,StatsString4=728027,StatsString5=728012)</Value>
+				<Value type="3">(KitName="SoldierTurian",ClassString=711385,IPNameString=0,IPEntryString=727972,GameplayEntryString=727987,StatsString1=728004,StatsString2=728015,StatsString3=728028,StatsString4=728026,StatsString5=728012)</Value>
+				<Value type="3">(KitName="VanguardDrell",ClassString=711386,IPNameString=0,IPEntryString=727974,GameplayEntryString=727990,StatsString1=728000,StatsString2=728006,StatsString3=728023,StatsString4=728020,StatsString5=0)</Value>
+				<Value type="3">(KitName="VanguardAsari",ClassString=711387,IPNameString=0,IPEntryString=727971,GameplayEntryString=727986,StatsString1=728001,StatsString2=728008,StatsString3=728018,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SoldierHumanMaleBF3",ClassString=727964,IPNameString=0,IPEntryString=727970,GameplayEntryString=727979,StatsString1=728002,StatsString2=728011,StatsString3=728024,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorGeth",ClassString=549701,IPNameString=0,IPEntryString=727977,GameplayEntryString=727996,StatsString1=728004,StatsString2=728017,StatsString3=728013,StatsString4=728025,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerGeth",ClassString=727591,IPNameString=0,IPEntryString=727977,GameplayEntryString=727997,StatsString1=728004,StatsString2=728017,StatsString3=728013,StatsString4=728025,StatsString5=0)</Value>
+				<Value type="3">(KitName="SoldierBatarian",ClassString=727832,IPNameString=0,IPEntryString=727978,GameplayEntryString=727999,StatsString1=728004,StatsString2=728016,StatsString3=728027,StatsString4=728012,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelBatarian",ClassString=727832,IPNameString=0,IPEntryString=727978,GameplayEntryString=727999,StatsString1=728004,StatsString2=728016,StatsString3=728027,StatsString4=728012,StatsString5=0)</Value>
+				<Value type="3">(KitName="VanguardKrogan",ClassString=340581,IPNameString=0,IPEntryString=727973,GameplayEntryString=727988,StatsString1=728005,StatsString2=728021,StatsString3=728022,StatsString4=728027,StatsString5=728012)</Value>
+				<Value type="3">(KitName="AdeptAsariCommando",ClassString=727957,IPNameString=0,IPEntryString=727971,GameplayEntryString=727985,StatsString1=728001,StatsString2=728008,StatsString3=728027,StatsString4=728018,StatsString5=0)</Value>
+				<Value type="3">(KitName="SoldierVorcha",ClassString=734483,IPNameString=0,IPEntryString=731658,GameplayEntryString=731659,StatsString1=734486,StatsString2=734487,StatsString3=728020,StatsString4=734488,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelVorcha",ClassString=734484,IPNameString=0,IPEntryString=731658,GameplayEntryString=731659,StatsString1=734486,StatsString2=734487,StatsString3=728020,StatsString4=734488,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorQuarianMale",ClassString=711381,IPNameString=0,IPEntryString=727976,GameplayEntryString=727993,StatsString1=728003,StatsString2=728010,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerQuarianMale",ClassString=711378,IPNameString=0,IPEntryString=727976,GameplayEntryString=727994,StatsString1=728003,StatsString2=728010,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="AdeptHumanMaleCerberus",ClassString=734480,IPNameString=0,IPEntryString=731660,GameplayEntryString=731661,StatsString1=728002,StatsString2=728011,StatsString3=734482,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="VanguardHumanMaleCerberus",ClassString=734481,IPNameString=0,IPEntryString=731660,GameplayEntryString=731661,StatsString1=728002,StatsString2=728011,StatsString3=734482,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SoldierN7",ClassString=745670,IPNameString=727964,IPEntryString=754270,GameplayEntryString=745676,StatsString1=728005,StatsString2=746044,StatsString3=728027,StatsString4=728012,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelN7",ClassString=745671,IPNameString=727965,IPEntryString=754270,GameplayEntryString=745677,StatsString1=728004,StatsString2=728011,StatsString3=746045,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerN7",ClassString=745672,IPNameString=727966,IPEntryString=754270,GameplayEntryString=745678,StatsString1=728003,StatsString2=728011,StatsString3=754269,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorN7",ClassString=745673,IPNameString=727967,IPEntryString=754270,GameplayEntryString=745679,StatsString1=728002,StatsString2=728006,StatsString3=728023,StatsString4=728020,StatsString5=746046)</Value>
+				<Value type="3">(KitName="VanguardN7",ClassString=745674,IPNameString=727968,IPEntryString=754270,GameplayEntryString=745680,StatsString1=728002,StatsString2=728006,StatsString3=728023,StatsString4=746047,StatsString5=746046)</Value>
+				<Value type="3">(KitName="AdeptN7",ClassString=745675,IPNameString=727969,IPEntryString=754270,GameplayEntryString=745681,StatsString1=728002,StatsString2=728006,StatsString3=746047,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="AdeptVolus",ClassString=765341,IPNameString=0,IPEntryString=765357,GameplayEntryString=765359,StatsString1=728002,StatsString2=728011,StatsString3=771226,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerVolus",ClassString=765342,IPNameString=0,IPEntryString=765357,GameplayEntryString=765360,StatsString1=728002,StatsString2=728011,StatsString3=771226,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="N7SoldierTurian",ClassString=770999,IPNameString=0,IPEntryString=727972,GameplayEntryString=766466,StatsString1=728004,StatsString2=728015,StatsString3=728028,StatsString4=728026,StatsString5=767914)</Value>
+				<Value type="3">(KitName="N7InfiltratorTurian",ClassString=771000,IPNameString=0,IPEntryString=727972,GameplayEntryString=766467,StatsString1=728004,StatsString2=728015,StatsString3=728028,StatsString4=728026,StatsString5=767914)</Value>
+				<Value type="3">(KitName="AdeptKrogan",ClassString=768065,IPNameString=0,IPEntryString=727973,GameplayEntryString=727988,StatsString1=728005,StatsString2=728021,StatsString3=728022,StatsString4=728027,StatsString5=728012)</Value>
+				<Value type="3">(KitName="EngineerTurian",ClassString=768066,IPNameString=0,IPEntryString=727972,GameplayEntryString=727987,StatsString1=728004,StatsString2=728015,StatsString3=728028,StatsString4=728026,StatsString5=767914)</Value>
+				<Value type="3">(KitName="InfiltratorDrell",ClassString=768067,IPNameString=0,IPEntryString=727974,GameplayEntryString=727990,StatsString1=728000,StatsString2=728006,StatsString3=728023,StatsString4=728020,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelVolus",ClassString=768068,IPNameString=0,IPEntryString=765357,GameplayEntryString=0,StatsString1=728002,StatsString2=728011,StatsString3=771226,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SoldierGeth",ClassString=768069,IPNameString=0,IPEntryString=727977,GameplayEntryString=0,StatsString1=728005,StatsString2=728017,StatsString3=728013,StatsString4=728025,StatsString5=0)</Value>
+				<Value type="3">(KitName="VanguardVolus",ClassString=768070,IPNameString=0,IPEntryString=765357,GameplayEntryString=0,StatsString1=728002,StatsString2=728011,StatsString3=771226,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="AdeptBatarian",ClassString=768111,IPNameString=0,IPEntryString=727978,GameplayEntryString=727999,StatsString1=728004,StatsString2=728016,StatsString3=728027,StatsString4=728012,StatsString5=0)</Value>
+				<Value type="3">(KitName="EngineerVorcha",ClassString=768112,IPNameString=0,IPEntryString=731658,GameplayEntryString=731659,StatsString1=734486,StatsString2=734487,StatsString3=728020,StatsString4=734488,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorAsari",ClassString=768113,IPNameString=0,IPEntryString=727971,GameplayEntryString=727985,StatsString1=728001,StatsString2=728008,StatsString3=728018,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelAsari",ClassString=768114,IPNameString=0,IPEntryString=727971,GameplayEntryString=727985,StatsString1=728001,StatsString2=728008,StatsString3=728018,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="VanguardBatarian",ClassString=768116,IPNameString=0,IPEntryString=727978,GameplayEntryString=727999,StatsString1=728004,StatsString2=728016,StatsString3=728027,StatsString4=728012,StatsString5=0)</Value>
+				<Value type="3">(KitName="SoldierGethDestroyer",ClassString=782882,IPNameString=0,IPEntryString=727977,GameplayEntryString=785637,StatsString1=814531,StatsString2=728027,StatsString3=728012,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="AdeptCollector",ClassString=783880,IPNameString=0,IPEntryString=785638,GameplayEntryString=785639,StatsString1=787961,StatsString2=785642,StatsString3=785643,StatsString4=785644,StatsString5=0)</Value>
+				<Value type="3">(KitName="SentinelKroganWarlord",ClassString=812780,IPNameString=0,IPEntryString=727973,GameplayEntryString=812781,StatsString1=812782,StatsString2=812783,StatsString3=728022,StatsString4=728027,StatsString5=728012)</Value>
+				<Value type="3">(KitName="EngineerMerc",ClassString=814592,IPNameString=0,IPEntryString=812785,GameplayEntryString=812786,StatsString1=728002,StatsString2=728011,StatsString3=812787,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="VanguardTurianFemale",ClassString=812774,IPNameString=0,IPEntryString=812776,GameplayEntryString=812777,StatsString1=812778,StatsString2=728020,StatsString3=812779,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorFembot",ClassString=812764,IPNameString=0,IPEntryString=812766,GameplayEntryString=812767,StatsString1=728004,StatsString2=728006,StatsString3=728023,StatsString4=0,StatsString5=0)</Value>
+				<Value type="4">(KitName="SoldierMQuarian",ClassString=768115,IPNameString=0,IPEntryString=727976,GameplayEntryString=771246,StatsString1=728003,StatsString2=728010,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="SoldierMQuarian",ClassString=768115,IPNameString=0,IPEntryString=727976,GameplayEntryString=771246,StatsString1=728002,StatsString2=728010,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+			</Property>
+			<Property name="srcharacterinfo" type="0">728029</Property>
+			<Property name="srformattedclasspromotion" type="0">770262</Property>
+		</Section>
+		<Section name="system.saveload">
+			<Property name="unknowndlcpackagestring" type="0">766341</Property>
+		</Section>
+	</Sections>
+</CoalesceAsset>
