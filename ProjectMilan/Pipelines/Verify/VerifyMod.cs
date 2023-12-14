@@ -74,7 +74,7 @@ namespace ProjectMilan.Pipelines.Verify
                 int i = 0;
                 for (; i < parentVTable.Count; i++)
                 {
-                    if (i < vTable.Count && vTable[i] != parentVTable[i])
+                    if (i < vTable.Count && !vTable[i].CaseInsensitiveEquals(parentVTable[i]))
                     {
                         MilanLog.Error($@"  Bad VTable detected in {f.InstancedFullPath}: Local[{i}] = {vTable[i]}, Parent[{i}]={parentVTable[i]}", customPrefix: LOG_CATEGORY);
                     }
