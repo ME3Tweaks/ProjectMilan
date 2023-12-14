@@ -2,6 +2,14 @@ Class SFXGUI_MPLobby_DLC extends SFXGUI_MPLobby
     config(UI);
 
 // Functions
+// MILAN CHANGE DropTheSquid 12/14/2023
+// adding this to make the UI dynamically swap between mouse/controller
+public event function HandleButtonRefresh(bool usingGamepad)
+{
+    Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
+    ActionScriptVoid("screen.RefreshButtonHelp");
+}
+// END MILAN
 public function array<MatchConsumableDisplayInfo> GetCharacterConsumableInfo_DLC(SFXPRIMP PRI)
 {
     local array<MatchConsumableDisplayInfo> ConsumableData;

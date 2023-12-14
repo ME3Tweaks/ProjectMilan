@@ -91,6 +91,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     var PAGE_TRANSITION_SLIDE_LEFT = 1;
     var PAGE_TRANSITION_SLIDE_RIGHT = 2;
     var m_PageTransitionType = screens.MPNewLobby.MPNewLobby.prototype.PAGE_TRANSITION_NONE;
+    var leftArrowOriginalX;
+    var rightArrayOriginalX;
+    var bUsingGamepad;
     function MPNewLobby()
     {
         super();
@@ -172,39 +175,59 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     {
         this.m_ControllerLegend = _root.mcControllerButtons;
         this.m_PCLegend = _root.PCController;
-        if(_global.SFX.Platform == com.XPlatform.PC)
+        // set up PC handlers
+        _root.PCBtnCharacter.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonY));
+        this.m_PCLegend.PCBtnLeft.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonY));
+        this.m_PCLegend.PCBtnMid1.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonX));
+        this.m_PCLegend.PCBtnMid2.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonA));
+        this.m_PCLegend.PCBtnRight.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonB));
+        // set up controller handlers
+        this.m_ControllerLegend.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onButtonA));
+        this.m_ControllerLegend.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onButtonB));
+        this.m_ControllerLegend.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.onButtonX));
+        this.m_ControllerLegend.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
+        this.m_ControllerLegend.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
+        this.m_ControllerLegend.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
+        this.m_ControllerLegend.addEventListener("onDPadRight",mx.utils.Delegate.create(this,this.onDPadRight));
+        this.m_ControllerLegend.addEventListener("onInvalidInput",mx.utils.Delegate.create(this,this.onInvalidInput));
+        Key.addListener(this);
+        this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
+        this.ActionMappings = new Object();
+    }
+    function RefreshButtonHelp(usingGamepad)
+    {
+        this.bUsingGamepad = usingGamepad;
+        var bIsInDeployFlow = Boolean(flash.external.ExternalInterface.call("IsInDeployFlow"));
+        if(!this.bUsingGamepad)
         {
+            this.m_ArrowLeft.contents._x = this.leftArrowOriginalX - this.PC_ARROW_OFFSET;
+            this.m_ArrowRight.contents._x = this.rightArrayOriginalX + this.PC_ARROW_OFFSET;
+            this.m_ArrowLeft.addEventListener("ArrowPressed",this.MakeDelegate(this.HideSquadScreen));
+            this.m_ArrowLeft.ShowStickIcon(false);
+            this.m_ArrowRight.ShowStickIcon(false);
+
             _root.m_ControlY._visible = false;
             this.m_ControllerLegend._visible = false;
             _root.PCBtnCharacter._visible = true;
             _root.PCBtnCharacter.enabled = true;
             this.m_PCLegend._visible = true;
             this.m_PCLegend.enabled = true;
-            _root.PCBtnCharacter.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonY));
-            this.m_PCLegend.PCBtnLeft.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonY));
-            this.m_PCLegend.PCBtnMid1.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonX));
-            this.m_PCLegend.PCBtnMid2.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonA));
-            this.m_PCLegend.PCBtnRight.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonB));
         }
         else
         {
+            this.m_ArrowLeft.ShowStickIcon(true);
+            this.m_ArrowRight.ShowStickIcon(true);
+            this.m_ArrowLeft.contents._x = this.leftArrowOriginalX;
+            this.m_ArrowRight.contents._x = this.rightArrayOriginalX;
+
             _root.PCBtnCharacter._visible = false;
             _root.PCBtnCharacter.enabled = false;
             this.m_PCLegend._visible = false;
             this.m_PCLegend.enabled = false;
             _root.m_ControlY._visible = true;
             this.m_ControllerLegend._visible = true;
-            this.m_ControllerLegend.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onButtonA));
-            this.m_ControllerLegend.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onButtonB));
-            this.m_ControllerLegend.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.onButtonX));
-            this.m_ControllerLegend.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
-            this.m_ControllerLegend.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
-            this.m_ControllerLegend.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
-            this.m_ControllerLegend.addEventListener("onDPadRight",mx.utils.Delegate.create(this,this.onDPadRight));
-            this.m_ControllerLegend.addEventListener("onInvalidInput",mx.utils.Delegate.create(this,this.onInvalidInput));
-            Key.addListener(this);
         }
-        this.ActionMappings = new Object();
+        this.RefreshButtonLegend();
     }
     function onKeyUp()
     {
@@ -221,17 +244,8 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     {
         this.m_ArrowLeft = _root.ArrowLeft;
         this.m_ArrowRight = _root.ArrowRight;
-        if(_global.SFX.Platform == com.XPlatform.PC)
-        {
-            this.m_ArrowLeft.contents._x -= this.PC_ARROW_OFFSET;
-            this.m_ArrowRight.contents._x += this.PC_ARROW_OFFSET;
-            this.m_ArrowLeft.addEventListener("ArrowPressed",this.MakeDelegate(this.HideSquadScreen));
-        }
-        else
-        {
-            this.m_ArrowLeft.ShowStickIcon(true);
-            this.m_ArrowRight.ShowStickIcon(true);
-        }
+        this.leftArrowOriginalX = this.m_ArrowLeft.contents._x;
+        this.rightArrayOriginalX = this.m_ArrowRight.contents._x;
     }
     function MakeLoadTabDelegate(subscreen)
     {
@@ -476,7 +490,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     {
         this.m_ArrowLeft._visible = false;
         this.m_ArrowRight._visible = false;
-        if(this.leftPage.contents.m_symbolName == this.PAGE_LOBBY_MENU && _global.SFX.Platform != com.XPlatform.PC)
+        if(this.leftPage.contents.m_symbolName == this.PAGE_LOBBY_MENU && this.bUsingGamepad)
         {
             this.m_ArrowRight._visible = true;
         }
@@ -607,137 +621,123 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     }
     function RefreshButtonLegend_MultiplayerMenu()
     {
-        var _loc4_ = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        var _loc5_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
-        var _loc6_ = Boolean(flash.external.ExternalInterface.call("CameFromSelectFirstCharacter"));
-        if(_global.SFX.Platform == com.XPlatform.PC)
+        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        // var _loc5_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        var cameFromSelectFirstCharacter = Boolean(flash.external.ExternalInterface.call("CameFromSelectFirstCharacter"));
+        if(!this.bUsingGamepad)
         {
-            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,_loc4_);
+            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srOptions,this.ShowOptionsScreen,_loc4_);
-            if(_loc6_)
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srOptions,this.ShowOptionsScreen,canInteract);
+            if(cameFromSelectFirstCharacter)
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,_loc4_);
+                this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,canInteract);
             }
             else
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,_loc4_);
+                this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,canInteract);
             }
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,_loc4_);
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false);
-            if(_global.SFX.Platform == com.XPlatform.XBox)
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract);
+            if(cameFromSelectFirstCharacter)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,_loc4_);
-            }
-            else if(_global.SFX.Platform == com.XPlatform.PS3)
-            {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srViewInvitations,this.ViewInvitations,_loc4_);
-            }
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,_loc4_);
-            if(_loc6_)
-            {
-                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,_loc4_);
+                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,canInteract);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,_loc4_);
+                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,canInteract);
             }
         }
     }
     function RefreshButtonLegend_Character()
     {
-        var _loc4_ = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        var _loc5_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
-        if(_global.SFX.Platform == com.XPlatform.PC)
+        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        // var isInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        if(!this.bUsingGamepad)
         {
-            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,_loc4_);
+            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srOptions,this.ShowOptionsScreen,_loc4_);
-            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),_loc4_);
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srOptions,this.ShowOptionsScreen,canInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),canInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,_loc4_);
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false);
-            if(_global.SFX.Platform == com.XPlatform.XBox)
-            {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,_loc4_);
-            }
-            else
-            {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,"",undefined,false);
-            }
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,_loc4_);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),_loc4_);
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),canInteract);
         }
     }
     function RefreshButtonLegend_Lobby()
     {
-        var _loc4_ = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        var _loc5_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
-        if(_global.SFX.Platform == com.XPlatform.PC)
+        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        var isInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        if(!this.bUsingGamepad)
         {
-            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,_loc4_);
+            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,_loc4_);
-            if(_loc5_)
+            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+            if(isInParty)
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,_loc4_ && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
             }
             else
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,_loc4_ && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
             }
-            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,_loc4_);
+            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,canInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,_loc4_);
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false);
-            if(_loc5_)
+            if(isInParty)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,_loc4_ && !this.IsGameFull());
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,_loc4_ && !this.IsGameFull());
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
             }
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,_loc4_);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,_loc4_);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,canInteract);
         }
     }
     function RefreshButtonLegend_Squad()
     {
-        var _loc4_ = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        var _loc5_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
-        if(_global.SFX.Platform == com.XPlatform.PC)
+        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        var isInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        if(!this.bUsingGamepad)
         {
             this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
             var _loc6_ = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
             if(_loc6_.isOccupied && !_loc6_.isLocalPlayer)
             {
                 var _loc7_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.leftPage.contents.list.selectedIndex));
-                this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,!_loc7_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,_loc4_);
+                this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,!_loc7_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,canInteract);
             }
             else
             {
                 this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false);
             }
-            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,_loc4_);
-            if(_loc5_)
+            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+            if(isInParty)
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,_loc4_ && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
             }
             else
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,_loc4_ && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
             }
-            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),_loc4_);
+            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),canInteract);
         }
         else
         {
@@ -746,57 +746,57 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             if(_loc6_.isOccupied && !_loc6_.isLocalPlayer)
             {
                 _loc7_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.leftPage.contents.list.selectedIndex));
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,!_loc7_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,_loc4_);
+                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,!_loc7_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,canInteract);
             }
             else
             {
                 this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false);
             }
-            if(_loc5_)
+            if(isInParty)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,_loc4_ && !this.IsGameFull());
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,_loc4_ && !this.IsGameFull());
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
             }
-            if(_global.SFX.Platform == com.XPlatform.PC)
-            {
-                this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srShowGamercard,this.ShowGamercard,_loc4_ && _loc6_.isOccupied);
-            }
-            else
-            {
+            // if(_global.SFX.Platform == com.XPlatform.PC)
+            // {
+            //     this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srShowGamercard,this.ShowGamercard,canInteract && _loc6_.isOccupied);
+            // }
+            // else
+            // {
                 this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false);
-            }
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),_loc4_);
+            // }
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),canInteract);
             this.m_ControllerLegend.ControlB.SetVisible(false);
         }
     }
     function RefreshButtonLegend_MissionSetup()
     {
-        var _loc4_ = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        var _loc5_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        var isInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
         var _loc6_ = com.SFXScreen.IsMPClient == false;
         var _loc7_ = Boolean(flash.external.ExternalInterface.call("IsHostingNewMission"));
         if(this.m_bConnected)
         {
-            if(_global.SFX.Platform == com.XPlatform.PC)
+            if(!this.bUsingGamepad)
             {
                 this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
                 this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,"",undefined,false);
-                this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,_loc4_);
-                if(_loc5_)
+                this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+                if(isInParty)
                 {
-                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,_loc4_ && !this.IsGameFull());
+                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
                 }
                 else
                 {
-                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,_loc4_ && !this.IsGameFull());
+                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
                 }
                 var _loc8_ = this.leftPage.contents.list.getItem(this.SETTING_MAP);
                 if(_loc8_.IsValueAvailable(_loc8_.GetActiveValue()))
                 {
-                    this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,!_loc6_ ? this.CancelMatchSettings : this.ConfirmMatchSettings,_loc4_);
+                    this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,!_loc6_ ? this.CancelMatchSettings : this.ConfirmMatchSettings,canInteract);
                 }
                 else
                 {
@@ -806,20 +806,20 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             else
             {
                 this.RefreshButton(_root.m_ControlY,0,"",undefined,false);
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srOptions,this.ShowOptionsScreen,_loc4_);
-                if(_loc5_)
+                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srOptions,this.ShowOptionsScreen,canInteract);
+                if(isInParty)
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,_loc4_ && !this.IsGameFull());
+                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
                 }
                 else
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,_loc4_ && !this.IsGameFull());
+                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
                 }
                 this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false);
                 _loc8_ = this.leftPage.contents.list.getItem(this.SETTING_MAP);
                 if(_loc8_.IsValueAvailable(_loc8_.GetActiveValue()))
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,_loc4_);
+                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,canInteract);
                 }
                 else
                 {
@@ -827,26 +827,26 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
                 }
             }
         }
-        else if(_global.SFX.Platform == com.XPlatform.PC)
+        else if(!this.bUsingGamepad)
         {
             this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,_loc4_);
-            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,_loc4_);
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,canInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,canInteract);
         }
         else
         {
             this.RefreshButton(_root.m_ControlY,0,"",undefined,false);
             this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,"",undefined,false);
             this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,_loc4_);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,_loc4_);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,canInteract);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,canInteract);
         }
     }
     function RefreshButton(mcButton, nButtonID, sLabel, fnAction, bEnabled)
     {
-        if(_global.SFX.Platform == com.XPlatform.PC)
+        if(!this.bUsingGamepad)
         {
             mcButton._visible = fnAction != undefined;
             mcButton.SetEnabled(bEnabled);
