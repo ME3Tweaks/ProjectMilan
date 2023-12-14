@@ -86,7 +86,29 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
         this.m_PCBackButton = _root.m_PCBackButton;
         this.m_PCButton1 = _root.m_PCButton1;
         this.m_PCButton2 = _root.m_PCButton2;
-        if(_global.SFX.Platform == com.XPlatform.PC)
+        // PC handlers
+        this.m_PCBackButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onBack));
+        this.m_PCButton2.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.ShowStoreScreen));
+        // controller handlers
+        this.m_ControllerButtons.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.ShowStoreScreen));
+        this.m_ControllerButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onAButton));
+        this.m_ControllerButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onBack));
+        this.m_ControllerButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
+        this.m_ControllerButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
+        this.m_ControllerButtons.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
+        this.m_ControllerButtons.addEventListener("onDPadRight",mx.utils.Delegate.create(this,this.onDPadRight));
+        this.m_ControllerButtons.addEventListener("onInvalidInput",mx.utils.Delegate.create(this,this.onInvalidInput));
+        this.m_ControllerButtons.ControlY.Active = false;
+        this.m_ControllerButtons.ControlY.SetVisible(false);
+        this.m_ControllerButtons.FitLeft();
+
+        this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
+        this.RefreshButtons();
+    }
+    function RefreshButtonHelp(usingGamepad)
+    {
+        this.bUsingGamepad = usingGamepad;
+        if(!this.bUsingGamepad)
         {
             this.m_ControllerButtons._visible = false;
             this.m_PCBackButton.SetVisible(true);
@@ -95,8 +117,7 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
             this.m_PCButton1.SetEnabled(false);
             this.m_PCButton2.SetVisible(true);
             this.m_PCButton2.SetEnabled(true);
-            this.m_PCBackButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onBack));
-            this.m_PCButton2.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.ShowStoreScreen));
+            this.m_List.SetPlatformLayout(com.XPlatform.PC);
         }
         else
         {
@@ -107,19 +128,10 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
             this.m_PCButton2.SetVisible(false);
             this.m_PCButton2.SetEnabled(false);
             this.m_ControllerButtons._visible = true;
-            this.m_ControllerButtons.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.ShowStoreScreen));
-            this.m_ControllerButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onAButton));
-            this.m_ControllerButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onBack));
-            this.m_ControllerButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
-            this.m_ControllerButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
-            this.m_ControllerButtons.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
-            this.m_ControllerButtons.addEventListener("onDPadRight",mx.utils.Delegate.create(this,this.onDPadRight));
-            this.m_ControllerButtons.addEventListener("onInvalidInput",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ControllerButtons.ControlY.Active = false;
-            this.m_ControllerButtons.ControlY.SetVisible(false);
-            this.m_ControllerButtons.FitLeft();
+            this.m_List.SetPlatformLayout(com.XPlatform.XBox);
         }
-        this.RefreshButtons();
+        this.RefreshButtonLegend();
+        this.RefreshInGameConsumables();
     }
     function SetupSlots()
     {
@@ -144,7 +156,7 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
         this.m_Slots.slotDamage.action = this.MakeDelegate(this.ShowDamageList);
         this.m_Slots.slotBonus.action = this.MakeDelegate(this.ShowBonusList);
         this.m_Slots.slotGear.action = this.MakeDelegate(this.ShowGearList);
-        if(_global.SFX.Platform != com.XPlatform.PC)
+        if(flash.external.ExternalInterface.call("IsUsingGamepad"))
         {
             this.m_SelectedSlot = this.SLOT_AMMO;
         }
@@ -178,7 +190,7 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
                 }
                 _loc3_ = _loc3_ + 1;
             }
-            if(_global.SFX.Platform != com.XPlatform.PC)
+            if(flash.external.ExternalInterface.call("IsUsingGamepad"))
             {
                 _loc3_ = 0;
                 while(_loc3_ < this.SLOT_MAX)
@@ -226,7 +238,6 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
     function SetupScrollbar()
     {
         this.m_List.setupScrollBar(this.m_Scrollbar);
-        this.m_List.SetPlatformLayout(_global.SFX.Platform);
     }
     function RefreshButtons()
     {
@@ -442,7 +453,7 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
             var _loc8_ = this.m_List.movementRefElementIndex;
             if(this.m_List.length > 0)
             {
-                if(this.m_List.selectedIndex == -1 && _global.SFX.Platform != com.XPlatform.PC)
+                if(this.m_List.selectedIndex == -1 && flash.external.ExternalInterface.call("IsUsingGamepad"))
                 {
                     this.m_List.selectedIndex = 0;
                 }
@@ -556,19 +567,15 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
     {
         var _loc4_ = _root.slots.inGameConsumables;
         var _loc5_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetInGameConsumableInfo"));
-        if(_global.SFX.Platform == com.XPlatform.PC)
+        var usingGamepad = flash.external.ExternalInterface.call("IsUsingGamepad");
+        if(!usingGamepad)
         {
             _loc4_.gotoAndStop("PC");
         }
-        else if(_global.SFX.Platform == com.XPlatform.XBox)
+        else
         {
             _loc4_.gotoAndStop("Console");
             _loc4_.Dpad.gotoAndStop("xbox");
-        }
-        else if(_global.SFX.Platform == com.XPlatform.PS3)
-        {
-            _loc4_.gotoAndStop("Console");
-            _loc4_.Dpad.gotoAndStop("ps3");
         }
         _loc4_.m_Title.text = this.srSupplies;
         this.RefreshInGameConsumable(_loc4_.Power01,_loc5_[0]);

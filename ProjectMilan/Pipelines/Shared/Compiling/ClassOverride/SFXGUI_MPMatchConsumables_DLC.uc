@@ -2,6 +2,14 @@ Class SFXGUI_MPMatchConsumables_DLC extends SFXGUI_MPMatchConsumables
     config(UI);
 
 // Functions
+// MILAN CHANGE DropTheSquid 12/14/2023
+// adding this to make the UI dynamically swap between mouse/controller
+public event function HandleButtonRefresh(bool usingGamepad)
+{
+    Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
+    ActionScriptVoid("screen.RefreshButtonHelp");
+}
+// END MILAN
 public event function OnStart()
 {
     Super(SFXGUIMovie).OnStart();
