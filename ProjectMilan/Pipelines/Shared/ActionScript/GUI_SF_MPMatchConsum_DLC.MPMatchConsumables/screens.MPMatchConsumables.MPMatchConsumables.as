@@ -86,24 +86,39 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
         this.m_PCBackButton = _root.m_PCBackButton;
         this.m_PCButton1 = _root.m_PCButton1;
         this.m_PCButton2 = _root.m_PCButton2;
-        this.m_PCBackButton.SetVisible(false);
-        this.m_PCBackButton.SetEnabled(false);
-        this.m_PCButton1.SetVisible(false);
-        this.m_PCButton1.SetEnabled(false);
-        this.m_PCButton2.SetVisible(false);
-        this.m_PCButton2.SetEnabled(false);
-        this.m_ControllerButtons._visible = true;
-        this.m_ControllerButtons.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.ShowStoreScreen));
-        this.m_ControllerButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onAButton));
-        this.m_ControllerButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onBack));
-        this.m_ControllerButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
-        this.m_ControllerButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
-        this.m_ControllerButtons.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
-        this.m_ControllerButtons.addEventListener("onDPadRight",mx.utils.Delegate.create(this,this.onDPadRight));
-        this.m_ControllerButtons.addEventListener("onInvalidInput",mx.utils.Delegate.create(this,this.onInvalidInput));
-        this.m_ControllerButtons.ControlY.Active = false;
-        this.m_ControllerButtons.ControlY.SetVisible(false);
-        this.m_ControllerButtons.FitLeft();
+        if(_global.SFX.Platform == com.XPlatform.PC)
+        {
+            this.m_ControllerButtons._visible = false;
+            this.m_PCBackButton.SetVisible(true);
+            this.m_PCBackButton.SetEnabled(true);
+            this.m_PCButton1.SetVisible(false);
+            this.m_PCButton1.SetEnabled(false);
+            this.m_PCButton2.SetVisible(true);
+            this.m_PCButton2.SetEnabled(true);
+            this.m_PCBackButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onBack));
+            this.m_PCButton2.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.ShowStoreScreen));
+        }
+        else
+        {
+            this.m_PCBackButton.SetVisible(false);
+            this.m_PCBackButton.SetEnabled(false);
+            this.m_PCButton1.SetVisible(false);
+            this.m_PCButton1.SetEnabled(false);
+            this.m_PCButton2.SetVisible(false);
+            this.m_PCButton2.SetEnabled(false);
+            this.m_ControllerButtons._visible = true;
+            this.m_ControllerButtons.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.ShowStoreScreen));
+            this.m_ControllerButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onAButton));
+            this.m_ControllerButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onBack));
+            this.m_ControllerButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
+            this.m_ControllerButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
+            this.m_ControllerButtons.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
+            this.m_ControllerButtons.addEventListener("onDPadRight",mx.utils.Delegate.create(this,this.onDPadRight));
+            this.m_ControllerButtons.addEventListener("onInvalidInput",mx.utils.Delegate.create(this,this.onInvalidInput));
+            this.m_ControllerButtons.ControlY.Active = false;
+            this.m_ControllerButtons.ControlY.SetVisible(false);
+            this.m_ControllerButtons.FitLeft();
+        }
         this.RefreshButtons();
     }
     function SetupSlots()
