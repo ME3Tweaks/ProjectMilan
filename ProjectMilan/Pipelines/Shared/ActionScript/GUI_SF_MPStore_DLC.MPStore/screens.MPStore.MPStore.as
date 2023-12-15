@@ -123,7 +123,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
         this.PS3StoreSD._visible = false;
         if(!_global.SFX.IsDemo)
         {
-            if(_global.SFX.Platform == com.XPlatform.XBox)
+            if(_global.SFX.Platform == com.XPlatform.PC)
             {
                 this.PCStore._visible = true;
             }
@@ -185,7 +185,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
     }
     function SetupPCPointsTitle()
     {
-        if(_global.SFX.Platform == com.XPlatform.XBox && !_global.SFX.IsDemo)
+        if(_global.SFX.Platform == com.XPlatform.PC && !_global.SFX.IsDemo)
         {
             this.PCPointsTitle._visible = true;
             this.PCPoints._visible = true;
