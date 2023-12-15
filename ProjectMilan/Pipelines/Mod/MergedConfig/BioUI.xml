@@ -108,11 +108,10 @@
 				<Value type="3">(Tag=MPNewLobby,\t\tZOrder=32,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPLobby_DLC",\t\t\t\tGFxResource="GUI_SF_MPNewLobby_DLC.MPNewLobby")</Value>
 				<Value type="3">(Tag=MPReinforcementsReveal,\t\tZOrder=367,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPReinforcementsReveal_DLC",\t\tGFxResource="GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal")</Value>
 				<Value type="3">(Tag=MPStore,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPStore",\t\tGFxResource="GUI_SF_MPStore_DLC.MPStore");</Value>
-				<Value type="3">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_Leaderboard",\t\tGFxResource="GUI_SF_Leaderboard_DLC.Leaderboard")</Value>
 
 				<!-- Milan change DropTheSquid 12/15/2023-->
-				<!-- Turns out we can just use the SinglePlayer weapon select UI here -->
-				<Value type="2">(Tag=MPWeaponSelect,\tZOrder=180,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPWeaponSelection_DLC",\t\tGFxResource="GUI_SF_WeaponSelect.WeaponSelect", bRequiresScaling=true);</Value>
+				<!-- Turns out we can just use the SinglePlayer weapon select UI here. It was based on the OT3 WeaponSelect DLC and has all the features added there, plus higher res textures. -->
+				<Value type="3">(Tag=MPWeaponSelect,\tZOrder=180,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPWeaponSelection_DLC",\t\tGFxResource="GUI_SF_WeaponSelect.WeaponSelect", bRequiresScaling=true);</Value>
 				<!-- END MILAN -->
 				
 				<Value type="3">(Tag=MPChallenges,\tZOrder=244,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPChallenges",\t\tGFxResource="GUI_SF_MPChallenges_DLC.MPChallenges")</Value>
@@ -121,6 +120,11 @@
 				<!-- redirect PlayerCountdown UI to the version shipped by MILAN that fixes input switching, prompt text -->
 				<Value type="4">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGame.SFXGUI_PlayerCountdown",\tGFxResource="GUI_SF_MPPlayerCountdown.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
 				<Value type="3">(Tag=PlayerCountdown,\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_PlayerCountdown_Milan",\tGFxResource="GUI_SF_MPPlayerCountdown_Milan.MPPlayerCountdown", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
+				<!-- END MILAN -->
+
+				<!-- MILAN Change DropTheSquid 12/15/2023 -->
+				<!--  redirect Leaderboard to a new version based on the LE leaderboard (which is itself based on the OT DLC leaderboard) -->
+				<Value type="3">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_Leaderboard_Milan",\t\tGFxResource="GUI_SF_Leaderboard_Milan.Leaderboard")</Value>
 				<!-- END MILAN -->
 			</Property>
 		</Section>

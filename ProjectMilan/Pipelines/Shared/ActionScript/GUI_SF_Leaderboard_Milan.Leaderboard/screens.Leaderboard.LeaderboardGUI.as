@@ -19,6 +19,7 @@ class screens.Leaderboard.LeaderboardGUI extends com.SFXScreen
     var srNextLeaderboard = "(NOLOC) Next";
     var srPrevLeaderboard = "(NOLOC) Previous";
     var RESULT_NAME_INDEX = 0;
+	var bUsingGamepad;
     function LeaderboardGUI()
     {
         super();
@@ -77,29 +78,74 @@ class screens.Leaderboard.LeaderboardGUI extends com.SFXScreen
     function Initialize()
     {
         this.m_Table.setupScrollBar(this.m_Scrollbar);
-        if(_global.SFX.Platform == com.XPlatform.PC || _global.SFX == undefined)
+        // PC setup
+		this.m_PCButtonExit.text = this.srClose;
+		this.m_PCButtonMe.text = this.srMe;
+		this.m_PCButtonTop.text = this.srTop;
+		this.m_PCButtonNextRB.text = this.srNextLeaderboard;
+		this.m_PCButtonPrevLB.text = this.srPrevLeaderboard;
+		this.m_PCButtonExit.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onExitGui));
+		this.m_PCButtonMe.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onGoToMe));
+		this.m_PCButtonTop.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onGoToTop));
+		this.m_PCButtonNextRB.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onNextLeaderboard));
+		this.m_PCButtonPrevLB.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onPrevLeaderboard));
+		// controller setup
+		this.m_ConsoleButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
+		this.m_ConsoleButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
+		this.m_ConsoleButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onExitGui));
+		this.m_ConsoleButtons.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.onGoToMe));
+		this.m_ConsoleButtons.addEventListener("onButtonY",mx.utils.Delegate.create(this,this.onGoToTop));
+		this.m_ConsoleButtons.addEventListener("onShoulderLeft",mx.utils.Delegate.create(this,this.onPrevLeaderboard));
+		this.m_ConsoleButtons.addEventListener("onShoulderRight",mx.utils.Delegate.create(this,this.onNextLeaderboard));
+		this.m_ConsoleButtons.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.addEventListener("onDPadRight",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.addEventListener("onButtonBack",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.addEventListener("onButtonStart",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.addEventListener("onThumbstickRight",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.addEventListener("onThumbstickLeft",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.addEventListener("onInvalidInput",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.addEventListener("onTriggerRight",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.addEventListener("onTriggerLeft",mx.utils.Delegate.create(this,this.onInvalidInput));
+		this.m_ConsoleButtons.ControlB.text = this.srClose;
+		this.m_ConsoleButtons.ControlX.text = this.srMe;
+		this.m_ConsoleButtons.ControlY.text = this.srTop;
+		if(_global.SFX.Platform == com.XPlatform.XBox)
+		{
+			this.m_ConsoleButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onShowGamerCard));
+			this.m_ConsoleButtons.ControlA.text = this.srShowGamerCard;
+		}
+		else
+		{
+			this.m_ConsoleButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onInvalidInput));
+			this.m_ConsoleButtons.ControlA.Hidden = true;
+		}
+		this.m_ConsoleButtons.addEventListener("ConsoleButtonGroupLoaded",mx.utils.Delegate.create(this,function()
+		{
+			this.m_ConsoleButtons.FitLeft();
+		}
+		));
+		this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
+
+    }
+	function RefreshButtonHelp(usingGamepad)
+    {
+		this.bUsingGamepad = usingGamepad;
+		if(!usingGamepad)
         {
-            this.m_Scrollbar._visible = true;
+			this.m_Scrollbar._visible = true;
             this.m_PCButtonExit._visible = true;
-            this.m_PCButtonExit.text = this.srClose;
-            this.m_PCButtonMe._visible = true;
-            this.m_PCButtonMe.text = this.srMe;
-            this.m_PCButtonTop._visible = true;
-            this.m_PCButtonTop.text = this.srTop;
-            this.m_PCButtonNextRB.text = this.srNextLeaderboard;
-            this.m_PCButtonPrevLB.text = this.srPrevLeaderboard;
-            this.m_ConsoleButtons._alpha = 0;
+			this.m_PCButtonMe._visible = true;
+			this.m_PCButtonTop._visible = true;
+			this.m_PCButtonNextRB._visible = true;
+            this.m_PCButtonPrevLB._visible = true;
+			this.m_ConsoleButtons._alpha = 0;
             this.m_ConsoleRB._visible = false;
             this.m_ConsoleLB._visible = false;
-            this.m_PCButtonExit.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onExitGui));
-            this.m_PCButtonMe.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onGoToMe));
-            this.m_PCButtonTop.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onGoToTop));
-            this.m_PCButtonNextRB.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onNextLeaderboard));
-            this.m_PCButtonPrevLB.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onPrevLeaderboard));
         }
         else
         {
-            this.m_PCButtonExit._visible = false;
+			this.m_Scrollbar._visible = false;
+			this.m_PCButtonExit._visible = false;
             this.m_PCButtonMe._visible = false;
             this.m_PCButtonTop._visible = false;
             this.m_PCButtonNextRB._visible = false;
@@ -107,41 +153,7 @@ class screens.Leaderboard.LeaderboardGUI extends com.SFXScreen
             this.m_ConsoleButtons._alpha = 100;
             this.m_ConsoleRB._visible = true;
             this.m_ConsoleLB._visible = true;
-            this.m_ConsoleButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
-            this.m_ConsoleButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
-            this.m_ConsoleButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onExitGui));
-            this.m_ConsoleButtons.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.onGoToMe));
-            this.m_ConsoleButtons.addEventListener("onButtonY",mx.utils.Delegate.create(this,this.onGoToTop));
-            this.m_ConsoleButtons.addEventListener("onShoulderLeft",mx.utils.Delegate.create(this,this.onPrevLeaderboard));
-            this.m_ConsoleButtons.addEventListener("onShoulderRight",mx.utils.Delegate.create(this,this.onNextLeaderboard));
-            this.m_ConsoleButtons.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.addEventListener("onDPadRight",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.addEventListener("onButtonBack",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.addEventListener("onButtonStart",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.addEventListener("onThumbstickRight",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.addEventListener("onThumbstickLeft",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.addEventListener("onInvalidInput",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.addEventListener("onTriggerRight",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.addEventListener("onTriggerLeft",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.ControlB.text = this.srClose;
-            this.m_ConsoleButtons.ControlX.text = this.srMe;
-            this.m_ConsoleButtons.ControlY.text = this.srTop;
-            if(_global.SFX.Platform == com.XPlatform.XBox)
-            {
-                this.m_ConsoleButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onShowGamerCard));
-                this.m_ConsoleButtons.ControlA.text = this.srShowGamerCard;
-            }
-            else
-            {
-                this.m_ConsoleButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onInvalidInput));
-                this.m_ConsoleButtons.ControlA.Hidden = true;
-            }
-            this.m_ConsoleButtons.addEventListener("ConsoleButtonGroupLoaded",mx.utils.Delegate.create(this,function()
-            {
-                this.m_ConsoleButtons.FitLeft();
-            }
-            ));
-        }
+\        }
     }
     function onDPadUp(p_event)
     {
