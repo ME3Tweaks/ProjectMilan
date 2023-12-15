@@ -126,8 +126,16 @@ class screens.Leaderboard.LeaderboardGUI extends com.SFXScreen
             this.m_ConsoleButtons.ControlB.text = this.srClose;
             this.m_ConsoleButtons.ControlX.text = this.srMe;
             this.m_ConsoleButtons.ControlY.text = this.srTop;
-            this.m_ConsoleButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onInvalidInput));
-            this.m_ConsoleButtons.ControlA.Hidden = true;
+            if(_global.SFX.Platform == com.XPlatform.XBox)
+            {
+                this.m_ConsoleButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onShowGamerCard));
+                this.m_ConsoleButtons.ControlA.text = this.srShowGamerCard;
+            }
+            else
+            {
+                this.m_ConsoleButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onInvalidInput));
+                this.m_ConsoleButtons.ControlA.Hidden = true;
+            }
             this.m_ConsoleButtons.addEventListener("ConsoleButtonGroupLoaded",mx.utils.Delegate.create(this,function()
             {
                 this.m_ConsoleButtons.FitLeft();
