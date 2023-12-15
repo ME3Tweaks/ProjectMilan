@@ -60,6 +60,8 @@
 			<Property name="srscorehudobjectivetitle" type="0">731647</Property>
 			<Property name="weightedchanceofselection" type="0">1.0f</Property>
 		</Section>
+		<!-- This appears to be for SP -->
+		<!--
 		<Section name="sfxgame.biocheatmanagernonnative">
 			<Property name="setupmodifierarray">
 				<Value type="3">(Modifier=UnlockArmour, PlotIDSet=(19455,19456,19457,19458,19459,19460,19461,19462,19467,19468,19469,19470,21399,21400,21401,21402,20914,20915,20916,20917,20918,20919,20920,20921,18988,18995,18999,19000,19005,19006,19007,19008,22339,22340,22341,20984,20985,20986,20987,20988,20989,21417,22590), PlotIDClear=(),  PlotInts=(), PlotCond=())</Value>
@@ -84,7 +86,8 @@
 				<Value type="3">(nIndex=23743, nType=SFXPlotType_Boolean)</Value>
 				<Value type="3">(nIndex=23744, nType=SFXPlotType_Boolean)</Value>
 			</Property>
-		</Section>
+		</Section>-->
+		<!-- Is this for MP? Figure out which DLC added this-->
 		<Section name="sfxgame.biohintsystembase">
 			<Property name="m_notificationdata">
 				<Value type="4">(nmType="AccomplishmentUnlocked",\t\t\tPriority=120, bCanBeMerged=false, srTitle=337484, srSubTitle=0,srBody=0,srAltBody=0,DisplayTime=2.5,sImageResource="", nmIcon="medal")</Value>
@@ -96,6 +99,8 @@
 				<Value type="3">(EffectsMaterial="CollectorGeneral",Priority=10)</Value>
 				<Value type="3">(EffectsMaterial="CollectorGeneral_Pra",Priority=10)</Value>
 			</Property>
+			<!-- We don't care about PS3 stuff -->
+			<!--
 			<Property name="m_aps3rubbermouthconvlist">
 				<Value type="3">norhen_ash_lev002_a_dlg</Value>
 				<Value type="3">norhen_ash_lev003_a_dlg</Value>
@@ -125,7 +130,7 @@
 				<Value type="3">nor_pilot_lev003_a_dlg</Value>
 				<Value type="3">nor_pilot_lev004_a_dlg</Value>
 				<Value type="3">expak1_nor_galaxymap_a_dlg</Value>
-			</Property>
+			</Property>-->
 		</Section>
 		<Section name="sfxgame.sfxaccomplishmentmanager">
 			<Property name="accomplishmentdata">
@@ -2130,6 +2135,8 @@
 				<Value type="3">(RewardIDGranted=157, AccomplishmentName=PROPHECY_1GROUP, EntitlementIDGranted=1500114, bUseNucleusCheck=TRUE )</Value>
 			</Property>
 		</Section>
+		<!-- SP stuff -->
+		<!--
 		<Section name="sfxgame.sfxgame">
 			<Property name="newgameplusplayervariables">
 				<Value type="3">SFXGameContentDLC_Shared.SFXWeaponMod_AssaultRifleMelee</Value>
@@ -2138,7 +2145,7 @@
 				<Value type="3">SFXGameContentDLC_Shared.SFXWeaponMod_SMGPenetration</Value>
 				<Value type="3">SFXGameContentDLC_Shared.SFXWeaponMod_SMGStabilization</Value>
 			</Property>
-		</Section>
+		</Section> -->
 		<Section name="sfxgame.sfxgameconfig">
 			<Property name="mpplayervariablemappings">
 				<Value type="4">(ClassName="recru_asa",ID=272)</Value>
@@ -2600,6 +2607,7 @@
 				<Value type="3">(ClassName="collectible20",ID=670)</Value>
 			</Property>
 		</Section>
+		<!-- Not sure if this matters in MP... not sure it uses any gestures. -->
 		<Section name="sfxgame.sfxgestures">
 			<Property name="gesturespackagenameeditor" type="0">BIOG_GesturesConfigDLC</Property>
 			<Property name="m_bonlyallowdlcperfediting" type="0">TRUE</Property>
@@ -2715,10 +2723,12 @@
 			<Property name="difficultyscoremultipliers">
 				<Value type="4">(Difficulty=DO_Level3,Multiplier=1.40f)</Value>
 				<Value type="3">(Difficulty=DO_Level3,Multiplier=1.60f)</Value>
-				<Value type="4">(Difficulty=DO_Level4,Multiplier=1.60f)</Value>
+				<!-- Merged DLC does not need to type 4 out value that was never set for mode that only existed in DLC-->
+				<!--<Value type="4">(Difficulty=DO_Level4,Multiplier=1.60f)</Value>-->
 				<Value type="3">(Difficulty=DO_Level4,Multiplier=2.00f)</Value>
 			</Property>
 			<Property name="factionbonuses">
+				<!-- Any factions that are added need to have this here. This is list of factions starting with Random -->
 				<Value type="3">(ID=0,XPBonus=0.15f,CreditBonus=0.0f)</Value>
 				<Value type="3">(ID=1,XPBonus=0.f,CreditBonus=0.0f)</Value>
 				<Value type="3">(ID=2,XPBonus=0.f,CreditBonus=0.0f)</Value>
@@ -2726,6 +2736,7 @@
 				<Value type="3">(ID=4,XPBonus=0.f,CreditBonus=0.0f)</Value>
 			</Property>
 			<Property name="mapbonuses">
+				<!-- MP4 Hazard Map bonuses -->
 				<Value type="3">(ID=0,XPBonus=0.25f,CreditBonus=0.0f)</Value>
 				<Value type="3">(ID=1,XPBonus=0.0f,CreditBonus=0.0f)</Value>
 				<Value type="3">(ID=2,XPBonus=0.0f,CreditBonus=0.0f)</Value>
@@ -2764,7 +2775,8 @@
 			<Property name="srextractioncreditsearned" type="0">774500</Property>
 		</Section>
 		<Section name="sfxgame.sfxtelemetry">
-			<Property name="confighooks">
+			<!-- Don't care about telemetry -->
+			<!--<Property name="confighooks">
 				<Value type="3">(Name="TelemetryHook_MP_Save",\t\t\t\t\t\t\tModule="GAME", Group="MULT", String="SAVE")</Value>
 				<Value type="3">(Name="TelemetryHook_Std_SettingsHardware_AlienFX",\t\tModule="HDWR", Group="PCHW", String="ALFX")</Value>
 				<Value type="3">(Name="TelemetryHook_AFKTimedOut",\tModule="GAME", Group="MULT", String="AFKT", CrossParameters="Map, Difficulty, EnemyType, GameTime, SessionTime, MatchID, MatchTime")</Value>
@@ -2780,7 +2792,7 @@
 				<Value type="3">(Name="TelemetryHook_MP_ObjectiveCompleted",\t\t\tModule="GAME", Group="MULT", String="OBJC", CrossParameters="Map, Difficulty, EnemyType, GameTime, SessionTime, MatchID, RoundID,CharacterClassKit, CharacterLevel,")</Value>
 				<Value type="3">(Name="TelemetryHook_MP_PlayerDowned",\t\t\t\t\tModule="GAME", Group="MULT", String="DOWN", CrossParameters="Map, MatchID, CharacterClassKit, CharacterLevel, Difficulty, PlayerLocation, EnemyType, RoundID")</Value>
 				<Value type="3">(Name="TelemetryHook_MP_PlayerDied",\t\t\t\t\tModule="GAME", Group="MULT", String="DEAD", CrossParameters="Map, MatchID, CharacterClassKit, CharacterLevel, Difficulty, PlayerLocation, EnemyType, RoundID")</Value>
-			</Property>
+			</Property>-->
 		</Section>
 		<Section name="sfxgamecontent.sfxgameeffect_powercombo_biotic">
 			<Property name="comboradius" type="0">(X=200.0f,Y=400.0f)</Property>
@@ -2944,6 +2956,7 @@
 			<Property name="bonus[2]" type="0">-0.3f</Property>
 			<Property name="versioncount" type="0">3</Property>
 		</Section>
+		<!-- Geth turret flamethrower needs its TLK strref changed as it shows up as 'Sentry Turret'. Might be in BioWeapon -->
 		<Section name="sfxgamecontentdlc_con_mp1.sfxpawn_gethturret">
 			<Property name="m_nmaxtargettickets" type="0">2</Property>
 		</Section>
@@ -3428,6 +3441,8 @@
 				<Value type="3">7</Value>
 			</Property>
 		</Section>
+		<!-- Do we want to patch pizza run trick? Looking down and mashing run button will let you keep 
+		running and pick up object at same time. But it cannot be done on controller due to input debounce -->
 		<Section name="sfxgamecontentdlc_con_mp2.sfxobjective_retrieve_pickupobject_dlc">
 			<Property name="activateobjectiveonspawn" type="0">false</Property>
 			<Property name="benablecombatzone" type="0">true</Property>
