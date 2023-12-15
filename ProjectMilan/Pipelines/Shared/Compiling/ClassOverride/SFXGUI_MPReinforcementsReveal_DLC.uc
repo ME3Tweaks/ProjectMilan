@@ -2,6 +2,11 @@ Class SFXGUI_MPReinforcementsReveal_DLC extends SFXGUI_MPReinforcementsReveal
     config(UI);
 
 // Functions
+public event function HandleButtonRefresh(bool usingGamepad)
+{
+    Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
+    ActionScriptVoid("screen.RefreshButtonHelp");
+}
 public function SFXGAWReinforcementMatchConsumable FindReinforcement(CardInfoData CardData)
 {
     local SFXGAWReinforcementManager Manager;

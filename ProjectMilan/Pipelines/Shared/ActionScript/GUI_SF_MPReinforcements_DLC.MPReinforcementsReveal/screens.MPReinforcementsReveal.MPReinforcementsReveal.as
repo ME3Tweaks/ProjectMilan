@@ -18,6 +18,8 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
     var m_nNumCurrentlyAnimatingCards = 0;
     var m_bLeftArrowPressed = false;
     var m_bRightArrowPressed = false;
+	var bUsingGamepad;
+	var bIntroFinished;
     function MPReinforcementsReveal()
     {
         super();
@@ -44,51 +46,54 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
         this.PCContinueButton = _root.mcContinueButton;
         this.ControllerButtons.addEventListener("onDPadLeft",this.MakeDelegate(this.OnDPadLeft));
         this.ControllerButtons.addEventListener("onDPadRight",this.MakeDelegate(this.OnDPadRight));
-        if(_global.SFX.Platform == com.XPlatform.PC || com.XPlatform.IsRunningInEngine() == false)
+        
+		this.PCContinueButton.SetVisible(false);
+		this.PCContinueButton.SetEnabled(false);
+		this.PCContinueButton.SetText(this.srContinue);
+		this.PCContinueButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnContinue));
+		this.LeftArrow.addEventListener("SFXButton_onPress",this.MakeDelegate(this.OnLeftArrowPressed));
+		this.RightArrow.addEventListener("SFXButton_onPress",this.MakeDelegate(this.OnRightArrowPressed));
+		this.LeftArrow.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnLeftArrowReleased));
+		this.RightArrow.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnRightArrowReleased));
+		this.LeftArrow.addEventListener("SFXButton_onReleaseOutside",this.MakeDelegate(this.OnLeftArrowReleased));
+		this.RightArrow.addEventListener("SFXButton_onReleaseOutside",this.MakeDelegate(this.OnRightArrowReleased));
+	
+		this.ControllerButtons.addEventListener("onButtonA",this.MakeDelegate(this.OnContinue));
+		this.ControllerButtons.addEventListener("onInvalidInput",this.MakeDelegate(this.OnInvalidInput));
+		this.ControllerButtons.ControlA.Hidden = true;
+		this.ControllerButtons.ControlA.Active = false;
+		this.ControllerButtons.ControlA.SetText(this.srContinue);
+		this.ControllerButtons.ControlB.Active = false;
+		this.ControllerButtons.ControlB.Hidden = true;
+		this.ControllerButtons.ControlX.Active = false;
+		this.ControllerButtons.ControlX.Hidden = true;
+		this.ControllerButtons.ControlY.Active = false;
+		this.ControllerButtons.ControlY.Hidden = true;
+		this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
+
+    }
+	function RefreshButtonHelp(usingGamepad)
+    {
+        this.bUsingGamepad = usingGamepad;
+        if(!usingGamepad)
         {
-            this.ControllerButtons._visible = false;
-            this.PCContinueButton.SetVisible(false);
-            this.PCContinueButton.SetEnabled(false);
-            this.PCContinueButton.SetText(this.srContinue);
-            this.PCContinueButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnContinue));
-            this.LeftArrow.addEventListener("SFXButton_onPress",this.MakeDelegate(this.OnLeftArrowPressed));
-            this.RightArrow.addEventListener("SFXButton_onPress",this.MakeDelegate(this.OnRightArrowPressed));
-            this.LeftArrow.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnLeftArrowReleased));
-            this.RightArrow.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnRightArrowReleased));
-            this.LeftArrow.addEventListener("SFXButton_onReleaseOutside",this.MakeDelegate(this.OnLeftArrowReleased));
-            this.RightArrow.addEventListener("SFXButton_onReleaseOutside",this.MakeDelegate(this.OnRightArrowReleased));
+			this.ControllerButtons._visible = false;
+			this.PCContinueButton.SetVisible(this.bIntroFinished);
+            this.PCContinueButton.SetEnabled(this.bIntroFinished);
         }
         else
         {
-            this.ControllerButtons._visible = true;
+			this.ControllerButtons._visible = true;
             this.PCContinueButton.SetVisible(false);
-            this.ControllerButtons.addEventListener("onButtonA",this.MakeDelegate(this.OnContinue));
-            this.ControllerButtons.addEventListener("onInvalidInput",this.MakeDelegate(this.OnInvalidInput));
-            this.ControllerButtons.ControlA.Hidden = true;
-            this.ControllerButtons.ControlA.Active = false;
-            this.ControllerButtons.ControlA.SetText(this.srContinue);
-            this.ControllerButtons.ControlB.Active = false;
-            this.ControllerButtons.ControlB.Hidden = true;
-            this.ControllerButtons.ControlX.Active = false;
-            this.ControllerButtons.ControlX.Hidden = true;
-            this.ControllerButtons.ControlY.Active = false;
-            this.ControllerButtons.ControlY.Hidden = true;
+			this.ControllerButtons.ControlA.Hidden = !this.bIntroFinished;
+            this.ControllerButtons.ControlA.Active = this.bIntroFinished;
             this.ControllerButtons.FitLeft();
         }
     }
     function IntroFinished()
     {
-        if(_global.SFX.Platform == com.XPlatform.PC || com.XPlatform.IsRunningInEngine() == false)
-        {
-            this.PCContinueButton.SetVisible(true);
-            this.PCContinueButton.SetEnabled(true);
-        }
-        else
-        {
-            this.ControllerButtons.ControlA.Hidden = false;
-            this.ControllerButtons.ControlA.Active = true;
-            this.ControllerButtons.FitLeft();
-        }
+		this.bIntroFinished = true;
+		this.RefreshButtonHelp(this.bUsingGamepad);
     }
     function SetupCards(CardData)
     {
