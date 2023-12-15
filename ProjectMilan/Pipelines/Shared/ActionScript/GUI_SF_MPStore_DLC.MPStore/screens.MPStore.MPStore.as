@@ -41,6 +41,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
     static var CREDITS_AND_PLATFORM = 2;
     static var FREE = 3;
     var m_bInputEnabled = false;
+	var bUsingGamepad;
     function MPStore()
     {
         super();
@@ -80,39 +81,47 @@ class screens.MPStore.MPStore extends com.SFXScreen
         this.PCBackButton = _root.mcBackButton;
         this.PCShowReinforcementsButton = _root.mcShowReinforcementsButton;
         var _loc4_ = Boolean(flash.external.ExternalInterface.call("CanShowReinforcementsRevealScreen"));
-        if(_global.SFX.Platform == com.XPlatform.PC)
+
+		this.PCBackButton.SetText(this.srBack);
+		this.PCPurchaseButton.SetText(this.srPurchase);
+		this.PCShowReinforcementsButton.SetText(this.srShowReinforcements);
+		this.PCPurchaseButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnPurchase));
+		this.PCBackButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnBack));
+		this.PCShowReinforcementsButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnManualReinforcementsReveal));
+		this.PCShowReinforcementsButton.SetEnabled(_loc4_);
+
+		this.ControllerButtons.addEventListener("onButtonA",this.MakeDelegate(this.OnPurchase));
+		this.ControllerButtons.addEventListener("onButtonB",this.MakeDelegate(this.OnBack));
+		this.ControllerButtons.addEventListener("onButtonY",this.MakeDelegate(this.OnManualReinforcementsReveal));
+		this.ControllerButtons.addEventListener("onDPadUp",this.MakeDelegate(this.OnDPadUp));
+		this.ControllerButtons.addEventListener("onDPadDown",this.MakeDelegate(this.OnDPadDown));
+		this.ControllerButtons.addEventListener("onInvalidInput",this.MakeDelegate(this.OnInvalidInput));
+		this.ControllerButtons.ControlA.SetText(this.srPurchase);
+		this.ControllerButtons.ControlB.SetText(this.srBack);
+		this.ControllerButtons.ControlY.SetText(this.srShowReinforcements);
+		this.ControllerButtons.ControlY.Active = _loc4_;
+		this.ControllerButtons.ControlX.Active = false;
+		this.ControllerButtons.ControlX.Hidden = true;
+		this.ControllerButtons.FitLeft();
+		this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
+
+    }
+	function RefreshButtonHelp(usingGamepad)
+    {
+        this.bUsingGamepad = usingGamepad;
+        if(!usingGamepad)
         {
-            this.ControllerButtons._visible = false;
+			this.ControllerButtons._visible = false;
             this.PCPurchaseButton.SetVisible(true);
             this.PCBackButton.SetVisible(true);
             this.PCShowReinforcementsButton.SetVisible(true);
-            this.PCBackButton.SetText(this.srBack);
-            this.PCPurchaseButton.SetText(this.srPurchase);
-            this.PCShowReinforcementsButton.SetText(this.srShowReinforcements);
-            this.PCPurchaseButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnPurchase));
-            this.PCBackButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnBack));
-            this.PCShowReinforcementsButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnManualReinforcementsReveal));
-            this.PCShowReinforcementsButton.SetEnabled(_loc4_);
         }
         else
         {
-            this.ControllerButtons._visible = true;
+			this.ControllerButtons._visible = true;
             this.PCPurchaseButton.SetVisible(false);
             this.PCBackButton.SetVisible(false);
             this.PCShowReinforcementsButton.SetVisible(false);
-            this.ControllerButtons.addEventListener("onButtonA",this.MakeDelegate(this.OnPurchase));
-            this.ControllerButtons.addEventListener("onButtonB",this.MakeDelegate(this.OnBack));
-            this.ControllerButtons.addEventListener("onButtonY",this.MakeDelegate(this.OnManualReinforcementsReveal));
-            this.ControllerButtons.addEventListener("onDPadUp",this.MakeDelegate(this.OnDPadUp));
-            this.ControllerButtons.addEventListener("onDPadDown",this.MakeDelegate(this.OnDPadDown));
-            this.ControllerButtons.addEventListener("onInvalidInput",this.MakeDelegate(this.OnInvalidInput));
-            this.ControllerButtons.ControlA.SetText(this.srPurchase);
-            this.ControllerButtons.ControlB.SetText(this.srBack);
-            this.ControllerButtons.ControlY.SetText(this.srShowReinforcements);
-            this.ControllerButtons.ControlY.Active = _loc4_;
-            this.ControllerButtons.ControlX.Active = false;
-            this.ControllerButtons.ControlX.Hidden = true;
-            this.ControllerButtons.FitLeft();
         }
     }
     function SetupStoreIcons()
@@ -261,17 +270,17 @@ class screens.MPStore.MPStore extends com.SFXScreen
         var _loc7_ = this.StoreItems.selectedIndex;
         var _loc5_ = Boolean(flash.external.ExternalInterface.call("IsItemFree",this.StoreItemData[_loc7_].nID));
         var _loc3_ = Boolean(flash.external.ExternalInterface.call("CanManuallyShowReinforcementsRevealScreen"));
-        if(_global.SFX.Platform == com.XPlatform.PC)
-        {
+        // if(this.bUsingGamepad)
+        // {
             this.PCPurchaseButton.SetEnabled(this.m_bInputEnabled && _loc4_);
             this.PCPurchaseButton.SetText(!_loc5_ ? this.srPurchase : this.srRedeem);
             this.PCBackButton.SetEnabled(this.m_bInputEnabled);
             this.PCBackButton.SetText(this.srBack);
             this.PCShowReinforcementsButton.SetEnabled(_loc3_);
             this.PCShowReinforcementsButton.SetText(this.srShowReinforcements);
-        }
-        else
-        {
+        // }
+        // else
+        // {
             this.ControllerButtons.ControlA.Active = this.m_bInputEnabled && _loc4_;
             this.ControllerButtons.ControlA.SetText(!_loc5_ ? this.srPurchase : this.srRedeem);
             this.ControllerButtons.ControlB.Active = this.m_bInputEnabled;
@@ -279,7 +288,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
             this.ControllerButtons.ControlY.Active = _loc3_;
             this.ControllerButtons.ControlY.SetText(this.srShowReinforcements);
             this.ControllerButtons.FitLeft();
-        }
+        // }
         var _loc6_ = Boolean(flash.external.ExternalInterface.call("IsReady"));
         this.CantPurchaseWhileReady.text = this.srCantPurchaseWhileReady;
         this.CantPurchaseWhileReady._visible = _loc6_;
