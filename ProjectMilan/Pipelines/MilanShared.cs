@@ -1,15 +1,21 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Gammtek.IO;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
+using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ProjectMilan.Pipelines.Audio.Extension;
 using ProjectMilan.Pipelines.Kits;
+using ProjectMilan.Pipelines.Startups;
+using ProjectMilan.Pipelines.Verify;
 using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines
@@ -415,6 +421,14 @@ namespace ProjectMilan.Pipelines
             }
         }
 
+        // This is a hack. These classes have some named functions that need updated in a second pass
+        // due to class compilation ordering.
+        private static string[] ClassesToDoubleRecompile = new[]
+        {
+            "SFXGameMPContent.SFXCustomAction_DisarmObject",
+            "SFXGameContentDLC_CON_MP3.SFXObjective_MobileAnnex"
+        };
+
         /// <summary>
         /// Ports an object referencer across games.
         /// </summary>
@@ -452,10 +466,48 @@ namespace ProjectMilan.Pipelines
 
             //DotTrace.SaveData();
 
-            // Not sure - do we need to make sure this needs done recursively in order? Topmost to bottommost
+            // NEW CODE - Loose Class Compiler
+            if (false)
+            {
+                MilanLog.Information("Preparing for class recompilation", customPrefix: logCategory);
+                var classes = new List<UnrealScriptCompiler.LooseClass>();
+                FileLib lib = new FileLib(destPackage);
+                lib.Initialize(cache, customFileResolver: MilanShared.LE3ImportResolver);
+                //foreach (var cls in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
+                foreach (var cls in destPackage.Exports.Where(x => x.IsClass))
+                {
+                    // Decompile all classes
+                    (_, string text) = UnrealScriptCompiler.DecompileExport(cls, lib, cache);
+                    classes.Add(
+                        new UnrealScriptCompiler.LooseClass(cls.ObjectName, text,
+                            cls.ParentName)); // Always use ucFilePath as it will be in the proper package folder, even if it goes unused.
+                }
+
+                // SourceFilePath variable is used to store parent of class, which is the containing package.
+                var looseClassPackages = new List<UnrealScriptCompiler.LooseClassPackage>();
+                foreach (var classEx in classes)
+                {
+                    var packageFile = classEx.SourceFilePath;
+                    var classList = looseClassPackages.Find(x => x.PackageName == packageFile);
+                    if (classList == null)
+                    {
+                        classList = new UnrealScriptCompiler.LooseClassPackage(packageFile,
+                            new List<UnrealScriptCompiler.LooseClass>());
+                        looseClassPackages.Add(classList);
+                    }
+
+                    classList.Classes.Add(classEx);
+                }
+
+                MilanLog.Information(@"Compiling loose classes...", customPrefix: logCategory);
+                MessageLog log = UnrealScriptCompiler.CompileLooseClasses(destPackage, looseClassPackages,
+                    MPCommon.MissingObjectResolver, vtableDonorGetter: MPCommon.VTableDonorGetter, cache: cache);
+            }
+
+
+            // OLD CODE
             if (true)
             {
-                destPackage.Save();
                 MilanLog.Information("Recompiling ported classes", customPrefix: logCategory);
                 FileLib lib = new FileLib(destPackage);
                 lib.Initialize(cache, customFileResolver: MilanShared.LE3ImportResolver);
@@ -464,7 +516,6 @@ namespace ProjectMilan.Pipelines
                 {
                     // Recompile all ported classes so vtables are updated
                     MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: logCategory);
-                    // This is broken!!
                     try
                     {
                         //var sourceObj = rop.CrossPackageMap.FirstOrDefault(x => x.Value == f).Key as ExportEntry;
@@ -476,6 +527,17 @@ namespace ProjectMilan.Pipelines
                     {
                         MilanLog.Exception(e, "  Error recompiling function:");
                     }
+                }
+
+                foreach (var clsIFP in ClassesToDoubleRecompile)
+                {
+                    var classX = destPackage.FindExport(clsIFP);
+                    if (classX == null)
+                        continue;
+
+                    MilanLog.Information($"  Double recompiling {classX.ObjectName}", customPrefix: logCategory);
+                    (_, string text) = UnrealScriptCompiler.DecompileExport(classX, lib, cache);
+                    UnrealScriptCompiler.CompileClass(destPackage, text, lib, classX, packageCache: cache);
                 }
             }
 
