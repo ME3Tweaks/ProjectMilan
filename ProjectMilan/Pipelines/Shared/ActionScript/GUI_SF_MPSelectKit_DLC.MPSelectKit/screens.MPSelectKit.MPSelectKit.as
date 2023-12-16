@@ -547,6 +547,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
             this.m_ControllerButtons._visible = true;
             this.m_ControllerButtons.FitLeft();
         }
+		this.RefreshButtons();
     }
     // END MILAN
 }
