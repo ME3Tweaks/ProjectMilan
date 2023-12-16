@@ -125,7 +125,7 @@ namespace ProjectMilan.Pipelines.Texture
                     //var me3File = MilanShared.GetME3Package(Path.GetFileName(package));
                     var le3File = MEPackageHandler.OpenMEPackage(package);
 
-                    foreach (var tex in le3File.Exports.Where(x => x.IsTexture()))
+                    foreach (var tex in le3File.Exports.Where(x => x.IsTexture() && x.idxLink != 0))
                     {
                         if (tex.ObjectName.Name.StartsWith("Cubemap", StringComparison.InvariantCultureIgnoreCase))
                             continue; // These are never moved to TFC as far as I know...
@@ -167,6 +167,7 @@ namespace ProjectMilan.Pipelines.Texture
                             var properties = tex.GetProperties();
                             properties.AddOrReplaceProp(new FGuid(guid).ToStructProperty("TFCFileGuid"));
                             properties.AddOrReplaceProp(new NameProperty(tfcName, "TextureFileCacheName"));
+                            properties.RemoveNamedProperty("NeverStream");
                             tex.WriteProperties(properties);
                         }
 
