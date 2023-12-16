@@ -126,6 +126,11 @@
 				<!--  redirect Leaderboard to a new version based on the LE leaderboard (which is itself based on the OT DLC leaderboard) -->
 				<Value type="3">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_Leaderboard_Milan",\t\tGFxResource="GUI_SF_Leaderboard_Milan.Leaderboard")</Value>
 				<!-- END MILAN -->
+				<!-- MILAN change DropTheSquid 12/16/2023 -->
+				<!-- added scaling to MPLObbyStatusBars which makes it scale properly -->
+				<Value type="4">(Tag=MPLobbyStatusBars,\tZOrder=368,\tMovieClass="SFXGameMPContent.SFXGUI_MPLobbyStatusBars",\t\t\t\tGFxResource="GUI_SF_MPLobbyStatusBars.MPLobbyStatusBars")</Value>
+				<Value type="3">(Tag=MPLobbyStatusBars,\tZOrder=368,\tMovieClass="SFXGameMPContent.SFXGUI_MPLobbyStatusBars",\t\t\t\tGFxResource="GUI_SF_MPLobbyStatusBars.MPLobbyStatusBars", bRequiresScaling=true)</Value>
+				<!-- END MILAN -->
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxguivalue_markerplayer">
