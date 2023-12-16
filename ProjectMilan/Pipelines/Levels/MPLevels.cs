@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
 using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
@@ -41,8 +42,8 @@ namespace ProjectMilan.Pipelines.Levels
 
 
                 // MP1 Resurgence
-                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= true, SpecialPortingDelegate = null}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = false, SpecialPortingDelegate = null}, // Hydra
+                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= true, SpecialPrePortingDelegate = MPMoonSpecific.PreCorrect}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null}, // Hydra
 
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade

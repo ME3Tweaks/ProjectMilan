@@ -213,7 +213,12 @@ namespace ProjectMilan.Pipelines.Shared
                     else
                     {
                         exp.ObjectName = parts[i];
-                        EntryExporter.ExportExportToPackage(exp, destDonorPackage, out portedEntry);
+                        var rop = new RelinkerOptionsPackage()
+                        {
+                            Cache = new PackageCache(),
+                            TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                        };
+                        EntryExporter.ExportExportToPackage(exp, destDonorPackage, out portedEntry, customROP: rop);
                         portedEntry.idxLink = parent?.UIndex ?? 0;
                         //EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, exp, donorPackage, parent, true, new RelinkerOptionsPackage() { ImportExportDependencies = true }, out var newDonor);
                     }
@@ -283,7 +288,8 @@ namespace ProjectMilan.Pipelines.Shared
                                 var rop = new RelinkerOptionsPackage()
                                 {
                                     DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
-                                    TargetGameDonorDB = MilanShared.LE3ObjectDB
+                                    TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                                    Cache = new PackageCache()
                                 };
 
                                 EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, null, new PackageCache(), rop);
