@@ -13,6 +13,7 @@
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
     <Folder Include="Pipelines\Mod\Live\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
+    <Folder Include="Pipelines\Shared\Compiling\FunctionOverride\SFXGameInfoMP_Lobby\" />
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
