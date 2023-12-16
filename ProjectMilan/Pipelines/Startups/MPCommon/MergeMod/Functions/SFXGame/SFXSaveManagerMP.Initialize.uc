@@ -20,7 +20,7 @@ public function Initialize()
         PC.ProfileSettings.SetLastSelectedCharacter("AdeptHumanMale");
         PC.SaveProfile();
     }
-    Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentImageManager().SetBaseURL("http://unencrypted-multiplayer.me3tweaks.com/mpserver/gameimages");
+    Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentImageManager().SetBaseURL("http://unencrypted-multiplayer.me3tweaks.com/images");
     // END MILAN CHANGE---------------------------
     if (MPMatchResultsData == None)
     {

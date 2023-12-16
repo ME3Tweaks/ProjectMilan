@@ -35,14 +35,14 @@ namespace ProjectMilan.Pipelines.Levels
                 new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
                 new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
                 new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
-                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
+                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
                 new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
 
 
 
                 // MP1 Resurgence
-                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= false, SpecialPortingDelegate = null}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null, StripShadowMaps = true}, // Hydra
+                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= true, SpecialPortingDelegate = null}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = false, SpecialPortingDelegate = null}, // Hydra
 
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade

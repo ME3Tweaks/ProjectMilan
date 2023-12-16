@@ -500,8 +500,8 @@ namespace ProjectMilan.Pipelines
                 }
 
                 MilanLog.Information(@"Compiling loose classes...", customPrefix: logCategory);
-                MessageLog log = UnrealScriptCompiler.CompileLooseClasses(destPackage, looseClassPackages,
-                    MPCommon.MissingObjectResolver, vtableDonorGetter: MPCommon.VTableDonorGetter, cache: cache);
+                //MessageLog log = UnrealScriptCompiler.CompileLooseClasses(destPackage, looseClassPackages,
+                //    MPCommon.MissingObjectResolver, vtableDonorGetter: MPCommon.VTableDonorGetter, cache: cache);
             }
 
 
