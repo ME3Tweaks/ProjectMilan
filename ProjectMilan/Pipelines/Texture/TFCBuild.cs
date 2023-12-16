@@ -37,7 +37,7 @@ namespace ProjectMilan.Pipelines.Texture
 
             // Commented out: Not reliable right now
             // Bring over all textures to TFC
-            // MoveTexturesToExternalTFC(MilanShared.DLC_NAME);
+            MoveTexturesToExternalTFC(MilanShared.DLC_NAME);
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace ProjectMilan.Pipelines.Texture
         /// <summary>
         /// This will probably be moved to LEC
         /// </summary>
-        private static void MoveTexturesToExternalTFC(string dlcName)
+        public static void MoveTexturesToExternalTFC(string dlcName)
         {
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
             var tfcName = $"Textures_{dlcName}";
@@ -128,14 +128,16 @@ namespace ProjectMilan.Pipelines.Texture
                     foreach (var tex in le3File.Exports.Where(x => x.IsTexture()))
                     {
                         if (tex.ObjectName.Name.StartsWith("Cubemap", StringComparison.InvariantCultureIgnoreCase))
-                            continue; // These are never moved to TFC
+                            continue; // These are never moved to TFC as far as I know...
 
                         var bin = ObjectBinary.From<UTexture2D>(tex);
-                        if (bin.Mips.Count <= 6)
-                            continue;
 
                         var startedMovingTexture = false;
                         var changedMips = bin.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty);
+                        
+                        if (bin.Mips.Count <= 6 && changedMips == 0)
+                            continue;
+
                         bool updateTFCName = false;
                         for (int i = 0; i < bin.Mips.Count - 6; i++)
                         {
@@ -153,6 +155,7 @@ namespace ProjectMilan.Pipelines.Texture
                                 mip.StorageType = StorageTypes.extOodle;
                                 mip.DataOffset = (int)offset;
                                 mip.CompressedSize = compressed.Length;
+                                mip.Mip = Array.Empty<byte>();
                                 changedMips++;
                                 updateTFCName = true;
                             }
@@ -188,7 +191,6 @@ namespace ProjectMilan.Pipelines.Texture
                     }
                 }
             }
-
 
             // Step 2: TFC Compactor
             var staging = Directory.CreateDirectory(Path.Combine(inputFolder, "Staging")).FullName;
