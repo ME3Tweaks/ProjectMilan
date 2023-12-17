@@ -124,7 +124,7 @@
 
 				<!-- MILAN Change DropTheSquid 12/15/2023 -->
 				<!--  redirect Leaderboard to a new version based on the LE leaderboard (which is itself based on the OT DLC leaderboard) -->
-				<Value type="3">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_Leaderboard_Milan",\t\tGFxResource="GUI_SF_Leaderboard_Milan.Leaderboard")</Value>
+				<Value type="3">(Tag=Leaderboard,\t\tZOrder=32,\tMovieClass="SFXGameContent_Milan.SFXGUI_Leaderboard_Milan",\t\tGFxResource="GUI_SF_Leaderboard_Milan.Leaderboard", bRequiresScaling=true)</Value>
 				<!-- END MILAN -->
 				<!-- MILAN change DropTheSquid 12/16/2023 -->
 				<!-- added scaling to MPLObbyStatusBars which makes it scale properly -->
