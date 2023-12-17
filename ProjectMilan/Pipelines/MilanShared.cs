@@ -1,21 +1,14 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using LegendaryExplorerCore.GameFilesystem;
-using LegendaryExplorerCore.Gammtek.IO;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
-using LegendaryExplorerCore.Unreal.Classes;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
-using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ProjectMilan.Pipelines.Audio.Extension;
-using ProjectMilan.Pipelines.Kits;
-using ProjectMilan.Pipelines.Startups;
-using ProjectMilan.Pipelines.Verify;
 using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines
@@ -450,8 +443,8 @@ namespace ProjectMilan.Pipelines
                 TargetGameDonorDB = MilanShared.LE3ObjectDB,
                 PortExportsAsImportsWhenPossible = true,
                 GenerateImportsForGlobalFiles = true,
-                DestinationCustomImportFileResolver = LE3ImportResolver,
-                SourceCustomImportFileResolver = ME3ImportResolver
+                DestinationCustomImportFileResolver = LE3PackageResolver,
+                SourceCustomImportFileResolver = ME3PackageResolver
             };
             var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
                 destPackage, null, true,
@@ -472,12 +465,19 @@ namespace ProjectMilan.Pipelines
                 MilanLog.Information("Preparing for class recompilation", customPrefix: logCategory);
                 var classes = new List<UnrealScriptCompiler.LooseClass>();
                 FileLib lib = new FileLib(destPackage);
-                lib.Initialize(cache, customFileResolver: MilanShared.LE3ImportResolver);
+                UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+                {
+                    Cache = cache,
+                    CustomFileResolver = MilanShared.LE3PackageResolver,
+                    GetVTableFromDonor = MilanShared.GetVTableFromDonor,
+                    MissingObjectResolver = MilanShared.MissingObjectResolver,
+                };
+                lib.Initialize(usop);
                 //foreach (var cls in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
                 foreach (var cls in destPackage.Exports.Where(x => x.IsClass))
                 {
                     // Decompile all classes
-                    (_, string text) = UnrealScriptCompiler.DecompileExport(cls, lib, cache);
+                    (_, string text) = UnrealScriptCompiler.DecompileExport(cls, lib, usop);
                     classes.Add(
                         new UnrealScriptCompiler.LooseClass(cls.ObjectName, text,
                             cls.ParentName)); // Always use ucFilePath as it will be in the proper package folder, even if it goes unused.
@@ -508,9 +508,16 @@ namespace ProjectMilan.Pipelines
             // OLD CODE
             if (true)
             {
+                destPackage.Save();
                 MilanLog.Information("Recompiling ported classes", customPrefix: logCategory);
+                UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+                {
+                    Cache = cache,
+                    CustomFileResolver = MilanShared.LE3PackageResolver,
+                    MissingObjectResolver = MilanShared.MissingObjectResolver
+                };
                 FileLib lib = new FileLib(destPackage);
-                lib.Initialize(cache, customFileResolver: MilanShared.LE3ImportResolver);
+                lib.Initialize(usop);
 
                 foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
                 {
@@ -520,8 +527,8 @@ namespace ProjectMilan.Pipelines
                     {
                         //var sourceObj = rop.CrossPackageMap.FirstOrDefault(x => x.Value == f).Key as ExportEntry;
                         //(_, string text) = UnrealScriptCompiler.DecompileExport(sourceObj, lib, cache);
-                        (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, cache);
-                        UnrealScriptCompiler.CompileClass(destPackage, text, lib, f, packageCache: cache);
+                        (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, usop);
+                        UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, f);
                     }
                     catch (Exception e)
                     {
@@ -536,8 +543,8 @@ namespace ProjectMilan.Pipelines
                         continue;
 
                     MilanLog.Information($"  Double recompiling {classX.ObjectName}", customPrefix: logCategory);
-                    (_, string text) = UnrealScriptCompiler.DecompileExport(classX, lib, cache);
-                    UnrealScriptCompiler.CompileClass(destPackage, text, lib, classX, packageCache: cache);
+                    (_, string text) = UnrealScriptCompiler.DecompileExport(classX, lib, usop);
+                    UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, classX);
                 }
             }
 
@@ -554,7 +561,7 @@ namespace ProjectMilan.Pipelines
         private static readonly object _globalDirEnumerator = new object();
 
         /// <summary>
-        /// Set to true to force the LE3ImportResolver to enumerate the source files directory again.
+        /// Set to true to force the LE3PackageResolver to enumerate the source files directory again.
         /// </summary>
         public static bool RefreshMilanFiles = true;
 
@@ -589,7 +596,7 @@ namespace ProjectMilan.Pipelines
         /// </summary>
         /// <param name="filename"></param>
         /// <returns></returns>
-        internal static IMEPackage LE3ImportResolver(string filename, PackageCache cache)
+        internal static IMEPackage LE3PackageResolver(string filename, PackageCache cache)
         {
             string matching = null;
             lock (_globalDirEnumerator)
@@ -625,7 +632,7 @@ namespace ProjectMilan.Pipelines
             return GetLE3GlobalCachedPackage(filename); // Try with full filename - Core, SFXGame, etc.
         }
 
-        public static IMEPackage ME3ImportResolver(string filename, PackageCache cache)
+        public static IMEPackage ME3PackageResolver(string filename, PackageCache cache)
         {
             // Lookup in ME3 global. We don't force to use specific packages
             return GetME3GlobalCachedPackage(filename);
@@ -682,8 +689,8 @@ namespace ProjectMilan.Pipelines
             EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceRef,
                 target, destRef, true, new RelinkerOptionsPackage()
                 {
-                    SourceCustomImportFileResolver = MilanShared.LE3ImportResolver, // Optimized file lookup
-                    DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                    SourceCustomImportFileResolver = MilanShared.LE3PackageResolver, // Optimized file lookup
+                    DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                     // PortExportsAsImportsWhenPossible = true, // Object referencer merge should have packages already set up properly
                     Cache = new PackageCache(),
 
@@ -720,6 +727,157 @@ namespace ProjectMilan.Pipelines
             }
 
             return cache;
+        }
+
+        private const string LOG_CATEGORY_MOR = @"MILAN-MissingObjectResolver";
+
+
+        public static PackageCache LE3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+        public static PackageCache ME3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3).ChainNewCache();
+        public static IEntry MissingObjectResolver(IMEPackage package, string ifp)
+        {
+            // Redirect base GUI assets to DLC assets so we don't port unused GUI assets
+            if (ifp == "GUI_SF_MPNewLobby.MPNewLobby")
+                ifp = "GUI_SF_MPNewLobby_DLC.MPNewLobby";
+
+            if (ifp == "GUI_SF_MPSelectKit.MPSelectKit")
+                ifp = "GUI_SF_MPSelectKit_DLC.MPSelectKit";
+
+            if (ifp == "GUI_SF_Leaderboard.Leaderboard")
+                ifp = "GUI_SF_Leaderboard_DLC.Leaderboard";
+
+            if (ifp == "GUI_SF_MPMatchConsumables.MPMatchConsumables")
+                ifp = "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables";
+
+            if (ifp == "GUI_SF_MPStore.MPStore")
+                ifp = "GUI_SF_MPStore_DLC.MPStore";
+
+            if (ifp == "GUI_SF_MPPromotion.MPPromotion")
+                ifp = "GUI_SF_MPPromotion_DLC.MPPromotion";
+
+            if (ifp == "GUI_SF_MPReinforcementsReveal.MPReinforcementsReveal")
+                ifp = "GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal";
+
+            var possibleDonors = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
+            if (possibleDonors == null)
+            {
+                // ME3 port
+                MilanLog.Error($"Object '{ifp}' does not exist in LE3! We need to make a donor for this.", customPrefix: LOG_CATEGORY_MOR);
+                var originalGameDonors = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
+                originalGameDonors = originalGameDonors.Select(x => Path.GetFileName(x)).ToList(); // we don't care about paths.
+                originalGameDonors.Sort(new ObjectSourceTierComparer(MEGame.ME3, package.FilePath));
+                foreach (var possibleDonor in originalGameDonors)
+                {
+                    var donorP = MilanShared.GetME3Package(possibleDonor);
+                    if (donorP != null)
+                    {
+                        var donorEntry = donorP.FindEntry(ifp);
+                        if (donorEntry != null)
+                        {
+                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY_MOR);
+                            return PortDonorIntoPackage(ME3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR);
+                        }
+                    }
+                }
+
+                MilanLog.Error($"  No donor! Returning null!!", customPrefix: LOG_CATEGORY_MOR);
+                return null;
+            }
+
+            // Sort by higher tier first
+            possibleDonors.Sort(new ObjectSourceTierComparer(MEGame.LE3, package.FilePath));
+
+            foreach (var possibleDonor in possibleDonors)
+            {
+                var donorP = LE3MissingObjectCache.GetCachedPackage(Path.Combine(LE3Directory.DefaultGamePath, possibleDonor), openPackageMethod: MilanShared.GetLE3Package);
+                if (donorP != null)
+                {
+                    var donorEntry = donorP.FindEntry(ifp);
+                    if (donorEntry != null)
+                    {
+                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY_MOR);
+                        return PortDonorIntoPackage(LE3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR);
+                    }
+                    else
+                    {
+                        MilanLog.Warning($"  LE3 donor package {possibleDonor} does not contain {ifp}", customPrefix: LOG_CATEGORY_MOR);
+                    }
+                }
+            }
+            MilanLog.Error($"Unable to find object {ifp} in {possibleDonors.Count} packages!", customPrefix: LOG_CATEGORY_MOR);
+            return null;
+        }
+
+
+        private static IEntry PortDonorIntoPackage(PackageCache globalCache, IEntry donorEntry, IMEPackage package, string logCategory)
+        {
+            if (donorEntry is ImportEntry donorImport)
+            {
+                // uh
+                Debug.WriteLine("Uh oh");
+            }
+            else if (donorEntry is ExportEntry donorExport)
+            {
+                if (EntryImporter.IsSafeToImportFrom(donorEntry.FileRef.FilePath, MEGame.LE3, package.FilePath))
+                {
+                    // Create parents
+                    MilanLog.Information($"    Porting as import", customPrefix: logCategory);
+                    var parent = EntryExporter.PortParents(donorEntry, package, true);
+                    ImportEntry imp = new ImportEntry(donorExport, parent.UIndex, package);
+                    package.AddImport(imp);
+                    return imp; // Adding as import
+                }
+                if (donorExport.FileRef.FileNameNoExtension == "SFXGame")
+                    Debugger.Break();
+                MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", customPrefix: logCategory);
+                var rop = new RelinkerOptionsPackage()
+                {
+                    Cache = globalCache,
+                    TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                    DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                    PortImportsMemorySafe = true, // MPCommon might try to reference BIO_COMMON which we do not want.
+                };
+                var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, globalCache, customROP: rop);
+                return newExp;
+            }
+
+            return null;
+        }
+
+        //terrible function, there are better ways of implementing it.
+        /// <summary>
+        /// Gets a VTable for the given class by looking it up from an export of it in LE3
+        /// </summary>
+        /// <param name="className"></param>
+        /// <returns></returns>
+        public static List<string> GetVTableFromDonor(string className)
+        {
+
+            var classInfo = GlobalUnrealObjectInfo.GetClassOrStructInfo(MEGame.LE3, className);
+            if (classInfo is not null)
+            {
+                string path = Path.Combine(MEDirectories.GetBioGamePath(MEGame.LE3), classInfo.pccPath);
+                if (File.Exists(path))
+                {
+                    IMEPackage partialLoad = MEPackageHandler.UnsafePartialLoad(path, exp => exp.IsClass && exp.ObjectName == className);
+                    foreach (ExportEntry export in partialLoad.Exports)
+                    {
+                        if (export.IsClass && export.ObjectName == className)
+                        {
+                            var obj = export.GetBinaryData<UClass>();
+                            var list = obj.VirtualFunctionTable.Select(uIdx => partialLoad.GetEntry(uIdx).ObjectName.Name).ToList();
+                            if (className == "SFXProjectile_PowerCustomAction_SuperSeeking")
+                            {
+                                // Debugger.Break();
+                            }
+
+                            return list;
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
     }
 }

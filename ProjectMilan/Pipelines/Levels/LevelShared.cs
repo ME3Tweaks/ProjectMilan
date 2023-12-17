@@ -112,8 +112,8 @@ namespace ProjectMilan.Pipelines.Levels
                             TargetGameDonorDB = MilanShared.LE3ObjectDB,
                             Cache = levelPipeline.Cache,
                             PortExportsAsImportsWhenPossible = true,
-                            DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
-                            SourceCustomImportFileResolver = MilanShared.ME3ImportResolver,
+                            DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                            SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
                         }, out var _);
                     if (badLinks.Any())
                     {
@@ -193,8 +193,8 @@ namespace ProjectMilan.Pipelines.Levels
                     destPackage, destmodel, true, new RelinkerOptionsPackage()
                     {
                         Cache = levelPipeline.Cache,
-                        DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
-                        SourceCustomImportFileResolver = MilanShared.ME3ImportResolver,
+                        DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                        SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
                         TargetGameDonorDB = MilanShared.LE3ObjectDB,
                         PortExportsAsImportsWhenPossible = true,
                     }, out _);
@@ -217,7 +217,7 @@ namespace ProjectMilan.Pipelines.Levels
                         destPackage, destLevel, true, new RelinkerOptionsPackage()
                         {
                             Cache = levelPipeline.Cache,
-                            DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                            DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                             TargetGameDonorDB = MilanShared.LE3ObjectDB,
                             PortExportsAsImportsWhenPossible = true,
                         }, out var newModelComp);
@@ -277,8 +277,8 @@ namespace ProjectMilan.Pipelines.Levels
                         TargetGameDonorDB = MilanShared.LE3ObjectDB,
                         Cache = levelPipeline.Cache,
                         PortExportsAsImportsWhenPossible = true,
-                        DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
-                        SourceCustomImportFileResolver = MilanShared.ME3ImportResolver,
+                        DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                        SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
                     }, out var _);
 
             }

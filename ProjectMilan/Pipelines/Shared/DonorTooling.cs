@@ -268,7 +268,7 @@ namespace ProjectMilan.Pipelines.Shared
                                 ExportEntry texture = originalTexture as ExportEntry;
                                 if (originalTexture is ImportEntry imp)
                                 {
-                                    texture = EntryImporter.ResolveImport(imp);
+                                    texture = EntryImporter.ResolveImport(imp, null);
 
                                     if (texture == null)
                                     {
@@ -286,12 +286,12 @@ namespace ProjectMilan.Pipelines.Shared
 
                                 var rop = new RelinkerOptionsPackage()
                                 {
-                                    DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                                    DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                                     TargetGameDonorDB = MilanShared.LE3ObjectDB,
                                     Cache = new PackageCache()
                                 };
 
-                                EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, null, new PackageCache(), rop);
+                                EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, new PackageCache(), rop);
                                 paramValue.Value = _le3Texture.UIndex; // Since this is not relinked we will relink it here.
                             }
                             else

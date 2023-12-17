@@ -193,13 +193,14 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
+            var globalCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
             // We use .Distinct() cause list might have duplicates due to duplicates in DLC folders
             Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
                 {
                     //if (packageBaseName is not "SFXMobileAnnex" and not "SFXMPObjectiveRetrieve")
                     //    return;
-                    var cache = new PackageCache();
+                    var cache = globalCache.ChainNewCache();
                     cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
                     MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
                     var packageName = $"{packageBaseName}.pcc";
