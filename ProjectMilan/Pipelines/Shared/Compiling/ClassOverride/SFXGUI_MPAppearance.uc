@@ -1,5 +1,5 @@
 // Source: ME3, Patch_SFXGUI_MPAppearance
-// Modified 12/12/2023 by DropTheSquid to account for switching input modes.
+// Modified 12/12/2023-12/16/2023 by DropTheSquid to account for switching input modes.
 Class SFXGUI_MPAppearance extends SFXGUIMovieMP
     config(UI);
 
@@ -61,27 +61,14 @@ var config int RequiredSkinToneLevel;
 var float m_fPreviousMipLevelFadingValue;
 var bool m_bUpdatedInitialPawnTint;
 var bool m_bPCRotationEnabled;
-// MILAN CHANGE DropTheSquid 12/12/2023
-// for debugging the UI. forces all available customization options to be enabled
-var bool unlockAllCustomizations;
 
 // Functions
 // MILAN CHANGE DropTheSquid 12/12/2023
-public function LogFromAS(string message)
-{
-	LogInternal("AS LOG:"@message);
-}
-// added so that the actionscript can check early in initialization what mode it should be in
-public function bool IsUsingGamepad()
-{
-    return bUsingGamepad;
-}
-// added so that we can react to input changes to update the UI
+// added so that we can react to input changes to update the UI and show/hide the mouse cursor
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
-	// TODO this is not working as intended, and I am not sure why
-    // SetMouseVisible(!usingGamepad);
+    SetMouseVisible(!usingGamepad);
     ActionScriptVoid("screen.RefreshButtonHelp");
 }
 // END MILAN
@@ -141,6 +128,12 @@ public event function OnStart()
     CurrModifiableCharacter = MPSaveManager.GetCurrentModifiableCharacter();
     Super(SFXGUIMovie).OnStart();
     SetGameMode(TRUE, 24); // MILAN Patched: GameMode Enum Index
+    // MILAN Change DropTheSquid 12/16/2023
+    // make sure we actually can control the mouse visibility
+	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
+	// make sure the mouse is initially shown/hidden based on the input mode
+	SetMouseVisible(!bUsingGamepad);
+    // END MILAN
     SetRequiresUIWorld(TRUE);
     PlayGuiSound('MPAppearanceStart');
     SourcePlayer = GetLobbyFlow().DummyPawn;
@@ -540,13 +533,6 @@ public final function int GetMaxCharacterNameLength()
 }
 public function EAppearanceMenuItemState GetMenuItemState(int RequiredLevel)
 {
-	// MILAN CHANGE DropTheSquid
-	// using this to unlock all options for UI testing
-	if (unlockAllCustomizations)
-	{
-		return EAppearanceMenuItemState.EAppearanceMenuItemState_Normal;
-	}
-	// END MILAN
     if (MPSaveManager.GetPlayerVariable(CurrModifiableCharacter.KitName) < RequiredLevel)
     {
         return EAppearanceMenuItemState.EAppearanceMenuItemState_Disabled;
@@ -1649,5 +1635,4 @@ defaultproperties
     RequiredEmissiveLevel = 4
     RequiredSkinToneLevel = 5
     m_bFocusOnStart = TRUE
-	// unlockAllCustomizations = TRUE
 }

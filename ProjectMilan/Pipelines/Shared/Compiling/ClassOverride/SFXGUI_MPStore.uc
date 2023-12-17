@@ -48,13 +48,15 @@ var bool bProcessPurchases;
 var bool m_bPurchaseCompleted;
 
 // Functions
+// MILAN CHANGE DropTheSquid 12/16/2023
+// make it so we can handle input changes
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
-	// TODO this is not working as intended, and I am not sure why
-    // SetMouseVisible(!usingGamepad);
+    SetMouseVisible(!usingGamepad);
     ActionScriptVoid("screen.RefreshButtonHelp");
 }
+// END MILAN
 public final function Exit()
 {
     SetInputEnabled(FALSE);
@@ -86,7 +88,12 @@ public event function OnStart()
     Super(SFXGUIMovie).OnStart();
     SetRequiresUIWorld(TRUE);
     SetGameMode(TRUE, 24);
-    SetMouseVisible(TRUE);
+	// MILAN CHANGE DropTheSquid 12/16/2023
+    // make sure we actually can control the mouse visibility
+	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
+	// make sure the mouse is initially shown/hidden based on the input mode
+	SetMouseVisible(!bUsingGamepad);
+	// END MILAN
     GAWManager = SFXGAWReinforcementManager(SFXLocalPlayer(GetPC().Player).GAWReinforcementManager);
     MPSaveManager = SFXEngine(Class'Engine'.static.GetEngine()).MPSaveManager;
     GAWManager.LastAwardedCards.Length = 0;

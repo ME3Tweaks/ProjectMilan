@@ -20,30 +20,28 @@ struct KitDescriptionData
 var config array<KitDescriptionData> KitDescriptions;
 // MILAN CHANGE DropTheSquid 12/12/2023
 // adding this so that we can look up the correct string for the controller Y button prompt
+// not sure if this is still needed, actually. will test
 var config stringref srCharacterInfo;
 
 // Functions
-// added so that the actionscript can check early in initialization what mode it should be in
-public function bool IsUsingGamepad()
-{
-    return bUsingGamepad;
-}
 // added so that we can react to input changes to update the UI
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
-	// TODO this is not working as intended, and I am not sure why
-    SetMouseVisible(!usingGamepad);
+	SetMouseVisible(!usingGamepad);
     ActionScriptVoid("screen.RefreshButtonHelp");
 }
 // added to set the mouse visibility on start according to the UI mode
 public event function OnStart()
 {
     Super.OnStart();
-	// TODO this is not working as intended, and I am not sure why
-    SetMouseVisible(!bUsingGamepad);
+    // make sure we actually can control the mouse visibility
+	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
+	// make sure the mouse is initially shown/hidden based on the input mode
+	SetMouseVisible(!bUsingGamepad);
 }
 // added so the Actionscript can get this string
+// Probably don't need this anymore TODO check if this is needed
 public function string GetCharacterInfoString()
 {
     return string(srCharacterInfo);
@@ -118,10 +116,9 @@ public final function ShowCharacterInfoCallback(bool bAPressed, int Context)
 //class default properties can be edited in the Properties tab for the class's Default__ object.
 defaultproperties
 {
-// MILAN CHANGE DropTheSquid 12/12/2023
-// added so something shows up. This is currently "More Information" which is almost right. It should be "Character Information" which was added in MP4
-// we don't have tlk pipeline as of this writing so this will get fixed later
-    srCharacterInfo = $315193
+// MILAN CHANGE DropTheSquid 12/16/2023
+// probably not necessary, as it should get added by the config
+    srCharacterInfo = $728029
 // END MILAN
     KitDescriptions = ({
                         KitName = "SoldierHumanMale", 

@@ -103,6 +103,7 @@ var transient MPChallengeCategory m_eCurrentTab;
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super.HandleButtonRefresh(usingGamepad);
+	SetMouseVisible(!bUsingGamepad);
     ActionScriptVoid("mcGUI.RefreshButtonHelp");
 }
 // END MILAN
@@ -231,6 +232,10 @@ public event function bool HandleInputEvent(BioGuiEvents Event, optional float f
 public event function OnStart()
 {
     Super.OnStart();
+	// MILAN CHANGE DropTheSquid 12/17/2023
+	// make sure the mouse shows up (or not) initially based on input
+	SetMouseVisible(!bUsingGamepad);
+	// END MILAN
     SetupFunctionIntercepts();
     ConstructEnumObjects();
 }
@@ -758,16 +763,16 @@ public function SetRewardButtonEnabled(bool bEnabled)
     m_bIsRewardButtonEnabled = bEnabled;
     // MILAN CHANGE DropTheSquid 12/15/2023
     // this was going off of whether it was a console build, which is a bad way to determine this
-    if (bUsingGamepad)
+    // if (bUsingGamepad)
     // END MILAN
-    {
+    // {
         buttonObject = GetVariableObject("_root.mcConsoleButtons.ControlX");
         buttonObject.SetBool("Active", bEnabled);
-    }
-    else
-    {
+    // }
+    // else
+    // {
         ActionScriptVoid("mcGUI.PC_MiddleButton.SetEnabled");
-    }
+    // }
 }
 public function SetRewardButtonVisibility(bool bVisible)
 {

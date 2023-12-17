@@ -2,11 +2,23 @@ Class SFXGUI_MPReinforcementsReveal_DLC extends SFXGUI_MPReinforcementsReveal
     config(UI);
 
 // Functions
+// MILAN CHANGE DropTheSquid 12/17/2023
+// make sure we can react to input change to update the UI and show/hide the mouse
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
+	SetMouseVisible(!bUsingGamepad);
     ActionScriptVoid("screen.RefreshButtonHelp");
 }
+public event function OnStart()
+{
+    Super.OnStart();
+    // make sure we actually can control the mouse visibility
+	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
+	// make sure the mouse is initially shown/hidden based on the input mode
+	SetMouseVisible(!bUsingGamepad);
+}
+// END MILAN
 public function SFXGAWReinforcementMatchConsumable FindReinforcement(CardInfoData CardData)
 {
     local SFXGAWReinforcementManager Manager;
