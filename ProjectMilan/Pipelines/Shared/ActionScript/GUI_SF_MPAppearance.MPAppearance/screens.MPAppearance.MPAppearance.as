@@ -236,6 +236,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             {
                 this.AppearanceMenu.AddNewItem(this.srSkinTone,skinToneState,this.srNew,this.MakeDelegate(this.OnAppearanceMenuItemSelected),this.MakeDelegate(this.OnSkinToneActivate));
             }
+			this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
         }
     }
     function OnAppearanceMenuItemSelected()
@@ -848,8 +849,14 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             this.m_ControllerButtons.ControlY.Active = false;
             this.m_ControllerButtons.ControlY._visible = false;
 			this.m_ControllerButtons.FitLeft();
-			// add the "confirm" item to the end of the list
-			this.confirmMenuItem = this.AppearanceMenu.AddNewItem(this.srConfirm,screens.MPAppearance.AppearanceMenuList.APPEARANCE_ITEM_NORMAL,this.srNew,this.MakeDelegate(this.OnConfirmSelect),this.MakeDelegate(this.OnConfirmActivate));
+			// make sure the list is loaded before we try to add things or it breaks the UI
+			// also make sure we don't add it twice
+			if (this.AppearanceMenu.IsLoaded() && !this.confirmMenuItem)
+			{
+				// add the "confirm" item to the end of the list
+				this.confirmMenuItem = this.AppearanceMenu.AddNewItem(this.srConfirm,screens.MPAppearance.AppearanceMenuList.APPEARANCE_ITEM_NORMAL,this.srNew,this.MakeDelegate(this.OnConfirmSelect),this.MakeDelegate(this.OnConfirmActivate));
+			}
+			
         }
     }
     // END MILAN
