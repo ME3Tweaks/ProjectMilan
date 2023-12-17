@@ -58,7 +58,9 @@ namespace ProjectMilan.Pipelines.Init
         /// <returns></returns>
         public static string GetSyncFile(string filename)
         {
-            return Path.Combine(Program.Settings.InputSyncPath, filename);
+            var outP = Path.Combine(Program.Settings.InputSyncPath, filename.Replace("/", "\\"));
+            Directory.GetParent(outP).Create();
+            return outP;
         }
 
         /// <summary>
