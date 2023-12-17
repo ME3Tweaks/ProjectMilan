@@ -232,8 +232,7 @@ namespace ProjectMilan.Pipelines.Shared
                     // Port expressions over from the original material
 
                     // Vectors
-                    var paramsProp =
-                        originalMaterial.GetProperty<ArrayProperty<StructProperty>>("VectorParameterValues");
+                    var paramsProp = originalMaterial.GetProperty<ArrayProperty<StructProperty>>("VectorParameterValues");
                     if (paramsProp != null)
                     {
                         portedExport.WriteProperty(paramsProp);
@@ -308,11 +307,16 @@ namespace ProjectMilan.Pipelines.Shared
                         portedExport.RemoveProperty("TextureParameterValues");
                     }
 
+                    portedExport.RemoveProperty("bHasStaticPermutationResource");
+                    // portedExport.WriteBinary(Array.Empty<byte>()); // Strip binary data // seems to break game maybe?
+
                     donorIdx++;
                 }
 
                 if (!keepAttempting)
                 {
+
+
                     var package = new ReferenceCheckPackage();
                     EntryChecker.CheckReferences(package, destDonorPackage, LECLocalizationShim.NonLocalizedStringConverter);
                     if (package.GetInfoWarnings().Any())

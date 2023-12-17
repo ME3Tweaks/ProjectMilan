@@ -5,7 +5,7 @@ using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
-using static System.Net.Mime.MediaTypeNames;
+using Image = LegendaryExplorerCore.Textures.Image;
 
 namespace ProjectMilan.Pipelines.Texture
 {
@@ -31,21 +31,34 @@ namespace ProjectMilan.Pipelines.Texture
 
         private static void InternalRunPipeline()
         {
-            ConvertTextures();
-
-            // Todo: Upscaled override
+            InventoryUpscales();
+            UpdateTextures();
 
             // Commented out: Not reliable right now
             // Bring over all textures to TFC
             MoveTexturesToExternalTFC(MilanShared.DLC_NAME);
         }
 
-        /// <summary>
-        /// Converts texture formats that only work in ME3 to LE3
-        /// </summary>
-        private static void ConvertTextures()
+        private static Dictionary<string, string> ifpToFileMap = new Dictionary<string, string>();
+
+        private static void InventoryUpscales()
         {
-            var texCategory = $"{LOG_CATEGORY}-Conversion";
+            var upscales = Path.Combine(Program.Settings.InputSyncPath, "upscales");
+            foreach (var upscale in Directory.GetFiles(upscales))
+            {
+                var fname = Path.GetFileNameWithoutExtension(upscale);
+                var ifp = fname.Substring(0, fname.IndexOf("_0x"));
+                ifpToFileMap[ifp] = upscale;
+            }
+        }
+
+
+        /// <summary>
+        /// Updates texture formats that only work in ME3 to LE3, installs upscales
+        /// </summary>
+        private static void UpdateTextures()
+        {
+            var texCategory = $"{LOG_CATEGORY}-Update";
             // ME3 V8U8 norms don't work in LE3, it seems V8U8 support was removed, they appear as black
             // Convert them all to BC7
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
@@ -72,6 +85,14 @@ namespace ProjectMilan.Pipelines.Texture
                             // This may happen during dev as textures will be broken on and off
                             MilanLog.Error($"  Unable to convert texture: {ex.Message}");
                         }
+                    }
+
+                    if (ifpToFileMap.TryGetValue(tex.InstancedFullPath, out var upscaleFile))
+                    {
+                        MilanLog.Information($"  Installing upscaled texture {tex.InstancedFullPath}");
+                        Texture2D t2d = new Texture2D(tex);
+                        var image = Image.LoadFromFile(upscaleFile, LegendaryExplorerCore.Textures.PixelFormat.ARGB);
+                        t2d.Replace(image, t2d.Export.GetProperties(), isPackageStored: true); // Put into package
                     }
                 }
 
@@ -134,7 +155,7 @@ namespace ProjectMilan.Pipelines.Texture
 
                         var startedMovingTexture = false;
                         var changedMips = bin.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty);
-                        
+
                         if (bin.Mips.Count <= 6 && changedMips == 0)
                             continue;
 
