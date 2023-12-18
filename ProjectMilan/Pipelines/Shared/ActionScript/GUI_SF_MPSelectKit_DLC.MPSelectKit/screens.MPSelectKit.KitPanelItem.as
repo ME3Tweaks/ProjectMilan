@@ -124,11 +124,29 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
     }
     function onRollOver()
     {
+		// MILAN CHANGE DropTheSquid 12/18/2023
+		// make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
+		if (_root.screen.bUsingGamepad)
+		{
+			return;
+		}
+		// END MILAN
         super.onRollOver();
         this.parentList.unselectAllItems();
         this.parentList.selectedItem = this;
         _global.SFX.PlayGUISound("MPSelectKitCharacterChange");
     }
+	// MILAN CHANGE DropTheSquid 12/18/2023
+	// make override of OnRollout so we can do nothing if the mouse is invisible
+	function onRollOut()
+    {
+		if (_root.screen.bUsingGamepad)
+		{
+			return;
+		}
+        super.onRollOut();
+    }
+	// END MILAN
     function onRelease()
     {
         super.onRelease();
