@@ -55,6 +55,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     var bLoaded = false;
     var RESTRICTED_CHARACTERS = "^;";
 	var confirmMenuItem;
+	var bUsingGamepad;
 	// MILAN CHANGE DropTheSquid 12/12/2023
 	// added for debugging purposes
 	// function LogFromAS()
@@ -236,6 +237,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             {
                 this.AppearanceMenu.AddNewItem(this.srSkinTone,skinToneState,this.srNew,this.MakeDelegate(this.OnAppearanceMenuItemSelected),this.MakeDelegate(this.OnSkinToneActivate));
             }
+			// ensure the confirm menu item gets added if needed after the list is initialized.
 			this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
         }
     }
@@ -804,6 +806,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
 	// and makes it reusable (not just run once at init) so we can switch dynamically
     function RefreshButtonHelp(usingGamepad)
     {
+		this.bUsingGamepad = usingGamepad;
 		var bIsInDeployFlow = Boolean(flash.external.ExternalInterface.call("IsInDeployFlow"));
 		if(!usingGamepad)
         {
