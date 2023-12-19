@@ -89,7 +89,7 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
         }
     }
 	// MILAN CHANGE DropTheSquid 12/19/2023
-	// This is called every frame while the list is animating. it allows the PC info button to move and fade/in out with the selected item as the list animates
+	// This is called every frame while the list is animating. It allows the PC info button to move and fade/in out with the selected item as the list animates
 	function refreshPCInfoButton()
 	{
 		if(!_root.screen.bUsingGamepad && this.m_bHovered)
@@ -115,8 +115,16 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
             this.PowerBar._visible = this.m_bHovered;
             this.KitName._visible = this.m_bHovered;
             this.CharacterName._visible = this.m_bHovered && this.IsDeployed();
-            var _loc3_ = !this.m_bHovered ? this.MouseOffFrame : this.MouseOverFrame;
-            this.m_mcBarOn.gotoAndPlay(_loc3_);
+			// MILAN CHANGE DropTheSquid 12/19/2023
+			// do not play the mouse off animation if we have already played it due to moving the mouse off
+			if (!bHovered && this.m_mcBarOn._currentframe > 1 && this.m_mcBarOn._currentframe < 12)
+			{
+				this.m_mcBarOn.gotoAndPlay(this.MouseOffFrame);
+			}
+			else if (bHovered)
+			{
+				this.m_mcBarOn.gotoAndPlay(this.MouseOverFrame);
+			}
             // MILAN CHANGE DropTheSquid 12/12/2023
 			// Changed this from going off of Platform (not dynamic) to the bUsingGamepad of the other class, which is dynamic
             if(!_root.screen.bUsingGamepad && this.m_bHovered)
