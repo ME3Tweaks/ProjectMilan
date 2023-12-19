@@ -15,7 +15,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     var m_ControllerButtons;
     var m_PCBackButton;
     var m_PCPromoteButton;
-    var PCInfoButton;
+	    var PCInfoButton;
     var Titlebar;
     var srSelectKit = "NOLOC:Select Kit";
     var srBack = "NOLOC:Back";
@@ -37,6 +37,27 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     var currentKitPanelItem;
     // END MILAN
     static var PROMOTION_BACKGROUND_FADEOUT_FRAME = "fadeOut";
+	// MILAN CHANGE DropTheSquid 12/19/2023
+	// added for debugging purposes
+	// function LogFromAS()
+	// {
+	// 	// takes any number of args
+	// 	var concatArgs = "";
+	// 	var i = 0;
+	// 	for (i = 0; i < arguments.length; i++)
+	// 	{
+	// 		if (concatArgs == "")
+	// 		{
+	// 			concatArgs = arguments[i].toString();
+	// 		}
+	// 		else
+	// 		{
+	// 			concatArgs = concatArgs + "," + arguments[i].toString();
+	// 		}
+	// 	}
+	// 	flash.external.ExternalInterface.call("LogFromAS", concatArgs);
+	// }
+	// END MILAN
     function MPSelectKit()
     {
         super();
@@ -224,7 +245,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
 		// and then calls the new RefreshButtonHelp method to set visibility
         this.m_PCBackButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnBack));
         this.m_PCPromoteButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnPromote));
-        this.PCInfoButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnShowCharacterInfo));
+		this.PCInfoButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnShowCharacterInfo));
 
         this.m_ControllerButtons.addEventListener("onButtonA",this.MakeDelegate(this.OnSelect));
         this.m_ControllerButtons.addEventListener("onButtonB",this.MakeDelegate(this.OnBack));
@@ -294,7 +315,8 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
         if(this.m_KitPanel.HasItemsOffBottom())
         {
             this.m_KitPanel.movementRefElementIndex += 1;
-            this.PCInfoButton._visible = false;
+			// MILAN CHANGE DropTheSquid 12/19/2023
+			// removed a line here making the PC info button invisible, as I am now handling that better elsewhere. 
         }
         else
         {
@@ -307,7 +329,8 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
         if(this.m_KitPanel.HasItemsOffTop())
         {
             this.m_KitPanel.movementRefElementIndex -= 1;
-            this.PCInfoButton._visible = false;
+			// MILAN CHANGE DropTheSquid 12/19/2023
+			// removed a line here making the PC info button invisible, as I am now handling that better elsewhere. 
         }
         else
         {
@@ -542,7 +565,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
             this.m_PCBackButton.SetVisible(false);
             this.m_PCPromoteButton.SetEnabled(false);
             this.m_PCPromoteButton.SetVisible(false);
-            this.PCInfoButton._visible = false;
+			this.PCInfoButton._visible = false;
 			// show controller buttons
             this.m_ControllerButtons._visible = true;
             this.m_ControllerButtons.FitLeft();

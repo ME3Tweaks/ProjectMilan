@@ -88,6 +88,16 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
             this.m_mcBarOn.gotoAndPlay(this.MouseOverFrame);
         }
     }
+	// MILAN CHANGE DropTheSquid 12/19/2023
+	// This is called every frame while the list is animating. it allows the PC info button to move and fade/in out with the selected item as the list animates
+	function refreshPCInfoButton()
+	{
+		if(!_root.screen.bUsingGamepad && this.m_bHovered)
+		{
+			this.ShowPCInfoButton();
+		}
+	}
+	// END MILAN
     function get IconState()
     {
         return this.m_IconState;
@@ -108,7 +118,7 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
             var _loc3_ = !this.m_bHovered ? this.MouseOffFrame : this.MouseOverFrame;
             this.m_mcBarOn.gotoAndPlay(_loc3_);
             // MILAN CHANGE DropTheSquid 12/12/2023
-			// Changed this from going off of Platform (not dynamic) to the bUsingGamepade of the other class, which is dynamic
+			// Changed this from going off of Platform (not dynamic) to the bUsingGamepad of the other class, which is dynamic
             if(!_root.screen.bUsingGamepad && this.m_bHovered)
             {
                 this.ShowPCInfoButton();
@@ -126,7 +136,8 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
     {
 		// MILAN CHANGE DropTheSquid 12/18/2023
 		// make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
-		if (_root.screen.bUsingGamepad)
+		// also not while the list is moving in general, which covers the same use case for scrolling with keyboard/mouse
+		if (_root.screen.bUsingGamepad || this.parentList.IsListMoving)
 		{
 			return;
 		}
@@ -137,10 +148,10 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
         _global.SFX.PlayGUISound("MPSelectKitCharacterChange");
     }
 	// MILAN CHANGE DropTheSquid 12/18/2023
-	// make override of OnRollout so we can do nothing if the mouse is invisible
+	// make override of OnRollout so we can do nothing if the mouse is invisible or the list is moving
 	function onRollOut()
     {
-		if (_root.screen.bUsingGamepad)
+		if (_root.screen.bUsingGamepad || this.parentList.IsListMoving)
 		{
 			return;
 		}
@@ -189,6 +200,14 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
         _root.screen.globalToLocal(_loc3_);
         _root.screen.PCInfoButton._x = _loc3_.x - 7;
         _root.screen.PCInfoButton._y = _loc3_.y - 42;
+		// MILAN CHANGE DropTheSquid 12/19/2023
+		// allows the PC info button to fade in/out with an item as the list scrolls
+		_root.screen.PCInfoButton._alpha = this._alpha;
+		if (this._alpha == 0)
+		{
+			_root.screen.PCInfoButton._visible = false;
+		}
+		// END MILAN
         _root.screen.PCInfoButton._visible = true;
     }
     function HidePCInfoButton()
