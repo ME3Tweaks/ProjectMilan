@@ -39,24 +39,24 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     static var PROMOTION_BACKGROUND_FADEOUT_FRAME = "fadeOut";
 	// MILAN CHANGE DropTheSquid 12/19/2023
 	// added for debugging purposes
-	// function LogFromAS()
-	// {
-	// 	// takes any number of args
-	// 	var concatArgs = "";
-	// 	var i = 0;
-	// 	for (i = 0; i < arguments.length; i++)
-	// 	{
-	// 		if (concatArgs == "")
-	// 		{
-	// 			concatArgs = arguments[i].toString();
-	// 		}
-	// 		else
-	// 		{
-	// 			concatArgs = concatArgs + "," + arguments[i].toString();
-	// 		}
-	// 	}
-	// 	flash.external.ExternalInterface.call("LogFromAS", concatArgs);
-	// }
+	function LogFromAS()
+	{
+		// takes any number of args
+		var concatArgs = "";
+		var i = 0;
+		for (i = 0; i < arguments.length; i++)
+		{
+			if (concatArgs == "")
+			{
+				concatArgs = arguments[i].toString();
+			}
+			else
+			{
+				concatArgs = concatArgs + "," + arguments[i].toString();
+			}
+		}
+		flash.external.ExternalInterface.call("LogFromAS", concatArgs);
+	}
 	// END MILAN
     function MPSelectKit()
     {
@@ -569,6 +569,18 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
 			// show controller buttons
             this.m_ControllerButtons._visible = true;
             this.m_ControllerButtons.FitLeft();
+			// stop showing the hover highlight on the arrows. The mouse off is not animated so there is no harm in calling this repeatedly or when not needed. 
+			this.LeftArrow.onRollOut();
+			this.RightArrow.onRollOut();
+			// same thing with the class list. the hover indicator is a single frame, and only shows up with mouse. so turn it off so we don't have it still hovered under the mouse
+			var classItem = undefined;
+			var i = 0;
+			while(i < this.m_ClassDataList.length)
+			{
+				classItem = screens.MPSelectKit.ClassListItem(this.m_ClassList.getListItem(i));
+				classItem.onRollOut();
+				i += 1;
+			}
         }
 		this.RefreshButtons();
     }
