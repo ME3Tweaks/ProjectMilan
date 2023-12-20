@@ -84,10 +84,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
         this.srTeamPromoted = "$" + _global.SFX.GetIniString("srTeamPromoted");
         this.srExitMultiplayer = "$" + _global.SFX.GetIniString("srExitMultiplayer");
         this.srLevelUp = "$" + _global.SFX.GetIniString("srLevelUp");
-        // MILAN CHANGE DropTheSquid 12/12/2023
-		// Changing how we get this string; this string never actually properly shipped with the PC version because there is no text in the PC layout
-        this.srCharacterInfo = flash.external.ExternalInterface.call("GetCharacterInfoString");
-		// END MILAN
+		this.srCharacterInfo = "$" + _global.SFX.GetIniString("srcharacterinfo");
     }
     function InitializeScreen()
     {

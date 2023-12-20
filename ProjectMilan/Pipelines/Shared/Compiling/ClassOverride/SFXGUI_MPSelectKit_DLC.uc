@@ -18,12 +18,9 @@ struct KitDescriptionData
 
 // Variables
 var config array<KitDescriptionData> KitDescriptions;
-// MILAN CHANGE DropTheSquid 12/12/2023
-// adding this so that we can look up the correct string for the controller Y button prompt
-// not sure if this is still needed, actually. will test
-var config stringref srCharacterInfo;
 
 // Functions
+// MILAN CHANGE DropTheSquid 12/12/2023
 // added so that we can react to input changes to update the UI
 public event function HandleButtonRefresh(bool usingGamepad)
 {
@@ -39,12 +36,6 @@ public event function OnStart()
 	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
 	// make sure the mouse is initially shown/hidden based on the input mode
 	SetMouseVisible(!bUsingGamepad);
-}
-// added so the Actionscript can get this string
-// Probably don't need this anymore TODO check if this is needed
-public function string GetCharacterInfoString()
-{
-    return string(srCharacterInfo);
 }
 // END MILAN
 public final function string ComposeKitDescriptionString(KitDescriptionData oData)
@@ -116,10 +107,6 @@ public final function ShowCharacterInfoCallback(bool bAPressed, int Context)
 //class default properties can be edited in the Properties tab for the class's Default__ object.
 defaultproperties
 {
-// MILAN CHANGE DropTheSquid 12/16/2023
-// probably not necessary, as it should get added by the config
-    srCharacterInfo = $728029
-// END MILAN
     KitDescriptions = ({
                         KitName = "SoldierHumanMale", 
                         ClassString = $727964, 
