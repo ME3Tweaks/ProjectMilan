@@ -96,10 +96,6 @@ namespace ProjectMilan.Pipelines.Startups
             // Actually run pipeline
             Directory.CreateDirectory(vars.OutputPath);
 
-            // Prepare classes for porting
-            HackPatchParents(); // Eventually this will be moved to a merge mod. But for compilation purposes, it needs to be done here.
-
-
             if (!CompileMPCommon(vars))
             {
                 MilanLog.Fatal($"Failed to compile {MilanShared.MP_STARTUP_NAME}", customPrefix: LOG_CATEGORY);
@@ -185,8 +181,11 @@ namespace ProjectMilan.Pipelines.Startups
         /// <summary>
         /// This is required to make the build work. This will eventually need to go into a merge mod or be patched out.
         /// </summary>
-        public static void HackPatchParents()
+        public static void HackPatchParents_Old()
         {
+            return;
+            // No longer needed
+
             if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, "SFXGame.pcc", out var sfxGameF))
             {
                 var sfxgame = MEPackageHandler.OpenMEPackage(sfxGameF);
@@ -620,7 +619,7 @@ namespace ProjectMilan.Pipelines.Startups
             return needsDecompiled;
         }
 
-        private static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared, PackageCache cache)
+        public static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared, PackageCache cache)
         {
             if (classExp.ObjectName == "DamageType")
                 Debug.WriteLine("");
@@ -714,6 +713,13 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     MilanLog.Information($"  Patching out telemetry call {line}", customPrefix: LOG_CATEGORY);
                     newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + " // MILAN Patched: Remove calls to SFXTelemetry";
+                    continue;
+                }
+
+                if (line.StartsWith("SFXEngine(Class'Engine'.static.GetEngine()).Telemetry.GameSession.SetMPMatchSettings"))
+                {
+                    MilanLog.Information($"  Patching out telemetry call {line}", customPrefix: LOG_CATEGORY);
+                    newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + " // MILAN Patched: Remove calls to Engine.Telemetry.GameSession.SetMPMatchSettings()";
                     continue;
                 }
 
