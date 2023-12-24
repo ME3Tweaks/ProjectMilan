@@ -1,12 +1,9 @@
 ﻿using System.Diagnostics;
-using JetBrains.Profiler.Api;
-using JetBrains.Profiler.SelfApi;
+using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using LegendaryExplorerCore.UnrealScript;
 
 namespace ProjectMilan.Pipelines.Kits
 {
@@ -22,32 +19,54 @@ namespace ProjectMilan.Pipelines.Kits
             InternalRunPipeline(vars);
         }
 
+        // These packages seem to be opened a lot
+        // This list will be cached in an intermediate tiered cache
+        // Don't put too many in here
+        private static string[] commonlyOpenedPackages = new[]
+        {
+            "BioP_ProEar.pcc",
+            "BioD_ProEar.pcc",
+            "BioD_MPCer_100SP.pcc",
+            "BioP_Gth002.pcc",
+            "BioD_Gth002.pcc"
+        };
+
         private static void InternalRunPipeline(MPKitVars vars)
         {
             //DotTrace.EnsurePrerequisite();
             //DotTrace.Attach();
             // foreach (var kit in vars.KitPipelines)
+
+            using TieredPackageCache parentCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+
+            foreach (var v in commonlyOpenedPackages)
+            {
+                MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3).TryGetValue(v, out var commonPackage);
+                MilanLog.Information($"Caching commonly opened package: {commonPackage}", customPrefix: LOG_CATEGORY);
+                parentCache.GetCachedPackage(commonPackage);
+            }
+
             Parallel.ForEach(vars.KitPipelines, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, kit =>
             {
                 // Uncomment this to port everything
-                if (/*false &&*/ !kit.Enabled)
+                if (/*false && */!kit.Enabled)
                 {
                     // This level is not marked for porting currently.
                     MilanLog.Information($"Skipping kit {kit.PackageName}, pipeline is not enabled", customPrefix: LOG_CATEGORY);
                     return;
                 }
 
-                BeginPorting(kit);
+                BeginPorting(kit, parentCache);
             });
             // }
         }
 
-        private static void BeginPorting(KitSpecificPipeline kitPipeline)
+        private static void BeginPorting(KitSpecificPipeline kitPipeline, TieredPackageCache parentCache)
         {
             kitPipeline.LogCategory = $"{LOG_CATEGORY}-{kitPipeline.PackageName}";
 
             // Initialize cache
-            kitPipeline.Cache = new PackageCache();
+            kitPipeline.Cache = parentCache.ChainNewCache();
             kitPipeline.Cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Kits");
@@ -130,18 +149,18 @@ namespace ProjectMilan.Pipelines.Kits
         public readonly List<KitSpecificPipeline> KitPipelines = new()
         {
             // Basegame
-            new KitSpecificPipeline() { PackageName = "Asari_Adept_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "Asari_Vanguard_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "Drell_Adept_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "Drell_Vanguard_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "Asari_Adept_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "Asari_Vanguard_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "Drell_Adept_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "Drell_Vanguard_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "HumanFemale_Adept_MP", Enabled  = true},
             new KitSpecificPipeline() { PackageName = "HumanFemale_Engineer_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "HumanFemale_Infiltrator_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "HumanFemale_Sentinel_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "HumanFemale_Soldier_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "HumanFemale_Vanguard_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "HumanMale_Adept_MP", Enabled  = true}, // Default option
-            new KitSpecificPipeline() { PackageName = "HumanMale_Engineer_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "HumanFemale_Infiltrator_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "HumanFemale_Sentinel_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "HumanFemale_Soldier_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "HumanFemale_Vanguard_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "HumanMale_Adept_MP"}, // Default option
+            new KitSpecificPipeline() { PackageName = "HumanMale_Engineer_MP", Enabled  = true},
             new KitSpecificPipeline() { PackageName = "HumanMale_Infiltrator_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "HumanMale_Sentinel_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "HumanMale_SoldierBF3_MP", Enabled  = false},
@@ -152,9 +171,9 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "Quarian_Engineer_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "Quarian_Infiltrator_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "Salarian_Infiltrator_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "Salar_Engineer_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "Turian_Sentinel_MP", Enabled  = true},
-            new KitSpecificPipeline() { PackageName = "Turian_Soldier_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "Salar_Engineer_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "Turian_Sentinel_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "Turian_Soldier_MP", Enabled  = false},
 
             // MP1
             new KitSpecificPipeline() { PackageName = "AsariCommando_Adept_MP", Enabled  = false},
@@ -182,7 +201,7 @@ namespace ProjectMilan.Pipelines.Kits
 
             // MP4
             new KitSpecificPipeline() { PackageName = "Krogan_Adept_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "Volus_Adept2_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "Volus_Adept2_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "Batarian_Adept_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "MQuarian_Soldier_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "N7Turian_Soldier_MP", Enabled  = false},
@@ -204,7 +223,7 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "Collector_Adept_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "Fembot_Infiltrator_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "GethDest_Soldier_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "KroganWarlord_Sentinel_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "KroganWarlord_Sentinel_MP", Enabled  = false},
             new KitSpecificPipeline() { PackageName = "TurianFemale_Vanguard_MP", Enabled  = false},
 
 
