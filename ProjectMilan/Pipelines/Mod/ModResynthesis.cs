@@ -64,6 +64,9 @@ namespace ProjectMilan.Pipelines.Mod
                             if (nExp.ExportFlags != exp.ExportFlags)
                                 MilanLog.Error($"ExportFlags changed of export : {nExp.InstancedFullPath} to {nExp.ExportFlags} from {exp.ExportFlags}", customPrefix: LOG_CATEGORY);
 
+                            if (nExp.PackageGUID != exp.PackageGUID)
+                                MilanLog.Error($"PackageGuid changed of export : {nExp.InstancedFullPath} to {nExp.PackageGUID} from {exp.PackageGUID}", customPrefix: LOG_CATEGORY);
+
                         }
                     }
                     catch (Exception ex)
