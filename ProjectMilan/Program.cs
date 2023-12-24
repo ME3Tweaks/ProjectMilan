@@ -1,6 +1,9 @@
-﻿using CommandLine;
+﻿using System.Diagnostics;
+using CommandLine;
 using LegendaryExplorerCore;
+using LegendaryExplorerCore.Gammtek.IO;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Save;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Finalize;
@@ -12,6 +15,7 @@ using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Pipelines.Verify;
+using ProjectMilan.Pipelines.Weapons;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
 
@@ -74,6 +78,8 @@ namespace ProjectMilan
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
+            // MPCommon.HackPatchParents();
+
             RunPipelines();
         }
 
@@ -115,7 +121,7 @@ namespace ProjectMilan
             //return;
 
             // Requirements
-            MPCommon.HackPatchParents();
+            // MPCommon.HackPatchParents(); // Should no longer be necessary
 
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
@@ -136,6 +142,7 @@ namespace ProjectMilan
             AudioRebuild.EnsureWwise7110();
 
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
+            RunPipeline(Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
             // Post-build pipelines
@@ -173,6 +180,40 @@ namespace ProjectMilan
             {
                 MilanLog.Information($"Skipping pipeline: {pipelineName}, not selected for running in settings");
             }
+        }
+
+
+        private static void REsearch()
+        {
+            Dictionary<int, ProfileSetting> ProfileSettings = new(103); // ME3 uses 100 keys so it's likely we'll hit that much normally
+            var version = 0;
+
+            var infile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile";
+            var inData = File.ReadAllBytes(infile);
+            LocalProfile lp = LocalProfile.DeserializeLocalProfile(infile, MEGame.LE3, false, false, true);
+            lp.SetProfileSettingById(1, "20;4;Adept;20;10500000.0000;11");
+            lp.SetProfileSettingById(2, "20;4;Soldier;20;10500000.0000;15");
+            lp.SetProfileSettingById(3, "20;4;Engineer;20;10500000.0000;16");
+            lp.SetProfileSettingById(4, "20;4;Sentinel;20;10500000.0000;13");
+            lp.SetProfileSettingById(5, "20;4;Infiltrator;16;28770.0000;14");
+            lp.SetProfileSettingById(6, "20;4;Vanguard;20;10500000.0000;13");
+            var serialized = lp.Serialize();
+            var outData = serialized.ToArray();
+
+
+            var outfile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile2";
+            File.WriteAllBytes(outfile, outData);
+
+            if (!inData.SequenceEqual(outData))
+            {
+                Debug.WriteLine("FAIL!");
+            }
+            else
+            {
+                Debug.WriteLine("PASS");
+            }
+
+            Debug.WriteLine("done");
         }
     }
 }

@@ -43,6 +43,11 @@ namespace ProjectMilan.Settings
         bool RunLevelsPipeline { get; set; }
 
         /// <summary>
+        /// If MP DLC weapons should be built (they have different code than SP)
+        /// </summary>
+        bool RunWeaponsPipeline { get; set; }
+
+        /// <summary>
         /// If audio should be extracted and converted for use in the resulting mod
         /// </summary>
         bool RunAudioPipeline { get; set; }

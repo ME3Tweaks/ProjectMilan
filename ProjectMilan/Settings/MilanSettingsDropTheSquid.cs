@@ -7,6 +7,7 @@
         public string InputSyncPath { get; set; } = @"H:\MELE_Mods\mods in development\LE3\Project Milan\MilanSync";
         public bool RunMPCommonPipeline { get; set; } = false;
         public bool RunKitsPipeline { get; set; }
+        public bool RunWeaponsPipeline { get; set; }
         public bool RunLevelsPipeline { get; set; } = true;
         public bool RunAudioPipeline { get; set; }
         public bool RunTexturePipeline { get; set; }

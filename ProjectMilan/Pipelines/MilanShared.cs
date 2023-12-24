@@ -705,7 +705,8 @@ namespace ProjectMilan.Pipelines
 
         public static IEnumerable<IMEPackage> GetLE3GlobalPackages()
         {
-            if (le3GlobalCache == null) InitGlobalPackages(MEGame.LE3);
+            if (le3GlobalCache == null) 
+                le3GlobalCache = InitGlobalPackages(MEGame.LE3);
             return le3GlobalCache.GetPackages();
         }
 
