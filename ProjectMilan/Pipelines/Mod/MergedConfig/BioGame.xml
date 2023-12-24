@@ -7188,13 +7188,18 @@
 		<Section name="sfxgamempcontent.sfxwave_horde">
 			<Property name="berserkstartcounts" type="3">(Difficulty=DO_Level4,EnemiesLeft=10)</Property>
 			<Property name="enemylist">
-				<Value type="4">(EnemyType="WAVE_CER_Phantom",\t\t\tEnemyArchetypeName = "Char_Enemies.Archetypes.Cerberus.Phantom",\t\tWaveCost=80)</Value>
-				<Value type="3">( EnemyType="WAVE_CER_Phantom", EnemyArchetypeName="Char_Enemies_MP3.Archetypes.Cerberus.Phantom",WaveCost=80 )</Value>
+				<!-- We do not need to use Phantom2, its shader was only broken in OT -->
+				<!--<Value type="4">(EnemyType="WAVE_CER_Phantom",\t\t\tEnemyArchetypeName = "Char_Enemies.Archetypes.Cerberus.Phantom",\t\tWaveCost=80)</Value>
+				<Value type="3">( EnemyType="WAVE_CER_Phantom", EnemyArchetypeName="Char_Enemies_MP3.Archetypes.Cerberus.Phantom",WaveCost=80 )</Value>-->
+
+
+				<!-- These may need adjusted to use the SP debaked versions we will have to make -->
 				<Value type="3">(EnemyType="WAVE_COL_CollectorTrooper",\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.CollectorTrooper",\tWaveCost=25)</Value>
 				<Value type="3">(EnemyType="WAVE_COL_CollectorCaptain",\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.CollectorCaptain",\tWaveCost=35)</Value>
 				<Value type="3">(EnemyType="WAVE_COL_Abomination",\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.Abomination",\t\tWaveCost=40)</Value>
 				<Value type="3">(EnemyType="WAVE_COL_Scion",\t\t\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.Scion",\t\t\tWaveCost=75)</Value>
 				<Value type="3">(EnemyType="WAVE_COL_Praetorian",\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.Praetorian",\t\tWaveCost=120)</Value>
+			
 				<Value type="3">(EnemyType="WAVE_CER_Phoenix",\t\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Cerberus.Phoenix",\t\t\tWaveCost=70)</Value>
 				<Value type="4">(EnemyType="WAVE_CER_Atlas",\t\t\t\tEnemyArchetypeName = "Char_Enemies.Archetypes.Cerberus.Atlas",\t\t\tWaveCost=100)</Value>
 				<Value type="3">(EnemyType="WAVE_CER_Atlas",\t\t\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Cerberus.Atlas",\t\t\t\tWaveCost=100)</Value>

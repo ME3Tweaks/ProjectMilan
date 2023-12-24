@@ -604,7 +604,8 @@
 				<Value type="3">(ObjectName="BioChar_DLC_MP3_MPPlayers.Soldier_N7",SeekFreePackageName="N7_Soldier_MP", bReplicate=true)</Value>
 				<Value type="3">(ObjectName="BioChar_DLC_MP3_MPPlayers.Sentinel_N7",SeekFreePackageName="N7_Sentinel_MP", bReplicate=true)</Value>
 				<Value type="3">(ObjectName="BioChar_DLC_MP3_MPPlayers.Adept_N7",SeekFreePackageName="N7_Adept_MP", bReplicate=true)</Value>
-				<Value type="3">(ObjectName="Char_Enemies_MP3.Archetypes.Cerberus.Phantom",SeekFreePackageName="SFXPawn_Phantom2", bReplicate=true)</Value>
+				<!-- Phantom shader was only broken in OT -->
+				<!--<Value type="3">(ObjectName="Char_Enemies_MP3.Archetypes.Cerberus.Phantom",SeekFreePackageName="SFXPawn_Phantom2", bReplicate=true)</Value>-->
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_SupplyTurret",SeekFreePackageName="SFXPower_SupplyTurret")</Value>
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_CryoCone",SeekFreePackageName="SFXPower_CryoCone")</Value>
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_Slash",SeekFreePackageName="SFXPower_Slash")</Value>

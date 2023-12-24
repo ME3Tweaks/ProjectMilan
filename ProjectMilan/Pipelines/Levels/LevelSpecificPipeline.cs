@@ -33,7 +33,7 @@ namespace ProjectMilan.Pipelines.Levels
         /// <summary>
         /// Which function should run to port the level
         /// </summary>
-        public Action<LevelSpecificPipeline> SpecialPortingDelegate { get; set; }
+        public Action<LevelSpecificPipeline, TieredPackageCache> SpecialPortingDelegate { get; set; }
 
         /// <summary>
         /// Map of filename -> loaded ME3 packages
@@ -75,7 +75,7 @@ namespace ProjectMilan.Pipelines.Levels
         /// <summary>
         /// Pipeline package cache
         /// </summary>
-        public PackageCache Cache { get; set; }
+        public TieredPackageCache Cache { get; set; }
 
         /// <summary>
         /// List of ME3 Export Entries that do not work in LE3
