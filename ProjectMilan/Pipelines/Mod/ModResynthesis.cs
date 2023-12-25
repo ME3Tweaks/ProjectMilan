@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Pipelines.Mod
 {
@@ -29,6 +30,18 @@ namespace ProjectMilan.Pipelines.Mod
                     var package = MEPackageHandler.OpenMEPackage(file);
                     try
                     {
+                        // Custom fix for loose class comp
+                        var sfxEPackage = package.FindExport("SFXGame", "Package");
+                        var sfxIPackage = package.FindImport("SFXGame", "Package");
+                        if (sfxEPackage != null && sfxIPackage != null)
+                        {
+                            foreach (var entry in sfxIPackage.GetChildren())
+                            {
+                                entry.Parent = sfxEPackage;
+                            }
+                            EntryPruner.TrashEntryAndDescendants(sfxIPackage); // Get rid of this pre-porting.
+                        }
+
                         var newPackage = PackageResynthesizer.ResynthesizePackage(package);
                         newPackage.Save();
 
@@ -39,6 +52,8 @@ namespace ProjectMilan.Pipelines.Mod
                         // Some verification
                         foreach (var exp in package.Exports)
                         {
+                            if (exp.IsTrash())
+                                continue; // We don't care
                             var nExp = newPackage.FindExport(exp.InstancedFullPath);
                             if (nExp == null)
                                 Debugger.Break();
