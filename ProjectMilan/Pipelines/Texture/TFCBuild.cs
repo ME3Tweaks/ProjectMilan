@@ -67,7 +67,7 @@ namespace ProjectMilan.Pipelines.Texture
                         if (tex.ObjectName.Name.StartsWith("Cubemap", StringComparison.InvariantCultureIgnoreCase))
                             continue; // These are never moved to TFC as far as I know...
 
-                        var bin = ObjectBinary.From<UTexture2D>(tex);
+                        var bin = (UTexture2D) ObjectBinary.From(tex); // Cast since we want it to make the lowest-tier class but we only need the upper one.
 
                         var startedMovingTexture = false;
                         var changedMips = bin.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty);
