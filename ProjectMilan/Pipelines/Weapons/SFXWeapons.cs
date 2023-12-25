@@ -93,6 +93,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
             var looseClassPackages = new List<UnrealScriptCompiler.LooseClassPackage>();
 
+            // Add main class
             UnrealScriptCompiler.LooseClassPackage lp = new UnrealScriptCompiler.LooseClassPackage(package,
                 new List<UnrealScriptCompiler.LooseClass>()
                 {
@@ -100,9 +101,24 @@ namespace ProjectMilan.Pipelines.Weapons
                 });
             looseClassPackages.Add(lp);
 
-            var le3SourcePackage = MilanShared.GetLE3Package($"{weaponPipeline.LE3PackageName}.pcc");
-            weaponPipeline.BaseObjectPaths.ReplaceAll(le3SourcePackage.Exports.Where(x => x.ClassName == "Package" && x.idxLink == 0)
-                         .Select(x => x.InstancedFullPath)) ;
+            var milanBase = Path.Combine(MilanShared.PipelineRoot, "Weapons", "Modified", package, Path.GetFileNameWithoutExtension(file));
+            if (Directory.Exists(milanBase))
+            {
+                // Add custom other classes that we need to compile as well.
+                var customClasses = Directory.GetFileSystemEntries(milanBase, "*.uc", SearchOption.AllDirectories);
+                foreach (var cc in customClasses)
+                {
+                    AddClassToCompilation(looseClassPackages, GetPackageName(cc), new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(cc), File.ReadAllText(cc)));
+                }
+            }
+
+            if (weaponPipeline.LE3PackageName != null)
+            {
+                var le3SourcePackage = MilanShared.GetLE3Package($"{weaponPipeline.LE3PackageName}.pcc");
+                weaponPipeline.BaseObjectPaths.ReplaceAll(le3SourcePackage.Exports
+                    .Where(x => x.ClassName == "Package" && x.idxLink == 0)
+                    .Select(x => x.InstancedFullPath));
+            }
 
             var me3SourcePackage = MilanShared.GetME3Package($"{weaponPipeline.PackageName}.pcc");
             weaponPipeline.BaseObjectPaths.AddRange(me3SourcePackage.Exports.Where(x => x.ClassName == "Package" && x.idxLink == 0 && !weaponPipeline.BaseObjectPaths.Contains(x.InstancedFullPath))
@@ -153,7 +169,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 GetVTableFromDonor = MilanShared.GetVTableFromDonor
             };
             // Different forced export packages
-            
+
 
 
             MilanLog.Information(@"Compiling LE3 class package", customPrefix: LOG_CATEGORY);
@@ -271,7 +287,7 @@ namespace ProjectMilan.Pipelines.Weapons
             containingPackage = null;
 
             List<string> decompiledClasses = new List<string>();
-           
+
             // Code: Find class
             foreach (var m in log.AllErrors)
             {
@@ -461,7 +477,6 @@ namespace ProjectMilan.Pipelines.Weapons
                 PackageName = "SFXWeapon_SniperRifle_BatarianDLC",
                 LE3PackageName = "SFXWeapon_SniperRifle_Batarian_GUN02",
                 Enabled  = true
-
             },
             new WeaponSpecificPipeline() { PackageName = "SFXWeapon_SMG_GethDLC", Enabled  = false},             // Geth Plasma SMG
             new WeaponSpecificPipeline() { PackageName = "SFXWeapon_AssaultRifles_KroganDLC", Enabled  = false}, // Striker
@@ -471,7 +486,14 @@ namespace ProjectMilan.Pipelines.Weapons
             // MP3
 
             // MP4
-
+            new WeaponSpecificPipeline()
+            {
+                // Kishock Harpoon Gun
+                WeaponClassName = "SFXWeapon_SniperRifle_Collector",
+                PackageName = "SFXWeapon_SniperRifle_Collector",
+                LE3PackageName = null, // There is no LE3 version of this package.
+                Enabled  = true
+            },
             // MP5
         };
     }
