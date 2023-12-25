@@ -512,7 +512,6 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 "MPLobby.pcc", // Holds pretty much all MP classes
                 "Startup_DLC_CON_MP4_INT.pcc", // Collector HUD, Faction
-                // "SFXMobileAnnex.pcc", // Extra stuff
                 "Startup_DLC_CON_MP3_INT.pcc", // MobileAnnex
                 "Startup_DLC_CON_MP2_INT.pcc", // Retrieve
                 "BioP_MPCer.pcc", // SFXGameType_Horde_Operation

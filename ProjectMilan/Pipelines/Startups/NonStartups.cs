@@ -195,7 +195,7 @@ namespace ProjectMilan.Pipelines.Startups
             Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
                 {
-                    //if (packageBaseName is not "SFXMobileAnnex" and not "SFXMPObjectiveRetrieve")
+                    //if (packageBaseName is not "SFXMobileAnnex")
                     //    return;
                     var cache = globalCache.ChainNewCache();
                     cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
