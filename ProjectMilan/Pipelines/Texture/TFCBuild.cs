@@ -333,7 +333,14 @@ namespace ProjectMilan.Pipelines.Texture
                 GamePath = LE3Directory.DefaultGamePath,
                 TFCsToCompact = new List<string>()
                 {
-                    $"Textures_{MilanShared.DLC_NAME}"
+                    $"Textures_{MilanShared.DLC_NAME}",
+                    "Textures_DLC_CON_GUN01",
+                    "Textures_DLC_CON_GUN02",
+                    "Textures_DLC_HEN_PR",
+                    "Textures_DLC_EXP_Pack001",
+                    "Textures_DLC_EXP_Pack002",
+                    "Textures_DLC_EXP_Pack003",
+                    "Textures_DLC_EXP_Pack003_Base",
                 },
                 UseIndexing = false,
                 StagingPath = staging,
