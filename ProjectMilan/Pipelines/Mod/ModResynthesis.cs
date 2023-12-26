@@ -23,6 +23,7 @@ namespace ProjectMilan.Pipelines.Mod
         private static void InternalRunPipeline()
         {
             var files = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
+            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
             Parallel.ForEach(files, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads },
                 file =>
                 {
@@ -42,7 +43,7 @@ namespace ProjectMilan.Pipelines.Mod
                             EntryPruner.TrashEntryAndDescendants(sfxIPackage); // Get rid of this pre-porting.
                         }
 
-                        var newPackage = PackageResynthesizer.ResynthesizePackage(package);
+                        var newPackage = PackageResynthesizer.ResynthesizePackage(package, cache.ChainNewCache());
                         newPackage.Save();
 
                         // Save as different package for analysis
