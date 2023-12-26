@@ -478,7 +478,22 @@ namespace ProjectMilan.Pipelines.Weapons
                 LE3PackageName = "SFXWeapon_SniperRifle_Batarian_GUN02",
                 Enabled  = true
             },
-            new WeaponSpecificPipeline() { PackageName = "SFXWeapon_SMG_GethDLC", Enabled  = false},             // Geth Plasma SMG
+            new WeaponSpecificPipeline()
+            { 
+                // Geth Plasma SMG
+                WeaponClassName = "SFXWeapon_SMG_Geth",
+                PackageName = "SFXWeapon_SMG_GethDLC",
+                LE3PackageName = "SFXWeapon_SMG_Geth_GUN01",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            { 
+                // Striker Assault Rifle
+                WeaponClassName = "SFXWeapon_AssaultRifle_Krogan",
+                PackageName = "SFXWeapon_AssaultRifles_KroganDLC",
+                LE3PackageName = "SFXWeapon_AssaultRifle_Krogan_GUN02",
+                Enabled  = true
+            },
             new WeaponSpecificPipeline() { PackageName = "SFXWeapon_AssaultRifles_KroganDLC", Enabled  = false}, // Striker
 
             // MP2
@@ -492,7 +507,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_SniperRifle_Collector",
                 PackageName = "SFXWeapon_SniperRifle_Collector",
                 LE3PackageName = null, // There is no LE3 version of this package.
-                Enabled  = true
+                Enabled  = false
             },
             // MP5
         };
