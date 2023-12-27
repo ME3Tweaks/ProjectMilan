@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
+using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Pipelines.Verify
@@ -29,17 +30,24 @@ namespace ProjectMilan.Pipelines.Verify
                     // Package file checks
                     var package = MEPackageHandler.OpenMEPackage(f);
                     VerifyVTables(package);
-                    CheckForDuplicates(package);
+                    RunEntryChecks(package);
                 }
             }
         }
 
-        private static void CheckForDuplicates(IMEPackage package)
+        private static void RunEntryChecks(IMEPackage package)
         {
             var dupes = EntryChecker.CheckForDuplicateIndices(package);
             foreach (var dupe in dupes)
             {
                 MilanLog.Error($"  Duplicate object found: {dupe.Entry?.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+            }
+
+            var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
+            foreach (var v in brokenMaterials)
+            {
+                MilanLog.Error($"  Material has no shader: {v.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+
             }
         }
 

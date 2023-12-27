@@ -735,7 +735,19 @@ namespace ProjectMilan.Pipelines
 
         public static PackageCache LE3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
         public static PackageCache ME3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3).ChainNewCache();
+
+        public static IEntry MissingObjectResolverExportsAsImports(IMEPackage package, string ifp)
+        {
+            return MissingObjectResolver(package, ifp, true);
+        }
+
         public static IEntry MissingObjectResolver(IMEPackage package, string ifp)
+        {
+            return MissingObjectResolver(package, ifp, false);
+        }
+
+
+        private static IEntry MissingObjectResolver(IMEPackage package, string ifp, bool portExportsAsImports)
         {
             // Redirect base GUI assets to DLC assets so we don't port unused GUI assets
             if (ifp == "GUI_SF_MPNewLobby.MPNewLobby")
@@ -776,7 +788,7 @@ namespace ProjectMilan.Pipelines
                         if (donorEntry != null)
                         {
                             MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY_MOR);
-                            return PortDonorIntoPackage(ME3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR);
+                            return PortDonorIntoPackage(ME3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR, true);
                         }
                     }
                 }
@@ -797,7 +809,7 @@ namespace ProjectMilan.Pipelines
                     if (donorEntry != null)
                     {
                         MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY_MOR);
-                        return PortDonorIntoPackage(LE3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR);
+                        return PortDonorIntoPackage(LE3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR, portExportsAsImports);
                     }
                     else
                     {
@@ -810,7 +822,7 @@ namespace ProjectMilan.Pipelines
         }
 
 
-        private static IEntry PortDonorIntoPackage(PackageCache globalCache, IEntry donorEntry, IMEPackage package, string logCategory)
+        private static IEntry PortDonorIntoPackage(PackageCache globalCache, IEntry donorEntry, IMEPackage package, string logCategory, bool portExportsAsImports)
         {
             if (donorEntry is ImportEntry donorImport)
             {
@@ -837,6 +849,7 @@ namespace ProjectMilan.Pipelines
                     TargetGameDonorDB = MilanShared.LE3ObjectDB,
                     DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                     PortImportsMemorySafe = true, // MPCommon might try to reference BIO_COMMON which we do not want.
+                    PortExportsAsImportsWhenPossible = portExportsAsImports
                 };
                 var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, globalCache, customROP: rop);
                 return newExp;
