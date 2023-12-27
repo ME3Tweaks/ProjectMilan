@@ -51,7 +51,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 parentCache.GetCachedPackage(commonPackage);
             }
 
-            Parallel.ForEach(vars.WeaponPipelines, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, weapon =>
+            Parallel.ForEach(vars.WeaponPipelines, new ParallelOptions() { MaxDegreeOfParallelism = 1 /* Program.Settings.MaxThreads*/ }, weapon =>
             {
                 // Uncomment this to port everything
                 if (/*false && */!weapon.Enabled)
@@ -165,7 +165,7 @@ namespace ProjectMilan.Pipelines.Weapons
             UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
             {
                 Cache = pipeline.Cache,
-                MissingObjectResolver = MilanShared.MissingObjectResolver,
+                MissingObjectResolver = MilanShared.MissingObjectResolverExportsAsImports,
                 GetVTableFromDonor = MilanShared.GetVTableFromDonor
             };
             // Different forced export packages
@@ -494,10 +494,40 @@ namespace ProjectMilan.Pipelines.Weapons
                 LE3PackageName = "SFXWeapon_AssaultRifle_Krogan_GUN02",
                 Enabled  = true
             },
-            new WeaponSpecificPipeline() { PackageName = "SFXWeapon_AssaultRifles_KroganDLC", Enabled  = false}, // Striker
 
             // MP2
-
+            new WeaponSpecificPipeline()
+            { 
+                // Cerberus Harrier Assault Rifle
+                WeaponClassName = "SFXWeapon_AssaultRifle_Cerberus",
+                PackageName = "SFXWeapon_AssaultRifle_CerberusDLC",
+                LE3PackageName = "SFXWeapon_AssaultRifle_Cerb_GUN01",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            { 
+                // Prothean Particle Rifle
+                WeaponClassName = "SFXWeapon_AssaultRifle_Prothean_MP",
+                PackageName = "SFXWeapon_AssaultRifle_ProtheanDLC",
+                LE3PackageName = "SFXWeapon_AssaultRifles_DLC1",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            { 
+                // Reegar Carbine Shotgun
+                WeaponClassName = "SFXWeapon_Shotgun_Quarian",
+                PackageName = "SFXWeapon_Shotgun_QuarianDLC",
+                LE3PackageName = "SFXWeapon_Shotgun_Quarian_GUN01",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            { 
+                // Krysae Sniper Rifle
+                WeaponClassName = "SFXWeapon_SniperRifle_Turian",
+                PackageName = "SFXWeapon_SniperRifle_TurianDLC",
+                LE3PackageName = "SFXWeapon_SniperRifle_Turian_GUN01",
+                Enabled  = true
+            },
             // MP3
 
             // MP4
@@ -507,7 +537,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_SniperRifle_Collector",
                 PackageName = "SFXWeapon_SniperRifle_Collector",
                 LE3PackageName = null, // There is no LE3 version of this package.
-                Enabled  = false
+                Enabled  = true
             },
             // MP5
         };
