@@ -99,7 +99,7 @@ namespace ProjectMilan.Pipelines.Audio
             MilanLog.Information("The following banks will be built into the WwiseProject:", customPrefix: LOG_CATEGORY);
             foreach (var lifp in bankInventory)
             {
-                MilanLog.Information($"  {lifp}", customPrefix: LOG_CATEGORY);
+                MilanLog.Information($"  {lifp?.LocalizedInfo}", customPrefix: LOG_CATEGORY);
             }
 
             // Decompile the audio from the banks

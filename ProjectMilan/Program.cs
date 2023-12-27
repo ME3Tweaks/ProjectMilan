@@ -1,9 +1,6 @@
-﻿using System.Diagnostics;
-using CommandLine;
+﻿using CommandLine;
 using LegendaryExplorerCore;
-using LegendaryExplorerCore.Gammtek.IO;
 using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Save;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Finalize;
@@ -11,7 +8,6 @@ using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Mod;
-using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Pipelines.Verify;
@@ -78,7 +74,6 @@ namespace ProjectMilan
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
-            // MPCommon.HackPatchParents();
 
             RunPipelines();
         }
@@ -97,7 +92,6 @@ namespace ProjectMilan
             {
                 MilanLog.Error($"Must point your settings at your mod library version of the DLC folder! Make sure you import the template from December 11 2023 (or newer) in #links.");
                 Environment.Exit(1);
-                return;
             }
         }
 
@@ -183,14 +177,14 @@ namespace ProjectMilan
         }
 
 
-        private static void REsearch()
+        private static void Research()
         {
-            Dictionary<int, ProfileSetting> ProfileSettings = new(103); // ME3 uses 100 keys so it's likely we'll hit that much normally
+            /*Dictionary<int, ProfileSetting> ProfileSettings = new(103); // ME3 uses 100 keys so it's likely we'll hit that much normally
             var version = 0;
 
             var infile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile";
-            var inData = File.ReadAllBytes(infile);
-            LocalProfile lp = LocalProfile.DeserializeLocalProfile(infile, MEGame.LE3, false, false, true);
+            var inData = File.ReadAllBytes(infile); 
+            lp = LocalProfile.DeserializeLocalProfile(infile, MEGame.LE3, false, false, true);
             lp.SetProfileSettingById(1, "20;4;Adept;20;10500000.0000;11");
             lp.SetProfileSettingById(2, "20;4;Soldier;20;10500000.0000;15");
             lp.SetProfileSettingById(3, "20;4;Engineer;20;10500000.0000;16");
@@ -213,7 +207,7 @@ namespace ProjectMilan
                 Debug.WriteLine("PASS");
             }
 
-            Debug.WriteLine("done");
+            Debug.WriteLine("done");*/
         }
     }
 }

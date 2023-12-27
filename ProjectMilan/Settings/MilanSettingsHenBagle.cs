@@ -10,7 +10,7 @@ namespace ProjectMilan.Settings
         public bool RunMPCommonPipeline { get; set; } = false;
         public bool RunKitsPipeline { get; set; } = false;
         public bool RunWeaponsPipeline { get; set; } = false;
-        public bool RunLevelsPipeline { get; set; } = false;
+        public bool RunLevelsPipeline { get; set; } = true;
         public bool RunAudioPipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = false;
         public int MaxThreads { get; set; } = 1;

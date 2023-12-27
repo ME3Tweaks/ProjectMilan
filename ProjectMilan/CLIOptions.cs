@@ -13,6 +13,6 @@ namespace ProjectMilan
     internal class CLIOptions
     {
         [Option('c', "config", HelpText = "Specifies which developer configuration to use.", Required = true)]
-        public string Config { get; set; }
+        public string Config { get; set; } = string.Empty;
     }
 }
