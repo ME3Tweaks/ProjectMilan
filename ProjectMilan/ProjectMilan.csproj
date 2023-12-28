@@ -20,9 +20,6 @@
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
     <Folder Include="Pipelines\Weapons\LooseClasses\" />
-    <Folder Include="Pipelines\Weapons\Modified\SFXGameContentDLC_CON_MP3\" />
-    <Folder Include="Pipelines\Weapons\Modified\SFXGameContentDLC_CON_MP5\" />
-    <Folder Include="Pipelines\Weapons\Modified\SFXGameContentDLC_CON_MP2\" />
   </ItemGroup>
 
   <ItemGroup>
