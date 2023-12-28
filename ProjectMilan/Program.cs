@@ -1,9 +1,6 @@
-﻿using System.Diagnostics;
-using CommandLine;
+﻿using CommandLine;
 using LegendaryExplorerCore;
-using LegendaryExplorerCore.Gammtek.IO;
 using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Save;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Finalize;
@@ -11,7 +8,6 @@ using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Mod;
-using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Pipelines.Verify;
@@ -78,7 +74,6 @@ namespace ProjectMilan
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
-            // MPCommon.HackPatchParents();
 
             RunPipelines();
         }
@@ -97,7 +92,6 @@ namespace ProjectMilan
             {
                 MilanLog.Error($"Must point your settings at your mod library version of the DLC folder! Make sure you import the template from December 11 2023 (or newer) in #links.");
                 Environment.Exit(1);
-                return;
             }
         }
 
@@ -126,7 +120,7 @@ namespace ProjectMilan
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
-            RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports pacakges that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
+            RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
 
             // Content build pipelines
             if (!MilanShared.EnsureMPCommonInGame()) // These require BIOP_MP_COMMON
@@ -147,7 +141,7 @@ namespace ProjectMilan
 
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
-            RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio"); // Converts audio
+            RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
 
             // Finalize
             RunPipeline(true, ModFinalize.RunPipeline, "Finalize");
@@ -183,9 +177,9 @@ namespace ProjectMilan
         }
 
 
-        private static void REsearch()
+        private static void Research()
         {
-            Dictionary<int, ProfileSetting> ProfileSettings = new(103); // ME3 uses 100 keys so it's likely we'll hit that much normally
+            /*Dictionary<int, ProfileSetting> ProfileSettings = new(103); // ME3 uses 100 keys so it's likely we'll hit that much normally
             var version = 0;
 
             var infile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile";
@@ -213,7 +207,7 @@ namespace ProjectMilan
                 Debug.WriteLine("PASS");
             }
 
-            Debug.WriteLine("done");
+            Debug.WriteLine("done");*/
         }
     }
 }
