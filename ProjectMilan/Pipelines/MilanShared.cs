@@ -146,7 +146,7 @@ namespace ProjectMilan.Pipelines
 
         public static string GetInjectedFunctionsPath(string className)
         {
-            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"Functions", className);
+            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"LooseFunctions", className);
         }
 
         public static IMEPackage GetLE3Package(string packageFileName)
@@ -418,10 +418,12 @@ namespace ProjectMilan.Pipelines
 
         // This is a hack. These classes have some named functions that need updated in a second pass
         // due to class compilation ordering.
-        private static string[] ClassesToDoubleRecompile = new[]
+        public static string[] ClassesToDoubleRecompile = new[]
         {
             "SFXGameMPContent.SFXCustomAction_DisarmObject",
-            "SFXGameContentDLC_CON_MP3.SFXObjective_MobileAnnex"
+            "SFXGameContentDLC_CON_MP3.SFXObjective_MobileAnnex",
+            "SFXGameContentDLC_CON_MP5.SFXProjectile_Adas_MP",
+            "SFXGameContentDLC_CON_MP5.SFXProjectile_SalarianBlastSplitter_MP"
         };
 
         /// <summary>
@@ -507,10 +509,10 @@ namespace ProjectMilan.Pipelines
             }
 
 
-            // OLD CODE
+            // Original implementation
             if (true)
             {
-                destPackage.Save();
+                // destPackage.Save();
                 MilanLog.Information("Recompiling ported classes", customPrefix: logCategory);
                 UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
                 {
