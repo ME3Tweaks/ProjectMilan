@@ -212,7 +212,7 @@ namespace ProjectMilan.Pipelines
             return null;
         }
 
-        public static MemoryStream GetME3SFARFile(string sourceFileName)
+        public static MemoryStream? GetME3SFARFile(string sourceFileName)
         {
             if (MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, false,
                     Path.GetExtension(sourceFileName) == ".tfc", Path.GetExtension(sourceFileName) == ".afc")

@@ -35,20 +35,7 @@ namespace ProjectMilan.Pipelines.Audio
     /// </summary>
     internal class AudioRebuild
     {
-        class AudioVars
-        {
-            /// <summary>
-            /// Path the project folder
-            /// </summary>
-            public string ProjectDir { get; set; }
-
-            /// <summary>
-            /// Paths to the .wproj file
-            /// </summary>
-            public string ProjectWPath { get; set; }
-        }
-
-        private const string LOG_CATEGORY = @"MILAN-Audio";
+        private const string LOG_CATEGORY = @"MILAN-Audio-Rebuild";
 
         // Expected pipeline:
         // 1. Go through ME3 package files and find all WwiseBanks that are not in LE (using object database?)
@@ -58,52 +45,20 @@ namespace ProjectMilan.Pipelines.Audio
         // 5. Build new LE versions of banks using the Wwise Authoring API (WAAPI)
         // 6. Inject the new banks into the compiled mod files
         // This will probably be one of the later pipelines
-        public static void RunPipeline()
+        public static void RunPipeline(List<MilanBankInfo> bankInventory, AudioVars vars)
         {
-            var vars = new AudioVars();
-            // Step 0: Create the template project
-            // Create template project ---------------------
-            vars.ProjectDir = Path.Combine(MilanShared.PipelineRoot, "Audio", "Wwise", "Milan");
-            if (Directory.Exists(vars.ProjectDir))
-            {
-                Utilities.DeleteFilesAndFoldersRecursively(vars.ProjectDir);
-            }
-
-            // Extract template
-            ZipFile.ExtractToDirectory(Path.Combine(MilanShared.PipelineRoot, "Audio", "Template", "Template.zip"), vars.ProjectDir);
-            vars.ProjectWPath = Path.Combine(vars.ProjectDir, "LE3TemplateProject.wproj");
-
-            // Step 1: Find all banks, decompile them
-            List<MilanBankInfo> bankInventory = new List<MilanBankInfo>();
-            foreach (var pf in Directory.GetFileSystemEntries(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories))
-            {
-                MilanLog.Information($"Inventorying WwiseBanks in {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
-                var package = MEPackageHandler.UnsafePartialLoad(pf, x => false); // Only need to find WwiseBank
-                foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank"))
-                {
-                    var matchingObjects = MilanShared.LE3ObjectDB.GetFilesContainingObject(exp.InstancedFullPath, package.Localization);
-                    if (matchingObjects == null)
-                    {
-                        // Needs extracted
-                        var lifp = new MilanBankInfo()
-                        {
-                            LocalizedInfo = new LocalizedIFP() { Localization = package.Localization, InstancedFullPath = exp.InstancedFullPath },
-                        };
-                        matchingObjects = MilanShared.ME3ObjectDB.GetFilesContainingObject(exp.InstancedFullPath, package.Localization);
-                        if (matchingObjects != null && matchingObjects.Count > 0 && !bankInventory.Contains(lifp))
-                            bankInventory.Add(lifp);
-                    }
-                }
-            }
-
             MilanLog.Information("The following banks will be built into the WwiseProject:", customPrefix: LOG_CATEGORY);
             foreach (var lifp in bankInventory)
             {
                 MilanLog.Information($"  {lifp?.LocalizedInfo}", customPrefix: LOG_CATEGORY);
             }
+            
+            // Step 0: Create the template project
+            // Create template project ---------------------
 
-            // Decompile the audio from the banks
-            DecompileBanks(vars, bankInventory);
+            // Extract template
+            ZipFile.ExtractToDirectory(Path.Combine(MilanShared.PipelineRoot, "Audio", "Template", "Template.zip"), vars.ProjectDir);
+            vars.ProjectWPath = Path.Combine(vars.ProjectDir, "LE3TemplateProject.wproj");
 
             // Generate the WwiseProject
             BuildWwiseProject(vars, bankInventory);
@@ -258,18 +213,6 @@ namespace ProjectMilan.Pipelines.Audio
             }
         }
 
-        /// <summary>
-        /// Extracts audio from ME3 banks and prepares them for import into Wwise.
-        /// </summary>
-        /// <param name="bankInventory"></param>
-        private static void DecompileBanks(AudioVars vars, List<MilanBankInfo> bankInventory)
-        {
-            foreach (var bankInfo in bankInventory)
-            {
-                DecompileME3WwiseBank(vars, bankInfo);
-            }
-        }
-
         //private static void ExtractWwiseBanks()
         //{
         //    // Basegame
@@ -322,188 +265,6 @@ namespace ProjectMilan.Pipelines.Audio
                 // May require admin rights for this operation to succeed.
                 data.WriteToFile(fileToPatch);
             }
-        }
-
-        /// <summary>
-        /// Extracts an ME3 WwiseBank to a .bnk file
-        /// </summary>
-        /// <param name="export"></param>
-        //private static void ExtractWwiseBank(ExportEntry export)
-        //{
-        //    //if (export.Game != MEGame.ME3)
-        //    //    throw new Exception("This method is only for extracting ME3 WwiseBanks!");
-
-        //    var outPath = Path.Combine(Program.Settings.OutputModPath, @"ME3", @"WwiseBanks", export.ObjectName);
-        //    var outBankPath = Path.Combine(outPath, $"{export.ObjectName}.bnk");
-        //    if (File.Exists(outBankPath))
-        //        return;
-        //    Directory.CreateDirectory(outPath);
-
-        //    MilanLog.Information($"Extracting WwiseBank {export.ObjectName}", customPrefix: LOG_CATEGORY);
-        //    // Taken from LEX Package Editor
-        //    var data = new MemoryStream(export.GetBinaryData());
-        //    if (export.Game.IsGame3())
-        //    {
-        //        data.Skip(0x10);
-        //    }
-        //    else if (export.Game.IsGame2())
-        //    {
-        //        data.Skip(0x18);
-        //    }
-
-        //    using FileStream fs = new FileStream(outBankPath, FileMode.Create);
-        //    data.CopyToEx(fs, (int)data.Length - 0x10);
-        //}
-
-        /// <summary>
-        /// Information about ME3 sound bank that is being ported to LE3
-        /// </summary>
-        class MilanBankInfo
-        {
-            /// <summary>
-            /// How to find the bank
-            /// </summary>
-            public LocalizedIFP LocalizedInfo { get; set; }
-
-            /// <summary>
-            /// ME3 has one event map to its referenced streams. LE3 lists all streams in every event.
-            /// </summary>
-            public Dictionary<ExportEntry, List<ExportEntry>> EventToStreamMap { get; set; }
-
-            /// <summary>
-            /// Source bank export.
-            /// </summary>
-            public ExportEntry Export { get; set; }
-
-            // Eventually we will need additional information such as random containers.
-
-            public override bool Equals(object other)
-            {
-                var otherLIFP = other as MilanBankInfo;
-                if (otherLIFP == null)
-                    return false;
-
-                return otherLIFP.LocalizedInfo.Localization == LocalizedInfo.Localization && otherLIFP.LocalizedInfo.InstancedFullPath == LocalizedInfo.InstancedFullPath;
-            }
-
-            public string GetDecompiledFolderName()
-            {
-                var outDir = Path.Combine(GetDecompiledBanksFolder(), Export.ObjectName);
-                if (LocalizedInfo.Localization != MELocalization.None)
-                {
-                    outDir += $"_{LocalizedInfo.Localization}";
-                }
-
-                return outDir;
-            }
-        }
-
-        //public static void TestDecomp()
-        //{
-
-        //    var me3P = MilanShared.GetME3Package("BioSimpleDlgContainer_Horde_LOC_INT.pcc");
-        //    ConvertBanks(me3P);
-
-
-        //}
-
-        //private static void ConvertBanks(IMEPackage le3Package)
-        //{
-        //    List<MilanBankInfo> bankInfos = new List<MilanBankInfo>();
-
-        //    // 1. Find banks
-        //    foreach (var bank in le3Package.Exports.Where(x => x.ClassName == "WwiseBank"))
-        //    {
-        //        var matchingObjects = MilanShared.LE3ObjectDB.GetFilesContainingObject(bank.InstancedFullPath);
-        //        if (matchingObjects == null)
-        //        {
-        //            // Only add banks that don't exist in the LE3 object database. These will need conversion
-        //            bankInfos.Add(new MilanBankInfo() { BankEntry = bank });
-        //        }
-        //    }
-
-        //    // Find events of banks
-        //    foreach (var evt in le3Package.Exports.Where(x => x.ClassName == "WwiseEvent"))
-        //    {
-        //        var bank = evt.GetProperty<StructProperty>("Relationships").GetProp<ObjectProperty>("Bank").ResolveToEntry(le3Package) as ExportEntry;
-        //        var bankInfo = bankInfos.FirstOrDefault(x => x.BankEntry == bank);
-        //        if (bankInfo == null)
-        //            continue; // This bank is not done like this
-        //        var wwiseBin = ObjectBinary.From<WwiseEvent>(evt);
-        //        if (wwiseBin.Links != null && wwiseBin.Links.Count == 1 && wwiseBin.Links[0].WwiseStreams.Count == 1)
-        //        {
-        //            bankInfo.EventToStreamMap[evt] = le3Package.GetUExport(wwiseBin.Links[0].WwiseStreams[0]);
-        //        }
-        //    }
-
-        //    // Decompile each bank
-        //    foreach (var bank in bankInfos)
-        //    {
-        //        // DecompileME3WwiseBank(bank);
-        //        //AddWwiseBankToProject(bank, le3Package);
-        //    }
-        //}
-
-        private static void DecompileME3WwiseBank(AudioVars vars, MilanBankInfo bankInfo)
-        {
-            var sourcePackages = MilanShared.ME3ObjectDB.GetFilesContainingObject(bankInfo.LocalizedInfo.InstancedFullPath, bankInfo.LocalizedInfo.Localization);
-            if (sourcePackages == null || sourcePackages.Count == 0)
-            {
-                // Probably don't have localized package available for this right now
-                return;
-            }
-            var sourcePackage = MilanShared.GetME3Package(Path.GetFileName(sourcePackages[0]));
-            var bankEntry = sourcePackage.FindExport(bankInfo.LocalizedInfo.InstancedFullPath);
-            bankInfo.Export = bankEntry;
-
-            MilanLog.Information($"Decompiling {bankEntry.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-            Directory.CreateDirectory(bankInfo.GetDecompiledFolderName());
-
-            bankInfo.EventToStreamMap = BuildEventToStreamMap(bankEntry);
-            foreach (var se in bankInfo.EventToStreamMap)
-            {
-                foreach (var stream in se.Value)
-                {
-                    MilanLog.Information($"  Extracting WwiseStream {stream.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-                    var wwstream = ObjectBinary.From<WwiseStream>(stream);
-                    var waveStream = wwstream.CreateWaveStream();
-                    var outPath = Path.Combine(bankInfo.GetDecompiledFolderName(), stream.ObjectName.Name[..^4] + ".wav"); // This removes _wav
-                    waveStream.WriteToFile(outPath);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Maps events to their streams (only works due to how ME3 does events. Does not work for LE3). Does not account for non streaming audio.
-        /// </summary>
-        /// <param name="bankEntry"></param>
-        /// <returns></returns>
-        private static Dictionary<ExportEntry, List<ExportEntry>> BuildEventToStreamMap(ExportEntry bankEntry)
-        {
-            var EventToStreamMap = new Dictionary<ExportEntry, List<ExportEntry>>();
-            foreach (var evt in bankEntry.FileRef.Exports.Where(x => x.ClassName == "WwiseEvent"))
-            {
-                var bank = evt.GetProperty<StructProperty>("Relationships").GetProp<ObjectProperty>("Bank").ResolveToEntry(bankEntry.FileRef) as ExportEntry;
-                if (bank != bankEntry)
-                    continue; // Not our bank
-                var wwiseBin = ObjectBinary.From<WwiseEvent>(evt);
-                if (wwiseBin.Links != null && wwiseBin.Links.Count == 1 && wwiseBin.Links[0].WwiseStreams.Count >= 1)
-                {
-                    var streams = new List<ExportEntry>();
-                    EventToStreamMap[evt] = streams;
-                    foreach (var stream in wwiseBin.Links[0].WwiseStreams)
-                    {
-                        streams.Add(bank.FileRef.GetUExport(stream)); // Should this be IEntry?
-                    }
-                }
-            }
-
-            return EventToStreamMap;
-        }
-
-        private static string GetDecompiledBanksFolder()
-        {
-            return Path.Combine(MilanShared.PipelineRoot, "Audio", "DecompiledBanks");
         }
 
         class WwiseImportRow
@@ -572,7 +333,7 @@ namespace ProjectMilan.Pipelines.Audio
 
             // Generate CSV records for import.
             var records = new List<WwiseImportRow>();
-            var srcDir = Path.Combine(GetDecompiledBanksFolder(), bankInfo.GetDecompiledFolderName());
+            var srcDir = Path.Combine(AudioPipeline.GetDecompiledBanksFolder(), bankInfo.GetDecompiledFolderName());
 
             foreach (var evtStream in bankInfo.EventToStreamMap)
             {

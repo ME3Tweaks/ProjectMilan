@@ -16,6 +16,6 @@ namespace ProjectMilan.Settings
         public int MaxThreads { get; set; } = 1;
         public bool DontDeleteModFolder { get; set; } = false;
         public bool RunNonStartupPipeline { get; set; } = false;
-        public bool RunResynthesis { get; set; } = false;
+        public bool RunResynthesis { get; set; } = true;
     }
 }
