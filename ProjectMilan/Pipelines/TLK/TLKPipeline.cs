@@ -30,7 +30,7 @@ namespace ProjectMilan.Pipelines.TLK
 
                 for (int i = 1; i <= 5; i++)
                 {
-                    var dlcTlkS = MilanShared.GetME3SFARFile($"DLC_CON_MP{i}_{loc}.tlk");
+                    var dlcTlkS = MilanShared.GetME3SFARFile($"DLC_CON_MP{i}_{loc}.tlk", true);
                     var dlcTlk = new ME2ME3TalkFile(dlcTlkS);
                     foreach (var f in dlcTlk.StringRefs)
                     {
