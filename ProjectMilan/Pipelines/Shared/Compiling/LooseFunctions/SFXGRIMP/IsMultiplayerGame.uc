@@ -3,6 +3,7 @@
 // this fixes the pause screen using the wrong version
 // and correctly disables power/weapon wheels
 // might not be needed when we get the NetMode variable set correctly. 
+// NOTE: 12/28/2023 - may no longer be necessary now.
 public simulated function bool IsMultiplayerGame()
 {
     return true;

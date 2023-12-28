@@ -46,7 +46,8 @@ namespace ProjectMilan.Pipelines.Kits
                 parentCache.GetCachedPackage(commonPackage);
             }
 
-            Parallel.ForEach(vars.KitPipelines, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, kit =>
+            var kits = vars.KitPipelines.OrderBy(x => x.Enabled); // Frontload enabled ones for multithread
+            Parallel.ForEach(kits.AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, kit =>
             {
                 // Uncomment this to port everything
                 if (/*false && */!kit.Enabled)

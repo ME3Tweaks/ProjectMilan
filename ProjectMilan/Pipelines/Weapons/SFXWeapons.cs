@@ -51,7 +51,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 parentCache.GetCachedPackage(commonPackage);
             }
 
-            Parallel.ForEach(vars.WeaponPipelines, new ParallelOptions() { MaxDegreeOfParallelism = 1 /* Program.Settings.MaxThreads*/ }, weapon =>
+            Parallel.ForEach(vars.WeaponPipelines.OrderBy(x => x.Enabled).AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = 1 /* Program.Settings.MaxThreads*/ }, weapon =>
             {
                 // Uncomment this to port everything
                 if (/*false && */!weapon.Enabled)
@@ -190,6 +190,24 @@ namespace ProjectMilan.Pipelines.Weapons
 
                 return false;
             }
+
+            FileLib lib = null;
+            foreach (var clsIFP in MilanShared.ClassesToDoubleRecompile)
+            {
+                var classX = weaponDestPackage.FindExport(clsIFP);
+                if (classX == null)
+                    continue;
+
+                if (lib == null)
+                {
+                    lib = new FileLib(weaponDestPackage);
+                    lib.Initialize(usop);
+                }
+                MilanLog.Information($"  Double recompiling {classX.ObjectName}", customPrefix: LOG_CATEGORY);
+                (_, string text) = UnrealScriptCompiler.DecompileExport(classX, lib, usop);
+                UnrealScriptCompiler.CompileClass(weaponDestPackage, text, lib, usop, classX);
+            }
+
             MilanLog.Information(@"Loose class compilation succeeded!", customPrefix: LOG_CATEGORY);
 
             MilanLog.Information(@"Creating object referencer", customPrefix: LOG_CATEGORY);
@@ -528,18 +546,108 @@ namespace ProjectMilan.Pipelines.Weapons
                 LE3PackageName = "SFXWeapon_SniperRifle_Turian_GUN01",
                 Enabled  = true
             },
+
             // MP3
+            new WeaponSpecificPipeline()
+            { 
+                // N7 Typhoon
+                WeaponClassName = "SFXWeapon_AssaultRifle_LMG",
+                PackageName = "SFXWeapon_AssaultRifle_LMGDLC",
+                LE3PackageName = "SFXWeapon_AssaultRifle_LMG_GUN02",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            { 
+                // Acolyte Pistol
+                WeaponClassName = "SFXWeapon_Pistol_Asari",
+                PackageName = "SFXWeapon_Pistol_AsariDLC",
+                LE3PackageName = "SFXWeapon_Pistol_Asari_GUN02",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            { 
+                // N7 Piranha
+                WeaponClassName = "SFXWeapon_Shotgun_Assault",
+                PackageName = "SFXWeapon_Shotgun_AssaultDLC",
+                LE3PackageName = "SFXWeapon_Shotgun_Assault_GUN02",
+                Enabled  = true
+            },
 
             // MP4
             new WeaponSpecificPipeline()
             {
-                // Kishock Harpoon Gun
+                // Collector SMG
+                WeaponClassName = "SFXWeapon_SniperRifle_Collector",
+                PackageName = "SFXWeapon_SniperRifle_Collector",
+                LE3PackageName = "BioD_CitSim_CllctrB", // There is no direct LE3 version of this package. It uses a _Shared version
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            {
+                // Collector Sniper Rifle
                 WeaponClassName = "SFXWeapon_SniperRifle_Collector",
                 PackageName = "SFXWeapon_SniperRifle_Collector",
                 LE3PackageName = null, // There is no LE3 version of this package.
                 Enabled  = true
             },
+
             // MP5
+            new WeaponSpecificPipeline()
+            {
+                // Adas Assault Rifle
+                WeaponClassName = "SFXWeapon_AssaultRifle_Adas_MP",
+                PackageName = "SFXWeapon_AssaultRifle_Adas_MP",
+                LE3PackageName = "SFXWeapon_AssaultRifle_Quarian",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            {
+                // M-7 Lancer
+                WeaponClassName = "SFXWeapon_AssaultRifle_Lancer_MP",
+                PackageName = "SFXWeapon_AssaultRifle_Lancer_MP",
+                LE3PackageName = "SFXWeapon_AssaultRifle_Lancer",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            {
+                // Geth Spitfire
+                WeaponClassName = "SFXWeapon_AssaultRifle_Spitfire",
+                PackageName = "SFXWeapon_AssaultRifle_Spitfire",
+                LE3PackageName = "SFXWeapon_AssaultRifle_Spitfire", // There is no direct LE3 version of this package. It is a heavy weapon version. Looks like maybe it was going to be a normal weapon though
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            {
+                // Bloodpack Executioner
+                WeaponClassName = "SFXWeapon_Pistol_Bloodpack_MP",
+                PackageName = "SFXWeapon_Pistol_Bloodpack_MP",
+                LE3PackageName = "SFXWeapon_Pistol_Bloodpack",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            {
+                // Silencer Pistol
+                WeaponClassName = "SFXWeapon_Pistol_Silencer_MP",
+                PackageName = "SFXWeapon_Pistol_Silencer_MP",
+                LE3PackageName = "SFXWeapon_Pistol_Silencer",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            {
+                // Venom Shotgun
+                WeaponClassName = "SFXWeapon_Shotgun_Salarian_MP",
+                PackageName = "SFXWeapon_Shotgun_Salarian_MP",
+                LE3PackageName = "SFXWeapon_Shotgun_Salarian",
+                Enabled  = true
+            },
+            new WeaponSpecificPipeline()
+            {
+                // Bloodpack Punisher
+                WeaponClassName = "SFXWeapon_SMG_Bloodpack_MP",
+                PackageName = "SFXWeapon_SMG_Bloodpack_MP",
+                LE3PackageName = "SFXWeapon_SMG_Bloodpack",
+                Enabled  = true
+            },
         };
     }
 }
