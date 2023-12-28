@@ -212,12 +212,14 @@ namespace ProjectMilan.Pipelines
             return null;
         }
 
-        public static MemoryStream? GetME3SFARFile(string sourceFileName)
+        public static MemoryStream GetME3SFARFile(string sourceFileName, bool returnOnDisk = false)
         {
-            if (MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, false,
-                    Path.GetExtension(sourceFileName) == ".tfc", Path.GetExtension(sourceFileName) == ".afc")
-                .TryGetValue(sourceFileName, out var filePath))
+            if (MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, false, Path.GetExtension(sourceFileName) == ".tfc", Path.GetExtension(sourceFileName) == ".afc").TryGetValue(sourceFileName, out var filePath))
             {
+                if (returnOnDisk)
+                {
+                    return new MemoryStream(File.ReadAllBytes(filePath));
+                }
                 return null; // Found on disk
             }
 
@@ -705,7 +707,7 @@ namespace ProjectMilan.Pipelines
 
         public static IEnumerable<IMEPackage> GetLE3GlobalPackages()
         {
-            if (le3GlobalCache == null) 
+            if (le3GlobalCache == null)
                 le3GlobalCache = InitGlobalPackages(MEGame.LE3);
             return le3GlobalCache.GetPackages();
         }
