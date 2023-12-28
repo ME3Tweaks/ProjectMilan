@@ -190,7 +190,7 @@ namespace ProjectMilan
 
             var infile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile";
             var inData = File.ReadAllBytes(infile);
-            LocalProfile lp = LocalProfile.DeserializeLocalProfile(infile, MEGame.LE3, false, false, true);
+            LocalProfile lp = LocalProfile.DeserializeLocalProfile(infile, MEGame.LE3, false, false);
             lp.SetProfileSettingById(1, "20;4;Adept;20;10500000.0000;11");
             lp.SetProfileSettingById(2, "20;4;Soldier;20;10500000.0000;15");
             lp.SetProfileSettingById(3, "20;4;Engineer;20;10500000.0000;16");
