@@ -4,29 +4,30 @@ using ME3Tweaks.Wwiser;
 
 namespace ProjectMilan.Pipelines.Audio;
 
+/// <summary>
+/// Pipeline for converting WwiseBanks from ME3 to LE3 using the Wwiser.NET tool
+/// </summary>
 internal static class BankConvertPipeline
 {
-    private const string LOG_CATEGORY = @"MILAN-Audio-Convert";
+    private const string LOG_CATEGORY = @"MILAN-Audio-WwiserConvert";
 
-    public static async Task RunPipeline(List<MilanBankInfo> bankInventory,  AudioVars vars)
+    public static void RunPipeline(List<MilanBankInfo> bankInventory)
     {
-        MilanLog.Information("The following banks will be converted using Wwiser:", customPrefix: LOG_CATEGORY);
-        foreach (var lifp in bankInventory)
-        {
-            MilanLog.Information($"  {lifp?.LocalizedInfo}", customPrefix: LOG_CATEGORY);
-        }
+        MilanLog.Information("Converting banks using Wwiser.NET", customPrefix: LOG_CATEGORY);
 
         foreach (var b in bankInventory)
         {
+            MilanLog.Information($" - Converting {b.LocalizedInfo}", customPrefix: LOG_CATEGORY);
+            
             // Skip data header
             var bankWithoutHeader = b.Export.GetBinaryData().Skip(sizeof(uint) * 4).ToArray();
             var bank = new WwiseBankParser(new MemoryStream(bankWithoutHeader));
-            await bank.Deserialize();
+            bank.Deserialize(); // Deserialize binary into object graph
             
-            bank.ConvertToVersion(134);
+            bank.ConvertToVersion(134); // Run Wwiser version convert
 
             var dataOut = new MemoryStream();
-            await bank.Serialize(dataOut);
+            bank.SerializeTo(dataOut);
             
             var length = dataOut.Length;
             dataOut.Position = 0;
@@ -37,8 +38,8 @@ internal static class BankConvertPipeline
             outStream.WriteInt32((int)length); // Compressed size
             outStream.WriteInt32((int)length); // Decompressed size
             outStream.WriteInt32(0); // Data offset - this is not external so this is not used
-            await dataOut.CopyToAsync(outStream);
-            b.Export.WriteBinary(outStream.ToArray()); // Do not use buffer
+            dataOut.CopyTo(outStream);
+            b.Export.WriteBinary(outStream.ToArray());
             
             b.Export.FileRef.Save();
         }

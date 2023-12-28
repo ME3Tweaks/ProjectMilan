@@ -1,27 +1,15 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
 using System.IO.Compression;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml.Linq;
 using CliWrap;
-using CliWrap.EventStream;
 using CsvHelper;
 using CsvHelper.Configuration;
 using LegendaryExplorerCore.Audio;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
-using LegendaryExplorerCore.Unreal;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.UnrealScript.Language.Tree;
-using NAudio.Codecs;
-using ProjectMilan.Pipelines.Audio.Extension;
-using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Utility;
 using WwiseTools.Objects;
 using WwiseTools.Src.Models.SoundBank;
@@ -31,19 +19,19 @@ using WwiseTools.Utils.SoundBank;
 namespace ProjectMilan.Pipelines.Audio
 {
     /// <summary>
-    /// Pipeline for extracting audio from ME3 and porting it to LE3 WwiseBanks
+    /// Pipeline for extracting streaming audio from ME3 and porting it to LE3 WwiseBanks.
+    ///
+    /// Runs all audio through Wwise authoring interface
     /// </summary>
-    internal class AudioRebuild
+    internal static class AudioRebuild
     {
-        private const string LOG_CATEGORY = @"MILAN-Audio-Rebuild";
+        private const string LOG_CATEGORY = @"MILAN-Audio-RebuildInWwise";
 
         // Expected pipeline:
-        // 1. Go through ME3 package files and find all WwiseBanks that are not in LE (using object database?)
-        // 2. Extract all WwiseBanks from them to disk.
-        // 3. Extract all audio from WwiseBank and WwiseStreams to disk
-        // 4. Decompile WwiseBank to gather information about what is needed to rebuild. Things like attenuation and stuff (this will probably be the worst step)
-        // 5. Build new LE versions of banks using the Wwise Authoring API (WAAPI)
-        // 6. Inject the new banks into the compiled mod files
+        // 1. Extract all audio from WwiseBank and WwiseStreams to disk
+        // 2. Decompile WwiseBank to gather information about what is needed to rebuild. Things like attenuation and stuff (this will probably be the worst step)
+        // 3. Build new LE versions of banks using the Wwise Authoring API (WAAPI)
+        // 4. Inject the new banks into the compiled mod files
         // This will probably be one of the later pipelines
         public static void RunPipeline(List<MilanBankInfo> bankInventory, AudioVars vars)
         {

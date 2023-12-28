@@ -5,10 +5,10 @@ class AudioVars
     /// <summary>
     /// Path the project folder
     /// </summary>
-    public string ProjectDir { get; set; }
+    public string ProjectDir { get; set; } = string.Empty;
 
     /// <summary>
     /// Paths to the .wproj file
     /// </summary>
-    public string ProjectWPath { get; set; }
+    public string ProjectWPath { get; set; } = string.Empty;
 }

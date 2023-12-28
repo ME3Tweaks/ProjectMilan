@@ -14,28 +14,8 @@ internal static class AudioPipeline
     public static void RunPipeline()
     {
         // Find all banks that need to be rebuilt
-        List<MilanBankInfo> bankInventory = new List<MilanBankInfo>();
-        foreach (var pf in Directory.GetFileSystemEntries(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories))
-        {
-            MilanLog.Information($"Inventorying WwiseBanks in {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
-            var package = MEPackageHandler.UnsafePartialLoad(pf, x => false); // Only need to find WwiseBank
-            foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank"))
-            {
-                var matchingObjects = MilanShared.LE3ObjectDB.GetFilesContainingObject(exp.InstancedFullPath, package.Localization);
-                if (matchingObjects == null)
-                {
-                    // Needs extracted
-                    var lifp = new MilanBankInfo()
-                    {
-                        LocalizedInfo = new LocalizedIFP() { Localization = package.Localization, InstancedFullPath = exp.InstancedFullPath },
-                    };
-                    matchingObjects = MilanShared.ME3ObjectDB.GetFilesContainingObject(exp.InstancedFullPath, package.Localization);
-                    if (matchingObjects != null && matchingObjects.Count > 0 && !bankInventory.Contains(lifp))
-                        bankInventory.Add(lifp);
-                }
-            }
-        }
-        
+        var banksToPort = GetBanksNotInLE3();
+
         var vars = new AudioVars
         {
             ProjectDir = Path.Combine(MilanShared.PipelineRoot, "Audio", "Wwise", "Milan")
@@ -47,15 +27,44 @@ internal static class AudioPipeline
         }
         
         // Decompile the audio from the banks
-        DecompileBanks(vars, bankInventory);
+        DecompileBanks(vars, banksToPort);
 
-        var streamingBanks = bankInventory.Where(b => b.EventToStreamMap.Count == 0).ToList();
-        var nonStreamingBanks = bankInventory.Where(b => b.EventToStreamMap.Count != 0).ToList();
+        var streamingBanks = banksToPort.Where(b => b.EventToStreamMap.Count == 0).ToList();
+        var nonStreamingBanks = banksToPort.Where(b => b.EventToStreamMap.Count != 0).ToList();
         
         
         //AudioRebuild.RunPipeline(streamingBanks, vars);
-        var t = BankConvertPipeline.RunPipeline(nonStreamingBanks, vars);
-        t.Wait();
+        BankConvertPipeline.RunPipeline(nonStreamingBanks);
+    }
+
+    private static List<MilanBankInfo> GetBanksNotInLE3()
+    {
+        List<MilanBankInfo> bankInventory = new List<MilanBankInfo>();
+        foreach (var pf in Directory.GetFileSystemEntries(Program.Settings.OutputModPath, "*.pcc",
+                     SearchOption.AllDirectories))
+        {
+            MilanLog.Information($"Inventorying WwiseBanks in {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
+            var package = MEPackageHandler.UnsafePartialLoad(pf, x => false); // Only need to find WwiseBank
+            foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank"))
+            {
+                var matchingObjects =
+                    MilanShared.LE3ObjectDB.GetFilesContainingObject(exp.InstancedFullPath, package.Localization);
+                if (matchingObjects == null) // bank not already in LE3
+                {
+                    var bankInfo = new MilanBankInfo()
+                    {
+                        LocalizedInfo = new LocalizedIFP()
+                            { Localization = package.Localization, InstancedFullPath = exp.InstancedFullPath },
+                    };
+                    matchingObjects =
+                        MilanShared.ME3ObjectDB.GetFilesContainingObject(exp.InstancedFullPath, package.Localization);
+                    if (matchingObjects is { Count: > 0 } && !bankInventory.Contains(bankInfo))
+                        bankInventory.Add(bankInfo);
+                }
+            }
+        }
+
+        return bankInventory;
     }
 
     public static string GetDecompiledBanksFolder()
