@@ -760,8 +760,9 @@ namespace ProjectMilan.Pipelines
             if (ifp == "GUI_SF_MPSelectKit.MPSelectKit")
                 ifp = "GUI_SF_MPSelectKit_DLC.MPSelectKit";
 
-            if (ifp == "GUI_SF_Leaderboard.Leaderboard")
-                ifp = "GUI_SF_Leaderboard_DLC.Leaderboard";
+            // redirect to a new UI based on the LE version that includes better textures and all _DLC changes, but with dynamic input support
+            if (ifp == "GUI_SF_Leaderboard.Leaderboard" || ifp == "GUI_SF_Leaderboard_DLC.Leaderboard")
+                ifp = "GUI_SF_Leaderboard_Milan.Leaderboard";
 
             if (ifp == "GUI_SF_MPMatchConsumables.MPMatchConsumables")
                 ifp = "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables";
@@ -774,6 +775,10 @@ namespace ProjectMilan.Pipelines
 
             if (ifp == "GUI_SF_MPReinforcementsReveal.MPReinforcementsReveal")
                 ifp = "GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal";
+
+            // we actually want to redirect to the basegame weapon select in this case; it includes all the _DLC updates, plus better textures and LE dynamic input support
+            if (ifp == "GUI_SF_WeaponSelect_DLC.WeaponSelect")
+                ifp = "GUI_SF_WeaponSelect.WeaponSelect";
 
             var possibleDonors = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
             if (possibleDonors == null)
