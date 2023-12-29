@@ -8,17 +8,12 @@ var Texture2D PromoTexture;
 
 // Functions
 // MILAN CHANGE DropTheSquid 12/12/2023
-// adding this so the ActionScript can tell whether to initially show PC or controller UI
-public function bool IsUsingGamepad()
-{
-    return bUsingGamepad;
-}
+
 // added so that we can react to input changes to update the UI
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
-	// TODO this is not working as intended, and I am not sure why
-    // SetMouseVisible(!usingGamepad);
+    SetMouseVisible(!usingGamepad);
     ActionScriptVoid("screen.RefreshButtonHelp");
 }
 // END MILAN
@@ -30,7 +25,12 @@ public event function OnStart()
     Super(SFXGUIMovie).OnStart();
     SetRequiresUIWorld(TRUE);
     SetGameMode(TRUE, 9);
-    SetMouseVisible(TRUE);
+    // MILAN CHANGE DropTheSquid 12/17/2023
+    // make sure we actually can control the mouse visibility
+	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
+	// make sure the mouse is initially shown/hidden based on the input mode
+	SetMouseVisible(!bUsingGamepad);
+	// END MILAN
     MPSaveManager = Class'SFXEngine'.static.GetSFXEngine().MPSaveManager;
     PromoData = MPSaveManager.GetPromotionalMessageData();
     PromotionalOfferID = PromoData.offerId;

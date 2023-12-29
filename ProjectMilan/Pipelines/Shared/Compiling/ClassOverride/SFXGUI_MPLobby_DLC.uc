@@ -7,7 +7,16 @@ Class SFXGUI_MPLobby_DLC extends SFXGUI_MPLobby
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
+	SetMouseVisible(!usingGamepad);
     ActionScriptVoid("screen.RefreshButtonHelp");
+}
+public event function OnStart()
+{
+    Super.OnStart();
+    // make sure we actually can control the mouse visibility
+	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
+	// make sure the mouse is initially shown/hidden based on the input mode
+	SetMouseVisible(!bUsingGamepad);
 }
 // END MILAN
 public function array<MatchConsumableDisplayInfo> GetCharacterConsumableInfo_DLC(SFXPRIMP PRI)

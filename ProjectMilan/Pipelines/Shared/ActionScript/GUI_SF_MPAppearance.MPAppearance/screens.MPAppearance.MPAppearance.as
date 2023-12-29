@@ -55,6 +55,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     var bLoaded = false;
     var RESTRICTED_CHARACTERS = "^;";
 	var confirmMenuItem;
+	var bUsingGamepad;
 	// MILAN CHANGE DropTheSquid 12/12/2023
 	// added for debugging purposes
 	// function LogFromAS()
@@ -236,6 +237,8 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             {
                 this.AppearanceMenu.AddNewItem(this.srSkinTone,skinToneState,this.srNew,this.MakeDelegate(this.OnAppearanceMenuItemSelected),this.MakeDelegate(this.OnSkinToneActivate));
             }
+			// ensure the confirm menu item gets added if needed after the list is initialized.
+			this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
         }
     }
     function OnAppearanceMenuItemSelected()
@@ -803,6 +806,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
 	// and makes it reusable (not just run once at init) so we can switch dynamically
     function RefreshButtonHelp(usingGamepad)
     {
+		this.bUsingGamepad = usingGamepad;
 		var bIsInDeployFlow = Boolean(flash.external.ExternalInterface.call("IsInDeployFlow"));
 		if(!usingGamepad)
         {
@@ -848,8 +852,14 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             this.m_ControllerButtons.ControlY.Active = false;
             this.m_ControllerButtons.ControlY._visible = false;
 			this.m_ControllerButtons.FitLeft();
-			// add the "confirm" item to the end of the list
-			this.confirmMenuItem = this.AppearanceMenu.AddNewItem(this.srConfirm,screens.MPAppearance.AppearanceMenuList.APPEARANCE_ITEM_NORMAL,this.srNew,this.MakeDelegate(this.OnConfirmSelect),this.MakeDelegate(this.OnConfirmActivate));
+			// make sure the list is loaded before we try to add things or it breaks the UI
+			// also make sure we don't add it twice
+			if (this.AppearanceMenu.IsLoaded() && !this.confirmMenuItem)
+			{
+				// add the "confirm" item to the end of the list
+				this.confirmMenuItem = this.AppearanceMenu.AddNewItem(this.srConfirm,screens.MPAppearance.AppearanceMenuList.APPEARANCE_ITEM_NORMAL,this.srNew,this.MakeDelegate(this.OnConfirmSelect),this.MakeDelegate(this.OnConfirmActivate));
+			}
+			
         }
     }
     // END MILAN
