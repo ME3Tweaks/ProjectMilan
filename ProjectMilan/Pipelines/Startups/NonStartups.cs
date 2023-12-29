@@ -132,14 +132,14 @@ namespace ProjectMilan.Pipelines.Startups
             "SFXMP4GearImages",
             "SFXMP4KitImages",
             //"SFXPawn_Abomination", // Collector faction, Geth, Cerb new enemy
-            //"SFXPawn_Atlas2", // Faster, more armor pieces
-            //"SFXPawn_Banshee2", // I think changes to warp ball?
-            //"SFXPawn_Cannibal2", // Can eat players
+            "SFXPawn_Atlas2", // Faster, more armor pieces - enabled as default cerb depends on it
+            "SFXPawn_Banshee2", // I think changes to warp ball? - enabled as default Reaper depends on 
+            "SFXPawn_Cannibal2", // Can eat players - enabled as default Reaper depends on 
             //"SFXPawn_CollectorCaptain",
             //"SFXPawn_CollectorTrooper",
             //"SFXPawn_GethBomber",
-            //"SFXPawn_GethPyro2", // Cannot be grabbed
-            //"SFXPawn_Marauder2", // Can stomp players
+            "SFXPawn_GethPyro2", // Cannot be grabbed  - enabled as default Reaper depends on 
+            "SFXPawn_Marauder2", // Can stomp players  - enabled as default Reaper depends on 
             //"SFXPawn_Phoenix",
             //"SFXPawn_Praetorian",
             //"SFXPawn_Scion",
@@ -168,9 +168,6 @@ namespace ProjectMilan.Pipelines.Startups
             "SFXMP5PowerImages",
             "SFXMP5WeaponImages",
             "SFXPawn_GethPrime2", // Changes to stagger, I think?
-
-
-
         };
 
         // If other options are ever needed for pass through they will be defined here
@@ -193,13 +190,14 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
+            var globalCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
             // We use .Distinct() cause list might have duplicates due to duplicates in DLC folders
             Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
                 {
-                    //if (packageBaseName is not "SFXMobileAnnex" and not "SFXMPObjectiveRetrieve")
+                    //if (packageBaseName is not "SFXMobileAnnex")
                     //    return;
-                    var cache = new PackageCache();
+                    var cache = globalCache.ChainNewCache();
                     cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
                     MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
                     var packageName = $"{packageBaseName}.pcc";

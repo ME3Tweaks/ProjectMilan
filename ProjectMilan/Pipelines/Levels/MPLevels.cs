@@ -32,12 +32,12 @@ namespace ProjectMilan.Pipelines.Levels
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
                 // Vanilla 
-                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Condor
                 new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
-                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
-                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
+                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Condor
 
 
 
@@ -93,6 +93,7 @@ namespace ProjectMilan.Pipelines.Levels
 
         private static void InternalRunPipeline(MPLevelsVars levelVars)
         {
+            TieredPackageCache parent = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
             foreach (var level in levelVars.LevelPipelines)
             {
                 if (!level.Enabled)
@@ -104,11 +105,11 @@ namespace ProjectMilan.Pipelines.Levels
 
                 if (level.SpecialPortingDelegate != null)
                 {
-                    level.SpecialPortingDelegate?.Invoke(level);
+                    level.SpecialPortingDelegate?.Invoke(level, parent);
                 }
                 else
                 {
-                    BeginPortingGeneric(level);
+                    BeginPortingGeneric(level, parent);
                 }
 
                 level.ClearReferences();
@@ -121,13 +122,13 @@ namespace ProjectMilan.Pipelines.Levels
         /// </summary>
         /// <param name="levelPipeline"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private static void BasegameMapPorting(LevelSpecificPipeline levelPipeline)
+        private static void BasegameMapPorting(LevelSpecificPipeline levelPipeline, TieredPackageCache parent)
         {
             levelPipeline.LogCategory = $"{LOG_CATEGORY}-{levelPipeline.BioP}";
             MilanLog.Information($@"Beginning generic level port: {levelPipeline.BioP}", customPrefix: levelPipeline.LogCategory);
 
             // Initialize cache
-            levelPipeline.Cache = new PackageCache();
+            levelPipeline.Cache = parent.ChainNewCache();
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Levels", levelPipeline.BioP);
             Directory.CreateDirectory(outputPath);
@@ -152,7 +153,7 @@ namespace ProjectMilan.Pipelines.Levels
                         TargetGameDonorDB = MilanShared.LE3ObjectDB,
                         Cache = levelPipeline.Cache,
                         PortExportsAsImportsWhenPossible = true,
-                        DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                        DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                     }, out var _);
             }
 
@@ -165,13 +166,13 @@ namespace ProjectMilan.Pipelines.Levels
             MilanShared.RefreshMilanFiles = true;
         }
 
-        private static void BeginPortingGeneric(LevelSpecificPipeline levelPipeline)
+        private static void BeginPortingGeneric(LevelSpecificPipeline levelPipeline, TieredPackageCache parent)
         {
             levelPipeline.LogCategory = $"{LOG_CATEGORY}-{levelPipeline.BioP}";
             MilanLog.Information($@"Beginning generic level port: {levelPipeline.BioP}", customPrefix: levelPipeline.LogCategory);
 
             // Initialize cache
-            levelPipeline.Cache = new PackageCache();
+            levelPipeline.Cache = parent.ChainNewCache();
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Levels", levelPipeline.BioP);
             Directory.CreateDirectory(outputPath);
@@ -228,7 +229,7 @@ namespace ProjectMilan.Pipelines.Levels
                 //    Debug.WriteLine($"// {me3BrokenMat.InstancedFullPath} -> ??? (??)");
                 //    Debug.WriteLine($"{{\"{shaderId}\", null}},");
                 //}
-                DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath());
+                DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath(), levelPipeline.Cache);
             }
             // levelPipeline.MaterialsNeedingDonors.Clear();
         }

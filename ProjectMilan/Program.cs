@@ -8,10 +8,10 @@ using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Mod;
-using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Pipelines.Verify;
+using ProjectMilan.Pipelines.Weapons;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
 
@@ -74,6 +74,7 @@ namespace ProjectMilan
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
+
             RunPipelines();
         }
 
@@ -91,7 +92,6 @@ namespace ProjectMilan
             {
                 MilanLog.Error($"Must point your settings at your mod library version of the DLC folder! Make sure you import the template from December 11 2023 (or newer) in #links.");
                 Environment.Exit(1);
-                return;
             }
         }
 
@@ -115,12 +115,12 @@ namespace ProjectMilan
             //return;
 
             // Requirements
-            MPCommon.HackPatchParents();
+            // MPCommon.HackPatchParents(); // Should no longer be necessary
 
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
-            RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports pacakges that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
+            RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
 
             // Content build pipelines
             if (!MilanShared.EnsureMPCommonInGame()) // These require BIOP_MP_COMMON
@@ -136,11 +136,12 @@ namespace ProjectMilan
             AudioRebuild.EnsureWwise7110();
 
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
+            RunPipeline(Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
-            RunPipeline(Settings.RunAudioPipeline, AudioRebuild.RunPipeline, "Audio"); // Converts audio
+            RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
 
             // Finalize
             RunPipeline(true, ModFinalize.RunPipeline, "Finalize");
@@ -173,6 +174,40 @@ namespace ProjectMilan
             {
                 MilanLog.Information($"Skipping pipeline: {pipelineName}, not selected for running in settings");
             }
+        }
+
+
+        private static void Research()
+        {
+            /*Dictionary<int, ProfileSetting> ProfileSettings = new(103); // ME3 uses 100 keys so it's likely we'll hit that much normally
+            var version = 0;
+
+            var infile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile";
+            var inData = File.ReadAllBytes(infile);
+            LocalProfile lp = LocalProfile.DeserializeLocalProfile(infile, MEGame.LE3, false, false);
+            lp.SetProfileSettingById(1, "20;4;Adept;20;10500000.0000;11");
+            lp.SetProfileSettingById(2, "20;4;Soldier;20;10500000.0000;15");
+            lp.SetProfileSettingById(3, "20;4;Engineer;20;10500000.0000;16");
+            lp.SetProfileSettingById(4, "20;4;Sentinel;20;10500000.0000;13");
+            lp.SetProfileSettingById(5, "20;4;Infiltrator;16;28770.0000;14");
+            lp.SetProfileSettingById(6, "20;4;Vanguard;20;10500000.0000;13");
+            var serialized = lp.Serialize();
+            var outData = serialized.ToArray();
+
+
+            var outfile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile2";
+            File.WriteAllBytes(outfile, outData);
+
+            if (!inData.SequenceEqual(outData))
+            {
+                Debug.WriteLine("FAIL!");
+            }
+            else
+            {
+                Debug.WriteLine("PASS");
+            }
+
+            Debug.WriteLine("done");*/
         }
     }
 }

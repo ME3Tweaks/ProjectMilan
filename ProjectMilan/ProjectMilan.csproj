@@ -10,13 +10,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Folder Include="Pipelines\Levels\BioP_MPHosp\Donors\Auto\" />
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
     <Folder Include="Pipelines\Mod\Live\" />
+    <Folder Include="Pipelines\Mod\Rejection\Vanilla\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
     <Folder Include="Pipelines\Shared\Compiling\FunctionOverride\SFXGameInfoMP_Lobby\" />
+    <Folder Include="Pipelines\Shared\Compiling\Functions\" />
+    <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
+    <Folder Include="Pipelines\Weapons\LooseClasses\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -33,5 +38,6 @@
   <ItemGroup>
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
     <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
+    <ProjectReference Include="..\Wwiser.NET\ME3Tweaks.Wwiser\ME3Tweaks.Wwiser.csproj" />
   </ItemGroup>
 </Project>

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Pipelines.Mod
 {
@@ -22,6 +23,7 @@ namespace ProjectMilan.Pipelines.Mod
         private static void InternalRunPipeline()
         {
             var files = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
+            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
             Parallel.ForEach(files, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads },
                 file =>
                 {
@@ -29,7 +31,19 @@ namespace ProjectMilan.Pipelines.Mod
                     var package = MEPackageHandler.OpenMEPackage(file);
                     try
                     {
-                        var newPackage = PackageResynthesizer.ResynthesizePackage(package);
+                        // Custom fix for loose class comp
+                        var sfxEPackage = package.FindExport("SFXGame", "Package");
+                        var sfxIPackage = package.FindImport("SFXGame", "Package");
+                        if (sfxEPackage != null && sfxIPackage != null)
+                        {
+                            foreach (var entry in sfxIPackage.GetChildren())
+                            {
+                                entry.Parent = sfxEPackage;
+                            }
+                            EntryPruner.TrashEntryAndDescendants(sfxIPackage); // Get rid of this pre-porting.
+                        }
+
+                        var newPackage = PackageResynthesizer.ResynthesizePackage(package, cache.ChainNewCache());
                         newPackage.Save();
 
                         // Save as different package for analysis
@@ -39,6 +53,8 @@ namespace ProjectMilan.Pipelines.Mod
                         // Some verification
                         foreach (var exp in package.Exports)
                         {
+                            if (exp.IsTrash())
+                                continue; // We don't care
                             var nExp = newPackage.FindExport(exp.InstancedFullPath);
                             if (nExp == null)
                                 Debugger.Break();
@@ -63,6 +79,9 @@ namespace ProjectMilan.Pipelines.Mod
 
                             if (nExp.ExportFlags != exp.ExportFlags)
                                 MilanLog.Error($"ExportFlags changed of export : {nExp.InstancedFullPath} to {nExp.ExportFlags} from {exp.ExportFlags}", customPrefix: LOG_CATEGORY);
+
+                            if (nExp.PackageGUID != exp.PackageGUID)
+                                MilanLog.Error($"PackageGuid changed of export : {nExp.InstancedFullPath} to {nExp.PackageGUID} from {exp.PackageGUID}", customPrefix: LOG_CATEGORY);
 
                         }
                     }

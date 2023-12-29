@@ -12,7 +12,7 @@ namespace ProjectMilan.Pipelines.Kits
         /// <summary>
         /// If this kit should be ported
         /// </summary>
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = true;
 
         /// <summary>
         /// Base package that contains primary kit

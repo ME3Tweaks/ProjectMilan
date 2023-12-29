@@ -6240,7 +6240,8 @@
 			<Property name="proximityradius" type="0">150.0f</Property>
 			<Property name="trapduration" type="0">20.0f</Property>
 		</Section>
-		<Section name="sfxgamecontentlivekismet.sfxseqact_missionidtoname">
+		<!-- This is SP only -->
+		<!--<Section name="sfxgamecontentlivekismet.sfxseqact_missionidtoname">
 			<Property name="mapiddataarray">
 				<Value type="3">(MapID=33, MapName="BioP_Omg001")</Value>
 				<Value type="3">(MapID=34, MapName="BioP_Lev001")</Value>
@@ -6260,7 +6261,7 @@
 				<Value type="3">(MapID=47, MapName="BioP_Cit004")</Value>
 				<Value type="3">(MapID=48, MapName="BioP_CitHot")</Value>
 			</Property>
-		</Section>
+		</Section>-->
 		<Section name="sfxgamempcontent.sfxcharacterclassmp_sentinel_turian">
 			<Property name="startingencumbrancecapacity" type="0">0.50f</Property>
 		</Section>
@@ -6832,7 +6833,7 @@
 				<Value type="3">(nID=655, PackName="n7equipment", Title=752066, OfferId=650100, Description=752067, CreditCost=75000, Visible=((and=(2000001))), ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store005"), RevealIntroTextureRef="GUI_MPImages.Creates.box5", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box5Holo", RevealIntroSound=MPRevealCrate5)</Value>
 				<Value type="3">(nID=656, PackName="arsenal", Title=752068, OfferId=650200, Description=752069, CreditCost=99000, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreBF3.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate5)</Value>
 				<Value type="3">(nID=657, PackName="reserves", Title=752070, OfferId=650300, Description=752071, CreditCost=99000, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreMPMoon.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Geth", RevealIntroHoloTextureRef="GUI_MPImages.Creates.GethHolo", RevealIntroSound=MPRevealCrate5)</Value>
-				<Value type="3">(nID=2004, PackName="conmp5dlctest",Title=768117, Description=747610, CreditCost=0, PerPlayerMax=1, Visible=((and=(1300001))), ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store005"), RevealIntroTextureRef="GUI_MPImages.Creates.box5", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box5Holo", RequiredDLCModuleIDs=(3225))</Value>
+				<Value type="3">(nID=2004, PackName="conmp5dlctest",Title=768117, Description=747610, CreditCost=0, PerPlayerMax=1, Visible=((and=(1300001))), ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store005"), RevealIntroTextureRef="GUI_MPImages.Creates.box5", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box5Holo")</Value> <!-- Milan - remove DLC requirement -->
 				<Value type="3">(nID=155, PackName="weekly1",Title=731378, Description=809298, Visible=((and=(1500101))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=2, PackName="weekly2",Title=731378, Description=809298, Visible=((and=(1500102))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=3, PackName="weekly3",Title=731378, Description=809298, Visible=((and=(1500104))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
@@ -6854,7 +6855,7 @@
 				<Value type="3">(nID=20, PackName="FreeLodestar",Title=738450, Description=738451, CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=21, PackName="Lodestar1",Title=731378, Description=809298, Visible=((and=(1500121))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=22, PackName="Lodestar2",Title=731378, Description=809298, Visible=((and=(1500122))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=23, PackName="FreeReckoning",Title=738450, Description=738451, CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1, RequiredDLCModuleIDs=(3225))</Value>
+				<Value type="3">(nID=23, PackName="FreeReckoning",Title=738450, Description=738451, CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value> <!-- Milan - remove DLC requirement -->
 				<Value type="3">(nID=13, PackName="prophecy",Title=731378, Description=809298, Visible=((and=(1500114))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=1, PackName="bf3",Title=723280, Description=723281, CreditCost=0, srPromoString=703324, PerPlayerMax=1, Visible=((and=(1150000))), ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=51, PackName="loyalty1",Title=724754, Description=724755, CreditCost=0, srPromoString=703324, Visible=((and=(1100001))), PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.box2", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box2Holo", RevealIntroSound=MPRevealCrate1)</Value>
@@ -7188,13 +7189,18 @@
 		<Section name="sfxgamempcontent.sfxwave_horde">
 			<Property name="berserkstartcounts" type="3">(Difficulty=DO_Level4,EnemiesLeft=10)</Property>
 			<Property name="enemylist">
-				<Value type="4">(EnemyType="WAVE_CER_Phantom",\t\t\tEnemyArchetypeName = "Char_Enemies.Archetypes.Cerberus.Phantom",\t\tWaveCost=80)</Value>
-				<Value type="3">( EnemyType="WAVE_CER_Phantom", EnemyArchetypeName="Char_Enemies_MP3.Archetypes.Cerberus.Phantom",WaveCost=80 )</Value>
+				<!-- We do not need to use Phantom2, its shader was only broken in OT -->
+				<!--<Value type="4">(EnemyType="WAVE_CER_Phantom",\t\t\tEnemyArchetypeName = "Char_Enemies.Archetypes.Cerberus.Phantom",\t\tWaveCost=80)</Value>
+				<Value type="3">( EnemyType="WAVE_CER_Phantom", EnemyArchetypeName="Char_Enemies_MP3.Archetypes.Cerberus.Phantom",WaveCost=80 )</Value>-->
+
+
+				<!-- These may need adjusted to use the SP debaked versions we will have to make -->
 				<Value type="3">(EnemyType="WAVE_COL_CollectorTrooper",\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.CollectorTrooper",\tWaveCost=25)</Value>
 				<Value type="3">(EnemyType="WAVE_COL_CollectorCaptain",\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.CollectorCaptain",\tWaveCost=35)</Value>
 				<Value type="3">(EnemyType="WAVE_COL_Abomination",\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.Abomination",\t\tWaveCost=40)</Value>
 				<Value type="3">(EnemyType="WAVE_COL_Scion",\t\t\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.Scion",\t\t\tWaveCost=75)</Value>
 				<Value type="3">(EnemyType="WAVE_COL_Praetorian",\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Collectors.Praetorian",\t\tWaveCost=120)</Value>
+			
 				<Value type="3">(EnemyType="WAVE_CER_Phoenix",\t\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Cerberus.Phoenix",\t\t\tWaveCost=70)</Value>
 				<Value type="4">(EnemyType="WAVE_CER_Atlas",\t\t\t\tEnemyArchetypeName = "Char_Enemies.Archetypes.Cerberus.Atlas",\t\t\tWaveCost=100)</Value>
 				<Value type="3">(EnemyType="WAVE_CER_Atlas",\t\t\t\tEnemyArchetypeName = "Char_Enemies_MP4.Archetypes.Cerberus.Atlas",\t\t\t\tWaveCost=100)</Value>
@@ -7387,19 +7393,23 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP2.SFXWeapon_Shotgun_Quarian")</Value>
 			</Property>
 			<Property name="poolname" type="0">conmp2gun</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
+
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gearbatariangauntlet sfxgawreinforcementmatchconsumable_gear">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_BatarianGauntlet", VersionIdx = 0)</Property>
 			<Property name="geartokenslist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_BatarianGauntlet",Custom0Tokens[0]=6.00f,Custom0Tokens[1]=6.50f,Custom0Tokens[2]=7.00f,Custom0Tokens[3]=7.50f,Custom0Tokens[4]=8.00f)</Property>
 			<Property name="poolname" type="0">gearbatariangauntlet</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gearvisionhelmet sfxgawreinforcementmatchconsumable_gear">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_VisionHelmet", VersionIdx = 0)</Property>
 			<Property name="geartokenslist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_VisionHelmet",Custom0Tokens[0]=0.1f,Custom0Tokens[1]=0.125f,Custom0Tokens[2]=0.15f,Custom0Tokens[3]=0.175f,Custom0Tokens[4]=0.20f)</Property>
 			<Property name="poolname" type="0">gearvisionhelmet</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldcommonweapon sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7467,7 +7477,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_Shared.SFXWeaponMod_PistolSuperDamage")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldmod</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldmodmp5 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7478,7 +7489,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_SMGPowerDamage_MP5")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldmod</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldultrarare sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7540,7 +7552,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP1.SFXWeapon_SMG_Geth")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldweapon</Property>
-			<Property name="requireddlcmoduleids" type="3">2300</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldweaponmp1backup sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7549,7 +7562,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP1.SFXWeapon_SMG_Geth")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">2300</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldweaponmp2 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7557,7 +7571,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP2.SFXWeapon_Shotgun_Quarian")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldweapon</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldweaponmp2backup sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7565,7 +7580,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP2.SFXWeapon_Shotgun_Quarian")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldweaponmp3 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7573,7 +7589,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP3.SFXWeapon_Shotgun_Assault")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldweapon</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldweaponmp3backup sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7581,7 +7598,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP3.SFXWeapon_Shotgun_Assault")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldweaponmp4 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7589,7 +7607,8 @@
 				<Value type="3">(UniqueName="SFXGameContent.SFXWeapon_AssaultRifle_Collector")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldweapon</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldweaponmp5 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7598,7 +7617,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_Pistol_Silencer_MP"); Will be available when we release Citadel</Value>
 			</Property>
 			<Property name="poolname" type="0">goldweapon</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_goldweaponmp5backup sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7607,42 +7627,50 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_Pistol_Silencer_MP"); Will be available when we release Citadel</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gunadasar sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_AssaultRifle_Adas_MP")</Property>
 			<Property name="poolname" type="0">gunadas</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gunbloodpackpistol sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_Pistol_Bloodpack_MP")</Property>
 			<Property name="poolname" type="0">gunbloodpackpistol</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gunbloodpacksmg sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_SMG_Bloodpack_MP")</Property>
 			<Property name="poolname" type="0">gunbloodpacksmg</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gunlancerar sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_AssaultRifle_Lancer_MP")</Property>
 			<Property name="poolname" type="0">gunlancer</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gunsalarianshotgun sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_Shotgun_Salarian_MP")</Property>
 			<Property name="poolname" type="0">gunsalarianshotgun</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gunsilencedpistol sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_Pistol_Silencer_MP")</Property>
 			<Property name="poolname" type="0">gunsilencedpistol</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_gunspitfirear sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_AssaultRifle_Spitfire")</Property>
 			<Property name="poolname" type="0">gunspitfire</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_mp3gun sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7651,7 +7679,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP3.SFXWeapon_Shotgun_Assault")</Value>
 			</Property>
 			<Property name="poolname" type="0">conmp3gun</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_n7weapon sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7682,12 +7711,14 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP2.SFXWeapon_AssaultRifle_Cerberus", MaxCount=1)</Value>
 			</Property>
 			<Property name="poolname" type="0">newultrarare</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_newultrarareweaponmp3 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP3.SFXWeapon_AssaultRifle_LMG", MaxCount=1)</Property>
 			<Property name="poolname" type="0">newultrarare</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_pistolpowerdamage sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_PistolPowerDamage_MP5")</Property>
@@ -7772,17 +7803,20 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP2.SFXWeapon_AssaultRifle_Cerberus")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldultrarare</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_ultrarareweaponmp3 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP3.SFXWeapon_AssaultRifle_LMG")</Property>
 			<Property name="poolname" type="0">goldultrarare</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_ultrarareweaponmp4 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist" type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXWeapon_SMG_Collector")</Property>
 			<Property name="poolname" type="0">goldultrarare</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementinventoryunlock_ultrarareweaponmp5 sfxgawreinforcementinventoryunlock">
 			<Property name="cardlist">
@@ -7792,12 +7826,14 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_Shotgun_Salarian_MP")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldultrarare</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_adeptcollector sfxgawreinforcementkitunlock">
 			<Property name="cardlist" type="3">(UniqueName="AdeptCollector")</Property>
 			<Property name="poolname" type="0">adeptcollector</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_bf3char1 sfxgawreinforcementkitunlock">
 			<Property name="cardlist" type="3">(UniqueName="SoldierHumanMaleBF3")</Property>
@@ -7830,12 +7866,14 @@
 				<Value type="3">(UniqueName="VanguardHumanMaleCerberus")</Value>
 			</Property>
 			<Property name="poolname" type="0">conmp2char</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_engineermerc sfxgawreinforcementkitunlock">
 			<Property name="cardlist" type="3">(UniqueName="EngineerMerc")</Property>
 			<Property name="poolname" type="0">engineermerc</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_freegoldcharmp5 sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7846,7 +7884,8 @@
 				<Value type="3">(UniqueName="InfiltratorFembot")</Value>
 			</Property>
 			<Property name="poolname" type="0">Freegoldchar</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldcharacterbackup sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7870,7 +7909,8 @@
 				<Value type="3">(UniqueName="AdeptAsariCommando")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">2300</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldcharactermp2backup sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7882,7 +7922,8 @@
 				<Value type="3">(UniqueName="VanguardHumanMaleCerberus")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldcharactermp3backup sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7894,7 +7935,8 @@
 				<Value type="3">(UniqueName="VanguardN7")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldcharmp4 sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7914,7 +7956,8 @@
 				<Value type="3">(UniqueName="InfiltratorDrell")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldchar</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldcharmp4backup sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7934,7 +7977,8 @@
 				<Value type="3">(UniqueName="InfiltratorDrell")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldcharmp5 sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7945,7 +7989,8 @@
 				<Value type="3">(UniqueName="InfiltratorFembot")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldchar</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldcharmp5backup sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7956,7 +8001,8 @@
 				<Value type="3">(UniqueName="InfiltratorFembot")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldweapon sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7980,7 +8026,8 @@
 				<Value type="3">(UniqueName="AdeptAsariCommando")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldchar</Property>
-			<Property name="requireddlcmoduleids" type="3">2300</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldweaponmp2 sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -7992,7 +8039,8 @@
 				<Value type="3">(UniqueName="VanguardHumanMaleCerberus")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldchar</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldweaponmp3 sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -8004,7 +8052,8 @@
 				<Value type="3">(UniqueName="VanguardN7")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldchar</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_goldxpchar sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -8026,7 +8075,8 @@
 		<Section name="sfxgawreinforcementkitunlock_infiltratorfembot sfxgawreinforcementkitunlock">
 			<Property name="cardlist" type="3">(UniqueName="InfiltratorFembot")</Property>
 			<Property name="poolname" type="0">infiltratorfembot</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_mp3char sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -8038,12 +8088,14 @@
 				<Value type="3">(UniqueName="SoldierN7")</Value>
 			</Property>
 			<Property name="poolname" type="0">conmp3char</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_sentinelkroganwarlord sfxgawreinforcementkitunlock">
 			<Property name="cardlist" type="3">(UniqueName="SentinelKroganWarlord")</Property>
 			<Property name="poolname" type="0">sentinelkroganwarlord</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_silvercharbackup sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -8070,7 +8122,8 @@
 		<Section name="sfxgawreinforcementkitunlock_soldiergethdestroyer sfxgawreinforcementkitunlock">
 			<Property name="cardlist" type="3">(UniqueName="SoldierGethDestroyer")</Property>
 			<Property name="poolname" type="0">soldiergethdestroyer</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_ultrararecharmp4 sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -8078,17 +8131,20 @@
 				<Value type="3">(UniqueName="AdeptVolus")</Value>
 			</Property>
 			<Property name="poolname" type="0">ultrararechar</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_ultrararecharmp5 sfxgawreinforcementkitunlock">
 			<Property name="cardlist" type="3">(UniqueName="AdeptCollector")</Property>
 			<Property name="poolname" type="0">ultrararechar</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_vanguardturianfemale sfxgawreinforcementkitunlock">
 			<Property name="cardlist" type="3">(UniqueName="VanguardTurianFemale")</Property>
 			<Property name="poolname" type="0">vanguardturianfemale</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementkitunlock_xpchar sfxgawreinforcementkitunlock">
 			<Property name="cardlist">
@@ -8150,7 +8206,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_HeadshotDamage", VersionIdx = 0)</Value>
 			</Property>
 			<Property name="poolname" type="0">bronzecommon</Property>
-			<Property name="requireddlcmoduleids" type="3">2300</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_bronzecommonmp4 sfxgawreinforcementmatchconsumable">
 			<Property name="cardlist">
@@ -8159,7 +8216,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", VersionIdx = 0)</Value>
 			</Property>
 			<Property name="poolname" type="0">bronzecommon</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 			<Property name="tokenslist">
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", Custom0Token=0.1f, Custom1Token=50.f, Custom3Token=1.5f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", Custom0Token=0.05f, Custom2Token=1.f, Custom5Token=15.f)</Value>
@@ -8186,7 +8244,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Combo_SniperDamageTechDamage",Custom0Tokens[0]=0.04f,Custom0Tokens[1]=0.06f,Custom0Tokens[2]=0.08f,Custom0Tokens[3]=0.1f,Custom0Tokens[4]=0.12f,Custom1Tokens[0]=0.04f,Custom1Tokens[1]=0.06f,Custom1Tokens[2]=0.08f,Custom1Tokens[3]=0.1f,Custom1Tokens[4]=0.12f)</Value>
 			</Property>
 			<Property name="poolname" type="0">goldgear</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_gear_goldgearbackup sfxgawreinforcementmatchconsumable_gear">
 			<Property name="cardlist">
@@ -8208,7 +8267,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Combo_SniperDamageTechDamage",Custom0Tokens[0]=0.04f,Custom0Tokens[1]=0.06f,Custom0Tokens[2]=0.08f,Custom0Tokens[3]=0.1f,Custom0Tokens[4]=0.12f,Custom1Tokens[0]=0.04f,Custom1Tokens[1]=0.06f,Custom1Tokens[2]=0.08f,Custom1Tokens[3]=0.1f,Custom1Tokens[4]=0.12f)</Value>
 			</Property>
 			<Property name="poolname" type="0">goldbackup</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_gear_goldgearmp3 sfxgawreinforcementmatchconsumable_gear">
 			<Property name="cardlist">
@@ -8230,7 +8290,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP3.SFXGameEffect_MatchConsumable_Gear_Combo_WeaponStabilityAmmoCapacity",Custom0Tokens[0]=0.1f,Custom0Tokens[1]=0.15f,Custom0Tokens[2]=0.2f,Custom0Tokens[3]=0.25f,Custom0Tokens[4]=0.3f,Custom1Tokens[0]=0.05f,Custom1Tokens[1]=0.075f,Custom1Tokens[2]=0.1f,Custom1Tokens[3]=0.125f,Custom1Tokens[4]=0.15f)</Value>
 			</Property>
 			<Property name="poolname" type="0">goldgear</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_gear_goldgearmp4 sfxgawreinforcementmatchconsumable_gear">
 			<Property name="cardlist">
@@ -8248,7 +8309,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_MassMedigel",Custom3Tokens[0]=10,Custom3Tokens[1]=15,Custom3Tokens[2]=20,Custom3Tokens[3]=25,Custom3Tokens[4]=30)</Value>
 			</Property>
 			<Property name="poolname" type="0">goldgear</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_gear_goldgearmp5 sfxgawreinforcementmatchconsumable_gear">
 			<Property name="cardlist">
@@ -8260,7 +8322,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_BatarianGauntlet",Custom0Tokens[0]=6.00f,Custom0Tokens[1]=6.50f,Custom0Tokens[2]=7.00f,Custom0Tokens[3]=7.50f,Custom0Tokens[4]=8.00f)</Value>
 			</Property>
 			<Property name="poolname" type="0">goldgear</Property>
-			<Property name="requireddlcmoduleids" type="3">3225</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_gear_silvergear sfxgawreinforcementmatchconsumable_gear">
 			<Property name="cardlist">
@@ -8293,7 +8356,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Stability",Custom0Tokens[0]=0.15f,Custom0Tokens[1]=0.22f,Custom0Tokens[2]=0.28f,Custom0Tokens[3]=0.34f,Custom0Tokens[4]=0.40f)</Value>
 			</Property>
 			<Property name="poolname" type="0">silvergear</Property>
-			<Property name="requireddlcmoduleids" type="3">2500</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_gear_silvergearmp3 sfxgawreinforcementmatchconsumable_gear">
 			<Property name="cardlist">
@@ -8309,7 +8373,8 @@
 				<Value type="3">(UniqueName="SFXGameMPContentDLC_Shared_MP.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_All",Custom0Tokens[0]=0.03f,Custom0Tokens[1]=0.05f,Custom0Tokens[2]=0.07f,Custom0Tokens[3]=0.085f,Custom0Tokens[4]=0.1f)</Value>
 			</Property>
 			<Property name="poolname" type="0">silvergear</Property>
-			<Property name="requireddlcmoduleids" type="3">2700</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_goldcommon sfxgawreinforcementmatchconsumable">
 			<Property name="cardlist">
@@ -8354,7 +8419,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_HeadshotDamage", VersionIdx = 2, Rarity=Rarity_Uncommon)</Value>
 			</Property>
 			<Property name="poolname" type="0">goldcommon</Property>
-			<Property name="requireddlcmoduleids" type="3">2300</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_goldcommonmp4 sfxgawreinforcementmatchconsumable">
 			<Property name="cardlist">
@@ -8363,7 +8429,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", VersionIdx = 2, Rarity=Rarity_Uncommon)</Value>
 			</Property>
 			<Property name="poolname" type="0">goldcommon</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 			<Property name="tokenslist">
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", Custom0Token=0.3f, Custom1Token=250.f, Custom3Token=2.5f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", Custom0Token=0.15f, Custom2Token=1.f, Custom5Token=15.f)</Value>
@@ -8490,7 +8557,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_HeadshotDamage", VersionIdx = 1)</Value>
 			</Property>
 			<Property name="poolname" type="0">silvercommon</Property>
-			<Property name="requireddlcmoduleids" type="3">2300</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_silvercommonmp4 sfxgawreinforcementmatchconsumable">
 			<Property name="cardlist">
@@ -8499,7 +8567,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", VersionIdx = 1)</Value>
 			</Property>
 			<Property name="poolname" type="0">silvercommon</Property>
-			<Property name="requireddlcmoduleids" type="3">3050</Property>
+			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
+			<Property name="requireddlcmoduleids" type="1"/>
 			<Property name="tokenslist">
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", Custom0Token=0.2f, Custom1Token=150.f, Custom3Token=2.f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", Custom0Token=0.1f, Custom2Token=1.f, Custom5Token=15.f)</Value>

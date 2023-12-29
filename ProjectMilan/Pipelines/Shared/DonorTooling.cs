@@ -154,7 +154,7 @@ namespace ProjectMilan.Pipelines.Shared
 
         private const string LOG_CATEGORY = "MILAN-MaterialDonorSystem";
         private static List<MatInfo> _materialDB;
-        public static void TryMakeDonor(ExportEntry originalMaterial, string outPath)
+        public static void TryMakeDonor(ExportEntry originalMaterial, string outPath, TieredPackageCache cache)
         {
             MilanLog.Information($"Looking for possible donor materials for {originalMaterial.InstancedFullPath}", customPrefix: LOG_CATEGORY);
             if (_materialDB == null)
@@ -268,7 +268,7 @@ namespace ProjectMilan.Pipelines.Shared
                                 ExportEntry texture = originalTexture as ExportEntry;
                                 if (originalTexture is ImportEntry imp)
                                 {
-                                    texture = EntryImporter.ResolveImport(imp);
+                                    texture = EntryImporter.ResolveImport(imp, cache, fileResolver: MilanShared.LE3PackageResolver);
 
                                     if (texture == null)
                                     {
@@ -286,12 +286,12 @@ namespace ProjectMilan.Pipelines.Shared
 
                                 var rop = new RelinkerOptionsPackage()
                                 {
-                                    DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
+                                    DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                                     TargetGameDonorDB = MilanShared.LE3ObjectDB,
                                     Cache = new PackageCache()
                                 };
 
-                                EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, null, new PackageCache(), rop);
+                                EntryExporter.ExportExportToPackage(texture, destDonorPackage, out var _le3Texture, new PackageCache(), rop);
                                 paramValue.Value = _le3Texture.UIndex; // Since this is not relinked we will relink it here.
                             }
                             else

@@ -96,10 +96,6 @@ namespace ProjectMilan.Pipelines.Startups
             // Actually run pipeline
             Directory.CreateDirectory(vars.OutputPath);
 
-            // Prepare classes for porting
-            HackPatchParents(); // Eventually this will be moved to a merge mod. But for compilation purposes, it needs to be done here.
-
-
             if (!CompileMPCommon(vars))
             {
                 MilanLog.Fatal($"Failed to compile {MilanShared.MP_STARTUP_NAME}", customPrefix: LOG_CATEGORY);
@@ -185,8 +181,11 @@ namespace ProjectMilan.Pipelines.Startups
         /// <summary>
         /// This is required to make the build work. This will eventually need to go into a merge mod or be patched out.
         /// </summary>
-        public static void HackPatchParents()
+        public static void HackPatchParents_Old()
         {
+            return;
+            // No longer needed
+
             if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, "SFXGame.pcc", out var sfxGameF))
             {
                 var sfxgame = MEPackageHandler.OpenMEPackage(sfxGameF);
@@ -195,9 +194,14 @@ namespace ProjectMilan.Pipelines.Startups
                     // Patch class
                     MilanLog.Information("Patching in SFXGame.pcc 'SFXTelemetryGameSession' method stubs", customPrefix: LOG_CATEGORY);
                     var classOverride = File.ReadAllText(MilanShared.GetClassOverride("SFXTelemetryGameSession"));
+                    UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+                    {
+                        MissingObjectResolver = MilanShared.MissingObjectResolver,
+                        GetVTableFromDonor = MilanShared.GetVTableFromDonor
+                    };
                     var lib = new FileLib(sfxgame);
-                    lib.Initialize();
-                    var messages = UnrealScriptCompiler.CompileClass(sfxgame, classOverride, lib, sfxgame.FindExport("SFXTelemetryGameSession"));
+                    lib.Initialize(usop);
+                    var messages = UnrealScriptCompiler.CompileClass(sfxgame, classOverride, lib, usop, sfxgame.FindExport("SFXTelemetryGameSession"));
                     sfxgame.Save();
                 }
             }
@@ -233,6 +237,13 @@ namespace ProjectMilan.Pipelines.Startups
 
             using IMEPackage pcc = MEPackageHandler.CreateAndOpenPackage(packagePath, MEGame.LE3);
             pcc.LECLTagData.IsPostLoadFile = false;
+
+            UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+            {
+                Cache = cache,
+                MissingObjectResolver = MilanShared.MissingObjectResolver,
+                GetVTableFromDonor = MilanShared.GetVTableFromDonor
+            };
             // Different forced export packages
             var looseClassPackages = new List<UnrealScriptCompiler.LooseClassPackage>();
             foreach (var classEx in classes)
@@ -248,7 +259,7 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             MilanLog.Information(@"Compiling LE3 class package", customPrefix: LOG_CATEGORY);
-            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(pcc, looseClassPackages, MissingObjectResolver, vtableDonorGetter: VTableDonorGetter, cache: cache);
+            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(pcc, looseClassPackages, usop);
 
             if (log.HasErrors)
             {
@@ -276,7 +287,7 @@ namespace ProjectMilan.Pipelines.Startups
             // and we just want to change small segments. Due to patch function
             // This is more desirable for large classes that just need some functions patched
             FileLib fl = new FileLib(pcc);
-            fl.Initialize(cache);
+            fl.Initialize(usop);
             foreach (var file in Directory.GetFiles(GetMPCommonFunctionOverrideFolder(), "*.uc", SearchOption.AllDirectories))
             {
                 var funcName = Path.GetFileNameWithoutExtension(file);
@@ -290,12 +301,12 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     // It's a sub function like a in a state
                     var function = pcc.FindExport($"{classToUpdate.InstancedFullPath}.{funcName}");
-                    UnrealScriptCompiler.CompileFunction(function, ucText, fl);
+                    UnrealScriptCompiler.CompileFunction(function, ucText, fl, usop);
                 }
                 else
                 {
                     // Add or replace to class
-                    UnrealScriptCompiler.AddOrReplaceInClass(classToUpdate, ucText, fl, cache);
+                    UnrealScriptCompiler.AddOrReplaceInClass(classToUpdate, ucText, fl, usop);
                 }
             }
 
@@ -327,36 +338,6 @@ namespace ProjectMilan.Pipelines.Startups
             return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"MPCommonAddins")).FullName;
         }
 
-        //terrible function, there are better ways of implementing it.
-        private static List<string> VTableDonorGetter(string className)
-        {
-
-            var classInfo = GlobalUnrealObjectInfo.GetClassOrStructInfo(MEGame.LE3, className);
-            if (classInfo is not null)
-            {
-                string path = Path.Combine(MEDirectories.GetBioGamePath(MEGame.LE3), classInfo.pccPath);
-                if (File.Exists(path))
-                {
-                    IMEPackage partialLoad = MEPackageHandler.UnsafePartialLoad(path, exp => exp.IsClass && exp.ObjectName == className);
-                    foreach (ExportEntry export in partialLoad.Exports)
-                    {
-                        if (export.IsClass && export.ObjectName == className)
-                        {
-                            var obj = export.GetBinaryData<UClass>();
-                            var list = obj.VirtualFunctionTable.Select(uIdx => partialLoad.GetEntry(uIdx).ObjectName.Name).ToList();
-                            if (className == "SFXProjectile_PowerCustomAction_SuperSeeking")
-                            {
-                                // Debugger.Break();
-                            }
-
-                            return list;
-                        }
-                    }
-                }
-            }
-
-            return null;
-        }
 
         /// <summary>
         /// Gets a list of files to compile into the MPCommon package
@@ -383,7 +364,6 @@ namespace ProjectMilan.Pipelines.Startups
             // Code: Find class
             foreach (var m in log.AllErrors)
             {
-
                 string className = null;
 
                 // Pull missing class name out of error message
@@ -406,8 +386,7 @@ namespace ProjectMilan.Pipelines.Startups
                 else if (m.Message.Contains(" has no member named '"))
                 {
                     if (m.Message.Contains("SFXWeapon_AssaultRifle_SentryTurret") ||
-                        false
-
+                        false // multiline - add more here if needed
                         )
                     {
                         className = m.Message.Substring(m.Message.IndexOf(" has no member named '") + " has no member named '".Length);
@@ -512,127 +491,12 @@ namespace ProjectMilan.Pipelines.Startups
             return decompiledClasses.Any();
         }
 
-        private static IEntry MissingObjectResolver(IMEPackage package, string ifp)
-        {
-            // Redirect base GUI assets to DLC assets so we don't port unused GUI assets
-            if (ifp == "GUI_SF_MPNewLobby.MPNewLobby")
-                ifp = "GUI_SF_MPNewLobby_DLC.MPNewLobby";
-            
-            if (ifp == "GUI_SF_MPSelectKit.MPSelectKit")
-                ifp = "GUI_SF_MPSelectKit_DLC.MPSelectKit";
-            
-            if (ifp == "GUI_SF_Leaderboard.Leaderboard")
-                ifp = "GUI_SF_Leaderboard_DLC.Leaderboard";
-            
-            if (ifp == "GUI_SF_MPMatchConsumables.MPMatchConsumables")
-                ifp = "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables";
-            
-            if (ifp == "GUI_SF_MPStore.MPStore")
-                ifp = "GUI_SF_MPStore_DLC.MPStore";
-
-            if (ifp == "GUI_SF_MPPromotion.MPPromotion")
-                ifp = "GUI_SF_MPPromotion_DLC.MPPromotion";
-            
-            if (ifp == "GUI_SF_MPReinforcementsReveal.MPReinforcementsReveal")
-                ifp = "GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal";
-
-            var possibleDonors = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
-            if (possibleDonors == null)
-            {
-                // ME3 port
-                MilanLog.Error($"Object '{ifp}' does not exist in LE3! We need to make a donor for this.", customPrefix: LOG_CATEGORY);
-                var originalGameDonors = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
-                originalGameDonors = originalGameDonors.Select(x => Path.GetFileName(x)).ToList(); // we don't care about paths.
-                originalGameDonors.Sort(new ObjectSourceTierComparer(MEGame.ME3, package.FilePath));
-                foreach (var possibleDonor in originalGameDonors)
-                {
-                    var donorP = MilanShared.GetME3Package(possibleDonor);
-                    if (donorP != null)
-                    {
-                        var donorEntry = donorP.FindEntry(ifp);
-                        if (donorEntry != null)
-                        {
-                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY);
-                            return PortDonorIntoPackage(ME3GlobalCache, donorEntry, package);
-                        }
-                    }
-                }
-
-                MilanLog.Error($"  No donor! Returning null!!", customPrefix: LOG_CATEGORY);
-                return null;
-            }
-
-            // Sort by higher tier first
-            possibleDonors.Sort(new ObjectSourceTierComparer(MEGame.LE3, package.FilePath));
-
-            foreach (var possibleDonor in possibleDonors)
-            {
-                // Todo: Maybe use cache for this - with a max size
-                var donorP = LE3GlobalCache.GetCachedPackage(Path.Combine(LE3Directory.DefaultGamePath, possibleDonor), openPackageMethod: MilanShared.GetLE3Package);
-                if (donorP != null)
-                {
-                    var donorEntry = donorP.FindEntry(ifp);
-                    if (donorEntry != null)
-                    {
-                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY);
-                        return PortDonorIntoPackage(LE3GlobalCache, donorEntry, package);
-                    }
-                    else
-                    {
-                        MilanLog.Warning($"  LE3 donor package {possibleDonor} does not contain {ifp}", customPrefix: LOG_CATEGORY);
-                    }
-                }
-            }
-            MilanLog.Error($"Unable to find object {ifp} in {possibleDonors.Count} packages!", customPrefix: LOG_CATEGORY);
-            return null;
-        }
-
-        private static IEntry PortDonorIntoPackage(PackageCache globalCache, IEntry donorEntry, IMEPackage package)
-        {
-            if (donorEntry is ImportEntry donorImport)
-            {
-                // uh
-                Debug.WriteLine("Uh oh");
-            }
-            else if (donorEntry is ExportEntry donorExport)
-            {
-                if (EntryImporter.IsSafeToImportFrom(donorEntry.FileRef.FilePath, MEGame.LE3, package.FilePath))
-                {
-                    // Create parents
-                    MilanLog.Information($"    Porting as import", customPrefix: LOG_CATEGORY);
-                    var parent = EntryExporter.PortParents(donorEntry, package, true);
-                    ImportEntry imp = new ImportEntry(donorExport, parent.UIndex, package);
-                    package.AddImport(imp);
-                    return imp; // Adding as import
-                }
-                if (donorExport.FileRef.FileNameNoExtension == "SFXGame")
-                    Debugger.Break();
-                MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
-                var rop = new RelinkerOptionsPackage()
-                {
-                    Cache = globalCache,
-                    TargetGameDonorDB = MilanShared.LE3ObjectDB,
-                    DestinationCustomImportFileResolver = MilanShared.LE3ImportResolver,
-                    PortImportsMemorySafe = true, // MPCommon might try to reference BIO_COMMON which we do not want.
-                };
-                var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, customROP: rop);
-                return newExp;
-            }
-
-            return null;
-        }
-
-        private static void SortDonors(List<string> possibleDonors)
-        {
-
-        }
-
         /// <summary>
         /// Prepares classes for porting by reading their data out of ME3
         /// </summary>
         private static bool CompileMPCommon(MPCommonPipelineVars vars)
         {
-            var cache = new PackageCache();
+            var cache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3, false, true).ChainNewCache(false);
             var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(),
                 "Default.sfar");
             if (!File.Exists(dlcInFile))
@@ -646,7 +510,6 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 "MPLobby.pcc", // Holds pretty much all MP classes
                 "Startup_DLC_CON_MP4_INT.pcc", // Collector HUD, Faction
-                // "SFXMobileAnnex.pcc", // Extra stuff
                 "Startup_DLC_CON_MP3_INT.pcc", // MobileAnnex
                 "Startup_DLC_CON_MP2_INT.pcc", // Retrieve
                 "BioP_MPCer.pcc", // SFXGameType_Horde_Operation
@@ -660,10 +523,15 @@ namespace ProjectMilan.Pipelines.Startups
                 var parsingPackage = MilanShared.GetME3Package(package);
 
                 //initing filelib is expensive, so we only want to do it for files that have script
+                UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+                {
+                    Cache = cache,
+                    CustomFileResolver = MilanShared.ME3PackageResolver,
+                };
                 FileLib fileLib = new FileLib(parsingPackage);
                 try
                 {
-                    fileLib.Initialize(cache);
+                    fileLib.Initialize(usop);
                 }
                 catch
                 {
@@ -748,7 +616,7 @@ namespace ProjectMilan.Pipelines.Startups
             return needsDecompiled;
         }
 
-        private static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared, PackageCache cache)
+        public static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared, PackageCache cache)
         {
             if (classExp.ObjectName == "DamageType")
                 Debug.WriteLine("");
@@ -785,22 +653,27 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 MilanLog.Information($@"  Using DLC_TestPatch version of {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
             }
-            if (fileLib == null)
+            UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
             {
-                // Initialize filelib if it wasn't.
-                try
+                Cache = cache,
+                CustomFileResolver = classExp.Game == MEGame.LE3 ? MilanShared.LE3PackageResolver : MilanShared.ME3PackageResolver,
+            };
+
+            fileLib ??= new FileLib(classExp.FileRef);
+            if (!fileLib.IsInitialized)
+            {
+                if (!fileLib.Initialize(usop))
                 {
-                    fileLib = new FileLib(classExp.FileRef);
-                    fileLib.Initialize(cache);
-                }
-                catch
-                {
-                    //we're not checking if it failed to initialize because we don't really care, since decompilation doesn't actually need an initialized filelib,
-                    //it just makes the output a bit nicer (at the time of this writing all it does is resolve some integer literals into enum values)
+                    MilanLog.Error($"FileLib initialization failed for {classExp.FileRef.FilePath}:", customPrefix: LOG_CATEGORY);
+                    foreach (var f in fileLib.InitializationLog.AllErrors)
+                    {
+                        MilanLog.Error($"  {f.Message}");
+                    }
+                    Debugger.Break(); // Filelib failed to initialize!!
                 }
             }
 
-            (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib, cache);
+            (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib, usop);
 
             // FUNCTION PATCHES
             List<string> newFunction = PatchFunction(classExp.ObjectName, functionText);
@@ -835,6 +708,13 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     MilanLog.Information($"  Patching out telemetry call {line}", customPrefix: LOG_CATEGORY);
                     newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + " // MILAN Patched: Remove calls to SFXTelemetry";
+                    continue;
+                }
+
+                if (line.StartsWith("SFXEngine(Class'Engine'.static.GetEngine()).Telemetry.GameSession.SetMPMatchSettings"))
+                {
+                    MilanLog.Information($"  Patching out telemetry call {line}", customPrefix: LOG_CATEGORY);
+                    newClassText[i] = GetWhiteSpaceStart(newClassText[i]) + " // MILAN Patched: Remove calls to Engine.Telemetry.GameSession.SetMPMatchSettings()";
                     continue;
                 }
 
