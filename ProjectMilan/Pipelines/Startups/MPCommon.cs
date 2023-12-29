@@ -364,7 +364,6 @@ namespace ProjectMilan.Pipelines.Startups
             // Code: Find class
             foreach (var m in log.AllErrors)
             {
-
                 string className = null;
 
                 // Pull missing class name out of error message
@@ -387,8 +386,7 @@ namespace ProjectMilan.Pipelines.Startups
                 else if (m.Message.Contains(" has no member named '"))
                 {
                     if (m.Message.Contains("SFXWeapon_AssaultRifle_SentryTurret") ||
-                        false
-
+                        false // multiline - add more here if needed
                         )
                     {
                         className = m.Message.Substring(m.Message.IndexOf(" has no member named '") + " has no member named '".Length);
@@ -658,22 +656,20 @@ namespace ProjectMilan.Pipelines.Startups
             UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
             {
                 Cache = cache,
-                CustomFileResolver = MilanShared.ME3PackageResolver,
+                CustomFileResolver = classExp.Game == MEGame.LE3 ? MilanShared.LE3PackageResolver : MilanShared.ME3PackageResolver,
             };
 
-            if (fileLib == null)
+            fileLib ??= new FileLib(classExp.FileRef);
+            if (!fileLib.IsInitialized)
             {
-                // Initialize filelib if it wasn't.
-                try
+                if (!fileLib.Initialize(usop))
                 {
-
-                    fileLib = new FileLib(classExp.FileRef);
-                    fileLib.Initialize(usop);
-                }
-                catch
-                {
-                    //we're not checking if it failed to initialize because we don't really care, since decompilation doesn't actually need an initialized filelib,
-                    //it just makes the output a bit nicer (at the time of this writing all it does is resolve some integer literals into enum values)
+                    MilanLog.Error($"FileLib initialization failed for {classExp.FileRef.FilePath}:", customPrefix: LOG_CATEGORY);
+                    foreach (var f in fileLib.InitializationLog.AllErrors)
+                    {
+                        MilanLog.Error($"  {f.Message}");
+                    }
+                    Debugger.Break(); // Filelib failed to initialize!!
                 }
             }
 

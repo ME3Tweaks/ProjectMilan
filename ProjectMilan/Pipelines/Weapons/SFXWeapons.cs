@@ -577,8 +577,8 @@ namespace ProjectMilan.Pipelines.Weapons
             new WeaponSpecificPipeline()
             {
                 // Collector SMG
-                WeaponClassName = "SFXWeapon_SniperRifle_Collector",
-                PackageName = "SFXWeapon_SniperRifle_Collector",
+                WeaponClassName = "SFXWeapon_SMG_Collector",
+                PackageName = "SFXWeapon_SMG_Collector",
                 LE3PackageName = "BioD_CitSim_CllctrB", // There is no direct LE3 version of this package. It uses a _Shared version
                 Enabled  = true
             },
