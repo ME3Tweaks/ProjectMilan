@@ -214,7 +214,15 @@ namespace ProjectMilan.Pipelines
 
         public static MemoryStream GetME3SFARFile(string sourceFileName, bool returnOnDisk = false)
         {
-            if (MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, false, Path.GetExtension(sourceFileName) == ".tfc", Path.GetExtension(sourceFileName) == ".afc").TryGetValue(sourceFileName, out var filePath))
+            var includeTfcs = Path.GetExtension(sourceFileName) == ".tfc";
+            var includeAfcs = Path.GetExtension(sourceFileName) == ".afc";
+            var additionalExtensions = Array.Empty<string>();
+            if (!includeTfcs && !includeAfcs && Path.GetExtension(sourceFileName) != ".pcc")
+            {
+                // Other extensions like .tlk that are not usually supported by GetFilesLoadedInGame
+                additionalExtensions = new[] { Path.GetExtension(sourceFileName) };
+            }
+            if (MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, false, includeTfcs, includeAfcs, additionalExtensions: additionalExtensions).TryGetValue(sourceFileName, out var filePath))
             {
                 if (returnOnDisk)
                 {
