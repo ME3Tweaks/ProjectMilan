@@ -268,7 +268,7 @@ namespace ProjectMilan.Pipelines
 
                 // Copy to basegame. Eventually move to DLC only
                 foundF = versions[0];
-                File.Copy(versions[0], Path.Combine(ME3Directory.CookedPCPath, MP_STARTUP_FILENAME), true);
+                File.Copy(versions[0], Path.Combine(LE3Directory.CookedPCPath, MP_STARTUP_FILENAME), true);
             }
 
             EntryImporter.AddUserSafeToImportFromFile(MEGame.LE3, MP_STARTUP_FILENAME);
