@@ -16,22 +16,48 @@ internal static class BankConvertPipeline
     {
         MilanLog.Information("Converting banks using Wwiser.NET", customPrefix: LOG_CATEGORY);
 
-        foreach (var b in bankInventory)
+        var packageMap = new Dictionary<IMEPackage, List<MilanBankConvertInfo>>();
+        foreach (var f in bankInventory)
         {
-            MilanLog.Information($" - Converting {b.LocalizedInfo} in {Path.GetFileName(b.LE3BankExport.FileRef.FilePath)}", customPrefix: LOG_CATEGORY);
-            if(b.BankParser is null) continue;
-            
-            // Skip data header
-            b.BankParser.Deserialize(); // Deserialize binary into object graph
-            
-            b.BankParser.ConvertToVersion(134); // Run Wwiser version convert
+            if (!packageMap.TryGetValue(f.LE3BankExport.FileRef, out var list))
+            {
+                list = new List<MilanBankConvertInfo>();
+                packageMap[f.LE3BankExport.FileRef] = list;
+            }
 
-            var dataOut = new MemoryStream();
-            b.BankParser.SerializeTo(dataOut);
-            
-            WwiseBank.WriteBankRaw(dataOut.ToArray(), b.LE3BankExport);
-            b.LE3BankExport.FileRef.Save();
+            list.Add(f);
         }
+
+        Parallel.ForEach(packageMap, new ParallelOptions() { MaxDegreeOfParallelism = /* 1 */ Program.Settings.MaxThreads }, map =>
+            {
+                foreach (var b in map.Value)
+                {
+                    MilanLog.Information(
+                        $" - Converting {b.LocalizedInfo} in {Path.GetFileName(b.LE3BankExport.FileRef.FilePath)}",
+                        customPrefix: LOG_CATEGORY);
+                    if (b.BankParser is null) continue;
+
+                    // Skip data header
+                    try
+                    {
+                        b.BankParser.Deserialize(); // Deserialize binary into object graph
+
+                        b.BankParser.ConvertToVersion(134); // Run Wwiser version convert
+
+                        var dataOut = new MemoryStream();
+                        b.BankParser.SerializeTo(dataOut);
+
+                        WwiseBank.WriteBankRaw(dataOut.ToArray(), b.LE3BankExport);
+                    }
+                    catch (Exception e)
+                    {
+                        MilanLog.Exception(e, $"Error converting WwiseBank {b.LE3BankExport.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                    }
+                }
+
+                // Save package
+                map.Key.Save();
+            });
     }
-    
+
 }
