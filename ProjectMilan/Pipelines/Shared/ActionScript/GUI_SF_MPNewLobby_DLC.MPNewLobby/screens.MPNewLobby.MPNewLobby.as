@@ -202,7 +202,6 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         {
             this.m_ArrowLeft.contents._x = this.leftArrowOriginalX - this.PC_ARROW_OFFSET;
             this.m_ArrowRight.contents._x = this.rightArrayOriginalX + this.PC_ARROW_OFFSET;
-            this.m_ArrowLeft.addEventListener("ArrowPressed",this.MakeDelegate(this.HideSquadScreen));
             this.m_ArrowLeft.ShowStickIcon(false);
             this.m_ArrowRight.ShowStickIcon(false);
 
@@ -228,6 +227,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.m_ControllerLegend._visible = true;
         }
         this.RefreshButtonLegend();
+        this.RefreshPageArrows();
     }
     function onKeyUp()
     {
@@ -246,6 +246,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         this.m_ArrowRight = _root.ArrowRight;
         this.leftArrowOriginalX = this.m_ArrowLeft.contents._x;
         this.rightArrayOriginalX = this.m_ArrowRight.contents._x;
+        this.m_ArrowLeft.addEventListener("ArrowPressed",this.MakeDelegate(this.HideSquadScreen));
     }
     function MakeLoadTabDelegate(subscreen)
     {
