@@ -133,7 +133,7 @@ namespace ProjectMilan
             // Post pipelines require additional items to load
             // We load them here so you don't find out later and have to run it again
             MilanShared.EnsureVGMStreamAvailable();
-            AudioRebuild.EnsureWwise7110();
+            WwiseProjectRebuild.EnsureWwise7110();
 
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
             RunPipeline(Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
