@@ -131,21 +131,27 @@ namespace ProjectMilan.Pipelines.Startups
             "SFXMP4Gear",
             "SFXMP4GearImages",
             "SFXMP4KitImages",
-            //"SFXPawn_Abomination", // Collector faction, Geth, Cerb new enemy
             "SFXPawn_Atlas2", // Faster, more armor pieces - enabled as default cerb depends on it
             "SFXPawn_Banshee2", // I think changes to warp ball? - enabled as default Reaper depends on 
             "SFXPawn_Cannibal2", // Can eat players - enabled as default Reaper depends on 
-            //"SFXPawn_CollectorCaptain",
-            //"SFXPawn_CollectorTrooper",
-            //"SFXPawn_GethBomber",
+            
+            // These MP4 enemies use exact same materials in SP, I think
+            "SFXPawn_GethBomber",
+            "SFXPawn_Phoenix",
+
+
+            // These are ported in the MP4NewEnemies pipeline
+            "SFXPawn_Abomination", // Collector faction, Geth, Cerb new enemy
+            "SFXPawn_CollectorCaptain",
+            // "SFXPawn_CollectorTrooper", // Requires fixes for weapon
+            "SFXPawn_Praetorian",
+            "SFXPawn_Scion",
+
             "SFXPawn_GethPyro2", // Cannot be grabbed  - enabled as default Reaper depends on 
             "SFXPawn_Marauder2", // Can stomp players  - enabled as default Reaper depends on 
-            //"SFXPawn_Phoenix",
-            //"SFXPawn_Praetorian",
-            //"SFXPawn_Scion",
             "SFXSharedModGameEffects",
             "SFXSharedModImages",
-            // "SFXWeapon_SniperRifle_Collector", // Use this version instead of EGM's as it may improve audio and/or other things with newer tooling
+            // "SFXWeapon_SniperRifle_Collector", // This is compiled in SFXWeapons pipeline
 
             // MP5
             "GUI_MPChallengeImages",

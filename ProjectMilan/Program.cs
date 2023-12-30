@@ -123,6 +123,7 @@ namespace ProjectMilan
             RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
 
             // Content build pipelines
+            // This should not be required anymore
             if (!MilanShared.EnsureMPCommonInGame()) // These require BIOP_MP_COMMON
                 return;
 
@@ -137,6 +138,17 @@ namespace ProjectMilan
 
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
             RunPipeline(Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
+
+            // This pipeline must come after weapons as it depends on Collector SMG.
+            if (Settings.RunWeaponsPipeline)
+            {
+                RunPipeline(Settings.RunMP4EnemiesPipeline, MP4NewEnemiesPipeline.RunPipeline, "MP4Enemies"); // Ports MP4 enemies that need custom code handling
+            }
+            else if (Settings.RunMP4EnemiesPipeline)
+            {
+                MilanLog.Error(@"MP4Enemies pipeline cannot run without SFXWeapons, pipeline being skipped.");
+            }
+
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
             // Post-build pipelines

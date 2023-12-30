@@ -8,6 +8,7 @@ using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ProjectMilan.Pipelines.Kits;
+using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines.Weapons
@@ -51,7 +52,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 parentCache.GetCachedPackage(commonPackage);
             }
 
-            Parallel.ForEach(vars.WeaponPipelines.OrderBy(x => x.Enabled).AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = 1 /* Program.Settings.MaxThreads*/ }, weapon =>
+            Parallel.ForEach(vars.WeaponPipelines.OrderBy(x => x.Enabled).AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, weapon =>
             {
                 // Uncomment this to port everything
                 if (/*false && */!weapon.Enabled)
@@ -201,7 +202,10 @@ namespace ProjectMilan.Pipelines.Weapons
                 if (lib == null)
                 {
                     lib = new FileLib(weaponDestPackage);
-                    lib.Initialize(usop);
+                    if (!lib.Initialize(usop))
+                    {
+                        MilanShared.LogFailedFileLibInit(lib);
+                    }
                 }
                 MilanLog.Information($"  Double recompiling {classX.ObjectName}", customPrefix: LOG_CATEGORY);
                 (_, string text) = UnrealScriptCompiler.DecompileExport(classX, lib, usop);
@@ -219,6 +223,10 @@ namespace ProjectMilan.Pipelines.Weapons
             }
 
             weaponDestPackage.Save();
+
+            // Register as donor-able
+            MilanShared.AddDonorPackage(weaponDestPackage.FilePath, pipeline.Cache);
+
             return true;
         }
 
@@ -277,7 +285,10 @@ namespace ProjectMilan.Pipelines.Weapons
                 {
 
                     fileLib = new FileLib(classExp.FileRef);
-                    fileLib.Initialize(usop);
+                    if (!fileLib.Initialize(usop))
+                    {
+                        MilanShared.LogFailedFileLibInit(fileLib);
+                    }
                 }
                 catch
                 {
@@ -494,7 +505,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_SniperRifle_Batarian",
                 PackageName = "SFXWeapon_SniperRifle_BatarianDLC",
                 LE3PackageName = "SFXWeapon_SniperRifle_Batarian_GUN02",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             { 
@@ -502,7 +513,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_SMG_Geth",
                 PackageName = "SFXWeapon_SMG_GethDLC",
                 LE3PackageName = "SFXWeapon_SMG_Geth_GUN01",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             { 
@@ -510,7 +521,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Krogan",
                 PackageName = "SFXWeapon_AssaultRifles_KroganDLC",
                 LE3PackageName = "SFXWeapon_AssaultRifle_Krogan_GUN02",
-                Enabled  = true
+                Enabled  = false
             },
 
             // MP2
@@ -520,7 +531,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Cerberus",
                 PackageName = "SFXWeapon_AssaultRifle_CerberusDLC",
                 LE3PackageName = "SFXWeapon_AssaultRifle_Cerb_GUN01",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             { 
@@ -528,7 +539,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Prothean_MP",
                 PackageName = "SFXWeapon_AssaultRifle_ProtheanDLC",
                 LE3PackageName = "SFXWeapon_AssaultRifles_DLC1",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             { 
@@ -536,7 +547,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_Shotgun_Quarian",
                 PackageName = "SFXWeapon_Shotgun_QuarianDLC",
                 LE3PackageName = "SFXWeapon_Shotgun_Quarian_GUN01",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             { 
@@ -544,7 +555,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_SniperRifle_Turian",
                 PackageName = "SFXWeapon_SniperRifle_TurianDLC",
                 LE3PackageName = "SFXWeapon_SniperRifle_Turian_GUN01",
-                Enabled  = true
+                Enabled  = false
             },
 
             // MP3
@@ -554,7 +565,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_LMG",
                 PackageName = "SFXWeapon_AssaultRifle_LMGDLC",
                 LE3PackageName = "SFXWeapon_AssaultRifle_LMG_GUN02",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             { 
@@ -562,7 +573,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_Pistol_Asari",
                 PackageName = "SFXWeapon_Pistol_AsariDLC",
                 LE3PackageName = "SFXWeapon_Pistol_Asari_GUN02",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             { 
@@ -570,7 +581,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_Shotgun_Assault",
                 PackageName = "SFXWeapon_Shotgun_AssaultDLC",
                 LE3PackageName = "SFXWeapon_Shotgun_Assault_GUN02",
-                Enabled  = true
+                Enabled  = false
             },
 
             // MP4
@@ -598,7 +609,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Adas_MP",
                 PackageName = "SFXWeapon_AssaultRifle_Adas_MP",
                 LE3PackageName = "SFXWeapon_AssaultRifle_Quarian",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             {
@@ -606,7 +617,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Lancer_MP",
                 PackageName = "SFXWeapon_AssaultRifle_Lancer_MP",
                 LE3PackageName = "SFXWeapon_AssaultRifle_Lancer",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             {
@@ -614,7 +625,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Spitfire",
                 PackageName = "SFXWeapon_AssaultRifle_Spitfire",
                 LE3PackageName = "SFXWeapon_AssaultRifle_Spitfire", // There is no direct LE3 version of this package. It is a heavy weapon version. Looks like maybe it was going to be a normal weapon though
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             {
@@ -622,7 +633,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_Pistol_Bloodpack_MP",
                 PackageName = "SFXWeapon_Pistol_Bloodpack_MP",
                 LE3PackageName = "SFXWeapon_Pistol_Bloodpack",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             {
@@ -630,7 +641,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_Pistol_Silencer_MP",
                 PackageName = "SFXWeapon_Pistol_Silencer_MP",
                 LE3PackageName = "SFXWeapon_Pistol_Silencer",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             {
@@ -638,7 +649,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_Shotgun_Salarian_MP",
                 PackageName = "SFXWeapon_Shotgun_Salarian_MP",
                 LE3PackageName = "SFXWeapon_Shotgun_Salarian",
-                Enabled  = true
+                Enabled  = false
             },
             new WeaponSpecificPipeline()
             {
@@ -646,7 +657,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_SMG_Bloodpack_MP",
                 PackageName = "SFXWeapon_SMG_Bloodpack_MP",
                 LE3PackageName = "SFXWeapon_SMG_Bloodpack",
-                Enabled  = true
+                Enabled  = false
             },
         };
     }
