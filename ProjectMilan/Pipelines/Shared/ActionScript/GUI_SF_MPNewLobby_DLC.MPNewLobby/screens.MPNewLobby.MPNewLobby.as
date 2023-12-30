@@ -91,6 +91,8 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     var PAGE_TRANSITION_SLIDE_LEFT = 1;
     var PAGE_TRANSITION_SLIDE_RIGHT = 2;
     var m_PageTransitionType = screens.MPNewLobby.MPNewLobby.prototype.PAGE_TRANSITION_NONE;
+    // just chosen to not overlap with com.xbox.button* values
+    var PCMid2Event = 64;
     var leftArrowOriginalX;
     var rightArrayOriginalX;
     var bUsingGamepad;
@@ -179,7 +181,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         _root.PCBtnCharacter.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonY));
         this.m_PCLegend.PCBtnLeft.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonY));
         this.m_PCLegend.PCBtnMid1.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonX));
-        this.m_PCLegend.PCBtnMid2.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonA));
+        // they did a weird thing and mapped this button using the controller A event, which is also triggered with enter, but that is often not what you want enter to do,
+        // so I separated it out to a separate event and manually mapped A/Enter to confirm/activate current item for each subscreen mode
+        this.m_PCLegend.PCBtnMid2.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onPCMid2));
         this.m_PCLegend.PCBtnRight.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.onButtonB));
         // set up controller handlers
         this.m_ControllerLegend.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onButtonA));
@@ -630,7 +634,10 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srOptions,this.ShowOptionsScreen,canInteract);
+            // map xbox A/Enter to "select current item"
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
+            // map PC mid button 2 to options without affecting enter mapping
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srOptions,this.ShowOptionsScreen,canInteract);
             if(cameFromSelectFirstCharacter)
             {
                 this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,canInteract);
@@ -642,17 +649,17 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
-            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false);
-            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract);
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract, true);
             if(cameFromSelectFirstCharacter)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,canInteract);
+                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,canInteract, true);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,canInteract);
+                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,canInteract, true);
             }
         }
     }
@@ -665,16 +672,18 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srOptions,this.ShowOptionsScreen,canInteract);
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
+            // map PC mid button 2 to options without affecting enter mapping
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srOptions,this.ShowOptionsScreen,canInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),canInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
-            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false);
-            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),canInteract);
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),canInteract, true);
         }
     }
     function RefreshButtonLegend_Lobby()
@@ -686,30 +695,32 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
+            // map PC mid button 2 to options without affecting enter mapping
             if(isInParty)
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
             }
             else
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
             }
             this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,canInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
-            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false);
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false, true);
             if(isInParty)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull(), true);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull(), true);
             }
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,canInteract);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,canInteract, true);
         }
     }
     function RefreshButtonLegend_Squad()
@@ -730,46 +741,49 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
                 this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false);
             }
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+            // map xbox A/Enter to "select current item"
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
             if(isInParty)
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
             }
             else
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
             }
             this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),canInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,0,"",undefined,false);
+            this.RefreshButton(_root.m_ControlY,0,"",undefined,false, true);
             _loc6_ = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
             if(_loc6_.isOccupied && !_loc6_.isLocalPlayer)
             {
                 _loc7_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.leftPage.contents.list.selectedIndex));
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,!_loc7_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,canInteract);
+                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,!_loc7_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,canInteract, true);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false);
+                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false, true);
             }
             if(isInParty)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull(), true);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull(), true);
             }
+            // TODO I should probably figure out what to display/do here
             // if(_global.SFX.Platform == com.XPlatform.PC)
             // {
             //     this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srShowGamercard,this.ShowGamercard,canInteract && _loc6_.isOccupied);
             // }
             // else
             // {
-                this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false);
+                this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false, true);
             // }
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),canInteract);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),canInteract, true);
             this.m_ControllerLegend.ControlB.SetVisible(false);
         }
     }
@@ -786,13 +800,15 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
                 this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
                 this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,"",undefined,false);
                 this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+                // TODO should enter do anything in this case?
+                // this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
                 if(isInParty)
                 {
-                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
+                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
                 }
                 else
                 {
-                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
+                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
                 }
                 var _loc8_ = this.leftPage.contents.list.getItem(this.SETTING_MAP);
                 if(_loc8_.IsValueAvailable(_loc8_.GetActiveValue()))
@@ -806,25 +822,25 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             }
             else
             {
-                this.RefreshButton(_root.m_ControlY,0,"",undefined,false);
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srOptions,this.ShowOptionsScreen,canInteract);
+                this.RefreshButton(_root.m_ControlY,0,"",undefined,false, true);
+                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srOptions,this.ShowOptionsScreen,canInteract, true);
                 if(isInParty)
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
+                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull(), true);
                 }
                 else
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
+                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull(), true);
                 }
-                this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false);
+                this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false, true);
                 _loc8_ = this.leftPage.contents.list.getItem(this.SETTING_MAP);
                 if(_loc8_.IsValueAvailable(_loc8_.GetActiveValue()))
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,canInteract);
+                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,canInteract, true);
                 }
                 else
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,false);
+                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,false, true);
                 }
             }
         }
@@ -833,39 +849,36 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,com.XInput.ButtonA,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,canInteract);
+            // Enter will confirm match settings, so will the button
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ConfirmMatchSettings,canInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,canInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,canInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,0,"",undefined,false);
-            this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,"",undefined,false);
-            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,canInteract);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,canInteract);
+            this.RefreshButton(_root.m_ControlY,0,"",undefined,false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,"",undefined,false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,"",undefined,false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,canInteract, true);
         }
     }
-    function RefreshButton(mcButton, nButtonID, sLabel, fnAction, bEnabled)
+    // made it so this does not rely on platform or current input mode, but a hardcoded bool of whether this button is a PC button or a controller button
+    function RefreshButton(mcButton, nButtonID, sLabel, fnAction, bEnabled, bIsControllerButton)
     {
-        if(!this.bUsingGamepad)
+        mcButton._visible = fnAction != undefined;
+        mcButton.text = sLabel;
+        if(nButtonID != 0)
         {
-            mcButton._visible = fnAction != undefined;
+            this.ActionMappings[nButtonID] = fnAction;
+        }
+        if(!bIsControllerButton)
+        {
             mcButton.SetEnabled(bEnabled);
-            mcButton.text = sLabel;
-            if(nButtonID != 0)
-            {
-                this.ActionMappings[nButtonID] = fnAction;
-            }
         }
         else
         {
-            mcButton._visible = fnAction != undefined;
-            mcButton.text = sLabel;
             mcButton.Active = bEnabled;
-            if(nButtonID != 0)
-            {
-                this.ActionMappings[nButtonID] = fnAction;
-            }
         }
     }
     function RefreshPlayerList(list, bInteractive)
@@ -932,6 +945,11 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     function onButtonA(p_event)
     {
         this.ActionMappings[com.XInput.ButtonA].call(this);
+    }
+    // added to separately handle controller A/Enter and the PC mid 2 button press
+    function onPCMid2(p_event)
+    {
+        this.ActionMappings[PCMid2Event].call(this);
     }
     function onButtonB(p_event)
     {
