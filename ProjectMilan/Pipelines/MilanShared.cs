@@ -8,6 +8,7 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
+using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ProjectMilan.Pipelines.Audio.Extension;
 using ProjectMilan.Utility;
 
@@ -214,7 +215,15 @@ namespace ProjectMilan.Pipelines
 
         public static MemoryStream GetME3SFARFile(string sourceFileName, bool returnOnDisk = false)
         {
-            if (MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, false, Path.GetExtension(sourceFileName) == ".tfc", Path.GetExtension(sourceFileName) == ".afc").TryGetValue(sourceFileName, out var filePath))
+            var includeTfcs = Path.GetExtension(sourceFileName) == ".tfc";
+            var includeAfcs = Path.GetExtension(sourceFileName) == ".afc";
+            var additionalExtensions = Array.Empty<string>();
+            if (!includeTfcs && !includeAfcs && Path.GetExtension(sourceFileName) != ".pcc")
+            {
+                // Other extensions like .tlk that are not usually supported by GetFilesLoadedInGame
+                additionalExtensions = new[] { Path.GetExtension(sourceFileName) };
+            }
+            if (MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, false, includeTfcs, includeAfcs, additionalExtensions: additionalExtensions).TryGetValue(sourceFileName, out var filePath))
             {
                 if (returnOnDisk)
                 {
@@ -249,36 +258,34 @@ namespace ProjectMilan.Pipelines
         /// </summary>
         public static bool EnsureMPCommonInGame()
         {
-            if (!MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, MP_STARTUP_FILENAME, out var foundF))
+            var biopMPCommon = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", MP_STARTUP_FILENAME);
+            if (!File.Exists(biopMPCommon))
             {
-                var versions = Directory.GetFiles(Program.Settings.OutputModPath, MP_STARTUP_FILENAME, SearchOption.AllDirectories);
-                if (!versions.Any())
-                {
-                    MilanLog.Error($"{MP_STARTUP_FILENAME} was not found - content pipelines cannot run, they depend on BIOP_MP_COMMON. Turn on MPCommon pipeline");
-                    return false;
-                }
-
-                // Copy to basegame. Eventually move to DLC only
-                foundF = versions[0];
-                File.Copy(versions[0], Path.Combine(ME3Directory.CookedPCPath, MP_STARTUP_FILENAME), true);
+                MilanLog.Error($"{MP_STARTUP_FILENAME} was not found - content pipelines cannot run, they depend on BIOP_MP_COMMON. Turn on MPCommon pipeline");
+                return false;
             }
 
             EntryImporter.AddUserSafeToImportFromFile(MEGame.LE3, MP_STARTUP_FILENAME);
 
             // Inventory package
-            MilanLog.Information($"Inventorying classes in {MP_STARTUP_FILENAME}");
-            var cache = new PackageCache();
-            var mpCommon = MEPackageHandler.OpenMEPackage(foundF);
-            foreach (var exp in mpCommon.Exports.Where(x => x.IsClass))
+            MilanShared.AddDonorPackage(biopMPCommon);
+
+            return true;
+        }
+
+        public static void AddDonorPackage(string packagePath, PackageCache cache = null)
+        {
+            MilanLog.Information($"Inventorying classes in {Path.GetFileName(packagePath)}");
+            cache ??= new PackageCache();
+            var package = MEPackageHandler.OpenMEPackage(packagePath);
+            foreach (var exp in package.Exports.Where(x => x.IsClass))
             {
                 MilanLog.Information($"  Inventorying {exp.InstancedFullPath}");
                 GlobalUnrealObjectInfo.generateClassInfo(exp, packageCache: cache);
             }
 
             // Add to object database for porting
-            MilanShared.LE3ObjectDB.AddFileToDB(mpCommon, foundF);
-
-            return true;
+            MilanShared.LE3ObjectDB.AddFileToDB(package, packagePath);
         }
 
         internal static void EnsureTFCsAvailable()
@@ -437,7 +444,7 @@ namespace ProjectMilan.Pipelines
         {
             var objReferencer = sourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
-            MilanLog.Information("Porting object referencer", customPrefix: logCategory);
+            MilanLog.Information($"Porting object referencer in {sourcePackage.FileNameNoExtension}", customPrefix: logCategory);
             //DotTrace.StartCollectingData(); // Start profiling
             var sw = new Stopwatch();
             sw.Start();
@@ -521,8 +528,10 @@ namespace ProjectMilan.Pipelines
                     MissingObjectResolver = MilanShared.MissingObjectResolver
                 };
                 FileLib lib = new FileLib(destPackage);
-                lib.Initialize(usop);
-
+                if (!lib.Initialize(usop))
+                {
+                    MilanShared.LogFailedFileLibInit(lib, $"Failed to initialize FileLib for recompilation of classes in {destPackage.FileNameNoExtension}", logCategory);
+                }
                 foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
                 {
                     // Recompile all ported classes so vtables are updated
@@ -901,6 +910,20 @@ namespace ProjectMilan.Pipelines
             }
 
             return null;
+        }
+
+        public static void LogFailedFileLibInit(FileLib fl, string firstMessage = "Compilation errors occurred", string logCategory = "Milan-Shared")
+        {
+            LogCompilerMessages(fl.InitializationLog, firstMessage, logCategory);
+        }
+
+        public static void LogCompilerMessages(MessageLog log, string firstMessage = "Compilation errors occurred", string logCategory = "Milan-Shared")
+        {
+            MilanLog.Error("COMPILATION OF ENEMY PAWN FAILED: ", customPrefix: logCategory);
+            foreach (var error in log.AllErrors)
+            {
+                MilanLog.Error($"  {error}", customPrefix: logCategory);
+            }
         }
     }
 }

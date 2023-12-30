@@ -23,7 +23,7 @@ namespace ProjectMilan.Pipelines.Audio
     ///
     /// Runs all audio through Wwise authoring interface
     /// </summary>
-    internal static class AudioRebuild
+    internal static class WwiseProjectRebuild
     {
         private const string LOG_CATEGORY = @"MILAN-Audio-RebuildInWwise";
 
@@ -33,7 +33,7 @@ namespace ProjectMilan.Pipelines.Audio
         // 3. Build new LE versions of banks using the Wwise Authoring API (WAAPI)
         // 4. Inject the new banks into the compiled mod files
         // This will probably be one of the later pipelines
-        public static void RunPipeline(List<MilanBankInfo> bankInventory, AudioVars vars)
+        public static void RunPipeline(List<MilanBankRebuildInfo> bankInventory, AudioVars vars)
         {
             MilanLog.Information("The following banks will be built into the WwiseProject:", customPrefix: LOG_CATEGORY);
             foreach (var lifp in bankInventory)
@@ -71,7 +71,7 @@ namespace ProjectMilan.Pipelines.Audio
 
                 var bankPackage = GetOrCreateBankPackage(bankLocalization, banksCache);
                 WwiseBankImport.ImportBank(bankPath, false, bankPackage, bankWwiseLoc, bankInfoXml,
-                    bankInventory.FirstOrDefault(x => x.Export.ObjectName == bankShortName).Export.ParentName, "Int");
+                    bankInventory.FirstOrDefault(x => x.ME3BankExport.ObjectName == bankShortName).ME3BankExport.ParentName, "Int");
 
                 //foreach (var exp in bankPackage.Exports.ToList())
                 //{
@@ -192,7 +192,7 @@ namespace ProjectMilan.Pipelines.Audio
         /// <param name="vars"></param>
         /// <param name="bankInventory"></param>
         /// <exception cref="NotImplementedException"></exception>
-        private static void BuildWwiseProject(AudioVars vars, List<MilanBankInfo> bankInventory)
+        private static void BuildWwiseProject(AudioVars vars, List<MilanBankRebuildInfo> bankInventory)
         {
             foreach (var bankInfo in bankInventory)
             {
@@ -304,26 +304,26 @@ namespace ProjectMilan.Pipelines.Audio
         }
 
 
-        private static async void AddWwiseBankToProject(AudioVars vars, MilanBankInfo bankInfo)
+        private static async void AddWwiseBankToProject(AudioVars vars, MilanBankRebuildInfo bankRebuildInfo)
         {
 
-            if (bankInfo.EventToStreamMap.Count == 0)
+            if (bankRebuildInfo.EventToStreamMap.Count == 0)
             {
-                MilanLog.Warning($"Skipping WwiseBank {bankInfo.Export.ObjectName} - it has no audio streams. Currently we can only port audio streams for banks", customPrefix: LOG_CATEGORY);
+                MilanLog.Warning($"Skipping WwiseBank {bankRebuildInfo.ME3BankExport.ObjectName} - it has no audio streams. Currently we can only port audio streams for banks", customPrefix: LOG_CATEGORY);
                 return;
             }
-            var wwiseFolderName = bankInfo.Export.ObjectName.Name;
+            var wwiseFolderName = bankRebuildInfo.ME3BankExport.ObjectName.Name;
 
-            MilanLog.Information($"Adding WwiseBank {bankInfo.LocalizedInfo.InstancedFullPath} {bankInfo.LocalizedInfo.Localization} to WwiseProject", customPrefix: LOG_CATEGORY);
+            MilanLog.Information($"Adding WwiseBank {bankRebuildInfo.LocalizedInfo.InstancedFullPath} {bankRebuildInfo.LocalizedInfo.Localization} to WwiseProject", customPrefix: LOG_CATEGORY);
 
             // Create folders
             //var wwiseInfo = CreateStreamAndEventsFolder(vars, wwiseFolderName);
 
             // Generate CSV records for import.
             var records = new List<WwiseImportRow>();
-            var srcDir = Path.Combine(AudioPipeline.GetDecompiledBanksFolder(), bankInfo.GetDecompiledFolderName());
+            var srcDir = Path.Combine(AudioPipeline.GetDecompiledBanksFolder(), bankRebuildInfo.GetDecompiledFolderName());
 
-            foreach (var evtStream in bankInfo.EventToStreamMap)
+            foreach (var evtStream in bankRebuildInfo.EventToStreamMap)
             {
                 foreach (var wwiseStream in evtStream.Value)
                 {
@@ -339,8 +339,8 @@ namespace ProjectMilan.Pipelines.Audio
                         Event = $@"{wwiseFolderName}\{evtStream.Key.ObjectName}@Play",
                         OutputBus = @"\Master-Mixer Hierarchy\Default Work Unit\Master Audio Bus\Slowdown and Bleedout Affected\Enviromental\Env-VO\Env-VO-Conversation",
                         Stream = true,
-                        BankName = bankInfo.Export.ObjectName.Name,
-                        IsLocalized = bankInfo.LocalizedInfo.Localization != MELocalization.None,
+                        BankName = bankRebuildInfo.ME3BankExport.ObjectName.Name,
+                        IsLocalized = bankRebuildInfo.LocalizedInfo.Localization != MELocalization.None,
                     };
 
                     var existingRecord = records.FirstOrDefault(x => x.AudioFile == srcFile);
@@ -371,7 +371,7 @@ namespace ProjectMilan.Pipelines.Audio
             // Start WwiseAPI
             KillWwise();
             var cmd = Cli.Wrap(Environment.ExpandEnvironmentVariables("%WWISEROOT%\\Authoring\\x64\\Release\\bin\\WwiseCLI.exe"))
-                .WithArguments(new[] { vars.ProjectWPath, "-TabDelimitedImport", csvPath, "-ImportLanguage", GetWwiseLanguage(bankInfo.LocalizedInfo.Localization), "-TabDelimitedOperation", "ReplaceExisting", "-Save" });
+                .WithArguments(new[] { vars.ProjectWPath, "-TabDelimitedImport", csvPath, "-ImportLanguage", GetWwiseLanguage(bankRebuildInfo.LocalizedInfo.Localization), "-TabDelimitedOperation", "ReplaceExisting", "-Save" });
 
             var exitCode = RunWwise(cmd).Result; // Do not await this. We want it to continue
 
@@ -381,7 +381,7 @@ namespace ProjectMilan.Pipelines.Audio
 
             WwiseUtility.Instance.ConnectAsync().Wait(); // Connect to Wwise
             var parent = WwiseUtility.Instance.GetWwiseObjectByPathAsync(@"\SoundBanks\Default Work Unit").Result;
-            var soundBank = WwiseUtility.Instance.CreateObjectAsync(bankInfo.Export.ObjectName, WwiseObject.ObjectType.SoundBank, parent).Result;
+            var soundBank = WwiseUtility.Instance.CreateObjectAsync(bankRebuildInfo.ME3BankExport.ObjectName, WwiseObject.ObjectType.SoundBank, parent).Result;
 
             // Add events and sounds
             var StreamsObj = WwiseUtility.Instance.GetWwiseObjectByPathAsync($@"\Actor-Mixer Hierarchy\Default Work Unit\{wwiseFolderName}").Result;
@@ -501,33 +501,5 @@ namespace ProjectMilan.Pipelines.Audio
     {
         public WwiseObject StreamsFolder { get; set; }
         public WwiseObject EventsFolder { get; set; }
-    }
-
-    /// <summary>
-    /// Represents an object path with respect to localization
-    /// </summary>
-    internal class LocalizedIFP
-    {
-        public string InstancedFullPath { get; set; }
-        public MELocalization Localization { get; set; }
-
-        public override bool Equals(object other)
-        {
-            var otherLIFP = other as LocalizedIFP;
-            if (otherLIFP == null)
-                return false;
-
-            return otherLIFP.Localization == Localization && otherLIFP.InstancedFullPath == InstancedFullPath;
-        }
-
-        public override string ToString()
-        {
-            if (Localization == MELocalization.None)
-            {
-                return InstancedFullPath;
-            }
-
-            return $"{InstancedFullPath}({Localization})";
-        }
     }
 }

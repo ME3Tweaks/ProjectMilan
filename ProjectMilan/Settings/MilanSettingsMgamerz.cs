@@ -10,12 +10,13 @@ namespace ProjectMilan.Settings
 
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunNonStartupPipeline { get; set; } = false;
+        public bool RunMP4EnemiesPipeline { get; set; } = true;
         public bool RunKitsPipeline { get; set; } = false;
         public bool RunWeaponsPipeline { get; set; } = true;
         public bool RunLevelsPipeline { get; set; } = false;
         public bool RunAudioPipeline { get; set; } = false;
-        public bool RunTexturePipeline { get; set; } = false;
-        public bool RunResynthesis { get; set; } = true;
+        public bool RunTexturePipeline { get; set; } = true;
+        public bool RunResynthesis { get; set; } = false;
 
 
         // Defined in my launch profiles

@@ -8,6 +8,7 @@ namespace ProjectMilan.Settings
         public string OutputModPath { get; set; } = $@"E:\Modding\LE3\Project Milan\{MilanShared.DLC_NAME}";
         public string InputSyncPath { get; set; } = $@"E:\Modding\LE3\Project Milan\InputSync";
         public bool RunMPCommonPipeline { get; set; }
+        public bool RunMP4EnemiesPipeline { get; set; }
         public bool RunKitsPipeline { get; set; }
         public bool RunWeaponsPipeline { get; set; }
         public bool RunLevelsPipeline { get; set; }

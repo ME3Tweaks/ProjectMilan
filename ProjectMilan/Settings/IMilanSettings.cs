@@ -33,6 +33,11 @@ namespace ProjectMilan.Settings
         bool RunMPCommonPipeline { get; set; }
 
         /// <summary>
+        /// If Retaliation enemies should be ported that require custom changes
+        /// </summary>
+        bool RunMP4EnemiesPipeline { get; set; }
+
+        /// <summary>
         /// If multiplayer archetype kits should be built
         /// </summary>
         bool RunKitsPipeline { get; set; }

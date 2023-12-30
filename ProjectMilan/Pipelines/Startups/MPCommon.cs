@@ -287,7 +287,10 @@ namespace ProjectMilan.Pipelines.Startups
             // and we just want to change small segments. Due to patch function
             // This is more desirable for large classes that just need some functions patched
             FileLib fl = new FileLib(pcc);
-            fl.Initialize(usop);
+            if (!fl.Initialize(usop))
+            {
+                MilanShared.LogFailedFileLibInit(fl, "Failed to initialize MPCommon FileLib for function overrides!", LOG_CATEGORY);
+            }
             foreach (var file in Directory.GetFiles(GetMPCommonFunctionOverrideFolder(), "*.uc", SearchOption.AllDirectories))
             {
                 var funcName = Path.GetFileNameWithoutExtension(file);
@@ -531,7 +534,10 @@ namespace ProjectMilan.Pipelines.Startups
                 FileLib fileLib = new FileLib(parsingPackage);
                 try
                 {
-                    fileLib.Initialize(usop);
+                    if (!fileLib.Initialize(usop))
+                    {
+                        MilanShared.LogFailedFileLibInit(fileLib);
+                    }
                 }
                 catch
                 {
@@ -696,7 +702,7 @@ namespace ProjectMilan.Pipelines.Startups
         /// <param name="functionText"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        private static List<string> PatchFunction(string className, string functionText)
+        public static List<string> PatchFunction(string className, string functionText)
         {
             var newClassText = functionText.Split('\n').ToList();
             for (int i = newClassText.Count - 1; i > 0; i--)
