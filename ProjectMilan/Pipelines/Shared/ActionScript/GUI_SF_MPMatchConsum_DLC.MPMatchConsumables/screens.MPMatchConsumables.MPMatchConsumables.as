@@ -39,6 +39,11 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
     var SLOT_MAX = 3;
     var m_ListCategoryFilter = screens.MPMatchConsumables.MPMatchConsumables.prototype.SLOT_AMMO;
     var m_ActiveListItem = -1;
+	var bUsingGamepad;
+	// adding this so that we can ignore mouse hover events when using a controller or navigating with the keyboard,
+	// but allow it while navigating with the mouse, including the scroll wheel. This allows for intuitive hovering while scrolling the list,
+	// but filters out unintuitive interactions with a mouse cursor you are not using
+	var bIgnoreMouseHover = false;
     function MPMatchConsumables()
     {
         super();
@@ -51,8 +56,17 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
         this.SetupList();
         this.SetupScrollbar();
         this.SetupButtons();
+		this.SetupMouse();
         this.ShowPage(this.PAGE_SLOTS);
     }
+	function SetupMouse()
+	{
+		var mouseListener = new Object();
+		mouseListener.onMouseMove = function () {
+			_root.screen.bIgnoreMouseHover = false;
+		};
+		Mouse.addListener(mouseListener);
+	}
     function InitializeLocalization()
     {
         this.srMatchConsumables = "$" + _global.SFX.GetIniString("srMatchConsumables");
@@ -117,10 +131,13 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
             this.m_PCButton1.SetEnabled(false);
             this.m_PCButton2.SetVisible(true);
             this.m_PCButton2.SetEnabled(true);
-            this.m_List.SetPlatformLayout(com.XPlatform.PC);
+			// modern UIs do not change the scroll bar indicator when using controller
+            // this.m_List.SetPlatformLayout(com.XPlatform.PC);
         }
         else
         {
+			// if we are using a controller, ignore all mouse hover events until we use the mouse again
+			this.bIgnoreMouseHover = true;
             this.m_PCBackButton.SetVisible(false);
             this.m_PCBackButton.SetEnabled(false);
             this.m_PCButton1.SetVisible(false);
@@ -128,7 +145,8 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
             this.m_PCButton2.SetVisible(false);
             this.m_PCButton2.SetEnabled(false);
             this.m_ControllerButtons._visible = true;
-            this.m_List.SetPlatformLayout(com.XPlatform.XBox);
+			// modern UIs do not change the scroll bar indicator when using controller
+            // this.m_List.SetPlatformLayout(com.XPlatform.XBox);
         }
         this.RefreshButtonLegend();
         this.RefreshInGameConsumables();
@@ -324,6 +342,8 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
     {
         if(this.m_Page == this.PAGE_LIST)
         {
+			// if we are navigating using arrow keys, ignore mouse input until it gets moved again
+			this.bIgnoreMouseHover = true;
             if(this.m_List.selectedIndex > 0)
             {
                 this.m_List.selectedIndex = this.m_List.selectedIndex - 1;
@@ -351,6 +371,8 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
     {
         if(this.m_Page == this.PAGE_LIST)
         {
+			// if we are navigating using arrow keys, ignore mouse input until it gets moved again
+			this.bIgnoreMouseHover = true;
             if(this.m_List.selectedIndex < this.m_List.GetListCount() - 1)
             {
                 this.m_List.selectedIndex = this.m_List.selectedIndex + 1;
