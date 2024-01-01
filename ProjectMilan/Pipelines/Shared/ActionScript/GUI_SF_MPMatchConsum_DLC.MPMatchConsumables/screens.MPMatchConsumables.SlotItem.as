@@ -92,6 +92,29 @@ class screens.MPMatchConsumables.SlotItem extends com.SFXMovieClip
         }
         this.Refresh();
     }
+	// used to look up which slot this is, so we can sync the root selectedIndex variable
+	function get slotIndex()
+	{
+		var path = this.toString();
+		var slotId = -1;
+		if (path == "_level0.slots.slotAmmo")
+		{
+			slotId = _root.screen.SLOT_AMMO;
+		}
+		else if (path == "_level0.slots.slotDamage")
+		{
+			slotId = _root.screen.SLOT_DAMAGE;
+		}
+		else if (path == "_level0.slots.slotBonus")
+		{
+			slotId = _root.screen.SLOT_BONUS;
+		}
+		else if (path == "_level0.slots.slotGear")
+		{
+			slotId = _root.screen.SLOT_GEAR;
+		}
+		return slotId;
+	}
     function get selected()
     {
         return this.m_Selected;
@@ -133,8 +156,11 @@ class screens.MPMatchConsumables.SlotItem extends com.SFXMovieClip
 		{
 			return;
 		}
-		// END MILAN
+		// sync with selected slot, refresh to ensure it looks correct
+		_root.screen.m_SelectedSlot = this.slotIndex;
         this.selected = true;
+		_root.screen.RefreshSlots();
+		// END MILAN
         _global.SFX.PlayGUISound("MPMatchConsumablesGroupChanged");
     }
     function onRollOut()
@@ -145,6 +171,9 @@ class screens.MPMatchConsumables.SlotItem extends com.SFXMovieClip
 		{
 			return;
 		}
+		// sync with the selected slot, refresh things to ensure it looks correct
+		_root.screen.m_SelectedSlot = -1;
+		_root.screen.RefreshSlots();
 		// END MILAN
         this.selected = false;
     }

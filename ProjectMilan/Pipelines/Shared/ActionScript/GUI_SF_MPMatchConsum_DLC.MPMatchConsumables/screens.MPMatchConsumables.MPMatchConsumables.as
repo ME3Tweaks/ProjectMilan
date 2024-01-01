@@ -48,6 +48,24 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
     {
         super();
     }
+	// function LogFromAS()
+	// {
+	// 	// takes any number of args
+	// 	var concatArgs = "";
+	// 	var i = 0;
+	// 	for (i = 0; i < arguments.length; i++)
+	// 	{
+	// 		if (concatArgs == "")
+	// 		{
+	// 			concatArgs = arguments[i].toString();
+	// 		}
+	// 		else
+	// 		{
+	// 			concatArgs = concatArgs + "," + arguments[i].toString();
+	// 		}
+	// 	}
+	// 	flash.external.ExternalInterface.call("LogFromAS", concatArgs);
+	// }
     function onLoad()
     {
         super.onLoad();
@@ -131,8 +149,6 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
             this.m_PCButton1.SetEnabled(false);
             this.m_PCButton2.SetVisible(true);
             this.m_PCButton2.SetEnabled(true);
-			// modern UIs do not change the scroll bar indicator when using controller
-            // this.m_List.SetPlatformLayout(com.XPlatform.PC);
         }
         else
         {
@@ -145,8 +161,12 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
             this.m_PCButton2.SetVisible(false);
             this.m_PCButton2.SetEnabled(false);
             this.m_ControllerButtons._visible = true;
-			// modern UIs do not change the scroll bar indicator when using controller
-            // this.m_List.SetPlatformLayout(com.XPlatform.XBox);
+			// if nothing is selected, select slot 0
+			if(this.m_SelectedSlot <= this.SLOT_NONE || this.m_SelectedSlot >= this.SLOT_MAX)
+			{
+				this.m_SelectedSlot = this.SLOT_AMMO;
+				this.RefreshSlots();
+			}
         }
         this.RefreshButtonLegend();
         this.RefreshInGameConsumables();
@@ -208,15 +228,13 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
                 }
                 _loc3_ = _loc3_ + 1;
             }
-            if(flash.external.ExternalInterface.call("IsUsingGamepad"))
-            {
-                _loc3_ = 0;
-                while(_loc3_ < this.SLOT_MAX)
-                {
-                    this.m_SlotItems[_loc3_].selected = this.m_SelectedSlot == _loc3_;
-                    _loc3_ = _loc3_ + 1;
-                }
-            }
+			// ensure exactly one is selected at a time, even with some mixed input
+			_loc3_ = 0;
+			while(_loc3_ < this.SLOT_MAX)
+			{
+				this.m_SlotItems[_loc3_].selected = this.m_SelectedSlot == _loc3_;
+				_loc3_ = _loc3_ + 1;
+			}
         }
         else if(this.m_Page == this.PAGE_LIST)
         {
@@ -590,6 +608,7 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
         var _loc4_ = _root.slots.inGameConsumables;
         var _loc5_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetInGameConsumableInfo"));
         var usingGamepad = flash.external.ExternalInterface.call("IsUsingGamepad");
+		// this changes the right side of the slots screen to a diamond formation around a dpad or a square for PC layout
         if(!usingGamepad)
         {
             _loc4_.gotoAndStop("PC");
@@ -617,25 +636,52 @@ class screens.MPMatchConsumables.MPMatchConsumables extends com.SFXScreen
     }
     function NavigateSlots(nDirection)
     {
-        var _loc2_ = new Object();
-        if(this.SLOT_MAX == 3)
+        var slotTransitions = new Object();
+		var newSlot = -1;
+		// handle this normally as long as the selected index is within the valid range
+		if (this.m_SelectedSlot >=0 && this.m_SelectedSlot < this.SLOT_MAX)
+		{
+			if(this.SLOT_MAX == 3)
+			{
+				slotTransitions[com.XInput.DPadUp] = [-1,0,0];
+				slotTransitions[com.XInput.DPadDown] = [1,-1,-1];
+				slotTransitions[com.XInput.DPadLeft] = [-1,-1,1];
+				slotTransitions[com.XInput.DPadRight] = [-1,2,-1];
+			}
+			else if(this.SLOT_MAX == 4)
+			{
+				slotTransitions[com.XInput.DPadUp] = [-1,-1,0,1];
+				slotTransitions[com.XInput.DPadDown] = [2,3,-1,-1];
+				slotTransitions[com.XInput.DPadLeft] = [-1,0,-1,2];
+				slotTransitions[com.XInput.DPadRight] = [1,-1,3,-1];
+			}
+		}
+		// and do some special handling if it is outside that range to ensure we can land on something valid
+		// this can happen if you used the mouse and dehighlighted all slots
+        else
+		{
+			// default it to 0
+			this.m_SelectedSlot = 0;
+			// program in transitions that will always land you on something, assuming you started from 0
+			if(this.SLOT_MAX == 3)
+			{
+				slotTransitions[com.XInput.DPadUp] = [0];
+				slotTransitions[com.XInput.DPadDown] = [1];
+				slotTransitions[com.XInput.DPadLeft] = [0];
+				slotTransitions[com.XInput.DPadRight] = [0];
+			}
+			else if(this.SLOT_MAX == 4)
+			{
+				slotTransitions[com.XInput.DPadUp] = [0];
+				slotTransitions[com.XInput.DPadDown] = [2];
+				slotTransitions[com.XInput.DPadLeft] = [0];
+				slotTransitions[com.XInput.DPadRight] = [1];
+			}
+		}
+		newSlot = slotTransitions[nDirection][this.m_SelectedSlot];
+        if(newSlot != -1)
         {
-            _loc2_[com.XInput.DPadUp] = [-1,0,0];
-            _loc2_[com.XInput.DPadDown] = [1,-1,-1];
-            _loc2_[com.XInput.DPadLeft] = [-1,-1,1];
-            _loc2_[com.XInput.DPadRight] = [-1,2,-1];
-        }
-        else if(this.SLOT_MAX == 4)
-        {
-            _loc2_[com.XInput.DPadUp] = [-1,-1,0,1];
-            _loc2_[com.XInput.DPadDown] = [2,3,-1,-1];
-            _loc2_[com.XInput.DPadLeft] = [-1,0,-1,2];
-            _loc2_[com.XInput.DPadRight] = [1,-1,3,-1];
-        }
-        var _loc3_ = _loc2_[nDirection][this.m_SelectedSlot];
-        if(_loc3_ != -1)
-        {
-            this.m_SelectedSlot = _loc3_;
+            this.m_SelectedSlot = newSlot;
             return true;
         }
         return false;
