@@ -56,6 +56,8 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     var RESTRICTED_CHARACTERS = "^;";
 	var confirmMenuItem;
 	var bUsingGamepad;
+	var bIgnoreMouseHover;
+	var bRightClickHeld;
 	// MILAN CHANGE DropTheSquid 12/12/2023
 	// added for debugging purposes
 	// function LogFromAS()
@@ -87,6 +89,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.bLoaded = true;
         this.SetupLocalization();
         this.SetupButtons();
+		this.SetupMouse();
         this.Scrollbar._visible = false;
         Key.addListener(this);
         Selection.addListener(this);
@@ -114,6 +117,30 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.Message._visible = false;
         this.InitializeNameField();
     }
+	// MILAN CHANGE DropTheSquid 1/2/2024
+	// adding a mouse listener so we can better distinguish mouse/keyboard input modes
+	function SetupMouse()
+	{
+		var mouseListener = new Object();
+		mouseListener.onMouseMove = function () {
+			_root.screen.bIgnoreMouseHover = false;
+		};
+		mouseListener.onMouseWheel = function(delta, scrollTarget) {
+			// this counts as a mouse action and we want things to react to the mouse over them
+			_root.screen.bIgnoreMouseHover = false;
+		}
+		Mouse.addListener(mouseListener);
+	}
+	// these two are called from UnrealScript. Lets us know to ignore mouse hover events because the cursor is invisible
+	function StartRightClick()
+	{
+		this.bRightClickHeld = true;
+	}
+	function EndRightClick()
+	{
+		this.bRightClickHeld = false;
+	}
+	// END MILAN
     function SetupLocalization()
     {
         this.srSelectAppearance = "$" + _global.SFX.GetIniString("srSelectAppearance");
@@ -513,6 +540,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     }
     function onDPadUp(p_event)
     {
+		this.bIgnoreMouseHover = true;
         if(this.SelectedField != screens.MPAppearance.MPAppearance.SELECTED_FIELD_NAME)
         {
             if(this.SelectedField == screens.MPAppearance.MPAppearance.SELECTED_FIELD_TINTS)
@@ -559,6 +587,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     }
     function onDPadDown(p_event)
     {
+		this.bIgnoreMouseHover = true;
         if(this.SelectedField == screens.MPAppearance.MPAppearance.SELECTED_FIELD_NAME)
         {
             if(_global.SFX.Platform == com.XPlatform.PC)
@@ -602,6 +631,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     }
     function onDPadLeft(p_event)
     {
+		this.bIgnoreMouseHover = true;
         if(this.SelectedField == screens.MPAppearance.MPAppearance.SELECTED_FIELD_TINTS)
         {
             if(!this.TintPanel.MoveHoveredSelectionLeft())
@@ -616,6 +646,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     }
     function onDPadRight(p_event)
     {
+		this.bIgnoreMouseHover = true;
         if(this.SelectedField == screens.MPAppearance.MPAppearance.SELECTED_FIELD_TINTS)
         {
             if(!this.TintPanel.MoveHoveredSelectionRight())
