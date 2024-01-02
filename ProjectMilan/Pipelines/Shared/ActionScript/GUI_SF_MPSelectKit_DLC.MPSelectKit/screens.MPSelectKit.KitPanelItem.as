@@ -144,8 +144,8 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
     {
 		// MILAN CHANGE DropTheSquid 12/18/2023
 		// make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
-		// also not while the list is moving in general, which covers the same use case for scrolling with keyboard/mouse
-		if (_root.screen.bUsingGamepad || this.parentList.IsListMoving)
+		// also not while navigating using the keyboard arrow keys. Do allow it while scrolling
+		if (_root.screen.bUsingGamepad || _root.screen.bIgnoreMouseHover)
 		{
 			return;
 		}
@@ -156,10 +156,10 @@ class screens.MPSelectKit.KitPanelItem extends com.bioware.masseffect.controls.V
         _global.SFX.PlayGUISound("MPSelectKitCharacterChange");
     }
 	// MILAN CHANGE DropTheSquid 12/18/2023
-	// make override of OnRollout so we can do nothing if the mouse is invisible or the list is moving
+	// make override of OnRollout so we can do nothing if the mouse is invisible or the user is navigating with arrow keys
 	function onRollOut()
     {
-		if (_root.screen.bUsingGamepad || this.parentList.IsListMoving)
+		if (_root.screen.bUsingGamepad || _root.screen.bIgnoreMouseHover)
 		{
 			return;
 		}

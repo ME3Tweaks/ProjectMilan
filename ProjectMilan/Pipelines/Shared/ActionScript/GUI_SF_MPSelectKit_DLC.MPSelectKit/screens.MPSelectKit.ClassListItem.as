@@ -57,17 +57,6 @@ class screens.MPSelectKit.ClassListItem extends com.bioware.masseffect.controls.
         super.onRollOver();
         _global.SFX.PlayGUISound("MPSelectKitClassChange");
     }
-	// MILAN CHANGE DropTheSquid 12/18/2023
-	// make override of OnRollout so we can do nothing if the mouse is invisible
-	function onRollOut()
-    {
-		if (_root.screen.bUsingGamepad)
-		{
-			return;
-		}
-        super.onRollOut();
-    }
-	// END MILAN
     function onRelease()
     {
         super.onRelease();

@@ -35,6 +35,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
 	// adding variables to be accessed from the KitPanelItem class
     var bUsingGamepad;
     var currentKitPanelItem;
+	var bIgnoreMouseHover;
     // END MILAN
     static var PROMOTION_BACKGROUND_FADEOUT_FRAME = "fadeOut";
 	// MILAN CHANGE DropTheSquid 12/19/2023
@@ -67,11 +68,50 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
         super.onLoad();
         this.InitializeLocalization();
         this.SetupButtons();
+		// MILAN CHANGE DropTheSquid 1/1/2024
+		// calling the new setup method
+		this.SetupMouse();
+		// END MILAN
         this.m_PromotionEvents = _root.PromotionEvents;
         this.m_PromotionBackground = _root.PromotionBackground;
         this.m_PromotionBackground._visible = false;
         this.m_ProcessPromoteEventsCallback = this.MakeDelegate(this.ProcessPromotionEvents);
     }
+	// MILAN CHANGE DropTheSquid 1/1/2024
+	// adding a mouse listener so we can better distinguish mouse/keyboard input modes, and so we can handle scroll wheel events. 
+	function SetupMouse()
+	{
+		var mouseListener = new Object();
+		mouseListener.onMouseMove = function () {
+			_root.screen.bIgnoreMouseHover = false;
+		};
+		mouseListener.onMouseWheel = function(delta, scrollTarget) {
+			// this counts as a mouse action and we want things to react to the mouse over them
+			_root.screen.bIgnoreMouseHover = false;
+			// scrolling "down"
+			if (delta < 0)
+			{
+				// if there is room to scroll, do so to the right
+				if (_root.screen.m_KitPanel.HasItemsOffBottom())
+				{
+					_root.screen.m_KitPanel.movementRefElementIndex++;
+				}
+			}
+			// scrolling "up"
+			else
+			{
+				// if there is room to scroll, do so to the left
+				if (_root.screen.m_KitPanel.HasItemsOffTop())
+				{
+					_root.screen.m_KitPanel.movementRefElementIndex--;
+				}
+			}
+			// make sure the arrow states are updated after scrolling
+			_root.screen.RefreshArrowStates();
+		}
+		Mouse.addListener(mouseListener);
+	}
+	// END MILAN
     function InitializeLocalization()
     {
         this.srSelectKit = "$" + _global.SFX.GetIniString("srSelectKit");
@@ -253,7 +293,6 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
         this.m_ControllerButtons.addEventListener("onDPadUp",this.MakeDelegate(this.OnDPadUp));
         this.m_ControllerButtons.addEventListener("onDPadDown",this.MakeDelegate(this.OnDPadDown));
         this.m_ControllerButtons.addEventListener("onInvalidInput",this.MakeDelegate(this.OnInvalidInput));
-
         this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
 		// END MILAN
         this.RefreshButtons();
@@ -337,6 +376,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnDPadRight()
     {
+		// ignore all mouse hover events until the mouse is moved again
+		this.bIgnoreMouseHover = true;
+		// remove mouse highlight over things when we start doing keyboard navigation
+		this.DehighlightHoverableElements();
         if(this.m_KitPanel.selectedIndex < this.m_KitPanel.length - 1)
         {
             this.m_KitPanel.selectedIndex += 1;
@@ -350,6 +393,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnDPadLeft()
     {
+		// ignore all mouse hover events until the mouse is moved again
+		this.bIgnoreMouseHover = true;
+		// remove mouse highlight over things when we start doing keyboard navigation
+		this.DehighlightHoverableElements();
         if(this.m_KitPanel.selectedIndex > 0)
         {
             this.m_KitPanel.selectedIndex -= 1;
@@ -363,6 +410,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnDPadUp()
     {
+		// ignore all mouse hover events until the mouse is moved again
+		this.bIgnoreMouseHover = true;
+		// remove mouse highlight over things when we start doing keyboard navigation
+		this.DehighlightHoverableElements();
         if(this.m_ClassList.selectedIndex > 0)
         {
             this.m_bSetKitSelection = false;
@@ -378,6 +429,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnDPadDown()
     {
+		// ignore all mouse hover events until the mouse is moved again
+		this.bIgnoreMouseHover = true;
+		// remove mouse highlight over things when we start doing keyboard navigation
+		this.DehighlightHoverableElements();
         if(this.m_ClassList.selectedIndex < this.m_ClassList.length - 1)
         {
             this.m_bSetKitSelection = false;
@@ -566,20 +621,28 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
 			// show controller buttons
             this.m_ControllerButtons._visible = true;
             this.m_ControllerButtons.FitLeft();
-			// stop showing the hover highlight on the arrows. The mouse off is not animated so there is no harm in calling this repeatedly or when not needed. 
-			this.LeftArrow.onRollOut();
-			this.RightArrow.onRollOut();
-			// same thing with the class list. the hover indicator is a single frame, and only shows up with mouse. so turn it off so we don't have it still hovered under the mouse
-			var classItem = undefined;
-			var i = 0;
-			while(i < this.m_ClassDataList.length)
-			{
-				classItem = screens.MPSelectKit.ClassListItem(this.m_ClassList.getListItem(i));
-				classItem.onRollOut();
-				i += 1;
-			}
+
+			// ignore all mouse hover events until the mouse is moved again
+			this.bIgnoreMouseHover = true;
+			// remove highlight on any highlighted elements
+			this.DehighlightHoverableElements();
         }
 		this.RefreshButtons();
     }
+	function DehighlightHoverableElements()
+	{
+		// stop showing the hover highlight on the arrows. The mouse off is not animated so there is no harm in calling this repeatedly or when not needed. 
+		this.LeftArrow.onRollOut();
+		this.RightArrow.onRollOut();
+		// same thing with the class list. the hover indicator is a single frame, and only shows up with mouse. so turn it off so we don't have it still hovered under the mouse
+		var classItem = undefined;
+		var i = 0;
+		while(i < this.m_ClassDataList.length)
+		{
+			classItem = screens.MPSelectKit.ClassListItem(this.m_ClassList.getListItem(i));
+			classItem.onRollOut();
+			i += 1;
+		}
+	}
     // END MILAN
 }
