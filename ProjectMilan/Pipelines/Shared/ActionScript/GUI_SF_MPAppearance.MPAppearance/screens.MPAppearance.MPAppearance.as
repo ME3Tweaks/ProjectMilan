@@ -26,6 +26,19 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     var CurrSelectedPhongID;
     var CurrSelectedEmissiveID;
     var CurrSelectedSkinToneID;
+
+	/// MILAN CHANGE DropTheSquid 1/2/2024
+	// adding these so I can better keep track of what option was selected when I started editing any of these, so you can cancel out and revert to that
+	var OriginalTint1ID;
+    var OriginalTint2ID;
+    var OriginalPatternID;
+    var OriginalPatternColorID;
+    var OriginalPhongID;
+    var OriginalEmissiveID;
+    var OriginalSkinToneID;
+	// callback when we back out of changing something
+	var ChangeItemRevert;
+	// END MILAN
     var playerInfo;
     var srSelectAppearance = "NOLOC:Select Appearance";
     var srCharacterName = "NOLOC:Character Name:";
@@ -183,7 +196,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
 			this.m_PCBackButton_Deploy.SetText(this.srCancel);
 			this.m_PCConfirmButton_Deploy.SetText(this.srConfirm);
 			this.m_PCResetButton_Deploy.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnResetButtonPressed));
-			this.m_PCBackButton_Deploy.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnBackButtonPressed));
+			this.m_PCBackButton_Deploy.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnPCBackButtonPressed));
 			// changed this from pointing to OnSelectButtonPressed to the method that should get invoked only for the PC button, so I can edit OnSelectButtonPressed to work for console well
 			this.m_PCConfirmButton_Deploy.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnConfirmActivate));
 		}
@@ -192,11 +205,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
 			this.m_PCResetButton.SetText(this.srReset);
 			this.m_PCBackButton.SetText(this.srBack);
 			this.m_PCResetButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnResetButtonPressed));
-			this.m_PCBackButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnBackButtonPressed));
+			this.m_PCBackButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnPCBackButtonPressed));
 		}
 		// set up Controller buttons
 		this.m_ControllerButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.OnSelectButtonPressed));
-		this.m_ControllerButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.OnBackButtonPressed));
+		this.m_ControllerButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.OnConsoleBackButtonPressed));
 		this.m_ControllerButtons.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.OnResetButtonPressed));
 		this.m_ControllerButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
 		this.m_ControllerButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
@@ -222,6 +235,9 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         if(this.bLoaded)
         {
 			// renamed these loc variables to be more clear
+			// So I think these are really mixed up just in vanilla. It starts from the list of kits saying what customization options each kit supports
+			// which this code maps incorrectly.
+			// we would need to fix it here and rearrange those. gross. 
             var tint1State = Number(flash.external.ExternalInterface.call("GetTint1State"));
             var tint2State = Number(flash.external.ExternalInterface.call("GetTint2State"));
             var patternState = Number(flash.external.ExternalInterface.call("GetPatternState"));
@@ -240,10 +256,12 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             {
                 this.AppearanceMenu.AddNewItem(this.srPrimaryColor,tint1State,this.srNew,this.MakeDelegate(this.OnAppearanceMenuItemSelected),this.MakeDelegate(this.OnTint1Activate));
             }
+			// TODO these two seem possibly mixed up
             if(canShowSecondaryColor)
             {
                 this.AppearanceMenu.AddNewItem(this.srMaterialColor,phongState,this.srNew,this.MakeDelegate(this.OnAppearanceMenuItemSelected),this.MakeDelegate(this.OnPhongActivate));
             }
+			// TODO honsetly this also seems messed up
             if(canShowPattern)
             {
                 this.AppearanceMenu.AddNewItem(this.srSecondaryColor,tint2State,this.srNew,this.MakeDelegate(this.OnAppearanceMenuItemSelected),this.MakeDelegate(this.OnTint2Activate));
@@ -252,6 +270,7 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             {
                 this.AppearanceMenu.AddNewItem(this.srPattern,patternState,this.srNew,this.MakeDelegate(this.OnAppearanceMenuItemSelected),this.MakeDelegate(this.OnPatternActivate));
             }
+			// TODO these seem possibly mixed up
             if(canShowPhong)
             {
                 this.AppearanceMenu.AddNewItem(this.srPatternColor,patternColorState,this.srNew,this.MakeDelegate(this.OnAppearanceMenuItemSelected),this.MakeDelegate(this.OnPatternColorActivate));
@@ -280,9 +299,12 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         {
             var _loc2_ = Number(flash.external.ExternalInterface.call("GetSelectedTint1ID"));
             this.CurrSelectedTint1ID = _loc2_;
+			// adding this so we know what to revert to if they cancel out
+			this.OriginalTint1ID = _loc2_;
             this.ChangeItemCallback = this.MakeDelegate(this.OnTint1Change);
             this.ChangeItemEnd = this.MakeDelegate(this.OnTint1End);
             this.ConfirmItemCallback = this.MakeDelegate(this.OnTint1Confirm);
+			this.ChangeItemRevert = this.MakeDelegate(this.OnTint1Revert);
             this.SetupTintPanel(com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetTint1SwatchData")),_loc2_);
         }
         this.RefreshActionButtonStates();
@@ -304,6 +326,14 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.CurrSelectedTint1ID = nID;
         flash.external.ExternalInterface.call("ChangeTint1Selection",nID);
     }
+	function OnTint1Revert()
+	{
+		// when just doing normal navigation between tints on controller/arrow keys
+		// it calls change and then confirm. So I need to undo both here. 
+		// flash.external.ExternalInterface.call("ChangePawnTint1",this.OriginalTint1ID);
+		this.OnTint1Change(this.OriginalTint1ID);
+		this.OnTint1Confirm(this.OriginalTint1ID);
+	}
     function OnTint2Activate()
     {
         this.SetNewFocus(screens.MPAppearance.MPAppearance.SELECTED_FIELD_MENU);
@@ -311,9 +341,12 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         {
             var _loc2_ = Number(flash.external.ExternalInterface.call("GetSelectedTint2ID"));
             this.CurrSelectedTint2ID = _loc2_;
+			// adding this so we can revert back to it
+			this.OriginalTint2ID = _loc2_;
             this.ChangeItemCallback = this.MakeDelegate(this.OnTint2Change);
             this.ChangeItemEnd = this.MakeDelegate(this.OnTint2End);
             this.ConfirmItemCallback = this.MakeDelegate(this.OnTint2Confirm);
+			this.ChangeItemRevert = this.MakeDelegate(this.OnTint2Revert);
             this.SetupTintPanel(com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetTint2SwatchData")),_loc2_);
         }
         this.RefreshActionButtonStates();
@@ -331,6 +364,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.CurrSelectedTint2ID = nID;
         flash.external.ExternalInterface.call("ChangeTint2Selection",nID);
     }
+	function OnTint2Revert()
+	{
+		this.OnTint2Change(this.OriginalTint2ID);
+		this.OnTint2Confirm(this.OriginalTint2ID);
+	}
     function OnPatternActivate()
     {
         this.SetNewFocus(screens.MPAppearance.MPAppearance.SELECTED_FIELD_MENU);
@@ -338,7 +376,9 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         {
             var _loc2_ = Number(flash.external.ExternalInterface.call("GetSelectedPatternID"));
             this.CurrSelectedPatternID = _loc2_;
+			this.OriginalPatternID = _loc2_;
             this.SetupPatternPanel(com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetPatternData")),_loc2_);
+			this.ChangeItemRevert = this.MakeDelegate(this.OnPatternRevert);
         }
     }
     function OnPatternColorActivate()
@@ -348,9 +388,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         {
             var _loc2_ = Number(flash.external.ExternalInterface.call("GetSelectedPatternColorID"));
             this.CurrSelectedPatternColorID = _loc2_;
+			this.OriginalPatternColorID = _loc2_;
             this.ChangeItemCallback = this.MakeDelegate(this.OnPatternColorChange);
             this.ChangeItemEnd = this.MakeDelegate(this.OnPatternColorEnd);
             this.ConfirmItemCallback = this.MakeDelegate(this.OnPatternColorConfirm);
+			this.ChangeItemRevert = this.MakeDelegate(this.OnPatternColorRevert);
             this.SetupTintPanel(com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetPatternColorSwatchData")),_loc2_);
         }
         this.RefreshActionButtonStates();
@@ -368,6 +410,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.CurrSelectedPatternColorID = nID;
         flash.external.ExternalInterface.call("ChangePatternColorSelection",nID);
     }
+	function OnPatternColorRevert()
+	{
+		this.OnPatternColorChange(this.OriginalPatternColorID);
+		this.OnPatternColorConfirm(this.OriginalPatternColorID);
+	}
     function OnPhongActivate()
     {
         this.SetNewFocus(screens.MPAppearance.MPAppearance.SELECTED_FIELD_MENU);
@@ -375,9 +422,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         {
             var _loc2_ = Number(flash.external.ExternalInterface.call("GetSelectedPhongID"));
             this.CurrSelectedPhongID = _loc2_;
+			this.OriginalPhongID = _loc2_;
             this.ChangeItemCallback = this.MakeDelegate(this.OnPhongChange);
             this.ChangeItemEnd = this.MakeDelegate(this.OnPhongEnd);
             this.ConfirmItemCallback = this.MakeDelegate(this.OnPhongConfirm);
+			this.ChangeItemRevert = this.MakeDelegate(this.OnPhongRevert);
             this.SetupTintPanel(com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetPhongSwatchData")),_loc2_);
         }
         this.RefreshActionButtonStates();
@@ -395,6 +444,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.CurrSelectedPhongID = nID;
         flash.external.ExternalInterface.call("ChangePhongSelection",nID);
     }
+	function OnPhongRevert()
+	{
+		this.OnPhongChange(this.OriginalPhongID);
+		this.OnPhongConfirm(this.OriginalPhongID);
+	}
     function OnEmissiveActivate()
     {
         this.SetNewFocus(screens.MPAppearance.MPAppearance.SELECTED_FIELD_MENU);
@@ -402,9 +456,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         {
             var _loc2_ = Number(flash.external.ExternalInterface.call("GetSelectedEmissiveID"));
             this.CurrSelectedEmissiveID = _loc2_;
+			this.OriginalEmissiveID = _loc2_;
             this.ChangeItemCallback = this.MakeDelegate(this.OnEmissiveChange);
             this.ChangeItemEnd = this.MakeDelegate(this.OnEmissiveEnd);
             this.ConfirmItemCallback = this.MakeDelegate(this.OnEmissiveConfirm);
+			this.ChangeItemRevert = this.MakeDelegate(this.OnEmissiveRevert);
             this.SetupTintPanel(com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetEmissiveSwatchData")),_loc2_);
         }
         this.RefreshActionButtonStates();
@@ -422,6 +478,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.CurrSelectedEmissiveID = nID;
         flash.external.ExternalInterface.call("ChangeEmissiveSelection",nID);
     }
+	function OnEmissiveRevert()
+	{
+		this.OnEmissiveChange(this.OriginalEmissiveID);
+		this.OnEmissiveConfirm(this.OriginalEmissiveID);
+	}
     function OnSkinToneActivate()
     {
         this.SetNewFocus(screens.MPAppearance.MPAppearance.SELECTED_FIELD_MENU);
@@ -429,9 +490,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         {
             var _loc2_ = Number(flash.external.ExternalInterface.call("GetSelectedSkinToneID"));
             this.CurrSelectedSkinToneID = _loc2_;
+			this.OriginalSkinToneID = _loc2_;
             this.ChangeItemCallback = this.MakeDelegate(this.OnSkinToneChange);
             this.ChangeItemEnd = this.MakeDelegate(this.OnSkinToneEnd);
             this.ConfirmItemCallback = this.MakeDelegate(this.OnSkinToneConfirm);
+			this.ChangeItemRevert = this.MakeDelegate(this.OnSkinToneRevert);
             this.SetupTintPanel(com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetSkinToneSwatchData")),_loc2_);
         }
         this.RefreshActionButtonStates();
@@ -449,6 +512,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.CurrSelectedSkinToneID = nID;
         flash.external.ExternalInterface.call("ChangeSkinToneSelection",nID);
     }
+	function OnSkinToneRevert()
+	{
+		this.OnSkinToneChange(this.OriginalSkinToneID);
+		this.OnSkinToneConfirm(this.OriginalSkinToneID);
+	}
     function OnConfirmSelect()
     {
         this.SetNewFocus(screens.MPAppearance.MPAppearance.SELECTED_FIELD_MENU);
@@ -468,6 +536,8 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.TintPanel._visible = true;
         this.Message._visible = false;
         this.TintPanel.InitializeSwatches(ColorData);
+		// stop it from animating the move to the already selected swatch.
+		this.TintPanel.SnapNextListMovement = true;
         this.TintPanel.SelectInitialSwatch(nInitialID);
         this.Scrollbar._visible = this.TintPanel.length > this.TintPanel.NUM_VISIBLE;
     }
@@ -493,6 +563,8 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.PatternMenu.SetActivatedCallback(this.MakeDelegate(this.OnPatternActivated));
         this.PatternMenu.SetHoveredCallback(this.MakeDelegate(this.OnPatternHovered));
         this.PatternMenu.SetHoveredEndCallback(this.MakeDelegate(this.OnPatternHoveredEnd));
+		// if there were ever enough patterns to need to scroll, do not animate scrolling to them
+		this.PatternMenu.SnapNextListMovement = true;
         this.PatternMenu.selectedIndex = _loc4_;
         this.Scrollbar._visible = this.PatternMenu.length > this.PatternMenu.NUM_VISIBLE;
     }
@@ -519,6 +591,13 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
     {
         this.PatternMenu.selectedIndex = nIndex;
     }
+	function OnPatternRevert()
+	{
+		// update the preview
+		flash.external.ExternalInterface.call("ChangePawnPattern",this.OriginalPatternID);
+		// actually commit the update
+		flash.external.ExternalInterface.call("ChangePatternSelection",this.OriginalPatternID);
+	}
     function RefreshCurrentMenuItem()
     {
         if(this.SelectedField != screens.MPAppearance.MPAppearance.SELECTED_FIELD_NAME)
@@ -686,10 +765,29 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             this.HidePanels();
         }
     }
-    function OnBackButtonPressed()
+    function OnConsoleBackButtonPressed()
     {
-        flash.external.ExternalInterface.call("BackButtonPressed");
+		// if we have a tint/pattern panel up, handle back differently
+		if(this.SelectedField == screens.MPAppearance.MPAppearance.SELECTED_FIELD_TINTS || this.SelectedField == screens.MPAppearance.MPAppearance.SELECTED_FIELD_PATTERNS)
+        {
+			// reset it to the selection when you opened the panel
+			this.ChangeItemRevert();
+			// tell it we are looking at the main left menu again
+            this.SelectedField = screens.MPAppearance.MPAppearance.SELECTED_FIELD_MENU;
+			// refresh buttons
+            this.RefreshActionButtonStates();
+			// hide the panel
+            this.HidePanels();
+        }
+		else
+		{
+			this.OnPCBackButtonPressed();
+		}
     }
+	function OnPCBackButtonPressed()
+	{
+		flash.external.ExternalInterface.call("BackButtonPressed");
+	}
     function OnNameMouseClick(p_event)
     {
         _global.SFX.PlayGUISound("MPAppearanceNameClick");
@@ -800,8 +898,9 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
 			case screens.MPAppearance.MPAppearance.SELECTED_FIELD_TINTS:
 			case screens.MPAppearance.MPAppearance.SELECTED_FIELD_PATTERNS:
 				this.m_ControllerButtons.ControlA.SetEnabled(true);
-				this.m_ControllerButtons.ControlB.SetText(this.srBack);
-				this.m_ControllerButtons.ControlB.SetEnabled(false);
+				// cancel is more correct here
+				this.m_ControllerButtons.ControlB.SetText(this.srCancel);
+				this.m_ControllerButtons.ControlB.SetEnabled(true);
 				break;
 			case screens.MPAppearance.MPAppearance.SELECTED_FIELD_NAME:
 				this.m_ControllerButtons.ControlA.SetEnabled(true);
