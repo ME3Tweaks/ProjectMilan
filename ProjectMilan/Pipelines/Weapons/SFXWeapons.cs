@@ -167,7 +167,8 @@ namespace ProjectMilan.Pipelines.Weapons
             {
                 Cache = pipeline.Cache,
                 MissingObjectResolver = MilanShared.MissingObjectResolverExportsAsImports,
-                GetVTableFromDonor = MilanShared.GetVTableFromDonor
+                GetVTableFromDonor = MilanShared.GetVTableFromDonor,
+                CustomFileResolver = MilanShared.LE3PackageResolver,
             };
             // Different forced export packages
 
