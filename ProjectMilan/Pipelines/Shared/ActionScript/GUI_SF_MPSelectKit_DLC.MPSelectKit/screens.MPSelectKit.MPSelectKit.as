@@ -15,7 +15,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     var m_ControllerButtons;
     var m_PCBackButton;
     var m_PCPromoteButton;
-	    var PCInfoButton;
+	var PCInfoButton;
     var Titlebar;
     var srSelectKit = "NOLOC:Select Kit";
     var srBack = "NOLOC:Back";
@@ -36,6 +36,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     var bUsingGamepad;
     var currentKitPanelItem;
 	var bIgnoreMouseHover;
+	var bInputIgnored;
     // END MILAN
     static var PROMOTION_BACKGROUND_FADEOUT_FRAME = "fadeOut";
 	// MILAN CHANGE DropTheSquid 12/19/2023
@@ -376,6 +377,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnDPadRight()
     {
+		if (this.bInputIgnored)
+		{
+			return;
+		}
 		// ignore all mouse hover events until the mouse is moved again
 		this.bIgnoreMouseHover = true;
 		// remove mouse highlight over things when we start doing keyboard navigation
@@ -393,6 +398,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnDPadLeft()
     {
+		if (this.bInputIgnored)
+		{
+			return;
+		}
 		// ignore all mouse hover events until the mouse is moved again
 		this.bIgnoreMouseHover = true;
 		// remove mouse highlight over things when we start doing keyboard navigation
@@ -410,6 +419,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnDPadUp()
     {
+		if (this.bInputIgnored)
+		{
+			return;
+		}
 		// ignore all mouse hover events until the mouse is moved again
 		this.bIgnoreMouseHover = true;
 		// remove mouse highlight over things when we start doing keyboard navigation
@@ -429,6 +442,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnDPadDown()
     {
+		if (this.bInputIgnored)
+		{
+			return;
+		}
 		// ignore all mouse hover events until the mouse is moved again
 		this.bIgnoreMouseHover = true;
 		// remove mouse highlight over things when we start doing keyboard navigation
@@ -453,11 +470,19 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnBack()
     {
+		if (this.bInputIgnored)
+		{
+			return;
+		}
         this.m_ControllerButtons.InputDisabled = true;
         flash.external.ExternalInterface.call("GoBack");
     }
     function OnSelect()
     {
+		if (this.bInputIgnored)
+		{
+			return;
+		}
         var _loc3_ = this.m_KitPanel.selectedIndex;
         if(this.m_KitDataList[_loc3_].bLocked)
         {
@@ -476,6 +501,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnPromote()
     {
+		if (this.bInputIgnored)
+		{
+			return;
+		}
         if(this.m_ClassDataList[this.m_ClassList.selectedIndex].bCanPromote)
         {
             flash.external.ExternalInterface.call("PromoteClass",this.m_ClassDataList[this.m_ClassList.selectedIndex].Name);
@@ -487,6 +516,10 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     }
     function OnShowCharacterInfo()
     {
+		if (this.bInputIgnored)
+		{
+			return;
+		}
         var _loc2_ = this.m_KitPanel.selectedIndex;
         if(_loc2_ != -1 && _loc2_ < this.m_KitDataList.length)
         {
@@ -557,6 +590,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
     function SetInputDisabled(b)
     {
         this.m_ControllerButtons.InputDisabled = b;
+		this.bInputIgnored = b;
     }
     function StartPromotionEvent()
     {
@@ -571,6 +605,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
         this.m_PromotionBackground._visible = this.m_PromotionEventList.length > 0;
         this.ProcessPromotionEvents();
         this.SetInputDisabled(true);
+		flash.external.ExternalInterface.call("PromotionEventActive",true);
     }
     function ProcessPromotionEvents()
     {
@@ -585,6 +620,7 @@ class screens.MPSelectKit.MPSelectKit extends com.SFXScreen
         {
             this.m_PromotionBackground.gotoAndPlay(screens.MPSelectKit.MPSelectKit.PROMOTION_BACKGROUND_FADEOUT_FRAME);
             this.SetInputDisabled(false);
+			flash.external.ExternalInterface.call("PromotionEventActive",false);
         }
     }
     // MILAN CHANGE DropTheSquid 12/12/2023

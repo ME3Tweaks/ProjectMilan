@@ -18,6 +18,11 @@ struct KitDescriptionData
 
 // Variables
 var config array<KitDescriptionData> KitDescriptions;
+// MILAN CHANGE DropTheSquid 1/4/2024
+// added so we can keep track of whether a promotion event is currently active
+// to control mouse visibility
+var transient bool bIsPromotionEventActive;
+// END MILAN
 
 // Functions
 // MILAN CHANGE DropTheSquid 12/12/2023
@@ -25,8 +30,22 @@ var config array<KitDescriptionData> KitDescriptions;
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
-	SetMouseVisible(!usingGamepad);
-    ActionScriptVoid("screen.RefreshButtonHelp");
+	// if there is a promotion event, do not show the mouse
+    SetMouseVisible(!usingGamepad && !bIsPromotionEventActive);
+	ActionScriptVoid("screen.RefreshButtonHelp");
+}
+// added so the unrealscript can keep track of whether it is currently displaying a promotion event to control mouse visibility appropriately
+public function PromotionEventActive(bool active)
+{
+    bIsPromotionEventActive = active;
+    if (active)
+    {
+        SetMouseVisible(false);
+    }
+    else 
+    {
+        SetMouseVisible(!bUsingGamepad);
+    }     
 }
 // added to set the mouse visibility on start according to the UI mode
 public event function OnStart()
