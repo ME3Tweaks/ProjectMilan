@@ -138,9 +138,8 @@
 				<!--END MILAN-->
 				<!-- MILAN CHANGE DropTheSquid 1/5/2024 -->
 				<!-- we need to redirect it to the DLC version of this UI for it to work -->
-				<!-- also tell it to scale for ultrawide aspect ratios -->
 				<Value type="4">(Tag=MPPromotion,\t\tZOrder=366,\tMovieClass="SFXGameMPContent.SFXGUI_MPPromotion",\t\tGFxResource="GUI_SF_MPPromotion.MPPromotion")</Value>
-				<Value type="3">(Tag=MPPromotion,\t\tZOrder=366,\tMovieClass="SFXGameMPContent.SFXGUI_MPPromotion",\t\tGFxResource="GUI_SF_MPPromotion_DLC.MPPromotion", bRequiresScaling=true)</Value>
+				<Value type="3">(Tag=MPPromotion,\t\tZOrder=366,\tMovieClass="SFXGameMPContent.SFXGUI_MPPromotion",\t\tGFxResource="GUI_SF_MPPromotion_DLC.MPPromotion")</Value>
 				<!-- END MILAN -->
 			</Property>
 		</Section>
