@@ -46,6 +46,11 @@ struct ClassDisplayData
 var Name ClassNameToPromote;
 var config stringref srPromote;
 var config stringref srCancel;
+// MILAN CHANGE DropSquid 1/4/2024
+// added so we can use this when backing out of character info. It makes more sense than cancel
+// it is already populated by the config and used in the UI
+var config stringref srback;
+// END MILAN
 var config stringref srLoadingCharacter;
 var config stringref srClassLevel;
 var config stringref srPromoteConfirm;
@@ -367,6 +372,10 @@ private final function string GetClassPromotionString()
     
     SetCustomToken(0, UIStrRef(MPSaveManager.GetClassPrettyName(ClassNameToPromote)));
     SetCustomToken(1, string(MPSaveManager.GetClassRecord(ClassNameToPromote).NumPromotions));
+	// TODO it would be nice if there was a singular version of this
+	// Currently the first time it says "Promoted 1 Times" and it would be better if it said "Promoted 1 Time"
+	// this would require checking if the number is equal to 1 here and using an alternate stringref if so
+	// we could do a localized version of this, or we could just copy the original in other languages
     ToRet = GetUIString(srFormattedClassPromotion, TRUE);
     ClearCustomTokens();
     return ToRet;

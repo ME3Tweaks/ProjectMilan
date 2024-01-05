@@ -112,7 +112,9 @@ public final function ShowCharacterInfo(string KitName)
     if (idx != -1)
     {
         oParams.bModal = TRUE;
-        oParams.srBText = srCancel;
+		// MILAN CHANGE DropTheSquid 1/4/2024
+		// this was srCancel, but you are not cancelling anything
+        oParams.srBText = srback;
         DescriptionString = ComposeKitDescriptionString(KitDescriptions[idx]);
         AS_SetInputDisabled(TRUE);
         GetSFXUIController().QueueNamedMessageBoxEx('CharacterInfo', 3, DescriptionString, oParams, ShowCharacterInfoCallback, 0, GetPC());
