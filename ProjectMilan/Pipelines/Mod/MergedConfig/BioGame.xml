@@ -6914,7 +6914,9 @@
 			<Property name="afkignoremovementcheck" type="0">false</Property>
 			<Property name="afkignoreweaponandpowercheck" type="0">false</Property>
 			<Property name="afkticktime" type="0">1.0f</Property>
-			<Property name="afktimelimitseconds" type="0">120.0f</Property>
+			<!--<Property name="afktimelimitseconds" type="0">120.0f</Property>-->
+			<!-- MILAN DEV ONLY - Infinite AFK time effectively -->
+			<Property name="afktimelimitseconds" type="0">12000000.0f</Property>
 			<Property name="mpmapnames[0]" type="0">biop_mptowr</Property>
 			<Property name="mpmapnames[1]" type="0">biop_mpcer</Property>
 			<Property name="mpmapnames[2]" type="0">biop_mpnov</Property>
