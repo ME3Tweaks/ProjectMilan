@@ -42,6 +42,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
     static var FREE = 3;
     var m_bInputEnabled = false;
 	var bUsingGamepad;
+	var bIgnoreMouseHover;
     function MPStore()
     {
         super();
@@ -56,12 +57,27 @@ class screens.MPStore.MPStore extends com.SFXScreen
         this.SetupLocalization();
         this.SetupButtons();
         this.SetupStoreIcons();
+		this.SetupMouse();
         if(!com.XPlatform.IsRunningInEngine())
         {
             this.StoreImage.SourcePrefix = "";
             this.StoreImage.SetImageData(screens.MPStore.StoreImageLoader.IMAGE_MODE_DEFAULT,"");
         }
     }
+	// MILAN CHANGE DropTheSquid 1/5/2024
+	// adding a mouse listener so we can better distinguish mouse/keyboard input modes
+	function SetupMouse()
+	{
+		var mouseListener = new Object();
+		mouseListener.onMouseMove = function () {
+			_root.screen.bIgnoreMouseHover = false;
+		};
+		mouseListener.onMouseWheel = function(delta, scrollTarget) {
+			// this counts as a mouse action and we want things to react to the mouse over them
+			_root.screen.bIgnoreMouseHover = false;
+		}
+		Mouse.addListener(mouseListener);
+	}
     function SetupLocalization()
     {
         this.srReinforcements = "$" + _global.SFX.GetIniString("srReinforcements");
@@ -104,7 +120,6 @@ class screens.MPStore.MPStore extends com.SFXScreen
 		this.ControllerButtons.ControlX.Hidden = true;
 		this.ControllerButtons.FitLeft();
 		this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
-
     }
 	function RefreshButtonHelp(usingGamepad)
     {
@@ -130,24 +145,25 @@ class screens.MPStore.MPStore extends com.SFXScreen
         this.XBoxStore._visible = false;
         this.PS3Store._visible = false;
         this.PS3StoreSD._visible = false;
-        if(!_global.SFX.IsDemo)
-        {
-            if(_global.SFX.Platform == com.XPlatform.PC)
-            {
-                this.PCStore._visible = true;
-            }
-            else if(_global.SFX.Platform == com.XPlatform.PS3)
-            {
-                if(com.SFXScreen.IsHD())
-                {
-                    this.PS3Store._visible = true;
-                }
-                else
-                {
-                    this.PS3StoreSD._visible = true;
-                }
-            }
-        }
+		// removing all store logos
+        // if(!_global.SFX.IsDemo)
+        // {
+        //     if(_global.SFX.Platform == com.XPlatform.PC)
+        //     {
+        //         this.PCStore._visible = true;
+        //     }
+        //     else if(_global.SFX.Platform == com.XPlatform.PS3)
+        //     {
+        //         if(com.SFXScreen.IsHD())
+        //         {
+        //             this.PS3Store._visible = true;
+        //         }
+        //         else
+        //         {
+        //             this.PS3StoreSD._visible = true;
+        //         }
+        //     }
+        // }
     }
     function ClearScreen()
     {
@@ -194,18 +210,19 @@ class screens.MPStore.MPStore extends com.SFXScreen
     }
     function SetupPCPointsTitle()
     {
-        if(_global.SFX.Platform == com.XPlatform.PC && !_global.SFX.IsDemo)
-        {
-            this.PCPointsTitle._visible = true;
-            this.PCPoints._visible = true;
-            this.PCPointsTitle.text = this.srAvailableBiowarePoints;
-            this.PCPointsTitle.textAutoSize = "shrink";
-        }
-        else
-        {
+		// removing the BioWare Points element entirely
+        // if(_global.SFX.Platform == com.XPlatform.PC && !_global.SFX.IsDemo)
+        // {
+        //     this.PCPointsTitle._visible = true;
+        //     this.PCPoints._visible = true;
+        //     this.PCPointsTitle.text = this.srAvailableBiowarePoints;
+        //     this.PCPointsTitle.textAutoSize = "shrink";
+        // }
+        // else
+        // {
             this.PCPointsTitle._visible = false;
             this.PCPoints._visible = false;
-        }
+        // }
     }
     function RefreshPCPoints()
     {
@@ -310,6 +327,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
     }
     function OnDPadUp()
     {
+		this.bIgnoreMouseHover = true;
         if(this.StoreItems.selectedIndex > 0)
         {
             this.StoreItems.selectedIndex -= 1;
@@ -322,6 +340,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
     }
     function OnDPadDown()
     {
+		this.bIgnoreMouseHover = true;
         if(this.StoreItems.selectedIndex < this.StoreItems.length - 1)
         {
             this.StoreItems.selectedIndex += 1;

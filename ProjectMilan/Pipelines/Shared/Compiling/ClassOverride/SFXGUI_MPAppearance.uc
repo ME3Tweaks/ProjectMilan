@@ -90,14 +90,22 @@ public event function bool HandleInputEvent(BioGuiEvents Event, optional float f
                 m_nRotating = 0;
             }
             break;
-        case BioGuiEvents.BIOGUI_EVENT_MOUSE_BUTTON_RIGHT:
+         case BioGuiEvents.BIOGUI_EVENT_MOUSE_BUTTON_RIGHT:
             m_bPCRotationEnabled = TRUE;
             SetMouseVisible(FALSE);
+			// MILAN CHANGE DropTheSquid 1/2/2024
+			// adding a call so we can keep track of the state of the mouse in Actionscript
+            ActionScriptVoid("StartRightClick");
+			// END MILAN
             break;
         case BioGuiEvents.BIOGUI_EVENT_MOUSE_BUTTON_RIGHT_RELEASE:
             m_bPCRotationEnabled = FALSE;
             SetMouseVisible(TRUE);
             m_nRotating = 0;
+			// MILAN CHANGE DropTheSquid 1/2/2024
+			// adding a call so we can keep track of the state of the mouse in Actionscript
+            ActionScriptVoid("EndRightClick");
+			// END MILAN
             break;
         case BioGuiEvents.BIOGUI_EVENT_AXIS_MOUSE_X:
             if (m_bPCRotationEnabled)
