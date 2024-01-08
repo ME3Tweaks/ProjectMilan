@@ -141,6 +141,11 @@
 				<Value type="4">(Tag=MPPromotion,\t\tZOrder=366,\tMovieClass="SFXGameMPContent.SFXGUI_MPPromotion",\t\tGFxResource="GUI_SF_MPPromotion.MPPromotion")</Value>
 				<Value type="3">(Tag=MPPromotion,\t\tZOrder=366,\tMovieClass="SFXGameMPContent.SFXGUI_MPPromotion",\t\tGFxResource="GUI_SF_MPPromotion_DLC.MPPromotion")</Value>
 				<!-- END MILAN -->
+				<!-- MILAN CHANGE DropTheSquid 1/8/2024 -->
+				<!-- redirecting to a new handler that will scale things correctly; it is hardcoded in the class to NoScale mode. This sets it to showAll instead -->
+				<Value type="4">(Tag=MPScoretags,\t\tZOrder=6,\tMovieClass="SFXGame.SFXGUI_MPScoretags",\t\tGFxResource="GUI_SF_MPScoretags.MPScoretags", HUDTypeToAutoLoadFor="SFXGameMPContent.SFXHUDMP")</Value>
+				<Value type="3">(Tag=MPScoretags,\t\tZOrder=6,\tMovieClass="SFXGameContent_Milan.SFXGUI_MPScoretags_Milan",\t\tGFxResource="GUI_SF_MPScoretags.MPScoretags", HUDTypeToAutoLoadFor="SFXGameMPContent.SFXHUDMP")</Value>
+				<!-- END MILAN -->
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxguivalue_markerplayer">
