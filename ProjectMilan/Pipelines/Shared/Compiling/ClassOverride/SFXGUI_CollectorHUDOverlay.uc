@@ -44,7 +44,7 @@ public event function HandleButtonRefresh(bool usingGamepad)
     
     Super.HandleButtonRefresh(usingGamepad);
 	oGUIs = GetSFXUIController();
-    m_oPCPowerWheel = oGUIs.CastGetMovie(Class'SFXSFHandler_PCPowerWheel', GetPC(), oGUIs.MovieTag_PowerWheel);
+    m_oPCPowerWheel = SFXSFHandler_PCPowerWheel(oGUIs.GetMovie(GetPC(), oGUIs.MovieTag_PowerWheel));
 	// clear everything
     ClearSwarmOverlays();
 	// set up the overlays again
@@ -88,7 +88,7 @@ private final function CheckInitialize()
     {
         return;
     }
-    m_oSPHUD = oGUIs.CastGetMovie(Class'SFXSFHandler_HUD', GetPC(), oGUIs.MovieTag_HUD);
+    m_oSPHUD = SFXSFHandler_HUD(oGUIs.GetMovie(GetPC(), oGUIs.MovieTag_HUD));
     if ((m_oSPHUD == None || m_oSPHUD.PlayerPowerLeft == None) || m_oSPHUD.m_oShepardInfo.pPawn == None)
     {
         return;
@@ -99,8 +99,8 @@ private final function CheckInitialize()
 	// this is wrong for dynamic input. The PC power wheel will not be present if you are using a controller. MP HUD will always be present (in multiplayer)
 	// we also want this to someday work in SP, maybe, so relying on that being always present is also dumb. 
 	// so just grab both and don't fail if they are not there
-	m_oPCPowerWheel = oGUIs.CastGetMovie(Class'SFXSFHandler_PCPowerWheel', GetPC(), oGUIs.MovieTag_PowerWheel);
-	m_oMPHUD = oGUIs.CastGetMovie(Class'SFXGUI_MPHUD', GetPC(), oGUIs.MovieTag_MPHUD);
+    m_oPCPowerWheel = SFXSFHandler_PCPowerWheel(oGUIs.GetMovie(GetPC(), oGUIs.MovieTag_PowerWheel));
+	m_oMPHUD = SFXGUI_MPHUD(oGUIs.GetMovie(GetPC(), oGUIs.MovieTag_MPHUD));
 	// END MILAN
     m_oSPHUD.PlayerPowerLeft = GetVariableObject("PlayerPower1");
     m_oSPHUD.PlayerPowerRight = GetVariableObject("PlayerPower2");
@@ -157,11 +157,7 @@ public final function InitializePCQuickslotIconOverlays()
 {
     local int nIconIndex;
     
-	// MILAN CHANGE DropTheSquid 1/10/2024
-	// there is a weird bug where it stores the parent class controller power wheel in this variable, then crashes when I try to access child class specific things
-	// like I do a few lines down. This check prevents that crash, but I don't understand how the parent class even gets put into the child class variable in the first place
-    if (m_oPCPowerWheel == None || m_oPCPowerWheel.class != class'SFXSFHandler_PCPowerWheel')
-	// END  MILAN
+    if (m_oPCPowerWheel == None)
 	{
         return;
     }
