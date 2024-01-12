@@ -108,6 +108,7 @@
 				<Value type="3">(Tag=MPNewLobby,\t\tZOrder=32,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPLobby_DLC",\t\t\t\tGFxResource="GUI_SF_MPNewLobby_DLC.MPNewLobby")</Value>
 				<Value type="3">(Tag=MPReinforcementsReveal,\t\tZOrder=367,\tMovieClass="SFXGameMPContentDLC_Shared_MP.SFXGUI_MPReinforcementsReveal_DLC",\t\tGFxResource="GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal")</Value>
 				<Value type="3">(Tag=MPStore,\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPStore",\t\tGFxResource="GUI_SF_MPStore_DLC.MPStore");</Value>
+				<Value type="3">(Tag=MPCollectorHUD,\tZOrder=37,\tMovieClass="SFXGameContentDLC_CON_MP4_Horde.SFXGUI_CollectorHUDOverlay",\t\tGFxResource="GUI_SF_DLC_MP4_CollectorHUD.DLC_MP4_CollectorHUD", HUDTypeToAutoLoadFor="SFXGameMPContent.SFXHUDMP")</Value>
 
 				<!-- Milan change DropTheSquid 12/15/2023-->
 				<!-- Turns out we can just use the SinglePlayer weapon select UI here. It was based on the OT3 WeaponSelect DLC and has all the features added there, plus higher res textures. -->
