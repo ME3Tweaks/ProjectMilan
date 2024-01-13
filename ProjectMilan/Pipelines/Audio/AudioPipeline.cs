@@ -43,7 +43,6 @@ internal static class AudioPipeline
         {
             MilanLog.Information($"Inventorying WwiseBanks in {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
             var package = MEPackageHandler.OpenMEPackage(pf);
-            package.Save();
             foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank"))
             {
                 var bankInfo = new MilanBankConvertInfo(exp);

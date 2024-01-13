@@ -1,6 +1,9 @@
-﻿using LegendaryExplorerCore.Helpers;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
+using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using ME3Tweaks.Wwiser;
+using ProjectMilan.Utility;
 using WwiseBank = LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank;
 
 namespace ProjectMilan.Pipelines.Audio;
@@ -28,30 +31,46 @@ internal static class BankConvertPipeline
             list.Add(f);
         }
 
-        Parallel.ForEach(packageMap, new ParallelOptions() { MaxDegreeOfParallelism = /* 1 */ Program.Settings.MaxThreads }, map =>
+        var bankCacheFolder = Path.Combine(MilanShared.PipelineRoot, "Audio", "ConvertedBankCache");
+        Directory.CreateDirectory(bankCacheFolder);
+        Utilities.DeleteFilesAndFoldersRecursively(bankCacheFolder, deleteDirectoryItself:false);
+        var bankCache = new ConcurrentDictionary<string, string>();
+
+        Parallel.ForEach(packageMap,
+            new ParallelOptions() { MaxDegreeOfParallelism = /* 1 */ Program.Settings.MaxThreads }, map =>
             {
                 foreach (var b in map.Value)
                 {
-                    MilanLog.Information(
-                        $" - Converting {b.LocalizedInfo} in {Path.GetFileName(b.LE3BankExport.FileRef.FilePath)}",
-                        customPrefix: LOG_CATEGORY);
-                    if (b.BankParser is null) continue;
-
-                    // Skip data header
-                    try
+                    if(bankCache.TryGetValue(b.LocalizedInfo.ToString(), out var value))
                     {
-                        b.BankParser.Deserialize(); // Deserialize binary into object graph
-
-                        b.BankParser.ConvertToVersion(134); // Run Wwiser version convert
-
-                        var dataOut = new MemoryStream();
-                        b.BankParser.SerializeTo(dataOut);
-
-                        WwiseBank.WriteBankRaw(dataOut.ToArray(), b.LE3BankExport);
+                        MilanLog.Information(
+                            $" - Already converted {b.LocalizedInfo} in {Path.GetFileName(b.LE3BankExport.FileRef.FilePath)} - copying from cache",
+                            customPrefix: LOG_CATEGORY);
+                        var bank = File.ReadAllBytes(value);
+                        WwiseBank.WriteBankRaw(bank, b.LE3BankExport);
                     }
-                    catch (Exception e)
+                    else
                     {
-                        MilanLog.Exception(e, $"Error converting WwiseBank {b.LE3BankExport.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                        MilanLog.Information(
+                            $" - Converting {b.LocalizedInfo} in {Path.GetFileName(b.LE3BankExport.FileRef.FilePath)}",
+                            customPrefix: LOG_CATEGORY);
+                        if (b.BankParser is null) continue;
+                        try
+                        {
+                            var bankArray = ConvertBank(b, bankCache).ToArray();
+                            WwiseBank.WriteBankRaw(bankArray, b.LE3BankExport);
+                            
+                            var cacheFileName = Path.Combine(bankCacheFolder, $"{b.LocalizedInfo}.bnk");
+                            if (bankCache.TryAdd(b.LocalizedInfo.ToString(), cacheFileName))
+                            {
+                                File.WriteAllBytes(cacheFileName, bankArray);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            MilanLog.Exception(e, $"Error converting WwiseBank {b.LE3BankExport.InstancedFullPath}",
+                                customPrefix: LOG_CATEGORY);
+                        }
                     }
                 }
 
@@ -60,4 +79,22 @@ internal static class BankConvertPipeline
             });
     }
 
+    private static MemoryStream ConvertBank(MilanBankConvertInfo b, ConcurrentDictionary<string, string> cache)
+    {
+        if (b.BankParser is null) return new MemoryStream();
+        
+        b.BankParser.Deserialize(); // Deserialize binary into object graph
+
+        b.BankParser.ConvertToVersion(134); // Run Wwiser version convert
+
+        // No STID chunks found on LE wwise banks
+        if (b.BankParser.WwiseBank != null)
+        {
+            b.BankParser.WwiseBank.STID = null;
+        }
+
+        var dataOut = new MemoryStream();
+        b.BankParser.SerializeTo(dataOut);
+        return dataOut;
+    }
 }
