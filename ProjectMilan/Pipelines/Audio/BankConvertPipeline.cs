@@ -1,8 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.Diagnostics;
-using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
-using ME3Tweaks.Wwiser;
 using ProjectMilan.Utility;
 using WwiseBank = LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank;
 
@@ -19,17 +16,7 @@ internal static class BankConvertPipeline
     {
         MilanLog.Information("Converting banks using Wwiser.NET", customPrefix: LOG_CATEGORY);
 
-        var packageMap = new Dictionary<IMEPackage, List<MilanBankConvertInfo>>();
-        foreach (var f in bankInventory)
-        {
-            if (!packageMap.TryGetValue(f.LE3BankExport.FileRef, out var list))
-            {
-                list = new List<MilanBankConvertInfo>();
-                packageMap[f.LE3BankExport.FileRef] = list;
-            }
-
-            list.Add(f);
-        }
+        var packageMap = MapBanksToPackages(bankInventory);
 
         var bankCacheFolder = Path.Combine(MilanShared.PipelineRoot, "Audio", "ConvertedBankCache");
         Directory.CreateDirectory(bankCacheFolder);
@@ -44,7 +31,7 @@ internal static class BankConvertPipeline
                     if(bankCache.TryGetValue(b.LocalizedInfo.ToString(), out var value))
                     {
                         MilanLog.Information(
-                            $" - Already converted {b.LocalizedInfo} in {Path.GetFileName(b.LE3BankExport.FileRef.FilePath)} - copying from cache",
+                            $" - Already converted {b.LocalizedInfo} - copying from cache to {Path.GetFileName(b.LE3BankExport.FileRef.FileNameNoExtension)}.pcc",
                             customPrefix: LOG_CATEGORY);
                         var bank = File.ReadAllBytes(value);
                         WwiseBank.WriteBankRaw(bank, b.LE3BankExport);
@@ -57,7 +44,7 @@ internal static class BankConvertPipeline
                         if (b.BankParser is null) continue;
                         try
                         {
-                            var bankArray = ConvertBank(b, bankCache).ToArray();
+                            var bankArray = ConvertBank(b).ToArray();
                             WwiseBank.WriteBankRaw(bankArray, b.LE3BankExport);
                             
                             var cacheFileName = Path.Combine(bankCacheFolder, $"{b.LocalizedInfo}.bnk");
@@ -79,7 +66,24 @@ internal static class BankConvertPipeline
             });
     }
 
-    private static MemoryStream ConvertBank(MilanBankConvertInfo b, ConcurrentDictionary<string, string> cache)
+    private static Dictionary<IMEPackage, List<MilanBankConvertInfo>> MapBanksToPackages(List<MilanBankConvertInfo> bankInventory)
+    {
+        var packageMap = new Dictionary<IMEPackage, List<MilanBankConvertInfo>>();
+        foreach (var f in bankInventory)
+        {
+            if (!packageMap.TryGetValue(f.LE3BankExport.FileRef, out var list))
+            {
+                list = new List<MilanBankConvertInfo>();
+                packageMap[f.LE3BankExport.FileRef] = list;
+            }
+
+            list.Add(f);
+        }
+
+        return packageMap;
+    }
+
+    private static MemoryStream ConvertBank(MilanBankConvertInfo b)
     {
         if (b.BankParser is null) return new MemoryStream();
         
