@@ -1,8 +1,7 @@
 ﻿using System.Data;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
-namespace ProjectMilan.Pipelines;
+namespace ProjectMilan.Pipelines.Audio;
 
 public static class BusIdMap
 {
@@ -35,10 +34,12 @@ public static class BusIdMap
             var LE3Row = LE3Map.Rows[i];
             if (ME3Row.ItemArray[1] is string me3IdStr && LE3Row.ItemArray[1] is string le3IdStr)
             {
+                // the busses we've figured out will be different ids between OT and LE
                 if (me3IdStr != le3IdStr && uint.TryParse(me3IdStr, out var me3Id) && uint.TryParse(le3IdStr, out var le3Id))
                 {
                     busMap.TryAdd(me3Id, new BusIdName(le3Id, LE3Row.ItemArray[2] as string));
                 }
+                
             }
         }
 
