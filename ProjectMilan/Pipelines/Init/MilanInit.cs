@@ -129,6 +129,7 @@ namespace ProjectMilan.Pipelines.Init
             if (manifest == null)
             {
                 MilanLog.Warning(@"Unable to get manifest from ME3Tweaks. Skipping MilanSync");
+                return;
             }
 
             Directory.CreateDirectory(Program.Settings.InputSyncPath);

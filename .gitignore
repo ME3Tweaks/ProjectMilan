@@ -364,9 +364,11 @@ FodyWeavers.xsd
 /ProjectMilan/Pipelines/Shared/Compiling/AutoDonor
 /ProjectMilan/Pipelines/Shared/Compiling/LooseClasses/MPCommon
 /ProjectMilan/Pipelines/Audio/DecompiledBanks/
+/ProjectMilan/Pipelines/Audio/ConvertedBankCache/
 /ProjectMilan/Pipelines/Audio/VGMStream
 /ProjectMilan/Pipelines/Audio/Wwise/Projects/
 /ProjectMilan/Pipelines/Audio/Wwise/Milan
 /ProjectMilan/Pipelines/Startups/MPCommon/MergeMod/Staging
 /ProjectMilan/Pipelines/Levels/BioP_MPGeth/Donors/Auto/
 /ProjectMilan/Pipelines/Levels/BioP_MPMoon/Donors/Auto/
+/ProjectMilan/Pipelines/Mod/Precomputed/Testing_GitIgnored/
