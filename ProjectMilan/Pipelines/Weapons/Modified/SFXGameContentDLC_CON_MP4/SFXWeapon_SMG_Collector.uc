@@ -1,6 +1,7 @@
 ﻿// MILAN Weapon
 // Source: MP4
 // Note: LE changes were made from BioD_CitSim_CllctrB - as this weapon does not exist for the player
+// Note: This class is shared with CollectorTrooper and will be linked in with it
 Class SFXWeapon_SMG_Collector extends SFXWeapon_SMG_Base
     placeable
     config(Weapon);

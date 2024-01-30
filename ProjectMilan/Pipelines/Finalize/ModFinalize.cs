@@ -113,6 +113,8 @@ namespace ProjectMilan.Pipelines.Finalize
         private static void ConformPackagesWithGuidCache()
         {
             MilanLog.Information("Conforming packages", customPrefix: LOG_CATEGORY);
+
+            // This is the list of all known Guids in vanilla LE3
             var masterGuidMap = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<Guid>>(
                 File.ReadAllText(Path.Combine(MilanShared.PipelineRoot, "Finalize", "GuidMap.json")));
 
@@ -134,10 +136,10 @@ namespace ProjectMilan.Pipelines.Finalize
             var guidCache = ExportCreator.CreateExport(guidCacheP, "GuidCache", "GuidCache", indexed: false);
             var buildingGuidMap = new Dictionary<string, Guid>();
 
-            var allPackages = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories).ToList();
+            var allPackagesFiles = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories).ToList();
 
             // Step 1: Ensure all packages have guids that are not LOC files.
-            foreach (var p in allPackages)
+            foreach (var p in allPackagesFiles)
             {
                 if (p.GetUnrealLocalization() != MELocalization.None)
                     continue;
@@ -145,60 +147,70 @@ namespace ProjectMilan.Pipelines.Finalize
                 using var package = (MEPackage)MEPackageHandler.OpenMEPackage(p);
                 if (package.FileNameNoExtension.StartsWith("GuidCache"))
                     continue; // never update or inventory these
+
+                #region Package and Package Export
                 var packageGuid = package.PackageGuid;
-                if (packageGuid == Guid.Empty)
+                if (masterGuidMap.TryGetValue(package.FileNameNoExtension, out packageGuid))
                 {
-                    if (masterGuidMap.TryGetValue(package.FileNameNoExtension, out packageGuid))
+                    package.PackageGuid = packageGuid;
+                }
+                else
+                {
+                    MilanLog.Error($"Package (file) not in guid map, adding now: {package.FileNameNoExtension}");
+                    // We probably need to make a new guid here...
+                    packageGuid = Guid.NewGuid();
+                    masterGuidMap[package.FileNameNoExtension] = packageGuid; // Assign to master
+                    buildingGuidMap[package.FileNameNoExtension] = packageGuid; // Assign to our new GuidCache
+                    package.PackageGuid = packageGuid;
+                }
+
+                // Map package file GUID
+                var sameNamedExport = package.FindExport(package.FileNameNoExtension);
+                if (sameNamedExport == null)
+                {
+                    // Generate it?
+                    ExportCreator.CreatePackageExport(package, NameReference.FromInstancedString(package.FileNameNoExtension));
+                }
+                #endregion
+
+                #region All package exports
+                foreach (var exp in package.Exports.Where(x => x.idxLink == 0 && x.ClassName == "Package" && x.IsForcedExport))
+                {
+                    if (masterGuidMap.TryGetValue(exp.ObjectName.Instanced, out var expGuid))
                     {
-                        package.PackageGuid = packageGuid;
+                        exp.PackageGUID = expGuid;
+                        if (!basegameCache.TryGetValue(exp.ObjectName.Instanced, out _))
+                        {
+                            masterGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to master
+                        }
+
+                        // 01/08/2024 - Observing FindPackageFile() with a GUID seems to indicate it's missing basegame GUIDs for some reason. No idea why.
+                        buildingGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to our new GuidCache
                     }
                     else
                     {
-                        MilanLog.Error($"Package not in guid map: {package.FileNameNoExtension}");
-                        // We probably need to make a new guid here...
-                        packageGuid = Guid.NewGuid();
-                        masterGuidMap[package.FileNameNoExtension] = packageGuid; // Assign to master
-                        buildingGuidMap[package.FileNameNoExtension] = packageGuid; // Assign to our new GuidCache
-                        package.PackageGuid = packageGuid;
+                        MilanLog.Information($"Package (export) not in guid map, adding now: {exp.ObjectName.Instanced}");
+                        expGuid = Guid.NewGuid();
+                        masterGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to master
+                        buildingGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to our new GuidCache
+                        exp.PackageGUID = expGuid;
+
+                        // Dunno if these are required fully but we're gonna put em here anyways cause that's how most of vanilla looks
+                        exp.PackageFlags |= UnrealFlags.EPackageFlags.AllowDownload;
+                        exp.PackageFlags |= UnrealFlags.EPackageFlags.NoExportsData;
                     }
+                }
+                #endregion
 
-                    // Map package file GUID
-                    var sameNamedExport = package.FindExport(package.FileNameNoExtension);
-                    if (sameNamedExport == null)
-                    {
-                        // Generate it?
-                        ExportCreator.CreatePackageExport(package, package.FileNameNoExtension);
-                    }
+                // Todo: Do package flags matter? AllowDownload Script
+                // Do net objects matter?
 
-                    foreach (var exp in package.Exports.Where(x => x.idxLink == 0 && x.ClassName == "Package" && x.IsForcedExport))
-                    {
-                        if (masterGuidMap.TryGetValue(exp.ObjectName, out var expGuid))
-                        {
-                            exp.PackageGUID = expGuid;
-                        }
-                        else
-                        {
-                            MilanLog.Error($"Package (export) not in guid map: {package.FileNameNoExtension}");
-                            expGuid = Guid.NewGuid();
-                            masterGuidMap[exp.ObjectName] = expGuid; // Assign to master
-                            buildingGuidMap[exp.ObjectName] = expGuid; // Assign to our new GuidCache
-                            exp.PackageGUID = expGuid;
+                if (package.IsModified)
+                {
+                    MilanLog.Information($"Saving conformed package {package.FileNameNoExtension}.pcc");
+                    package.Save();
+                    MilanShared.RefreshMilanFiles = true;
 
-                            // Dunno if these are required fully but we're gonna put em here anyways cause that's how most of vanilla looks
-                            exp.PackageFlags |= UnrealFlags.EPackageFlags.AllowDownload;
-                            exp.PackageFlags |= UnrealFlags.EPackageFlags.NoExportsData;
-                        }
-                    }
-
-                    // Todo: Do package flags matter? AllowDownload Script
-                    // Do net objects matter?
-
-                    if (package.IsModified)
-                    {
-                        MilanLog.Information($"Saving conformed package {package.FileNameNoExtension}.pcc");
-                        package.Save();
-                        MilanShared.RefreshMilanFiles = true;
-                    }
                 }
             }
 

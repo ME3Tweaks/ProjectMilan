@@ -68,7 +68,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // MP5 Reckoning
                 // No maps
                 // We use MPLobby.pcc level from here
-                new LevelSpecificPipeline() { BioP="MPLobby", Enabled=true, SpecialPrePortingDelegate = MPLobbySpecific.PreCorrect}, 
+                new LevelSpecificPipeline() { BioP="MPLobby", SpecialPrePortingDelegate = MPLobbySpecific.PreCorrect}, // This level is always ported
 
                 // Prototype and unused maps
                 // These are named that were assigned to the maps for ModMaker
