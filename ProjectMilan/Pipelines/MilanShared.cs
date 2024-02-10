@@ -349,19 +349,39 @@ namespace ProjectMilan.Pipelines
                 foreach (var loc in audioSuffixes)
                 {
                     var locF = $"{afcN}_{loc}.afc";
+                    var milanLocPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", locF);
+
+                    if (loadedFiles.TryGetValue(locF, out var locOnDisk))
+                    {
+                        MilanLog.Information($"{locF} already exists in game - skipping extraction");
+                        if (!File.Exists(milanLocPath))
+                        {
+                            MilanLog.Information($"Copying {locF} to Milan.");
+                            File.Copy(locOnDisk, milanLocPath);
+                        }
+                        continue; // Already exists
+                    }
+                    
+                    var data = GetME3SFARFile(locF);
+                    if (data == null)
+                        continue; // On disk already
+
+                    MilanLog.Information($"{locF} is being copied to the direct access cache");
+                    
                     if (loadedFiles.ContainsKey(locF))
                     {
                         MilanLog.Information($"{locF} already exists in game - skipping extraction");
                         continue; // Already exists
                     }
-
-                    var data = MilanShared.GetME3SFARFile(locF);
-                    if (data == null)
-                        continue; // On disk already
-
-                    MilanLog.Information($"{locF} is being copied to the direct access cache");
                     using var outF = File.OpenWrite(Path.Combine(fakeCooked, locF));
                     data.CopyTo(outF);
+
+                    if (!File.Exists(milanLocPath))
+                    {
+                        MilanLog.Information($"Extracting {locF} to Milan.");
+                        using var outLe = File.OpenWrite(milanLocPath);
+                        data.CopyTo(outLe);
+                    }
                 }
             }
         }
