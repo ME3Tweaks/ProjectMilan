@@ -101,7 +101,7 @@ namespace ProjectMilan
             "sircxyrtyx" => new MilanSettingsSirCxyrtyx(),
             "kinkojiro" => new MilanSettingsKinkojiro(),
             "henbagle" => new MilanSettingsHenBagle(),
-            "doot" => new MilanSettingsd00t(),
+            "d00t" => new MilanSettingsd00t(),
             "dropthesquid" => new MilanSettingsDropTheSquid(),
             _ => throw new Exception($"Undefined configuration: {cliOptions.Config}")
         };
