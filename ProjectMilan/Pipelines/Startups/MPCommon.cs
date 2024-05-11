@@ -144,19 +144,35 @@ namespace ProjectMilan.Pipelines.Startups
 
         }
 
+        /// <summary>
+        /// Gets the changes to put into the m3m merge file for Project Milan
+        /// </summary>
+        /// <param name="packageName">Package to merge into</param>
+        /// <param name="stagingPath">Where the contents to merge are stored</param>
+        /// <returns></returns>
         private static IEnumerable<MergeFileChange1> GetMergeChangesFor(string packageName, string stagingPath)
         {
             var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
-            var functions = Path.Combine(compilingPath, "Functions", packageName);
-
             List<MergeFileChange1> files = new List<MergeFileChange1>();
 
 
             // FUNCTIONS
+            var functions = Directory.CreateDirectory(Path.Combine(compilingPath, "Functions", packageName)).FullName;
             foreach (var f in Directory.GetFiles(functions, "*.uc", SearchOption.AllDirectories))
             {
                 files.Add(AddMergeScriptFileChange(f, stagingPath));
             }
+
+            // ADDTOCLASSORREPLACE
+            // Need to split up by class name
+            var atcor = Directory.CreateDirectory(Path.Combine(compilingPath, "AddToClassOrReplace", packageName)).FullName;
+            var atcorFiles = Directory.GetFiles(atcor, "*.uc", SearchOption.AllDirectories).ToList();
+            var atcorClasses = atcorFiles.GroupBy(x => x.Substring(0, x.IndexOf('.')));
+            foreach (var classGrouping in atcorClasses)
+            {
+                files.Add(AddMergeAddToClassOrReplaceChanges(Path.GetFileName(classGrouping.Key), classGrouping.ToList(), stagingPath));
+            }
+
 
             return files;
         }
@@ -174,6 +190,35 @@ namespace ProjectMilan.Pipelines.Startups
                 ScriptUpdate = new ScriptUpdate1()
                 {
                     ScriptFileName = ucName,
+                }
+            };
+        }
+
+        /// <summary>
+        /// Adds a 'addtoclassoreplace' merge item. Used to add things to a class or update them if they already exist
+        /// </summary>
+        /// <param name="className">Name of class to merge into</param>
+        /// <param name="sourceFiles">uc file sources that exist (full paths)</param>
+        /// <param name="stagingPath">Where to copy the files to for compilation</param>
+        /// <returns></returns>
+        private static MergeFileChange1 AddMergeAddToClassOrReplaceChanges(string className, List<string> sourceFiles, string stagingPath)
+        {
+            // Copy the individual files to the compiling dir
+            Directory.CreateDirectory(stagingPath);
+            foreach (var sourceFile in sourceFiles)
+            {
+                var ucName = Path.GetFileName(sourceFile);
+                var destFile = Path.Combine(stagingPath, ucName);
+                MilanLog.Information($"Adding 'addtoclassorreplace' to merge mod: {ucName}");
+                File.Copy(sourceFile, destFile, true);
+            }
+
+            return new MergeFileChange1()
+            {
+                EntryName = className,
+                AddToClassOrReplace = new AddToClassOrReplace1()
+                {
+                    ScriptFileNames = sourceFiles.Select(x => Path.GetFileName(x)).ToArray()
                 }
             };
         }

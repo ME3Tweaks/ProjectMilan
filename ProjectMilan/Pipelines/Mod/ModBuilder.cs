@@ -66,7 +66,7 @@ namespace ProjectMilan.Pipelines.Mod
             CoalescedConverter.ConvertToBin(manifest, dest);
 
             // Add precomputed files
-            var afcPath = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"Precomputed");
+            var afcPath = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Mod", @"Precomputed")).FullName;
             foreach (var file in Directory.GetFiles(afcPath, "*.*", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Copying precomputed file {Path.GetFileName(file)} to mod", customPrefix: LOG_CATEGORY);
