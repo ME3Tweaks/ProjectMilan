@@ -22,6 +22,7 @@
     <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
+    <Folder Include="Pipelines\Startups\MPCommon\MergeMod\AddToClassOrReplace\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
     <Folder Include="Pipelines\Weapons\LooseClasses\" />
   </ItemGroup>

@@ -155,11 +155,12 @@ namespace ProjectMilan
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
             RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
 
-            // Finalize
-            RunPipeline(true, ModFinalize.RunPipeline, "Finalize");
-
             // Package resynthesis
             RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
+
+            // Conformance
+            RunPipeline(true, Conformance.RunPipeline, "Conformance");
+
 
             // Verification
             RunPipeline(true, VerifyMod.RunPipeline, "Verify");

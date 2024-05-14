@@ -17,11 +17,11 @@ using ProjectMilan.Pipelines.Startups;
 namespace ProjectMilan.Pipelines.Finalize
 {
     /// <summary>
-    /// Finalizes the mod by doing things such as package conformance and building the guid cache.
+    /// Conforms the mod for networking by doing things such as net object counting and building the guid map
     /// </summary>
-    internal class ModFinalize
+    internal class Conformance
     {
-        private const string LOG_CATEGORY = @"MILAN-Finalize";
+        private const string LOG_CATEGORY = @"MILAN-Conformance";
         public static void RunPipeline()
         {
             InternalRunPipeline();
@@ -30,10 +30,92 @@ namespace ProjectMilan.Pipelines.Finalize
         private static void InternalRunPipeline()
         {
             ConformPackagesWithGuidCache();
-            // AssignNetIndexes(); // No idea how to do this.
+            ConformNetObjects();
 
             // Ensure SFXGame is patched.
-            // MPCommon.HackPatchParents(); // No longer needed.
+            //MPCommon.HackPatchParents(); // No longer needed.
+        }
+
+        private static void ConformNetObjects()
+        {
+            // Not really sure how this is determined exactly.
+
+            // 1. All package objects must have a generation and it must list the amount of objects under it (including package exports, but not itself)
+            //    This count must be done as it the package is not cooked
+            // 2. NetIndex seems to be the 4 bytes before properties, but I'm not sure how the order is chosen
+
+            var allPackagesFiles = Directory
+                .GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories).ToList();
+
+            // The nested dictionary is for perf only. the value is not used.
+            var packageExportMap = new CaseInsensitiveDictionary<CaseInsensitiveDictionary<int>>();
+            foreach (var p in allPackagesFiles)
+            {
+                using var package = MEPackageHandler.UnsafePartialLoad(p, x => false);
+                foreach (var pExp in package.Exports.Where(x => x.idxLink == 0))
+                {
+                    if (pExp.GenerationNetObjectCount.Length == 0)
+                    {
+                        if (!packageExportMap.TryGetValue(pExp.InstancedFullPath, out var exportsForPackage))
+                        {
+                            exportsForPackage = new CaseInsensitiveDictionary<int>();
+                            packageExportMap[pExp.InstancedFullPath] = exportsForPackage;
+                        }
+
+                        foreach (var subExp in package.Exports.Where(x => IsChildObjectOf(x, pExp)))
+                        {
+                            if (!exportsForPackage.TryGetValue(subExp.InstancedFullPath, out var val))
+                            {
+                                exportsForPackage[subExp.InstancedFullPath] = 0;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Write out net object counts, net indexing
+            foreach (var p in allPackagesFiles)
+            {
+                using var package = MEPackageHandler.OpenMEPackage(p);
+                foreach (var pExp in package.Exports.Where(x => x.idxLink == 0))
+                {
+                    if (package.Localization == MELocalization.None)
+                    {
+                        pExp.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload | UnrealFlags.EPackageFlags.NoExportsData;
+                    }
+
+                    if (pExp.GenerationNetObjectCount.Length == 0 &&
+                        packageExportMap.TryGetValue(pExp.InstancedFullPath, out var listing))
+                        pExp.GenerationNetObjectCount = new[] { listing.Count + 5 }; // +5 just for safety, I guess.
+                }
+
+                if (package.IsModified)
+                {
+                    package.Save();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checks if the given object is a child of another object
+        /// </summary>
+        /// <param name="child"></param>
+        /// <param name="parent"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private static bool IsChildObjectOf(IEntry child, IEntry parent)
+        {
+            if (child == parent)
+                return false; // it is not a child of itself
+
+            while (child != null && child != parent)
+            {
+                child = child.Parent;
+                if (child == parent)
+                    return true;
+            }
+
+            return false;
         }
 
         public static void BuildGuidMap()
