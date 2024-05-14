@@ -23,7 +23,7 @@ namespace ProjectMilan.Pipelines.Levels
         /// <summary>
         /// If level is marked for porting
         /// </summary>
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; } = true;
 
         /// <summary>
         /// Which function should run before porting the level - after default precorrections

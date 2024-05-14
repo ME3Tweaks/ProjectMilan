@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
+using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Shaders;
+using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Pipelines.Verify
@@ -22,6 +19,8 @@ namespace ProjectMilan.Pipelines.Verify
 
         private static void InternalRunPipeline()
         {
+            var afcFilesReferenced = new HashSet<string>();
+            
             foreach (var f in Directory.GetFiles(Program.Settings.OutputModPath, "*", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Verifying {Path.GetFileName(f)}", customPrefix: LOG_CATEGORY);
@@ -31,6 +30,34 @@ namespace ProjectMilan.Pipelines.Verify
                     var package = MEPackageHandler.OpenMEPackage(f);
                     VerifyVTables(package);
                     RunEntryChecks(package);
+                    CollectAFCFileNames(package, afcFilesReferenced);
+                }
+            }
+
+            LogAFCsNotInModOrBasegame(afcFilesReferenced);
+        }
+
+        private static void CollectAFCFileNames(IMEPackage package, HashSet<string> afcSet)
+        {
+            foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseStream"))
+            {
+                var filename = exp.GetProperties().GetProp<NameProperty>("Filename").Value;
+                afcSet.Add(Path.ChangeExtension(filename, ".afc"));
+            }
+        }
+        
+        private static void LogAFCsNotInModOrBasegame(HashSet<string> afcFilesReferenced)
+        {
+            var le3LoadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, includeAFCs: true);
+            
+            var afcsInMod = Directory.GetFileSystemEntries(Program.Settings.OutputModPath, "*.afc",
+                SearchOption.AllDirectories).Select(e => Path.GetFileName(e)).ToList();
+
+            foreach (var afc in afcFilesReferenced)
+            {
+                if (!le3LoadedFiles.ContainsKey(afc) && !afcsInMod.Contains(afc))
+                {
+                    MilanLog.Error($"  Missing referenced AFC file: {afc}", customPrefix: LOG_CATEGORY);
                 }
             }
         }
