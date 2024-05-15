@@ -132,10 +132,9 @@
 				<Value type="4">(Tag=MPLobbyStatusBars,\tZOrder=368,\tMovieClass="SFXGameMPContent.SFXGUI_MPLobbyStatusBars",\t\t\t\tGFxResource="GUI_SF_MPLobbyStatusBars.MPLobbyStatusBars")</Value>
 				<Value type="3">(Tag=MPLobbyStatusBars,\tZOrder=368,\tMovieClass="SFXGameMPContent.SFXGUI_MPLobbyStatusBars",\t\t\t\tGFxResource="GUI_SF_MPLobbyStatusBars.MPLobbyStatusBars", bRequiresScaling=true)</Value>
 				<!-- END MILAN -->
-				<!-- MILAN CHANGE DropTheSquid 12/28/2023 -->
-				<!--redirecting to a new version of messageBox handler which handles controller input correctly-->
-				<!--<Value type="4">(Tag=MessageBox,\t\tZOrder=370,\tMovieClass="SFXGame.BioSFHandler_PCMessageBox",\t\tGFxResource="GUI_SF_MessageBox.MessageBox")</Value>
-				<Value type="3">(Tag=MessageBox,\t\tZOrder=370,\tMovieClass="SFXGame.BioSFHandler_PCMessageBox",\t\tGFxResource="GUI_SF_MessageBox_Milan.MessageBox")</Value>-->
+				<!-- MILAN CHANGE DropTheSquid 5/15/2024 -->
+				<!--adding a new version of messagebox for use by the mp weapon select UI-->
+				<Value type="3">(Tag=MPMessageBox,\t\tZOrder=370,\tMovieClass="SFXGame.BioSFHandler_PCMessageBox",\t\tGFxResource="GUI_SF_MessageBox_Milan.MessageBox")</Value>
 				<!--END MILAN-->
 				<!-- MILAN CHANGE DropTheSquid 1/5/2024 -->
 				<!-- we need to redirect it to the DLC version of this UI for it to work -->
