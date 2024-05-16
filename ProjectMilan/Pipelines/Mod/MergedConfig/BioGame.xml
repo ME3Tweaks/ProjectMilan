@@ -7237,13 +7237,18 @@
 		<Section name="sfxgamempcontent.sfxwavemanager_horde">
 			<Property name="wavepointsranges" type="3">(Difficulty=DO_Level4,PointRange=(X=900,Y=2000))</Property>
 			<Property name="wavetypes">
-				<Value type="4">(WaveClassName="SFXGameMPContent.SFXWave_Horde_Reaper",SelectionWeight=100)</Value>
+				<!-- We just clear the list here to make sure nothing goofs it up before us -->
+				<Value type="1">null</Value>
 				<Value type="3">(WaveClassName="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Reaper2",SelectionWeight=100)</Value>
-				<Value type="4">(WaveClassName="SFXGameMPContent.SFXWave_Horde_Cerberus",SelectionWeight=100)</Value>
 				<Value type="3">(WaveClassName="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Cerberus2",SelectionWeight=100)</Value>
-				<Value type="4">(WaveClassName="SFXGameMPContent.SFXWave_Horde_Geth",SelectionWeight=65)</Value>
 				<Value type="3">(WaveClassName="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Geth2",SelectionWeight=65)</Value>
 				<Value type="3">(WaveClassName="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Collector",SelectionWeight=100)</Value>
+
+				<!-- These are the original 3 wavelists from basegame. They can be repurposed -->
+				<!--
+				<Value type="4">(WaveClassName="SFXGameMPContent.SFXWave_Horde_Cerberus",SelectionWeight=100)</Value>
+				<Value type="4">(WaveClassName="SFXGameMPContent.SFXWave_Horde_Geth",SelectionWeight=65)</Value>
+				<Value type="4">(WaveClassName="SFXGameMPContent.SFXWave_Horde_Reaper",SelectionWeight=100)</Value>-->
 			</Property>
 		</Section>
 		<Section name="sfxgamempcontentdlc_shared_mp.sfxgameeffect_matchconsumable_gear">
@@ -8683,6 +8688,10 @@
 			</Property>
 			<Property name="challengetypes" type="3">(ID=3,Name=747607,AllCapsName=747608,Image="GUI_MPImages.MatchSettings.OptChallgPlatinum")</Property>
 			<Property name="enemytypes">
+				<!-- Clear list of enemy types so we start fresh-->
+				<Value type="1">null</Value>
+
+				<!-- Define the list of enemy types -->
 				<Value type="3">(ID=0,Name=701523,AllCapsName=701523,Image="GUI_MPImages.MatchSettings.OptEmyRandom",WaveClass="")</Value>
 				<Value type="3">(ID=1,Name=683914,AllCapsName=683908,Image="GUI_MPImages_MP4.OptEmyCerberus",WaveClass="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Cerberus2")</Value>
 				<Value type="3">(ID=2,Name=683915,AllCapsName=683909,Image="GUI_MPImages_MP4.OptEmyGeth",WaveClass="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Geth2")</Value>
