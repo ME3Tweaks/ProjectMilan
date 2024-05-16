@@ -28,7 +28,7 @@ namespace ProjectMilan.Pipelines.Shared
             foreach (var file in files)
             {
                 MilanLog.Information($"Registering temporary donor package {file}", customPrefix: LOG_CATEGORY);
-                var package = MEPackageHandler.UnsafePartialLoad(file, x => false);
+                var package = MEPackageHandler.OpenMEPackage(file);
                 MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath);
             }
         }
@@ -57,7 +57,7 @@ namespace ProjectMilan.Pipelines.Shared
             foreach (var donorF in Directory.GetFiles(globalPath, "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"  Registering global donor package {Path.GetFileName(donorF)}", customPrefix: LOG_CATEGORY);
-                var donorP = MEPackageHandler.UnsafePartialLoad(donorF, x => false);
+                var donorP = MEPackageHandler.OpenMEPackage(donorF);
                 MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
             }
         }
