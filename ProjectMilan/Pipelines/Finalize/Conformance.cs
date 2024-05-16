@@ -123,7 +123,7 @@ namespace ProjectMilan.Pipelines.Finalize
                         var linker = GetLinker(pExp);
                         if (!currentNetIndexes.TryGetValue(linker, out var assigningNetIndex))
                         {
-                            MilanLog.Information($"Starting NetIndexing for linker {linker}",customPrefix: LOG_CATEGORY);
+                            MilanLog.Information($"Starting NetIndexing for linker {linker}", customPrefix: LOG_CATEGORY);
                             assigningNetIndex = -1; // Will be incremented before use
                         }
 
@@ -174,7 +174,12 @@ namespace ProjectMilan.Pipelines.Finalize
                             if (pExp.InstancedFullPath == pExp.FileRef.FileNameNoExtension)
                             {
                                 // Same-named package
-                                pExp.GenerationNetObjectCount = new [] {((MEPackage)pExp.FileRef).Gen0NetworkedObjectCount };
+                                // Count number of objects in this linker
+                                var netCount = package.Exports.Count(x => GetLinker(x) == pExp.FileRef.FileNameNoExtension && pExp != x);
+                                pExp.GenerationNetObjectCount = new[] { netCount };
+                                ((MEPackage)pExp.FileRef).Gen0NetworkedObjectCount = netCount;
+                                ((MEPackage)pExp.FileRef).Gen0NameCount = pExp.FileRef.Names.Count;
+                                ((MEPackage)pExp.FileRef).Gen0ExportCount = pExp.FileRef.Exports.Count;
                             }
                             else
                             {
