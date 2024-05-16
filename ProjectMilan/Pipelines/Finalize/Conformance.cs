@@ -11,6 +11,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Collections;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
 using ProjectMilan.Pipelines.Startups;
 
@@ -36,57 +37,105 @@ namespace ProjectMilan.Pipelines.Finalize
             //MPCommon.HackPatchParents(); // No longer needed.
         }
 
+        /// <summary>
+        /// Get package file this entry will be nested under in memory. Parent chain should be preferably exports
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <returns></returns>
+        private static string GetLinker(IEntry entry)
+        {
+            if (entry.idxLink == 0)
+            {
+                if (entry.ClassName == "Package")
+                {
+                    if (entry is ExportEntry exp && exp.IsForcedExport)
+                        return entry.InstancedFullPath; // SFXGameContent
+                    if (entry is ImportEntry imp)
+                        return entry.InstancedFullPath; // Edge case; this should not occur after resynthesis of a package
+                }
+
+                // It's part of the package file itself.
+                return entry.FileRef.FileNameNoExtension;
+            }
+
+            return GetLinker(entry.Parent);
+        }
+
         private static void ConformNetObjects()
         {
             // Not really sure how this is determined exactly.
 
             // 1. All package objects must have a generation and it must list the amount of objects under it (including package exports, but not itself)
             //    This count must be done as it the package is not cooked
-            // 2. NetIndex seems to be the 4 bytes before properties, but I'm not sure how the order is chosen
+            // 2. NetIndex seems to be the 4 bytes before properties, but I'm not sure how the order is chosen. It's done by linker though so it will be unique to the package.
 
             var allPackagesFiles = Directory
                 .GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories).ToList();
 
             // The nested dictionary is for perf only. the value is not used.
-            var packageExportMap = new CaseInsensitiveDictionary<CaseInsensitiveDictionary<int>>();
-            foreach (var p in allPackagesFiles)
-            {
-                using var package = MEPackageHandler.UnsafePartialLoad(p, x => false);
-                foreach (var pExp in package.Exports.Where(x => x.idxLink == 0))
-                {
-                    if (pExp.GenerationNetObjectCount.Length == 0)
-                    {
-                        if (!packageExportMap.TryGetValue(pExp.InstancedFullPath, out var exportsForPackage))
-                        {
-                            exportsForPackage = new CaseInsensitiveDictionary<int>();
-                            packageExportMap[pExp.InstancedFullPath] = exportsForPackage;
-                        }
 
-                        foreach (var subExp in package.Exports.Where(x => IsChildObjectOf(x, pExp)))
-                        {
-                            if (!exportsForPackage.TryGetValue(subExp.InstancedFullPath, out var val))
-                            {
-                                exportsForPackage[subExp.InstancedFullPath] = 0;
-                            }
-                        }
-                    }
-                }
-            }
+            MilanLog.Information("Pass 1: Build map of linkers", customPrefix: LOG_CATEGORY);
 
-            // Write out net object counts, net indexing
+            //var packageExportMap = new CaseInsensitiveDictionary<CaseInsensitiveDictionary<int>>();
+            //foreach (var p in allPackagesFiles)
+            //{
+            //    using var package = MEPackageHandler.OpenMEPackage(p);
+            //    foreach (var pExp in package.Exports)
+            //    {
+            //        var linker = GetLinker(pExp);
+            //        if (!packageExportMap.TryGetValue(linker, out var exportsForPackage))
+            //        {
+            //            exportsForPackage = new CaseInsensitiveDictionary<int>();
+            //            packageExportMap[linker] = exportsForPackage;
+            //        }
+
+            //        exportsForPackage.Add(pExp.InstancedFullPath, 0);
+            //    }
+            //}
+
+            CaseInsensitiveDictionary<int> currentNetIndexes = new CaseInsensitiveDictionary<int>();
+
+            #region Pass 2: Write out net indexes
+            MilanLog.Information("Pass 2: Assign NetIndexes", customPrefix: LOG_CATEGORY);
+
             foreach (var p in allPackagesFiles)
             {
                 using var package = MEPackageHandler.OpenMEPackage(p);
-                foreach (var pExp in package.Exports.Where(x => x.idxLink == 0))
+                if (package.FileNameNoExtension == "BioA_MPThes")
+                    Debugger.Break();
+                foreach (var pExp in package.Exports)
                 {
-                    if (package.Localization == MELocalization.None)
+                    var existingInfo = MilanShared.LE3ObjectDB.GetInfo(pExp.InstancedFullPath);
+
+                    if (pExp.idxLink == 0 && pExp.ClassName == "Package" && pExp.IsForcedExport)
                     {
-                        pExp.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload | UnrealFlags.EPackageFlags.NoExportsData;
+                        continue; // Skip these
                     }
 
-                    if (pExp.GenerationNetObjectCount.Length == 0 &&
-                        packageExportMap.TryGetValue(pExp.InstancedFullPath, out var listing))
-                        pExp.GenerationNetObjectCount = new[] { listing.Count + 5 }; // +5 just for safety, I guess.
+                    if (existingInfo != null)
+                    {
+                        // Previously inventoried
+                        pExp.NetIndex = existingInfo.NetIndex;
+                    }
+                    else
+                    {
+                        // We are assigning it new
+                        var linker = GetLinker(pExp);
+                        if (!currentNetIndexes.TryGetValue(linker, out var assigningNetIndex))
+                        {
+                            MilanLog.Information($"Starting NetIndexing for linker {linker}",customPrefix: LOG_CATEGORY);
+                            assigningNetIndex = -1; // Will be incremented before use
+                        }
+
+                        currentNetIndexes[linker] = ++assigningNetIndex;
+
+                        pExp.NetIndex = assigningNetIndex;
+                        if (linker != pExp.FileRef.FileNameNoExtension)
+                        {
+                            // Do not cache same-package objects as they will not have the correct IFP
+                            MilanShared.LE3ObjectDB.AddObjectToDB(pExp);
+                        }
+                    }
                 }
 
                 if (package.IsModified)
@@ -94,6 +143,56 @@ namespace ProjectMilan.Pipelines.Finalize
                     package.Save();
                 }
             }
+            #endregion
+
+            #region Pass 3: NetObj counts on root package exports
+            MilanLog.Information("Pass 3: Write NetObj counts for root packages", customPrefix: LOG_CATEGORY);
+            foreach (var p in allPackagesFiles)
+            {
+                using var package = MEPackageHandler.OpenMEPackage(p);
+                foreach (var pExp in package.Exports.Where(x =>
+                             x.idxLink == 0 && x.ClassName == "Package" && x.IsForcedExport))
+                {
+                    // Root packages
+                    var existingInfo = MilanShared.LE3ObjectDB.GetInfo(pExp.InstancedFullPath);
+                    pExp.NetIndex = -1;
+
+                    if (package.Localization == MELocalization.None)
+                    {
+                        pExp.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload |
+                                            UnrealFlags.EPackageFlags.NoExportsData;
+                    }
+
+                    if (existingInfo != null)
+                    {
+                        pExp.GenerationNetObjectCount = new[] { existingInfo.GenerationNetObjCount };
+                    }
+                    else
+                    {
+                        if (!currentNetIndexes.TryGetValue(pExp.InstancedFullPath, out int netObjCount))
+                        {
+                            if (pExp.InstancedFullPath == pExp.FileRef.FileNameNoExtension)
+                            {
+                                // Same-named package
+                                pExp.GenerationNetObjectCount = new [] {((MEPackage)pExp.FileRef).Gen0NetworkedObjectCount };
+                            }
+                            else
+                            {
+                                Debugger.Break(); // Unknown case
+                            }
+                        }
+                        else
+                        {
+                            pExp.GenerationNetObjectCount = new[] { netObjCount };
+                        }
+                    }
+                }
+                if (package.IsModified)
+                {
+                    package.Save();
+                }
+            }
+            #endregion
         }
 
         /// <summary>
