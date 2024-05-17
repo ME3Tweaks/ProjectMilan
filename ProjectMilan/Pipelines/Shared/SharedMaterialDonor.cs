@@ -13,7 +13,7 @@ namespace ProjectMilan.Pipelines.Shared
 {
     internal static class SharedMaterialDonor
     {
-        private const string LOG_CATEGORY = @"MILAN-Donor";
+        internal const string LOG_CATEGORY = @"MILAN-Donor";
 
         public static void RegisterLocalDonors(string donorPath)
         {
@@ -29,7 +29,7 @@ namespace ProjectMilan.Pipelines.Shared
             {
                 MilanLog.Information($"Registering temporary donor package {file}", customPrefix: LOG_CATEGORY);
                 var package = MEPackageHandler.OpenMEPackage(file);
-                MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath);
+                MilanShared.RegisterObjectDBPackage(package);
             }
         }
 
@@ -58,7 +58,7 @@ namespace ProjectMilan.Pipelines.Shared
             {
                 MilanLog.Information($"  Registering global donor package {Path.GetFileName(donorF)}", customPrefix: LOG_CATEGORY);
                 var donorP = MEPackageHandler.OpenMEPackage(donorF);
-                MilanShared.LE3ObjectDB.AddFileToDB(donorP, donorF);
+                MilanShared.RegisterObjectDBPackage(donorP);
             }
         }
 

@@ -10,6 +10,7 @@ using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ProjectMilan.Pipelines.Audio.Extension;
+using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines
@@ -24,6 +25,11 @@ namespace ProjectMilan.Pipelines
         public static ObjectInstanceDB ME3ObjectDB { get; set; }
 
         private static string _pipelineRoot;
+
+        /// <summary>
+        /// This is the list of all packages that were registered/inventoried for donors.
+        /// </summary>
+        private static SortedSet<string> RegisteredObjectDBPackages { get; } = new SortedSet<string>();
 
         /// <summary>
         /// Root path for Milan Pipelines - will be named 'Pipelines' under folder 'ProjectMilan'
@@ -268,7 +274,7 @@ namespace ProjectMilan.Pipelines
             EntryImporter.AddUserSafeToImportFromFile(MEGame.LE3, MP_STARTUP_FILENAME);
 
             // Inventory package
-            MilanShared.AddDonorPackage(biopMPCommon);
+            //MilanShared.AddDonorPackage(biopMPCommon);
 
             return true;
         }
@@ -285,7 +291,8 @@ namespace ProjectMilan.Pipelines
             }
 
             // Add to object database for porting
-            MilanShared.LE3ObjectDB.AddFileToDB(package, packagePath);
+            // The predicate here is to prevent root level packages from being pulled in with incorrect netindexing data. We will generate that later.
+            RegisterObjectDBPackage(package, objectsToAddPrediate: x=> x.idxLink != 0 || x.ClassName != "Package" || !x.IsForcedExport);
         }
 
         internal static void EnsureTFCsAvailable()
@@ -943,6 +950,52 @@ namespace ProjectMilan.Pipelines
             foreach (var error in log.AllErrors)
             {
                 MilanLog.Error($"  {error}", customPrefix: logCategory);
+            }
+        }
+
+        /// <summary>
+        /// Used to track custom registered packages so they can be unregistered at a later time
+        /// </summary>
+        /// <param name="package">Package to register in the ObjectInstanceDB</param>
+        /// <param name="objectsToAddPrediate">Predicate used to determine which objects to add to the database</param>
+        public static void RegisterObjectDBPackage(IMEPackage package, Func<ExportEntry, bool> objectsToAddPrediate = null)
+        {
+            if (package.Game == MEGame.LE3)
+            {
+                RegisteredObjectDBPackages.Add(package.FilePath);
+                MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath, objectsToAddPrediate: objectsToAddPrediate);
+            }
+            else
+            {
+                MilanShared.ME3ObjectDB.AddFileToDB(package, package.FilePath, objectsToAddPrediate: objectsToAddPrediate);
+            }
+        }
+
+        /// <summary>
+        /// Unregisters all packages from LE3's ObjectDB that were added after the vanilla database loaded
+        /// </summary>
+        public static void UnregisterObjectDBPackages()
+        {
+            foreach (var file in RegisteredObjectDBPackages)
+            {
+                MilanLog.Information($"Unregistering ObjectInstanceDB package {file}", customPrefix: SharedMaterialDonor.LOG_CATEGORY);
+                var package = MEPackageHandler.UnsafePartialLoad(file, x => false);
+                MilanShared.LE3ObjectDB.RemoveFileFromDB(package);
+            }
+
+            RegisteredObjectDBPackages.Clear();
+        }
+
+        public static void RegisterObjectDBObject(ExportEntry export)
+        {
+            if (export.Game == MEGame.LE3)
+            {
+                RegisteredObjectDBPackages.Add(export.FileRef.FilePath);
+                MilanShared.LE3ObjectDB.AddObjectToDB(export);
+            }
+            else
+            {
+                MilanShared.ME3ObjectDB.AddObjectToDB(export);
             }
         }
     }
