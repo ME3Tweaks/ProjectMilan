@@ -112,8 +112,8 @@ namespace ProjectMilan.Pipelines.Finalize
                         continue; // Skip these
                     }
 
-                    if (pExp.InstancedFullPath == "SFXGameContentDLC_CON_MP3.SFXDamageType_HeavyMachinegun")
-                        Debugger.Break();
+                    //if (pExp.InstancedFullPath == "SFXGameContentDLC_CON_MP3.SFXDamageType_HeavyMachinegun")
+                    //    Debugger.Break();
 
                     if (existingInfo != null)
                     {
@@ -166,8 +166,8 @@ namespace ProjectMilan.Pipelines.Finalize
                                             UnrealFlags.EPackageFlags.NoExportsData;
                     }
 
-                    if (pExp.InstancedFullPath == "GUI_SF_MPReinforcements_DLC")
-                        Debugger.Break();
+                    //if (pExp.InstancedFullPath == "GUI_SF_MPReinforcements_DLC")
+                    //    Debugger.Break();
 
                     if (existingInfo != null)
                     {
