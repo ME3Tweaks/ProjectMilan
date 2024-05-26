@@ -43,7 +43,7 @@ namespace ProjectMilan.Pipelines.Finalize
         /// </summary>
         /// <param name="entry"></param>
         /// <returns></returns>
-        private static string GetLinker(IEntry entry)
+        public static string GetLinker(IEntry entry)
         {
             if (entry.idxLink == 0)
             {
