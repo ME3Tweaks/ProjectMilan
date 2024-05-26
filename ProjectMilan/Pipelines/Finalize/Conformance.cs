@@ -8,6 +8,7 @@ using CommandLine;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Collections;
@@ -179,7 +180,7 @@ namespace ProjectMilan.Pipelines.Finalize
                         if (!currentNetIndexes.TryGetValue(pExp.InstancedFullPath, out int netObjCount))
                         {
                             var netCount = package.Exports.Count(x => GetLinker(x) == package.FileNameNoExtension && pExp != x);
-                            pExp.GenerationNetObjectCount = new[] { netCount};
+                            pExp.GenerationNetObjectCount = new[] { netCount };
                         }
                         else
                         {
@@ -195,6 +196,19 @@ namespace ProjectMilan.Pipelines.Finalize
                     // Same-named package
                     // Count number of objects in this linker
                     sameNamedExp.GenerationNetObjectCount = new[] { currentLinkerNetCount };
+
+                    if (EntryExporter.IsLevelFile(sameNamedExp.InstancedFullPath))
+                    {
+                        // Set package flags
+                        sameNamedExp.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload |
+                                                    UnrealFlags.EPackageFlags.NoExportsData |
+                                                    UnrealFlags.EPackageFlags.Cooked | 
+                                                    UnrealFlags.EPackageFlags.Map |
+                                                    UnrealFlags.EPackageFlags.DisallowLazyLoading |
+                                                    UnrealFlags.EPackageFlags.RequireImportsAlreadyLoaded | UnrealFlags.EPackageFlags.Protected;
+                        ((MEPackage)package).setFlags(sameNamedExp.PackageFlags);
+                    }
+
                 }
 
                 ((MEPackage)package).Gen0NetworkedObjectCount = currentLinkerNetCount;
