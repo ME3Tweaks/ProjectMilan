@@ -90,10 +90,10 @@ public event function bool HandleInputEvent(BioGuiEvents Event, optional float f
                 m_nRotating = 0;
             }
             break;
-         case BioGuiEvents.BIOGUI_EVENT_MOUSE_BUTTON_RIGHT:
+        case BioGuiEvents.BIOGUI_EVENT_MOUSE_BUTTON_RIGHT:
             m_bPCRotationEnabled = TRUE;
             SetMouseVisible(FALSE);
-			// MILAN CHANGE DropTheSquid 1/2/2024
+            // MILAN CHANGE DropTheSquid 1/2/2024
 			// adding a call so we can keep track of the state of the mouse in Actionscript
             ActionScriptVoid("StartRightClick");
 			// END MILAN
@@ -102,7 +102,7 @@ public event function bool HandleInputEvent(BioGuiEvents Event, optional float f
             m_bPCRotationEnabled = FALSE;
             SetMouseVisible(TRUE);
             m_nRotating = 0;
-			// MILAN CHANGE DropTheSquid 1/2/2024
+            // MILAN CHANGE DropTheSquid 1/2/2024
 			// adding a call so we can keep track of the state of the mouse in Actionscript
             ActionScriptVoid("EndRightClick");
 			// END MILAN
@@ -124,6 +124,22 @@ public event function bool HandleInputEvent(BioGuiEvents Event, optional float f
                 }
             }
             break;
+		// MILAN CHANGE DropTheSquid 6/17/2024
+		// adding unrealscript side handling of controller face buttons because the ACtionscript side
+		// cannot reliably distinguish between keyboard a/b/x/y and controller a/b/x/y
+		case BioGuiEvents.BIOGUI_EVENT_BUTTON_A:
+			AS_ControllerFaceButton("A");
+            break;
+		case BioGuiEvents.BIOGUI_EVENT_BUTTON_B:
+			AS_ControllerFaceButton("B");
+            break;
+		case BioGuiEvents.BIOGUI_EVENT_BUTTON_X:
+			AS_ControllerFaceButton("X");
+            break;
+		case BioGuiEvents.BIOGUI_EVENT_BUTTON_Y:
+			AS_ControllerFaceButton("Y");
+            break;
+		// END MILAN
         default:
             return Super(SFXGUIMovie).HandleInputEvent(Event, fValue);
     }
@@ -209,6 +225,13 @@ public function AS_InitializeScreen()
 {
     ActionScriptVoid("screen.InitializeScreen");
 }
+// MILAN CHANGE DropTheSquid 6/17/2024
+// adding function to call into Actionscript to handle controller face buttons
+private function AS_ControllerFaceButton(string button)
+{
+    ActionScriptVoid("screen.ControllerButton");
+}
+// END MILAN
 public final function ConfirmButtonPressed()
 {
     local ECharacterNameResult eResult;
