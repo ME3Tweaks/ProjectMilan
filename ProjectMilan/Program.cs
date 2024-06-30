@@ -155,6 +155,10 @@ namespace ProjectMilan
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
             RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
 
+            // Drop all extra packages from database. Conformance depends on vanilla DB.
+            MilanShared.UnregisterObjectDBPackages();
+
+
             // Package resynthesis
             RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
 

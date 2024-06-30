@@ -208,9 +208,10 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
 			this.m_PCBackButton.addEventListener("SFXButton_onRelease",mx.utils.Delegate.create(this,this.OnPCBackButtonPressed));
 		}
 		// set up Controller buttons
-		this.m_ControllerButtons.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.OnSelectButtonPressed));
-		this.m_ControllerButtons.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.OnConsoleBackButtonPressed));
-		this.m_ControllerButtons.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.OnResetButtonPressed));
+		// note that these are set up to handle a slightly different event which is dispatched in ControllerButton
+		this.m_ControllerButtons.addEventListener("onControllerButtonA",mx.utils.Delegate.create(this,this.OnSelectButtonPressed));
+		this.m_ControllerButtons.addEventListener("onControllerButtonB",mx.utils.Delegate.create(this,this.OnConsoleBackButtonPressed));
+		this.m_ControllerButtons.addEventListener("onControllerButtonX",mx.utils.Delegate.create(this,this.OnResetButtonPressed));
 		this.m_ControllerButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
 		this.m_ControllerButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
 		this.m_ControllerButtons.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
@@ -225,6 +226,13 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
 		// END MILAN
         this.RefreshActionButtonStates();
     }
+    // MILAN CHANGE DropTheSquid 6/17/2024
+    // adding this so we can separately handle controller face buttons because the actionscript is bad at distinguishing those from keyboard a/b/x/y
+    function ControllerButton(sButton)
+	{
+		this.m_ControllerButtons.dispatchEvent({type:"onControllerButton" + sButton});
+	}
+    // end milan
     function OnAppearanceMenuLoad()
     {
         delete this.AppearanceMenu.onLoad;

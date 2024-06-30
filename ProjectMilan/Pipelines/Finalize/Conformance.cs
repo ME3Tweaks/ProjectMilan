@@ -8,6 +8,7 @@ using CommandLine;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Collections;
@@ -42,7 +43,7 @@ namespace ProjectMilan.Pipelines.Finalize
         /// </summary>
         /// <param name="entry"></param>
         /// <returns></returns>
-        private static string GetLinker(IEntry entry)
+        public static string GetLinker(IEntry entry)
         {
             if (entry.idxLink == 0)
             {
@@ -101,8 +102,8 @@ namespace ProjectMilan.Pipelines.Finalize
             foreach (var p in allPackagesFiles)
             {
                 using var package = MEPackageHandler.OpenMEPackage(p);
-                if (package.FileNameNoExtension == "BioA_MPThes")
-                    Debugger.Break();
+                //if (package.FileNameNoExtension == "BioA_MPThes")
+                //    Debugger.Break();
                 foreach (var pExp in package.Exports)
                 {
                     var existingInfo = MilanShared.LE3ObjectDB.GetInfo(pExp.InstancedFullPath);
@@ -111,6 +112,9 @@ namespace ProjectMilan.Pipelines.Finalize
                     {
                         continue; // Skip these
                     }
+
+                    //if (pExp.InstancedFullPath == "SFXGameContentDLC_CON_MP3.SFXDamageType_HeavyMachinegun")
+                    //    Debugger.Break();
 
                     if (existingInfo != null)
                     {
@@ -133,7 +137,7 @@ namespace ProjectMilan.Pipelines.Finalize
                         if (linker != pExp.FileRef.FileNameNoExtension)
                         {
                             // Do not cache same-package objects as they will not have the correct IFP
-                            MilanShared.LE3ObjectDB.AddObjectToDB(pExp);
+                            MilanShared.RegisterObjectDBObject(pExp);
                         }
                     }
                 }
@@ -163,35 +167,54 @@ namespace ProjectMilan.Pipelines.Finalize
                                             UnrealFlags.EPackageFlags.NoExportsData;
                     }
 
+                    //if (pExp.InstancedFullPath == "GUI_SF_MPReinforcements_DLC")
+                    //    Debugger.Break();
+
                     if (existingInfo != null)
                     {
                         pExp.GenerationNetObjectCount = new[] { existingInfo.GenerationNetObjCount };
                     }
                     else
                     {
+
                         if (!currentNetIndexes.TryGetValue(pExp.InstancedFullPath, out int netObjCount))
                         {
-                            if (pExp.InstancedFullPath == pExp.FileRef.FileNameNoExtension)
-                            {
-                                // Same-named package
-                                // Count number of objects in this linker
-                                var netCount = package.Exports.Count(x => GetLinker(x) == pExp.FileRef.FileNameNoExtension && pExp != x);
-                                pExp.GenerationNetObjectCount = new[] { netCount };
-                                ((MEPackage)pExp.FileRef).Gen0NetworkedObjectCount = netCount;
-                                ((MEPackage)pExp.FileRef).Gen0NameCount = pExp.FileRef.Names.Count;
-                                ((MEPackage)pExp.FileRef).Gen0ExportCount = pExp.FileRef.Exports.Count;
-                            }
-                            else
-                            {
-                                Debugger.Break(); // Unknown case
-                            }
+                            var netCount = package.Exports.Count(x => GetLinker(x) == package.FileNameNoExtension && pExp != x);
+                            pExp.GenerationNetObjectCount = new[] { netCount };
                         }
                         else
                         {
-                            pExp.GenerationNetObjectCount = new[] { netObjCount };
+                            pExp.GenerationNetObjectCount = new[] { netObjCount + 1 };
                         }
                     }
                 }
+
+                var sameNamedExp = package.FindExport(package.FileNameNoExtension);
+                var currentLinkerNetCount = package.Exports.Count(x => GetLinker(x) == package.FileNameNoExtension && sameNamedExp != x);
+                if (sameNamedExp != null)
+                {
+                    // Same-named package
+                    // Count number of objects in this linker
+                    sameNamedExp.GenerationNetObjectCount = new[] { currentLinkerNetCount };
+
+                    if (EntryExporter.IsLevelFile(sameNamedExp.InstancedFullPath))
+                    {
+                        // Set package flags
+                        sameNamedExp.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload |
+                                                    UnrealFlags.EPackageFlags.NoExportsData |
+                                                    UnrealFlags.EPackageFlags.Cooked | 
+                                                    UnrealFlags.EPackageFlags.Map |
+                                                    UnrealFlags.EPackageFlags.DisallowLazyLoading |
+                                                    UnrealFlags.EPackageFlags.RequireImportsAlreadyLoaded | UnrealFlags.EPackageFlags.Protected;
+                        ((MEPackage)package).setFlags(sameNamedExp.PackageFlags);
+                    }
+
+                }
+
+                ((MEPackage)package).Gen0NetworkedObjectCount = currentLinkerNetCount;
+                ((MEPackage)package).Gen0NameCount = package.Names.Count;
+                ((MEPackage)package).Gen0ExportCount = package.Exports.Count;
+
                 if (package.IsModified)
                 {
                     package.Save();
