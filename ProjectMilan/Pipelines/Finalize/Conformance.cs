@@ -227,44 +227,36 @@ namespace ProjectMilan.Pipelines.Finalize
             var outPath = Path.Combine(MilanShared.PipelineRoot, "Finalize", "GuidMap.json");
             var guidMap = new CaseInsensitiveDictionary<Guid>();
 
-            // Load default guid map
-            var guidCache = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, "GuidCache.pcc"));
-            var cache = ObjectBinary.From<GuidCache>(guidCache.Exports[0]);
-            foreach (var map in cache.PackageGuidMap)
-            {
-                guidMap[map.Key] = map.Value;
-            }
+            // Basegame guid map is completely wrong. we must calculate our own.
 
-            // LE - inventory packages (we could just use it's GUIDCaches...)
-            foreach (var dlc in LE3Directory.OfficialDLC)
+            // LE - inventory all packages
+            foreach (var file in MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3))
             {
-                var dlcPath = Path.Combine(LE3Directory.DLCPath, dlc);
-                foreach (var pack in Directory.GetFileSystemEntries(dlcPath, "*.pcc", SearchOption.AllDirectories))
+                if (file.Value == "GuidCache.pcc")
+                    continue; // Self
+                if (file.Value.GetUnrealLocalization() != MELocalization.None)
+                    continue;
+
+                var package = MEPackageHandler.UnsafePartialLoad(file.Value, x => x.ClassName == "Package");
+                if (!guidMap.ContainsKey(package.FileNameNoExtension) && package.PackageGuid != Guid.Empty)
                 {
-                    if (pack.GetUnrealLocalization() != MELocalization.None)
+                    guidMap[package.FileNameNoExtension] = package.PackageGuid;
+                }
+
+                foreach (var packageExport in package.Exports.Where(x => x.ClassName == "Package"))
+                {
+                    if (packageExport.PackageGUID == Guid.Empty)
                         continue;
-
-                    var package = MEPackageHandler.UnsafePartialLoad(pack, x => x.ClassName == "Package");
-                    if (!guidMap.ContainsKey(package.FileNameNoExtension) && package.PackageGuid != Guid.Empty)
+                    if (!guidMap.ContainsKey(packageExport.ObjectName)) // Do we need to use instanced? For things like BioD_ProEar_440. how does that work for guids
                     {
-                        guidMap[package.FileNameNoExtension] = package.PackageGuid;
-                    }
-
-                    foreach (var packageExport in package.Exports.Where(x => x.ClassName == "Package"))
-                    {
-                        if (packageExport.PackageGUID == Guid.Empty)
-                            continue;
-                        if (!guidMap.ContainsKey(packageExport.ObjectName)) // Do we need to use instanced?
-                        {
-                            guidMap[packageExport.ObjectName] = packageExport.PackageGUID;
-                        }
+                        guidMap[packageExport.ObjectName] = packageExport.PackageGUID;
                     }
                 }
             }
 
-            // Now inventory MP from OT
+            // Now inventory MP from OT. We will use it's guids
             var me3GuidCache = MilanShared.GetME3Package($"GuidCache.pcc");
-            cache = ObjectBinary.From<GuidCache>(me3GuidCache.Exports[0]);
+            var cache = ObjectBinary.From<GuidCache>(me3GuidCache.Exports[0]);
             foreach (var map in cache.PackageGuidMap)
             {
                 if (!guidMap.ContainsKey(map.Key))
@@ -290,7 +282,19 @@ namespace ProjectMilan.Pipelines.Finalize
                 i++;
             }
 
+            // Save cached guidmap.
             File.WriteAllText(outPath, JsonConvert.SerializeObject(guidMap, Formatting.Indented));
+
+            // Save base GuidCache.pcc
+            var guidCache = MEPackageHandler.CreateAndOpenPackage(Path.Combine(MilanShared.PipelineRoot, "Mod", "Precomputed", "GuidCache.pcc"), MEGame.LE3);
+            var gc = new GuidCache
+            {
+                PackageGuidMap = new UMultiMap<NameReference, Guid>(guidMap.Select(x => new KeyValuePair<NameReference, Guid>(x.Key, x.Value)))
+            };
+            var exp = ExportCreator.CreateExport(guidCache, "GuidCache", "GuidCache", indexed: false);
+            exp.WriteBinary(gc);
+            guidCache.Save();
+
         }
 
         /// <summary>
