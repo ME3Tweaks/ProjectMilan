@@ -1,6 +1,9 @@
 ﻿// Adds 4 methods that are blank. I know this is native,
 // But I don't think it gets inherited.
 // Eventally if we have MP menu functionality we will need to setup the functions for use.
+
+
+// 05/10/2024 - Moved 4 function stubs to m3m of Milan mod - Mgamerz
 Class SFXTelemetryGameSession
     native
     transient

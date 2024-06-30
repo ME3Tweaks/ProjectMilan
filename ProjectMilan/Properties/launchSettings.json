@@ -21,7 +21,8 @@
       "commandLineArgs": "--config Mgamerz",
       "environmentVariables": {
         "MAXTHREADS": "4"
-      }
+      },
+      "nativeDebugging": false
     },
     "ProjectMilan - Mgamerz Desktop": {
       "commandName": "Project",
