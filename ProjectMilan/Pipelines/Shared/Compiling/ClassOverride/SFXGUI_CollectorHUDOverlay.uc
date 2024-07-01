@@ -139,7 +139,7 @@ public final function bool GetGlobalPosition(GFxValue val, out float X, out floa
         Y += val.GetNumber("_y");
         val = ParentVal;
         ParentVal = val.GetObject("_parent");
-    } until (ParentVal == None)
+    } until (ParentVal == None);
     return TRUE;
 }
 public final function InitializeMPHUDPowerIconOverlays()
