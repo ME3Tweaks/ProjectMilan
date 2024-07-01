@@ -309,7 +309,7 @@ namespace ProjectMilan.Pipelines.Finalize
             File.WriteAllText(outPath, JsonConvert.SerializeObject(guidMap, Formatting.Indented));
 
             // Save base GuidCache.pcc
-            var guidCache = MEPackageHandler.CreateAndOpenPackage(Path.Combine(MilanShared.PipelineRoot, "Mod", "Precomputed", "GuidCache.pcc"), MEGame.LE3);
+            var guidCache = MEPackageHandler.CreateAndOpenPackage(Path.Combine(MilanShared.PipelineRoot, "Mod", "PrecomputedBASEGAME", "GuidCache.pcc"), MEGame.LE3);
             var gc = new GuidCache
             {
                 PackageGuidMap = new UMultiMap<NameReference, Guid>(guidMap.Select(x => new KeyValuePair<NameReference, Guid>(x.Key, x.Value)))
