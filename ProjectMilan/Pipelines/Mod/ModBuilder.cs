@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.Coalesced;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.TLK.ME2ME3;
 using ProjectMilan.Pipelines.TLK;
@@ -15,6 +17,11 @@ namespace ProjectMilan.Pipelines.Mod
     {
         private const string LOG_CATEGORY = "MILAN-StarterKit"; // Technically not starter kit...
 
+        /// <summary>
+        /// The current moddesc version of the mod. Change this every time moddesc updates are required.
+        /// </summary>
+        private static readonly Version CURRENT_VERSION = new Version("1.0.1");
+
         public static void RunPipeline()
         {
             InternalRunPipeline();
@@ -24,7 +31,7 @@ namespace ProjectMilan.Pipelines.Mod
         {
             // Generate a basic working mod.
             var outDir = Directory.CreateDirectory(Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole")).FullName;
-            
+
             // Write mount.dlc
             MilanLog.Information($@"Compiling mount.dlc", customPrefix: LOG_CATEGORY);
             MountFile mf = new MountFile()
@@ -65,14 +72,26 @@ namespace ProjectMilan.Pipelines.Mod
             MilanLog.Information($"Compiling {MilanShared.DLC_NAME}.bin", customPrefix: LOG_CATEGORY);
             CoalescedConverter.ConvertToBin(manifest, dest);
 
-            // Add precomputed files
-            var afcPath = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Mod", @"Precomputed")).FullName;
-            foreach (var file in Directory.GetFiles(afcPath, "*.*", SearchOption.AllDirectories))
-            {
-                MilanLog.Information($"Copying precomputed file {Path.GetFileName(file)} to mod", customPrefix: LOG_CATEGORY);
-                File.Copy(file, Path.Combine(outDir, Path.GetFileName(file)), true);
-            }
             
+            // Add precomputed files to the CookedPCConsole folders
+            foreach (var dir in Directory.GetDirectories(Path.Combine(MilanShared.PipelineRoot, @"Mod"))
+                         .Where(x => x.StartsWith("Precomputed")))
+            {
+                var targetName = dir.Substring("Precomputed".Length);
+                var targetDir = Path.Combine(outDir, targetName);
+                var cookedOut = Path.Combine(targetDir, "CookedPCConsole");
+                if (!Directory.Exists(cookedOut))
+                {
+                    Directory.CreateDirectory(cookedOut);
+                }
+
+                foreach (var file in Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories))
+                {
+                    MilanLog.Information($"Copying precomputed file {Path.GetFileName(file)} to mod", customPrefix: LOG_CATEGORY);
+                    File.Copy(file, Path.Combine(cookedOut, Path.GetFileName(file)), true);
+                }
+            }
+
             // Where does TestPatch go in here? First or last?
             // Build merged config file from vanilla ME3 DLC
             // Patch01/02 is not included here and I am unsure how it will affect the results of this
@@ -87,6 +106,20 @@ namespace ProjectMilan.Pipelines.Mod
             //bundle.CommitDLCAssets(outDir, "DLC_MOD_ProjectMilan");
 
             TLKPipeline.RunPipeline();
+
+            // This is here as it will be at point where mod should be deployable for templating.
+            // Check moddesc version
+            var mdPath = Path.Combine(Program.Settings.OutputModPath, "..", "moddesc.ini");
+            if (File.Exists(mdPath))
+            {
+                var di = DuplicatingIni.LoadIni(mdPath);
+                var mdVer = di.GetOrAddSection("ModInfo")["modver"]; // getoradd prevents exceptions, we are not saving.
+                if (mdVer.HasValue && Version.TryParse(mdVer.Value, out var actualVersion) && actualVersion < CURRENT_VERSION)
+                {
+                    MilanLog.Fatal($"moddesc.ini needs updated. Current version: {actualVersion}, Supported version: {CURRENT_VERSION}. Download a new templated version from #links in the Project Milan Discord");
+                    Environment.Exit(1);
+                }
+            }
         }
     }
 }
