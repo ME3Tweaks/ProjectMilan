@@ -292,7 +292,7 @@ namespace ProjectMilan.Pipelines
 
             // Add to object database for porting
             // The predicate here is to prevent root level packages from being pulled in with incorrect netindexing data. We will generate that later.
-            RegisterObjectDBPackage(package, objectsToAddPrediate: x=> x.idxLink != 0 || x.ClassName != "Package" || !x.IsForcedExport);
+            RegisterObjectDBPackage(package, objectsToAddPredicate: x=> x.idxLink != 0 || x.ClassName != "Package" || !x.IsForcedExport);
         }
 
         internal static void EnsureTFCsAvailable()
@@ -957,17 +957,17 @@ namespace ProjectMilan.Pipelines
         /// Used to track custom registered packages so they can be unregistered at a later time
         /// </summary>
         /// <param name="package">Package to register in the ObjectInstanceDB</param>
-        /// <param name="objectsToAddPrediate">Predicate used to determine which objects to add to the database</param>
-        public static void RegisterObjectDBPackage(IMEPackage package, Func<ExportEntry, bool> objectsToAddPrediate = null)
+        /// <param name="objectsToAddPredicate">Predicate used to determine which objects to add to the database</param>
+        public static void RegisterObjectDBPackage(IMEPackage package, Func<ExportEntry, bool> objectsToAddPredicate = null)
         {
             if (package.Game == MEGame.LE3)
             {
                 RegisteredObjectDBPackages.Add(package.FilePath);
-                MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath, objectsToAddPrediate: objectsToAddPrediate);
+                MilanShared.LE3ObjectDB.AddFileToDB(package, package.FilePath, objectsToAddPredicate: objectsToAddPredicate);
             }
             else
             {
-                MilanShared.ME3ObjectDB.AddFileToDB(package, package.FilePath, objectsToAddPrediate: objectsToAddPrediate);
+                MilanShared.ME3ObjectDB.AddFileToDB(package, package.FilePath, objectsToAddPredicate: objectsToAddPredicate);
             }
         }
 

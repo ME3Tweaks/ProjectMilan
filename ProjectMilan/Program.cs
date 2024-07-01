@@ -59,17 +59,17 @@ namespace ProjectMilan
             VerifySettings();
 
             // Cleanup output directory before we start
-            if (!Settings.DontDeleteModFolder)
-            {
-                if (Directory.Exists(Settings.OutputModPath))
-                {
-                    Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputModPath, deleteDirectoryItself: false);
-                }
-                else
-                {
-                    Directory.CreateDirectory(Settings.OutputModPath);
-                }
-            }
+            //if (!Settings.DontDeleteModFolder)
+            //{
+            //    if (Directory.Exists(Settings.OutputModPath))
+            //    {
+            //        Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputModPath, deleteDirectoryItself: false);
+            //    }
+            //    else
+            //    {
+            //        Directory.CreateDirectory(Settings.OutputModPath);
+            //    }
+            //}
 
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"));
@@ -165,11 +165,11 @@ namespace ProjectMilan
             // Conformance
             RunPipeline(true, Conformance.RunPipeline, "Conformance");
 
-
             // Verification
             RunPipeline(true, VerifyMod.RunPipeline, "Verify");
 
-
+            // Patch for multi instance
+            MultiInstance.PatchForMultiInstance();
         }
 
         /// <summary>
