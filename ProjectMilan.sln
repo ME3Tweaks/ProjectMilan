@@ -11,11 +11,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WwiseTools_DotNet6", "Wwise
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Wwiser.NET", "Wwiser.NET", "{446C9336-A563-42CD-A637-4D34D47C9570}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ME3Tweaks.Wwiser", "Wwiser.NET\ME3Tweaks.Wwiser\ME3Tweaks.Wwiser.csproj", "{A840855E-3765-4C3C-87F7-A46A9ABF48F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ME3Tweaks.Wwiser", "Wwiser.NET\ME3Tweaks.Wwiser\ME3Tweaks.Wwiser.csproj", "{A840855E-3765-4C3C-87F7-A46A9ABF48F8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BinarySerializer", "BinarySerializer", "{78F80EF6-30B5-4FDC-BE3E-E68430E10111}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinarySerializer", "Wwiser.NET\BinarySerializer\BinarySerializer\BinarySerializer.csproj", "{D976FEF2-1BED-48D2-9DBC-56C0590E6292}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinarySerializer", "Wwiser.NET\BinarySerializer\BinarySerializer\BinarySerializer.csproj", "{D976FEF2-1BED-48D2-9DBC-56C0590E6292}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MultiInstancePatcher", "MultiInstancePatcher\MultiInstancePatcher.csproj", "{C34C7EEC-E76A-4828-AEED-09EBD9683179}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -215,16 +217,52 @@ Global
 		{D976FEF2-1BED-48D2-9DBC-56C0590E6292}.WinRelease|x64.Build.0 = Debug|Any CPU
 		{D976FEF2-1BED-48D2-9DBC-56C0590E6292}.WinRelease|x86.ActiveCfg = Debug|Any CPU
 		{D976FEF2-1BED-48D2-9DBC-56C0590E6292}.WinRelease|x86.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Debug|x64.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Debug|x86.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Release|x64.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Release|x64.Build.0 = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Release|x86.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.Release|x86.Build.0 = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureRelease|Any CPU.Build.0 = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureRelease|x64.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureRelease|x64.Build.0 = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureRelease|x86.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureRelease|x86.Build.0 = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureTest|Any CPU.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureTest|Any CPU.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureTest|x64.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureTest|x64.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureTest|x86.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinAzureTest|x86.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinDebug|Any CPU.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinDebug|x64.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinDebug|x64.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinDebug|x86.ActiveCfg = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinDebug|x86.Build.0 = Debug|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinRelease|Any CPU.Build.0 = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinRelease|x64.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinRelease|x64.Build.0 = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinRelease|x86.ActiveCfg = Release|Any CPU
+		{C34C7EEC-E76A-4828-AEED-09EBD9683179}.WinRelease|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {09AD82AF-200A-4437-BDBF-391FBD368ABE}
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A840855E-3765-4C3C-87F7-A46A9ABF48F8} = {446C9336-A563-42CD-A637-4D34D47C9570}
 		{78F80EF6-30B5-4FDC-BE3E-E68430E10111} = {446C9336-A563-42CD-A637-4D34D47C9570}
 		{D976FEF2-1BED-48D2-9DBC-56C0590E6292} = {78F80EF6-30B5-4FDC-BE3E-E68430E10111}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {09AD82AF-200A-4437-BDBF-391FBD368ABE}
 	EndGlobalSection
 EndGlobal
