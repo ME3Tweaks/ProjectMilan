@@ -878,6 +878,13 @@ namespace ProjectMilan.Pipelines
             {
                 if (EntryImporter.IsSafeToImportFrom(donorEntry.FileRef.FilePath, MEGame.LE3, package.FilePath))
                 {
+                    var existingImport = package.FindImport(donorEntry.MemoryFullPath, donorEntry.ClassName);
+                    if (existingImport != null)
+                    {
+                        // Use existing import to prevent duplicates.
+                        return existingImport;
+                    }
+
                     // Create parents
                     MilanLog.Information($"    Porting as import", customPrefix: logCategory);
                     var parent = EntryExporter.PortParents(donorEntry, package, true);
