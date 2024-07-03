@@ -72,7 +72,7 @@ namespace ProjectMilan.Pipelines.Verify
                 {
                     // Todo: This needs fleshed out for proper cases. 
                     // Check if there are -1 NetIndexes that are not package
-                    MilanLog.Warning($"NetIndex is -1: {exp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                    // MilanLog.Warning($"NetIndex is -1: {exp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
                 }
 
             }
