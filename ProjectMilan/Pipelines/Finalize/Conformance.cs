@@ -29,10 +29,16 @@ namespace ProjectMilan.Pipelines.Finalize
             InternalRunPipeline();
         }
 
+        /// <summary>
+        /// Map of count of unique netindices. Maps linker -> unique object count.
+        /// </summary>
+        private static CaseInsensitiveDictionary<int> currentNetIndexes = new();
+
+
         private static void InternalRunPipeline()
         {
-            ConformPackagesWithGuidCache();
             ConformNetObjects();
+            ConformPackagesWithGuidCache();
 
             // Ensure SFXGame is patched.
             //MPCommon.HackPatchParents(); // No longer needed.
@@ -94,7 +100,6 @@ namespace ProjectMilan.Pipelines.Finalize
             //    }
             //}
 
-            CaseInsensitiveDictionary<int> currentNetIndexes = new CaseInsensitiveDictionary<int>();
 
             #region Pass 2: Write out net indexes
             MilanLog.Information("Pass 2: Assign NetIndexes", customPrefix: LOG_CATEGORY);
@@ -153,6 +158,7 @@ namespace ProjectMilan.Pipelines.Finalize
             MilanLog.Information("Pass 3: Write NetObj counts for root packages", customPrefix: LOG_CATEGORY);
             foreach (var p in allPackagesFiles)
             {
+                int localLinkerCount = 0;
                 using var package = MEPackageHandler.OpenMEPackage(p);
                 foreach (var pExp in package.Exports.Where(x =>
                              x.idxLink == 0 && x.ClassName == "Package" && x.IsForcedExport))
@@ -172,46 +178,49 @@ namespace ProjectMilan.Pipelines.Finalize
 
                     if (existingInfo != null)
                     {
-                        pExp.GenerationNetObjectCount = new[] { existingInfo.GenerationNetObjCount };
+                        // Already calculated this value.
+                        pExp.GenerationNetObjectCount = [existingInfo.GenerationNetObjCount];
                     }
                     else
                     {
-
+                        // Not calculated: Lookup what we counted
                         if (!currentNetIndexes.TryGetValue(pExp.InstancedFullPath, out int netObjCount))
                         {
-                            var netCount = package.Exports.Count(x => GetLinker(x) == package.FileNameNoExtension && pExp != x);
-                            pExp.GenerationNetObjectCount = new[] { netCount };
+                            // Was not under package export - find number of objects that are not forced export under the root.
+                            localLinkerCount = package.Exports.Count(x => GetLinker(x) == package.FileNameNoExtension && pExp != x);
+                            pExp.GenerationNetObjectCount = [localLinkerCount];
                         }
                         else
                         {
-                            pExp.GenerationNetObjectCount = new[] { netObjCount + 1 };
+                            // Use the count we calculated
+                            pExp.GenerationNetObjectCount = [netObjCount];
                         }
                     }
                 }
 
+                // Update the same-named package.
                 var sameNamedExp = package.FindExport(package.FileNameNoExtension);
-                var currentLinkerNetCount = package.Exports.Count(x => GetLinker(x) == package.FileNameNoExtension && sameNamedExp != x);
                 if (sameNamedExp != null)
                 {
                     // Same-named package
                     // Count number of objects in this linker
-                    sameNamedExp.GenerationNetObjectCount = new[] { currentLinkerNetCount };
+                    sameNamedExp.GenerationNetObjectCount = [localLinkerCount];
 
                     if (EntryExporter.IsLevelFile(sameNamedExp.InstancedFullPath))
                     {
                         // Set package flags
                         sameNamedExp.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload |
                                                     UnrealFlags.EPackageFlags.NoExportsData |
-                                                    UnrealFlags.EPackageFlags.Cooked | 
+                                                    UnrealFlags.EPackageFlags.Cooked |
                                                     UnrealFlags.EPackageFlags.Map |
                                                     UnrealFlags.EPackageFlags.DisallowLazyLoading |
-                                                    UnrealFlags.EPackageFlags.RequireImportsAlreadyLoaded | UnrealFlags.EPackageFlags.Protected;
+                                                    UnrealFlags.EPackageFlags.RequireImportsAlreadyLoaded |
+                                                    UnrealFlags.EPackageFlags.Protected;
                         ((MEPackage)package).setFlags(sameNamedExp.PackageFlags);
                     }
-
                 }
 
-                ((MEPackage)package).Gen0NetworkedObjectCount = currentLinkerNetCount;
+                ((MEPackage)package).Gen0NetworkedObjectCount = localLinkerCount;
                 ((MEPackage)package).Gen0NameCount = package.Names.Count;
                 ((MEPackage)package).Gen0ExportCount = package.Exports.Count;
 
@@ -328,8 +337,7 @@ namespace ProjectMilan.Pipelines.Finalize
             MilanLog.Information("Conforming packages", customPrefix: LOG_CATEGORY);
 
             // This is the list of all known Guids in vanilla LE3
-            var masterGuidMap = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<Guid>>(
-                File.ReadAllText(Path.Combine(MilanShared.PipelineRoot, "Finalize", "GuidMap.json")));
+            var masterGuidMap = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<Guid>>(File.ReadAllText(Path.Combine(MilanShared.PipelineRoot, "Finalize", "GuidMap.json")));
 
             // Read basegame guid map so we know what we can skip.
             var basegameGuidCache = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, "GuidCache.pcc"));
@@ -340,14 +348,15 @@ namespace ProjectMilan.Pipelines.Finalize
                 basegameCache[entry.Key] = entry.Value;
             }
 
-            // All packages that had a 'source' file in source needs to be in GuidCache
+            // All packages that had a 'source' file in source needs to be in GuidCache,
+            // as long as they had at least one net object,
             // so clients know they are in sync with server
-            var guidCacheP = MEPackageHandler.CreateAndOpenPackage(
-                Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole",
-                    $"GuidCache_{MilanShared.DLC_NAME}.pcc"), MEGame.LE3);
+            var guidCacheP = MEPackageHandler.CreateAndOpenPackage(Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole", $"GuidCache_{MilanShared.DLC_NAME}.pcc"), MEGame.LE3);
 
             var guidCache = ExportCreator.CreateExport(guidCacheP, "GuidCache", "GuidCache", indexed: false);
-            var buildingGuidMap = new Dictionary<string, Guid>();
+
+            // The dictionary of guids we are building
+            var buildingGuidMap = new CaseInsensitiveDictionary<Guid>();
 
             var allPackagesFiles = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories).ToList();
 
@@ -363,46 +372,66 @@ namespace ProjectMilan.Pipelines.Finalize
 
                 #region Package and Package Export
                 var packageGuid = package.PackageGuid;
+
+                // Does master guid map have our file in it?
                 if (masterGuidMap.TryGetValue(package.FileNameNoExtension, out packageGuid))
                 {
-                    package.PackageGuid = packageGuid;
+                    package.PackageGuid = packageGuid; // Assign package guid
                 }
                 else
                 {
-                    MilanLog.Error($"Package (file) not in guid map, adding now: {package.FileNameNoExtension}");
-                    // We probably need to make a new guid here...
-                    packageGuid = Guid.NewGuid();
-                    masterGuidMap[package.FileNameNoExtension] = packageGuid; // Assign to master
-                    buildingGuidMap[package.FileNameNoExtension] = packageGuid; // Assign to our new GuidCache
-                    package.PackageGuid = packageGuid;
+                    // Master guid map does not have our package - we are adding a new guid.
+                    if (currentNetIndexes.TryGetValue(package.FileNameNoExtension, out var val))
+                    {
+
+                        MilanLog.Information($"Package (file) not in guid map, adding now: {package.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+                        // We probably need to make a new guid here...
+                        packageGuid = Guid.NewGuid(); // Todo should probably cache these in a file for historical debugging
+                        masterGuidMap[package.FileNameNoExtension] = packageGuid; // Assign to master for future lookups
+                        if (val > 0)
+                        {
+                            // Only packages with more than 0 net objects are added to guidcache
+                            buildingGuidMap[package.FileNameNoExtension] = packageGuid; // Assign to our new GuidCache
+                        }
+                        else
+                        {
+                            MilanLog.Information($"Skipping guidcaching package with no net objects: {package.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+                        }
+
+                        package.PackageGuid = packageGuid; // Assign package guid
+                    }
                 }
 
                 // Map package file GUID
-                var sameNamedExport = package.FindExport(package.FileNameNoExtension);
+                var sameNamedExport = package.FindExport(package.FileNameNoExtension, "Package");
                 if (sameNamedExport == null)
                 {
-                    // Generate it?
+                    // Generate same-named package export. Unsure if this matters really.
+                    // Guid will be updated in an upcoming pass
                     ExportCreator.CreatePackageExport(package, NameReference.FromInstancedString(package.FileNameNoExtension));
                 }
                 #endregion
 
-                #region All package exports
+                #region All forced-export package exports
                 foreach (var exp in package.Exports.Where(x => x.idxLink == 0 && x.ClassName == "Package" && x.IsForcedExport))
                 {
                     if (masterGuidMap.TryGetValue(exp.ObjectName.Instanced, out var expGuid))
                     {
+                        // We have seen this package before in either master or as package file
                         exp.PackageGUID = expGuid;
                         if (!basegameCache.TryGetValue(exp.ObjectName.Instanced, out _))
                         {
-                            masterGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to master
+                            masterGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to master if not seen before
                         }
 
                         // 01/08/2024 - Observing FindPackageFile() with a GUID seems to indicate it's missing basegame GUIDs for some reason. No idea why.
+                        // Late June 2024 - Basegame GUIDCache is totally wrong!
                         buildingGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to our new GuidCache
                     }
                     else
                     {
-                        MilanLog.Information($"Package (export) not in guid map, adding now: {exp.ObjectName.Instanced}");
+                        // We have not seen this package before yet for guids
+                        MilanLog.Information($"Package (export) not in guid map, adding now: {exp.ObjectName.Instanced}", customPrefix: LOG_CATEGORY);
                         expGuid = Guid.NewGuid();
                         masterGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to master
                         buildingGuidMap[exp.ObjectName.Instanced] = expGuid; // Assign to our new GuidCache
@@ -416,14 +445,13 @@ namespace ProjectMilan.Pipelines.Finalize
                 #endregion
 
                 // Todo: Do package flags matter? AllowDownload Script
-                // Do net objects matter?
+                // Do net objects matter? // Yes, yes they do
 
                 if (package.IsModified)
                 {
-                    MilanLog.Information($"Saving conformed package {package.FileNameNoExtension}.pcc");
+                    MilanLog.Information($"Saving conformed package {package.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
                     package.Save();
                     MilanShared.RefreshMilanFiles = true;
-
                 }
             }
 
@@ -492,7 +520,7 @@ namespace ProjectMilan.Pipelines.Finalize
             var map = new UMultiMap<NameReference, Guid>();
             foreach (var mapItem in buildingGuidMap)
             {
-                map.TryAddUnique(mapItem.Key, mapItem.Value);
+                map.TryAddUnique(NameReference.FromInstancedString(mapItem.Key), mapItem.Value);
             }
 
             GuidCache gc = new GuidCache();
