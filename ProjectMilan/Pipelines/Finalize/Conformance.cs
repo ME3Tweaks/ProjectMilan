@@ -173,9 +173,6 @@ namespace ProjectMilan.Pipelines.Finalize
                                             UnrealFlags.EPackageFlags.NoExportsData;
                     }
 
-                    //if (pExp.InstancedFullPath == "GUI_SF_MPReinforcements_DLC")
-                    //    Debugger.Break();
-
                     if (existingInfo != null)
                     {
                         // Already calculated this value.
@@ -194,6 +191,11 @@ namespace ProjectMilan.Pipelines.Finalize
                         {
                             // Use the count we calculated
                             pExp.GenerationNetObjectCount = [netObjCount];
+                            if (GetLinker(pExp) == package.FileNameNoExtension)
+                            {
+                                // Set the local linker count var
+                                localLinkerCount = netObjCount;
+                            }
                         }
                     }
                 }
@@ -256,6 +258,7 @@ namespace ProjectMilan.Pipelines.Finalize
 
         public static void BuildGuidMap()
         {
+
             var outPath = Path.Combine(MilanShared.PipelineRoot, "Finalize", "GuidMap.json");
             var guidMap = new CaseInsensitiveDictionary<Guid>();
 
@@ -269,23 +272,25 @@ namespace ProjectMilan.Pipelines.Finalize
                 if (file.Value.GetUnrealLocalization() != MELocalization.None)
                     continue;
 
+                MilanLog.Information($"Inventorying {file.Key}", customPrefix: LOG_CATEGORY);
                 var package = MEPackageHandler.UnsafePartialLoad(file.Value, x => x.ClassName == "Package");
-                if (!guidMap.ContainsKey(package.FileNameNoExtension) && package.PackageGuid != Guid.Empty)
+                if (!guidMap.ContainsKey(NameReference.FromInstancedString(package.FileNameNoExtension)) && package.PackageGuid != Guid.Empty)
                 {
-                    guidMap[package.FileNameNoExtension] = package.PackageGuid;
+                    guidMap[NameReference.FromInstancedString(package.FileNameNoExtension)] = package.PackageGuid;
                 }
 
                 foreach (var packageExport in package.Exports.Where(x => x.ClassName == "Package"))
                 {
                     if (packageExport.PackageGUID == Guid.Empty)
                         continue;
-                    if (!guidMap.ContainsKey(packageExport.ObjectName)) // Do we need to use instanced? For things like BioD_ProEar_440. how does that work for guids
+                    if (!guidMap.ContainsKey(packageExport.ObjectName.Instanced)) // Do we need to use instanced? For things like BioD_ProEar_440. how does that work for guids
                     {
-                        guidMap[packageExport.ObjectName] = packageExport.PackageGUID;
+                        guidMap[packageExport.ObjectName.Instanced] = packageExport.PackageGUID;
                     }
                 }
             }
 
+            MilanLog.Information("Reading OT GUIDCaches", customPrefix: LOG_CATEGORY);
             // Now inventory MP from OT. We will use it's guids
             var me3GuidCache = MilanShared.GetME3Package($"GuidCache.pcc");
             var cache = ObjectBinary.From<GuidCache>(me3GuidCache.Exports[0]);
@@ -293,7 +298,7 @@ namespace ProjectMilan.Pipelines.Finalize
             {
                 if (!guidMap.ContainsKey(map.Key))
                 {
-                    guidMap[map.Key] = map.Value;
+                    guidMap[map.Key.Instanced] = map.Value;
                 }
             }
 
@@ -307,7 +312,7 @@ namespace ProjectMilan.Pipelines.Finalize
                 {
                     if (!guidMap.ContainsKey(map.Key))
                     {
-                        guidMap[map.Key] = map.Value;
+                        guidMap[map.Key.Instanced] = map.Value;
                     }
                 }
 
@@ -321,7 +326,12 @@ namespace ProjectMilan.Pipelines.Finalize
             var guidCache = MEPackageHandler.CreateAndOpenPackage(Path.Combine(MilanShared.PipelineRoot, "Mod", "PrecomputedBASEGAME", "GuidCache.pcc"), MEGame.LE3);
             var gc = new GuidCache
             {
-                PackageGuidMap = new UMultiMap<NameReference, Guid>(guidMap.Select(x => new KeyValuePair<NameReference, Guid>(x.Key, x.Value)))
+                PackageGuidMap = new UMultiMap<NameReference, Guid>(
+                    guidMap.Where(x=>
+                    {
+                        var info =  MilanShared.LE3ObjectDB.GetInfo(x.Key);
+                        return info != null && info.GenerationNetObjCount > 0;
+                    }).Select(x => new KeyValuePair<NameReference, Guid>(NameReference.FromInstancedString(x.Key), x.Value)))
             };
             var exp = ExportCreator.CreateExport(guidCache, "GuidCache", "GuidCache", indexed: false);
             exp.WriteBinary(gc);
