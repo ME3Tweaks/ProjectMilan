@@ -23,7 +23,9 @@ public function ProfileMPGame()
     local array<EnemyWaveInfo> EnemiesToSpawn;
     local int EnemyIndex;
     local SFXPlayerControllerMP C;
-    
+    local Color OldColor;
+    local Canvas Canvas;
+
     Engine = SFXEngine(Class'Engine'.static.GetEngine());
     GRI = SFXGRI(Outer.WorldInfo.GRI);
     ScoreManager = GRI != None ? GRI.GetScoreManager() : None;
@@ -84,6 +86,35 @@ public function ProfileMPGame()
                 DrawLine((((("    Enemy: " $ EnemiesToSpawn[idx].EnemyType) $ " Count: ") $ HordeCurrentWave.NumSpawnedEnemiesByType[EnemyIndex]) $ " Max: ") $ EnemiesToSpawn[idx].MaxPerWave);
             }
         }
+        
+        // BEGIN MILAN CHANGE
+        // Add asset load status
+        DrawLine("Asset load status:");
+        Canvas = Outer.myHUD.Canvas;
+        OldColor = Canvas.DrawColor;
+        for (idx = 0; idx < HordeCurrentWave.AssetLoadData.Length; idx++)
+        {
+            if (HordeCurrentWave.AssetLoadData[idx].AssetLoadStatus == EAsyncLoadStatus.ASYNC_LOAD_STARTED)
+            {
+                Canvas.SetDrawColor(255, 255, 255, 128);
+            }
+            else if (HordeCurrentWave.AssetLoadData[idx].AssetLoadStatus == EAsyncLoadStatus.ASYNC_LOAD_INPROGRESS)
+            {
+                Canvas.SetDrawColor(255, 255, 0, 255);
+            }
+            else if (HordeCurrentWave.AssetLoadData[idx].AssetLoadStatus == EAsyncLoadStatus.ASYNC_LOAD_COMPLETE)
+            {
+                Canvas.SetDrawColor(0, 255, 0, 200);
+            }
+            else if (HordeCurrentWave.AssetLoadData[idx].AssetLoadStatus == EAsyncLoadStatus.ASYNC_LOAD_ERROR)
+            {
+                Canvas.SetDrawColor(255, 0, 0, 255);
+            }
+            Canvas.DrawText("    " $ HordeCurrentWave.AssetLoadData[idx].AssetToLoad $ ": " $ HordeCurrentWave.AssetLoadData[idx].AssetLoadStatus);
+        }
+        DrawLine("");
+        // END MILAN CHANGE
+
         DrawLine("");
         DrawLine("Enemies");
         foreach Outer.WorldInfo.AllPawns(Class'SFXPawn', ChkPawn)
