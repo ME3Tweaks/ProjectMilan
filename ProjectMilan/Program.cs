@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.Timers;
+using CommandLine;
 using LegendaryExplorerCore;
 using LegendaryExplorerCore.Packages;
 using ProjectMilan.Pipelines;
@@ -15,6 +16,7 @@ using ProjectMilan.Pipelines.Weapons;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
 using Serilog;
+using Timer = System.Timers.Timer;
 
 // MAKE SURE YOU SET YOUR SETTINGS PATH IN YOUR RUN CONFIGURATION
 // DO NOT EDIT OTHERS! MAKE YOUR OWN AND SET YOUR SETTINGS PATH.
@@ -46,6 +48,9 @@ namespace ProjectMilan
             Parser.Default.ParseArguments<CLIOptions>(args).WithParsed(Init);
         }
 
+        private static Timer _keepAwakeTimer = new Timer(30 * 1000); // 30s interval
+
+
         /// <summary>
         /// Initialize Project Milan
         /// </summary>
@@ -75,9 +80,26 @@ namespace ProjectMilan
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.ME3, MEGame.LE3]);
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
-
-            RunPipelines();
+            try
+            {
+                SystemSleepManager.PreventSleep("Compiling");
+                _keepAwakeTimer.Elapsed += keepSystemAwake;
+                _keepAwakeTimer.Start();
+                RunPipelines();
+            }
+            finally
+            {
+                _keepAwakeTimer.Elapsed -= keepSystemAwake;
+                _keepAwakeTimer.Stop();
+                SystemSleepManager.AllowSleep();
+            }
         }
+
+        private static void keepSystemAwake(object sender, ElapsedEventArgs e)
+        {
+            SystemSleepManager.PreventSleep(@"Compiling");
+        }
+
 
         private static void VerifySettings()
         {
