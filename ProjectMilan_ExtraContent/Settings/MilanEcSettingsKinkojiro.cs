@@ -3,7 +3,7 @@
 namespace ProjectMilan_ExtraContent.Settings
 {
     // Settings for Kinkojiro's system build
-    internal class MilanEcSettingsKinkojiro : IMilanECSettings
+    internal class MilanECSettingsKinkojiro : IMilanECSettings
     {
         public string OutputModPathREJ { get; set; } = $@"E:\Modding\LE3\Project Milan R2\{MilanShared.REJECTS_DLC_NAME}";
         public string OutputModPathRED { get; set; } = $@"E:\Modding\LE3\Project Milan R3\{MilanShared.REDEMPTION_DLC_NAME}";

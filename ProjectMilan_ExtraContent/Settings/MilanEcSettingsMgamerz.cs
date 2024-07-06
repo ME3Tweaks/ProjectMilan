@@ -3,7 +3,7 @@
 namespace ProjectMilan_ExtraContent.Settings
 {
     // Settings for Mgamerz' system build
-    internal class MilanEcSettingsMgamerz : IMilanECSettings
+    internal class MilanECSettingsMgamerz : IMilanECSettings
     {
         private string _outputModPathREJ;
 
@@ -45,7 +45,7 @@ namespace ProjectMilan_ExtraContent.Settings
                 }
 
                 _outputModPathRED = $@"E:\LocalModLibrary\LE3\Project Milan R3\{MilanShared.REDEMPTION_DLC_NAME}";
-                return _outputModPathREJ;
+                return _outputModPathRED;
             }
             set
             {

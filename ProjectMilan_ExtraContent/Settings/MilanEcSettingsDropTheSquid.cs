@@ -4,7 +4,7 @@ using ProjectMilanCore;
 namespace ProjectMilan_ExtraContent.Settings
 {
     // Settings for DropTheSquid
-    internal class MilanEcSettingsDropTheSquid : IMilanECSettings
+    internal class MilanECSettingsDropTheSquid : IMilanECSettings
     {
         private static readonly bool fullBuild = false;
         public string OutputModPathREJ { get; set; } = $@"H:\MELE_Mods\mods in development\LE3\Project Milan R2\{MilanShared.REJECTS_DLC_NAME}";

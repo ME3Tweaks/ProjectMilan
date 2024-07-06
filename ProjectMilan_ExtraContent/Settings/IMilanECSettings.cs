@@ -5,7 +5,7 @@
     // As items are added please add them to all implementers with a default of false.
 
     /// <summary>
-    /// Describes settings for running Project Milan
+    /// Describes settings for running Project Milan - Extra Content
     /// </summary>
     public interface IMilanECSettings
     {

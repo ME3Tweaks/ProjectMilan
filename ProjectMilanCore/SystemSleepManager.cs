@@ -16,7 +16,7 @@ namespace ProjectMilan.Pipelines
         private static object syncObj = new object();
 
         private static Timer _wakeTimer;
-
+        
         // If we have not received a new call to PreventSleep() in 4 minutes we will stop keeping the system awake.
         // This is a failsafe.
         private static readonly int MinutesPerWake = 4;

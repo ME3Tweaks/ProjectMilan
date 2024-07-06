@@ -3,7 +3,7 @@
 namespace ProjectMilan_ExtraContent.Settings
 {
     // Settings for SirCxyrtyx's system build
-    internal class MilanEcSettingsSirCxyrtyx : IMilanECSettings
+    internal class MilanECSettingsSirCxyrtyx : IMilanECSettings
     {
         public string OutputModPathREJ { get; set; } = $@"C:\Users\natal\Documents\ME3TweaksModManager\mods\LE3\Project Milan R2\{MilanShared.REJECTS_DLC_NAME}";
         public string OutputModPathRED { get; set; } = $@"C:\Users\natal\Documents\ME3TweaksModManager\mods\LE3\Project Milan R3\{MilanShared.REDEMPTION_DLC_NAME}";
