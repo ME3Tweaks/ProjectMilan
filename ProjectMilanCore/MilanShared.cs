@@ -477,6 +477,10 @@ namespace ProjectMilanCore
             "SFXGameContentDLC_CON_MP5.SFXProjectile_SalarianBlastSplitter_MP"
         };
 
+        private static readonly string PostPortingClassOverrideFolder = Path.Combine(MilanShared.PipelineRoot, "Shared", "Compiling", "ClassOverride", "PostPorting");
+
+        private static CaseInsensitiveConcurrentDictionary<string> PostPortingClassOverrides { get; } = new();
+
         /// <summary>
         /// Ports an object referencer across games.
         /// </summary>
@@ -559,7 +563,6 @@ namespace ProjectMilanCore
                 //    MPCommon.MissingObjectResolver, vtableDonorGetter: MPCommon.VTableDonorGetter, cache: cache);
             }
 
-
             // Original implementation
             if (true)
             {
@@ -579,12 +582,30 @@ namespace ProjectMilanCore
                 foreach (var f in rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass))
                 {
                     // Recompile all ported classes so vtables are updated
-                    MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: logCategory);
                     try
                     {
                         //var sourceObj = rop.CrossPackageMap.FirstOrDefault(x => x.Value == f).Key as ExportEntry;
                         //(_, string text) = UnrealScriptCompiler.DecompileExport(sourceObj, lib, cache);
-                        (_, string text) = UnrealScriptCompiler.DecompileExport(f, lib, usop);
+                        if (!PostPortingClassOverrides.TryGetValue(f.ObjectName, out var text))
+                        {
+                            // Does it exist on disk?
+                            lock (PostPortingClassOverrides)
+                            {
+                                if (File.Exists(Path.Combine(PostPortingClassOverrideFolder, $"{f.ObjectName}.uc")))
+                                {
+                                    MilanLog.Information($"  Recompiling {f.ObjectName} with Milan override", customPrefix: logCategory);
+                                    text = File.ReadAllText(Path.Combine(PostPortingClassOverrideFolder, $"{f.ObjectName}.uc"));
+                                    PostPortingClassOverrides[f.ObjectName] = text;     
+                                } 
+                                else
+                                {
+                                    MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: logCategory);
+                                }
+                            }
+
+                            // Use decomp
+                            (_, text) = UnrealScriptCompiler.DecompileExport(f, lib, usop);
+                        }
                         UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, f);
                     }
                     catch (Exception e)
