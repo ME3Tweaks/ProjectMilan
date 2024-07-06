@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using LegendaryExplorerCore.Misc;
-using LegendaryExplorerCore.Packages;
 using Newtonsoft.Json;
 using ProjectMilan;
 

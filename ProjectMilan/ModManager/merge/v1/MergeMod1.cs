@@ -1,12 +1,11 @@
-﻿using System.Diagnostics;
-using LegendaryExplorerCore.GameFilesystem;
-using LegendaryExplorerCore.Helpers;
+﻿using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using ProjectMilan;
 using ProjectMilan.Pipelines;
+using ProjectMilanCore;
 
 namespace ME3TweaksModManager.modmanager.objects.mod.merge.v1
 {

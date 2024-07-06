@@ -11,6 +11,7 @@ using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using ProjectMilan.Utility;
+using ProjectMilanCore;
 using WwiseTools.Objects;
 using WwiseTools.Src.Models.SoundBank;
 using WwiseTools.Utils;

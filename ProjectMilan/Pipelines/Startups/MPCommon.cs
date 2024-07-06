@@ -1,23 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
-using LegendaryExplorerCore.Unreal;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ME3TweaksModManager.modmanager.objects.mod.merge;
 using ME3TweaksModManager.modmanager.objects.mod.merge.v1;
 using Newtonsoft.Json;
 using ProjectMilan.Utility;
-using Serilog;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Startups
 {
@@ -720,7 +711,7 @@ namespace ProjectMilan.Pipelines.Startups
                     {
                         MilanLog.Error($"  {f.Message}");
                     }
-                    Debugger.Break(); // Filelib failed to initialize!!
+                    // Debugger.Break(); // Filelib failed to initialize!!
                 }
             }
 

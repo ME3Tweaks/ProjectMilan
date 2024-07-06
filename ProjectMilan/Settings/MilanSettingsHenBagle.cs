@@ -1,4 +1,5 @@
 ﻿using ProjectMilan.Pipelines;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Settings
 {

@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
+using ProjectMilanCore;
 using Image = LegendaryExplorerCore.Textures.Image;
 
 namespace ProjectMilan.Pipelines.Texture

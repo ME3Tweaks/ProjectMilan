@@ -3,7 +3,6 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using ME3TweaksModManager.modmanager.objects.mod.merge.v1;
 using ProjectMilan;
-using Serilog;
 
 namespace ME3TweaksModManager.modmanager.objects.mod.merge
 {

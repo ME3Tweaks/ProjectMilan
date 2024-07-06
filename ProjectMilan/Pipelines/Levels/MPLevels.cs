@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LegendaryExplorerCore.GameFilesystem;
+﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
 using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Shared;
-using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Utility;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Levels
 {
@@ -51,10 +44,10 @@ namespace ProjectMilan.Pipelines.Levels
 
                 // MP3 Earth
                 new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled=false, SpecialPortingDelegate = null}, // Rio
-                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled=false, SpecialPortingDelegate = null}, // Vancouver
+                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled=true, SpecialPortingDelegate = null}, // Vancouver
                 new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled=false, SpecialPortingDelegate = null}, // London
 
-                // MP4 Retalition
+                // MP4 Retaliation
                 new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled=false, SpecialPortingDelegate = null}, // Glacier - Hazard
                 new LevelSpecificPipeline() { BioP="BioP_MPCer3", Enabled=false, SpecialPortingDelegate = null}, // Glacier - Rework (replaces MPCer in ME3)
                 new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled=false, SpecialPortingDelegate = null}, // Dagger - Hazard

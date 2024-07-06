@@ -34,12 +34,13 @@
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
     <PackageReference Include="JetBrains.Profiler.SelfApi" Version="2.5.0" />
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="5.0.0" />
-    <PackageReference Include="Serilog.Sinks.Debug" Version="2.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
+    <ProjectReference Include="..\ProjectMilanCore\ProjectMilanCore.csproj" />
     <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
     <ProjectReference Include="..\Wwiser.NET\ME3Tweaks.Wwiser\ME3Tweaks.Wwiser.csproj" />
   </ItemGroup>

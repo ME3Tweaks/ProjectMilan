@@ -4,6 +4,7 @@ using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Kits
 {
@@ -193,12 +194,12 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "Cerberus_Vanguard_MP", Enabled  = false},
 
             // MP3
-            new KitSpecificPipeline() { PackageName = "N7_Vanguard_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "N7_Soldier_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "N7_Adept_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "N7_Sentinel_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "N7_Infiltrator_MP", Enabled  = false},
-            new KitSpecificPipeline() { PackageName = "N7_Engineer_MP", Enabled  = false},
+            new KitSpecificPipeline() { PackageName = "N7_Vanguard_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "N7_Soldier_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "N7_Adept_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "N7_Sentinel_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "N7_Infiltrator_MP", Enabled  = true},
+            new KitSpecificPipeline() { PackageName = "N7_Engineer_MP", Enabled  = true},
 
             // MP4
             new KitSpecificPipeline() { PackageName = "Krogan_Adept_MP", Enabled  = false},

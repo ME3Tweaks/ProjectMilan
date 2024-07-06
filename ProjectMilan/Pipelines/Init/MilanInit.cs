@@ -7,6 +7,7 @@ using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
 using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Init
 {

@@ -10,6 +10,7 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Shared
 {

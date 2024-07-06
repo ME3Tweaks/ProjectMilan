@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using LegendaryExplorerCore.Packages;
+﻿using LegendaryExplorerCore.Packages;
 
 namespace ProjectMilan.Pipelines.Weapons
 {

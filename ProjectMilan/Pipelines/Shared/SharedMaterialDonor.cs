@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LegendaryExplorerCore.Packages;
+﻿using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilan.Pipelines.Shared.GlobalDonors.Material;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Shared
 {

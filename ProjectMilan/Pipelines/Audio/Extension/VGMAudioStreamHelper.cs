@@ -2,6 +2,7 @@
 using System.IO.Compression;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Audio.Extension
 {

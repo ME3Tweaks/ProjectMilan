@@ -6,6 +6,7 @@ using ME3Tweaks.Wwiser.Model;
 using ME3Tweaks.Wwiser.Model.Hierarchy;
 using ME3Tweaks.Wwiser.Model.Hierarchy.Enums;
 using ProjectMilan.Utility;
+using ProjectMilanCore;
 using WwiseBankLEC = LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank;
 
 namespace ProjectMilan.Pipelines.Audio;

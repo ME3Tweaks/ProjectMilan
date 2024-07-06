@@ -7,10 +7,10 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
-using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.MP4NewEnemies;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Utility;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Weapons
 {

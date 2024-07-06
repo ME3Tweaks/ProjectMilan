@@ -1,15 +1,5 @@
 ﻿using System.Diagnostics;
-using System.Globalization;
-using LegendaryExplorerCore.Helpers;
-using LegendaryExplorerCore.Kismet;
-using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
-using LegendaryExplorerCore.Unreal;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.UnrealScript;
-using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using Newtonsoft.Json;
-using ProjectMilan;
 
 namespace ME3TweaksModManager.modmanager.objects.mod.merge.v1
 {

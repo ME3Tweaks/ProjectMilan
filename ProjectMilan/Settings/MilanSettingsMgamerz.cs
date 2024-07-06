@@ -1,21 +1,59 @@
-﻿// Comment this out if we are in a location that 
-// is not our standard network
-//#define NETWORKED
-
-using ProjectMilan.Pipelines;
+﻿using ProjectMilan.Pipelines;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Settings
 {
     // Settings for Mgamerz' system build
     internal class MilanSettingsMgamerz : IMilanSettings
     {
-#if NETWORKED
-        public string OutputModPath { get; set; } = $@"Z:\ModLibrary\LE3\Project Milan\{MilanShared.DLC_NAME}";
-        public string InputSyncPath { get; set; } = @"Z:\ModLibrary\LE3\Project Milan\MilanSync";
-#else
-        public string OutputModPath { get; set; } = $@"E:\LocalModLibrary\LE3\Project Milan\{MilanShared.DLC_NAME}";
-        public string InputSyncPath { get; set; } = @"E:\LocalModLibrary\LE3\Project Milan\MilanSync";
-#endif
+        private string _outputModPath;
+
+        public string OutputModPath
+        {
+            get
+            {
+                if (_outputModPath != null)
+                    return _outputModPath;
+                var networkedPath = $@"Z:\ModLibrary\LE3\Project Milan\{MilanShared.DLC_NAME}";
+                if (Directory.Exists(networkedPath))
+                {
+                    _outputModPath = networkedPath;
+                    return _outputModPath;
+                }
+
+                _outputModPath = $@"E:\LocalModLibrary\LE3\Project Milan\{MilanShared.DLC_NAME}";
+                return _outputModPath;
+            }
+            set
+            {
+                _outputModPath = value;
+            }
+        }
+
+        private string _inputSyncPath;
+
+        public string InputSyncPath
+        {
+            get
+            {
+                if (_inputSyncPath != null)
+                    return _inputSyncPath;
+                var networkedPath = @"Z:\ModLibrary\LE3\Project Milan\MilanSync";
+                if (Directory.Exists(networkedPath))
+                {
+                    _inputSyncPath = networkedPath;
+                    return _inputSyncPath;
+                }
+
+                _inputSyncPath = @"E:\LocalModLibrary\LE3\Project Milan\MilanSync";
+                return _inputSyncPath;
+            }
+            set
+            {
+                _inputSyncPath = value;
+            }
+        }
+
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunNonStartupPipeline { get; set; } = true;
         public bool RunMP4EnemiesPipeline { get; set; } = true;

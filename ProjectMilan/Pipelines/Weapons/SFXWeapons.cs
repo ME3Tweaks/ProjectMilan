@@ -7,9 +7,8 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
-using ProjectMilan.Pipelines.Kits;
-using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Weapons
 {

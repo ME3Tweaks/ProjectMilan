@@ -8,6 +8,7 @@ using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ProjectMilan.Pipelines.Finalize;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Verify
 {

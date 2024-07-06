@@ -14,6 +14,7 @@ using ProjectMilan.Pipelines.Verify;
 using ProjectMilan.Pipelines.Weapons;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
+using ProjectMilanCore;
 using Serilog;
 
 // MAKE SURE YOU SET YOUR SETTINGS PATH IN YOUR RUN CONFIGURATION
@@ -30,16 +31,7 @@ namespace ProjectMilan
         /// The loaded settings configuration
         /// </summary>
         public static IMilanSettings Settings;
-
-        public static readonly MELocalization[] SupportedVOLanguages = new[]
-        {
-            MELocalization.INT,
-            MELocalization.FRA,
-            MELocalization.DEU,
-            MELocalization.ITA,
-            // Any other languages that had VO?
-        };
-
+        
         static void Main(string[] args)
         {
             // Parse command line options. If it succeeds, run the specified delegate
@@ -94,6 +86,9 @@ namespace ProjectMilan
                 MilanLog.Error($"Must point your settings at your mod library version of the DLC folder! Make sure you import the template from December 11 2023 (or newer) in #links.");
                 Environment.Exit(1);
             }
+
+            // Map settings into Core library.
+            BaseBuildSettings.OutputModPath = Settings.OutputModPath;
         }
 
         private static IMilanSettings LoadSettingsConfig(CLIOptions cliOptions) => cliOptions.Config.ToLower() switch
@@ -134,7 +129,7 @@ namespace ProjectMilan
 
             // Post pipelines require additional items to load
             // We load them here so you don't find out later and have to run it again
-            MilanShared.EnsureVGMStreamAvailable();
+            // MilanShared.EnsureVGMStreamAvailable();
             WwiseProjectRebuild.EnsureWwise7110();
 
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
