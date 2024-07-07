@@ -7,7 +7,7 @@ namespace ProjectMilan.Pipelines.Mod
 
     public static class ModResynthesis
     {
-        private const string LOG_CATEGORY = @"Milan-Resynthesis";
+        private const string LOG_CATEGORY = @"MILAN-Resynthesis";
 
         public static void RunPipeline()
         {

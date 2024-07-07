@@ -179,7 +179,7 @@ namespace ProjectMilan.Pipelines.Startups
     /// </summary>
     internal class NonStartupPipeline
     {
-        private const string LOG_CATEGORY = @"Milan-NonStartup";
+        private const string LOG_CATEGORY = @"MILAN-NonStartup";
         public static void RunPipeline()
         {
             var vars = new NonStartupPipelineVars()
