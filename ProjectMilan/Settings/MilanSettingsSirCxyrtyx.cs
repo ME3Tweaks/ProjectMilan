@@ -12,6 +12,8 @@ namespace ProjectMilan.Settings
         public bool RunMP4EnemiesPipeline { get; set; } = true;
         public bool RunKitsPipeline { get; set; }
         public bool RunWeaponsPipeline { get; set; }
+        public bool RunRejectionPipeline { get; set; }
+        public bool RunRedemptionPipeline { get; set; }
         public bool RunLevelsPipeline { get; set; }
         public bool RunAudioPipeline { get; set; }
         public bool RunTexturePipeline { get; set; }

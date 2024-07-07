@@ -1,4 +1,5 @@
-﻿using System.Timers;
+﻿using System.Diagnostics;
+using System.Timers;
 using CommandLine;
 using LegendaryExplorerCore;
 using LegendaryExplorerCore.Packages;
@@ -15,6 +16,8 @@ using ProjectMilan.Pipelines.Verify;
 using ProjectMilan.Pipelines.Weapons;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
+using ProjectMilan_ExtraContent.Redemption;
+using ProjectMilan_ExtraContent.Rejects;
 using ProjectMilanCore;
 using Serilog;
 using Timer = System.Timers.Timer;
@@ -169,6 +172,10 @@ namespace ProjectMilan
 
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
+            RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
+            RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipeline, "Redemption"); // Builds Redemption Maps
+
+
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
             RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
@@ -202,8 +209,10 @@ namespace ProjectMilan
             if (shouldRunPipeline)
             {
                 MilanLog.Information($"Running pipeline: {pipelineName}");
+                Stopwatch sw = Stopwatch.StartNew();
                 runPipeline();
-                MilanLog.Information($"Pipeline finished: {pipelineName}");
+                sw.Stop();
+                MilanLog.Information($"Pipeline finished: {pipelineName} took {sw.ElapsedMilliseconds}ms");
             }
             else
             {

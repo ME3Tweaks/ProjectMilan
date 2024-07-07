@@ -9,6 +9,7 @@
     /// </summary>
     public interface IMilanSettings
     {
+        #region Pathing
         /// <summary>
         /// The base output folder for Project Milan. It should point to a DLC_MOD_Milan folder - in game DLC dir, or in mod manager. Contents will be deleted.
         /// </summary>
@@ -18,12 +19,18 @@
         /// Directory where the source data is located that is synchronized from ME3Tweaks.com. The contents of this folder will be updated when ProjectMilan runs.
         /// </summary>
         public string InputSyncPath { get; set; }
+        #endregion
 
-        // Pipelines
+        #region Content pipelines
         /// <summary>
-        /// If persistent classes should be built
+        /// If persistent classes should be built. You almost always want this on.
         /// </summary>
         bool RunMPCommonPipeline { get; set; }
+
+        /// <summary>
+        /// If the NonStartup pipeline should run - things like horde VO, objectives, etc. You typically will need this for MP to work.
+        /// </summary>
+        bool RunNonStartupPipeline { get; set; }
 
         /// <summary>
         /// If Retaliation enemies should be ported that require custom changes
@@ -46,6 +53,19 @@
         bool RunWeaponsPipeline { get; set; }
 
         /// <summary>
+        /// If Rejection enemies content should be built
+        /// </summary>
+        bool RunRejectionPipeline { get; set; }
+
+        /// <summary>
+        /// If Redemption map content should be built
+        /// </summary>
+        bool RunRedemptionPipeline { get; set; }
+
+        #endregion
+
+        #region Content cleanup and optimization
+        /// <summary>
         /// If audio should be extracted and converted for use in the resulting mod
         /// </summary>
         bool RunAudioPipeline { get; set; }
@@ -54,7 +74,13 @@
         /// If TFC data should be built for the resulting mod
         /// </summary>
         bool RunTexturePipeline { get; set; }
+        /// <summary>
+        /// If packages should be reconstructed at the end of pipelines to be more vanilla-organized.
+        /// </summary>
+        bool RunResynthesis { get; set; }
+        #endregion
 
+        #region Performance tuning
         /// <summary>
         /// Maximum number of threads to run. Tune to your system.
         /// </summary>
@@ -64,15 +90,6 @@
         /// If the mod folder should not be deleted
         /// </summary>
         bool DontDeleteModFolder { get; set; }
-
-        /// <summary>
-        /// If the NonStartup pipeline should run - things like horde VO, objectives, etc.
-        /// </summary>
-        bool RunNonStartupPipeline { get; set; }
-
-        /// <summary>
-        /// If packages should be reconstructed at the end of pipelines to be more vanilla-organized.
-        /// </summary>
-        bool RunResynthesis { get; set; }
+        #endregion
     }
 }

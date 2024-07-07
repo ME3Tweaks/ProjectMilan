@@ -10,6 +10,8 @@
         public bool RunMP4EnemiesPipeline { get; set; } = fullBuild;
         public bool RunKitsPipeline { get; set; } = fullBuild;
         public bool RunWeaponsPipeline { get; set; } = fullBuild;
+        public bool RunRejectionPipeline { get; set; }
+        public bool RunRedemptionPipeline { get; set; }
         public bool RunLevelsPipeline { get; set; } = fullBuild;
         public bool RunAudioPipeline { get; set; } = false;
         public bool RunTexturePipeline { get; set; } = fullBuild;
