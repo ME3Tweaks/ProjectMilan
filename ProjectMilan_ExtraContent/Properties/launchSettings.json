@@ -1,0 +1,42 @@
+{
+  "profiles": {
+    "ProjectMilanEC - SirCxyrtyx": {
+      "commandName": "Project",
+      "commandLineArgs": "--config SirCxyrtyx"
+    },
+    "ProjectMilanEC - Kinkojiro": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Kinkojiro"
+    },
+    "ProjectMilanEC - HenBagle": {
+      "commandName": "Project",
+      "commandLineArgs": "--config HenBagle"
+    },
+    "ProjectMilanEC - d00t": {
+      "commandName": "Project",
+      "commandLineArgs": "--config d00t"
+    },
+    "ProjectMilanEC - Mgamerz Laptop": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Mgamerz",
+      "environmentVariables": {
+        "MAXTHREADS": "4"
+      },
+      "nativeDebugging": false
+    },
+    "ProjectMilanEC - Mgamerz Desktop": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Mgamerz",
+      "environmentVariables": {
+        "MAXTHREADS": "12"
+      }
+    },
+    "ProjectMilanEC - DropTheSquid": {
+      "commandName": "Project",
+      "commandLineArgs": "--config DropTheSquid",
+      "environmentVariables": {
+        "MAXTHREADS": "18"
+      }
+    }
+  }
+}

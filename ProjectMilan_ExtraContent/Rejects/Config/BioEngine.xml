@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioEngine" name="bioengine.ini" source="..\..\biogame\config\bioengine.ini">
+	<Sections>
+		<Section name="sfxgame.sfxengine">
+			<Property name="dynamicloadmapping">
+				<Value type="3">(ObjectName="SFXGUIMPImages_Milan_Rejects.OptEmyRejects",SeekFreePackageName="SFXGUIMPImages_Milan_Rejects")</Value>
+
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Specialist",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Heavy",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Sniper",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Rampart",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Adjutant",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Forerunner",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Catlas",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Executioner",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.Agent",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.GethAssassin",SeekFreePackageName="MergedContent", bReplicate=true)</Value>m
+			</Property>
+		</Section>
+	</Sections>
+</CoalesceAsset>

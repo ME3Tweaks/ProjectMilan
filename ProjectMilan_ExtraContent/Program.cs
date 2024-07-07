@@ -8,6 +8,7 @@ using ProjectMilan_ExtraContent.Settings;
 using Serilog;
 using Timer = System.Timers.Timer;
 using System.Timers;
+using ProjectMilan_ExtraContent.Redemption;
 using ProjectMilan_ExtraContent.Rejects;
 using ProjectMilanCore;
 
@@ -74,7 +75,7 @@ namespace ProjectMilan_ExtraContent
             }
 
             // Initialize LEC
-            LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.ME3, MEGame.LE3]);
+            LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.LE3]);
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
             try
             {
@@ -105,13 +106,13 @@ namespace ProjectMilan_ExtraContent
             if (Settings.RunRejectionPipeline)
             {
                 BaseBuildSettings.OutputModPath = Settings.OutputModPathREJ;
-                RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, @"Rejection");
+                RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipelineEC, @"Rejection");
             }
 
             if (Settings.RunRedemptionPipeline)
             {
                 BaseBuildSettings.OutputModPath = Settings.OutputModPathRED;
-                RunPipeline(Settings.RunRedemptionPipeline, RejectsPipeline.RunPipeline, @"Redemption");
+                RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipelineEC, @"Redemption");
             }
         }
 
@@ -159,7 +160,7 @@ namespace ProjectMilan_ExtraContent
                 var moddescCheck = Path.Combine(Settings.OutputModPathREJ, "..", "moddesc.ini");
                 if (!File.Exists(moddescCheck))
                 {
-                    MilanLog.Error($"Must point your settings at your mod library version of the Rejects DLC development folder!");
+                    MilanLog.Error($"Must point your settings at your mod library version of the Rejects DLC development folder ({MilanShared.REJECTS_DLC_NAME})!");
                     Environment.Exit(1);
                 }
             }
@@ -175,7 +176,7 @@ namespace ProjectMilan_ExtraContent
                 var moddescCheck = Path.Combine(Settings.OutputModPathRED, "..", "moddesc.ini");
                 if (!File.Exists(moddescCheck))
                 {
-                    MilanLog.Error($"Must point your settings at your mod library version of the Redemption DLC development folder!");
+                    MilanLog.Error($"Must point your settings at your mod library version of the Redemption DLC development folder ({MilanShared.REDEMPTION_DLC_NAME})!");
                     Environment.Exit(1);
                 }
             }

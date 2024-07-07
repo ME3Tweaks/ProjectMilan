@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioInput" name="bioinput.ini" source="..\..\biogame\config\bioinput.ini">
+	<Sections>
+	</Sections>
+</CoalesceAsset>

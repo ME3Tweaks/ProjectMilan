@@ -13,11 +13,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Redemption\" />
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <Folder Include="Rejects\Assets\Textures\GUI\" />
+    <Folder Include="Rejects\Config\" />
+    <Folder Include="Rejects\TLK\" />
   </ItemGroup>
 
 </Project>
