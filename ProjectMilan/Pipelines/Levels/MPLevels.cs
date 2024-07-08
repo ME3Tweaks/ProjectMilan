@@ -239,6 +239,8 @@ namespace ProjectMilan.Pipelines.Levels
 
             int lskIndex = 1;
             var destPersistentLevel = levelPipeline.LE3BioP.GetLevel();
+
+            // Add all LSKs for items that are in our level cache
             foreach (var ol in levelPipeline.ME3Packages.Where(x => x.Value != levelPipeline.ME3BioP))
             {
                 var itemToClone = levelPipeline.ME3BioP.Exports.FirstOrDefault(x => x.ClassName == @"LevelStreamingKismet");

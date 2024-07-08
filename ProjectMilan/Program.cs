@@ -2,6 +2,8 @@
 using System.Timers;
 using CommandLine;
 using LegendaryExplorerCore;
+using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
@@ -36,7 +38,7 @@ namespace ProjectMilan
         /// The loaded settings configuration
         /// </summary>
         public static IMilanSettings Settings;
-        
+
         static void Main(string[] args)
         {
             // Parse command line options. If it succeeds, run the specified delegate
@@ -56,8 +58,16 @@ namespace ProjectMilan
             MilanLog.CreateLogger();
             MilanLog.Information("Welcome to Project Milan");
             Settings = LoadSettingsConfig(obj);
-
             VerifySettings();
+
+            Console.WriteLine("-------------------------------");
+            Console.WriteLine("Install mod when compiling completes [Y/N]? (5 second timeout)");
+            var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+            if ("Y".CaseInsensitiveEquals(input))
+            {
+                InstallModOnCompletion = true;
+                MilanLog.Information("Installing mod on completion of compile");
+            }
 
             // Cleanup output directory before we start
             if (!Settings.DontDeleteModFolder)
@@ -90,6 +100,8 @@ namespace ProjectMilan
             }
         }
 
+        public static bool InstallModOnCompletion { get; set; }
+
         private static void keepSystemAwake(object sender, ElapsedEventArgs e)
         {
             SystemSleepManager.PreventSleep(@"Compiling");
@@ -108,7 +120,7 @@ namespace ProjectMilan
             var moddescCheck = Path.Combine(Settings.OutputModPath, "..", "moddesc.ini");
             if (!File.Exists(moddescCheck))
             {
-                MilanLog.Error($"Must point your settings at your mod library version of the DLC folder! Make sure you import the template from December 11 2023 (or newer) in #links.");
+                MilanLog.Error($"Must point your settings at your mod library version of the DLC folder! Make sure you import the template from July 1 2024 (or newer) in #links.");
                 Environment.Exit(1);
             }
 
@@ -195,6 +207,9 @@ namespace ProjectMilan
 
             // Patch for multi instance
             MultiInstance.PatchForMultiInstance();
+
+            if (InstallModOnCompletion)
+                ModManagerIntegration.RequestModInstallation(Path.Combine(Settings.OutputModPath, "..", "moddesc.ini"));
         }
 
         /// <summary>
