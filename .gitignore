@@ -370,5 +370,7 @@ FodyWeavers.xsd
 /ProjectMilan/Pipelines/Audio/Wwise/Milan
 /ProjectMilan/Pipelines/Startups/MPCommon/MergeMod/Staging
 /ProjectMilan/Pipelines/Levels/BioP_MPGeth/Donors/Auto/
+/ProjectMilan/Pipelines/Levels/BioP_MPHosp/Donors/Auto/
 /ProjectMilan/Pipelines/Levels/BioP_MPMoon/Donors/Auto/
+/ProjectMilan/Pipelines/Levels/BioP_MPSlum/Donors/Auto/
 /ProjectMilan/Pipelines/Mod/Precomputed/Testing_GitIgnored/

@@ -25,12 +25,12 @@ namespace ProjectMilan.Pipelines.Levels
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
                 // Vanilla 
-                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Glacier
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Reactor
+                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // White
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Ghost
                 // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
-                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Dagger
 
 
 
