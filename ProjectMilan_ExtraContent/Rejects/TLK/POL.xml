@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tlkFile TLKToolVersion="4.0.0.0">
+    <!--Male entries section begin-->
+    <String id="649162">Nie możesz dołączyć do gry znajomego, gdyż używacie różnych wersji gry.
+
+Upewnij się, że wszyscy gracze posiadają ten sam zestaw DLC i wszystkie priorytety montowania są te same.</String>
+    <String id="13250200">Snajper CAT6</String>
+    <String id="13250201">Tarczownik CAT6</String>
+    <String id="13250202">Specjalista CAT6</String>
+    <String id="13250203">Sonda Dysrupcyjna</String>
+    <String id="13250204">Atlas CAT6</String>
+    <String id="13250205">Adiutant</String>
+    <String id="13250206">Mech Obronny</String>
+    <String id="13250207">Tajniak CAT6</String>
+    <String id="13250208">Egzekutor CAT6</String>
+    <String id="13250210">Geth Zabójca</String>
+    <String id="13250215">Odrzuceni</String>
+    <String id="13250216">ODRZUCENI</String>
+    <String id="13250217">Agent Cerberusa</String>
+    <String id="13250220">Mass Effect 3: Rejection</String>
+    <String id="13250221">DLC_MOD_MP_Extras</String>
+    <String id="13250222">pl-pl</String>
+    <String id="13250223">Male</String>
+    <String id="13250224">Female</String>
+    <!--Female entries section end-->
+</tlkFile>

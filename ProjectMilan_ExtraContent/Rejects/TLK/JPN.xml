@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tlkFile TLKToolVersion="4.0.0.0">
+    <!--Male entries section begin-->
+    <String id="649162">ゲームのバージョンが異なるため、友達のゲームに参加できません。
+
+ゲームの参加者全員が同じマルチプレイヤー用のDLCをインストールしているか、またはマウント優先が同じかをご確認ください。</String>
+    <String id="13250200">CAT6スナイパー</String>
+    <String id="13250201">CAT6ヘビー</String>
+    <String id="13250202">CAT6スペシャリスト</String>
+    <String id="13250203">ディスラプション・ドローン</String>
+    <String id="13250204">CAT6アトラス</String>
+    <String id="13250205">副官</String>
+    <String id="13250206">城壁メカ</String>
+    <String id="13250207">CAT6フォアランナー</String>
+    <String id="13250208">CAT6エグゼクティオナー</String>
+    <String id="13250210">ゲスアサシン</String>
+    <String id="13250215">アウトローズ</String>
+    <String id="13250216">アウトローズ</String>
+    <String id="13250217">サーベラスのエージェント</String>
+    <String id="13250220">Mass Effect 3: Rejection</String>
+    <String id="13250221">DLC_MOD_MP_Extras</String>
+    <String id="13250222">ja</String>
+    <String id="13250223">Male</String>
+    <String id="13250224">Female</String>
+    <!--Female entries section end-->
+</tlkFile>

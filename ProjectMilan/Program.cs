@@ -47,6 +47,10 @@ namespace ProjectMilan
 
         private static Timer _keepAwakeTimer = new Timer(30 * 1000); // 30s interval
 
+        /// <summary>
+        /// For printing out at the end
+        /// </summary>
+        private static Dictionary<string, long> pipelineTimes = new();
 
         /// <summary>
         /// Initialize Project Milan
@@ -208,6 +212,12 @@ namespace ProjectMilan
             // Patch for multi instance
             MultiInstance.PatchForMultiInstance();
 
+            MilanLog.Information($"Pipeline timings:");
+            foreach (var stat in pipelineTimes)
+            {
+                MilanLog.Information($"\t{stat.Key}:\t{stat.Value}ms");
+            }
+
             if (InstallModOnCompletion)
                 ModManagerIntegration.RequestModInstallation(Path.Combine(Settings.OutputModPath, "..", "moddesc.ini"));
         }
@@ -228,6 +238,7 @@ namespace ProjectMilan
                 runPipeline();
                 sw.Stop();
                 MilanLog.Information($"Pipeline finished: {pipelineName} took {sw.ElapsedMilliseconds}ms");
+                pipelineTimes[pipelineName] = sw.ElapsedMilliseconds;
             }
             else
             {

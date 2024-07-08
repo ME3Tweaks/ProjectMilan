@@ -12,6 +12,13 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.UnrealScript;
 using static ProjectMilan_ExtraContent.Rejects.RejectsPipeline;
 using ProjectMilanCore;
+using LegendaryExplorerCore.Coalesced.Config;
+using LegendaryExplorerCore.Coalesced;
+using System.Reflection.Metadata;
+using LegendaryExplorerCore.TLK.ME2ME3;
+using LegendaryExplorerCore.TLK;
+using Serilog;
+using System.Xml.Linq;
 
 namespace ProjectMilan_ExtraContent.Shared
 {
@@ -154,5 +161,88 @@ namespace ProjectMilan_ExtraContent.Shared
             EExtraContent.Redemption => 58765561,
             _ => 0,
         };
+
+
+        internal static void MergeTLK(EExtraContent content)
+        {
+            MilanLog.Information($"Merging TLK data", customPrefix: LOG_CATEGORY);
+            var locFileDir = Path.Combine(SharedECPipelines.ECPipelineRoot, content.ToString(), "TLK");
+            var locFiles = Directory.GetFiles(locFileDir, "*.xml");
+            foreach (var locFile in locFiles)
+            {
+                if (!Enum.TryParse<MELocalization>(Path.GetFileNameWithoutExtension(locFile), out var loc))
+                {
+                    MilanLog.Error($"Not a localized XML in TLK folder: {Path.GetFileName(locFile)}", customPrefix: LOG_CATEGORY);
+                    continue;
+                }
+
+                // Find matching TLK.
+                var destTLKPath = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"{Path.GetFileName(BaseBuildSettings.OutputModPath)}_{loc}.tlk");
+                if (!File.Exists(destTLKPath))
+                {
+                    MilanLog.Warning($"Destination TLK does not exist, will not merge into it: {destTLKPath}");
+                    continue;
+                }
+
+                MilanLog.Information($"  Merging {Path.GetFileName(destTLKPath)}", customPrefix: LOG_CATEGORY);
+
+                var destTlk = new ME2ME3TalkFile(destTLKPath);
+                var newStrings = GetStringRefsFromXml(locFile);
+
+                // Overwrite strings.
+                foreach (var str in newStrings)
+                {
+                    // Very slow... really need a dictionary for this
+                    var existing = destTlk.StringRefs.FirstOrDefault(x => x.StringID == str.StringID);
+                    if (existing != null)
+                    {
+                        existing.Data = str.Data;
+                    }
+                    else
+                    {
+                        destTlk.StringRefs.Add(str);
+                    }
+                }
+
+                HuffmanCompression.SaveToTlkFile(destTLKPath, destTlk.StringRefs);
+            }
+
+        }
+
+        // From M3.
+        private static List<TLKStringRef> GetStringRefsFromXml(string xmlfile)
+        {
+            List<TLKStringRef> strings = new List<TLKStringRef>();
+
+            XDocument doc = XDocument.Load(xmlfile);
+            var substrings = doc.Root.Descendants(@"String");
+            var position = 0;
+            foreach (var substr in substrings)
+            {
+                var id = int.Parse(substr.Attribute(@"id").Value);
+                var data = substr.Value;
+                if (id > 0) data += '\0';
+                strings.Add(new TLKStringRef(id, data));
+                position++;
+            }
+
+            return strings;
+        }
+
+
+        internal static void MergeConfig(EExtraContent content)
+        {
+            MilanLog.Information($"Merging config file", customPrefix: LOG_CATEGORY);
+            var configDest = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"Default_{Path.GetFileName(BaseBuildSettings.OutputModPath)}.bin"); // Points to output directory .bin, could be milan or R2
+            var configSourceF = Path.Combine(SharedECPipelines.ECPipelineRoot, content.ToString(), "Config");
+            var configSourceManifest = Path.Combine(configSourceF, $"Default_{GetDLCFolderName(content)}.xml"); // Always will be R2/R3 data
+            var ms = new MemoryStream();
+            CoalescedConverter.ConvertToBin(configSourceManifest, null, outStream: ms);
+            ms.Position = 0;
+            var sourceAssetBundle = ConfigAssetBundle.FromSingleStream(MEGame.LE3, ms);
+            var destAssetBundle = ConfigAssetBundle.FromSingleFile(MEGame.LE3, configDest);
+            sourceAssetBundle.MergeInto(destAssetBundle);
+            destAssetBundle.CommitAssets(configDest);
+        }
     }
 }

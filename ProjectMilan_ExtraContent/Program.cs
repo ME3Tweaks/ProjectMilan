@@ -1,4 +1,5 @@
-﻿using CommandLine;
+﻿using System.Diagnostics;
+using CommandLine;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore;
 using ProjectMilan;
@@ -98,6 +99,11 @@ namespace ProjectMilan_ExtraContent
         }
 
         /// <summary>
+        /// For printing out at the end
+        /// </summary>
+        private static Dictionary<string, long> pipelineTimes = new();
+
+        /// <summary>
         /// Executes the pipelines for Milan - Extra Content
         /// </summary>
         private static void RunPipelines()
@@ -114,6 +120,12 @@ namespace ProjectMilan_ExtraContent
                 BaseBuildSettings.OutputModPath = Settings.OutputModPathRED;
                 RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipelineEC, @"Redemption");
             }
+
+            MilanLog.Information($"Pipeline timings:");
+            foreach (var stat in pipelineTimes)
+            {
+                MilanLog.Information($"\t{stat.Key}:\t{stat.Value}ms");
+            }
         }
 
         /// <summary>
@@ -127,8 +139,11 @@ namespace ProjectMilan_ExtraContent
             if (shouldRunPipeline)
             {
                 MilanLog.Information($"Running pipeline: {pipelineName}");
+                var sw = Stopwatch.StartNew();
                 runPipeline();
+                sw.Stop();
                 MilanLog.Information($"Pipeline finished: {pipelineName}");
+                pipelineTimes[pipelineName] = sw.ElapsedMilliseconds;
             }
             else
             {

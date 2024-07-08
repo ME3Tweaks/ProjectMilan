@@ -1,22 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <tlkFile TLKToolVersion="4.0.0.0">
     <!--Male entries section begin-->
-
-	<!-- From Rejection DLC (ME3) -->
-	<String id="13250200">CAT6 Sniper</String>
-    <String id="13250201">CAT6 Heavy</String>
-    <String id="13250202">CAT6 Specialist</String>
-    <String id="13250203">Disruption Drone</String>
-    <String id="13250204">CAT6 Atlas</String>
-    <String id="13250205">Adjutant</String>
-    <String id="13250206">Rampart Mech</String>
-    <String id="13250207">CAT6 Forerunner</String>
-    <String id="13250208">CAT6 Executioner</String>
-    <String id="13250210">Geth Assassin</String>
-    <String id="13250215">Rejects</String>
-    <String id="13250216">REJECTS</String>
-    <String id="13250217">Cerberus Agent</String>
-
 	<!-- Project Milan Strings -->
     <String id="49875622">Project Milan DLC</String>
     <String id="49875623">DLC_MOD_ProjectMilan</String>

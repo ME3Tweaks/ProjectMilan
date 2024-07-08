@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tlkFile TLKToolVersion="4.0.0.0">
+    <!--Male entries section begin-->
+    <String id="649162">No es posible unirse a la partida de su amigo porque las versiones del juego utilizadas son diferentes.
+
+Asegurése de que todos los jugadores tienen correctamente instalados los mismo DLC del modo multijugador y que el orden de montaje es idéntico.</String>
+    <String id="13250200">Francotiradora de CAT6</String>
+    <String id="13250201">Soldado Pesado de CAT6 </String>
+    <String id="13250202">Especialista de CAT6</String>
+    <String id="13250203">Dron Disruptor</String>
+    <String id="13250204">Atlas de CAT6</String>
+    <String id="13250205">Ayudante</String>
+    <String id="13250206">Meca Baluarte</String>
+    <String id="13250207">Reconocimiento de CAT6</String>
+    <String id="13250208">Ejecutor de CAT6</String>
+    <String id="13250210">Asesino Geth</String>
+    <String id="13250215">Renegados</String>
+    <String id="13250216">RENEGADOS</String>
+    <String id="13250217">Agente de Cerberus</String>
+    <String id="13250220">Mass Effect 3: Rejection</String>
+    <String id="13250221">DLC_MOD_MP_Extras</String>
+    <String id="13250222">es-es</String>
+    <String id="13250223">Male</String>
+    <String id="13250224">Female</String>
+    <!--Female entries section end-->
+</tlkFile>

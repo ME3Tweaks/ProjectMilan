@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tlkFile TLKToolVersion="4.0.0.0">
+    <!--Male entries section begin-->
+    <String id="649162">Non puoi partecipare alla partita del tuo amico poichè non state usando la stessa versione.
+
+Assicurati che tutti i giocatori abbiano gli stessi DLC e che le mount priorities siano le stesse.</String>
+    <String id="13250200">CAT6 Cecchino</String>
+    <String id="13250201">CAT6 Pesante</String>
+    <String id="13250202">CAT6 Specialista</String>
+    <String id="13250203">Drone Disruttore</String>
+    <String id="13250204">CAT6 Atlas</String>
+    <String id="13250205">Aiutante</String>
+    <String id="13250206">Mech Baluardo</String>
+    <String id="13250207">CAT6 Scout</String>
+    <String id="13250208">CAT6 Esecutore</String>
+    <String id="13250210">Assassino Geth</String>
+    <String id="13250215">Reietti</String>
+    <String id="13250216">REIETTI</String>
+    <String id="13250217">Agente di Cerberus</String>
+    <String id="13250220">Mass Effect 3: Rejection</String>
+    <String id="13250221">DLC_MOD_MP_Extras</String>
+    <String id="13250222">it-it</String>
+    <String id="13250223">Male</String>
+    <String id="13250224">Female</String>
+    <!--Female entries section end-->
+</tlkFile>

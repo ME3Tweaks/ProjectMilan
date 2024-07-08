@@ -90,8 +90,8 @@ namespace ProjectMilan_ExtraContent.Rejects
 
         private static void InternalRunPipeline(RejectVars vars)
         {
-            MergeConfig(vars);
-            MergeTLK(vars);
+            SharedECPipelines.MergeConfig(EExtraContent.Rejects);
+            SharedECPipelines.MergeTLK(EExtraContent.Rejects);
             GenerateGUIPackage(vars);
             GenerateMergedContent(vars);
             SplitEnemyPackages(vars);
@@ -112,28 +112,7 @@ namespace ProjectMilan_ExtraContent.Rejects
             bannerExp.WriteProperty(new BoolProperty(false, "sRGB"));
             pcc.Save();
         }
-
-        private static void MergeTLK(RejectVars vars)
-        {
-            MilanLog.Information($"Merging TLK data", customPrefix: LOG_CATEGORY);
-
-        }
-
-        private static void MergeConfig(RejectVars vars)
-        {
-            MilanLog.Information($"Merging config file", customPrefix: LOG_CATEGORY);
-            var configDest = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"Default_{Path.GetFileName(BaseBuildSettings.OutputModPath)}.bin");
-            var configSourceF = Path.Combine(SharedECPipelines.ECPipelineRoot, "Rejects", "Config");
-            var configSourceManifest = Path.Combine(configSourceF, "Default_DLC_MOD_PMR2.xml");
-            var ms = new MemoryStream();
-            CoalescedConverter.ConvertToBin(configSourceManifest, null, outStream: ms);
-            ms.Position = 0;
-            var sourceAssetBundle = ConfigAssetBundle.FromSingleStream(MEGame.LE3, ms);
-            var destAssetBundle = ConfigAssetBundle.FromSingleFile(MEGame.LE3, configDest);
-            sourceAssetBundle.MergeInto(destAssetBundle);
-            destAssetBundle.CommitAssets(configDest);
-        }
-
+        
         /// <summary>
         /// Generates a single package file that has all assets for all enemies, so that one change affects them all. Moves and renames all archetype objects accordingly.
         /// </summary>
