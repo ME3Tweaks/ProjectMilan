@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LegendaryExplorerCore.Audio;
 using LegendaryExplorerCore.TLK.ME2ME3;
 using LegendaryExplorerCore.TLK;
 using Serilog;
@@ -175,6 +176,32 @@ namespace ProjectMilan_ExtraContent.Shared
                 {
 
                 }
+            });
+        }
+
+        /// <summary>
+        /// Since we are pulling in content from SP DLC we must compact the TFC or the texture data will not be valid.
+        /// </summary>
+        /// <param name="content"></param>
+        public static void CompactAFC(EExtraContent content)
+        {
+            // Step 2: TFC Compactor
+            var inputFolder = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole");
+            var staging = Directory.CreateDirectory(Path.Combine(inputFolder, "Staging")).FullName;
+            MilanLog.Information("Scanning for audio references", customPrefix: LOG_CATEGORY);
+            var referencedAudio = AFCCompactor.GetReferencedAudio(MEGame.LE3, inputFolder,
+            (done, total) =>
+            {
+                    MilanLog.Information($"Progress: {done}/{total}", customPrefix: LOG_CATEGORY);
+                });
+
+            MilanLog.Information("Compacting AFC", customPrefix: LOG_CATEGORY);
+            // I don't know if it matters but technically to follow game this should be split up into localized files.
+            AFCCompactor.CompactAFC(MEGame.LE3, inputFolder, $"{SharedECPipelines.GetDLCFolderName(content)}_Audio", 
+                referencedAudio.availableAFCReferences.Where(x=>x.AFCName.Contains("DLC_EXP", StringComparison.OrdinalIgnoreCase)).ToList(), null, 
+                (done, total) =>
+            {
+                MilanLog.Information($"Progress: {done}/{total}", customPrefix: LOG_CATEGORY);
             });
         }
     }
