@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LegendaryExplorerCore.Coalesced;
+﻿using LegendaryExplorerCore.Coalesced;
 using LegendaryExplorerCore.Coalesced.Config;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.Classes;
 using ProjectMilan;
-using ProjectMilan.Utility;
+using ProjectMilan_ExtraContent.Rejects.Enemies;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
 
@@ -32,12 +28,13 @@ namespace ProjectMilan_ExtraContent.Rejects
         public class RejectVars
         {
             public PackageCache Cache { get; set; } = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+
+            public readonly CaseInsensitiveDictionary<string> LoadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
+
         }
 
-        class RejectPawnSource
+        class RejectPawnSource : PortingAsset
         {
-            public string SourceFile { get; set; }
-            public string ArchetypeIFP { get; set; }
             public string Name { get; set; }
 
             /// <summary>
@@ -50,21 +47,21 @@ namespace ProjectMilan_ExtraContent.Rejects
 
         private static List<RejectPawnSource> PawnSources = new List<RejectPawnSource>([
             // First - assets that fail import resolution
-            new RejectPawnSource() { SourceFile = "SFXCharacterClass_Infiltrator.pcc", ArchetypeIFP = "BIOG_HMM_BC_A.HMM_BC_MeleeInfiltrator_BC_OmniInfiltrator", Name="InfiltratorMeleeAnim", IsSupportingObject = true},
-            new RejectPawnSource() { SourceFile = "BIO_COMMON.pcc", ArchetypeIFP = "Wwise_Generic_Foley._Play_foot_scuffs_short", Name="Foley1", IsSupportingObject = true},
-            new RejectPawnSource() { SourceFile = "SFXPawn_Husk.pcc", ArchetypeIFP = "Wwise_Generic_Foley.Play_foley_melee_hit_standard_flesh", Name="Foley2", IsSupportingObject = true},
+            new RejectPawnSource() { SourceFile = "SFXCharacterClass_Infiltrator.pcc", AssetIFP = "BIOG_HMM_BC_A.HMM_BC_MeleeInfiltrator_BC_OmniInfiltrator", Name="InfiltratorMeleeAnim", IsSupportingObject = true},
+            new RejectPawnSource() { SourceFile = "BIO_COMMON.pcc", AssetIFP = "Wwise_Generic_Foley._Play_foot_scuffs_short", Name="Foley1", IsSupportingObject = true},
+            new RejectPawnSource() { SourceFile = "SFXPawn_Husk.pcc", AssetIFP = "Wwise_Generic_Foley.Play_foley_melee_hit_standard_flesh", Name="Foley2", IsSupportingObject = true},
 
             // Second - pawns
-            new RejectPawnSource() { SourceFile = "SFXPawn_Demo.pcc", ArchetypeIFP = "Char_Enemies_Citadel.Demo", Name="Specialist"},
-            new RejectPawnSource() { SourceFile = "SFXPawn_Heavy.pcc", ArchetypeIFP = "Char_Enemies_Citadel.Heavy", Name="Heavy"},
-            new RejectPawnSource() { SourceFile = "SFXPawn_Sniper.pcc", ArchetypeIFP = "Char_Enemies_Citadel.Sniper", Name="Sniper"},
-            new RejectPawnSource() { SourceFile = "BioD_OMG003_303Trap.pcc", ArchetypeIFP = "Char_Omega_Enemies.Archetypes.Rampart_Combat", Name="Rampart"},
-            new RejectPawnSource() { SourceFile = "BioD_OMG003_125LitExtra.pcc", ArchetypeIFP = "Char_Omega_Enemies.Archetypes.Adjutant_Combat", Name="Adjutant"},
-            new RejectPawnSource() { SourceFile = "BioD_Cit004_270ShuttleBay1.pcc", ArchetypeIFP = "Char_Enemies_Citadel.Bosses.FemmeFatale", Name="Forerunner"},
-            new RejectPawnSource() { SourceFile = "BioD_Cit004_272MaleClone.pcc", ArchetypeIFP = "Char_Enemies_Citadel.Bosses.CloneShepardMale", Name="Executioner"},
-            new RejectPawnSource() { SourceFile = "BioD_Cit003_600MechEvent.pcc", ArchetypeIFP = "Char_Enemies_Citadel.Atlas", Name="Catlas"},
-            new RejectPawnSource() { SourceFile = "BioD_Cat004_625ProtoReaper.pcc", ArchetypeIFP = "BioChar_Cat004.Archetypes.Nemesis_Legion", Name="GethAssassin"},
-            new RejectPawnSource() { SourceFile = "BioD_Cat004_800KaiLeng.pcc", ArchetypeIFP = "char_enemies.Archetypes.Cerberus.KaiLeng", Name="Agent"},
+            new RejectPawnSource() { SourceFile = "SFXPawn_Demo.pcc", AssetIFP = "Char_Enemies_Citadel.Demo", Name="Specialist"},
+            new RejectPawnSource() { SourceFile = "SFXPawn_Heavy.pcc", AssetIFP = "Char_Enemies_Citadel.Heavy", Name="Heavy"},
+            new RejectPawnSource() { SourceFile = "SFXPawn_Sniper.pcc", AssetIFP = "Char_Enemies_Citadel.Sniper", Name="Sniper"},
+            new RejectPawnSource() { SourceFile = "BioD_OMG003_303Trap.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Rampart_Combat", Name="Rampart"},
+            new RejectPawnSource() { SourceFile = "BioD_OMG003_125LitExtra.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Adjutant_Combat", Name="Adjutant"},
+            new RejectPawnSource() { SourceFile = "BioD_Cit004_270ShuttleBay1.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.FemmeFatale", Name="Forerunner", PrePortingDelegate = RejectsForerunner.PrePort},
+            new RejectPawnSource() { SourceFile = "BioD_Cit004_272MaleClone.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.CloneShepardMale", Name="Executioner"},
+            new RejectPawnSource() { SourceFile = "BioD_Cit003_600MechEvent.pcc", AssetIFP = "Char_Enemies_Citadel.Atlas", Name="Catlas"},
+            new RejectPawnSource() { SourceFile = "BioD_Cat004_625ProtoReaper.pcc", AssetIFP = "BioChar_Cat004.Archetypes.Nemesis_Legion", Name="GethAssassin", PrePortingDelegate = RejectsGethAssassin.PrePort},
+            new RejectPawnSource() { SourceFile = "BioD_Cat004_800KaiLeng.pcc", AssetIFP = "char_enemies.Archetypes.Cerberus.KaiLeng", Name="Agent"},
             // FemClone Char_Enemies_Citadel.Bosses.CloneShepardFemale BioD_Cit004_273FemClone
         ]);
 
@@ -75,6 +72,7 @@ namespace ProjectMilan_ExtraContent.Rejects
         {
             ExtraContentInit.PrepareContent(EExtraContent.Rejects);
             RunPipeline();
+            ExtraContentInit.CompactTFC(EExtraContent.Rejects); // Milan main will handle this when it pulls everything together
         }
 
         /// <summary>
@@ -143,26 +141,26 @@ namespace ProjectMilan_ExtraContent.Rejects
             var mergedPackage = MEPackageHandler.CreateAndOpenPackage(MergedContentPath, MEGame.LE3);
             mergedPackage.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this is an MP subfile
 
-            var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
-
             // Pass 1: Import everything, without changes.
             foreach (var source in PawnSources)
             {
-                MilanLog.Information($"Porting {source.Name} into MergedContent", customPrefix: LOG_CATEGORY);
-                if (!loadedFiles.TryGetValue(source.SourceFile, out var path))
+                if (!vars.LoadedFiles.TryGetValue(source.SourceFile, out var path))
                 {
                     MilanLog.Error($@"Could not find source pawn package: {source.SourceFile}", customPrefix: LOG_CATEGORY);
                     continue;
                 }
 
                 var package = MEPackageHandler.OpenMEPackage(path);
-                var archetype = package.FindExport(source.ArchetypeIFP);
+                var archetype = package.FindExport(source.AssetIFP);
                 if (archetype == null)
                 {
-                    MilanLog.Error($@"Could not find source pawn archetype {source.ArchetypeIFP} in {source.SourceFile}", customPrefix: LOG_CATEGORY);
+                    MilanLog.Error($@"Could not find source pawn archetype {source.AssetIFP} in {source.SourceFile}", customPrefix: LOG_CATEGORY);
                     continue;
                 }
 
+                source.PrePortingDelegate?.Invoke(vars, package);
+
+                MilanLog.Information($"Porting {source.Name} into MergedContent", customPrefix: LOG_CATEGORY);
                 EntryExporter.ExportExportToPackage(archetype, mergedPackage, out _, vars.Cache, new RelinkerOptionsPackage() { Cache = vars.Cache, PortImportsMemorySafe = true, PortLocalizationImportsMemorySafe = false });
             }
 
@@ -170,9 +168,15 @@ namespace ProjectMilan_ExtraContent.Rejects
             var charEnemies = ExportCreator.CreatePackageExport(mergedPackage, "Char_Enemies_Milan", cache: vars.Cache);
             foreach (var source in PawnSources.Where(x => !x.IsSupportingObject))
             {
-                var archetypeObj = mergedPackage.FindExport(source.ArchetypeIFP);
+                var archetypeObj = mergedPackage.FindExport(source.AssetIFP);
                 archetypeObj.idxLink = charEnemies.UIndex;
                 archetypeObj.ObjectName = source.Name;
+            }
+
+            // Pass 3: Post porting delegates
+            foreach (var source in PawnSources.Where(x => !x.IsSupportingObject))
+            {
+                source.PostPortingDelegate?.Invoke(vars, mergedPackage.FindExport(source.RemappedArchetypeIFP));
             }
 
             mergedPackage.Save();

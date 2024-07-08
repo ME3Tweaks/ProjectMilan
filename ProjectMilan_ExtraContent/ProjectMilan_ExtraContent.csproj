@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Rejects\Assets\MeshPackages\" />
     <Folder Include="Rejects\Assets\Textures\GUI\" />
     <Folder Include="Rejects\Config\" />
     <Folder Include="Rejects\TLK\" />

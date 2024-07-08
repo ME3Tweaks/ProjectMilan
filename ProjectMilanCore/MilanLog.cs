@@ -1,4 +1,5 @@
 ﻿using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using Serilog;
 
 // Ported from ME3TweaksCore
@@ -162,6 +163,14 @@ namespace ProjectMilan
 #endif
 
                 .CreateLogger();
+        }
+
+        public static void LogUSCErrors(MessageLog log)
+        {
+            foreach (var msg in log.AllErrors)
+            {
+                MilanLog.Error(msg.Message, customPrefix: @"UnrealScriptCompiler");
+            }
         }
     }
 }

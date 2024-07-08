@@ -3,7 +3,7 @@
 	<Sections>
 		<Section name="sfxgamempcontent.sfxwave_horde">
 			<Property name="enemylist">
-				<Value type="3">( EnemyType="WAVE_REJ_Demo", EnemyArchetypeName="Char_Enemies_Milan.Demo",WaveCost=20 )</Value>
+				<Value type="3">( EnemyType="WAVE_REJ_Specialist", EnemyArchetypeName="Char_Enemies_Milan.Specialist",WaveCost=20 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Heavy", EnemyArchetypeName="Char_Enemies_Milan.Heavy",WaveCost=50 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Sniper", EnemyArchetypeName="Char_Enemies_Milan.Sniper",WaveCost=30 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Catlas", EnemyArchetypeName="Char_Enemies_Milan.Catlas",WaveCost=100 )</Value>
@@ -25,11 +25,11 @@
 		<Section name="sfxwave_horde_rejects1 sfxwave_horde_rejects">
 			<Property name="enemies">
 				<Value type="1">null</Value>
-				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Demo")))</Value>
-				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Sniper", MinCount=1, MaxCount=1),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2)))</Value>
+				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Specialist")))</Value>
+				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Sniper", MinCount=1, MaxCount=1),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_GethAssassin"))</Value>
-				<!-- <Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=2, MaxCount=2)))</Value> -->
-				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2),(EnemyType="Wave_REJ_Sniper", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Executioner", MinCount=2, MaxCount=2)))</Value>
+				<!-- <Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=2, MaxCount=2)))</Value> -->
+				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2),(EnemyType="Wave_REJ_Sniper", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Executioner", MinCount=2, MaxCount=2)))</Value>
 			</Property>
 			<Property name="waveindex" type="0">1</Property>
 		</Section>
@@ -56,9 +56,9 @@
 		<Section name="sfxwave_horde_rejects2 sfxwave_horde_rejects">
 			<Property name="enemies">
 				<Value type="1">null</Value>
-				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Sniper", MinCount=1, MaxCount=1, MaxPerWave=3)))</Value>
+				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Sniper", MinCount=1, MaxCount=1, MaxPerWave=3)))</Value>
 				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Sniper"),(EnemyType="WAVE_REJ_Heavy", MinCount=1, MaxCount=1),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2)))</Value>
-				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Heavy", MinCount=1, MaxCount=1, MaxPerWave=3),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2)))</Value>
+				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Heavy", MinCount=1, MaxCount=1, MaxPerWave=3),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Catlas"),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Forerunner", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2)))</Value>
 			</Property>
 			<Property name="waveindex" type="0">2</Property>
@@ -66,7 +66,7 @@
 		<Section name="sfxwave_horde_rejects3 sfxwave_horde_rejects">
 			<Property name="enemies">
 				<Value type="1">null</Value>
-				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2, MaxPerWave=3),(EnemyType="WAVE_REJ_Heavy", MinCount=1, MaxCount=1)))</Value>
+				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2, MaxPerWave=3),(EnemyType="WAVE_REJ_Heavy", MinCount=1, MaxCount=1)))</Value>
 				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Rampart"),(EnemyType="WAVE_REJ_Heavy", MinCount=1, MaxCount=1),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_GethAssassin"),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Heavy", MinCount=2, MaxCount=2, MaxPerWave=4),(EnemyType="WAVE_REJ_Catlas", MinCount=1, MaxCount=1)))</Value>
 				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_GethAssassin"),(EnemyType="WAVE_REJ_Executioner", MinCount=2, MaxCount=2),(EnemyType="WAVE_RPR_Banshee", MinCount=2, MaxCount=2),(EnemyType="WAVE_RPR_Ravager", MinCount=2, MaxCount=2)))</Value>
@@ -76,10 +76,10 @@
 		<Section name="sfxwave_horde_rejects4 sfxwave_horde_rejects">
 			<Property name="enemies">
 				<Value type="1">null</Value>
-				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Forerunner", MinCount=1, MaxCount=1)))</Value>
-				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Heavy", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=3, MaxCount=3)))</Value>
+				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Forerunner", MinCount=1, MaxCount=1)))</Value>
+				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Heavy", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=3, MaxCount=3)))</Value>
 				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Rampart"),(EnemyType="WAVE_REJ_Executioner", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Heavy", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Adjutant", MinCount=1, MaxCount=1)))</Value>
-				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2),(EnemyType="WAVE_CER_Phantom", MinCount=2, MaxCount=2),(EnemyType="WAVE_GTH_GethPrime", MinCount=1, MaxCount=1)))</Value>
+				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2),(EnemyType="WAVE_CER_Phantom", MinCount=2, MaxCount=2),(EnemyType="WAVE_GTH_GethPrime", MinCount=1, MaxCount=1)))</Value>
 			</Property>
 			<Property name="waveindex" type="0">4</Property>
 		</Section>
@@ -88,7 +88,7 @@
 				<Value type="1">null</Value>
 				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Sniper"),(EnemyType="WAVE_REJ_Forerunner", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Adjutant"),(EnemyType="WAVE_REJ_Catlas", MinCount=1, MaxCount=1),(EnemyType="WAVE_REJ_Forerunner", MinCount=2, MaxCount=2)))</Value>
-				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Forerunner", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Catlas", MinCount=1, MaxCount=1, MaxPerWave=3),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2)))</Value>
+				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Forerunner", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Catlas", MinCount=1, MaxCount=1, MaxPerWave=3),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_CER_Phoenix"),(EnemyType="WAVE_REJ_Forerunner", MinCount=2,MaxCount=2),(EnemyType="WAVE_RPR_Brute", MinCount=3, MaxCount=3),(EnemyType="WAVE_COL_Scion", MinCount=1, MaxCount=1, MaxPerWave=3)))</Value>
 			</Property>
 			<Property name="waveindex" type="0">5</Property>
@@ -98,7 +98,7 @@
 				<Value type="1">null</Value>
 				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Forerunner"),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Adjutant", MinCount=1, MaxCount=1)))</Value>
 				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Sniper"),(EnemyType="WAVE_REJ_Catlas", MinCount=1, MaxCount=1),(EnemyType="WAVE_REJ_GethAssassin", MinCount=3, MaxCount=3)))</Value>
-				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Forerunner"),(EnemyType="WAVE_REJ_Demo", MinCount=3, MaxCount=3),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Executioner", MinCount=1, MaxCount=1)))</Value>
+				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Forerunner"),(EnemyType="WAVE_REJ_Specialist", MinCount=3, MaxCount=3),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Executioner", MinCount=1, MaxCount=1)))</Value>
 				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Heavy"),(EnemyType="WAVE_CER_Phantom", MinCount=2, MaxCount=2),(EnemyType="WAVE_RPR_Marauder", MinCount=2, MaxCount=2),(EnemyType="WAVE_COL_Praetorian", MinCount=2, MaxCount=2)))</Value>
 			</Property>
 			<Property name="waveindex" type="0">6</Property>
@@ -107,7 +107,7 @@
 			<Property name="enemies">
 				<Value type="1">null</Value>
 				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Heavy"),(EnemyType="WAVE_REJ_Rampart", MinCount=3, MaxCount=3),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2)))</Value>
-				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Heavy"),(EnemyType="WAVE_REJ_Executioner", MinCount=1, MaxCount=1, MaxPerWave=2),(EnemyType="WAVE_REJ_Demo", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=2, MaxCount=2)))</Value>
+				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Heavy"),(EnemyType="WAVE_REJ_Executioner", MinCount=1, MaxCount=1, MaxPerWave=2),(EnemyType="WAVE_REJ_Specialist", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Rampart"),(EnemyType="WAVE_REJ_Forerunner", MinCount=1, MaxCount=1, MaxPerWave=1),(EnemyType="WAVE_REJ_Heavy", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_CER_Phoenix"),(EnemyType="WAVE_REJ_Sniper", MinCount=2, MaxCount=2),(EnemyType="WAVE_GTH_GethBomber", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Agent", MinCount=2, MaxCount=2)))</Value>
 			</Property>
@@ -118,7 +118,7 @@
 				<Value type="1">null</Value>
 				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Forerunner"),(EnemyType="WAVE_REJ_Catlas", MinCount=1, MaxCount=1, MaxPerWave=3),(EnemyType="WAVE_REJ_GethAssassin", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Forerunner"),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Rampart", MinCount=3, MaxCount=3)))</Value>
-				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Executioner", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2)))</Value>
+				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Executioner", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Adjutant"),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Forerunner", MinCount=2, MaxCount=2),(EnemyType="WAVE_CER_Engineer", MinCount=1, MaxCount=1)))</Value>
 			</Property>
 			<Property name="waveindex" type="0">8</Property>
@@ -126,8 +126,8 @@
 		<Section name="sfxwave_horde_rejects9 sfxwave_horde_rejects">
 			<Property name="enemies">
 				<Value type="1">null</Value>
-				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Heavy"),(EnemyType="WAVE_REJ_Demo", MinCount=3, MaxCount=3),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Executioner", MinCount=1, MaxCount=1)))</Value>
-				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Demo"),(EnemyType="WAVE_REJ_Adjutant", MinCount=3, MaxCount=3),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=1, MaxCount=1)))</Value>
+				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Heavy"),(EnemyType="WAVE_REJ_Specialist", MinCount=3, MaxCount=3),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Executioner", MinCount=1, MaxCount=1)))</Value>
+				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Adjutant", MinCount=3, MaxCount=3),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=1, MaxCount=1)))</Value>
 				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Heavy"),(EnemyType="WAVE_REJ_Adjutant", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Forerunner", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=1, MaxCount=1, MaxPerWave=3),(EnemyType="WAVE_REJ_Executioner", MinCount=1, MaxCount=1,MaxPerWave=3)))</Value>
 				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Adjutant"),(EnemyType="WAVE_REJ_Agent", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Executioner", MinCount=2, MaxCount=2),(EnemyType="WAVE_GTH_GethHunter", MinCount=2, MaxCount=2)))</Value>
 			</Property>

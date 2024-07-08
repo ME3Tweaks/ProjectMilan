@@ -13,6 +13,7 @@ using LegendaryExplorerCore.TLK.ME2ME3;
 using LegendaryExplorerCore.TLK;
 using Serilog;
 using ProjectMilan.Utility;
+using LegendaryExplorerCore.Textures;
 
 namespace ProjectMilan_ExtraContent.Shared
 {
@@ -46,8 +47,8 @@ namespace ProjectMilan_ExtraContent.Shared
             {
                 Game = MEGame.LE3,
                 MountFlags = new MountFlag(EME3MountFileFlag.LoadsInMultiplayer),
-                MountPriority = GetMountPriority(content),
-                TLKID = GetTLKID(content)
+                MountPriority = SharedECPipelines.GetMountPriority(content),
+                TLKID = SharedECPipelines.GetTLKID(content)
             };
 
             mf.WriteMountFile(Path.Combine(outDir, "mount.dlc"));
@@ -63,7 +64,7 @@ namespace ProjectMilan_ExtraContent.Shared
                 // From M3C DLCModGenerator
                 List<TLKStringRef> strs = new List<TLKStringRef>();
                 strs.Add(new TLKStringRef(mf.TLKID, content.ToString() + " Developer DLC module"));
-                strs.Add(new TLKStringRef(mf.TLKID + 1, GetDLCFolderName(content)));
+                strs.Add(new TLKStringRef(mf.TLKID + 1, SharedECPipelines.GetDLCFolderName(content)));
                 strs.Add(new TLKStringRef(mf.TLKID + 2, lang.ToString()));
                 strs.Add(new TLKStringRef(mf.TLKID + 3, @"Male"));
                 strs.Add(new TLKStringRef(mf.TLKID + 3, @"Female"));
@@ -73,7 +74,7 @@ namespace ProjectMilan_ExtraContent.Shared
                     str.Data += '\0';
                 }
 
-                var tlk = Path.Combine(outDir, $@"{GetDLCFolderName(content)}_{lang}.tlk");
+                var tlk = Path.Combine(outDir, $@"{SharedECPipelines.GetDLCFolderName(content)}_{lang}.tlk");
                 HuffmanCompression.SaveToTlkFile(tlk, strs);
             }
 
@@ -83,10 +84,10 @@ namespace ProjectMilan_ExtraContent.Shared
             using var fs = File.OpenRead(Path.Combine(SharedECPipelines.ECPipelineRoot, "Shared", "Default_DLC_MOD_StarterKit.bin"));
             var files = CoalescedConverter.DecompileGame3ToMemory(fs);
             //Modify coal files for this mod.
-            files[@"BioEngine.xml"] = files[@"BioEngine.xml"].Replace(@"StarterKit", GetDLCFolderName(content)[8..]); // Remove DLC_MOD_, update bioengine
+            files[@"BioEngine.xml"] = files[@"BioEngine.xml"].Replace(@"StarterKit", SharedECPipelines.GetDLCFolderName(content)[8..]); // Remove DLC_MOD_, update bioengine
 
             var newMemory = CoalescedConverter.CompileFromMemory(files);
-            var outpath = Path.Combine(outDir, $@"Default_{GetDLCFolderName(content)}.bin");
+            var outpath = Path.Combine(outDir, $@"Default_{SharedECPipelines.GetDLCFolderName(content)}.bin");
             File.WriteAllBytes(outpath, newMemory.ToArray());
 
             // Add precomputed files to the CookedPCConsole folders
@@ -123,41 +124,58 @@ namespace ProjectMilan_ExtraContent.Shared
             }
         }
 
-        private static string GetDLCFolderName(EExtraContent content) => content switch
-        {
-            EExtraContent.Rejects => MilanShared.REJECTS_DLC_NAME,
-            EExtraContent.Redemption => MilanShared.REDEMPTION_DLC_NAME,
-            _ => throw new Exception($"Unknown content: {content}")
-        };
-
-        /// <summary>
-        /// Gets developer DLC mount priority
-        /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        private static int GetMountPriority(EExtraContent content) => content switch
-        {
-            EExtraContent.Rejects => 12556,
-            EExtraContent.Redemption => 12557,
-            _ => 0,
-        };
-
-        /// <summary>
-        /// Gets developer DLC TLK ID
-        /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        private static int GetTLKID(EExtraContent content) => content switch
-        {
-            // Random.
-            EExtraContent.Rejects => 46578962,
-            EExtraContent.Redemption => 58765561,
-            _ => 0,
-        };
 
         private static readonly Version CURRENT_VERSION = new Version(1, 0);
 
         private const string LOG_CATEGORY = @"MILAN-ExtraContent-INIT";
+
+        /// <summary>
+        /// Since we are pulling in content from SP DLC we must compact the TFC or the texture data will not be valid.
+        /// </summary>
+        /// <param name="content"></param>
+        public static void CompactTFC(EExtraContent content)
+        {
+            // Step 2: TFC Compactor
+            var inputFolder = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole");
+            var staging = Directory.CreateDirectory(Path.Combine(inputFolder, "Staging")).FullName;
+            TFCCompactorInfoPackage info = new TFCCompactorInfoPackage()
+            {
+                Game = MEGame.LE3,
+                BaseCompactionPath = inputFolder,
+                DLCName = SharedECPipelines.GetDLCFolderName(content),
+                GamePath = LE3Directory.DefaultGamePath,
+                TFCsToCompact = new List<string>()
+                {
+                    $"Textures_{SharedECPipelines.GetDLCFolderName(content)}",
+                    "Textures_DLC_CON_GUN01",
+                    "Textures_DLC_CON_GUN02",
+                    "Textures_DLC_HEN_PR",
+                    "Textures_DLC_EXP_Pack001",
+                    "Textures_DLC_EXP_Pack002",
+                    "Textures_DLC_EXP_Pack003",
+                    "Textures_DLC_EXP_Pack003_Base",
+                },
+                UseIndexing = false,
+                StagingPath = staging,
+                TFCType = "Textures",
+            };
+
+            MilanLog.Information("Compacting TFC", customPrefix: LOG_CATEGORY);
+            TFCCompactor.CompactTFC(info, x => MilanLog.Error(x, customPrefix: LOG_CATEGORY), (text, done, total) =>
+            {
+                if (text != null)
+                {
+                    MilanLog.Information($"  {text}", customPrefix: LOG_CATEGORY);
+                }
+                if (total > 0)
+                {
+                    MilanLog.Information($"  Progress: {done}/{total}", customPrefix: LOG_CATEGORY);
+                }
+                else if (done == -1 && total == -1)
+                {
+
+                }
+            });
+        }
     }
 }

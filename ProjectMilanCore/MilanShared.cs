@@ -14,6 +14,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Helpers;
 using ProjectMilan.Utility;
 
@@ -595,8 +596,8 @@ namespace ProjectMilanCore
                                 {
                                     MilanLog.Information($"  Recompiling {f.ObjectName} with Milan override", customPrefix: logCategory);
                                     text = File.ReadAllText(Path.Combine(PostPortingClassOverrideFolder, $"{f.ObjectName}.uc"));
-                                    PostPortingClassOverrides[f.ObjectName] = text;     
-                                } 
+                                    PostPortingClassOverrides[f.ObjectName] = text;
+                                }
                                 else
                                 {
                                     MilanLog.Information($"  Recompiling {f.ObjectName}", customPrefix: logCategory);
@@ -809,7 +810,6 @@ namespace ProjectMilanCore
         }
 
         private const string LOG_CATEGORY_MOR = @"MILAN-MissingObjectResolver";
-
 
         public static PackageCache LE3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
         public static PackageCache ME3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3).ChainNewCache();
@@ -1042,6 +1042,47 @@ namespace ProjectMilanCore
             {
                 MilanShared.ME3ObjectDB.AddObjectToDB(export);
             }
+        }
+
+        /// <summary>
+        /// Moves the object with the given IFP underneath the given parent, or root if null.
+        /// </summary>
+        /// <param name="sourcePackage"></param>
+        /// <param name="ifp"></param>
+        /// <param name="parent"></param>
+        public static ExportEntry MoveExport(IMEPackage sourcePackage, string ifp, ExportEntry parent, NameReference newName = default)
+        {
+            var exp = sourcePackage.FindExport(ifp);
+            exp.idxLink = parent?.UIndex ?? 0;
+
+            if (exp.ClassName == "Class")
+                exp.GetDefaults().idxLink = parent?.UIndex ?? 0;
+
+            if (newName.Name != null)
+            {
+                RenameObject(exp.FileRef, exp.InstancedFullPath, newName);
+            }
+
+            return exp;
+        }
+
+        /// <summary>
+        /// Renames an object, including defaults if it is a class.
+        /// </summary>
+        /// <param name="package"></param>
+        /// <param name="ifp"></param>
+        /// <param name="newName"></param>
+        /// <returns></returns>
+        public static ExportEntry RenameObject(IMEPackage package, string ifp, NameReference newName)
+        {
+            var exp = package.FindExport(ifp);
+            exp.ObjectName = newName;
+            if (exp.ClassName == "Class")
+            {
+                exp.GetDefaults().ObjectName = "Default__" + newName.Name; // Will not be indexed.
+            }
+
+            return exp;
         }
     }
 }
