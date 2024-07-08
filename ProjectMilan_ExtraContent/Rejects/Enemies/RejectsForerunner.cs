@@ -41,10 +41,10 @@ namespace ProjectMilan_ExtraContent.Rejects.Enemies
 
 
             // Compile new class data
-            SharedECPipelines.CompileClassOn(sfxgcFFP, null, vars.Cache, EExtraContent.Rejects);
-            SharedECPipelines.CompileClassOn(sfxgcFFAI, null, vars.Cache, EExtraContent.Rejects);
-            SharedECPipelines.CompileClassOn(sfxgcFFBC, null, vars.Cache, EExtraContent.Rejects);
-            SharedECPipelines.CompileClassOn(sfxgcFFFC, null, vars.Cache, EExtraContent.Rejects);
+            SharedECPipelines.CompileClassOn(sfxgcFFP, null, vars.Cache, EExtraContent.Rejects, "Forerunner");
+            SharedECPipelines.CompileClassOn(sfxgcFFAI, null, vars.Cache, EExtraContent.Rejects, "Forerunner");
+            SharedECPipelines.CompileClassOn(sfxgcFFBC, null, vars.Cache, EExtraContent.Rejects, "Forerunner");
+            SharedECPipelines.CompileClassOn(sfxgcFFFC, null, vars.Cache, EExtraContent.Rejects, "Forerunner");
         }
 
         private static void ChangeMesh(RejectsPipeline.RejectVars vars, IMEPackage sourcePackage)

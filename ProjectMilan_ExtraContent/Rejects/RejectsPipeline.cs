@@ -8,9 +8,11 @@ using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.Classes;
 using ProjectMilan;
+using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Rejects.Enemies;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
+using System.Security.AccessControl;
 
 namespace ProjectMilan_ExtraContent.Rejects
 {
@@ -58,7 +60,7 @@ namespace ProjectMilan_ExtraContent.Rejects
             new RejectPawnSource() { SourceFile = "BioD_OMG003_303Trap.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Rampart_Combat", Name="Rampart"},
             new RejectPawnSource() { SourceFile = "BioD_OMG003_125LitExtra.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Adjutant_Combat", Name="Adjutant"},
             new RejectPawnSource() { SourceFile = "BioD_Cit004_270ShuttleBay1.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.FemmeFatale", Name="Forerunner", PrePortingDelegate = RejectsForerunner.PrePort},
-            new RejectPawnSource() { SourceFile = "BioD_Cit004_272MaleClone.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.CloneShepardMale", Name="Executioner"},
+            new RejectPawnSource() { SourceFile = "BioD_Cit004_272MaleClone.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.CloneShepardMale", Name="Executioner", PrePortingDelegate = RejectsExecutioner.PrePort},
             new RejectPawnSource() { SourceFile = "BioD_Cit003_600MechEvent.pcc", AssetIFP = "Char_Enemies_Citadel.Atlas", Name="Catlas"},
             new RejectPawnSource() { SourceFile = "BioD_Cat004_625ProtoReaper.pcc", AssetIFP = "BioChar_Cat004.Archetypes.Nemesis_Legion", Name="GethAssassin", PrePortingDelegate = RejectsGethAssassin.PrePort},
             new RejectPawnSource() { SourceFile = "BioD_Cat004_800KaiLeng.pcc", AssetIFP = "char_enemies.Archetypes.Cerberus.KaiLeng", Name="Agent"},
@@ -73,6 +75,7 @@ namespace ProjectMilan_ExtraContent.Rejects
             ExtraContentInit.PrepareContent(EExtraContent.Rejects);
             RunPipeline();
             ExtraContentInit.CompactTFC(EExtraContent.Rejects); // Milan main will handle this when it pulls everything together
+            ExtraContentInit.CompactAFC(EExtraContent.Rejects); // Milan main will handle this when it pulls everything together
         }
 
         /// <summary>
@@ -137,9 +140,18 @@ namespace ProjectMilan_ExtraContent.Rejects
         /// <param name="vars"></param>
         private static void GenerateMergedContent(RejectVars vars)
         {
+
             MilanLog.Information($"Building MergedContent", customPrefix: LOG_CATEGORY);
             var mergedPackage = MEPackageHandler.CreateAndOpenPackage(MergedContentPath, MEGame.LE3);
             mergedPackage.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this is an MP subfile
+
+            // Add localized packages.
+            MilanPackageCache localizedCache = new MilanPackageCache();
+            foreach (var loc in BaseBuildSettings.SupportedVOLanguages)
+            {
+                var localizedPackage = MEPackageHandler.CreateAndOpenPackage(MergedContentPath.SetUnrealLocalization(MEGame.LE3, loc, true), MEGame.LE3);
+                localizedCache.InsertIntoCache(localizedPackage);
+            }
 
             // Pass 1: Import everything, without changes.
             foreach (var source in PawnSources)
@@ -162,6 +174,22 @@ namespace ProjectMilan_ExtraContent.Rejects
 
                 MilanLog.Information($"Porting {source.Name} into MergedContent", customPrefix: LOG_CATEGORY);
                 EntryExporter.ExportExportToPackage(archetype, mergedPackage, out _, vars.Cache, new RelinkerOptionsPackage() { Cache = vars.Cache, PortImportsMemorySafe = true, PortLocalizationImportsMemorySafe = false });
+                if (!source.IsSupportingObject)
+                {
+                    // Calculate once outside of loop to improve performance.
+                    var references = EntryImporter.GetAllReferencesOfExport(archetype).OfType<ImportEntry>().ToList();
+                    Parallel.ForEach(BaseBuildSettings.SupportedVOLanguages, loc =>
+                    {
+                        MilanLog.Information($"Porting localized content for {source.Name} into MergedContent_{loc}", customPrefix: LOG_CATEGORY);
+                        SharedLoc.GenerateLocalizedContent(archetype, localizedCache.GetPackages().FirstOrDefault(x => x.Localization == loc), loc, vars.Cache, source.Name, references);
+                    });
+
+                    //foreach (var loc in BaseBuildSettings.SupportedVOLanguages)
+                    //{
+                    //    MilanLog.Information($"Porting localized content for {source.Name} into MergedContent_{loc}", customPrefix: LOG_CATEGORY);
+                    //    SharedLoc.GenerateLocalizedContent(archetype, localizedCache.GetPackages().FirstOrDefault(x => x.Localization == loc), loc, vars.Cache, source.Name);
+                    //}
+                }
             }
 
             // Pass 2: Rename archetypes
@@ -179,7 +207,14 @@ namespace ProjectMilan_ExtraContent.Rejects
                 source.PostPortingDelegate?.Invoke(vars, mergedPackage.FindExport(source.RemappedArchetypeIFP));
             }
 
+            // Save merged content
             mergedPackage.Save();
+
+            // Save merged content localizations
+            foreach (var package in localizedCache.GetPackages())
+            {
+                package.Save();
+            }
         }
 
         private const string LOG_CATEGORY = @"MILAN-Rejection";

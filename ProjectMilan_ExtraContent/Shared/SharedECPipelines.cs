@@ -99,11 +99,11 @@ namespace ProjectMilan_ExtraContent.Shared
         /// <param name="className">Name of file to compile in assets/classes. If null, the name of the passed in object is used</param>
         /// <param name="cache"></param>
         /// <param name="content"></param>
-        public static void CompileClassOn(ExportEntry targetObj, string className, PackageCache cache, EExtraContent content)
+        public static void CompileClassOn(ExportEntry targetObj, string className, PackageCache cache, EExtraContent content, string subfolderName)
         {
             if (className == null)
                 className = targetObj.ObjectName.Name; // Use 
-            var asset = Path.Combine(ECPipelineRoot, content.ToString(), "Assets", "Classes", $"{className}.uc");
+            var asset = Path.Combine(ECPipelineRoot, content.ToString(), "Assets", "Classes", subfolderName, $"{className}.uc");
             var classText = File.ReadAllText(asset);
 
             var usop = new UnrealScriptOptionsPackage() { Cache = cache };
