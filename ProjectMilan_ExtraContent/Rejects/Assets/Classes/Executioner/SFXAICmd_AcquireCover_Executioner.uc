@@ -2,11 +2,11 @@
 
 public static function bool AcquireNewCover(SFXAI_Cover AI, Goal_AtCover GoalEvaluator, Actor GoalActor, optional bool bUsePeriodicCheck = TRUE, optional bool bAllowedToFire = TRUE)
 {
-    local SFXAICmd_AcquireCover_Clone Cmd;
+    local SFXAICmd_AcquireCover_Executioner Cmd;
     
     if (AI != None && AI.MyBP != None && GoalEvaluator != None && GoalActor != None)
     {
-        Cmd = new (SFXAI_Executioner(AI)) Class'SFXAICmd_AcquireCover_Clone';
+        Cmd = new (SFXAI_Executioner(AI)) Class'SFXAICmd_AcquireCover_Executioner';
         if (Cmd != None)
         {
             Cmd.CoverEvaluator = GoalEvaluator;
@@ -63,7 +63,7 @@ Begin:
     }
     Outer.CoverGoal = NewCoverGoal;
     Outer.m_bUsePeriodicCoverCheck = bDoPeriodicCoverCheck;
-    Class'SFXAICmd_MoveToCover_Clone'.static.MoveToCover(Outer, Outer.m_bUsePeriodicCoverCheck, bCanShoot);
+    Class'SFXAICmd_MoveToCover_Executioner'.static.MoveToCover(Outer, Outer.m_bUsePeriodicCoverCheck, bCanShoot);
     Outer.PopCommand(Self);
     stop;
 };

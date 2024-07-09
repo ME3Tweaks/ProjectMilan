@@ -169,7 +169,7 @@ namespace ProjectMilan
         {
             foreach (var msg in log.AllErrors)
             {
-                MilanLog.Error(msg.Message, customPrefix: @"UnrealScriptCompiler");
+                MilanLog.Error(msg.ToString(), customPrefix: @"UnrealScriptCompiler");
             }
         }
     }

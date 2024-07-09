@@ -156,7 +156,8 @@ namespace ProjectMilan.Pipelines.Finalize
                              x.idxLink == 0 && x.ClassName == "Package" && x.IsForcedExport))
                 {
                     // Root packages
-                    var existingInfo = MilanShared.LE3ObjectDB.GetInfo(pExp.InstancedFullPath);
+                    var ifp = pExp.InstancedFullPath;
+                    var existingInfo = MilanShared.LE3ObjectDB.GetInfo(ifp);
                     pExp.NetIndex = -1;
 
                     if (package.Localization == MELocalization.None)
@@ -173,7 +174,7 @@ namespace ProjectMilan.Pipelines.Finalize
                     else
                     {
                         // Not calculated: Lookup what we counted
-                        if (!currentNetIndexes.TryGetValue(pExp.InstancedFullPath, out int netObjCount))
+                        if (!currentNetIndexes.TryGetValue(ifp, out int netObjCount))
                         {
                             // Was not under package export - find number of objects that are not forced export under the root.
                             localLinkerCount = package.Exports.Count(x => GetLinker(x) == package.FileNameNoExtension && pExp != x);
@@ -200,7 +201,7 @@ namespace ProjectMilan.Pipelines.Finalize
                     // Count number of objects in this linker
                     sameNamedExp.GenerationNetObjectCount = [localLinkerCount];
 
-                    if (EntryExporter.IsLevelFile(sameNamedExp.InstancedFullPath))
+                    if (EntryExporter.IsLevelFile(package.FileNameNoExtension))
                     {
                         // Set package flags
                         sameNamedExp.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload |

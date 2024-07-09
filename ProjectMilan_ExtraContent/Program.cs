@@ -124,8 +124,9 @@ namespace ProjectMilan_ExtraContent
             MilanLog.Information($"Pipeline timings:");
             foreach (var stat in pipelineTimes)
             {
-                MilanLog.Information($"\t{stat.Key}:\t{stat.Value}ms");
+                MilanLog.Information($"\t{stat.Key.PadRight(pipelineTimes.Keys.MaxBy(x=>x.Length).Length + 3)}{stat.Value}ms");
             }
+            MilanLog.Information($"\tTotal:\t{pipelineTimes.Sum(x => x.Value)}ms");
         }
 
         /// <summary>

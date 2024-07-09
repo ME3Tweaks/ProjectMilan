@@ -1,12 +1,15 @@
 ﻿using LegendaryExplorerCore.Coalesced;
 using LegendaryExplorerCore.Coalesced.Config;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Gammtek.Paths;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.Classes;
+using LegendaryExplorerCore.UnrealScript;
+using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ProjectMilan;
 using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Rejects.Enemies;
@@ -53,7 +56,7 @@ namespace ProjectMilan_ExtraContent.Rejects
             new RejectPawnSource() { SourceFile = "BIO_COMMON.pcc", AssetIFP = "Wwise_Generic_Foley._Play_foot_scuffs_short", Name="Foley1", IsSupportingObject = true},
             new RejectPawnSource() { SourceFile = "SFXPawn_Husk.pcc", AssetIFP = "Wwise_Generic_Foley.Play_foley_melee_hit_standard_flesh", Name="Foley2", IsSupportingObject = true},
 
-            // Second - pawns
+            //// Second - pawns
             new RejectPawnSource() { SourceFile = "SFXPawn_Demo.pcc", AssetIFP = "Char_Enemies_Citadel.Demo", Name="Specialist"},
             new RejectPawnSource() { SourceFile = "SFXPawn_Heavy.pcc", AssetIFP = "Char_Enemies_Citadel.Heavy", Name="Heavy"},
             new RejectPawnSource() { SourceFile = "SFXPawn_Sniper.pcc", AssetIFP = "Char_Enemies_Citadel.Sniper", Name="Sniper"},
@@ -112,7 +115,7 @@ namespace ProjectMilan_ExtraContent.Rejects
             bannerExp.WriteProperty(new BoolProperty(false, "sRGB"));
             pcc.Save();
         }
-        
+
         /// <summary>
         /// Generates a single package file that has all assets for all enemies, so that one change affects them all. Moves and renames all archetype objects accordingly.
         /// </summary>
@@ -149,6 +152,10 @@ namespace ProjectMilan_ExtraContent.Rejects
                     continue;
                 }
 
+                // Installs new classes into the target
+                CompileNewEnemyClasses(vars, source, package);
+
+                // Prepare for porting by hooking up data to the new classes and changing things that need changed to not port them over
                 source.PrePortingDelegate?.Invoke(vars, package);
 
                 MilanLog.Information($"Porting {source.Name} into MergedContent", customPrefix: LOG_CATEGORY);
@@ -193,6 +200,46 @@ namespace ProjectMilan_ExtraContent.Rejects
             foreach (var package in localizedCache.GetPackages())
             {
                 package.Save();
+            }
+        }
+
+        private static void CompileNewEnemyClasses(RejectVars vars, RejectPawnSource rps, IMEPackage sourcePackage)
+        {
+            var looseClassesFolder = Path.Combine(SharedECPipelines.ECPipelineRoot, EExtraContent.Rejects.ToString(), "Assets", "Classes", rps.Name);
+            if (!Directory.Exists(looseClassesFolder))
+                return;
+
+            var classes = new List<UnrealScriptCompiler.LooseClass>();
+            var files = Directory.GetFiles(looseClassesFolder, "*.uc");
+            foreach (var f in files)
+            {
+                var source = File.ReadAllText(f);
+                classes.Add(new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(f), source, f));
+            }
+
+            // Maps Package -> Classes under them. Organization.
+            // Rejects only uses SFXGameContent_Milan.
+            var looseClassPackages = new List<UnrealScriptCompiler.LooseClassPackage>();
+            var looseClassPackage = new UnrealScriptCompiler.LooseClassPackage(MilanPackages.SFXGameContentMilan, classes);
+            looseClassPackages.Add(looseClassPackage);
+
+            UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+            {
+                Cache = vars.Cache,
+                MissingObjectResolver = MilanShared.MissingObjectResolver,
+                GetVTableFromDonor = MilanShared.GetVTableFromDonor
+            };
+
+            MilanLog.Information($@"Compiling classes for {rps.Name}:", customPrefix: LOG_CATEGORY);
+            foreach (var c in files)
+            {
+                MilanLog.Information($"   {Path.GetFileNameWithoutExtension(c)}", customPrefix: LOG_CATEGORY);
+            }
+            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(sourcePackage, looseClassPackages, usop);
+
+            if (log.HasErrors)
+            {
+                MilanLog.LogUSCErrors(log);
             }
         }
 

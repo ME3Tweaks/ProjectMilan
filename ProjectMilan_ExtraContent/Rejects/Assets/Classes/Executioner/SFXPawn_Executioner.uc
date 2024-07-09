@@ -20,7 +20,6 @@ public simulated function Destroyed()
     }
     Super(BioPawn).Destroyed();
 }
-
 public function bool Died(Controller Killer, Class<DamageType> DamageType, Vector HitLocation)
 {
     local SFXAI_Executioner MyAI;
@@ -34,12 +33,11 @@ public function bool Died(Controller Killer, Class<DamageType> DamageType, Vecto
     }
     return DiedReturn;
 }
-
 public simulated function ClearPersistentStuff()
 {
     local SFXPowerCustomAction_CloneDenial DenialGrenade;
     local SFXPowerCustomAction_CloneDenial_Biotic BioticDenialGrenade;
-    local SFXPowerCustomAction_CloneDrone CloneDrone;
+    local SFXPowerCustomAction_ExecutionerDrone ExecutionerDrone;
     
     if (PowerManager != None)
     {
@@ -53,17 +51,16 @@ public simulated function ClearPersistentStuff()
         {
             BioticDenialGrenade.ClearDenialZones();
         }
-        if (SFXAI_Executioner(Controller) != None && SFXAI_Executioner(Controller).CloneClass == CloneClassType.CloneClass_Engineer)
+        if (SFXAI_Executioner(Controller) != None && SFXAI_Executioner(Controller).ExecutionerClass == CloneClassType.CloneClass_Engineer)
         {
-            CloneDrone = SFXPowerCustomAction_CloneDrone(PowerManager.GetPowerByClass(Class'SFXPowerCustomAction_CloneDrone'));
-            if (CloneDrone != None && CloneDrone.Drone != None)
+            ExecutionerDrone = SFXPowerCustomAction_ExecutionerDrone(PowerManager.GetPowerByClass(Class'SFXPowerCustomAction_ExecutionerDrone'));
+            if (ExecutionerDrone != None && ExecutionerDrone.Drone != None)
             {
-                CloneDrone.DespawnDrone(CloneDrone.Drone);
+                ExecutionerDrone.DespawnDrone(ExecutionerDrone.Drone);
             }
         }
     }
 }
-
 protected function bool GetKnockbackReactions(float Angle, float SideAngle, out array<EAICustomAction> OutActions)
 {
     if (WorldInfo.GameTimeSeconds - LastLargeReactionTime > LargeReactionInterval)
@@ -146,6 +143,7 @@ defaultproperties
     Begin Template Class=ForceFeedbackWaveform Name=FootstepShakeFF0
     End Template
     Begin Object Class=SFXLoadoutData Name=ExecutionerLoadout0
+        Weapons = (Class'SFXWeapon_AI_Wraith')
         ShieldLoadouts = ({
                            Shields = Class'SFXShield_Energy', 
                            ShieldLevelRange = {X = 0.0, Y = 0.0}, 
@@ -175,7 +173,6 @@ defaultproperties
     End Template
     Begin Template Class=SFXModule_Timeline Name=TimelineMod0
     End Template
-    // Remove clone damage module, just use normal one.
     Begin Object Class=SFXModule_Damage Name=DmgMod1
         HealthType = EHealthType.HealthType_Armour
         MaxHealth = {X = 100.0, Y = 100.0}
@@ -330,7 +327,7 @@ defaultproperties
                            None, 
                            Class'SFXCustomAction_ClonePunch_Soldier', 
                            None, 
-                           None, // Used to be SFXCustomAction_CloneGrapple. Will be replaced with the execution move
+                           None, 
                            None, 
                            None, 
                            None, 
@@ -406,10 +403,10 @@ defaultproperties
                            Class'SFXCustomAction_ClonePunch_Engineer', 
                            Class'SFXCustomAction_ClonePunch_Adept', 
                            Class'SFXCustomAction_ClonePunch_Soldier', 
-                           None, // Formerly Medigel
                            None, 
-                           Class'SFXCustomAction_CloneCharge', 
-                           None, // Formerly FemmeRes
+                           None, 
+                           Class'SFXCustomAction_ExecutionerCharge', 
+                           None
                           )
     PowerCustomActionClasses = (None, 
                                 None, 
@@ -462,7 +459,7 @@ defaultproperties
                                 None, 
                                 None, 
                                 None, 
-                                Class'SFXPowerCustomAction_CloneDrone', 
+                                Class'SFXPowerCustomAction_ExecutionerDrone', 
                                 None, 
                                 None, 
                                 None, 

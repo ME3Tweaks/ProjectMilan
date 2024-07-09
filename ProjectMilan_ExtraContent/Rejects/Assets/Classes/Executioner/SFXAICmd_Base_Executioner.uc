@@ -7,7 +7,7 @@ public function PeriodicMoveCheck()
     local SFXPawn_Player pPawn;
     
     Super(SFXAICommand).PeriodicMoveCheck();
-    if (Outer.CloneClass == CloneClassType.CloneClass_Infiltrator)
+    if (Outer.ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
     {
         pPawn = SFXPawn_Player(Outer.FireTarget);
         if (pPawn == None)
@@ -15,7 +15,7 @@ public function PeriodicMoveCheck()
             return;
         }
     }
-    if (Outer.CloneClass == CloneClassType.CloneClass_Vanguard && Outer.InMeleeRange(Outer.FireTarget.location) == TRUE && Outer.ShouldMelee(Outer.FireTarget) == TRUE)
+    if (Outer.ExecutionerClass == CloneClassType.CloneClass_Vanguard && Outer.InMeleeRange(Outer.FireTarget.location) == TRUE && Outer.ShouldMelee(Outer.FireTarget) == TRUE)
     {
         Outer.MyBP.StartCustomAction(206);
     }
@@ -38,25 +38,15 @@ auto state Combat
     
 Begin:
     Outer.m_bAvoidDangerLinks = TRUE;
-    if (Outer.CloneClass == CloneClassType.CloneClass_Infiltrator)
+    if (Outer.ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
     {
-        Outer.CloneDeCloak();
+        Outer.ExecutionerDeCloak();
     }
-    if (Outer.bEndBehaviorActive == TRUE && Outer.m_bAllowedToLeavePlaypen == TRUE && Outer.MyBP.Squad != None && Outer.MyBP.Squad.HasPlaypen() == TRUE)
-    {
-        while (Outer.MyBP.Squad.IsPositionInPlaypen(Outer.MyBP.location) == FALSE)
-        {
-            Class'SFXAICmd_MoveToGoal_Clone'.static.MoveToGoal(Outer, Outer.MyBP.Squad.GetPlaypenReturnPoint(Outer.MyBP), 100.0, TRUE);
-        }
-        Outer.m_bAllowedToLeavePlaypen = FALSE;
-    }
-
     if (Outer.FireTarget == None)
     {
         Outer.AILog_Internal("Lost enemy.  Re-acquiring target", 'Combat');
         Outer.SelectTarget();
     }
-
     if (Outer.bAcquireNewCover == FALSE || Outer.bReachedCover)
     {
         Outer.bAcquireNewCover = FALSE;
@@ -67,31 +57,31 @@ Begin:
             if (GEManager != None)
             {
                 GEManager.RemoveEffectsByType(Class'SFXGameEffect_MovementSpeedBonus');
-                if (Outer.CloneClass != CloneClassType.CloneClass_Infiltrator)
+                if (Outer.ExecutionerClass != CloneClassType.CloneClass_Infiltrator)
                 {
-                    GEManager.CreateAndApplyEffect(Class'SFXGameEffect_MovementSpeedBonus', Name, Outer.CloneSpeedBoostDuration, 1, Outer.CLoneSpeedIncrease, Outer);
+                    GEManager.CreateAndApplyEffect(Class'SFXGameEffect_MovementSpeedBonus', Name, Outer.ExecutionerSpeedBoostDuration, 1, Outer.ExecutionerSpeedIncrease, Outer);
                 }
                 else
                 {
-                    GEManager.CreateAndApplyEffect(Class'SFXGameEffect_MovementSpeedBonus', Name, Outer.CloneSpeedBoostDuration, 1, Outer.InfiltratorSpeedIncrease, Outer);
+                    GEManager.CreateAndApplyEffect(Class'SFXGameEffect_MovementSpeedBonus', Name, Outer.ExecutionerSpeedBoostDuration, 1, Outer.InfiltratorSpeedIncrease, Outer);
                 }
             }
             Outer.m_bAvoidDangerLinks = FALSE;
             Outer.bPlayerSynced = FALSE;
-            if (Outer.CloneClass == CloneClassType.CloneClass_Infiltrator)
+            if (Outer.ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
             {
-                Outer.CloneCloak(TRUE);
+                Outer.ExecutionerCloak(TRUE);
             }
             Outer.ChargeCountThisRush = 0;
             Outer.bRushChargingActive = TRUE;
             while (Outer.bPlayerSynced == FALSE && Outer.MyBP.GetCurrentShields() > float(0))
             {
                 Outer.MyBP.SetTimer(Outer.RushTimeout, FALSE, 'ClearRushTimer', Self);
-                if (Outer.CloneClass == CloneClassType.CloneClass_Infiltrator)
+                if (Outer.ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
                 {
-                    Class'SFXAICmd_MoveToMeleeRange_Clone'.static.MoveToMeleeRangeClone(Outer, Outer.FireTarget, 50.0, Outer.Rush_CloneSyncRange, Outer.Rush_CloneHealthMinPercent, Outer.Rush_StopFiringRange, FALSE, TRUE);
+                    Class'SFXAICmd_MoveToMeleeRange_Executioner'.static.MoveToMeleeRangeExecutioner(Outer, Outer.FireTarget, 50.0, Outer.Rush_ExecutionRange, Outer.Rush_ExecutionerHealthMinPercent, Outer.Rush_StopFiringRange, FALSE, TRUE);
                 }
-                else if (Outer.CloneClass == CloneClassType.CloneClass_Vanguard)
+                else if (Outer.ExecutionerClass == CloneClassType.CloneClass_Vanguard)
                 {
                     if (Outer.ChargeCountThisRush <= Outer.MaxChargesPerRush)
                     {
@@ -105,13 +95,13 @@ Begin:
                 }
                 else
                 {
-                    Class'SFXAICmd_MoveToMeleeRange_Clone'.static.MoveToMeleeRangeClone(Outer, Outer.FireTarget, 100.0, Outer.Rush_CloneSyncRange, Outer.Rush_CloneHealthMinPercent, Outer.Rush_StopFiringRange, TRUE, TRUE);
+                    Class'SFXAICmd_MoveToMeleeRange_Executioner'.static.MoveToMeleeRangeExecutioner(Outer, Outer.FireTarget, 100.0, Outer.Rush_ExecutionRange, Outer.Rush_ExecutionerHealthMinPercent, Outer.Rush_StopFiringRange, TRUE, TRUE);
                 }
                 if (Outer.bPlayerSynced == TRUE)
                 {
                     Outer.MyBP.ClearTimer('ClearRushTimer', Self);
                 }
-                if (Outer.CloneClass == CloneClassType.CloneClass_Vanguard)
+                if (Outer.ExecutionerClass == CloneClassType.CloneClass_Vanguard)
                 {
                     Outer.Sleep(Outer.MinTeleportInterval_Rush);
                     continue;
@@ -119,9 +109,9 @@ Begin:
                 Outer.Sleep(0.5);
             }
             Outer.bRushChargingActive = FALSE;
-            if (Outer.CloneClass == CloneClassType.CloneClass_Infiltrator)
+            if (Outer.ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
             {
-                Outer.CloneDeCloak();
+                Outer.ExecutionerDeCloak();
             }
         }
         else if (Outer.ShouldCastDrone())
@@ -163,11 +153,11 @@ Begin:
         {
             SFXPawn(Outer.Pawn).PlayMoveToCoverSound();
         }
-        if (Outer.CloneClass == CloneClassType.CloneClass_Infiltrator && Outer.MyBP.GetCurrentShields() <= float(0))
+        if (Outer.ExecutionerClass == CloneClassType.CloneClass_Infiltrator && Outer.MyBP.GetCurrentShields() <= float(0))
         {
-            Outer.CloneCloak();
+            Outer.ExecutionerCloak();
         }
-        Class'SFXAICmd_AcquireCover_Clone'.static.AcquireNewCover(Outer, Outer.AtCover_WeaponRange, Outer.FireTarget, , !Outer.bCloaked);
+        Class'SFXAICmd_AcquireCover_Executioner'.static.AcquireNewCover(Outer, Outer.AtCover_WeaponRange, Outer.FireTarget, , !Outer.bCloaked);
         Outer.SetTimer(Outer.GetCoverDelayTime(), FALSE, 'FindNewCover', );
     }
     Outer.Sleep(0.100000001);

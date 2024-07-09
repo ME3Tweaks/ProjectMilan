@@ -31,27 +31,17 @@ var transient float LastPowerTime;
 var float PowerInterval;
 var float GrenadeConeAngle;
 var float PowerToFiringRatio;
-var float StageTwo_ShieldRechargeDelayMultiplier;
-var float StageTwo_ShieldBonusMultiplier;
-var float StageTwo_WeaponDamageMultiplier;
-var float StageTwo_NewIdealRange;
-var float StageTwo_SentinelDamageReduction;
-var float StageTwo_VanguardChargeFrequencyBonus;
-var float StageTwo_InfiltratorAgressiveFrequencyMultiplier;
-var float StageTwo_AdeptPowerDamageBonus;
-var float StageTwo_SoldierGrenadeFrequencyMultiplier;
-var float StageTwo_SoldierWeaponDamageMultiplier;
 var float MinTimeBetweenDrones;
 var float LastDroneTime;
 var float Shield_StartingMax;
 var float Shield_StartRegenDelay;
-var float CloneRetreatDistance;
-var float CloneSpeedBoostDuration;
-var float CLoneSpeedIncrease;
+var float ExecutionerRetreatDistance;
+var float ExecutionerSpeedBoostDuration;
+var float ExecutionerSpeedIncrease;
 var float InfiltratorSpeedIncrease;
 var float RushTimeout;
-var float Rush_CloneSyncRange;
-var float Rush_CloneHealthMinPercent;
+var float Rush_ExecutionRange;
+var float Rush_ExecutionerHealthMinPercent;
 var float Rush_StopFiringRange;
 var float MinTimeBetweenCloaks;
 var float LastCloakTime;
@@ -63,7 +53,6 @@ var int MaxChargesPerRush;
 var int ChargeCountThisRush;
 var float EnemyDistance_VanguardMelee;
 var float SyncMeleeAttackInterval_Vanguard;
-var float MaxRezDistance;
 var float PlayerCampingDistance;
 var stringref GameName_Soldier;
 var stringref GameName_Adept;
@@ -77,10 +66,9 @@ var bool bPlayerLockedOn;
 var bool bPlayerSynced;
 var bool bCloaked;
 var bool bRushChargingActive;
-var bool bEndBehaviorActive;
 var bool bHasRushPriority;
-var bool bSimFightActive;
-var CloneClassType CloneClass;
+var CloneClassType ExecutionerClass;
+var float MinTimeBetweenExecutionAttempts;
 
 public function Destroyed()
 {
@@ -98,6 +86,44 @@ public function Destroyed()
     Class'RvrClientEffectManager'.static.GetClientEffectManager().Stop(CE_TechArmor_Male, Guid_DefensiveCrust, FALSE);
     Super(BioAiController).Destroyed();
 }
+public function OnTargetChanged()
+{
+    Super(SFXAI_Core).OnTargetChanged();
+    ChangeClass();
+}
+public function ChangeClass()
+{
+    // Choose class based on who we are attacking
+    if (FireTarget == None)
+    {
+        return;
+    }
+    if (FireTarget.IsA('SFXPawn_PlayerMP_Sentinel') == TRUE)
+    {
+        ExecutionerClass = CloneClassType.CloneClass_Sentinel;
+    }
+    else if (FireTarget.IsA('SFXPawn_PlayerMP_Vanguard') == TRUE)
+    {
+        ExecutionerClass = CloneClassType.CloneClass_Vanguard;
+    }
+    else if (FireTarget.IsA('SFXPawn_PlayerMP_Infiltrator') == TRUE)
+    {
+        ExecutionerClass = CloneClassType.CloneClass_Infiltrator;
+    }
+    else if (FireTarget.IsA('SFXPawn_PlayerMP_Engineer') == TRUE)
+    {
+        ExecutionerClass = CloneClassType.CloneClass_Engineer;
+    }
+    else if (FireTarget.IsA('SFXPawn_PlayerMP_Adept') == TRUE)
+    {
+        ExecutionerClass = CloneClassType.CloneClass_Adept;
+    }
+    else
+    {
+        ExecutionerClass = CloneClassType.CloneClass_Soldier;
+    }
+    SetPowerUsage();
+}
 public function Initialize()
 {
     local SFXDifficultyHandler DH;
@@ -105,42 +131,8 @@ public function Initialize()
     local SFXShield_Base PawnShield;
     local SFXPowerCustomAction_CloneDenial DenialPower;
     local SFXPowerCustomAction_CloneProjectile ProjectilePower;
-    local SFXPawn_Player PlayerPawn;
-    local PlayerController PC;
     local int idx;
     
-    if (MyBP.WorldInfo != None)
-    {
-        PC = MyBP.WorldInfo.GetALocalPlayerController();
-        if (PC != None)
-        {
-            PlayerPawn = SFXPawn_Player(PC.Pawn);
-        }
-    }
-    if (PlayerPawn.IsA('SFXPawn_PlayerSentinel') == TRUE)
-    {
-        CloneClass = CloneClassType.CloneClass_Sentinel;
-    }
-    else if (PlayerPawn.IsA('SFXPawn_PlayerVanguard') == TRUE)
-    {
-        CloneClass = CloneClassType.CloneClass_Vanguard;
-    }
-    else if (PlayerPawn.IsA('SFXPawn_PlayerInfiltrator') == TRUE)
-    {
-        CloneClass = CloneClassType.CloneClass_Infiltrator;
-    }
-    else if (PlayerPawn.IsA('SFXPawn_PlayerEngineer') == TRUE)
-    {
-        CloneClass = CloneClassType.CloneClass_Engineer;
-    }
-    else if (PlayerPawn.IsA('SFXPawn_PlayerAdept') == TRUE)
-    {
-        CloneClass = CloneClassType.CloneClass_Adept;
-    }
-    else
-    {
-        CloneClass = CloneClassType.CloneClass_Soldier;
-    }
     DH = SFXGRI(WorldInfo.GRI).DifficultyHandler;
     if (DH != None)
     {
@@ -155,6 +147,7 @@ public function Initialize()
         PowerEvadeChance = DH.GetFloat('PowerEvadeChance', 'Executioner');
         FlankReactionTime = DH.GetFloat('FlankReactionTime', 'Executioner');
         GrenadeInterval = DH.GetFloat('GrenadeInterval', 'Executioner');
+        MinTimeBetweenExecutionAttempts = DH.GetFloat('ExecutionAttemptInterval', 'Executioner');
         DmgMod = MyBP.GetModule(Class'SFXModule_Damage');
         if (DmgMod != None)
         {
@@ -257,18 +250,9 @@ public function NotifyTakeHit(Controller instigatedBy, Vector HitLocation, int D
 public function DoMeleeAttack()
 {
     local SFXPawn EnemyPawn;
-    local float SyncInterval;
     local bool bSyncSuccessful;
     
-    if (CloneClass == CloneClassType.CloneClass_Vanguard)
-    {
-        SyncInterval = SyncMeleeAttackInterval_Vanguard;
-    }
-    else
-    {
-        SyncInterval = SyncMeleeAttackInterval;
-    }
-    if (SFXPawn_Player(FireTarget) != None && WorldInfo.GameTimeSeconds - LastSyncMeleeTime > SyncInterval)
+    if (SFXPawn_Player(FireTarget) != None && WorldInfo.GameTimeSeconds - LastSyncMeleeTime > MinTimeBetweenExecutionAttempts)
     {
         EnemyPawn = SFXPawn(Enemy);
         if (EnemyPawn != None)
@@ -283,23 +267,23 @@ public function DoMeleeAttack()
     if (!bSyncSuccessful)
     {
         LastCombatActionTime = WorldInfo.GameTimeSeconds;
-        if (CloneClass == CloneClassType.CloneClass_Sentinel)
+        if (ExecutionerClass == CloneClassType.CloneClass_Sentinel)
         {
             MyBP.StartCustomAction(205);
         }
-        else if (CloneClass == CloneClassType.CloneClass_Vanguard)
+        else if (ExecutionerClass == CloneClassType.CloneClass_Vanguard)
         {
             MyBP.StartCustomAction(206);
         }
-        else if (CloneClass == CloneClassType.CloneClass_Infiltrator)
+        else if (ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
         {
             MyBP.StartCustomAction(207);
         }
-        else if (CloneClass == CloneClassType.CloneClass_Engineer)
+        else if (ExecutionerClass == CloneClassType.CloneClass_Engineer)
         {
             MyBP.StartCustomAction(208);
         }
-        else if (CloneClass == CloneClassType.CloneClass_Adept)
+        else if (ExecutionerClass == CloneClassType.CloneClass_Adept)
         {
             MyBP.StartCustomAction(209);
         }
@@ -390,7 +374,7 @@ public function InitializeCoverConstraints(Goal_AtCover Evaluator, Actor GoalAct
     Super.InitializeCoverConstraints(Evaluator, GoalActor);
     if (MyBP.GetCurrentShields() <= 0.0)
     {
-        Class'SFXPath_AwayFromGoal'.static.AwayFromGoal(MyBP, GoalActor, CloneRetreatDistance);
+        Class'SFXPath_AwayFromGoal'.static.AwayFromGoal(MyBP, GoalActor, ExecutionerRetreatDistance);
     }
 }
 public function bool ReactToNearbyEnemy(Pawn NearbyPawn)
@@ -399,7 +383,7 @@ public function bool ReactToNearbyEnemy(Pawn NearbyPawn)
     {
         return FALSE;
     }
-    if (MyBP != None && (MyBP.GetCurrentShields() > float(0) || bSimFightActive == TRUE))
+    if (MyBP != None)
     {
         if (DirectWalkCheck(NearbyPawn.location, NearbyPawn) == FALSE)
         {
@@ -413,7 +397,7 @@ public function bool ReactToNearbyEnemy(Pawn NearbyPawn)
         }
         else if (ShouldMelee(NearbyPawn))
         {
-            if (CloneClass == CloneClassType.CloneClass_Vanguard)
+            if (ExecutionerClass == CloneClassType.CloneClass_Vanguard)
             {
                 MyBP.StartCustomAction(206);
             }
@@ -426,28 +410,6 @@ public function bool ReactToNearbyEnemy(Pawn NearbyPawn)
         return FALSE;
     }
     return FALSE;
-}
-public function bool ShouldMelee(Actor MeleeTarget)
-{
-    if (bEndBehaviorActive == TRUE && m_bAllowedToLeavePlaypen == TRUE && MyBP.Squad != None && MyBP.Squad.HasPlaypen() == TRUE && MyBP.Squad.IsPositionInPlaypen(MyBP.location) == FALSE)
-    {
-        return FALSE;
-    }
-    return Super(SFXAI_Core).ShouldMelee(MeleeTarget);
-}
-public function OnShouldThrowGrenade(SequenceAction Seq)
-{
-    if (Seq != None)
-    {
-        if (Seq.InputLinks[0].bHasImpulse)
-        {
-            bThrowGrenade = TRUE;
-        }
-        else if (Seq.InputLinks[1].bHasImpulse)
-        {
-            bThrowGrenade = FALSE;
-        }
-    }
 }
 public final function bool ShouldUseGrenade()
 {
@@ -471,13 +433,12 @@ public final function bool ShouldUseGrenade()
     }
     return FALSE;
 }
-
-public function CloneCloak(optional bool bForce = FALSE)
+public function ExecutionerCloak(optional bool bForce = FALSE)
 {
-    // TODO: Must be moved to pawn to work off-host
     local SFXModule_GameEffectManager GEManager;
     local SFXSelectionModule SelectionModule;
     
+    // TODO: Must be moved to pawn to work off-host
     if (bCloaked)
     {
         return;
@@ -499,12 +460,12 @@ public function CloneCloak(optional bool bForce = FALSE)
         }
     }
 }
-public function CloneDeCloak()
+public function ExecutionerDeCloak()
 {
-    // TODO: Must be moved to pawn to work off-host
     local SFXModule_GameEffectManager GEManager;
     local SFXSelectionModule SelectionModule;
     
+    // TODO: Must be moved to pawn to work off-host
     if (bCloaked)
     {
         bCloaked = FALSE;
@@ -520,26 +481,25 @@ public function CloneDeCloak()
         }
     }
 }
-
 public final function Name GetGrenadeName()
 {
-    if (CloneClass == CloneClassType.CloneClass_Sentinel)
+    if (ExecutionerClass == CloneClassType.CloneClass_Sentinel)
     {
         return 'DenialGrenade';
     }
-    else if (CloneClass == CloneClassType.CloneClass_Vanguard)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Vanguard)
     {
         return 'DenialGrenade_Biotic';
     }
-    else if (CloneClass == CloneClassType.CloneClass_Infiltrator)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
     {
         return 'DenialGrenade';
     }
-    else if (CloneClass == CloneClassType.CloneClass_Engineer)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Engineer)
     {
         return 'DenialGrenade';
     }
-    else if (CloneClass == CloneClassType.CloneClass_Adept)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Adept)
     {
         return 'DenialGrenade_Biotic';
     }
@@ -550,7 +510,7 @@ public final function Name GetGrenadeName()
 }
 public final function Name GetPowerName()
 {
-    if (CloneClass == CloneClassType.CloneClass_Sentinel)
+    if (ExecutionerClass == CloneClassType.CloneClass_Sentinel)
     {
         if (FRand() >= 0.5)
         {
@@ -561,19 +521,19 @@ public final function Name GetPowerName()
             return 'CloneIncinerate';
         }
     }
-    else if (CloneClass == CloneClassType.CloneClass_Vanguard)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Vanguard)
     {
         return 'CloneWarp';
     }
-    else if (CloneClass == CloneClassType.CloneClass_Infiltrator)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
     {
         return 'CloneIncinerate';
     }
-    else if (CloneClass == CloneClassType.CloneClass_Engineer)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Engineer)
     {
         return 'CloneIncinerate';
     }
-    else if (CloneClass == CloneClassType.CloneClass_Adept)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Adept)
     {
         return 'CloneWarp';
     }
@@ -582,153 +542,68 @@ public final function Name GetPowerName()
         return 'CloneCarnage';
     }
 }
-
 public function InitializeClassSpecific()
 {
-    local SFXPawn_Executioner ClonePawn;
+    local SFXPawn_Executioner ExecutionerPawn;
     local SFXSelectionModule SelectionModule;
     
     SetPowerUsage();
-    ClonePawn = SFXPawn_Executioner(MyBP);
-    if (ClonePawn != None)
+    ExecutionerPawn = SFXPawn_Executioner(MyBP);
+    if (FALSE && ExecutionerPawn != None)
     {
-        if (ClonePawn.Weapon != None)
+        if (ExecutionerPawn.Weapon != None)
         {
-            ClonePawn.Weapon.Destroy();
+            ExecutionerPawn.Weapon.Destroy();
         }
-        SelectionModule = ClonePawn.GetModule(Class'SFXSelectionModule');
-        if (CloneClass == CloneClassType.CloneClass_Infiltrator)
+        // Todo: Investigate how to handle this with clients
+        if (FALSE)
         {
-            ClonePawn.Loadout = ClonePawn.Loadout_Sniper;
-            ClonePawn.CreateWeapons(ClonePawn.Loadout_Sniper, TRUE);
-            if (bSimFightActive == TRUE && SelectionModule != None && GameName_Infiltrator != 0)
-            {
-                SelectionModule.m_srGameName = GameName_Infiltrator;
-            }
-        }
-        else if (CloneClass == CloneClassType.CloneClass_Vanguard)
-        {
-            ClonePawn.Loadout = ClonePawn.Loadout_Shotgun;
-            ClonePawn.CreateWeapons(ClonePawn.Loadout_Shotgun, TRUE);
-            EnemyDistance_Melee = EnemyDistance_VanguardMelee;
-            if (bSimFightActive == TRUE && SelectionModule != None && GameName_Vanguard != 0)
-            {
-                SelectionModule.m_srGameName = GameName_Vanguard;
-            }
-        }
-        else if (CloneClass == CloneClassType.CloneClass_Sentinel)
-        {
-            ClonePawn.Loadout = ClonePawn.Loadout_Shotgun;
-            ClonePawn.CreateWeapons(ClonePawn.Loadout_Shotgun, TRUE);
-            if (bSimFightActive == TRUE && SelectionModule != None && GameName_Sentinel != 0)
-            {
-                SelectionModule.m_srGameName = GameName_Sentinel;
-            }
-        }
-        else if (CloneClass == CloneClassType.CloneClass_Adept)
-        {
-            ClonePawn.Loadout = ClonePawn.Loadout_Pistol;
-            ClonePawn.CreateWeapons(ClonePawn.Loadout_Pistol, TRUE);
-            if (bSimFightActive == TRUE && SelectionModule != None && GameName_Adept != 0)
-            {
-                SelectionModule.m_srGameName = GameName_Adept;
-            }
-        }
-        else if (CloneClass == CloneClassType.CloneClass_Engineer)
-        {
-            ClonePawn.Loadout = ClonePawn.Loadout_Pistol;
-            ClonePawn.CreateWeapons(ClonePawn.Loadout_Pistol, TRUE);
-            if (bSimFightActive == TRUE && SelectionModule != None && GameName_Engineer != 0)
-            {
-                SelectionModule.m_srGameName = GameName_Engineer;
-            }
-        }
-        else
-        {
-            ClonePawn.Loadout = ClonePawn.Loadout_Assault;
-            ClonePawn.CreateWeapons(ClonePawn.Loadout_Assault, TRUE);
-            if (bSimFightActive == TRUE && SelectionModule != None && GameName_Soldier != 0)
-            {
-                SelectionModule.m_srGameName = GameName_Soldier;
-            }
+            ExecutionerPawn.Loadout = ExecutionerPawn.Loadout_Assault;
+            ExecutionerPawn.CreateWeapons(ExecutionerPawn.Loadout_Assault, TRUE);
         }
     }
-}
-
-public function OnInitSimClone(SFXSeqAct_InitSimClone Seq)
-{
-    local SFXPowerCustomAction_CloneDenial SimDenialPower;
-    
-    if (Seq == None || Seq.SimClone == None)
-    {
-        return;
-    }
-    bSimFightActive = TRUE;
-    CloneClass = Seq.CloneClass;
-    InitializeClassSpecific();
-    if (Seq.SimClone.PowerManager != None)
-    {
-        SimDenialPower = SFXPowerCustomAction_CloneDenial(Seq.SimClone.PowerManager.GetPowerByClass(Class'SFXPowerCustomAction_CloneDenial'));
-        if (SimDenialPower == None)
-        {
-            SimDenialPower = SFXPowerCustomAction_CloneDenial(Seq.SimClone.PowerManager.GetPowerByClass(Class'SFXPowerCustomAction_CloneDenial_Biotic'));
-        }
-        if (SimDenialPower != None)
-        {
-            SimDenialPower.MaxActiveGrenades = 1;
-        }
-    }
-    Seq.SimClone.bPreventPermanentDeath = FALSE;
-    Seq.SimClone.bCanRagdoll = TRUE;
 }
 public function SetGrenadeTime()
 {
-    local SFXAI_Executioner ChkCloneAI;
+    local SFXAI_Executioner ChkExecutionerAI;
     local SFXPawn_Executioner ChkExecutioner;
     
     if (MyBP == None || MyBP.WorldInfo == None)
     {
         return;
     }
-    if (!bSimFightActive)
+    foreach WorldInfo.AllPawns(Class'SFXPawn_Executioner', ChkExecutioner)
     {
-        LastGrenadeTime = MyBP.WorldInfo.GameTimeSeconds;
-    }
-    else
-    {
-        foreach WorldInfo.AllPawns(Class'SFXPawn_Executioner', ChkExecutioner)
+        ChkExecutionerAI = SFXAI_Executioner(ChkExecutioner.Controller);
+        if (ChkExecutionerAI != None)
         {
-            ChkCloneAI = SFXAI_Executioner(ChkExecutioner.Controller);
-            if (ChkCloneAI != None)
-            {
-                ChkCloneAI.LastGrenadeTime = MyBP.WorldInfo.GameTimeSeconds;
-            }
+            ChkExecutionerAI.LastGrenadeTime = MyBP.WorldInfo.GameTimeSeconds;
         }
     }
 }
 public function SetPowerUsage()
 {
-    if (CloneClass == CloneClassType.CloneClass_Sentinel)
+    if (ExecutionerClass == CloneClassType.CloneClass_Sentinel)
     {
         PowerToFiringRatio = 1.5;
         PowerInterval = 1.5;
     }
-    else if (CloneClass == CloneClassType.CloneClass_Vanguard)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Vanguard)
     {
         PowerToFiringRatio = 0.5;
         PowerInterval = 4.0;
     }
-    else if (CloneClass == CloneClassType.CloneClass_Infiltrator)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
     {
         PowerToFiringRatio = 0.5;
         PowerInterval = 4.0;
     }
-    else if (CloneClass == CloneClassType.CloneClass_Engineer)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Engineer)
     {
         PowerToFiringRatio = 1.0;
         PowerInterval = 1.5;
     }
-    else if (CloneClass == CloneClassType.CloneClass_Adept)
+    else if (ExecutionerClass == CloneClassType.CloneClass_Adept)
     {
         PowerToFiringRatio = 1.0;
         PowerInterval = 1.5;
@@ -741,18 +616,18 @@ public function SetPowerUsage()
 }
 public final function bool ShouldCastDrone()
 {
-    local SFXPowerCustomAction_CloneDrone CloneDronePower;
+    local SFXPowerCustomAction_ExecutionerDrone ExecutionerDronePower;
     
-    if (CloneClass != CloneClassType.CloneClass_Engineer)
+    if (ExecutionerClass != CloneClassType.CloneClass_Engineer)
     {
         return FALSE;
     }
     if (MyBP.PowerManager != None)
     {
-        CloneDronePower = SFXPowerCustomAction_CloneDrone(MyBP.PowerManager.GetPowerByClass(Class'SFXPowerCustomAction_CloneDrone'));
-        if (CloneDronePower != None)
+        ExecutionerDronePower = SFXPowerCustomAction_ExecutionerDrone(MyBP.PowerManager.GetPowerByClass(Class'SFXPowerCustomAction_ExecutionerDrone'));
+        if (ExecutionerDronePower != None)
         {
-            if (CloneDronePower.IsDroneAlive() == TRUE)
+            if (ExecutionerDronePower.IsDroneAlive() == TRUE)
             {
                 return FALSE;
             }
@@ -764,117 +639,26 @@ public final function bool ShouldCastDrone()
     }
     return TRUE;
 }
-
 public final function bool ShouldRushPlayer()
 {
-    if (SFXPawn_Player(FireTarget) == None || bEndBehaviorActive == TRUE || bHasRushPriority == FALSE)
+    if (SFXPawn(FireTarget) == None || bHasRushPriority == FALSE)
     {
         return FALSE;
     }
     if (WorldInfo.GameTimeSeconds - LastSyncMeleeTime > SyncMeleeAttackInterval)
     {
+        // Rush players if their shields are down. Risk it!
+        if (SFXPawn(FireTarget) != None && SFXPawn(FireTarget).GetCurrentShields() == 0.0)
+        {
+            return TRUE;
+        }
+        // Probably not the best plan if their shields are up but mine aren't
         if (MyBP.GetCurrentShields() > float(0))
         {
             return TRUE;
         }
     }
     return FALSE;
-}
-public function StageTwoUpgrade()
-{
-    local SFXPawn_Player PlayerPawn;
-    local PlayerController PC;
-    local RvrClientEffectTarget CETarget;
-    local SFXShield_Base CloneShield;
-    local SFXModule_GameEffectManager GEManager;
-    local SFXModule_GameEffectManager WeaponGEManager;
-    local SFXWeapon CloneWeapon;
-    local SFXGameEffect_WeaponVFXChange WeaponVFXEffect;
-    
-    bStageTwoActive = TRUE;
-    GEManager = MyBP.GetModule(Class'SFXModule_GameEffectManager');
-    if (GEManager == None)
-    {
-        return;
-    }
-    if (MyBP.WorldInfo != None)
-    {
-        PC = MyBP.WorldInfo.GetALocalPlayerController();
-        if (PC != None)
-        {
-            PlayerPawn = SFXPawn_Player(PC.Pawn);
-        }
-    }
-    CloneWeapon = SFXWeapon(MyBP.Weapon);
-    if (CloneWeapon != None)
-    {
-        CloneWeapon.IdealTargetDistance = StageTwo_NewIdealRange;
-    }
-    if (CloneClass != CloneClassType.CloneClass_Soldier)
-    {
-        GEManager.CreateAndApplyEffect(Class'SFXGameEffect_WeaponDamageBonus', Name, 0.0, 2, StageTwo_WeaponDamageMultiplier);
-    }
-    CloneShield = MyBP.GetShields();
-    if (CloneShield != None)
-    {
-        CloneShield.InitializeMaxShields(Shield_StartingMax * StageTwo_ShieldBonusMultiplier);
-        if (CloneShield.MaxEnemyShieldRecharge > 0.0)
-        {
-            CloneShield.ShieldRegenDelay.X = Shield_StartRegenDelay * StageTwo_ShieldRechargeDelayMultiplier;
-            CloneShield.ShieldRegenDelay.Y = Shield_StartRegenDelay * StageTwo_ShieldRechargeDelayMultiplier;
-            CloneShield.ShieldRegenDelay.Value = Shield_StartRegenDelay * StageTwo_ShieldRechargeDelayMultiplier;
-        }
-    }
-    CETarget.Instigator = MyBP;
-    if (CloneClass == CloneClassType.CloneClass_Sentinel)
-    {
-        if (PlayerPawn.bIsFemale == FALSE)
-        {
-            Guid_DefensiveCrust = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_TechArmor_Male, CETarget);
-        }
-        else
-        {
-            Guid_DefensiveCrust = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_TechArmor_Female, CETarget);
-        }
-        GEManager.CreateAndApplyEffect(Class'SFXGameEffect_DamageTakenBonus', Name, 0.0, 2, StageTwo_SentinelDamageReduction, Self);
-    }
-    else if (CloneClass == CloneClassType.CloneClass_Vanguard)
-    {
-        Guid_DefensiveCrust = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_Barrier, CETarget);
-    }
-    else if (CloneClass == CloneClassType.CloneClass_Infiltrator)
-    {
-        SyncMeleeAttackInterval *= StageTwo_InfiltratorAgressiveFrequencyMultiplier;
-    }
-    else if (CloneClass == CloneClassType.CloneClass_Engineer)
-    {
-        Guid_DefensiveCrust = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_DefensiveMatrix, CETarget);
-    }
-    else if (CloneClass == CloneClassType.CloneClass_Adept)
-    {
-        Guid_DefensiveCrust = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_Barrier, CETarget);
-        GEManager.CreateAndApplyEffect(Class'SFXGameEffect_PowerBonus_Damage', Name, 0.0, 2, StageTwo_AdeptPowerDamageBonus, Self);
-    }
-    else
-    {
-        Guid_DefensiveCrust = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_AdrenalineRush, CETarget);
-        GEManager.CreateAndApplyEffect(Class'SFXGameEffect_WeaponDamageBonus', Name, 0.0, 2, StageTwo_SoldierWeaponDamageMultiplier);
-        CloneWeapon.WeaponPowerFireSound = WWise_FireAmmoSound;
-        CloneWeapon.SetAmmoPowerHologramTemplates(PS_FireHologramTemplate, PS_FireIconTemplate);
-        WeaponGEManager = CloneWeapon.GetModule(Class'SFXModule_GameEffectManager');
-        if (WeaponGEManager != None)
-        {
-            WeaponVFXEffect = SFXGameEffect_WeaponVFXChange(WeaponGEManager.CreateEffect(Class'SFXGameEffect_WeaponVFXChange', Name, 0.0, 2, 1.0, Self));
-            if (WeaponVFXEffect != None)
-            {
-                WeaponVFXEffect.bModifyMuzzleFlash = TRUE;
-                WeaponVFXEffect.oMuzzleVFX = PS_FireMuzzleVFX;
-                WeaponVFXEffect.oMuzzleLoopVFX = PS_FireMuzzleLoopVFX;
-                WeaponVFXEffect.OnApplied();
-            }
-        }
-        GrenadeInterval *= StageTwo_SoldierGrenadeFrequencyMultiplier;
-    }
 }
 
 //class default properties can be edited in the Properties tab for the class's Default__ object.
@@ -935,24 +719,14 @@ defaultproperties
     PowerInterval = 5.0
     GrenadeConeAngle = 0.699999988
     PowerToFiringRatio = 0.5
-    StageTwo_ShieldRechargeDelayMultiplier = 0.75
-    StageTwo_ShieldBonusMultiplier = 1.5
-    StageTwo_WeaponDamageMultiplier = 0.25
-    StageTwo_NewIdealRange = 750.0
-    StageTwo_SentinelDamageReduction = 0.5
-    StageTwo_VanguardChargeFrequencyBonus = 0.5
-    StageTwo_InfiltratorAgressiveFrequencyMultiplier = 0.5
-    StageTwo_AdeptPowerDamageBonus = 0.5
-    StageTwo_SoldierGrenadeFrequencyMultiplier = 0.5
-    StageTwo_SoldierWeaponDamageMultiplier = 0.5
     MinTimeBetweenDrones = 10.0
-    CloneRetreatDistance = 4000.0
-    CloneSpeedBoostDuration = 10.0
-    CLoneSpeedIncrease = 0.300000012
+    ExecutionerRetreatDistance = 4000.0
+    ExecutionerSpeedBoostDuration = 10.0
+    ExecutionerSpeedIncrease = 0.300000012
     InfiltratorSpeedIncrease = 0.400000006
     RushTimeout = 30.0
-    Rush_CloneSyncRange = 300.0
-    Rush_CloneHealthMinPercent = 0.5
+    Rush_ExecutionRange = 300.0
+    Rush_ExecutionerHealthMinPercent = 0.5
     Rush_StopFiringRange = 800.0
     MinTimeBetweenCloaks = 3.0
     MinTeleportInterval = 5.0
@@ -961,7 +735,6 @@ defaultproperties
     MaxChargesPerRush = 2
     EnemyDistance_VanguardMelee = 250.0
     SyncMeleeAttackInterval_Vanguard = 30.0
-    MaxRezDistance = 200.0
     PlayerCampingDistance = 500.0
     GameName_Soldier = $93952
     GameName_Adept = $93954
