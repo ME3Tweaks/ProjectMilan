@@ -4,6 +4,7 @@ using LegendaryExplorerCore.Packages;
 using ProjectMilan;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,9 @@ using LegendaryExplorerCore.TLK.ME2ME3;
 using LegendaryExplorerCore.TLK;
 using Serilog;
 using System.Xml.Linq;
+using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Textures;
+using LegendaryExplorerCore.Unreal.Classes;
 
 namespace ProjectMilan_ExtraContent.Shared
 {
@@ -243,6 +247,34 @@ namespace ProjectMilan_ExtraContent.Shared
             var destAssetBundle = ConfigAssetBundle.FromSingleFile(MEGame.LE3, configDest);
             sourceAssetBundle.MergeInto(destAssetBundle);
             destAssetBundle.CommitAssets(configDest);
+        }
+
+        /// <summary>
+        /// Installs textures from a folder to a package.
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="type">Folder under 'Textures', such as Enemies or Art.</param>
+        /// <param name="category">Folder under type, such as specific items.</param>
+        /// <param name="targetPackage"></param>
+        internal static void InstallTextures(EExtraContent content, string type, string category, IMEPackage targetPackage, ExportEntry newParentPackage)
+        {
+            var sourceDir = Path.Combine(ECPipelineRoot, content.ToString(), "Assets", "Textures", type, category);
+            if (!Directory.Exists(sourceDir))
+                return; // Nothing here
+
+            foreach (var texFile in Directory.GetFiles(sourceDir, "*.png"))
+            {
+                var name = Path.GetFileNameWithoutExtension(texFile);
+                var matchingTexture = targetPackage.Exports.FirstOrDefault(x => x.IsTexture() && x.ObjectName.Instanced.CaseInsensitiveEquals(name));
+                if (matchingTexture == null)
+                    Debugger.Break(); // Should not happen!
+
+                MilanLog.Information($"Installing new texture {name} into {targetPackage.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+                Image im = Image.LoadFromFile(texFile, PixelFormat.BC7); // Lets just use BC7, I guess.
+                Texture2D t2d = new Texture2D(matchingTexture);
+                t2d.Replace(im, matchingTexture.GetProperties(), isPackageStored: true); // We will extract textures at a later step
+                matchingTexture.idxLink = newParentPackage.UIndex;
+            }
         }
     }
 }

@@ -177,6 +177,7 @@ namespace ProjectMilan_ExtraContent.Shared
 
                 }
             });
+            Directory.Delete(staging);
         }
 
         /// <summary>

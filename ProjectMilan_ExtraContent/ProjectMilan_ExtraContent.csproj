@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Rejects\Assets\Textures\Enemies\NewFolder\**" />
+    <EmbeddedResource Remove="Rejects\Assets\Textures\Enemies\NewFolder\**" />
+    <None Remove="Rejects\Assets\Textures\Enemies\NewFolder\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ProjectMilanCore\ProjectMilanCore.csproj" />
   </ItemGroup>
 
