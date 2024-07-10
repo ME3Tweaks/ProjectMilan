@@ -27,8 +27,9 @@ namespace ProjectMilanCore
 
         // DEV MODE ONLY!!!
         public static string REJECTS_DLC_NAME { get; } = @"DLC_MOD_PMR2";
+
+        // DEV MODE ONLY!!!
         public static string REDEMPTION_DLC_NAME { get; } = @"DLC_MOD_PMR3";
-#endif
 
         private const string ROOT_FOLDER_NAME = @"ProjectMilan";
         public static ObjectInstanceDB LE3ObjectDB { get; set; }
@@ -1078,6 +1079,29 @@ namespace ProjectMilanCore
             }
 
             return exp;
+        }
+
+        private static object commonCacheSyncObj = new object();
+        private static TieredPackageCache mpCommonCache;
+
+        /// <summary>
+        /// Returns a tiered package cache that contains BIOP_MP_COMMON already in it
+        /// </summary>
+        /// <returns></returns>
+        public static TieredPackageCache GetMPCommonTieredPackageCache()
+        {
+            lock (commonCacheSyncObj)
+            {
+                if (mpCommonCache == null)
+                {
+                    mpCommonCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+                    mpCommonCache.GetCachedPackage(Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", "BIOP_MP_COMMON.pcc")); // Cache MPCommon as it will be used. A lot.
+                }
+            }
+
+            return mpCommonCache;
+
+
         }
     }
 }
