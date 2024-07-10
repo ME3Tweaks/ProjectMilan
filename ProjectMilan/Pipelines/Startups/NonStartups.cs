@@ -191,7 +191,7 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
-            var globalCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
+            var globalCache = MilanShared.GetMPCommonTieredPackageCache();
             // We use .Distinct() cause list might have duplicates due to duplicates in DLC folders
             Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
@@ -199,7 +199,7 @@ namespace ProjectMilan.Pipelines.Startups
                     //if (packageBaseName is not "SFXMobileAnnex")
                     //    return;
                     var cache = globalCache.ChainNewCache();
-                    cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
+                    //cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
                     MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
                     var packageName = $"{packageBaseName}.pcc";
                     var me3File = MilanShared.GetME3Package(packageName);
@@ -208,7 +208,7 @@ namespace ProjectMilan.Pipelines.Startups
                     me3File.LECLTagData.ImportHintFiles.Add("Startup_DLC_CON_MP4_INT.pcc");
 
                     var le3File = MEPackageHandler.CreateAndOpenPackage(Path.Combine(vars.OutputPath, packageName), MEGame.LE3);
-                    le3File.LECLTagData.ImportHintFiles.Add("BIOP_MP_COMMON.pcc"); // Hint common package
+                    le3File.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint common package
                     le3File.LECLTagData.IsPostLoadFile = false;
 
                     MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY);
