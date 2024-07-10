@@ -19,9 +19,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BinarySerializer", "Wwiser.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MultiInstancePatcher", "MultiInstancePatcher\MultiInstancePatcher.csproj", "{C34C7EEC-E76A-4828-AEED-09EBD9683179}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectMilan_ExtraContent", "ProjectMilan_ExtraContent\ProjectMilan_ExtraContent.csproj", "{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectMilan_ExtraContent", "ProjectMilan_ExtraContent\ProjectMilan_ExtraContent.csproj", "{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectMilanCore", "ProjectMilanCore\ProjectMilanCore.csproj", "{45CB5489-C90B-4291-8C6E-5E0E744911C7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectMilanCore", "ProjectMilanCore\ProjectMilanCore.csproj", "{45CB5489-C90B-4291-8C6E-5E0E744911C7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -263,6 +263,7 @@ Global
 		{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}.Debug|x86.ActiveCfg = Debug|x64
 		{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}.Release|Any CPU.ActiveCfg = Release|x64
 		{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}.Release|x64.ActiveCfg = Release|x64
+		{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}.Release|x64.Build.0 = Release|x64
 		{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}.Release|x86.ActiveCfg = Release|x64
 		{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}.WinAzureRelease|Any CPU.ActiveCfg = Release|x64
 		{5AD4BD37-68EE-4E47-81CE-3D9EDBA12E8F}.WinAzureRelease|x64.ActiveCfg = Release|x64
@@ -282,6 +283,7 @@ Global
 		{45CB5489-C90B-4291-8C6E-5E0E744911C7}.Debug|x86.ActiveCfg = Debug|x64
 		{45CB5489-C90B-4291-8C6E-5E0E744911C7}.Release|Any CPU.ActiveCfg = Release|x64
 		{45CB5489-C90B-4291-8C6E-5E0E744911C7}.Release|x64.ActiveCfg = Release|x64
+		{45CB5489-C90B-4291-8C6E-5E0E744911C7}.Release|x64.Build.0 = Release|x64
 		{45CB5489-C90B-4291-8C6E-5E0E744911C7}.Release|x86.ActiveCfg = Release|x64
 		{45CB5489-C90B-4291-8C6E-5E0E744911C7}.WinAzureRelease|Any CPU.ActiveCfg = Release|x64
 		{45CB5489-C90B-4291-8C6E-5E0E744911C7}.WinAzureRelease|x64.ActiveCfg = Release|x64
