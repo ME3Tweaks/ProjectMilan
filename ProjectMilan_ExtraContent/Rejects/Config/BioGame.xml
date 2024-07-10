@@ -8,7 +8,7 @@
 				<Value type="3">( EnemyType="WAVE_REJ_Sniper", EnemyArchetypeName="Char_Enemies_Milan.Sniper",WaveCost=30 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Catlas", EnemyArchetypeName="Char_Enemies_Milan.Catlas",WaveCost=100 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Forerunner", EnemyArchetypeName="Char_Enemies_Milan.Forerunner",WaveCost=55 )</Value>
-				<Value type="3">( EnemyType="WAVE_REJ_Rampart", EnemyArchetypeName="Char_Enemies_Milan.Rampart",WaveCost=40 )</Value>
+				<Value type="3">( EnemyType="WAVE_REJ_Rampart", EnemyArchetypeName="Char_Enemies_Milan.RampartMP",WaveCost=40 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Adjutant", EnemyArchetypeName="Char_Enemies_Milan.Adjutant",WaveCost=80 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Executioner", EnemyArchetypeName="Char_Enemies_Milan.Executioner",WaveCost=90 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Agent", EnemyArchetypeName="Char_Enemies_Milan.Agent",WaveCost=100 )</Value>
