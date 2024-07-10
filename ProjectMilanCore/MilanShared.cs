@@ -1100,8 +1100,102 @@ namespace ProjectMilanCore
             }
 
             return mpCommonCache;
+        }
 
+        /// <summary>
+        /// Moves textures that can be TFC stored out of a package and into a TFC for performance. This creates a new TFC file, it will wipe out existing!!
+        /// </summary>
+        /// <param name="tfcType">TFC name prefix, e.g. Textures, Lighting</param>
+        /// <param name="dlcName">Name of the DLC for TFC naming.</param>
+        /// <param name="rootTextures">if we should external root textures (lighting) only or non-root textures (everything else)</param>
+        /// <param name="logCategoryBase"></param>
+        public static void MoveTexturesToTFC(string tfcType, string dlcName, bool rootTextures, string logCategoryBase)
+        {
+            bool ShouldExternalize(bool rootTexture, int idxLink)
+            {
+                return rootTexture ? idxLink == 0 : idxLink != 0;
+            }
 
+            string category = logCategoryBase + "-" + tfcType;
+            var inputFolder = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole");
+            var tfcName = $"{tfcType}_{dlcName}";
+            var tfcPath = Path.Combine(inputFolder, $"{tfcName}.tfc");
+            using var tfcStream = File.Open(tfcPath, FileMode.CreateNew, FileAccess.ReadWrite);
+            var guid = Guid.NewGuid();
+            tfcStream.WriteGuid(guid);
+
+            foreach (var package in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
+            {
+                MilanLog.Information($"Checking package {Path.GetFileName(package)}", customPrefix: category);
+                //var me3File = MilanShared.GetME3Package(Path.GetFileName(package));
+                var le3File = MEPackageHandler.OpenMEPackage(package);
+
+                foreach (var tex in le3File.Exports.Where(x => x.IsTexture() && ShouldExternalize(rootTextures, x.idxLink)))
+                {
+                    if (tex.ObjectName.Name.StartsWith("Cubemap", StringComparison.OrdinalIgnoreCase))
+                        continue; // These are never moved to TFC as far as I know...
+
+                    var bin = (UTexture2D)ObjectBinary.From(tex); // Cast since we want it to make the lowest-tier class but we only need the upper one.
+
+                    var startedMovingTexture = false;
+                    var changedMips = bin.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty);
+
+                    if (bin.Mips.Count <= 6 && changedMips == 0)
+                        continue;
+
+                    bool updateTFCName = false;
+                    for (int i = 0; i < bin.Mips.Count - 6; i++)
+                    {
+                        // Move data to external
+                        var mip = bin.Mips[i];
+                        if (mip.StorageType == StorageTypes.pccUnc)
+                        {
+                            MilanLog.Information($"  Moving texture to external TFC: {tex.InstancedFullPath}",
+                                !startedMovingTexture, customPrefix: category);
+                            startedMovingTexture = true;
+
+                            var compressed = TextureCompression.CompressTexture(mip.Mip, StorageTypes.extOodle);
+                            var offset = tfcStream.Position;
+                            tfcStream.Write(compressed);
+                            mip.StorageType = StorageTypes.extOodle;
+                            mip.DataOffset = (int)offset;
+                            mip.CompressedSize = compressed.Length;
+                            mip.Mip = Array.Empty<byte>();
+                            changedMips++;
+                            updateTFCName = true;
+                        }
+                    }
+
+                    if (updateTFCName)
+                    {
+                        // Update TFC properties
+                        var properties = tex.GetProperties();
+                        properties.AddOrReplaceProp(new FGuid(guid).ToStructProperty("TFCFileGuid"));
+                        properties.AddOrReplaceProp(new NameProperty(tfcName, "TextureFileCacheName"));
+                        properties.RemoveNamedProperty("NeverStream");
+                        tex.WriteProperties(properties);
+                    }
+
+                    if (changedMips > 0)
+                    {
+                        tex.WriteBinary(bin);
+                    }
+
+                    //var me3Tex = me3File.FindExport(tex.InstancedFullPath);
+                    //if (me3Tex != null)
+                    //{
+                    //    var le3Bin = 
+                    //}
+
+                }
+
+                if (le3File.IsModified)
+                {
+                    MilanLog.Information("  Saving package", customPrefix: category);
+                    le3File.Save();
+                    MilanShared.RefreshMilanFiles = true;
+                }
+            }
         }
     }
 }

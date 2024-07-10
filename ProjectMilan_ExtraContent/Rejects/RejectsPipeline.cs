@@ -78,6 +78,7 @@ namespace ProjectMilan_ExtraContent.Rejects
         {
             ExtraContentInit.PrepareContent(EExtraContent.Rejects);
             RunPipeline();
+            MilanShared.MoveTexturesToTFC("Textures", MilanShared.REJECTS_DLC_NAME, false, @"MILANEC-TFC");
             ExtraContentInit.CompactTFC(EExtraContent.Rejects); // Milan main will handle this when it pulls everything together
             ExtraContentInit.CompactAFC(EExtraContent.Rejects); // Milan main will handle this when it pulls everything together
         }
