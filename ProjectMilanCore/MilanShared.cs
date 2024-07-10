@@ -24,8 +24,8 @@ namespace ProjectMilanCore
         /// Name of the DLC folder to output for Project Milan.
         /// </summary>
         public static string DLC_NAME { get; } = @"DLC_MOD_ProjectMilan";
-#if DEBUG
-        // These are only used for partial builds! THus they can only be build in debug.
+
+        // DEV MODE ONLY!!!
         public static string REJECTS_DLC_NAME { get; } = @"DLC_MOD_PMR2";
         public static string REDEMPTION_DLC_NAME { get; } = @"DLC_MOD_PMR3";
 #endif

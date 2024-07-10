@@ -42,15 +42,6 @@ namespace ProjectMilan.Pipelines.Weapons
             //DotTrace.Attach();
             // foreach (var kit in vars.KitPipelines)
 
-            using TieredPackageCache parentCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
-
-            foreach (var v in commonlyOpenedPackages)
-            {
-                MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3).TryGetValue(v, out var commonPackage);
-                MilanLog.Information($"Caching commonly opened package: {commonPackage}", customPrefix: LOG_CATEGORY);
-                parentCache.GetCachedPackage(commonPackage);
-            }
-
             Parallel.ForEach(vars.WeaponPipelines.OrderBy(x => x.Enabled).AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, weapon =>
             {
                 // Uncomment this to port everything
@@ -61,19 +52,19 @@ namespace ProjectMilan.Pipelines.Weapons
                     return;
                 }
 
-                BeginPorting(weapon, parentCache);
+                BeginPorting(weapon);
             });
             // }
         }
 
         private static object _weaponSyncObj = new object();
 
-        private static void BeginPorting(WeaponSpecificPipeline weaponPipeline, TieredPackageCache parentCache)
+        private static void BeginPorting(WeaponSpecificPipeline weaponPipeline)
         {
             weaponPipeline.LogCategory = $"{LOG_CATEGORY}-{weaponPipeline.PackageName}";
 
             // Initialize cache
-            weaponPipeline.Cache = parentCache.ChainNewCache();
+            weaponPipeline.Cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache();
             weaponPipeline.Cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"DLCWeapons");

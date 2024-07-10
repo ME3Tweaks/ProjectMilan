@@ -44,7 +44,7 @@ namespace ProjectMilan.Pipelines.Weapons
             //DotTrace.Attach();
             // foreach (var kit in vars.KitPipelines)
 
-            using TieredPackageCache parentCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+            using TieredPackageCache parentCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache();
 
             foreach (var v in commonlyOpenedPackages)
             {

@@ -26,5 +26,10 @@ namespace ProjectMilanCore
         /// Contains appearance archetypes, which are the base archetype of spawnable archetype.
         /// </summary>
         public static string BIOG_Milan_Appearances => "BIOG_Milan_Appr_L";
+
+        /// <summary>
+        /// Contains RampartMP BioG.
+        /// </summary>
+        public static string BIOG_RampartMP => "BIOG_MCH_LOK_R_Milan";
     }
 }

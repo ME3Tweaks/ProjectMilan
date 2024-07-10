@@ -38,15 +38,6 @@ namespace ProjectMilan.Pipelines.Kits
             //DotTrace.Attach();
             // foreach (var kit in vars.KitPipelines)
 
-            using TieredPackageCache parentCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
-
-            foreach (var v in commonlyOpenedPackages)
-            {
-                MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3).TryGetValue(v, out var commonPackage);
-                MilanLog.Information($"Caching commonly opened package: {commonPackage}", customPrefix: LOG_CATEGORY);
-                parentCache.GetCachedPackage(commonPackage);
-            }
-
             var kits = vars.KitPipelines.OrderBy(x => x.Enabled); // Frontload enabled ones for multithread
             Parallel.ForEach(kits.AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, kit =>
             {
@@ -58,18 +49,17 @@ namespace ProjectMilan.Pipelines.Kits
                     return;
                 }
 
-                BeginPorting(kit, parentCache);
+                BeginPorting(kit);
             });
             // }
         }
 
-        private static void BeginPorting(KitSpecificPipeline kitPipeline, TieredPackageCache parentCache)
+        private static void BeginPorting(KitSpecificPipeline kitPipeline)
         {
             kitPipeline.LogCategory = $"{LOG_CATEGORY}-{kitPipeline.PackageName}";
 
             // Initialize cache
-            kitPipeline.Cache = parentCache.ChainNewCache();
-            kitPipeline.Cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
+            kitPipeline.Cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache();
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Kits");
             Directory.CreateDirectory(outputPath);

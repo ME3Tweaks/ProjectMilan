@@ -119,10 +119,11 @@ namespace ProjectMilan.Pipelines.Levels
             // Sequencing needs ported over eventually. This controls the shuttle flying away. Requires MP classes though.
             foreach (var export in destPackage.Exports)
             {
+                var ifp = export.InstancedFullPath;
                 if (export.HasStack)
                 {
                     // Copy stack data. Not sure if this does anything useful.
-                    var orig = sourcePackage.FindExport(export.InstancedFullPath);
+                    var orig = sourcePackage.FindExport(ifp);
                     if (orig == null)
                         continue;
                     var binPreOrig = orig.GetPrePropBinary();
@@ -135,7 +136,7 @@ namespace ProjectMilan.Pipelines.Levels
                 var cachedDataVer = export.GetProperty<IntProperty>("CachedPhysBrushDataVersion") ?? export.GetProperty<IntProperty>("PreCachedPhysDataVersion");
                 if (cachedDataVer != null && cachedDataVer == 34079634) // OT version
                 {
-                    MilanLog.Information($"  Fixing collision data for {export.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
+                    MilanLog.Information($"  Fixing collision data for {ifp}", customPrefix: levelPipeline.LogCategory);
 
                     // Get rid of it
                     // This doesn't fix anything

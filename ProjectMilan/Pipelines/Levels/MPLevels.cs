@@ -86,7 +86,7 @@ namespace ProjectMilan.Pipelines.Levels
 
         private static void InternalRunPipeline(MPLevelsVars levelVars)
         {
-            TieredPackageCache parent = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
+            TieredPackageCache parent = MilanShared.GetMPCommonTieredPackageCache();
             foreach (var level in levelVars.LevelPipelines)
             {
                 if (!level.Enabled)

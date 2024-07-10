@@ -17,7 +17,7 @@ namespace ProjectMilan.Pipelines.Mod
         private static void InternalRunPipeline()
         {
             var files = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
-            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
+            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3); // Do not use the MPCommon cache as we will be modifying that package.
             Parallel.ForEach(files, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads },
                 file =>
                 {
