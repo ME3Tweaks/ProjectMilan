@@ -562,24 +562,11 @@ namespace ProjectMilan.Pipelines.Startups
                 var parsingPackage = MilanShared.GetME3Package(package);
 
                 //initing filelib is expensive, so we only want to do it for files that have script
-                UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+                var usop = new UnrealScriptOptionsPackage
                 {
                     Cache = cache,
                     CustomFileResolver = MilanShared.ME3PackageResolver,
                 };
-                FileLib fileLib = new FileLib(parsingPackage);
-                try
-                {
-                    if (!fileLib.Initialize(usop))
-                    {
-                        MilanShared.LogFailedFileLibInit(fileLib);
-                    }
-                }
-                catch
-                {
-                    //we're not checking if it failed to initialize because we don't really care, since decompilation doesn't actually need an initialized filelib,
-                    //it just makes the output a bit nicer (at the time of this writing all it does is resolve some integer literals into enum values)
-                }
 
                 // List of package level exports to port (ForcedExport)
                 // These can be null depending on what package they resolve on. That's fine.
