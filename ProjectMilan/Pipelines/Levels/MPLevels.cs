@@ -27,8 +27,8 @@ namespace ProjectMilan.Pipelines.Levels
                 // Vanilla 
                 new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Glacier
                 new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Reactor
-                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // White
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= true, SpecialPortingDelegate = BasegameMapPorting}, // Ghost
+                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // White
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Ghost
                 // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
                 new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Dagger
 
@@ -44,7 +44,7 @@ namespace ProjectMilan.Pipelines.Levels
 
                 // MP3 Earth
                 new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled=false, SpecialPortingDelegate = null}, // Rio
-                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled=true, SpecialPortingDelegate = null}, // Vancouver
+                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled=false, SpecialPortingDelegate = null}, // Vancouver
                 new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled=false, SpecialPortingDelegate = null}, // London
 
                 // MP4 Retaliation
