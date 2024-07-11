@@ -99,7 +99,10 @@ namespace ProjectMilan_ExtraContent.Rejects
             SharedECPipelines.MergeTLK(EExtraContent.Rejects);
             GenerateGUIPackage(vars);
             GenerateMergedContent(vars);
+            // To speed up builds don't split enemy packages in dev mode    
+#if !DEBUG
             SplitEnemyPackages(vars);
+#endif
         }
 
         private static string PipelineRoot => Path.Combine(SharedECPipelines.ECPipelineRoot, "Rejects");
