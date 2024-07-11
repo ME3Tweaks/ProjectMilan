@@ -54,12 +54,6 @@ var int ChargeCountThisRush;
 var float EnemyDistance_VanguardMelee;
 var float SyncMeleeAttackInterval_Vanguard;
 var float PlayerCampingDistance;
-var stringref GameName_Soldier;
-var stringref GameName_Adept;
-var stringref GameName_Engineer;
-var stringref GameName_Sentinel;
-var stringref GameName_Vanguard;
-var stringref GameName_Infiltrator;
 var bool bThrowGrenade;
 var bool bStageTwoActive;
 var bool bPlayerLockedOn;
@@ -736,12 +730,6 @@ defaultproperties
     EnemyDistance_VanguardMelee = 250.0
     SyncMeleeAttackInterval_Vanguard = 30.0
     PlayerCampingDistance = 500.0
-    GameName_Soldier = $93952
-    GameName_Adept = $93954
-    GameName_Engineer = $93953
-    GameName_Sentinel = $93957
-    GameName_Vanguard = $93956
-    GameName_Infiltrator = $93955
     bThrowGrenade = TRUE
     bHasRushPriority = TRUE
     AtCover_WeaponRange = AtCov_EvalWeaponRange

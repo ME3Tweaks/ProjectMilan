@@ -158,6 +158,7 @@ defaultproperties
     Begin Template Class=SFXModule_Radar Name=RadarModule
     End Template
     Begin Template Class=SFXModule_AimAssistTarget Name=AimAssistMod
+        m_srGameName = $13250208
     End Template
     Begin Template Class=SFXModule_Gestures Name=GestMod01
         Begin Template Class=BioGestureAnimSetMgr Name=oAnimSetMgr
