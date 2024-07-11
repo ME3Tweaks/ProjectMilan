@@ -234,11 +234,15 @@ namespace ProjectMilan_ExtraContent.Shared
         }
 
 
-        internal static void MergeConfig(EExtraContent content)
+        internal static void MergeConfig(EExtraContent content, string subfolder = null)
         {
             MilanLog.Information($"Merging config file", customPrefix: LOG_CATEGORY);
             var configDest = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"Default_{Path.GetFileName(BaseBuildSettings.OutputModPath)}.bin"); // Points to output directory .bin, could be milan or R2
             var configSourceF = Path.Combine(SharedECPipelines.ECPipelineRoot, content.ToString(), "Config");
+            if (subfolder != null)
+            {
+                configSourceF = Path.Combine(configSourceF, subfolder);
+            }
             var configSourceManifest = Path.Combine(configSourceF, $"Default_{GetDLCFolderName(content)}.xml"); // Always will be R2/R3 data
             var ms = new MemoryStream();
             CoalescedConverter.ConvertToBin(configSourceManifest, null, outStream: ms);

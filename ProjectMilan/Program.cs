@@ -212,6 +212,15 @@ namespace ProjectMilan
             // Patch for multi instance
             MultiInstance.PatchForMultiInstance();
 
+            PrintSummaryInformation();
+
+            if (InstallModOnCompletion)
+                ModManagerIntegration.RequestModInstallation(Path.Combine(Settings.OutputModPath, "..", "moddesc.ini"));
+        }
+
+        private static void PrintSummaryInformation()
+        {
+            // Timings
             MilanLog.Information($"Pipeline timings:");
             foreach (var stat in pipelineTimes)
             {
@@ -219,8 +228,20 @@ namespace ProjectMilan
             }
             MilanLog.Information($"\tTotal:\t{pipelineTimes.Sum(x => x.Value)}ms");
 
-            if (InstallModOnCompletion)
-                ModManagerIntegration.RequestModInstallation(Path.Combine(Settings.OutputModPath, "..", "moddesc.ini"));
+            // Tiered cache usage
+#if DEBUG
+            MilanLog.Information($"TieredPackageCache HeatMap for multiple same-file loads");
+            var gameMap = TieredPackageCache.StaticTieredHeatMap[MEGame.LE3];
+            var padWidth = gameMap.Values.Max() + 3;
+
+            foreach (var heatIndex in gameMap.OrderByDescending(x => x.Value))
+            {
+                if (heatIndex.Value == 1)
+                    continue; // These don't provide any benefit.
+                MilanLog.Information($"\t{heatIndex.Key.PadRight(padWidth)}{heatIndex.Value} loads");
+
+            }
+#endif
         }
 
         /// <summary>

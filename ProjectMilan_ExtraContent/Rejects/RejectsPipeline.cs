@@ -253,6 +253,25 @@ namespace ProjectMilan_ExtraContent.Rejects
         /// <param name="vars"></param>
         private static void SplitEnemyPackages(RejectVars vars)
         {
+            using var mergedContent = MEPackageHandler.OpenMEPackage(MergedContentPath);
+            Parallel.ForEach(PawnSources.Where(x => !x.IsSupportingObject), ps =>
+            {
+                MilanLog.Information($"Splitting {ps.Name} to individual package", customPrefix: LOG_CATEGORY);
+                var splitPackage = MEPackageHandler.CreateAndOpenPackage(
+                    Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"SFXPawn_{ps.Name}.pcc"),
+                    MEGame.LE3);
+                EntryExporter.ExportExportToPackage(mergedContent.FindExport(ps.RemappedArchetypeIFP), splitPackage, out var archetype, vars.Cache);
+                PackageTools.AddToObjectReferencer(archetype);
+                splitPackage.Save();
+            });
+
+            // Change to release settings.
+            SharedECPipelines.MergeConfig(EExtraContent.Rejects, "Release");
+
+            // Delete MergedContent
+#if !DEBUG
+            File.Delete(MergedContentPath);
+#endif
         }
     }
 }

@@ -173,7 +173,7 @@ namespace ProjectMilan.Pipelines.Startups
             var ucName = Path.GetFileName(sourceFile);
             Directory.CreateDirectory(stagingPath);
             var destFile = Path.Combine(stagingPath, ucName);
-            MilanLog.Information($"Adding script to merge mod: {ucName}");
+            MilanLog.Information($"Adding script to merge mod: {ucName}", customPrefix: LOG_CATEGORY);
             File.Copy(sourceFile, destFile, true);
             return new MergeFileChange1()
             {
@@ -200,7 +200,7 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 var ucName = Path.GetFileName(sourceFile);
                 var destFile = Path.Combine(stagingPath, ucName);
-                MilanLog.Information($"Adding 'addtoclassorreplace' to merge mod: {ucName}");
+                MilanLog.Information($"Adding 'addtoclassorreplace' to merge mod: {ucName}", customPrefix: LOG_CATEGORY);
                 File.Copy(sourceFile, destFile, true);
             }
 
