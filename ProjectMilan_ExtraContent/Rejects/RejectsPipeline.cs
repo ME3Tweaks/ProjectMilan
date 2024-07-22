@@ -58,16 +58,16 @@ namespace ProjectMilan_ExtraContent.Rejects
             new RejectPawnSource() { SourceFile = "SFXPawn_Husk.pcc", AssetIFP = "Wwise_Generic_Foley.Play_foley_melee_hit_standard_flesh", Name="Foley2", IsSupportingObject = true},
 
             //// Second - pawns
-            new RejectPawnSource() { SourceFile = "SFXPawn_Demo.pcc", AssetIFP = "Char_Enemies_Citadel.Demo", Name="Specialist"},
-            new RejectPawnSource() { SourceFile = "SFXPawn_Heavy.pcc", AssetIFP = "Char_Enemies_Citadel.Heavy", Name="Heavy"},
-            new RejectPawnSource() { SourceFile = "SFXPawn_Sniper.pcc", AssetIFP = "Char_Enemies_Citadel.Sniper", Name="Sniper"},
-            new RejectPawnSource() { SourceFile = "BioD_OMG003_303Trap.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Rampart_Combat", Name="RampartMP", PrePortingDelegate = RejectsRampart.PrePort},
-            new RejectPawnSource() { SourceFile = "BioD_OMG003_125LitExtra.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Adjutant_Combat", Name="Adjutant"},
-            new RejectPawnSource() { SourceFile = "BioD_Cit004_270ShuttleBay1.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.FemmeFatale", Name="Forerunner", PrePortingDelegate = RejectsForerunner.PrePort},
-            new RejectPawnSource() { SourceFile = "BioD_Cit004_272MaleClone.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.CloneShepardMale", Name="Executioner", PrePortingDelegate = RejectsExecutioner.PrePort},
-            new RejectPawnSource() { SourceFile = "BioD_Cit003_600MechEvent.pcc", AssetIFP = "Char_Enemies_Citadel.Atlas", Name="Catlas"},
+            //new RejectPawnSource() { SourceFile = "SFXPawn_Demo.pcc", AssetIFP = "Char_Enemies_Citadel.Demo", Name="Specialist"},
+            //new RejectPawnSource() { SourceFile = "SFXPawn_Heavy.pcc", AssetIFP = "Char_Enemies_Citadel.Heavy", Name="Heavy"},
+            //new RejectPawnSource() { SourceFile = "SFXPawn_Sniper.pcc", AssetIFP = "Char_Enemies_Citadel.Sniper", Name="Sniper"},
+            //new RejectPawnSource() { SourceFile = "BioD_OMG003_303Trap.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Rampart_Combat", Name="RampartMP", PrePortingDelegate = RejectsRampart.PrePort},
+            //new RejectPawnSource() { SourceFile = "BioD_OMG003_125LitExtra.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Adjutant_Combat", Name="AdjutantMP", PrePortingDelegate = RejectsAdjutant.PrePort},
+            //new RejectPawnSource() { SourceFile = "BioD_Cit004_270ShuttleBay1.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.FemmeFatale", Name="Forerunner", PrePortingDelegate = RejectsForerunner.PrePort},
+            //new RejectPawnSource() { SourceFile = "BioD_Cit004_272MaleClone.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.CloneShepardMale", Name="Executioner", PrePortingDelegate = RejectsExecutioner.PrePort},
+            //new RejectPawnSource() { SourceFile = "BioD_Cit003_600MechEvent.pcc", AssetIFP = "Char_Enemies_Citadel.Atlas", Name="Catlas", PrePortingDelegate = RejectsCatlas.PrePort},
             new RejectPawnSource() { SourceFile = "BioD_Cat004_625ProtoReaper.pcc", AssetIFP = "BioChar_Cat004.Archetypes.Nemesis_Legion", Name="GethAssassin", PrePortingDelegate = RejectsGethAssassin.PrePort},
-            new RejectPawnSource() { SourceFile = "BioD_Cat004_800KaiLeng.pcc", AssetIFP = "char_enemies.Archetypes.Cerberus.KaiLeng", Name="Agent"},
+            new RejectPawnSource() { SourceFile = "BioD_Cat004_800KaiLeng.pcc", AssetIFP = "char_enemies.Archetypes.Cerberus.KaiLeng", Name="Agent", PrePortingDelegate = RejectsAgent.PrePort},
             // FemClone Char_Enemies_Citadel.Bosses.CloneShepardFemale BioD_Cit004_273FemClone
         ]);
 

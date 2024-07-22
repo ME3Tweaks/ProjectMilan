@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using LegendaryExplorerCore.Packages;
+using ProjectMilanCore;
 
 namespace ProjectMilan_ExtraContent.Rejects.Enemies
 {
@@ -12,5 +9,12 @@ namespace ProjectMilan_ExtraContent.Rejects.Enemies
     // - Make sync attack only able to be used once
     internal class RejectsAgent
     {
+        public static void PrePort(RejectsPipeline.RejectVars vars, IMEPackage package)
+        {
+
+            var archetype = package.FindExport("char_enemies.Archetypes.Cerberus.KaiLeng");
+            var pawnClass = package.FindExport($"{MilanPackages.SFXGameContentMilan}.SFXPawn_Agent");
+            RejectsShared.ChangeoverArchetype(archetype, pawnClass);
+        }
     }
 }

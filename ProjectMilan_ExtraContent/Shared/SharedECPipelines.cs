@@ -250,7 +250,7 @@ namespace ProjectMilan_ExtraContent.Shared
             var sourceAssetBundle = ConfigAssetBundle.FromSingleStream(MEGame.LE3, ms);
             var destAssetBundle = ConfigAssetBundle.FromSingleFile(MEGame.LE3, configDest);
             sourceAssetBundle.MergeInto(destAssetBundle);
-            destAssetBundle.CommitAssets(configDest);
+            destAssetBundle.CommitAssets(configDest, MELocalization.None);
         }
 
         /// <summary>

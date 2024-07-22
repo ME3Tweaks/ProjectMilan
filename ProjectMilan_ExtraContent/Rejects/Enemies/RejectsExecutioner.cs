@@ -47,8 +47,6 @@ namespace ProjectMilan_ExtraContent.Rejects.Enemies
             // Change over classes of archetypes.
             var spawnableArchetype = sourcePackage.FindExport("Char_Enemies_Citadel.Bosses.CloneShepardMale");
             RejectsShared.ChangeoverArchetype(spawnableArchetype, sfxgcEXP);
-
-
         }
 
         public static void PrePort(RejectsPipeline.RejectVars vars, IMEPackage package)
@@ -61,8 +59,20 @@ namespace ProjectMilan_ExtraContent.Rejects.Enemies
             package.Save(Path.Combine(debug, "Clone-PrePort.pcc"));
         }
 
-        private static void ChangeMesh(RejectsPipeline.RejectVars vars, IMEPackage package)
+        private static void ChangeMesh(RejectsPipeline.RejectVars vars, IMEPackage sourcePackage)
         {
+            
+            var newAssetP = Path.Combine(SharedECPipelines.ECPipelineRoot, "Rejects", "Assets", "MeshPackages", "Executioner.pcc");
+
+            var meshAsset = new PortingAsset() { SourceFile = newAssetP, AssetIFP = "BIOG_HMM_EXECUTIONER_R.EXE.HMM_ARM_EXE_MDL", PostPortingDelegate = SetupExecutionerMesh };
+            SharedECPipelines.PortAsset(vars, meshAsset, sourcePackage);
+        }
+
+        private static void SetupExecutionerMesh(RejectsPipeline.RejectVars vars, ExportEntry mdl)
+        {
+            var archetypeMesh = mdl.FileRef.FindExport("Char_Enemies_Citadel.Bosses.CloneShepardMale.BioPawnSkeletalMeshComponent");
+            archetypeMesh.RemoveProperty("Materials"); // Use the mesh one instead
+            archetypeMesh.WriteProperty(new ObjectProperty(mdl, "SkeletalMesh"));
         }
     }
 }

@@ -3,13 +3,13 @@
 	<Sections>
 		<Section name="sfxgamempcontent.sfxwave_horde">
 			<Property name="enemylist">
-				<Value type="3">( EnemyType="WAVE_REJ_Specialist", EnemyArchetypeName="Char_Enemies_Milan.Specialist",WaveCost=20 )</Value>
+				<Value type="3">( EnemyType="WAVE_REJ_Specialist", EnemyArchetypeName="Char_Enemies_Milan.Specialist",WaveCost=25 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Heavy", EnemyArchetypeName="Char_Enemies_Milan.Heavy",WaveCost=50 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Sniper", EnemyArchetypeName="Char_Enemies_Milan.Sniper",WaveCost=30 )</Value>
-				<Value type="3">( EnemyType="WAVE_REJ_Catlas", EnemyArchetypeName="Char_Enemies_Milan.Catlas",WaveCost=100 )</Value>
+				<Value type="3">( EnemyType="WAVE_REJ_Catlas", EnemyArchetypeName="Char_Enemies_Milan.Catlas",WaveCost=120 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Forerunner", EnemyArchetypeName="Char_Enemies_Milan.Forerunner",WaveCost=55 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Rampart", EnemyArchetypeName="Char_Enemies_Milan.RampartMP",WaveCost=40 )</Value>
-				<Value type="3">( EnemyType="WAVE_REJ_Adjutant", EnemyArchetypeName="Char_Enemies_Milan.Adjutant",WaveCost=80 )</Value>
+				<Value type="3">( EnemyType="WAVE_REJ_Adjutant", EnemyArchetypeName="Char_Enemies_Milan.AdjutantMP",WaveCost=110 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Executioner", EnemyArchetypeName="Char_Enemies_Milan.Executioner",WaveCost=90 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_Agent", EnemyArchetypeName="Char_Enemies_Milan.Agent",WaveCost=100 )</Value>
 				<Value type="3">( EnemyType="WAVE_REJ_GethAssassin", EnemyArchetypeName="Char_Enemies_Milan.GethAssassin",WaveCost=45 )</Value>
@@ -27,7 +27,7 @@
 				<Value type="1">null</Value>
 				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_REJ_Specialist")))</Value>
 				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Sniper", MinCount=1, MaxCount=1),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2)))</Value>
-				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_GethAssassin"))</Value>
+				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_GethAssassin"),(EnemyType="WAVE_REJ_Agent", MinCount=2, MaxCount=2)))</Value>
 				<!-- <Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Rampart", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_GethAssassin", MinCount=2, MaxCount=2)))</Value> -->
 				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_REJ_Specialist"),(EnemyType="WAVE_REJ_Catlas", MinCount=2, MaxCount=2),(EnemyType="Wave_REJ_Sniper", MinCount=2, MaxCount=2),(EnemyType="WAVE_REJ_Executioner", MinCount=2, MaxCount=2)))</Value>
 			</Property>

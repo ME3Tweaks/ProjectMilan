@@ -9,7 +9,7 @@
 				<Value type="3">(ObjectName="Char_Enemies_Milan.Heavy",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
 				<Value type="3">(ObjectName="Char_Enemies_Milan.Sniper",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
 				<Value type="3">(ObjectName="Char_Enemies_Milan.RampartMP",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
-				<Value type="3">(ObjectName="Char_Enemies_Milan.Adjutant",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
+				<Value type="3">(ObjectName="Char_Enemies_Milan.AdjutantMP",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
 				<Value type="3">(ObjectName="Char_Enemies_Milan.Forerunner",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
 				<Value type="3">(ObjectName="Char_Enemies_Milan.Catlas",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
 				<Value type="3">(ObjectName="Char_Enemies_Milan.Executioner",SeekFreePackageName="MergedContent", bReplicate=true)</Value>
