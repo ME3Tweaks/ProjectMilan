@@ -87,6 +87,10 @@ namespace ProjectMilan.Pipelines.Levels
         private static void InternalRunPipeline(MPLevelsVars levelVars)
         {
             TieredPackageCache parent = MilanShared.GetMPCommonTieredPackageCache();
+
+            // Register our custom made donors generated from the donor build pipeline
+            SharedMaterialDonor.RegisterLocalDonors(Path.Combine(MilanShared.PipelineRoot, "Materials", "Build"));
+
             foreach (var level in levelVars.LevelPipelines)
             {
                 if (!level.Enabled)
@@ -171,7 +175,7 @@ namespace ProjectMilan.Pipelines.Levels
             Directory.CreateDirectory(outputPath);
 
             // Register donors
-            SharedMaterialDonor.RegisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
+            // SharedMaterialDonor.RegisterLocalDonors(levelPipeline.GetDonorsPath());
 
             // Get BioP package
             MilanLog.Information($"Loading ME3 BioP", customPrefix: levelPipeline.LogCategory);
@@ -206,24 +210,24 @@ namespace ProjectMilan.Pipelines.Levels
             MilanShared.RefreshMilanFiles = true;
 
             // Unregister donors
-            SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetTemporaryDonorPath());
+            // SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetDonorsPath());
 
             // Print donors for global shader converter.
             MilanLog.Information("Material donors required: ", customPrefix: levelPipeline.LogCategory);
             //List<string> shadersListed = new List<string>();
-            foreach (var me3BrokenMat in levelPipeline.MaterialsNeedingDonors)
-            {
-                ////MilanLog.Warning(me3BrokenMat.InstancedFullPath, customPrefix: levelPipeline.LogCategory);
-                //var shaderId = SharedMaterialDonor.GetShaderIdString(me3BrokenMat);
-                //if (!shadersListed.Contains(shaderId))
+            //foreach (var me3BrokenMat in levelPipeline.MaterialsNeedingDonors)
                 //{
-                //    // Seems some materials share shaders...?
-                //    shadersListed.Add(shaderId);
-                //    Debug.WriteLine($"// {me3BrokenMat.InstancedFullPath} -> ??? (??)");
-                //    Debug.WriteLine($"{{\"{shaderId}\", null}},");
+            //    ////MilanLog.Warning(me3BrokenMat.InstancedFullPath, customPrefix: levelPipeline.LogCategory);
+            //    //var shaderId = SharedMaterialDonor.GetShaderIdString(me3BrokenMat);
+            //    //if (!shadersListed.Contains(shaderId))
+            //    //{
+            //    //    // Seems some materials share shaders...?
+            //    //    shadersListed.Add(shaderId);
+            //    //    Debug.WriteLine($"// {me3BrokenMat.InstancedFullPath} -> ??? (??)");
+            //    //    Debug.WriteLine($"{{\"{shaderId}\", null}},");
+            //    //}
+            //    DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath(), levelPipeline.Cache);
                 //}
-                DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath(), levelPipeline.Cache);
-            }
             // levelPipeline.MaterialsNeedingDonors.Clear();
         }
 

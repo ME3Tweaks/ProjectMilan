@@ -87,15 +87,15 @@ namespace ProjectMilan.Pipelines.Levels
         /// </summary>
         /// <param name="pipeline"></param>
         /// <returns></returns>
-        public string GetTemporaryDonorPath()
-        {
-            return Path.Combine(MilanShared.PipelineRoot, "Levels", BioP, "Donors");
-        }
+        //public string GetDonorsPath()
+        //{
+        //    return Path.Combine(MilanShared.PipelineRoot, "Materials", "Build");
+        //}
 
-        public string GetStagingTemporaryDonorPath()
-        {
-            return Directory.CreateDirectory(Path.Combine(GetTemporaryDonorPath(), "Auto")).FullName;
-        }
+        //public string GetStagingTemporaryDonorPath()
+        //{
+        //    return Directory.CreateDirectory(Path.Combine(GetDonorsPath(), "Auto")).FullName;
+        //}
 
         /// <summary>
         /// Removes all object references to release memory

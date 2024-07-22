@@ -10,6 +10,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.Collections;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Pipelines.Materials;
 using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
@@ -117,7 +118,7 @@ namespace ProjectMilan.Pipelines.Levels
                             PortExportsAsImportsWhenPossible = true,
                             DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                             SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
-                            InstallPreloadedFilelibs = MilanShared.InstallTieredPackageCacheFileLibs,
+                            CustomDonorImporter = DonorBuilderPipeline.MaterialDonorImporter
                         }, out var _);
                     if (badLinks.Any())
                     {
@@ -479,7 +480,7 @@ namespace ProjectMilan.Pipelines.Levels
                     continue;
 
                 // Get list of textures on the materials.
-                foreach (var mat in materials)
+                foreach (var mat in materials.Distinct())
                 {
                     var parsedMat = new MaterialInstanceConstant(mat, cache, true);
                     texturesOnMesh.AddRange(parsedMat.Textures);
@@ -489,6 +490,9 @@ namespace ProjectMilan.Pipelines.Levels
                 // Add imports for all materials so we can reference them if they are in higher tier packages.
                 foreach (var tex in texturesOnMesh.ToList())
                 {
+                    //if (tex.UIndex == 53054)
+                    //    //&& package.FileNameNoExtension != "BioA_MPMoon")
+                    //    Debugger.Break();
                     if (tex.ClassName.CaseInsensitiveEquals("TextureCube"))
                     {
                         // Texture cubes are not streamable
@@ -498,6 +502,7 @@ namespace ProjectMilan.Pipelines.Levels
 
                     if (tex is ExportEntry tExp)
                     {
+                        bool validatePackage = true;
                         if (tExp.GetProperty<BoolProperty>("NeverStream")?.Value == true)
                         {
                             // This texture is not streamed
@@ -520,6 +525,7 @@ namespace ProjectMilan.Pipelines.Levels
                             {
                                 texturesOnMesh.Remove(tex);
                                 texturesOnMesh.Add(existingEntry);
+                                validatePackage = false;
                             }
                             else
                             {
@@ -531,22 +537,33 @@ namespace ProjectMilan.Pipelines.Levels
                                 // Replace the mesh 
                                 texturesOnMesh.Remove(tex);
                                 texturesOnMesh.Add(imp);
+                                validatePackage = false;
                             }
                         }
-                    }
-                }
 
-                // Validate
-                // Items in this list must ALL be from the current package. Resolved mesh/material imports -> exports in higher tier packages must be converted to imports in the local file!
-                foreach (var tex in texturesOnMesh)
-                {
-                    if (tex.FileRef != package)
-                        Debugger.Break();
+                        // We're gonna crash game if we use this
+                        if (tex.FileRef != package && validatePackage)
+                            Debugger.Break();
+                    }
+                    else if (tex is ImportEntry tImp)
+                    {
+                        if (tImp.FileRef != package)
+                        {
+                            // This is an import in another package. We must copy it over.
+                            var newImp = EntryExporter.PortParents(tImp, package, true);
+                            texturesOnMesh.Remove(tex);
+                            texturesOnMesh.Add(newImp);
+                        }
+                    }
                 }
 
                 // Add streaming instances.
                 foreach (var tex in texturesOnMesh)
                 {
+                    // Final validation
+                    if (tex.FileRef != package)
+                        Debugger.Break();
+
                     if (!textureToInstancesMap.TryGetValue(tex, out var stil))
                     {
                         stil = new List<StreamableTextureInstance>();
