@@ -11,6 +11,7 @@ namespace ProjectMilan.Settings
 
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunNonStartupPipeline { get; set; } = true;
+        public bool RunDonorBuildPipeline { get; set; } = true;
         public bool RunMP4EnemiesPipeline { get; set; } = true;
         public bool RunKitsPipeline { get; set; } = true;
         public bool RunWeaponsPipeline { get; set; } = true;

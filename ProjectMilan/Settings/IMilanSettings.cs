@@ -33,6 +33,11 @@
         bool RunNonStartupPipeline { get; set; }
 
         /// <summary>
+        /// If material donors should be built, to fix things like level, kits, and particle effects
+        /// </summary>
+        bool RunDonorBuildPipeline { get; set; }
+
+        /// <summary>
         /// If Retaliation enemies should be ported that require custom changes
         /// </summary>
         bool RunMP4EnemiesPipeline { get; set; }

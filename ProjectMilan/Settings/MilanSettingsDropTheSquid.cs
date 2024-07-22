@@ -7,6 +7,7 @@
         public string OutputModPath { get; set; } = @"H:\MELE_Mods\mods in development\LE3\Project Milan\DLC_MOD_ProjectMilan";
         public string InputSyncPath { get; set; } = @"H:\MELE_Mods\mods in development\LE3\Project Milan\MilanSync";
         public bool RunMPCommonPipeline { get; set; } = true;
+        public bool RunDonorBuildPipeline { get; set; } = fullBuild;
         public bool RunMP4EnemiesPipeline { get; set; } = fullBuild;
         public bool RunKitsPipeline { get; set; } = fullBuild;
         public bool RunWeaponsPipeline { get; set; } = fullBuild;

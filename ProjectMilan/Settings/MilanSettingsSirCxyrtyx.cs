@@ -10,6 +10,7 @@ namespace ProjectMilan.Settings
         public string InputSyncPath { get; set; } = @"C:\Users\natal\Documents\ME3TweaksModManager\mods\LE3\Project Milan\MilanSync";
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunNonStartupPipeline { get; set; } = false;
+        public bool RunDonorBuildPipeline { get; set; } = false;
         public bool RunMP4EnemiesPipeline { get; set; } = false;
         public bool RunKitsPipeline { get; set; } = false;
         public bool RunWeaponsPipeline { get; set; } = false;
