@@ -442,7 +442,7 @@ namespace ProjectMilanCore
                 locDestPackage.LECLTagData.IsPostLoadFile = false;
 
                 MilanLog.Information($"Porting localized file {me3Package.FileNameNoExtension}", customPrefix: logCategory);
-                PortObjectReferencer(me3Package, locDestPackage, cache, logCategory);
+                PortObjectReferencer(me3Package, locDestPackage, cache, logCategory, null);
                 //var objReferencer = me3Package.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
                 ////DotTrace.StartCollectingData(); // Start profiling
@@ -485,7 +485,7 @@ namespace ProjectMilanCore
         /// <param name="destPackage"></param>
         /// <param name="cache"></param>
         /// <param name="logCategory"></param>
-        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory)
+        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, ExportEntry> customDonorImporter)
         {
             var objReferencer = sourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
@@ -500,7 +500,8 @@ namespace ProjectMilanCore
                 PortExportsAsImportsWhenPossible = true,
                 GenerateImportsForGlobalFiles = true,
                 DestinationCustomImportFileResolver = LE3PackageResolver,
-                SourceCustomImportFileResolver = ME3PackageResolver
+                SourceCustomImportFileResolver = ME3PackageResolver,
+                CustomDonorImporter = customDonorImporter
             };
             var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
                 destPackage, null, true,
@@ -607,6 +608,7 @@ namespace ProjectMilanCore
                     }
                     catch (Exception e)
                     {
+                        destPackage.Save(@"C:\users\public\fail.pcc");
                         MilanLog.Exception(e, "  Error recompiling function:");
                     }
                 }
@@ -901,7 +903,7 @@ namespace ProjectMilanCore
         }
 
 
-        private static IEntry PortDonorIntoPackage(PackageCache globalCache, IEntry donorEntry, IMEPackage package, string logCategory, bool portExportsAsImports)
+        public static IEntry PortDonorIntoPackage(PackageCache globalCache, IEntry donorEntry, IMEPackage package, string logCategory, bool portExportsAsImports)
         {
             if (donorEntry is ImportEntry donorImport)
             {
@@ -1085,7 +1087,7 @@ namespace ProjectMilanCore
         private static TieredPackageCache mpCommonCache;
 
         /// <summary>
-        /// Returns a tiered package cache that contains BIOP_MP_COMMON already in it
+        /// Returns a tiered package cache that contains BIOP_MP_COMMON and other hot tiered files in it.
         /// </summary>
         /// <returns></returns>
         public static TieredPackageCache GetMPCommonTieredPackageCache()
@@ -1094,12 +1096,33 @@ namespace ProjectMilanCore
             {
                 if (mpCommonCache == null)
                 {
+                    MilanLog.Information("Loading Milan MPCommonTieredPackageCache");
                     mpCommonCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
                     mpCommonCache.GetCachedPackage(Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", "BIOP_MP_COMMON.pcc")); // Cache MPCommon as it will be used. A lot.
+
+                    var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
+                    // According to TieredPackageCache heatmap these are hot files - loading more than 10 times in MilanMain
+                    mpCommonCache.GetCachedPackage(loadedFiles["BIO_COMMON.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["BioP_Char.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["BioD_Cat002.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["BioP_Cat002.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["BioP_ProEar.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["BioD_CitHub_Prothean.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["BioP_Gth002.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["BioD_MPCer_100SP.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["BioA_ProEar_100.pcc"]);
+                    mpCommonCache.GetCachedPackage(loadedFiles["SFXCharacterClass_Adept.pcc"]);
+
+                    MilanLog.Information("Loaded Milan MPCommonTieredPackageCache");
                 }
             }
 
             return mpCommonCache;
+        }
+
+        public static void DropMPCommonTieredPackageCache()
+        {
+            mpCommonCache = null;
         }
 
         /// <summary>

@@ -10,22 +10,29 @@ namespace ProjectMilan.Utility
         /// </summary>
         public static void PatchForMultiInstance()
         {
-            if (LE3Directory.ExecutablePath != null && File.Exists(LE3Directory.ExecutablePath))
+            try
             {
-                var fSize = new FileInfo(LE3Directory.ExecutablePath).Length;
-                if (fSize == 26887680L)
+                if (LE3Directory.ExecutablePath != null && File.Exists(LE3Directory.ExecutablePath))
                 {
-                    // DRM Free
-                    MilanLog.Information("Patching executable for multi-instance");
-                    using var fStream = File.Open(LE3Directory.ExecutablePath, FileMode.Open, FileAccess.ReadWrite);
-                    fStream.Seek(0x9BAA6E, SeekOrigin.Begin);
-                    for (int i = 0; i < 0x21; i++)
+                    var fSize = new FileInfo(LE3Directory.ExecutablePath).Length;
+                    if (fSize == 26887680L)
                     {
-                        // ♫ Nop, Nop, Nop it all out
-                        // These are the bytes I don't care about ♫
-                        fStream.WriteByte(0x90); 
+                        // DRM Free
+                        MilanLog.Information("Patching executable for multi-instance");
+                        using var fStream = File.Open(LE3Directory.ExecutablePath, FileMode.Open, FileAccess.ReadWrite);
+                        fStream.Seek(0x9BAA6E, SeekOrigin.Begin);
+                        for (int i = 0; i < 0x21; i++)
+                        {
+                            // ♫ Nop, Nop, Nop it all out
+                            // These are the bytes I don't care about ♫
+                            fStream.WriteByte(0x90);
+                        }
                     }
                 }
+            }
+            catch
+            {
+                MilanLog.Warning("Multipatching was skipped due an error.");
             }
         }
     }

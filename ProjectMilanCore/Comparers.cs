@@ -66,7 +66,7 @@ namespace ProjectMilan.Utility
     /// Comparer for preference of sourcing files
     /// </summary>
     /// <param name="game"></param>
-    class ObjectSourceTierComparer(MEGame game, string destFileName) : Comparer<string>
+    public class ObjectSourceTierComparer(MEGame game, string destFileName) : Comparer<string>
     {
         public override int Compare(string file1, string file2)
         {
