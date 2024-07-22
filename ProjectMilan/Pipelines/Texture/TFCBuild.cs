@@ -1,10 +1,12 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilanCore;
 using Image = LegendaryExplorerCore.Textures.Image;
 
@@ -56,42 +58,63 @@ namespace ProjectMilan.Pipelines.Texture
 
 
         /// <summary>
-        /// Updates texture formats that only work in ME3 to LE3, installs upscales
+        /// Updates texture formats that only work in ME3 to LE3, installs upscales, strip material permutations on broken materials if it will fix them.
         /// </summary>
         private static void UpdateTextures()
         {
             // ME3 V8U8 norms don't work in LE3, it seems V8U8 support was removed, they appear as black
             // Convert them all to BC7
-            var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
 
+            var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
+            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
             foreach (var pf in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Checking package {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
                 var p = MEPackageHandler.OpenMEPackage(pf);
 
-                foreach (var tex in p.Exports.Where(x => x.IsTexture()))
+                foreach (var obj in p.Exports.Where(x => x.IsTexture() || x.IsA("MaterialInstanceConstant")))
                 {
-                    var format = tex.GetProperty<EnumProperty>("Format");
-                    if (format.Value == "PF_V8U8")
+                    if (obj.IsA("MaterialInstanceConstant"))
                     {
-                        // Needs converted
-                        MilanLog.Information($"  Converting texture {tex.InstancedFullPath} from {format.Value} to BC7", customPrefix: LOG_CATEGORY);
-                        try
+                        if (obj.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true && ShaderCacheManipulator.IsMaterialBroken(obj))
                         {
-                            ConvertTexture(tex, PixelFormat.BC7);
+                            var parent = obj.GetProperty<ObjectProperty>("Parent")?.ResolveToExport(p, cache);
+                            if (parent != null && !ShaderCacheManipulator.IsMaterialBroken(parent))
+                            {
+                                MilanLog.Information($"  Fixing broken material due to permutation {obj.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                                obj.RemoveProperty("bHasStaticPermutationResource");
+                                obj.WriteBinary([]);
+                            }
                         }
-                        catch (Exception ex)
+
+                        continue;
+                    }
+                    else
+                    {
+                        var format = obj.GetProperty<EnumProperty>("Format");
+                        if (format.Value == "PF_V8U8")
                         {
-                            // This may be expected in a few cases. For example if TFC for texture data cannot be found.
-                            // This may happen during dev as textures will be broken on and off
-                            MilanLog.Error($"  Unable to convert texture: {ex.Message}");
+                            // Needs converted
+                            MilanLog.Information(
+                                $"  Converting texture {obj.InstancedFullPath} from {format.Value} to BC7",
+                                customPrefix: LOG_CATEGORY);
+                            try
+                            {
+                                ConvertTexture(obj, PixelFormat.BC7);
+                            }
+                            catch (Exception ex)
+                            {
+                                // This may be expected in a few cases. For example if TFC for texture data cannot be found.
+                                // This may happen during dev as textures will be broken on and off
+                                MilanLog.Error($"  Unable to convert texture: {ex.Message}");
+                            }
                         }
                     }
 
-                    if (ifpToFileMap.TryGetValue(tex.InstancedFullPath, out var upscaleFile))
+                    if (ifpToFileMap.TryGetValue(obj.InstancedFullPath, out var upscaleFile))
                     {
-                        MilanLog.Information($"  Installing upscaled texture {tex.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-                        Texture2D t2d = new Texture2D(tex);
+                        MilanLog.Information($"  Installing upscaled texture {obj.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                        Texture2D t2d = new Texture2D(obj);
                         var image = Image.LoadFromFile(upscaleFile, getFormat(upscaleFile));
                         t2d.Replace(image, t2d.Export.GetProperties(), isPackageStored: true); // Put into package
                     }
