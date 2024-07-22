@@ -53,6 +53,7 @@ Begin:
         Outer.bReachedCover = FALSE;
         if (Outer.ShouldRushPlayer())
         {
+            SFXPawn_Executioner(Outer.MyBP).SetMoodColor(2);
             GEManager = Outer.MyBP.GetModule(Class'SFXModule_GameEffectManager');
             if (GEManager != None)
             {
@@ -109,6 +110,7 @@ Begin:
                 Outer.Sleep(0.5);
             }
             Outer.bRushChargingActive = FALSE;
+            SFXPawn_Executioner(Outer.MyBP).SetMoodColor(1);
             if (Outer.ExecutionerClass == CloneClassType.CloneClass_Infiltrator)
             {
                 Outer.ExecutionerDeCloak();
@@ -140,11 +142,16 @@ Begin:
         }
         else if (ShouldAttack())
         {
+            SFXPawn_Executioner(Outer.MyBP).SetMoodColor(1);
             Outer.ShootWeaponAtFireTarget(Outer.MyBP.GetMaxHealth() * Outer.CancelFirePct);
             if (!Outer.bAcquireNewCover)
             {
                 Outer.Sleep(Outer.GetActionDelayTime());
             }
+        }
+        else
+        {
+            SFXPawn_Executioner(Outer.MyBP).SetMoodColor(0);
         }
     }
     if (Outer.bAcquireNewCover && Outer.bPlayerLockedOn == FALSE)

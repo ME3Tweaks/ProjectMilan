@@ -2,6 +2,12 @@
     placeable
     config(Game);
 
+enum EExecutionerMood {
+    Defensive, // Backpedaling to cover
+    Offensive, // On the attack
+    Reckless   // Preparing to execute! 
+}
+
 var SFXLoadoutData Loadout_Assault;
 var SFXLoadoutData Loadout_Sniper;
 var SFXLoadoutData Loadout_Shotgun;
@@ -96,6 +102,44 @@ protected function bool GetStandardReactions(float Angle, float SideAngle, out a
         return Super(BioPawn).GetStandardReactions(Angle, SideAngle, OutActions);
     }
     return FALSE;
+}
+
+public simulated function SetMoodColor(EExecutionerMood mood){
+    local MaterialInstance Mat;
+    local MeshComponent Comp;
+    local LinearColor Value;
+    local int i;
+    
+    Value.A = 1;
+    if (mood == EExecutionerMood.Defensive) {
+        Value.R = 0.0f;
+        Value.G = 0.035f;
+        Value.B = 0.08f;
+    } 
+    else if (mood == EExecutionerMood.Offensive)
+    {
+        Value.R = 0.278f;
+        Value.G = 0.278f;
+        Value.B = 0.008f;
+    }
+    else if (mood == EExecutionerMood.Reckless)
+    {
+        Value.R = 0.89f;
+        Value.G = 0.008f;
+        Value.B = 0.0f;        
+    }
+
+    foreach AllOwnedComponents(Class'MeshComponent', Comp)
+    {
+        for (i = 0; i < Comp.GetNumElements(); i++)
+        {
+            Mat = MaterialInstance(Comp.GetMaterial(i));
+            if (Mat != None)
+            {
+                Mat.SetVectorParameterValue('None', Value);
+            }
+        }
+    }
 }
 
 //class default properties can be edited in the Properties tab for the class's Default__ object.

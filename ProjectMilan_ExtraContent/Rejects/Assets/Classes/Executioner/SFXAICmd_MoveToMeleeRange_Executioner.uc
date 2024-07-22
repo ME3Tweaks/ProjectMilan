@@ -7,11 +7,23 @@ var float StopFiringRange;
 public function NotifyTakeHit(Controller instigatedBy, Vector HitLocation, int Damage, Class<DamageType> DamageType, Vector Momentum)
 {
     Super(SFXAICommand).NotifyTakeHit(instigatedBy, HitLocation, Damage, DamageType, Momentum);
-    if (Outer.MyBP.GetCurrentShields() <= 0.0 && Outer.MyBP.GetCurrentHealth() / Outer.MyBP.GetMaxHealth() <= ExecutionerHealthMinPercent)
+    if (Outer.MyBP.GetCurrentShields() <= 0.0)
     {
-        Outer.FindNewCover();
-        Outer.bPlayerSynced = TRUE;
-        Outer.PopCommand(Self);
+        if (Outer.MyBP.GetCurrentHealth() / Outer.MyBP.GetMaxHealth() <= ExecutionerHealthMinPercent)
+        {
+            SFXPawn_Executioner(Outer.MyBP).SetMoodColor(0);
+            Outer.FindNewCover();
+            Outer.bPlayerSynced = TRUE;
+            Outer.PopCommand(Self);
+        }
+        else
+        {
+            SFXPawn_Executioner(Outer.MyBP).SetMoodColor(2);
+        }
+    }
+    else
+    {
+        SFXPawn_Executioner(Outer.MyBP).SetMoodColor(1);
     }
 }
 public function PeriodicMoveCheck()
