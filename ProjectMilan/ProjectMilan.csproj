@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Pipelines\Material\**" />
+    <EmbeddedResource Remove="Pipelines\Material\**" />
+    <None Remove="Pipelines\Material\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Pipelines\Levels\BioP_MPHosp\Donors\Auto\" />
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
     <Folder Include="Pipelines\Mod\Live\" />

@@ -11,6 +11,7 @@ using ProjectMilan.Pipelines.Finalize;
 using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
+using ProjectMilan.Pipelines.Materials;
 using ProjectMilan.Pipelines.Mod;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
@@ -59,36 +60,61 @@ namespace ProjectMilan
         /// <exception cref="NotImplementedException"></exception>
         private static void Init(CLIOptions obj)
         {
+#if DEBUG
+            // Change to true to run the research() method, for quick research tasks. Like LEX experiments.
+            bool researchMode = false;
+#else
+            // DO NOT CHANGE.
+            bool researchMode = false;
+#endif
+
             MilanLog.CreateLogger();
             MilanLog.Information("Welcome to Project Milan");
             Settings = LoadSettingsConfig(obj);
             VerifySettings();
 
-            Console.WriteLine("-------------------------------");
-            Console.WriteLine("Install mod when compiling completes [Y/N]? (5 second timeout)");
-            var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
-            if ("Y".CaseInsensitiveEquals(input))
+            if (!researchMode)
             {
-                InstallModOnCompletion = true;
-                MilanLog.Information("Installing mod on completion of compile");
+                Console.WriteLine("-------------------------------");
+                Console.WriteLine("Install mod when compiling completes [Y/N]? (5 second timeout)");
+                var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                if ("Y".CaseInsensitiveEquals(input))
+                {
+                    InstallModOnCompletion = true;
+                    MilanLog.Information("Installing mod on completion of compile");
+                }
             }
 
-            // Cleanup output directory before we start
-            if (!Settings.DontDeleteModFolder)
+            if (!researchMode)
             {
-                if (Directory.Exists(Settings.OutputModPath))
+                // Cleanup output directory before we start
+                if (!Settings.DontDeleteModFolder)
                 {
-                    Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputModPath, deleteDirectoryItself: false);
-                }
-                else
-                {
-                    Directory.CreateDirectory(Settings.OutputModPath);
+                    if (Directory.Exists(Settings.OutputModPath))
+                    {
+                        Utilities.DeleteFilesAndFoldersRecursively(Settings.OutputModPath,
+                            deleteDirectoryItself: false);
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory(Settings.OutputModPath);
+                    }
                 }
             }
 
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.ME3, MEGame.LE3]);
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
+
+#if DEBUG
+            // For research methods
+            if (researchMode)
+            {
+                RunResearch();
+                return;
+            }
+#endif
+
             try
             {
                 SystemSleepManager.PreventSleep("Compiling");
@@ -156,6 +182,8 @@ namespace ProjectMilan
 
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
+            RunPipeline(Settings.RunDonorBuildPipeline, DonorBuilderPipeline.RunPipeline, "DonorBuild");
+
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
             RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
 
@@ -173,6 +201,7 @@ namespace ProjectMilan
             // MilanShared.EnsureVGMStreamAvailable();
             WwiseProjectRebuild.EnsureWwise7110();
 
+
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
             RunPipeline(Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
 
@@ -187,6 +216,8 @@ namespace ProjectMilan
             }
 
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
+
+            MilanShared.DropMPCommonTieredPackageCache(); // Release lots of memory
 
             RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
             RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipeline, "Redemption"); // Builds Redemption Maps
@@ -268,38 +299,12 @@ namespace ProjectMilan
             }
         }
 
-
-        private static void Research()
+        private static void RunResearch()
         {
-            /*Dictionary<int, ProfileSetting> ProfileSettings = new(103); // ME3 uses 100 keys so it's likely we'll hit that much normally
-            var version = 0;
-
-            var infile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile";
-            var inData = File.ReadAllBytes(infile);
-            LocalProfile lp = LocalProfile.DeserializeLocalProfile(infile, MEGame.LE3, false, false);
-            lp.SetProfileSettingById(1, "20;4;Adept;20;10500000.0000;11");
-            lp.SetProfileSettingById(2, "20;4;Soldier;20;10500000.0000;15");
-            lp.SetProfileSettingById(3, "20;4;Engineer;20;10500000.0000;16");
-            lp.SetProfileSettingById(4, "20;4;Sentinel;20;10500000.0000;13");
-            lp.SetProfileSettingById(5, "20;4;Infiltrator;16;28770.0000;14");
-            lp.SetProfileSettingById(6, "20;4;Vanguard;20;10500000.0000;13");
-            var serialized = lp.Serialize();
-            var outData = serialized.ToArray();
-
-
-            var outfile = @"B:\UserProfile\Documents\BioWare\Mass Effect Legendary Edition\Save\ME3\MP_Profile2";
-            File.WriteAllBytes(outfile, outData);
-
-            if (!inData.SequenceEqual(outData))
-            {
-                Debug.WriteLine("FAIL!");
-            }
-            else
-            {
-                Debug.WriteLine("PASS");
-            }
-
-            Debug.WriteLine("done");*/
+#if DEBUG
+            // Put your method in Research class and call it here.
+            Research.TestTextureToInstancesMap();
+#endif
         }
     }
 }

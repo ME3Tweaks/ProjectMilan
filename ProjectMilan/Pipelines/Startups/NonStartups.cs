@@ -1,4 +1,5 @@
 ﻿using LegendaryExplorerCore.Packages;
+using ProjectMilan.Pipelines.Materials;
 using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Startups
@@ -24,12 +25,12 @@ namespace ProjectMilan.Pipelines.Startups
             "SFXEngagement_Disarm_Disable",
             "SFXEngagement_Disarm_Enable",
             "SFXEngagement_Extraction",
-            // Todo: add MP2, MP3 objectives
             // "SFXEngagement_Retrieve" // I don't think this is used - this is basegame version which is broken. May leave however if ModMaker somehow is ported to LE.
             // "SFXEngagement_SupplyDrop" // This is a cut objective that has no implementation
 
             // GUI IMAGES (Basegame)
-            "SFXMPCardImages",
+            
+             "SFXMPCardImages",
             "SFXMPImagesCrates",
             "SFXMPImagesMaps1",
             "SFXMPImagesMaps2",
@@ -94,15 +95,15 @@ namespace ProjectMilan.Pipelines.Startups
             "SFXMobileAnnex",
 
             // These were redone in MP4 as they don't work properly in MP3
-            /*"SFXModsMP3_AssaultRifle",
-            "SFXModsMP3_Pistol",
-            "SFXModsMP3_Shotgun",
-            "SFXModsMP3_SMG",
-            "SFXModsMP3_SniperRifle",*/
+            //"SFXModsMP3_AssaultRifle",
+            //"SFXModsMP3_Pistol",
+            //"SFXModsMP3_Shotgun",
+            //"SFXModsMP3_SMG",
+            //"SFXModsMP3_SniperRifle",
             "SFXMP3Gear",
             "SFXSharedGear",
-            "SFXSharedModGameEffects",
-            "SFXSharedModImages",
+            //"SFXSharedModGameEffects",
+            //"SFXSharedModImages",
 
 
             // MP4
@@ -211,7 +212,7 @@ namespace ProjectMilan.Pipelines.Startups
                     le3File.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint common package
                     le3File.LECLTagData.IsPostLoadFile = false;
 
-                    MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY);
+                    MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY, customDonorImporter: DonorBuilderPipeline.MaterialDonorImporter);
                     MilanShared.PortLocalizations(packageBaseName, vars.OutputPath, cache, LOG_CATEGORY);
                 });
         }

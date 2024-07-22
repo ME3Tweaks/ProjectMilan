@@ -7,6 +7,7 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
+using ProjectMilan.Pipelines.Materials;
 using ProjectMilan.Pipelines.MP4NewEnemies;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Utility;
@@ -95,7 +96,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
             // Different forced export packages
             var otFile = MilanShared.GetME3Package($"{enemyPipeline.PackageName}.pcc");
-            MilanShared.PortObjectReferencer(otFile, enemyPackage, enemyPipeline.Cache, enemyPipeline.LogCategory);
+            MilanShared.PortObjectReferencer(otFile, enemyPackage, enemyPipeline.Cache, enemyPipeline.LogCategory, DonorBuilderPipeline.MaterialDonorImporter);
             enemyPackage.Save();
 
 
@@ -219,7 +220,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
             // Different forced export packages
             var otFile = MilanShared.GetME3Package($"{pipeline.PackageName}.pcc");
-            MilanShared.PortObjectReferencer(otFile, enemyPackage, pipeline.Cache, pipeline.LogCategory);
+            MilanShared.PortObjectReferencer(otFile, enemyPackage, pipeline.Cache, pipeline.LogCategory, DonorBuilderPipeline.MaterialDonorImporter);
             enemyPackage.Save();
             return true;
 
