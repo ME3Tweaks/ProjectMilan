@@ -19,7 +19,6 @@
     <Folder Include="Pipelines\Levels\BioP_MPHosp\Donors\Auto\" />
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
     <Folder Include="Pipelines\Mod\Live\" />
-    <Folder Include="Pipelines\Mod\Rejection\Vanilla\" />
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
@@ -27,6 +26,7 @@
     <Folder Include="Pipelines\Shared\Compiling\Functions\" />
     <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
+    <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\AddToClassOrReplace\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />

@@ -314,9 +314,6 @@ namespace ProjectMilan.Pipelines.Levels
             // Calculate a very basic texture to instances map
             LevelShared.CalculateTextureToInstancesMap(destPackage, levelPipeline.Cache);
 
-            // Correct shaders
-            SharedMaterialDonor.UpdateMaterialShaders(destPackage);
-
             MilanLog.Information($"  Saving ported package {packageBaseName}.pcc",
                 customPrefix: levelPipeline.LogCategory);
             destPackage.Save();
