@@ -2,7 +2,6 @@
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using ProjectMilan.Pipelines.Shared.GlobalDonors.Material;
 using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Shared
@@ -44,9 +43,6 @@ namespace ProjectMilan.Pipelines.Shared
         {
             MilanLog.Information($"Registering global donors", customPrefix: LOG_CATEGORY);
             
-            // Material swaps directly.
-            ShaderMapping = GlobalMaterial.GetMapping(); // This returns a clone
-
             // Add global donor packages
             var globalPath = Directory.CreateDirectory(GetGlobalDonorPath()).FullName;
 
@@ -69,61 +65,6 @@ namespace ProjectMilan.Pipelines.Shared
             {
                 // We dont need donors
                 throw new Exception("Don't need donors except for ME3!");
-            }
-        }
-
-
-
-        /// <summary>
-        /// Maps shaders between games. This effectively is the material donor.
-        /// </summary>
-        private static Dictionary<Guid, Guid> ShaderMapping = new();
-        public static bool GetDonorForShader(Guid ogShader, out Guid leShader)
-        {
-            if (ShaderMapping.TryGetValue(ogShader, out leShader))
-            {
-                return true;
-            }
-
-            /*
-            if (TemporaryShaderMapping.TryGetValue(ogShader, out var leShader))
-            {
-                return leShader;
-            }*/
-
-            // MilanLog.Warning($"Could not find mapping for OG shader {ogShader}");
-            return false;
-        }
-
-        /// <summary>
-        /// Uses the known direct material shader id converter for materials that support it.
-        /// </summary>
-        /// <param name="package"></param>
-        public static void UpdateMaterialShaders(IMEPackage package)
-        {
-            MilanLog.Information("Updating shader ids", customPrefix: LOG_CATEGORY);
-            foreach (var export in package.Exports.Where(x => !x.IsDefaultObject && x.IsA("MaterialInterface")))
-            {
-                if (export.ClassName == "Material")
-                {
-                    var bin = ObjectBinary.From<Material>(export);
-                    if (GetDonorForShader(bin.SM3MaterialResource.ID, out var leShader))
-                    {
-                        MilanLog.Information($"  Updated shader for {export.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-                        bin.SM3MaterialResource.ID = leShader;
-                        export.WriteBinary(bin);
-                    }
-                }
-                else if (export.IsA("MaterialInstance") && export.GetProperty<BoolProperty>("bHasStaticPermutationResource"))
-                {
-                    var bin = ObjectBinary.From<MaterialInstance>(export);
-                    if (GetDonorForShader(bin.SM3StaticPermutationResource.ID, out var leShader))
-                    {
-                        MilanLog.Information($"  Updated shader for {export.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-                        bin.SM3StaticPermutationResource.ID = leShader;
-                        export.WriteBinary(bin);
-                    }
-                }
             }
         }
 
