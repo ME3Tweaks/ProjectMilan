@@ -6,17 +6,17 @@ properties
     m_Guid = {A = 1676008477, B = 1208398727, C = -266925137, D = -228383543}
     ScalarParameterValues = ({
                               ParameterName = 'Main_Tex_Pan_Speed', 
-                              ParameterValue = 0.25, 
+                              ParameterValue = 0.7, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
                               ParameterName = 'Distortion', 
-                              ParameterValue = 5.05, 
+                              ParameterValue = 0.05, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
                               ParameterName = 'Main_Tex_Tile_V', 
-                              ParameterValue = 2.0, 
+                              ParameterValue = 8.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
@@ -27,7 +27,7 @@ properties
                             )
     VectorParameterValues = ({
                               ParameterName = 'Main_color', 
-                              ParameterValue = {R = 8.6, G = 8.5, B = 8.3, A = 1.0}, 
+                              ParameterValue = {R = 40.6, G = 40.5, B = 40, A =5.0}, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }
                             )

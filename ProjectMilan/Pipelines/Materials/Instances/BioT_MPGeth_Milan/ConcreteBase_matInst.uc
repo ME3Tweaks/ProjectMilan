@@ -52,7 +52,7 @@ properties
                              }, 
                              {
                               ParameterName = 'Text_02_Tint', 
-                              ParameterValue = {R = 0.0549019612, G = 0.0666666701, B = 0.0784313753, A = 1.0}, 
+                              ParameterValue = {R = 0.549019612, G = 0.666666701, B = 0.784313753, A = 1.0}, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
