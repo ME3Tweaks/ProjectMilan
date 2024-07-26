@@ -1,7 +1,9 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
+using ProjectMilan.Pipelines.Levels.BioP_MPGeth;
 using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
 using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Shared;
@@ -36,7 +38,7 @@ namespace ProjectMilan.Pipelines.Levels
 
                 // MP1 Resurgence
                 new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= true, SpecialPrePortingDelegate = MPMoonSpecific.PreCorrect}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPortingDelegate = null}, // Hydra
+                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPrePortingDelegate = MPGethSpecific.PreCorrect}, // Hydra
 
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade
@@ -118,7 +120,6 @@ namespace ProjectMilan.Pipelines.Levels
         /// Fixes up the 5 usable basegame MP maps that ship with LE
         /// </summary>
         /// <param name="levelPipeline"></param>
-        /// <exception cref="NotImplementedException"></exception>
         private static void BasegameMapPorting(LevelSpecificPipeline levelPipeline, TieredPackageCache parent)
         {
             levelPipeline.LogCategory = $"{LOG_CATEGORY}-{levelPipeline.BioP}";
@@ -216,7 +217,7 @@ namespace ProjectMilan.Pipelines.Levels
             MilanLog.Information("Material donors required: ", customPrefix: levelPipeline.LogCategory);
             //List<string> shadersListed = new List<string>();
             //foreach (var me3BrokenMat in levelPipeline.MaterialsNeedingDonors)
-                //{
+            //{
             //    ////MilanLog.Warning(me3BrokenMat.InstancedFullPath, customPrefix: levelPipeline.LogCategory);
             //    //var shaderId = SharedMaterialDonor.GetShaderIdString(me3BrokenMat);
             //    //if (!shadersListed.Contains(shaderId))
@@ -227,7 +228,7 @@ namespace ProjectMilan.Pipelines.Levels
             //    //    Debug.WriteLine($"{{\"{shaderId}\", null}},");
             //    //}
             //    DonorTooling.TryMakeDonor(me3BrokenMat, levelPipeline.GetStagingTemporaryDonorPath(), levelPipeline.Cache);
-                //}
+            //}
             // levelPipeline.MaterialsNeedingDonors.Clear();
         }
 
@@ -285,8 +286,9 @@ namespace ProjectMilan.Pipelines.Levels
                 levelPipeline.LE3BioP.GetBioWorldInfo().WriteProperty(ppStruct);
             }
 
-
-
+            // Set AdditionalPackagesToCook
+            (levelPipeline.LE3BioP as MEPackage).AdditionalPackagesToCook.ReplaceAll(levelPipeline.LE3Packages.Where(x => x.Value != levelPipeline.ME3BioP).Select(x => x.Value.FileNameNoExtension));
+            
             LevelTools.RebuildPersistentLevelChildren(destPersistentLevel);
         }
 
