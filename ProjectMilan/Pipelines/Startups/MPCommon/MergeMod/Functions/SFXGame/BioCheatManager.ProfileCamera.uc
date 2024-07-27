@@ -18,7 +18,7 @@
     Camera = SFXPlayerCamera(Controller.PlayerCamera);
     DrawProfileText("Camera:" @ Camera);
     DrawProfileText("Active:" @ Camera.CurrentCameraMode);
-    DrawProfileText("Actual POV: (Rotation=" @ Camera.CameraCache.POV.Rotation @ ", Location="; @ Camera.CameraCache.POV.location @ ", FOV=" @ Camera.CameraCache.POV.FOV);
+    DrawProfileText("Actual POV: (Rotation=" @ Camera.CameraCache.POV.Rotation @ ", Location=" @ Camera.CameraCache.POV.location @ ", FOV=" @ Camera.CameraCache.POV.FOV);
     DrawProfileText("Target POV: (Rotation=" @ Camera.ViewTarget.POV.Rotation @ ", Location=" @ Camera.ViewTarget.POV.location @ ", FOV=" @ Camera.ViewTarget.POV.FOV);
     Camera.CurrentCameraMode.DrawHUD(Self);
     TheWorldInfo = BioWorldInfo(Outer.WorldInfo);
