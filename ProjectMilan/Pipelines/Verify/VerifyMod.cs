@@ -122,49 +122,11 @@ namespace ProjectMilan.Pipelines.Verify
 
         private static void VerifyVTables(IMEPackage package)
         {
-            PackageCache cache = new PackageCache();
+            var tpc = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
             foreach (var f in package.Exports.Where(x => x.IsClass))
             {
-                if (f.SuperClass == null)
-                {
-                    continue;
-                }
-                ExportEntry parent = null;
-                if (f.SuperClass is ImportEntry imp)
-                {
-                    parent = EntryImporter.ResolveImport(imp, cache, fileResolver: MilanShared.LE3PackageResolver);
-                }
-                else
-                {
-                    parent = f.SuperClass as ExportEntry;
-                }
-
-                if (parent == null)
-                    Debugger.Break();
-                var vTable = GetVTable(f);
-                var parentVTable = GetVTable(parent);
-
-                if (vTable.Count < parentVTable.Count)
-                {
-                    MilanLog.Error($@"  Invalid VTable size detected in {f.InstancedFullPath}: local count = {vTable.Count}, parent count = {parentVTable.Count}", customPrefix: LOG_CATEGORY);
-                }
-                int i = 0;
-                for (; i < parentVTable.Count; i++)
-                {
-                    if (i < vTable.Count && !vTable[i].CaseInsensitiveEquals(parentVTable[i]))
-                    {
-                        MilanLog.Error($@"  Bad VTable detected in {f.InstancedFullPath}: Local[{i}] = {vTable[i]}, Parent[{i}]={parentVTable[i]}", customPrefix: LOG_CATEGORY);
-                    }
-                }
+                VTables.VerifyVTable(f, tpc, true);
             }
-        }
-
-
-
-        private static List<string> GetVTable(ExportEntry export)
-        {
-            var obj = export.GetBinaryData<UClass>();
-            return obj.VirtualFunctionTable.Select(uIdx => export.FileRef.GetEntry(uIdx).ObjectName.Name).ToList();
         }
     }
 }
