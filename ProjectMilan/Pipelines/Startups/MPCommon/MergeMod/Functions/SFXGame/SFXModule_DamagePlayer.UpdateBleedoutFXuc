@@ -1,0 +1,37 @@
+﻿public final simulated function UpdateBleedoutFX()
+{
+    local float NewBleedoutVFXParam;
+    local float NewBleedoutSFXParam;
+    local float BleedoutPct;
+    
+    if (ModuleOwner.IsTimerActive('WaitForShieldPresentation', Self))
+    {
+        return;
+    }
+    // MILAN CHANGE: Do not update bleedout FX if the owner is not a human.
+    if (!Pawn(ModuleOwner).IsHumanControlled())
+    {
+        return;
+    }
+    BleedoutPct = GetBleedoutPct();
+    Class'BioInterpolator'.static.InterpolateFloatCurve(NewBleedoutVFXParam, BleedoutVFXCurve, 0.0, 1.0, BleedoutPct);
+    CurrentBleedoutVFXParam = Lerp(CurrentBleedoutVFXParam, NewBleedoutVFXParam, 0.0500000007 * BleedoutVFXInterpSpeed);
+    if (MIC_Bleedout != None)
+    {
+        MIC_Bleedout.SetScalarParameterValue('fb_Damage', CurrentBleedoutVFXParam);
+    }
+    Class'BioInterpolator'.static.InterpolateFloatCurve(NewBleedoutSFXParam, BleedoutSFXCurve, 0.0, 1.0, BleedoutPct);
+    CurrentBleedoutSFXParam = Lerp(CurrentBleedoutSFXParam, NewBleedoutSFXParam, 0.0500000007 * BleedoutSFXInterpSpeed);
+    if (WwiseComponent != None)
+    {
+        WwiseComponent.SetGlobalRTPCFromScript(BleedOutRTPC, CurrentBleedoutSFXParam);
+    }
+    if (CurrentBleedoutState == EBleedoutState.BleedOutState_None && CurrentBleedoutVFXParam ~= 0.0)
+    {
+        DisableBleedOutVisualEffects();
+    }
+    if (CurrentBleedoutState == EBleedoutState.BleedOutState_None && CurrentBleedoutSFXParam <= 0.100000001)
+    {
+        DisableBleedoutSoundEffects();
+    }
+}
