@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
+using ProjectMilan.Pipelines.Materials;
 using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
@@ -36,7 +37,11 @@ namespace ProjectMilan.Pipelines.Init
         public static void Init()
         {
             CheckSettings();
-
+            if (!DonorBuilderPipeline.LocateFXC(out _))
+            {
+                // FXC is required for Milan.
+                Environment.Exit(1);
+            }
             // Install all custom classes that are used for porting
             // InventoryCustomPackages(); // Not currently used
 

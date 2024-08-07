@@ -2,7 +2,7 @@
 properties
 {
     ParentLightingGuid = {A = -235755426, B = 1280564587, C = -1089311103, D = -944190951}
-    Parent = Material'BioT_Tropical.FX_lite.Waterfall_Base_Master_lite'
+    Parent = Material'BIoT_MPGeth_Milan.Materials.DamWaterfall'
     m_Guid = {A = 1676008477, B = 1208398727, C = -266925137, D = -228383543}
     ScalarParameterValues = ({
                               ParameterName = 'Main_Tex_Pan_Speed', 

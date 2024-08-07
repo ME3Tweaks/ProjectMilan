@@ -1,0 +1,22 @@
+﻿PROJECT MILAN SHADERS
+================================================
+Source: Folders matching material names that contain shader hlsl files that will replace policies for that shader map. 
+   NOTE: Shader disassembly must be from the donor material! Or at least have the same inputs. Otherwise D3D will reject the shader and the game will probably die.
+Compiled: Compiled shader HLSL files with the same name as the source, in the same folder structure. When compiling donors, if a material's name matches a folder in this directory,
+          the shaders will be cloned to a local SeekFreeShaderCache and compiled bytecode will be swapped in from the compiled shader.
+
+
+Directions for editing shaders:
+    1. You must install RenderDoc https://renderdoc.org/
+    2. You must install Windows 8 SDK (Yes, Windows 8) https://go.microsoft.com/fwlink/p/?LinkId=226658 - You only need the C++ tools for x86 from it.
+    2. Configure RenderDoc plugin for shader editing. See contents of the hlsl_decompiler_wrapper.bat in the RenderDocTool folder next to this file.
+    3. You must use a DRM-free executable (probably). The game must be run with the -ONETHREAD parameter at least.
+    4. Run game until the material you want to edit the shader of is on screen and with good visibility.
+    5. In RenderDoc, capture a single frame. You can also use the PrintScreen button to capture it. MilanHost also can capture it from the console.
+    6. In RenderDoc, open the capture and go to Resource Inspector tab. On the right, click on any item in the list and then do View Contents in the top right.
+    7. In Event Browser on the level, step through each GPU call until your material's textures show up in the input. You may want to split the input and output tabs by dragging them.
+    8. One you have identified the GPU call, go to the Pipeline State tab. The shader you want to edit will be either the Vertex Shader (for 3D stuff) or Pixel Shader (for 2D stuff). Most often it's probably going to be Pixel Shader.
+    9. Right under the row of arrows will be a button 'Edit'. Click the dropdown arrow and choose the tool you made earlier.
+    10. You can take this decompilation and use the shader viewer export loader's search feature to figure out which shader is being used. Paste the exact contents in.
+    11. You can edit the shader in RenderDoc by editing it and pressing Apply Changes. It will immediately take effect in the capture. For animated shaders that work over time, we're still trying to figure out how to handle that.
+    12. Edited shader HLSL files go in the Source folder with the shader policy type name under the material name. Consider commenting what you changed at the top.

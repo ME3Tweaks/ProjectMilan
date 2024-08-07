@@ -1,48 +1,99 @@
-﻿// DONOR FOR: BioT_GthMP.Materials.Mat.MPG_ConcreteBaseBunker
+﻿// Floor of the bunkers
+// DONOR FOR: BioT_GthMP.Materials.Mat.MPG_ConcreteBaseBunker
 properties
 {
-    ParentLightingGuid = {A = 187302895, B = 1117602143, C = -558858341, D = -759638468}
-    Parent = Material'BioT_MPGeth_Milan.Materials.ConcreteBunker'
-    m_Guid = {A = 482340912, B = 1112649569, C = 386921392, D = 1589862060}
+    ParentLightingGuid = {A = -575195882, B = 1288138845, C = 1656989073, D = 2061046603}
+    Parent = Material'biot_rubble.Vistahills01_MM'
+    m_Guid = {A = 815640067, B = 1140161761, C = -331851123, D = -906426378}
     ScalarParameterValues = ({
-                              ParameterName = 'SpecPower', 
-                              ParameterValue = 1.0, 
+                              ParameterName = 'Spec_Strength', 
+                              ParameterValue = 0.100000001, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
-                              ParameterName = 'Specular Contrast', 
-                              ParameterValue = 1.5, 
+                              ParameterName = 'Text_02_Tile', 
+                              ParameterValue = 15.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
-                              ParameterName = 'NormalMapIntensity', 
-                              ParameterValue = 0.5, 
+                              ParameterName = 'Spec_Power', 
+                              ParameterValue = 15.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
-                              ParameterName = 'V_Scale', 
-                              ParameterValue = 9.0, 
+                              ParameterName = 'Spec_Flatten', 
+                              ParameterValue = 0.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
-                              ParameterName = 'Desaturate', 
-                              ParameterValue = 0.400000006, 
+                              ParameterName = 'Mask_Power', 
+                              ParameterValue = 2.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
-                              ParameterName = 'UV_Scale', 
-                              ParameterValue = 10.0, 
+                              ParameterName = 'Text_01_Tile', 
+                              ParameterValue = 6.0, 
+                              ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                             }, 
+                             {
+                              ParameterName = 'Panner_Time', 
+                              ParameterValue = 6.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }
                             )
     VectorParameterValues = ({
-                              ParameterName = 'HardSurface_Tint', 
-                              ParameterValue = {R = 0.298039228, G = 0.223529413, B = 0.121568628, A = 1.0}, 
+                              ParameterName = 'HeightChooser', 
+                              ParameterValue = {R = 1.0, G = 0.0, B = 0.0, A = 1.0}, 
+                              ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                             }, 
+                             {
+                              ParameterName = 'Spec_tint', 
+                              ParameterValue = {R = 1.0, G = 1.0, B = 1.0, A = 1.0}, 
+                              ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                             }, 
+                             {
+                              ParameterName = 'Text_02_Tint', 
+                              ParameterValue = {R = 0.615686297, G = 0.639215708, B = 0.513725519, A = 1.0}, 
+                              ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                             }, 
+                             {
+                              ParameterName = 'Cubemap_Color_Intensity', 
+                              ParameterValue = {R = 1.0, G = 1.0, B = 1.0, A = 1.0}, 
+                              ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                             }, 
+                             {
+                              ParameterName = 'Text_01_Tint', 
+                              ParameterValue = {R = 0.109803922, G = 0.117647059, B = 0.113725491, A = 1.0}, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }
                             )
     TextureParameterValues = ({
-                               ParameterName = 'HardSurface_DIFF', 
+                               ParameterName = 'Text_01_Norm', 
+                               ParameterValue = Texture2D'BioT_MPGeth_Milan.Textures.ConcreteGround_Norm', 
+                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                              }, 
+                              {
+                               ParameterName = 'Mask', 
+                               ParameterValue = Texture2D'BioG_Skies.Sky_Cloud_Msk03', 
+                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                              }, 
+                              {
+                               ParameterName = 'Text_02_Norm', 
+                               ParameterValue = Texture2D'biot_ancientcity.Textures.RubblePile_01_Norm', 
+                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                              }, 
+                              {
+                               ParameterName = 'CubeMap', 
+                               ParameterValue = TextureCube'BioG_MasterMats.Texture_Samples.Cubemap_02', 
+                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                              }, 
+                              {
+                               ParameterName = 'Text_02_Diff', 
+                               ParameterValue = Texture2D'biot_ancientcity.Textures.RubblePile_01_Diff', 
+                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
+                              }, 
+                              {
+                               ParameterName = 'Text_01_Diff', 
                                ParameterValue = Texture2D'BioT_MPGeth_Milan.Textures.ConcreteGround_Diff', 
                                ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                               }

@@ -376,3 +376,4 @@ FodyWeavers.xsd
 /ProjectMilan/Pipelines/Mod/Precomputed/Testing_GitIgnored/
 /ProjectMilan/Pipelines/Materials/Todo
 /ProjectMilan/Pipelines/Materials/Build
+/ProjectMilan/Pipelines/Materials/Shaders/Compiled/DamWaterfall/FLocalVertexFactory

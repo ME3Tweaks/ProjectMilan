@@ -1,4 +1,5 @@
-﻿// DONOR FOR: BioT_GthMP.Materials.Mat.MPG_ConcreteBase
+﻿// Floor of the main play area
+// DONOR FOR: BioT_GthMP.Materials.Mat.MPG_ConcreteBase
 properties
 {
     ParentLightingGuid = {A = -575195882, B = 1288138845, C = 1656989073, D = 2061046603}
@@ -11,12 +12,12 @@ properties
                              }, 
                              {
                               ParameterName = 'Text_02_Tile', 
-                              ParameterValue = 5.0, 
+                              ParameterValue = 15.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
                               ParameterName = 'Spec_Power', 
-                              ParameterValue = 10.0, 
+                              ParameterValue = 15.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
@@ -26,7 +27,7 @@ properties
                              }, 
                              {
                               ParameterName = 'Mask_Power', 
-                              ParameterValue = 0.800000012, 
+                              ParameterValue = 2.0, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
@@ -52,7 +53,7 @@ properties
                              }, 
                              {
                               ParameterName = 'Text_02_Tint', 
-                              ParameterValue = {R = 0.549019612, G = 0.666666701, B = 0.784313753, A = 1.0}, 
+                              ParameterValue = {R = 0.615686297, G = 0.639215708, B = 0.513725519, A = 1.0}, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }, 
                              {
@@ -62,7 +63,7 @@ properties
                              }, 
                              {
                               ParameterName = 'Text_01_Tint', 
-                              ParameterValue = {R = 0.87843138, G = 0.854901969, B = 0.737254918, A = 1.0}, 
+                              ParameterValue = {R = 0.109803922, G = 0.117647059, B = 0.113725491, A = 1.0}, 
                               ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                              }
                             )
@@ -78,7 +79,7 @@ properties
                               }, 
                               {
                                ParameterName = 'Text_02_Norm', 
-                               ParameterValue = Texture2D'biot_rubble.Textures.RubblePile_02_Norm', 
+                               ParameterValue = Texture2D'biot_ancientcity.Textures.RubblePile_01_Norm', 
                                ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                               }, 
                               {
@@ -88,7 +89,7 @@ properties
                               }, 
                               {
                                ParameterName = 'Text_02_Diff', 
-                               ParameterValue = Texture2D'biot_rubble.Textures.RubblePile_02_Diff', 
+                               ParameterValue = Texture2D'biot_ancientcity.Textures.RubblePile_01_Diff', 
                                ExpressionGUID = {A = 0, B = 0, C = 0, D = 0}
                               }, 
                               {
