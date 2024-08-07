@@ -19,6 +19,12 @@ using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ProjectMilan.Pipelines.Shared;
+using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Shaders;
+using Serilog;
+using SharpDX.D3DCompiler;
+using SixLabors.ImageSharp.ColorSpaces;
 
 namespace ProjectMilan.Pipelines.Materials
 {
@@ -34,6 +40,83 @@ namespace ProjectMilan.Pipelines.Materials
 
         }
 
+        private class MaterialExpressionDonor
+        {
+            public string Name { get; set; }
+            public string PropertiesText { get; set; }
+        }
+
+        private class MaterialDonorInfo
+        {
+            public string DonorFor { get; set; }
+
+            public List<MaterialExpressionDonor> Expressions { get; } = new();
+            public string PropertiesText { get; set; }
+            public string BinaryText { get; set; }
+
+            /// <summary>
+            /// Reads a milan material donor info from a .uc file
+            /// </summary>
+            /// <param name="inputPath"></param>
+            /// <param name="cache"></param>
+            /// <returns></returns>
+            public static MaterialDonorInfo ReadFromFile(string inputPath)
+            {
+                var biotName = Directory.GetParent(inputPath).Name;
+
+                var instLines = File.ReadAllLines(inputPath).ToList();
+
+                // Skip comment lines.
+                // First data block starts with // DONOR FOR: 
+                while (!instLines[0].StartsWith("// DONOR FOR: ", StringComparison.OrdinalIgnoreCase))
+                {
+                    instLines.RemoveAt(0);
+                }
+                var donorFor = instLines[0];
+                donorFor = donorFor.Substring("// DONOR FOR: ".Length).Trim();
+
+                var matName = Path.GetFileNameWithoutExtension(inputPath);
+                var outName = $"{biotName}.Materials.{matName}";
+                instLines.RemoveAt(0);
+
+                // EXPRESSIONS
+                var mdi = new MaterialDonorInfo();
+                mdi.DonorFor = donorFor;
+                while (instLines[0].StartsWith("// EXPRESSION "))
+                {
+                    MaterialExpressionDonor med = new MaterialExpressionDonor();
+                    med.Name = instLines[0][14..];
+                    instLines.RemoveAt(0);
+                    var endIdx = 0;
+                    while (endIdx < instLines.Count)
+                    {
+                        if (instLines[endIdx].StartsWith("// "))
+                            break;
+                        endIdx++;
+                    }
+
+                    med.PropertiesText = string.Join('\n', instLines.Take(endIdx));
+                    instLines.RemoveRange(0, endIdx);
+                    mdi.Expressions.Add(med);
+                }
+
+                // PROPERTIES
+                var isProperties = instLines[0].StartsWith("// PROPERTIES");
+                if (!isProperties)
+                    Debugger.Break(); // Not correctly set up! Must have // PROPERTIES before props and // BINARY before Material binary
+
+                var binaryIdx = instLines.IndexOf("// BINARY");
+                if (binaryIdx == -1)
+                    Debugger.Break(); // Not correctly set up! Must have // PROPERTIES before props and // BINARY before Material binary
+
+                mdi.PropertiesText = string.Join('\n', instLines.Take(binaryIdx));
+
+                // BINARY
+                mdi.BinaryText = string.Join('\n', instLines.Skip(binaryIdx + 1));
+                return mdi;
+            }
+        }
+
         private static CaseInsensitiveDictionary<MilanTextureInfo> DonorTextureInfo = new();
 
         public static void RunPipeline()
@@ -47,17 +130,14 @@ namespace ProjectMilan.Pipelines.Materials
         private static void InventoryDonorPackages()
         {
             var packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build");
-            DonorObjects.ReplaceAll(Directory.GetFiles(packageOutputFolder, "*.pcc").Select(Path.GetFileNameWithoutExtension));
+            DonorObjects.ReplaceAll(Directory.GetFiles(packageOutputFolder, "*.pcc", SearchOption.AllDirectories).Select(Path.GetFileNameWithoutExtension));
         }
 
         private static void InternalRunPipeline(DonorBuildVars vars)
         {
-            // Until we can build material exports from source we will have to use donors for the parents.
-            var tempDonors = Path.Combine(MilanShared.PipelineRoot, "Materials", "Parents");
-            SharedMaterialDonor.RegisterLocalDonors(tempDonors);
+            // CompileShaders();
             InventoryDonorPackages();
             BuildDonorPackages(vars);
-            SharedMaterialDonor.UnregisterLocalDonors(tempDonors);
         }
 
         private static void BuildDonorPackages(DonorBuildVars vars)
@@ -70,25 +150,151 @@ namespace ProjectMilan.Pipelines.Materials
                 DonorTextureInfo[info.ObjectName] = info;
             }
 
-
+            // Materials and parents of MICs
+            var parentsFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Parents");
+            // MICs
             var instancesFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Instances");
-            var packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build");
+            // Output folder that will be used for donors in later pipelines
+            var packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build", "Materials");
 
-            // Build instances
-            var packageFolders = Directory.GetDirectories(instancesFolder);
+            // Build parents
+            var packageFolders = Directory.GetDirectories(parentsFolder);
             foreach (var biotPackage in packageFolders)
             {
                 var biotCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
                 var biotName = Path.GetFileName(biotPackage);
                 foreach (var instPath in Directory.GetFiles(biotPackage, "*.uc"))
                 {
-                    var instLines = File.ReadAllLines(instPath);
-                    var donorFor = instLines[0];
-                    if (!donorFor.StartsWith("// DONOR FOR: ", StringComparison.OrdinalIgnoreCase))
+                    var mdi = MaterialDonorInfo.ReadFromFile(instPath);
+                    var matName = Path.GetFileNameWithoutExtension(instPath);
+                    var outName = $"{biotName}.Materials.{matName}";
+                    var donorPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(packageOutputFolder, $"{outName}.pcc"), MEGame.LE3);
+
+                    MilanLog.Information($"Building donor package for {outName}", customPrefix: LOG_CATEGORY);
+
+                    var biot = ExportCreator.CreatePackageExport(donorPackage, biotName, cache: biotCache);
+                    var biot_materials = ExportCreator.CreatePackageExport(donorPackage, "Materials", cache: biotCache, parent: biot);
+                    var biot_textures = ExportCreator.CreatePackageExport(donorPackage, "Textures", cache: biotCache, parent: biot); // Create in the event we donor tooling needs it
+                    var material = ExportCreator.CreateExport(donorPackage, matName, "Material", biot_materials, indexed: false, cache: biotCache);
+
+                    var usop = new UnrealScriptOptionsPackage() { MissingObjectResolver = DonorBuildResolver, Cache = biotCache };
+                    var fileLib = new FileLib(donorPackage);
+                    if (!fileLib.Initialize(usop))
                     {
-                        MilanLog.Fatal($"Donor uc file {instPath} does not start with // DONOR FOR: ! We don't know how to override a material with this");
-                        Environment.Exit(1);
+                        MilanShared.LogFailedFileLibInit(fileLib);
                     }
+
+                    // EXPRESSIONS
+                    // This ensures that expressions are not attempted to be donated when compiling material properties.
+                    foreach (var expr in mdi.Expressions)
+                    {
+                        var exprClass = NameReference.FromInstancedString(expr.Name).Name;
+                        var exprExp = ExportCreator.CreateExport(donorPackage, NameReference.FromInstancedString(expr.Name), exprClass, material, indexed: false, cache: biotCache);
+                        var output = UnrealScriptCompiler.CompileDefaultProperties(exprExp, expr.PropertiesText, fileLib, usop);
+                        MilanLog.LogUSCErrors(output.log);
+                    }
+
+                    // PROPERTIES
+                    var output2 = UnrealScriptCompiler.CompileDefaultProperties(material, mdi.PropertiesText, fileLib, usop);
+                    MilanLog.LogUSCErrors(output2.log);
+
+                    // BINARY
+                    var ms = new MemoryStream();
+                    var writer = new StreamWriter(ms);
+                    writer.Write(mdi.BinaryText);
+                    writer.Flush();
+                    ms.Position = 0;
+
+                    var mat = Material.JsonDeserialize(ms, donorPackage, DonorBuildResolver);
+                    material.WriteBinary(mat);
+
+                    if (!mdi.DonorFor.Contains("NoDonor", StringComparison.OrdinalIgnoreCase))
+                    {
+                        CreateObjectRedirector(mdi.DonorFor, material, biotCache);
+                    }
+
+                    // CUSTOM SHADERS
+                    var customShaderDir = Path.Combine(MilanShared.PipelineRoot, "Materials", "Shaders", "Source", material.ObjectName);
+
+                    if (Directory.Exists(customShaderDir))
+                    {
+                        // Write before access
+                        var guid = ShaderCacheManipulator.CopyRefShadersToLocal(material, false);
+                        var shaderCacheE = material.FileRef.FindExport("SeekFreeShaderCache");
+                        var shaderCache = ObjectBinary.From<ShaderCache>(shaderCacheE);
+                        if (shaderCache.MaterialShaderMaps.TryGetValue((StaticParameterSet)guid.Value, out var msm))
+                        {
+                            msm.FriendlyName = material.ObjectName;
+                            foreach (var shaderKey in msm.MeshShaderMaps)
+                            {
+                                foreach (var shaderRef in shaderKey.Shaders)
+                                {
+                                    var shader = shaderCache.Shaders[shaderRef.Value.Id];
+                                    var shaderFile = Path.Combine(customShaderDir, shaderKey.VertexFactoryType, shader.ShaderType + ".hlsl");
+                                    if (File.Exists(shaderFile))
+                                    {
+                                        MilanLog.Information($"Replacing shader {material.ObjectName} {shader.ShaderType} with custom version", customPrefix: LOG_CATEGORY);
+                                        var compiled = CompileShader(shaderFile);
+                                        if (compiled == null)
+                                        {
+                                            MilanLog.Fatal($"Failed to compiled shader! {material.ObjectName} {shader.ShaderType}", customPrefix: LOG_CATEGORY);
+                                            Environment.Exit(1);
+                                        }
+
+                                        shader.ShaderByteCode = compiled.Data;
+
+                                        // INSTRUCTION COUNT UPDATE
+                                        // Get Disassembly
+                                        string dissasembledShader = ShaderBytecode.FromStream(new MemoryStream(compiled.Data)).Disassemble();
+                                        // Get last line that contains instruction counts
+                                        string result = string.Join("", dissasembledShader.Split('\n').Reverse().Take(2).ToArray());
+                                        // Get digits from the result
+                                        string digits = string.Join("", new String(result.Where(Char.IsDigit).ToArray()));
+                                        int instructions = int.Parse(digits);
+
+                                        // Insert new instruction count
+                                        shader.InstructionCount = instructions;
+                                        compiled.Dispose();
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            MilanLog.Fatal($"Failed to find material shader map in new local shader cache in donor: {material.ObjectName}", customPrefix: LOG_CATEGORY);
+                            Environment.Exit(1);
+                        }
+
+                        shaderCacheE.WriteBinary(shaderCache);
+                    }
+
+                    donorPackage.Save();
+                }
+            }
+
+            // Some instances depend on the materials we just built
+            // Register them for use
+            SharedMaterialDonor.RegisterLocalDonors(packageOutputFolder);
+
+            // Change output directory
+            packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build", "Instances");
+
+            // Build instances
+            packageFolders = Directory.GetDirectories(instancesFolder);
+            foreach (var biotPackage in packageFolders)
+            {
+                var biotCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+                var biotName = Path.GetFileName(biotPackage);
+                foreach (var instPath in Directory.GetFiles(biotPackage, "*.uc"))
+                {
+                    var instLines = File.ReadAllLines(instPath).ToList();
+                    // Skip comment lines.
+                    // First data block starts with // DONOR FOR: 
+                    while (!instLines[0].StartsWith("// DONOR FOR: ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        instLines.RemoveAt(0);
+                    }
+                    var donorFor = instLines[0];
 
                     donorFor = donorFor.Substring("// DONOR FOR: ".Length).Trim();
 
@@ -122,6 +328,16 @@ namespace ProjectMilan.Pipelines.Materials
                     donorPackage.Save();
                 }
             }
+
+            packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build", "Materials");
+            SharedMaterialDonor.UnregisterLocalDonors(packageOutputFolder);
+        }
+
+        private static ShaderBytecode CompileShader(string sourceFile)
+        {
+            var isPixelShader = sourceFile.Contains("PixelShader", StringComparison.OrdinalIgnoreCase);
+            var shaderByteCode = ShaderBytecode.CompileFromFile(sourceFile, "main", isPixelShader ? "ps_5_0" : "vs_5_0");
+            return shaderByteCode?.Bytecode;
         }
 
         private static void CreateObjectRedirector(string originalObject, ExportEntry targetObject, PackageCache cache)
@@ -188,7 +404,7 @@ namespace ProjectMilan.Pipelines.Materials
                 MilanLog.Information($"  Generating Milan donor texture export {textureInfo.ObjectName}", customPrefix: LOG_CATEGORY);
                 var sizeX = textureInfo.AspectRatioX * 2;
                 var sizeY = textureInfo.AspectRatioY * 2;
-                
+
                 // Some formats have a minimum size of 4x4
                 while (sizeX < 8 && sizeY < 8)
                 {
@@ -228,8 +444,10 @@ namespace ProjectMilan.Pipelines.Materials
 
         public static ExportEntry MaterialDonorImporter(IMEPackage dest, ExportEntry source, RelinkerOptionsPackage rop)
         {
-            if (DonorObjects.IndexOf(source.InstancedFullPath) == -1)
-                return null; // We don't use this for anything we don't have full control over
+            if (!CanDonateViaMDI(source))
+            {
+                return null;
+            }
 
             var relinkMap = rop.CrossPackageMap; // Cache the relink map. Using it will corrupt the relink operation.
             rop.CustomDonorImporter = null; // Remove this or we will get a stack overflow
@@ -240,6 +458,95 @@ namespace ProjectMilan.Pipelines.Materials
             rop.CrossPackageMap = relinkMap; // Restore relink map so a relink can later be performed.
             rop.CustomDonorImporter = MaterialDonorImporter; // Restore
             return newEntry as ExportEntry;
+        }
+
+        private static bool CanDonateViaMDI(ExportEntry source)
+        {
+            if (source.FileRef.FilePath.Contains(MilanShared.PipelineRoot))
+            {
+                if (source.FileRef.FilePath.Contains("Meshes") && source.ClassName.CaseInsensitiveEquals("StaticMesh"))
+                    return true; // We can donate 
+            }
+
+            if (DonorObjects.IndexOf(source.InstancedFullPath) == -1)
+                return false; // We don't use this for anything we don't have full control over
+
+            return true;
+        }
+
+        ///// <summary>
+        ///// Compiles shaders from source
+        ///// </summary>
+        //private static void CompileShaders()
+        //{
+        //    var hasFXC = LocateFXC(out var fxc);
+        //    if (!hasFXC)
+        //    {
+        //        Environment.Exit(1); // This is required. The failure will be logged in Locate.
+        //    }
+
+        //    var shadersDir = Path.Combine(MilanShared.PipelineRoot, "Materials", "Shaders");
+        //    var sourceDir = Path.Combine(shadersDir, "Source");
+        //    var compiledDir = Path.Combine(shadersDir, "Compiled");
+
+        //    if (!Directory.Exists(sourceDir))
+        //    {
+        //        MilanLog.Information($"Skipping shader build, input directory missing: {shadersDir}", customPrefix: LOG_CATEGORY);
+        //        return;
+        //    }
+
+        //    // Ensure exists
+        //    Directory.CreateDirectory(compiledDir);
+
+        //    foreach (var sourceMaterialShaderDir in Directory.GetDirectories(sourceDir))
+        //    {
+        //        var destMaterialShaderDir = Directory.CreateDirectory(Path.Combine(compiledDir, Path.GetFileName(sourceMaterialShaderDir))).FullName;
+        //        foreach (var factory in Directory.GetDirectories(sourceMaterialShaderDir))
+        //        {
+        //            var destFactory = Directory.CreateDirectory(Path.Combine(destMaterialShaderDir, Path.GetFileName(factory)));
+        //            foreach (var hlsl in Directory.GetFiles(factory, "*.hlsl"))
+        //            {
+        //                var isPixelShader = hlsl.Contains("PixelShader", StringComparison.OrdinalIgnoreCase);
+        //                var typeParam = isPixelShader ? "ps_5_0" : "vs_5_0";
+        //                MilanLog.Information($"Compiling shader {Path.GetFileName(sourceMaterialShaderDir)} {destFactory.Name} {Path.GetFileNameWithoutExtension(hlsl)}", customPrefix: LOG_CATEGORY);
+        //                var process = Process.Start(fxc, $"/nologo /T {typeParam} /Fo \"{Path.Combine(destFactory.FullName, Path.GetFileNameWithoutExtension(hlsl) + ".fxc")}\" \"{hlsl}\"");
+        //                process.WaitForExit();
+        //                if (process.ExitCode != 0)
+        //                {
+        //                    MilanLog.Error($"    FXC exit code was not zero: {process.ExitCode}", customPrefix: LOG_CATEGORY);
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+
+        /// <summary>
+        /// Locates FXC compiler
+        /// </summary>
+        /// <param name="fxcPath"></param>
+        /// <returns></returns>
+        public static bool LocateFXC(out string fxcPath)
+        {
+            fxcPath = Environment.GetEnvironmentVariable("WindowsSdkVerBinPath") + @"x86\fxc.exe";
+            if (!File.Exists(fxcPath))
+            {
+                fxcPath = Environment.GetEnvironmentVariable("WindowsSdkVerBinPath") + Environment.GetEnvironmentVariable("WindowsSDKVersion") + @"x86\fxc.exe";
+                if (!File.Exists(fxcPath))
+                {
+                    fxcPath = Environment.GetEnvironmentVariable("WindowsSdkDir") + @"bin\" + Environment.GetEnvironmentVariable("WindowsSDKVersion") + @"x86\fxc.exe";
+                    if (!File.Exists(fxcPath))
+                    {
+                        fxcPath = Environment.GetEnvironmentVariable("WindowsSdkDir_80") + @"bin\x86\fxc.exe";
+                        if (!File.Exists(fxcPath))
+                        {
+                            MilanLog.Fatal("Could not find fxc for shader compiling - install the Windows 8 SDK");
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
         }
     }
 

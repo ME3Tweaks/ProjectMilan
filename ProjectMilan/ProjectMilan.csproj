@@ -16,8 +16,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Pipelines\Levels\BioP_MPGeth\Donors\" />
     <Folder Include="Pipelines\Levels\BioP_MPHosp\Donors\Auto\" />
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
+    <Folder Include="Pipelines\Materials\Build\Instances\" />
+    <Folder Include="Pipelines\Materials\Build\Materials\" />
+    <Folder Include="Pipelines\Materials\Shaders\Compiled\" />
+    <Folder Include="Pipelines\Materials\Shaders\Source\DamWaterfall\" />
     <Folder Include="Pipelines\Mod\Live\" />
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
@@ -27,6 +32,7 @@
     <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
+    <Folder Include="Pipelines\Shared\GlobalDonors\Meshes\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\AddToClassOrReplace\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
@@ -42,6 +48,7 @@
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
+    <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
   </ItemGroup>
 
   <ItemGroup>
