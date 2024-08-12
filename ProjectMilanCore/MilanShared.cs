@@ -497,7 +497,7 @@ namespace ProjectMilanCore
         /// <param name="destPackage"></param>
         /// <param name="cache"></param>
         /// <param name="logCategory"></param>
-        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, ExportEntry> customDonorImporter)
+        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, IEntry> customDonorImporter)
         {
             var objReferencer = sourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 

@@ -116,6 +116,7 @@ namespace ProjectMilan.Pipelines.Levels
                             TargetGameDonorDB = MilanShared.LE3ObjectDB,
                             Cache = levelPipeline.Cache,
                             PortExportsAsImportsWhenPossible = true,
+                            PortImportsMemorySafe = true,
                             DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                             SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
                             CustomDonorImporter = DonorBuilderPipeline.MaterialDonorImporter

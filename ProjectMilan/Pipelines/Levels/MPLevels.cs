@@ -26,7 +26,7 @@ namespace ProjectMilan.Pipelines.Levels
             /// </summary>
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
-                // Vanilla 
+                // Vanilla - Some must be enabled again via editing.
                 new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Glacier
                 new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Reactor
                 new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // White

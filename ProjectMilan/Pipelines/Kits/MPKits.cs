@@ -88,7 +88,7 @@ namespace ProjectMilan.Pipelines.Kits
 
 
 
-            MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory);
+            MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory, DonorBuilderPipeline.MaterialDonorImporter);
             MilanShared.PortLocalizations(kitPipeline.PackageName, outputPath, kitPipeline.Cache, kitPipeline.LogCategory);
 
             kitPipeline.Cache.Dispose();
