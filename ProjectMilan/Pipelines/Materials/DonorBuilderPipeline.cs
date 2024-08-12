@@ -186,17 +186,23 @@ namespace ProjectMilan.Pipelines.Materials
 
                     // EXPRESSIONS
                     // This ensures that expressions are not attempted to be donated when compiling material properties.
+                    List<ExportEntry> expressions = new List<ExportEntry>();
                     foreach (var expr in mdi.Expressions)
                     {
                         var exprClass = NameReference.FromInstancedString(expr.Name).Name;
                         var exprExp = ExportCreator.CreateExport(donorPackage, NameReference.FromInstancedString(expr.Name), exprClass, material, indexed: false, cache: biotCache);
                         var output = UnrealScriptCompiler.CompileDefaultProperties(exprExp, expr.PropertiesText, fileLib, usop);
                         MilanLog.LogUSCErrors(output.log);
+                        expressions.Add(exprExp);
                     }
 
                     // PROPERTIES
                     var output2 = UnrealScriptCompiler.CompileDefaultProperties(material, mdi.PropertiesText, fileLib, usop);
                     MilanLog.LogUSCErrors(output2.log);
+                    if (expressions.Any())
+                    {
+                        material.WriteProperty(new ArrayProperty<ObjectProperty>(expressions.Select(x => new ObjectProperty(x)), "Expressions"));
+                    }
 
                     // BINARY
                     var ms = new MemoryStream();
@@ -342,20 +348,27 @@ namespace ProjectMilan.Pipelines.Materials
 
         private static void CreateObjectRedirector(string originalObject, ExportEntry targetObject, PackageCache cache)
         {
-            var parts = originalObject.Split('.');
-            IEntry currentParent = null;
-
-            // Determine where we need to start working.
-            string composed = "";
-            for (int i = 0; i < parts.Length - 1; i++)
+            var uniqueItems = originalObject.Split(',');
+            foreach (var uniqueItem in uniqueItems)
             {
-                var part = parts[i];
-                currentParent = ExportCreator.CreatePackageExport(targetObject.FileRef, part, currentParent, cache: cache);
+                var parts = uniqueItem.Split('.');
+                IEntry currentParent = null;
+
+                // Determine where we need to start working.
+                string composed = "";
+                for (int i = 0; i < parts.Length - 1; i++)
+                {
+                    var part = parts[i];
+                    currentParent =
+                        ExportCreator.CreatePackageExport(targetObject.FileRef, part, currentParent, cache: cache);
+                }
+
+                var redirector = ExportCreator.CreateExport(targetObject.FileRef, parts.Last(), "ObjectRedirector",
+                    currentParent, indexed: false);
+                var bin = ObjectRedirector.Create();
+                bin.DestinationObject = targetObject.UIndex;
+                redirector.WriteBinary(bin);
             }
-            var redirector = ExportCreator.CreateExport(targetObject.FileRef, parts.Last(), "ObjectRedirector", currentParent, indexed: false);
-            var bin = ObjectRedirector.Create();
-            bin.DestinationObject = targetObject.UIndex;
-            redirector.WriteBinary(bin);
         }
 
         private static IEntry DonorBuildResolver(IMEPackage destPackage, string ifp)
@@ -442,7 +455,7 @@ namespace ProjectMilan.Pipelines.Materials
             return new MilanTextureInfo() { Format = format, ObjectName = name, FullPath = path, AspectRatioX = aspX, AspectRatioY = aspY };
         }
 
-        public static ExportEntry MaterialDonorImporter(IMEPackage dest, ExportEntry source, RelinkerOptionsPackage rop)
+        public static IEntry MaterialDonorImporter(IMEPackage dest, ExportEntry source, RelinkerOptionsPackage rop)
         {
             if (!CanDonateViaMDI(source))
             {
@@ -457,7 +470,7 @@ namespace ProjectMilan.Pipelines.Materials
             // Do we need to merge the relink map? Will that cause a double relink?
             rop.CrossPackageMap = relinkMap; // Restore relink map so a relink can later be performed.
             rop.CustomDonorImporter = MaterialDonorImporter; // Restore
-            return newEntry as ExportEntry;
+            return newEntry;
         }
 
         private static bool CanDonateViaMDI(ExportEntry source)
