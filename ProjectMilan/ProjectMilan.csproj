@@ -58,4 +58,12 @@
     <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
     <ProjectReference Include="..\Wwiser.NET\ME3Tweaks.Wwiser\ME3Tweaks.Wwiser.csproj" />
   </ItemGroup>
+
+	<ItemGroup>
+		<!-- HLSL compiler-->
+		<ContentWithTargetPath Include="Pipelines\Materials\Shaders\RenderDocTool\d3dcompiler_47.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<TargetPath>d3dcompiler_47.dll</TargetPath>
+		</ContentWithTargetPath>
+	</ItemGroup>
 </Project>

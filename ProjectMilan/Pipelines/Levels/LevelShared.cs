@@ -325,9 +325,12 @@ namespace ProjectMilan.Pipelines.Levels
             foreach (var v in brokenMaterials)
             {
                 var matchingME3 = sourcePackage.FindExport(v.InstancedFullPath);
-                if (levelPipeline.MaterialsNeedingDonors.All(x => x.InstancedFullPath != matchingME3.InstancedFullPath))
+                if (matchingME3 != null)
                 {
-                    levelPipeline.MaterialsNeedingDonors.Add(matchingME3);
+                    if (levelPipeline.MaterialsNeedingDonors.All(x => x.InstancedFullPath != matchingME3.InstancedFullPath))
+                    {
+                        levelPipeline.MaterialsNeedingDonors.Add(matchingME3);
+                    }
                 }
             }
 

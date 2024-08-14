@@ -72,8 +72,14 @@ namespace ProjectMilan.Pipelines.Materials
                 {
                     instLines.RemoveAt(0);
                 }
+
                 var donorFor = instLines[0];
                 donorFor = donorFor.Substring("// DONOR FOR: ".Length).Trim();
+                if (string.IsNullOrWhiteSpace(donorFor))
+                {
+                    MilanLog.Fatal($"MALFORMED 'DONOR FOR:' in file {inputPath}", customPrefix: LOG_CATEGORY);
+                    Environment.Exit(1);
+                }
 
                 var matName = Path.GetFileNameWithoutExtension(inputPath);
                 var outName = $"{biotName}.Materials.{matName}";
@@ -300,6 +306,7 @@ namespace ProjectMilan.Pipelines.Materials
                     {
                         instLines.RemoveAt(0);
                     }
+
                     var donorFor = instLines[0];
 
                     donorFor = donorFor.Substring("// DONOR FOR: ".Length).Trim();
@@ -351,7 +358,7 @@ namespace ProjectMilan.Pipelines.Materials
             var uniqueItems = originalObject.Split(',');
             foreach (var uniqueItem in uniqueItems)
             {
-                var parts = uniqueItem.Split('.');
+                var parts = uniqueItem.Trim().Split('.');
                 IEntry currentParent = null;
 
                 // Determine where we need to start working.
@@ -399,8 +406,10 @@ namespace ProjectMilan.Pipelines.Materials
                         }
                     }
                 }
+
                 MilanLog.Error($"Unable to find object {ifp} in {possibleDonors.Count} packages!", customPrefix: LOG_CATEGORY);
             }
+
             return null;
         }
 
@@ -424,12 +433,14 @@ namespace ProjectMilan.Pipelines.Materials
                     sizeX *= 2;
                     sizeY *= 2;
                 }
+
                 var tex = Texture2D.CreateTexture(destPackage, textureInfo.ObjectName, sizeX, sizeY, textureInfo.Format, true, parent: parent);
                 var inImage = Image.LoadFromFile(textureInfo.FullPath, textureInfo.Format);
                 var t2d = new Texture2D(tex);
                 t2d.Replace(inImage, tex.GetProperties(), isPackageStored: true, forcedNewFormat: textureInfo.Format);
                 return tex;
             }
+
             Debugger.Break();
             return null;
         }
@@ -532,35 +543,6 @@ namespace ProjectMilan.Pipelines.Materials
         //        }
         //    }
         //}
-
-        /// <summary>
-        /// Locates FXC compiler
-        /// </summary>
-        /// <param name="fxcPath"></param>
-        /// <returns></returns>
-        public static bool LocateFXC(out string fxcPath)
-        {
-            fxcPath = Environment.GetEnvironmentVariable("WindowsSdkVerBinPath") + @"x86\fxc.exe";
-            if (!File.Exists(fxcPath))
-            {
-                fxcPath = Environment.GetEnvironmentVariable("WindowsSdkVerBinPath") + Environment.GetEnvironmentVariable("WindowsSDKVersion") + @"x86\fxc.exe";
-                if (!File.Exists(fxcPath))
-                {
-                    fxcPath = Environment.GetEnvironmentVariable("WindowsSdkDir") + @"bin\" + Environment.GetEnvironmentVariable("WindowsSDKVersion") + @"x86\fxc.exe";
-                    if (!File.Exists(fxcPath))
-                    {
-                        fxcPath = Environment.GetEnvironmentVariable("WindowsSdkDir_80") + @"bin\x86\fxc.exe";
-                        if (!File.Exists(fxcPath))
-                        {
-                            MilanLog.Fatal("Could not find fxc for shader compiling - install the Windows 8 SDK");
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            return true;
-        }
     }
 
     internal class MilanTextureInfo

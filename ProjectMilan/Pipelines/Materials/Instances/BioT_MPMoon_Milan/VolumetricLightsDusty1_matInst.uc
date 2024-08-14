@@ -1,4 +1,4 @@
-﻿// DONOR FOR: BioT_MPMoon.Effects.Volumetric_DustBeamDefault_INST
+﻿// DONOR FOR: BioT_MPMoon.Effects.Volumetric_DustBeamDefault_INST, BioT_MPThes.fX.Volumetric_DustBeamDefault_INST
 properties
 {
     VectorParameterValues = ({

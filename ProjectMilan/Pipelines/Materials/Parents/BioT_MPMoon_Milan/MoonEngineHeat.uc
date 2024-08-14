@@ -9,7 +9,6 @@ properties
 // PROPERTIES
 properties
 {
-    Expressions = (MaterialExpressionVectorParameter'BioVFX_DLC_Env_MPMoon.Materials.Engine_Heat_Mat.MaterialExpressionVectorParameter_0')
     Distortion = {Expression = None}
     EmissiveColor = {Expression = None}
     Opacity = {Expression = None}
