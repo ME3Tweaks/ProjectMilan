@@ -54,6 +54,13 @@ namespace ProjectMilan.Pipelines.Materials
             public string PropertiesText { get; set; }
             public string BinaryText { get; set; }
 
+            // Flags
+            /// <summary>
+            /// Don't put material in Materials package. Just put under BioT
+            /// </summary>
+            public bool NoMaterialsPackage { get; set; }
+
+
             /// <summary>
             /// Reads a milan material donor info from a .uc file
             /// </summary>
@@ -81,13 +88,25 @@ namespace ProjectMilan.Pipelines.Materials
                     Environment.Exit(1);
                 }
 
-                var matName = Path.GetFileNameWithoutExtension(inputPath);
-                var outName = $"{biotName}.Materials.{matName}";
                 instLines.RemoveAt(0);
 
-                // EXPRESSIONS
                 var mdi = new MaterialDonorInfo();
                 mdi.DonorFor = donorFor;
+
+                if (instLines[0].StartsWith("// FLAGS: "))
+                {
+                    var flags = instLines[0].Substring("// FLAGS: ".Length).Split(' ');
+                    foreach (var flag in flags)
+                    {
+                        if (flag == "NoMaterialsPackage")
+                            mdi.NoMaterialsPackage = true;
+                    }
+
+
+                    instLines.RemoveAt(0);
+                }
+
+                // EXPRESSIONS
                 while (instLines[0].StartsWith("// EXPRESSION "))
                 {
                     MaterialExpressionDonor med = new MaterialExpressionDonor();
@@ -121,6 +140,7 @@ namespace ProjectMilan.Pipelines.Materials
                 mdi.BinaryText = string.Join('\n', instLines.Skip(binaryIdx + 1));
                 return mdi;
             }
+
         }
 
         private static CaseInsensitiveDictionary<MilanTextureInfo> DonorTextureInfo = new();
@@ -179,8 +199,14 @@ namespace ProjectMilan.Pipelines.Materials
                     MilanLog.Information($"Building donor package for {outName}", customPrefix: LOG_CATEGORY);
 
                     var biot = ExportCreator.CreatePackageExport(donorPackage, biotName, cache: biotCache);
-                    var biot_materials = ExportCreator.CreatePackageExport(donorPackage, "Materials", cache: biotCache, parent: biot);
-                    var biot_textures = ExportCreator.CreatePackageExport(donorPackage, "Textures", cache: biotCache, parent: biot); // Create in the event we donor tooling needs it
+
+                    ExportEntry biot_materials = biot;
+                    if (!mdi.NoMaterialsPackage)
+                    {
+                        biot_materials = ExportCreator.CreatePackageExport(donorPackage, "Materials", cache: biotCache, parent: biot);
+                    }
+
+                    var biot_textures = ExportCreator.CreatePackageExport(donorPackage, "Textures", cache: biotCache, parent: biot); // Create in the event donor tooling needs it
                     var material = ExportCreator.CreateExport(donorPackage, matName, "Material", biot_materials, indexed: false, cache: biotCache);
 
                     var usop = new UnrealScriptOptionsPackage() { MissingObjectResolver = DonorBuildResolver, Cache = biotCache };

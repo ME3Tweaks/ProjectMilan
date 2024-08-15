@@ -1,6 +1,7 @@
 ﻿using LegendaryExplorerCore.Packages;
 using ProjectMilan.Pipelines.Levels;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Utility
 {
@@ -23,6 +24,24 @@ namespace ProjectMilan.Utility
                 LevelShared.CalculateTextureToInstancesMap(package, TieredPackageCache.GetGlobalPackageCache(MEGame.LE3));
                 //package.Save();
             }
+        }
+
+        public static void DumpRefShaderNames()
+        {
+            var shaderCacheF = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole\RefShaderCache-PC-D3D-SM5.upk";
+            MilanLog.Information("Loading RefShaderCache");
+            var shaderCacheP = MEPackageHandler.OpenMEPackage(shaderCacheF);
+            MilanLog.Information("Parsing RefShaderCache");
+            var shaderCache = ObjectBinary.From<ShaderCache>(shaderCacheP.Exports.FirstOrDefault());
+            MilanLog.Information("Dumping materials");
+            SortedSet<string> matNames = new SortedSet<string>();
+            foreach (var sm in shaderCache.MaterialShaderMaps)
+            {
+                matNames.Add($"{sm.Value.FriendlyName} {sm.Value.ID}");
+            }
+
+            var outP = @"C:\users\public\refshadermaterials.txt";
+            File.WriteAllLines(outP, matNames);
         }
 #endif
     }

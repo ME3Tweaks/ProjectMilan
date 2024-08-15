@@ -303,7 +303,8 @@ namespace ProjectMilan
         {
 #if DEBUG
             // Put your method in Research class and call it here.
-            Research.TestTextureToInstancesMap();
+            // Research.TestTextureToInstancesMap();
+            Research.DumpRefShaderNames();
 #endif
         }
     }
