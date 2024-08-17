@@ -4,6 +4,7 @@ using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Pipelines.Materials;
 using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Kits

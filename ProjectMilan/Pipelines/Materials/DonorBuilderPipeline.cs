@@ -182,6 +182,7 @@ namespace ProjectMilan.Pipelines.Materials
             var instancesFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Instances");
             // Output folder that will be used for donors in later pipelines
             var packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build", "Materials");
+            if (!Directory.Exists(packageOutputFolder)) Directory.CreateDirectory(packageOutputFolder);
 
             // Build parents
             var packageFolders = Directory.GetDirectories(parentsFolder);
@@ -316,6 +317,7 @@ namespace ProjectMilan.Pipelines.Materials
 
             // Change output directory
             packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build", "Instances");
+            if (!Directory.Exists(packageOutputFolder)) Directory.CreateDirectory(packageOutputFolder);
 
             // Build instances
             packageFolders = Directory.GetDirectories(instancesFolder);
