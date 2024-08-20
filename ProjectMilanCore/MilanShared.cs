@@ -11,6 +11,7 @@ using ProjectMilan;
 using System.Diagnostics;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Pathing;
 using ProjectMilan.Utility;
 
 namespace ProjectMilanCore
@@ -272,17 +273,22 @@ namespace ProjectMilanCore
         /// <summary>
         /// Ensures the MPCommon package is in the game so tooling can use it
         /// </summary>
-        public static bool EnsureMPCommonInGame()
+        public static bool EnsureMPCommonInGame(out string foundPath)
         {
+            foundPath = null;
             var biopMPCommon = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole", MP_STARTUP_FILENAME);
             if (!File.Exists(biopMPCommon))
             {
                 var files = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
-                if (!files.TryGetValue(MP_STARTUP_FILENAME, out _))
+                if (!files.TryGetValue(MP_STARTUP_FILENAME, out foundPath))
                 {
                     MilanLog.Error($"{MP_STARTUP_FILENAME} was not found - content pipelines cannot run, they depend on BIOP_MP_COMMON. Install Project Milan or build the MP startup pipeline if this is the Project Milan project.");
                     return false;
                 }
+            }
+            else
+            {
+                foundPath = biopMPCommon;
             }
 
             EntryImporter.AddUserSafeToImportFromFile(MEGame.LE3, MP_STARTUP_FILENAME);
@@ -689,16 +695,21 @@ namespace ProjectMilanCore
         public static IMEPackage LE3PackageResolver(string filename, PackageCache cache)
         {
             string matching = null;
-            lock (_globalDirEnumerator)
+            if (BaseBuildSettings.OutputModPath != null)
             {
-                if (RefreshMilanFiles)
+                lock (_globalDirEnumerator)
                 {
-                    MilanFiles = Directory.GetFiles(BaseBuildSettings.OutputModPath, "*", SearchOption.AllDirectories);
-                    RefreshMilanFiles = false;
-                }
+                    if (RefreshMilanFiles)
+                    {
+                        MilanFiles = Directory.GetFiles(BaseBuildSettings.OutputModPath, "*",
+                            SearchOption.AllDirectories);
+                        RefreshMilanFiles = false;
+                    }
 
-                matching = MilanFiles.FirstOrDefault(x => Path.GetFileName(x).CaseInsensitiveEquals(filename));
+                    matching = MilanFiles.FirstOrDefault(x => Path.GetFileName(x).CaseInsensitiveEquals(filename));
+                }
             }
+
             if (matching != null)
             {
                 // See if this package is already loaded
@@ -1138,6 +1149,55 @@ namespace ProjectMilanCore
         public static void DropMPCommonTieredPackageCache()
         {
             mpCommonCache = null;
+        }
+
+        public static ExportEntry CreateSPStartLocation(IMEPackage package, Point3D startLocation)
+        {
+            var pl = package.FindExport("TheWorld.PersistentLevel");
+            var startLoc = ExportCreator.CreateExport(package, "BioStartLocation", "BioStartLocation", pl);
+            startLoc.WriteProperty(new StructProperty("Vector", new PropertyCollection()
+            {
+                new FloatProperty(startLocation.X, "X"),
+                new FloatProperty(startLocation.Y, "Y"),
+                new FloatProperty(startLocation.Z, "Z"),
+            }, "location", true));
+
+
+            var collisionCylinder =
+                ExportCreator.CreateExport(package, "CylinderComponent", "CylinderComponent", startLoc);
+            collisionCylinder.WritePrePropsAndProperties(new byte[4],
+                collisionCylinder.GetProperties()); // Set up pre-prop binary
+
+            collisionCylinder.WriteProperty(new ObjectProperty(0, "ReplacementPrimitive"));
+            // Technically should do lighting channels.
+
+            startLoc.WriteProperty(new ObjectProperty(collisionCylinder, "CollisionComponent"));
+            startLoc.WriteProperty(new NameProperty("start_milanSP", "Tag"));
+
+            return startLoc;
+        }
+
+        private static bool InstalledMPCommonInfo = false;
+
+        public static void InstallMPCommonClassInfo(string mpCommonPath)
+        {
+            if (InstalledMPCommonInfo)
+                return;
+            InstalledMPCommonInfo = true;
+            MilanLog.Information($"Inventorying BIOP_MP_COMMON package");
+            var p = MEPackageHandler.OpenMEPackage(mpCommonPath);
+            foreach (var ex in p.Exports.Where(x => x.IsClass))
+            {
+                var classInfo = GlobalUnrealObjectInfo.generateClassInfo(ex);
+                MilanLog.Information($@"  Inventorying class {ex.InstancedFullPath}");
+                GlobalUnrealObjectInfo.InstallCustomClassInfo(ex.ObjectName, classInfo, ex.Game);
+
+                if (ex.InheritsFrom("SequenceObject"))
+                {
+                    var defaults = p.GetUExport(ObjectBinary.From<UClass>(ex).Defaults);
+                    GlobalUnrealObjectInfo.GenerateSequenceObjectInfoForClassDefaults(defaults);
+                }
+            }
         }
 
         /// <summary>

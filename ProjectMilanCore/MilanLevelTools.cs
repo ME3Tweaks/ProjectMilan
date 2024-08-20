@@ -1,97 +1,16 @@
-﻿using System.Numerics;
-using LegendaryExplorerCore.Helpers;
-using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Unreal;
+﻿using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal;
+using ProjectMilan;
+using System.Numerics;
+using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using ProjectMilan.Utility;
 
-namespace ProjectMilan.Pipelines.Levels
+namespace ProjectMilanCore
 {
-
-    /// <summary>
-    /// Basically a stripped down PathEdUtils from LEX.
-    /// </summary>
-    public class LevelTools
+    public static class MilanLevelTools
     {
-        public static Point3D GetLocation(ExportEntry export)
-        {
-            float x = 0, y = 0, z = int.MinValue;
-            if (export.ClassName.Contains("Component") && export.HasParent && export.Parent.ClassName.Contains("CollectionActor"))  //Collection component
-            {
-                var actorCollection = export.Parent as ExportEntry;
-                var collection = GetCollectionItems(actorCollection);
-
-                if (!(collection?.IsEmpty() ?? true))
-                {
-                    var positions = GetCollectionLocationData(actorCollection);
-                    var idx = collection.FindIndex(o => o != null && o.UIndex == export.UIndex);
-                    if (idx >= 0)
-                    {
-                        return new Point3D(positions[idx].X, positions[idx].Y, positions[idx].Z);
-                    }
-                }
-
-            }
-            else
-            {
-                var prop = export.GetProperty<StructProperty>("location");
-                if (prop != null)
-                {
-                    foreach (var locprop in prop.Properties)
-                    {
-                        switch (locprop)
-                        {
-                            case FloatProperty fltProp when fltProp.Name == "X":
-                                x = fltProp;
-                                break;
-                            case FloatProperty fltProp when fltProp.Name == "Y":
-                                y = fltProp;
-                                break;
-                            case FloatProperty fltProp when fltProp.Name == "Z":
-                                z = fltProp;
-                                break;
-                        }
-                    }
-                    return new Point3D(x, y, z);
-                }
-            }
-            return new Point3D(0, 0, 0);
-        }
-
-        public static List<Point3D> GetCollectionLocationData(ExportEntry collectionactor)
-        {
-            if (!collectionactor.ClassName.Contains("CollectionActor"))
-                return null;
-
-            return ((StaticCollectionActor)ObjectBinary.From(collectionactor)).LocalToWorldTransforms
-                                                                              .Select(localToWorldTransform => (Point3D)localToWorldTransform.Translation).ToList();
-        }
-
-        public static List<ExportEntry> GetCollectionItems(ExportEntry smac)
-        {
-            var collectionItems = new List<ExportEntry>();
-            var smacItems = smac.GetProperty<ArrayProperty<ObjectProperty>>(smac.ClassName == "StaticMeshCollectionActor" ? "StaticMeshComponents" : "LightComponents");
-            if (smacItems != null)
-            {
-                //Read exports...
-                foreach (ObjectProperty obj in smacItems)
-                {
-                    if (obj.Value > 0)
-                    {
-                        ExportEntry item = smac.FileRef.GetUExport(obj.Value);
-                        collectionItems.Add(item);
-                    }
-                    else
-                    {
-                        //this is a blank entry, or an import, somehow.
-                        collectionItems.Add(null);
-                    }
-                }
-                return collectionItems;
-            }
-            return null;
-        }
 
         public static void SetDrawScale3D(ExportEntry export, float x, float y, float z)
         {
@@ -145,7 +64,7 @@ namespace ProjectMilan.Pipelines.Levels
                 collectionactor = (ExportEntry)component.Parent;
             }
 
-            collectionitems ??= GetCollectionItems(collectionactor);
+            collectionitems ??= LevelTools.GetCollectionItems(collectionactor);
 
             if (collectionitems?.Count > 0)
             {
@@ -172,7 +91,7 @@ namespace ProjectMilan.Pipelines.Levels
                 collectionactor = (ExportEntry)component.Parent;
             }
 
-            collectionitems ??= GetCollectionItems(collectionactor);
+            collectionitems ??= LevelTools.GetCollectionItems(collectionactor);
 
             if (collectionitems?.Count > 0)
             {
@@ -239,10 +158,9 @@ namespace ProjectMilan.Pipelines.Levels
         /// Rebuilds the stream levels list for the package
         /// </summary>
         /// <param name="Pcc"></param>
-        /// <param name="lsp">Used for logging. Can be null</param>
-        public static void RebuildStreamingLevels(IMEPackage Pcc, LevelSpecificPipeline lsp = null)
+        public static void RebuildStreamingLevels(IMEPackage Pcc, string logCategory)
         {
-            MilanLog.Information("Rebuilding streaming levels list", customPrefix: lsp?.LogCategory);
+            MilanLog.Information("Rebuilding streaming levels list", customPrefix: logCategory);
 
             try
             {
@@ -278,12 +196,12 @@ namespace ProjectMilan.Pipelines.Levels
                 }
                 else
                 {
-                    MilanLog.Warning("No BioWorldInfo object found in this file", customPrefix: lsp?.LogCategory);
+                    MilanLog.Warning("No BioWorldInfo object found in this file", customPrefix: logCategory);
                 }
             }
             catch (Exception ex)
             {
-                MilanLog.Exception(ex, "Error setting streaming levels:", customPrefix: lsp?.LogCategory);
+                MilanLog.Exception(ex, "Error setting streaming levels:", customPrefix: logCategory);
             }
         }
 
@@ -305,56 +223,68 @@ namespace ProjectMilan.Pipelines.Levels
 
             return levelName;
         }
-    }
 
-    public class Point3D
-    {
-        public float X { get; set; }
-        public float Y { get; set; }
-        public float Z { get; set; }
-
-        public Point3D()
+        /// <summary>
+        /// Sets the game modes on BioWorldInfo
+        /// </summary>
+        /// <param name="bioP"></param>
+        public static void SetupHordeModes(IMEPackage bioP, bool isLobby)
         {
+            if (isLobby)
+            {
+                var mpContent = bioP.FindEntry("SFXGameMPContentDLC_Shared_MP") ??
+                                ExportCreator.CreatePackageExport(bioP, "SFXGameMPContentDLC_Shared_MP");
+                ImportEntry lobbyMode = new ImportEntry(bioP)
+                {
+                    ObjectName = "SFXGameInfoMP_Lobby_DLC",
+                    idxLink = mpContent.UIndex,
+                    ClassName = "Class",
+                    PackageFile = "Core"
+                };
+                bioP.AddImport(lobbyMode);
+                bioP.GetBioWorldInfo().WriteProperty(
+                    new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
+                    {
+                        new ObjectProperty(lobbyMode),
+                    });
+            }
+            else
+            {
+                var mpContent = bioP.FindEntry("SFXGameMPContent") ??
+                                ExportCreator.CreatePackageExport(bioP, "SFXGameMPContent");
 
+                ImportEntry infoMP = new ImportEntry(bioP)
+                {
+                    ObjectName = "SFXGameInfoMP",
+                    idxLink = mpContent.UIndex,
+                    ClassName = "Class",
+                    PackageFile = "Core"
+                };
+                ImportEntry gameTypeHorde = new ImportEntry(bioP)
+                {
+                    ObjectName = "SFXGameType_Horde_Operation",
+                    idxLink = mpContent.UIndex,
+                    ClassName = "Class",
+                    PackageFile = "Core"
+                };
+                bioP.AddImport(infoMP);
+                bioP.AddImport(gameTypeHorde);
+                bioP.GetBioWorldInfo().WriteProperty(
+                    new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
+                    {
+                        new ObjectProperty(infoMP),
+                        new ObjectProperty(gameTypeHorde)
+                    });
+            }
         }
 
-        public Point3D(float X, float Y, float Z)
+        public static void SetMPStartLocations(IMEPackage biop, Vector3 sl)
         {
-            this.X = X;
-            this.Y = Y;
-            this.Z = Z;
+            for (int i = 0; i < 4; i++)
+            {
+                var bsl = biop.FindExport($"TheWorld.PersistentLevel.BioStartLocationMP_{i}");
+                SetLocation(bsl, sl.X + i * 85, sl.Y, sl.Z); // No idea if this is a good idea. Will fix later. // Mgamerz 08/15/2024
+            }
         }
-
-        public double getDistanceToOtherPoint(Point3D other)
-        {
-            double deltaX = X - other.X;
-            double deltaY = Y - other.Y;
-            double deltaZ = Z - other.Z;
-
-            return Math.Sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
-        }
-
-        public Point3D getDelta(Point3D other)
-        {
-            float deltaX = X - other.X;
-            float deltaY = Y - other.Y;
-            float deltaZ = Z - other.Z;
-            return new Point3D(deltaX, deltaY, deltaZ);
-        }
-
-        public override string ToString()
-        {
-            return $"{X},{Y},{Z}";
-        }
-
-        public Point3D applyDelta(Point3D other)
-        {
-            float deltaX = X + other.X;
-            float deltaY = Y + other.Y;
-            float deltaZ = Z + other.Z;
-            return new Point3D(deltaX, deltaY, deltaZ);
-        }
-
-        public static implicit operator Point3D(Vector3 vec) => new Point3D(vec.X, vec.Y, vec.Z);
     }
 }

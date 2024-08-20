@@ -1,18 +1,13 @@
-﻿using System.Diagnostics;
-using System.Drawing.Interop;
-using System.Numerics;
+﻿using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
+using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.Unreal.Classes;
-using LegendaryExplorerCore.Unreal.Collections;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilan.Pipelines.Materials;
-using ProjectMilan.Pipelines.Shared;
-using ProjectMilan.Utility;
 using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Levels
@@ -28,34 +23,6 @@ namespace ProjectMilan.Pipelines.Levels
 
             MilanLog.Error(@"Unsupported package type!");
             return null;
-        }
-
-        public static ExportEntry CreateSPStartLocation(IMEPackage package, Point3D startLocation)
-        {
-            var pl = package.FindExport("TheWorld.PersistentLevel");
-            var startLoc = ExportCreator.CreateExport(package, "BioStartLocation", "BioStartLocation", pl);
-            startLoc.WriteProperty(new StructProperty("Vector", new PropertyCollection()
-            {
-                new FloatProperty(startLocation.X, "X"),
-                new FloatProperty(startLocation.Y, "Y"),
-                new FloatProperty(startLocation.Z, "Z"),
-            }, "location", true));
-
-
-            var collisionCylinder =
-                ExportCreator.CreateExport(package, "CylinderComponent", "CylinderComponent", startLoc);
-            collisionCylinder.WritePrePropsAndProperties(new byte[4],
-                collisionCylinder.GetProperties()); // Set up pre-prop binary
-
-            collisionCylinder.WriteProperty(new ObjectProperty(0, "ReplacementPrimitive"));
-            // Technically should do lighting channels.
-
-            startLoc.WriteProperty(new ObjectProperty(collisionCylinder, "CollisionComponent"));
-            startLoc.WriteProperty(new NameProperty("start_milanSP", "Tag"));
-
-
-
-            return startLoc;
         }
 
         public static IMEPackage PortLevel(LevelSpecificPipeline levelPipeline, IMEPackage sourcePackage)
@@ -78,8 +45,8 @@ namespace ProjectMilan.Pipelines.Levels
                 levelPipeline.LE3BioP = destPackage;
             }
 
-            var destLevel = PackageExtensions.GetLevel(destPackage);
-            var sourcePersistentLevel = PackageExtensions.GetLevelBinary(sourcePackage);
+            var destLevel = destPackage.GetLevel();
+            var sourcePersistentLevel = sourcePackage.GetLevelBinary();
             var actors = sourcePersistentLevel.Actors.Where(x =>
             {
                 if (sourcePackage.TryGetUExport(x, out var exp))
@@ -186,7 +153,7 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             // Map the stuff in PersistentLevel
-            var destLevelBin = PackageExtensions.GetLevelBinary(destPackage);
+            var destLevelBin = destPackage.GetLevelBinary();
 
             // Bring over models
             var oModelIdx = sourcePersistentLevel.Model;
@@ -273,7 +240,7 @@ namespace ProjectMilan.Pipelines.Levels
 
             // NavRefs, CoverRefs
             // CrossLevelActors
-            PackageExtensions.GetLevel(destPackage).WriteBinary(destLevelBin);
+            destPackage.GetLevel().WriteBinary(destLevelBin);
 
             // Port sequence
             var srcSeq = sourcePackage.FindExport("TheWorld.PersistentLevel.Main_Sequence");
@@ -296,7 +263,7 @@ namespace ProjectMilan.Pipelines.Levels
 
             }
 
-            LevelTools.RebuildPersistentLevelChildren(destLevel);
+            MilanLevelTools.RebuildPersistentLevelChildren(destLevel);
 
             if (levelPipeline.StripShadowMaps)
             {
@@ -313,7 +280,7 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             // Calculate a very basic texture to instances map
-            LevelShared.CalculateTextureToInstancesMap(destPackage, levelPipeline.Cache);
+            LevelTools.CalculateTextureToInstancesMap(destPackage, levelPipeline.Cache);
 
             MilanLog.Information($"  Saving ported package {packageBaseName}.pcc",
                 customPrefix: levelPipeline.LogCategory);
@@ -335,300 +302,6 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             return destPackage;
-        }
-
-        /// <summary>
-        /// Sets the game modes on BioWorldInfo
-        /// </summary>
-        /// <param name="bioP"></param>
-        public static void SetupHordeModes(IMEPackage bioP, bool isLobby)
-        {
-            if (isLobby)
-            {
-                var mpContent = bioP.FindEntry("SFXGameMPContentDLC_Shared_MP") ??
-                                ExportCreator.CreatePackageExport(bioP, "SFXGameMPContentDLC_Shared_MP");
-                ImportEntry lobbyMode = new ImportEntry(bioP)
-                {
-                    ObjectName = "SFXGameInfoMP_Lobby_DLC",
-                    idxLink = mpContent.UIndex,
-                    ClassName = "Class",
-                    PackageFile = "Core"
-                };
-                bioP.AddImport(lobbyMode);
-                bioP.GetBioWorldInfo().WriteProperty(
-                    new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
-                    {
-                        new ObjectProperty(lobbyMode),
-                    });
-            }
-            else
-            {
-                var mpContent = bioP.FindEntry("SFXGameMPContent") ??
-                                ExportCreator.CreatePackageExport(bioP, "SFXGameMPContent");
-
-                ImportEntry infoMP = new ImportEntry(bioP)
-                {
-                    ObjectName = "SFXGameInfoMP",
-                    idxLink = mpContent.UIndex,
-                    ClassName = "Class",
-                    PackageFile = "Core"
-                };
-                ImportEntry gameTypeHorde = new ImportEntry(bioP)
-                {
-                    ObjectName = "SFXGameType_Horde_Operation",
-                    idxLink = mpContent.UIndex,
-                    ClassName = "Class",
-                    PackageFile = "Core"
-                };
-                bioP.AddImport(infoMP);
-                bioP.AddImport(gameTypeHorde);
-                bioP.GetBioWorldInfo().WriteProperty(
-                    new ArrayProperty<ObjectProperty>("GameTypesSupportedOnThisMap")
-                    {
-                        new ObjectProperty(infoMP),
-                        new ObjectProperty(gameTypeHorde)
-                    });
-            }
-        }
-
-        // This technically doesn't need done here as we have this all computed already and could just be ported over
-        // but it would be good to try to code something up here to do it for us for other devs
-        /// <summary>
-        /// Computes a texture to instances map for a level package
-        /// </summary>
-        /// <param name="package"></param>
-        public static void CalculateTextureToInstancesMap(IMEPackage package, TieredPackageCache cache)
-        {
-            MilanLog.Information($"Calculating TextureToInstancesMap for {package.FileNameNoExtension}", customPrefix: @"MILAN-StreamingTextures");
-            var textureToInstancesMap = new Dictionary<IEntry, List<StreamableTextureInstance>>();
-
-            // Look at all components
-            foreach (var component in package.Exports.Where(x => x.IsA("Component")))
-            {
-                // Only do ones in the world
-                if (!component.GetRootName().CaseInsensitiveEquals("TheWorld"))
-                    continue;
-
-                ObjectProperty meshProp = component.GetProperty<ObjectProperty>("StaticMesh");
-                meshProp ??= component.GetProperty<ObjectProperty>("SkeletalMesh");
-
-                if (meshProp == null)
-                    continue; // Not supported by this code.
-
-                // List of materials this mesh uses
-                List<IEntry> texturesOnMesh = new List<IEntry>();
-                List<ExportEntry> materials = new List<ExportEntry>();
-                var matList = component.GetProperty<ArrayProperty<ObjectProperty>>("Materials");
-                if (matList != null)
-                {
-                    foreach (var mat in matList)
-                    {
-                        if (mat.TryResolveExport(package, cache, out var matExp))
-                        {
-                            materials.Add(matExp);
-                        }
-                    }
-                }
-
-                // if we don't have any materials set on component, we have to pull it off the mesh.
-                // resolve the mesh export
-                if (materials.Count == 0 && meshProp.TryResolveExport(package, cache, out var mdl))
-                {
-                    switch (mdl.ClassName)
-                    {
-                        case "StaticMesh":
-                            {
-                                var bin = ObjectBinary.From<StaticMesh>(mdl);
-                                foreach (var mat in bin.GetMaterials())
-                                {
-                                    if (mdl.FileRef.TryGetEntry(mat, out var matEntry))
-                                    {
-                                        if (matEntry is ExportEntry exp)
-                                            materials.Add(exp);
-                                        else if (matEntry is ImportEntry imp &&
-                                                 EntryImporter.TryResolveImport(imp, out var resolvedExp, cache))
-                                            materials.Add(resolvedExp);
-                                    }
-                                }
-
-                                break;
-                            }
-                        case "SkeletalMesh":
-                            {
-                                var bin = ObjectBinary.From<SkeletalMesh>(mdl);
-                                foreach (var mat in bin.Materials)
-                                {
-                                    if (mdl.FileRef.TryGetEntry(mat, out var matEntry))
-                                    {
-                                        if (matEntry is ExportEntry exp)
-                                            materials.Add(exp);
-                                        else if (matEntry is ImportEntry imp &&
-                                                 EntryImporter.TryResolveImport(imp, out var resolvedExp, cache))
-                                            materials.Add(resolvedExp);
-                                    }
-                                }
-
-                                break;
-                            }
-                    }
-                }
-
-                // We now have the list of materials.
-                // Get actor location.
-                var actorLocation = GetActorLocationFromComponent(component);
-
-                if (actorLocation is { X: 0, Y: 0, Z: 0 })
-                    continue;
-
-                // Get list of textures on the materials.
-                foreach (var mat in materials.Distinct())
-                {
-                    var parsedMat = new MaterialInstanceConstant(mat, cache, true);
-                    texturesOnMesh.AddRange(parsedMat.Textures);
-                }
-
-                // Jiminy crickets this is complicated
-                // Add imports for all materials so we can reference them if they are in higher tier packages.
-                foreach (var tex in texturesOnMesh.ToList())
-                {
-                    //if (tex.UIndex == 53054)
-                    //    //&& package.FileNameNoExtension != "BioA_MPMoon")
-                    //    Debugger.Break();
-                    if (tex.ClassName.CaseInsensitiveEquals("TextureCube"))
-                    {
-                        // Texture cubes are not streamable
-                        texturesOnMesh.Remove(tex);
-                        continue;
-                    }
-
-                    if (tex is ExportEntry tExp)
-                    {
-                        bool validatePackage = true;
-                        if (tExp.GetProperty<BoolProperty>("NeverStream")?.Value == true)
-                        {
-                            // This texture is not streamed
-                            texturesOnMesh.Remove(tex);
-                            continue;
-                        }
-                        var t2d = ObjectBinary.From<UTexture2D>(tExp, cache);
-                        if (t2d.Mips.Count <= 6)
-                        {
-                            // This texture is not streamed.
-                            texturesOnMesh.Remove(tex);
-                            continue;
-                        }
-
-                        if (tex.FileRef != package)
-                        {
-                            // We must resolve this to local object
-                            var existingEntry = package.FindEntry(tex.InstancedFullPath, tex.ClassName);
-                            if (existingEntry != null)
-                            {
-                                texturesOnMesh.Remove(tex);
-                                texturesOnMesh.Add(existingEntry);
-                                validatePackage = false;
-                            }
-                            else
-                            {
-                                // Not found, and in another package
-                                var parent = EntryExporter.PortParents(tex, package, true); // Really dicey. This method needs improved
-                                ImportEntry imp = new ImportEntry(tExp, parent.UIndex, package);
-                                package.AddImport(imp);
-
-                                // Replace the mesh 
-                                texturesOnMesh.Remove(tex);
-                                texturesOnMesh.Add(imp);
-                                validatePackage = false;
-                            }
-                        }
-
-                        // We're gonna crash game if we use this
-                        if (tex.FileRef != package && validatePackage)
-                            Debugger.Break();
-                    }
-                    else if (tex is ImportEntry tImp)
-                    {
-                        if (tImp.FileRef != package)
-                        {
-                            // This is an import in another package. We must copy it over.
-                            var newImp = EntryExporter.PortParents(tImp, package, true);
-                            texturesOnMesh.Remove(tex);
-                            texturesOnMesh.Add(newImp);
-                        }
-                    }
-                }
-
-                // Add streaming instances.
-                foreach (var tex in texturesOnMesh)
-                {
-                    // Final validation
-                    if (tex.FileRef != package)
-                        Debugger.Break();
-
-                    if (!textureToInstancesMap.TryGetValue(tex, out var stil))
-                    {
-                        stil = new List<StreamableTextureInstance>();
-                        textureToInstancesMap[tex] = stil;
-                    }
-
-                    stil.Add(new StreamableTextureInstance()
-                    {
-                        BoundingSphere = new Sphere()
-                        {
-                            Center = new Vector3(actorLocation.X, actorLocation.Y, actorLocation.Z),
-                            W = 50 // Radius. I guess we could technically take the size of the mesh. But do I care that much?
-                        },
-                        TexelFactor = 50 // I have no ideal how to calcluate this
-                    });
-                }
-            }
-            // We now have location and list of textures
-            // Build the map.
-
-            var levelExp = package.GetLevel();
-            var level = package.GetLevelBinary();
-
-            level.TextureToInstancesMap = new UMultiMap<int, StreamableTextureInstanceList>(textureToInstancesMap.Count);
-            foreach (var tex in textureToInstancesMap)
-            {
-                level.TextureToInstancesMap[tex.Key.UIndex] = new StreamableTextureInstanceList()
-                {
-                    Instances = tex.Value.ToArray()
-                };
-            }
-
-            levelExp.WriteBinary(level);
-
-        }
-
-        private static Point3D GetActorLocationFromComponent(ExportEntry exportEntry)
-        {
-            // I don't like working with structs.
-            // So we use Point3D instead.
-            if (exportEntry.HasParent && (exportEntry.IsA("StaticMeshComponent")
-                                          && exportEntry.Parent.IsA("StaticMeshCollectionActor")
-                                          || exportEntry.IsA("LightComponent") &&
-                                          exportEntry.Parent.IsA("StaticLightCollectionActor")))
-            {
-                // collection actor
-                if (StaticCollectionActor.TryGetStaticCollectionActorAndIndex(exportEntry,
-                        out StaticCollectionActor sca, out int index))
-                {
-                    float PosX;
-                    float PosY;
-                    float PosZ;
-                    ((PosX, PosY, PosZ), (_, _, _), (_, _, _)) = sca.GetDecomposedTransformationForIndex(index);
-                    return new Point3D(PosX, PosY, PosZ);
-                }
-            }
-            else
-            {
-                return LevelTools.GetLocation(exportEntry);
-            }
-
-            // Unknown location...
-            Debugger.Break();
-            return new Point3D();
         }
     }
 }

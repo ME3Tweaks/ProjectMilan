@@ -38,7 +38,7 @@ namespace ProjectMilan.Pipelines.Init
         {
             CheckSettings();
             // Install all custom classes that are used for porting
-            // InventoryCustomPackages(); // Not currently used
+            InventoryCustomPackages();
 
             // Load object databases
 

@@ -1,4 +1,4 @@
-﻿using ProjectMilan.Utility;
+﻿using LegendaryExplorerCore.Gammtek.Extensions;
 
 namespace ProjectMilan.Pipelines.Levels.MPLobby
 {

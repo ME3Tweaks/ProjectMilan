@@ -1,6 +1,6 @@
 ﻿using LegendaryExplorerCore.Packages;
-using ProjectMilan.Pipelines.Levels;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Utility
@@ -21,7 +21,7 @@ namespace ProjectMilan.Utility
             foreach (var pcc in Directory.GetFiles(dir))
             {
                 var package = MEPackageHandler.OpenMEPackage(pcc);
-                LevelShared.CalculateTextureToInstancesMap(package, TieredPackageCache.GetGlobalPackageCache(MEGame.LE3));
+                LevelTools.CalculateTextureToInstancesMap(package, TieredPackageCache.GetGlobalPackageCache(MEGame.LE3));
                 //package.Save();
             }
         }

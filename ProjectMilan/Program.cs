@@ -189,8 +189,9 @@ namespace ProjectMilan
 
             // Content build pipelines
             // This should not be required anymore
-            if (!MilanShared.EnsureMPCommonInGame()) // These require BIOP_MP_COMMON
+                if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath)) // These require BIOP_MP_COMMON
                 return;
+                MilanShared.InstallMPCommonClassInfo(mpCommonPath);
 
             // Content pipelines will use the milan ME3 cache
             MilanShared.EnsureTFCsAvailable();
