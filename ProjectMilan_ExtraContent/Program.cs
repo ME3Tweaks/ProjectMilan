@@ -108,15 +108,25 @@ namespace ProjectMilan_ExtraContent
         /// </summary>
         private static void RunPipelines()
         {
+            // These are required for build to work
+            if (BaseBuildSettings.OutputModPath == null)
+            {
+                BaseBuildSettings.OutputModPath = ""; // Set blank so next call works
+            }
+
+            MilanShared.EnsureMPCommonInGame(out var mpCommonPath);
+
             // if statements are here because we don't want to change output paths unless necessary.
             if (Settings.RunRejectionPipeline)
             {
+                MilanShared.InstallMPCommonClassInfo(mpCommonPath);
                 BaseBuildSettings.OutputModPath = Settings.OutputModPathREJ;
                 RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipelineEC, @"Rejection");
             }
 
             if (Settings.RunRedemptionPipeline)
             {
+                MilanShared.InstallMPCommonClassInfo(mpCommonPath);
                 BaseBuildSettings.OutputModPath = Settings.OutputModPathRED;
                 RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipelineEC, @"Redemption");
             }
@@ -124,7 +134,7 @@ namespace ProjectMilan_ExtraContent
             MilanLog.Information($"Pipeline timings:");
             foreach (var stat in pipelineTimes)
             {
-                MilanLog.Information($"\t{stat.Key.PadRight(pipelineTimes.Keys.MaxBy(x=>x.Length).Length + 3)}{stat.Value}ms");
+                MilanLog.Information($"\t{stat.Key.PadRight(pipelineTimes.Keys.MaxBy(x => x.Length).Length + 3)}{stat.Value}ms");
             }
             MilanLog.Information($"\tTotal:\t{pipelineTimes.Sum(x => x.Value)}ms");
         }

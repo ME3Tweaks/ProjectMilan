@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioGame" name="biogame.ini" source="..\..\biogame\config\biogame.ini">
+	<Sections>
+		<Section name="sfxgamecontentdlc_con_mp4.sfxpawn_playermp_adept_volus">
+			<Property name="bcannotusecover" type="0">false</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_con_mp4.sfxpawn_playermp_engineer_volus">
+			<Property name="bcannotusecover" type="0">false</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_con_mp4.sfxpawn_playermp_sentinel_volus">
+			<Property name="bcannotusecover" type="0">false</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_con_mp4.sfxpawn_playermp_vanguard_volus">
+			<Property name="bcannotusecover" type="0">false</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_con_mp5.sfxpawn_playermp_sentinel_kroganwarlord">
+			<Property name="bcannotusecover" type="0">false</Property>
+		</Section>
+		<Section name="sfxgamecontentdlc_con_mp5.sfxpawn_playermp_soldier_gethdestroyer">
+			<Property name="bcannotusecover" type="0">false</Property>
+		</Section>
+		<Section name="sfxgamempcontent.sfxprimp">
+			<Property name="mapsettings">
+				<Value type="3">(MapName="BioP_MPCron2",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Earth,ZoneIncrease=7)</Value>
+				<Value type="3">(MapName="BioP_MPRnch",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Earth,ZoneIncrease=7)</Value>
+				<Value type="3">(MapName="BioP_MPGris",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Earth,ZoneIncrease=7)</Value>
+				<Value type="3">(MapName="BioP_MPMars3",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Earth,ZoneIncrease=7)</Value>
+				<Value type="3">(MapName="BioP_MPShip",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Earth,ZoneIncrease=7)</Value>
+				<Value type="3">(MapName="BioP_MPSnct",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Earth,ZoneIncrease=7)</Value>
+				<Value type="3">(MapName="BioP_MPArra",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Earth,ZoneIncrease=7)</Value>
+				<Value type="3">(MapName="BioP_MPProEarth",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Earth,ZoneIncrease=7)</Value>
+			</Property>
+		</Section>
+		<Section name="sfxonlinefoundation.sfxonlinegamesettings">
+			<Property name="availablemaps">
+				<Value type="3">BioP_MPSnct</Value>
+				<Value type="3">BioP_MPGris</Value>
+				<Value type="3">BioP_MPShip</Value>
+				<Value type="3">BioP_MPMars3</Value>
+				<Value type="3">BioP_MPCron2</Value>
+				<Value type="3">BioP_MPRnch</Value>
+				<Value type="3">BioP_MPArmaxJungle</Value>
+				<Value type="3">BioP_MPArmaxGlitch</Value>
+				<Value type="3">BioP_MPArmaxOcean</Value>
+				<Value type="3">BioP_MPArmaxBlasteroid</Value>
+				<Value type="3">BioP_MPArmaxSpin</Value>
+				<Value type="3">BioP_MPArmaxClassic</Value>
+				<Value type="3">BioP_MPArmaxPainTrain</Value>
+				<Value type="3">BioP_MPArmaxBrimStone</Value>
+				<Value type="3">BioP_MPArra</Value>
+				<Value type="3">BioP_MPArmaxJungle_Modifier_1</Value>
+				<Value type="3">BioP_MPArmaxGlitch_Modifier_1</Value>
+				<Value type="3">BioP_MPArmaxOcean_Modifier_1</Value>
+				<Value type="3">BioP_MPArmaxBlasteroid_Modifier_1</Value>
+				<Value type="3">BioP_MPArmaxSpin_Modifier_1</Value>
+				<Value type="3">BioP_MPArmaxClassic_Modifier_1</Value>
+				<Value type="3">BioP_MPArmaxPainTrain_Modifier_1</Value>
+				<Value type="3">BioP_MPArmaxBrimStone_Modifier_1</Value>
+				<Value type="3">BioP_MPArmaxJungle_Modifier_2</Value>
+				<Value type="3">BioP_MPArmaxGlitch_Modifier_2</Value>
+				<Value type="3">BioP_MPArmaxOcean_Modifier_2</Value>
+				<Value type="3">BioP_MPArmaxBlasteroid_Modifier_2</Value>
+				<Value type="3">BioP_MPArmaxSpin_Modifier_2</Value>
+				<Value type="3">BioP_MPArmaxClassic_Modifier_2</Value>
+				<Value type="3">BioP_MPArmaxPainTrain_Modifier_2</Value>
+				<Value type="3">BioP_MPArmaxBrimStone_Modifier_2</Value>
+				<Value type="3">BioP_MPArmaxJungle_Modifier_3</Value>
+				<Value type="3">BioP_MPArmaxGlitch_Modifier_3</Value>
+				<Value type="3">BioP_MPArmaxOcean_Modifier_3</Value>
+				<Value type="3">BioP_MPArmaxBlasteroid_Modifier_3</Value>
+				<Value type="3">BioP_MPArmaxSpin_Modifier_3</Value>
+				<Value type="3">BioP_MPArmaxClassic_Modifier_3</Value>
+				<Value type="3">BioP_MPArmaxPainTrain_Modifier_3</Value>
+				<Value type="3">BioP_MPArmaxBrimStone_Modifier_3</Value>
+				<Value type="3">BioP_MPThes_Proto</Value>
+				<Value type="3">BioP_MPProEarth</Value>
+			</Property>
+			<Property name="mastermaplist">
+				<Value type="3">(ID=32, PackageName="BioP_MPArmaxOcean", PrettyName=187965080, Description=187965217, Image="GUI_MPImages.MatchSettings.OptMapAxWingman", GalaxyAtWarMapPosition=(X=184,Y=323), GalaxyAtWarMapSubtitle=187965217, MusicEventName="Set_mus_map_mpslum")</Value>
+				<Value type="3">(ID=33, PackageName="BioP_MPArmaxBlasteroid", PrettyName=187965081, Description=187965217, Image="GUI_MPImages.MatchSettings.OptMapAxBlasteroid", GalaxyAtWarMapPosition=(X=184,Y=323), GalaxyAtWarMapSubtitle=187965217, MusicEventName="Set_mus_map_mprctr")</Value>
+				<Value type="3">(ID=34, PackageName="BioP_MPArmaxSpin", PrettyName=187965082, Description=187965217, Image="GUI_MPImages.MatchSettings.OptMapAxSpinZone", GalaxyAtWarMapPosition=(X=184,Y=323), GalaxyAtWarMapSubtitle=187965217, MusicEventName="Set_mus_map_mpnov")</Value>
+				<Value type="3">(ID=35, PackageName="BioP_MPArmaxJungle", PrettyName=187965218, Description=187965217, Image="GUI_MPImages.MatchSettings.OptMapAxJungle", GalaxyAtWarMapPosition=(X=184,Y=323), GalaxyAtWarMapSubtitle=187965217, MusicEventName="Set_mus_map_mptowr")</Value>
+				<Value type="3">(ID=36, PackageName="BioP_MPArmaxClassic", PrettyName=187965083, Description=187965217, Image="GUI_MPImages.MatchSettings.OptMapAxClassic", GalaxyAtWarMapPosition=(X=184,Y=323), GalaxyAtWarMapSubtitle=187965217, MusicEventName="Set_mus_map_mprctr")</Value>
+				<Value type="3">(ID=37, PackageName="BioP_MPArmaxPainTrain", PrettyName=187965084, Description=187965217, Image="GUI_MPImages.MatchSettings.OptMapAxPainTrain", GalaxyAtWarMapPosition=(X=184,Y=323), GalaxyAtWarMapSubtitle=187965217, MusicEventName="Set_mus_map_mpcer")</Value>
+				<Value type="3">(ID=38, PackageName="BioP_MPArmaxBrimStone", PrettyName=187965085, Description=187965217, Image="GUI_MPImages.MatchSettings.OptMapAxBrimstone", GalaxyAtWarMapPosition=(X=184,Y=323), GalaxyAtWarMapSubtitle=187965217, MusicEventName="Set_mus_map_mpslum")</Value>
+				<Value type="3">(ID=39, PackageName="BioP_MPArmaxGlitch", PrettyName=187965219, Description=187965217, Image="GUI_MPImages.MatchSettings.OptMapAxGlitch", GalaxyAtWarMapPosition=(X=184,Y=323), GalaxyAtWarMapSubtitle=187965217, MusicEventName="Set_mus_map_mprctr")</Value>
+				<Value type="3">(ID=40, PackageName="BioP_MPSnct", PrettyName=187965207, Description=187965210, Image="GUI_MPImages.MatchSettings.OptMapMoon2", GalaxyAtWarMapPosition=(X=412,Y=284), GalaxyAtWarMapSubtitle=187965210, MusicEventName="Set_mus_map_mpdish")</Value>
+				<Value type="3">(ID=41, PackageName="BioP_MPGris", PrettyName=187965211, Description=187965212, Image="GUI_MPImages.MatchSettings.OptMapMoon3", GalaxyAtWarMapPosition=(X=355,Y=423), GalaxyAtWarMapSubtitle=187965212, MusicEventName="Set_mus_map_mpcer")</Value>
+				<Value type="3">(ID=42, PackageName="BioP_MPShip", PrettyName=187965206, Description=187965209, Image="GUI_MPImages.MatchSettings.OptMapMoon", GalaxyAtWarMapPosition=(X=313,Y=97), GalaxyAtWarMapSubtitle=187965209, MusicEventName="Set_mus_map_mptowr")</Value>
+				<Value type="3">(ID=43, PackageName="BioP_MPMars3", PrettyName=187965205, Description=187965208, Image="GUI_MPImages.MatchSettings.OptMapMars", GalaxyAtWarMapPosition=(X=292,Y=405), GalaxyAtWarMapSubtitle=187965208, MusicEventName="Set_mus_map_mpslum")</Value>
+				<Value type="3">(ID=44, PackageName="BioP_MPCron2", PrettyName=187965215, Description=187965216, Image="GUI_MPImages.MatchSettings.OptMapCronos", GalaxyAtWarMapPosition=(X=332,Y=360), GalaxyAtWarMapSubtitle=187965216, MusicEventName="Set_mus_map_mprctr")</Value>
+				<Value type="3">(ID=45, PackageName="BioP_MPRnch", PrettyName=187965213, Description=187965214, Image="GUI_MPImages.MatchSettings.OptMapGeth", GalaxyAtWarMapPosition=(X=290,Y=100), GalaxyAtWarMapSubtitle=187965214, MusicEventName="Set_mus_map_mpnov")</Value>
+				<Value type="3">(ID=46, PackageName="BioP_MPArra", PrettyName=187965090, Description=500423, Image="GUI_MPImages.MatchSettings.OptMapGellix", GalaxyAtWarMapPosition=(X=290,Y=100), GalaxyAtWarMapSubtitle=500423, MusicEventName="Set_mus_map_mpcer")</Value>
+				<Value type="3">(ID=47, PackageName="BioP_MPThes_Proto", PrettyName=660998, Description=678964, Image="GUI_MPImages.MatchSettings.OptMapTrinity", GalaxyAtWarMapPosition=(X=290,Y=100), GalaxyAtWarMapSubtitle=678964, MusicEventName="Set_mus_map_mptowr")</Value>
+				<Value type="3">(ID=48, PackageName="BioP_MPProEarth", PrettyName=187965086, Description=187965087, Image="GUI_MPImages.MatchSettings.OptMapFallOfVancouver", GalaxyAtWarMapPosition=(X=290,Y=410), GalaxyAtWarMapSubtitle=187965087, MusicEventName="Set_mus_map_mprctr")</Value>
+			</Property>
+		</Section>
+	</Sections>
+</CoalesceAsset>

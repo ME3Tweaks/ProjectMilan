@@ -234,7 +234,7 @@ namespace ProjectMilan_ExtraContent.Shared
         }
 
 
-        internal static void MergeConfig(EExtraContent content, string subfolder = null)
+        internal static ConfigAssetBundle MergeConfig(EExtraContent content, string subfolder = null)
         {
             MilanLog.Information($"Merging config file", customPrefix: LOG_CATEGORY);
             var configDest = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"Default_{Path.GetFileName(BaseBuildSettings.OutputModPath)}.bin"); // Points to output directory .bin, could be milan or R2
@@ -251,6 +251,7 @@ namespace ProjectMilan_ExtraContent.Shared
             var destAssetBundle = ConfigAssetBundle.FromSingleFile(MEGame.LE3, configDest);
             sourceAssetBundle.MergeInto(destAssetBundle);
             destAssetBundle.CommitAssets(configDest, MELocalization.None);
+            return destAssetBundle;
         }
 
         /// <summary>
