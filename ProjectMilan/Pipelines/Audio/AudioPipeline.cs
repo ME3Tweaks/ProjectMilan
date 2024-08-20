@@ -13,16 +13,6 @@ internal static class AudioPipeline
 
     public static void RunPipeline()
     {
-        var vars = new AudioVars
-        {
-            ProjectDir = Path.Combine(MilanShared.PipelineRoot, "Audio", "Wwise", "Milan")
-        };
-            
-        if (Directory.Exists(vars.ProjectDir))
-        {
-            Utilities.DeleteFilesAndFoldersRecursively(vars.ProjectDir);
-        }
-        
         /*var banksToPort = GetBanksNotInLE3();
         
         // Decompile the audio from the banks
@@ -30,9 +20,17 @@ internal static class AudioPipeline
         var streamingBanks = banksToPort.Where(b => b.EventToStreamMap.Count == 0).ToList();
         AudioRebuild.RunPipeline(streamingBanks, vars);*/
 
+
         // Find all banks that need to be converted
         var banksToConvert = GetWwiseV56BanksInOutputMod();
+
+        // Convert WwiseBank binary to v134
         BankConvertPipeline.RunPipeline(banksToConvert);
+
+        // Rebuild AFC and WwiseStreams in v134 using Wwise CLI
+        AFCRebuildPipeline.RunPipeline(banksToConvert);
+
+
     }
 
     private static List<MilanBankConvertInfo> GetWwiseV56BanksInOutputMod()
@@ -43,7 +41,7 @@ internal static class AudioPipeline
         {
             MilanLog.Information($"Inventorying WwiseBanks in {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
             var package = MEPackageHandler.OpenMEPackage(pf);
-            foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank"))
+            foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank" && x.ObjectNameString == "ss_mp_horde_narr_v1"))
             {
                 var bankInfo = new MilanBankConvertInfo(exp);
                 if(bankInfo.BankParser is { Version: 56 }) bankInventory.Add(bankInfo);
