@@ -106,6 +106,12 @@ namespace ProjectMilan.Pipelines.Audio.Extension
                 File.WriteAllBytes(outputFile, ws.EmbeddedData);
                 return true;
             }
+            var afcPath = ws.GetPathToAFC();
+            if (string.IsNullOrEmpty(afcPath))
+            {
+                MilanLog.Warning($"AFC {ws.Filename} not found in game!", customPrefix:"MILAN-AFCRebuild");
+                return false;
+            }
             return VGMAudioStreamHelper.ExtractRawFromSourceToFile(outputFile, ws.GetPathToAFC(), ws.DataSize, ws.DataOffset);
         }
 

@@ -49,19 +49,29 @@ namespace ProjectMilan.Pipelines.Audio
             var exportedPath = Path.Combine(afcFolder, "Exported");
             Directory.CreateDirectory(exportedPath);
 
+            // STEP 1
             // Export all streams to .wav in Exported folder
             foreach(var stream in streams)
             {
                 MilanLog.Information($"  Extracting WwiseStream {stream.InstancedFullPath}", customPrefix: LOG_CATEGORY);
                 var wwstream = ObjectBinary.From<WwiseStream>(stream);
                 var waveStream = wwstream.CreateWaveStream();
-                var outPath = Path.Combine(exportedPath, stream.ObjectName.Name[..^4] + ".wav"); // This removes _wav
+                var outPath = Path.Combine(exportedPath, Path.ChangeExtension(stream.ObjectName.Name, ".wav"));
                 waveStream.WriteToFile(outPath);
             }
 
+            // STEP 2
             // Convert all .wavs to .wem in Converted folder with Wwise
 
-            // Add .wems to new .afc in the base AFC folder, create .json file as table of contents for .afc
+            // STEP 3
+            // Add .wems to new .afc in the base AFC folder
+
+
+            // STEP 4
+            // Create .json file as table of contents for .afc
+
+            // CLEANUP STEP
+            // Delete .wav and .wem folder. Converted .afc and .json will serve as cache until wiped out.
         }
 
         public static void RelinkWwiseStream(ExportEntry stream, string afcName, string afcFolder)
