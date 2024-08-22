@@ -5,6 +5,7 @@ using ProjectMilan.Utility;
 using ProjectMilanCore;
 using ProjectMilan.Pipelines.Audio.Extension;
 using LegendaryExplorerCore.Helpers;
+using System.IO;
 
 
 namespace ProjectMilan.Pipelines.Audio
@@ -16,6 +17,7 @@ namespace ProjectMilan.Pipelines.Audio
 
         public static void RunPipeline(List<MilanBankConvertInfo> banksToConvert)
         {
+            Utilities.DeleteFilesAndFoldersRecursively(GetAfcCacheFolder());
             foreach (var bank in banksToConvert)
             {
                 var streams = bank.GetStreams();
@@ -43,7 +45,9 @@ namespace ProjectMilan.Pipelines.Audio
 
         public static void ConvertAFC(List<ExportEntry> streams, string afcName, string afcFolder)
         {
-            if(!Directory.Exists(afcFolder)) Directory.CreateDirectory(afcFolder);
+            MilanLog.Information($"  Converting {afcName}.afc to Wwise v134", customPrefix: LOG_CATEGORY);
+
+            if (!Directory.Exists(afcFolder)) Directory.CreateDirectory(afcFolder);
             Utilities.DeleteFilesAndFoldersRecursively(afcFolder);
 
             var exportedPath = Path.Combine(afcFolder, "Exported");
@@ -51,11 +55,15 @@ namespace ProjectMilan.Pipelines.Audio
 
             // STEP 1
             // Export all streams to .wav in Exported folder
-            foreach(var stream in streams)
+            MilanLog.Information($"  Extracting {streams.Count} WwiseStreams from {afcName}", customPrefix: LOG_CATEGORY);
+            foreach (var stream in streams)
             {
-                MilanLog.Information($"  Extracting WwiseStream {stream.InstancedFullPath}", customPrefix: LOG_CATEGORY);
                 var wwstream = ObjectBinary.From<WwiseStream>(stream);
                 var waveStream = wwstream.CreateWaveStream();
+                if(waveStream is null)
+                {
+                    break;
+                }
                 var outPath = Path.Combine(exportedPath, Path.ChangeExtension(stream.ObjectName.Name, ".wav"));
                 waveStream.WriteToFile(outPath);
             }

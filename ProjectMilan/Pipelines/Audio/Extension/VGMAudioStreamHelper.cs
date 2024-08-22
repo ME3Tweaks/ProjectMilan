@@ -107,12 +107,12 @@ namespace ProjectMilan.Pipelines.Audio.Extension
                 return true;
             }
             var afcPath = ws.GetPathToAFC();
-            if (string.IsNullOrEmpty(afcPath))
+            if (string.IsNullOrWhiteSpace(afcPath))
             {
                 MilanLog.Warning($"AFC {ws.Filename} not found in game!", customPrefix:"MILAN-AFCRebuild");
                 return false;
             }
-            return VGMAudioStreamHelper.ExtractRawFromSourceToFile(outputFile, ws.GetPathToAFC(), ws.DataSize, ws.DataOffset);
+            return VGMAudioStreamHelper.ExtractRawFromSourceToFile(outputFile, afcPath, ws.DataSize, ws.DataOffset);
         }
 
         /// <summary>
