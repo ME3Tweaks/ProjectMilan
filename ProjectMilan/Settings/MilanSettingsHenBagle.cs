@@ -10,19 +10,19 @@ namespace ProjectMilan.Settings
         public string InputSyncPath { get; set; } = @"D:\Mass Effect Modding\ME3TweaksModManager\mods\LE3\Project Milan\MilanSync";
         public int MaxThreads { get; set; } = 2;
 
-        public bool RunMPCommonPipeline { get; set; } = false;
-        public bool RunNonStartupPipeline { get; set; } = false;
+        public bool RunMPCommonPipeline { get; set; } = true;
+        public bool RunNonStartupPipeline { get; set; } = true;
         public bool RunDonorBuildPipeline { get; set; } = false;
         public bool RunMP4EnemiesPipeline { get; set; } = false;
-        public bool RunKitsPipeline { get; set; } = false;
-        public bool RunWeaponsPipeline { get; set; } = false;
+        public bool RunKitsPipeline { get; set; } = true;
+        public bool RunWeaponsPipeline { get; set; } = true;
         public bool RunRejectionPipeline { get; set; }
         public bool RunRedemptionPipeline { get; set; }
-        public bool RunLevelsPipeline { get; set; } = false;
-        public bool RunAudioPipeline { get; set; } = true;
-        public bool RunTexturePipeline { get; set; } = false;
+        public bool RunLevelsPipeline { get; set; } = true;
+        public bool RunAudioPipeline { get; set; } = false;
+        public bool RunTexturePipeline { get; set; } = true;
         public bool RunResynthesis { get; set; } = false;
 
-        public bool DontDeleteModFolder { get; set; } = true;
+        public bool DontDeleteModFolder { get; set; } = false;
     }
 }

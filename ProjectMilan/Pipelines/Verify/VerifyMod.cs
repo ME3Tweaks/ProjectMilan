@@ -47,7 +47,7 @@ namespace ProjectMilan.Pipelines.Verify
         {
             foreach (var exp in package.Exports)
             {
-                var linker = Conformance.GetLinker(exp);
+                var linker = exp.GetLinker();
                 if (!netIndexes.TryGetValue(linker, out var indicesUnderLinker))
                 {
                     indicesUnderLinker = new CaseInsensitiveDictionary<int>();

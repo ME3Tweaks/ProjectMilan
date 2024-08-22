@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioWeapon" name="bioweapon.ini" source="..\..\biogame\config\bioweapon.ini">
+	<Sections>
+		<Section name="sfxgamecontent.sfxweapon_heavy_mountedgun">
+			<Property name="accfireinterpspeed" type="0">(X=12.0f,Y=12.0f)</Property>
+			<Property name="accfirepenalty" type="0">(X=12.7f,Y=12.7f)</Property>
+			<Property name="ai_acccone_max" type="0">(X=1.5,Y=1.5)</Property>
+			<Property name="ai_acccone_min" type="0">(X=1.5,Y=1.5)</Property>
+			<Property name="ai_burstfirecount" type="0">(X=15,Y=20)</Property>
+			<Property name="ai_burstfiredelay" type="0">(X=1.2f,Y=3.25f)</Property>
+			<Property name="binfiniteammo" type="0">false</Property>
+			<Property name="damage" type="0">(X=50.0,Y=50.0)</Property>
+			<Property name="distancepenetrated" type="0">100</Property>
+			<Property name="encumbranceweight" type="0">(X=0.0f,Y=0.0f)</Property>
+			<Property name="generaldescription" type="0">338224</Property>
+			<Property name="guiimage" type="0">gui_codex_images.Weapons.hvy_grenade_512x256</Property>
+			<Property name="iconref" type="0">57</Property>
+			<Property name="impactrelevancedistance" type="0">100000</Property>
+			<Property name="lowammosoundthreshold" type="0">20</Property>
+			<Property name="magsize" type="0">(X=250,Y=250)</Property>
+			<Property name="maxaimerror" type="0">(X=5.5,Y=5.5)</Property>
+			<Property name="maxcrosshairrange" type="0">(X=120,Y=120)</Property>
+			<Property name="maxspareammo" type="0">(X=0,Y=0)</Property>
+			<Property name="maxzoomaimerror" type="0">(X=1.6f,Y=1.6f)</Property>
+			<Property name="maxzoomcrosshairrange" type="0">(X=99,Y=99)</Property>
+			<Property name="minaimerror" type="0">(X=2.7,Y=2.7)</Property>
+			<Property name="mincrosshairrange" type="0">(X=45,Y=45)</Property>
+			<Property name="minzoomaimerror" type="0">(X=0.6,Y=0.6)</Property>
+			<Property name="minzoomcrosshairrange" type="0">(X=32,Y=32)</Property>
+			<Property name="noammofiresounddelay" type="0">0.5</Property>
+			<Property name="notificationimage" type="0">GUI_Icons.Weapons.hvy_grenade_256x128</Property>
+			<Property name="prettyname" type="0">212281</Property>
+			<Property name="rateoffire" type="0">(X=650,Y=650)</Property>
+			<Property name="rateoffireai" type="0">1.0f</Property>
+			<Property name="recoil" type="0">(X=20.5,Y=20.5)</Property>
+			<Property name="recoilfadespeed" type="0">0.6f</Property>
+			<Property name="recoilinterpspeed" type="0">15.f</Property>
+			<Property name="recoilyawfrequency" type="0">2.0f</Property>
+			<Property name="recoilyawscale" type="0">0.1f</Property>
+			<Property name="recoilzoomfadespeed" type="0">0.82f</Property>
+			<Property name="shortdescription" type="0">339325</Property>
+			<Property name="steamsoundthreshold" type="0">1</Property>
+			<Property name="tracerange" type="0">100000</Property>
+			<Property name="zoomaccfireinterpspeed" type="0">(X=35.0f,Y=35.0f)</Property>
+			<Property name="zoomaccfirepenalty" type="0">(X=37.0f,Y=37.0f)</Property>
+			<Property name="zoomrecoil" type="0">(X=20.5,Y=20.5)</Property>
+		</Section>
+	</Sections>
+</CoalesceAsset>

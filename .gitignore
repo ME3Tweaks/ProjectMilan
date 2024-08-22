@@ -365,6 +365,7 @@ FodyWeavers.xsd
 /ProjectMilan/Pipelines/Shared/Compiling/LooseClasses/MPCommon
 /ProjectMilan/Pipelines/Audio/DecompiledBanks/
 /ProjectMilan/Pipelines/Audio/ConvertedBankCache/
+/ProjectMilan/Pipelines/Audio/ConvertedAFCCache/
 /ProjectMilan/Pipelines/Audio/VGMStream
 /ProjectMilan/Pipelines/Audio/Wwise/Projects/
 /ProjectMilan/Pipelines/Audio/Wwise/Milan

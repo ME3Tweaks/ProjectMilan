@@ -72,7 +72,7 @@ namespace ProjectMilan_ExtraContent.Rejects
         ]);
 
         /// <summary>
-        /// Prepares the mod folder and then runs the pipeline.
+        /// Prepares the mod folder and then runs the pipeline. Runs when you are only building EC.
         /// </summary>
         internal static void RunPipelineEC()
         {
@@ -93,7 +93,7 @@ namespace ProjectMilan_ExtraContent.Rejects
             InternalRunPipeline(vars);
         }
 
-        private static void InternalRunPipeline(RejectVars vars)
+        public static void InternalRunPipeline(RejectVars vars)
         {
             SharedECPipelines.MergeConfig(EExtraContent.Rejects);
             SharedECPipelines.MergeTLK(EExtraContent.Rejects);

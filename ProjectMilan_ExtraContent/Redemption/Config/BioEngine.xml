@@ -1,0 +1,4 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioEngine" name="bioengine.ini" source="..\..\biogame\config\bioengine.ini">
+	<!-- Dynamic load mapping for images will be added here automatically during build.-->
+</CoalesceAsset>

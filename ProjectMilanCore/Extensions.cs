@@ -1,9 +1,9 @@
-﻿using System.IO.Compression;
-using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
+﻿using LegendaryExplorerCore.Packages;
+using System.IO.Compression;
 
-namespace ProjectMilan.Utility
+namespace ProjectMilanCore
 {
+
     public static class ZipExtensions
     {
 
@@ -24,16 +24,6 @@ namespace ProjectMilan.Utility
 
     public static class PackageExtensions
     {
-        public static ExportEntry GetLevel(this IMEPackage package)
-        {
-            return package.FindExport("TheWorld.PersistentLevel");
-        }
-
-        public static Level GetLevelBinary(this IMEPackage package)
-        {
-            return ObjectBinary.From<Level>(package.GetLevel());
-        }
-
         public static ExportEntry GetBioWorldInfo(this IMEPackage package)
         {
             return package.Exports.FirstOrDefault(x => !x.IsDefaultObject && x.ClassName == "BioWorldInfo");

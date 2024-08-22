@@ -26,7 +26,7 @@ properties
     "NumUserTexCoords": 1,
     "UniformExpressionTextures": [
       "Texture2D'biot_human_space.Noise_Normal_Norm'",
-      "Texture2D'biot_human_space.Tarp01_Diff'"
+      "Texture2D'BioT_Thessia_Monastery.Banner01_Diff'"
     ],
     "bUsesSceneColor": false,
     "bUsesSceneDepth": false,

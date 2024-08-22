@@ -1,7 +1,9 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
+using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Unreal;
 using ProjectMilan.Pipelines.Levels.BioP_MPGeth;
 using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
@@ -155,8 +157,8 @@ namespace ProjectMilan.Pipelines.Levels
                     }, out var _);
             }
 
-            LevelTools.RebuildPersistentLevelChildren(level);
-            LevelShared.SetupHordeModes(levelPipeline.LE3BioP, false);
+            MilanLevelTools.RebuildPersistentLevelChildren(level);
+            MilanLevelTools.SetupHordeModes(levelPipeline.LE3BioP, false);
 
 
             // Save BioP into folder
@@ -201,7 +203,7 @@ namespace ProjectMilan.Pipelines.Levels
             foreach (var level in levelPipeline.ME3Packages)
             {
                 var le3Package = LevelShared.PortLevel(levelPipeline, level.Value);
-                LevelTools.RebuildPersistentLevelChildren(le3Package.GetLevel());
+                MilanLevelTools.RebuildPersistentLevelChildren(le3Package.GetLevel());
             }
 
             ConfigureBioP(levelPipeline);
@@ -239,7 +241,7 @@ namespace ProjectMilan.Pipelines.Levels
             // Add SP start location for testing.
             if (levelPipeline.IsSP)
             {
-                LevelShared.CreateSPStartLocation(levelPipeline.LE3BioP, levelPipeline.SPStartLocation);
+                MilanShared.CreateSPStartLocation(levelPipeline.LE3BioP, levelPipeline.SPStartLocation);
             }
 
             int lskIndex = 1;
@@ -254,9 +256,9 @@ namespace ProjectMilan.Pipelines.Levels
                     levelPipeline.LE3BioP, destPersistentLevel, true, new RelinkerOptionsPackage(),
                     out var portedLSK);
                 portedLSK.indexValue += 1 + lskIndex++;
-                (portedLSK as ExportEntry).WriteProperty(new NameProperty(LevelTools.GetLevelFileName(ol.Key), "PackageName"));
+                (portedLSK as ExportEntry).WriteProperty(new NameProperty(MilanLevelTools.GetLevelFileName(ol.Key), "PackageName"));
             }
-            LevelTools.RebuildStreamingLevels(levelPipeline.LE3BioP, levelPipeline);
+            MilanLevelTools.RebuildStreamingLevels(levelPipeline.LE3BioP, levelPipeline.LogCategory);
 
             // Port over the BioTriggerStream
             var bts = levelPipeline.ME3BioP.Exports.FirstOrDefault(x => x.ClassName == @"BioTriggerStream");
@@ -276,7 +278,7 @@ namespace ProjectMilan.Pipelines.Levels
             // Set game modes
             if (!levelPipeline.IsSP)
             {
-                LevelShared.SetupHordeModes(levelPipeline.LE3BioP, levelPipeline.BioP == "MPLobby");
+                MilanLevelTools.SetupHordeModes(levelPipeline.LE3BioP, levelPipeline.BioP == "MPLobby");
             }
 
             // Default post processing
@@ -289,7 +291,7 @@ namespace ProjectMilan.Pipelines.Levels
             // Set AdditionalPackagesToCook
             (levelPipeline.LE3BioP as MEPackage).AdditionalPackagesToCook.ReplaceAll(levelPipeline.LE3Packages.Where(x => x.Value != levelPipeline.ME3BioP).Select(x => x.Value.FileNameNoExtension));
             
-            LevelTools.RebuildPersistentLevelChildren(destPersistentLevel);
+            MilanLevelTools.RebuildPersistentLevelChildren(destPersistentLevel);
         }
 
 

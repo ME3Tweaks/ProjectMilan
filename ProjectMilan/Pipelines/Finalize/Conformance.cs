@@ -36,30 +36,6 @@ namespace ProjectMilan.Pipelines.Finalize
             //MPCommon.HackPatchParents(); // No longer needed.
         }
 
-        /// <summary>
-        /// Get package file this entry will be nested under in memory. Parent chain should be preferably exports
-        /// </summary>
-        /// <param name="entry"></param>
-        /// <returns></returns>
-        public static string GetLinker(IEntry entry)
-        {
-            if (entry.idxLink == 0)
-            {
-                if (entry.ClassName == "Package")
-                {
-                    if (entry is ExportEntry exp && exp.IsForcedExport)
-                        return entry.InstancedFullPath; // SFXGameContent
-                    if (entry is ImportEntry imp)
-                        return entry.InstancedFullPath; // Edge case; this should not occur after resynthesis of a package
-                }
-
-                // It's part of the package file itself.
-                return entry.FileRef.FileNameNoExtension;
-            }
-
-            return GetLinker(entry.Parent);
-        }
-
         private static void ConformNetObjects()
         {
             // Not really sure how this is determined exactly.
@@ -121,7 +97,7 @@ namespace ProjectMilan.Pipelines.Finalize
                     else
                     {
                         // We are assigning it new
-                        var linker = GetLinker(pExp);
+                        var linker = pExp.GetLinker();
                         if (!currentNetIndexes.TryGetValue(linker, out var assigningNetIndex))
                         {
                             MilanLog.Information($"Starting NetIndexing for linker {linker}", customPrefix: LOG_CATEGORY);
@@ -177,14 +153,14 @@ namespace ProjectMilan.Pipelines.Finalize
                         if (!currentNetIndexes.TryGetValue(ifp, out int netObjCount))
                         {
                             // Was not under package export - find number of objects that are not forced export under the root.
-                            localLinkerCount = package.Exports.Count(x => GetLinker(x) == package.FileNameNoExtension && pExp != x);
+                            localLinkerCount = package.Exports.Count(x => x.GetLinker() == package.FileNameNoExtension && pExp != x);
                             pExp.GenerationNetObjectCount = [localLinkerCount];
                         }
                         else
                         {
                             // Use the count we calculated
                             pExp.GenerationNetObjectCount = [netObjCount];
-                            if (GetLinker(pExp) == package.FileNameNoExtension)
+                            if (pExp.GetLinker() == package.FileNameNoExtension)
                             {
                                 // Set the local linker count var
                                 localLinkerCount = netObjCount;

@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioDifficulty" name="biodifficulty.ini" source="..\..\biogame\config\biodifficulty.ini">
+	<Sections>
+		<!-- Add difficult data for pawns that may appear due to this extra content -->
+		<Section name="sfxgamempcontent.sfxdifficultyhandlermp">
+			<Property name="level1difficultydata">
+				<Value type="3">(Category="SPGlobal", CategoryData=((StatName="MedigelHealAmount",StatRange=(X=0.6f,Y=0.6f)),(StatName="XPForExcessMedigel",StatRange=(X=100.0f,Y=100.0f)),(StatName="Cerberus_Pylon_ShieldStrength",StatRange=(X=300.0f,Y=300.0f)),(StatName="Cerberus_Pylon_RegenStrength",StatRange=(X=15.0f,Y=15.0f)),(StatName="Cerberus_Pylon_PlaceableRegenStrength",StatRange=(X=3.0f,Y=3.0f)),(StatName="Cerberus_KineticBarrier_Health",StatRange=(X=500.0f,Y=500.0f)),(StatName="Cerberus_Generator_BlastDamage",StatRange=(X=200.0f,Y=200.0f)),(StatName="Reaper_RachniiEgg_RottenBlastDamage",StatRange=(X=400.0f,Y=400.0f)),(StatName="Reaper_IndoctrinationDevice_ShieldStrength",StatRange=(X=300.0f,Y=300.0f)),(StatName="Reaper_IndoctrinationDevice_BeamCooldown",StatRange=(X=10.0f,Y=10.0f)),(StatName="Reaper_GethTripMine_ZapDamage",StatRange=(X=150.0f,Y=150.0f))))</Value>
+				<Value type="3">(Category="TutorialCannibal", CategoryData=((StatName="MaxHealth",StatRange=(X=275.0f,Y=275.0f))))</Value>
+			</Property>
+			<Property name="level2difficultydata">
+				<Value type="3">(Category="SPGlobal", CategoryData=((StatName="MedigelHealAmount",StatRange=(X=0.6f,Y=0.6f)),(StatName="XPForExcessMedigel",StatRange=(X=100.0f,Y=100.0f)),(StatName="Cerberus_Pylon_ShieldStrength",StatRange=(X=300.0f,Y=300.0f)),(StatName="Cerberus_Pylon_RegenStrength",StatRange=(X=15.0f,Y=15.0f)),(StatName="Cerberus_Pylon_PlaceableRegenStrength",StatRange=(X=3.0f,Y=3.0f)),(StatName="Cerberus_KineticBarrier_Health",StatRange=(X=500.0f,Y=500.0f)),(StatName="Cerberus_Generator_BlastDamage",StatRange=(X=400.0f,Y=400.0f)),(StatName="Reaper_RachniiEgg_RottenBlastDamage",StatRange=(X=400.0f,Y=400.0f)),(StatName="Reaper_IndoctrinationDevice_ShieldStrength",StatRange=(X=300.0f,Y=300.0f)),(StatName="Reaper_IndoctrinationDevice_BeamCooldown",StatRange=(X=10.0f,Y=10.0f)),(StatName="Reaper_GethTripMine_ZapDamage",StatRange=(X=150.0f,Y=150.0f))))</Value>
+				<Value type="3">(Category="TutorialCannibal", CategoryData=((StatName="MaxHealth",StatRange=(X=400.0f,Y=400.0f))))</Value>
+			</Property>
+			<Property name="level3difficultydata">
+				<Value type="3">(Category="SPGlobal", CategoryData=((StatName="MedigelHealAmount",StatRange=(X=0.6f,Y=0.6f)),(StatName="XPForExcessMedigel",StatRange=(X=100.0f,Y=100.0f)),(StatName="Cerberus_Pylon_ShieldStrength",StatRange=(X=300.0f,Y=300.0f)),(StatName="Cerberus_Pylon_RegenStrength",StatRange=(X=15.0f,Y=15.0f)),(StatName="Cerberus_Pylon_PlaceableRegenStrength",StatRange=(X=3.0f,Y=3.0f)),(StatName="Cerberus_KineticBarrier_Health",StatRange=(X=500.0f,Y=500.0f)),(StatName="Cerberus_Generator_BlastDamage",StatRange=(X=600.0f,Y=600.0f)),(StatName="Reaper_RachniiEgg_RottenBlastDamage",StatRange=(X=400.0f,Y=400.0f)),(StatName="Reaper_IndoctrinationDevice_ShieldStrength",StatRange=(X=300.0f,Y=300.0f)),(StatName="Reaper_IndoctrinationDevice_BeamCooldown",StatRange=(X=10.0f,Y=10.0f)),(StatName="Reaper_GethTripMine_ZapDamage",StatRange=(X=150.0f,Y=150.0f))))</Value>
+				<Value type="3">(Category="TutorialCannibal", CategoryData=((StatName="MaxHealth",StatRange=(X=480.0f,Y=720.0f))))</Value>
+			</Property>
+			<Property name="level4difficultydata">
+				<Value type="3">(Category="SPGlobal", CategoryData=((StatName="MedigelHealAmount",StatRange=(X=0.6f,Y=0.6f)),(StatName="XPForExcessMedigel",StatRange=(X=100.0f,Y=100.0f)),(StatName="Cerberus_Pylon_ShieldStrength",StatRange=(X=300.0f,Y=300.0f)),(StatName="Cerberus_Pylon_RegenStrength",StatRange=(X=15.0f,Y=15.0f)),(StatName="Cerberus_Pylon_PlaceableRegenStrength",StatRange=(X=3.0f,Y=3.0f)),(StatName="Cerberus_KineticBarrier_Health",StatRange=(X=500.0f,Y=500.0f)),(StatName="Cerberus_Generator_BlastDamage",StatRange=(X=800.0f,Y=800.0f)),(StatName="Reaper_RachniiEgg_RottenBlastDamage",StatRange=(X=400.0f,Y=400.0f)),(StatName="Reaper_IndoctrinationDevice_ShieldStrength",StatRange=(X=300.0f,Y=300.0f)),(StatName="Reaper_IndoctrinationDevice_BeamCooldown",StatRange=(X=10.0f,Y=10.0f)),(StatName="Reaper_GethTripMine_ZapDamage",StatRange=(X=150.0f,Y=150.0f))))</Value>
+				<Value type="3">(Category="TutorialCannibal", CategoryData=((StatName="MaxHealth",StatRange=(X=720.0f,Y=1080.0f))))</Value>
+				<Value type="3">(Category="Harvester", CategoryData=((StatName="MaxHealth",StatRange=(X=28000.0f,Y=37000.0f)),(StatName="PowerThreshold_Standard",StatRange=(X=1300.0f,Y=1300.0f)),(StatName="PowerThreshold_Stagger",StatRange=(X=1400.0f,Y=1400.0f)),(StatName="PowerThreshold_Knockback",StatRange=(X=1900.0f,Y=1900.0f)),(StatName="HitReactionChanceMultiplier",StatRange=(X=1.0f,Y=1.0f))))</Value>
+			</Property>
+		</Section>
+	</Sections>
+</CoalesceAsset>
