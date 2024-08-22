@@ -14,6 +14,7 @@ namespace ProjectMilan.Pipelines.Audio
     {
         private const string LOG_CATEGORY = "MILAN-Audio-AFCConvert";
 
+        public static Dictionary<string, AFCInventory> AFCMap = new();
 
         public static void RunPipeline(List<MilanBankConvertInfo> banksToConvert)
         {
@@ -74,18 +75,46 @@ namespace ProjectMilan.Pipelines.Audio
 
             // STEP 3
             // Add .wems to new .afc in the base AFC folder
+            var convertedPath = Path.Combine(afcFolder, "Converted");
+            var inventory = new AFCInventory(afcName, afcFolder);
 
+            // TODO
 
             // STEP 4
             // Create .json file as table of contents for .afc
+            inventory.WriteToFile(Path.Combine(afcFolder, Path.ChangeExtension(afcName, ".json")));
+            AFCMap.TryAdd(afcName, inventory);
 
             // CLEANUP STEP
             // Delete .wav and .wem folder. Converted .afc and .json will serve as cache until wiped out.
+            //Utilities.DeleteFilesAndFoldersRecursively(exportedPath, deleteDirectoryItself: true);
+            //Utilities.DeleteFilesAndFoldersRecursively(convertedPath, deleteDirectoryItself: true);
         }
 
         public static void RelinkWwiseStream(ExportEntry stream, string afcName, string afcFolder)
         {
+            AFCInventory inventory;
+            if(AFCMap.ContainsKey(afcName))
+            {
+                inventory = AFCMap[afcName];
+            }
+            else
+            {
+                inventory = new AFCInventory(afcName, afcFolder);
+                AFCMap[afcName] = inventory;
+            }
 
+            if(inventory.Streams.TryGetValue(stream.ObjectNameString, out var item))
+            {
+                var streamObj = ObjectBinary.From<WwiseStream>(stream);
+                streamObj.DataOffset = item.Offset;
+                streamObj.DataSize = item.Size;
+                stream.WriteBinary(streamObj);
+            }
+            else
+            {
+                MilanLog.Warning($"WwiseStream {stream.ObjectNameString} in {stream.FileRef.FileNameNoExtension} not in AFC Inventory!", customPrefix: LOG_CATEGORY);
+            }
         }
 
     }

@@ -1,7 +1,9 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Xml;
 using System.Xml.Linq;
+using CliWrap;
 using LegendaryExplorerCore.Packages;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
@@ -51,22 +53,25 @@ public static class WwiseCliHandler
 
         //Generate the external sources document
         string[] filesToConvert = null;
-        string folderParent = null;
+        string exportParentFolder = ""; // folder to put "Converted" subfolder in - I CHANGED THIS FOR MILAN - HenBagle 8/21/24
+        string convertFolder = ""; // actual folder the .wav file(s) are in
         bool isSingleFile = false;
         if (Directory.Exists(fileOrFolderPath))
         {
             //it's a directory
             filesToConvert = Directory.GetFiles(fileOrFolderPath, "*.wav");
+            convertFolder = fileOrFolderPath;
         }
         else
         {
             //it's a single file
             isSingleFile = true;
             filesToConvert = new[] { fileOrFolderPath };
+            convertFolder = Directory.GetParent(fileOrFolderPath).FullName;
         }
-        folderParent = Directory.GetParent(fileOrFolderPath).FullName;
+        exportParentFolder = Directory.GetParent(fileOrFolderPath).FullName;
 
-        XElement externalSourcesList = new XElement("ExternalSourcesList", new XAttribute("SchemaVersion", 1.ToString()), new XAttribute("Root", folderParent));
+        XElement externalSourcesList = new XElement("ExternalSourcesList", new XAttribute("SchemaVersion", 1.ToString()), new XAttribute("Root", convertFolder));
         foreach (string file in filesToConvert)
         {
             XElement source = new XElement("Source", new XAttribute("Path", Path.GetFileName(file)), new XAttribute("Conversion", "Vorbis"));
@@ -94,33 +99,18 @@ public static class WwiseCliHandler
         //Run Conversion
 
         string projFile = Path.Combine(templatefolder, "TemplateProject.wproj");
-        Process process = new Process
-        {
-            StartInfo =
-            {
-                FileName = wwiseCLIPath,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                Arguments = $"\"{projFile}\" -ConvertExternalSources Windows",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardInput = true
-            }
-        };
-        //uncomment the following lines to view output from wwisecli
-        //DebugOutput.StartDebugger("Wwise Wav to Ogg Converter");
-        process.OutputDataReceived += (s, eventArgs) => { MilanLog.Information(eventArgs.Data ?? "", !string.IsNullOrEmpty(eventArgs.Data), "WWISE"); };
-        process.ErrorDataReceived += (s, eventArgs) => { MilanLog.Error(eventArgs.Data ?? "", !string.IsNullOrEmpty(eventArgs.Data), "WWISE"); };
 
-        process.Start();
-        //process.BeginOutputReadLine();
-        process.WaitForExit();
-        Debug.WriteLine("Process output: \n" + process.StandardOutput.ReadToEnd());
-        process.Close();
+
+        // Uncomment the two calls to route Wwise log to Milan log
+        await Cli.Wrap(wwiseCLIPath)
+                 .WithArguments([projFile, "-ConvertExternalSources", "Windows"])
+                 //.WithStandardOutputPipe(PipeTarget.ToDelegate(s => MilanLog.Information(s, customPrefix: "WWISE")))
+                 //.WithStandardErrorPipe(PipeTarget.ToDelegate(s => MilanLog.Error(s, customPrefix: "WWISE")))
+                 .ExecuteAsync().ConfigureAwait(false);
 
         //Files generates
         string outputDirectory = Path.Combine(Path.GetTempPath(), "TemplateProject", "OutputFiles");
-        string copyToDirectory = Path.Combine(folderParent, "Converted");
+        string copyToDirectory = Path.Combine(exportParentFolder, "Converted");
         Directory.CreateDirectory(copyToDirectory);
 
         var extension = game is MEGame.ME3 ? ".ogg" : ".wem";
