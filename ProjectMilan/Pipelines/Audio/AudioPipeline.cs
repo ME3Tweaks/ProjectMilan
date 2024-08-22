@@ -25,7 +25,7 @@ internal static class AudioPipeline
         var banksToConvert = GetWwiseV56BanksInOutputMod();
 
         // Convert WwiseBank binary to v134
-        BankConvertPipeline.RunPipeline(banksToConvert);
+        //BankConvertPipeline.RunPipeline(banksToConvert);
 
         // Rebuild AFC and WwiseStreams in v134 using Wwise CLI
         AFCRebuildPipeline.RunPipeline(banksToConvert);

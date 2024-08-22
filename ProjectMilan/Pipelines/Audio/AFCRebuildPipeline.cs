@@ -43,7 +43,7 @@ namespace ProjectMilan.Pipelines.Audio
             return Path.Combine(MilanShared.PipelineRoot, "Audio", "ConvertedAFCCache");
         }
 
-        public static void ConvertAFC(List<ExportEntry> streams, string afcName, string afcFolder)
+        public static async void ConvertAFC(List<ExportEntry> streams, string afcName, string afcFolder)
         {
             MilanLog.Information($"  Converting {afcName}.afc to Wwise v134", customPrefix: LOG_CATEGORY);
 
@@ -70,6 +70,7 @@ namespace ProjectMilan.Pipelines.Audio
 
             // STEP 2
             // Convert all .wavs to .wem in Converted folder with Wwise
+            await WwiseCliHandler.RunWwiseConversion(MEGame.LE3, exportedPath, 24000);
 
             // STEP 3
             // Add .wems to new .afc in the base AFC folder
