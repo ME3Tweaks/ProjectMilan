@@ -13,6 +13,13 @@ properties
     ExpressionGUID = {A = 1166165467, B = 1210705223, C = -1964472646, D = 517885957}
     ParameterName = 'Distortion'
 }
+// EXPRESSION MaterialExpressionVectorParameter_33
+properties
+{
+    DefaultValue = {R = 1.60000002, G = 1.5, B = 1.29999995, A = 1.0}
+    ExpressionGUID = {A = 371913400, B = 1077684872, C = -1192837471, D = -1063785200}
+    ParameterName = 'Main_color'
+}
 // EXPRESSION MaterialExpressionStaticSwitchParameter_0
 properties
 {
@@ -20,13 +27,6 @@ properties
     B = {Expression = None, Mask = 1, MaskR = 1}
     ExpressionGUID = {A = 1804747652, B = 1179899437, C = -1940500860, D = -1119797517}
     ParameterName = 'Falloff'
-}
-// EXPRESSION MaterialExpressionVectorParameter_33
-properties
-{
-    DefaultValue = {R = 1.60000002, G = 1.5, B = 1.29999995, A = 1.0}
-    ExpressionGUID = {A = 371913400, B = 1077684872, C = -1192837471, D = -1063785200}
-    ParameterName = 'Main_color'
 }
 // EXPRESSION MaterialExpressionScalarParameter_38
 properties
