@@ -2,12 +2,12 @@
 
 namespace ProjectMilan.Pipelines.Audio;
 
-public class AFCInventory
+public class AFCContents
 {
     public string AFCFilename { get; set; }
     public Dictionary<string, AFCItem> Streams = new();
 
-    public AFCInventory(string afcFilename, string folder)
+    public AFCContents(string afcFilename, string folder)
     {
         AFCFilename = Path.ChangeExtension(afcFilename, ".afc") ?? "";
         var jsonFile = Path.ChangeExtension(Path.Combine(folder, AFCFilename), ".json");
@@ -18,7 +18,7 @@ public class AFCInventory
         }
     }
 
-    public void AddAFCItem(string streamName, int wemSize, int wemOffset)
+    public void AddAFCItem(string streamName, long wemSize, long wemOffset)
     {
         Streams.TryAdd(streamName, new AFCItem(wemSize, wemOffset));
     }
@@ -31,4 +31,4 @@ public class AFCInventory
     }
 }
 
-public record AFCItem(int Size, int Offset);
+public record AFCItem(long Size, long Offset);

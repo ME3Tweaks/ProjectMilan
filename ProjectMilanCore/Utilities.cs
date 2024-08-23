@@ -13,7 +13,7 @@ namespace ProjectMilan.Utility
         /// <param name="targetDirectory"></param>
         /// <param name="throwOnFailed"></param>
         /// <returns></returns>
-        public static bool DeleteFilesAndFoldersRecursively(string targetDirectory, bool throwOnFailed = false, bool deleteDirectoryItself = true)
+        public static bool DeleteFilesAndFoldersRecursively(string targetDirectory, bool throwOnFailed = false, bool deleteDirectoryItself = true, bool quiet = false)
         {
             if (!Directory.Exists(targetDirectory))
             {
@@ -27,7 +27,10 @@ namespace ProjectMilan.Utility
                 File.SetAttributes(file, FileAttributes.Normal); //remove read only
                 try
                 {
-                    MilanLog.Information($"Deleting file: {file}");
+                    if(!quiet)
+                    {
+                        MilanLog.Information($"Deleting file: {file}");
+                    }
                     File.Delete(file);
                 }
                 catch (Exception e)

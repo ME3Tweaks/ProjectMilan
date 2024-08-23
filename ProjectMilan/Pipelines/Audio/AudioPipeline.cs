@@ -25,7 +25,7 @@ internal static class AudioPipeline
         var banksToConvert = GetWwiseV56BanksInOutputMod();
 
         // Convert WwiseBank binary to v134
-        //BankConvertPipeline.RunPipeline(banksToConvert);
+        BankConvertPipeline.RunPipeline(banksToConvert);
 
         // Rebuild AFC and WwiseStreams in v134 using Wwise CLI
         AFCRebuildPipeline.RunPipeline(banksToConvert);
@@ -41,7 +41,7 @@ internal static class AudioPipeline
         {
             MilanLog.Information($"Inventorying WwiseBanks in {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
             var package = MEPackageHandler.OpenMEPackage(pf);
-            foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank" && x.ObjectNameString == "ss_mp_horde_narr_v1"))
+            foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank")
             {
                 var bankInfo = new MilanBankConvertInfo(exp);
                 if(bankInfo.BankParser is { Version: 56 }) bankInventory.Add(bankInfo);

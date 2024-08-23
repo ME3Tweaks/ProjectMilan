@@ -14,27 +14,48 @@ namespace ProjectMilan.Pipelines.Audio
     {
         private const string LOG_CATEGORY = "MILAN-Audio-AFCConvert";
 
-        public static Dictionary<string, AFCInventory> AFCMap = new();
+        public static Dictionary<string, AFCContents> AFCMap = new();
 
         public static void RunPipeline(List<MilanBankConvertInfo> banksToConvert)
         {
-            Utilities.DeleteFilesAndFoldersRecursively(GetAfcCacheFolder());
+            Utilities.DeleteFilesAndFoldersRecursively(GetAfcCacheFolder(), quiet: true); // Uncomment me to rebuild AFC cache on every Milan run
+
+            var prePipelineAfcInventory = Directory.GetFileSystemEntries(Program.Settings.OutputModPath, "*.afc", SearchOption.AllDirectories)
+                    .ToDictionary(s => Path.GetFileNameWithoutExtension(s).ToLower()) ?? new();
+
             foreach (var bank in banksToConvert)
             {
                 var streams = bank.GetStreams();
                 if (streams.Count == 0) break;
 
-                var afcName = streams.First().GetProperty<NameProperty>("Filename").Value;
+                var afcName = streams.First().GetProperty<NameProperty>("Filename").Value.ToString().ToLower();
                 var afcFolder = Path.Combine(GetAfcCacheFolder(), afcName);
 
                 if (!Directory.Exists(afcFolder))
                 {
-                    ConvertAFC(streams, afcName, afcFolder);
+                    ConvertAFC(streams, afcName, afcFolder); // If the AFC isn't found, convert it to v134 and save it in the cache
+                }
+
+                string afcCachedPath = Path.Combine(afcFolder, Path.ChangeExtension(afcName, ".afc"));
+                AFCContents afcContents = new AFCContents(afcName, afcFolder); // Metadata for new afc
+
+                // Delete existing afc and copy the new one to output mod
+                if(prePipelineAfcInventory.TryGetValue(afcName, out var oldAfcPath))
+                {
+                    File.Delete(oldAfcPath);
+                }
+
+                var outputModAfcPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", Path.ChangeExtension(afcName, ".afc"));
+                if(File.Exists(afcCachedPath))
+                {
+                    MilanLog.Information($"Copying {afcName}.afc to output mod and relinking streams", customPrefix: LOG_CATEGORY);
+                    File.Copy(afcCachedPath, outputModAfcPath);
                 }
 
                 foreach (var stream in streams)
                 {
-                    RelinkWwiseStream(stream, afcName, afcFolder);
+                    // Relink each stream for this bank. This will copy the cached AFC into the output mod folder as needed.
+                    RelinkWwiseStream(stream, afcContents);
                 }
             }
         }
@@ -44,19 +65,16 @@ namespace ProjectMilan.Pipelines.Audio
             return Path.Combine(MilanShared.PipelineRoot, "Audio", "ConvertedAFCCache");
         }
 
-        public static async void ConvertAFC(List<ExportEntry> streams, string afcName, string afcFolder)
+        public static void ConvertAFC(List<ExportEntry> streams, string afcName, string afcFolder)
         {
-            MilanLog.Information($"  Converting {afcName}.afc to Wwise v134", customPrefix: LOG_CATEGORY);
-
             if (!Directory.Exists(afcFolder)) Directory.CreateDirectory(afcFolder);
-            Utilities.DeleteFilesAndFoldersRecursively(afcFolder);
 
-            var exportedPath = Path.Combine(afcFolder, "Exported");
+            var exportedPath = Path.Combine(afcFolder, "Exported"); // Exported folder is where .wavs go
             Directory.CreateDirectory(exportedPath);
 
             // STEP 1
             // Export all streams to .wav in Exported folder
-            MilanLog.Information($"  Extracting {streams.Count} WwiseStreams from {afcName}", customPrefix: LOG_CATEGORY);
+            MilanLog.Information($"Extracting {streams.Count} WwiseStreams from ME3 {afcName}.afc", customPrefix: LOG_CATEGORY);
             foreach (var stream in streams)
             {
                 var wwstream = ObjectBinary.From<WwiseStream>(stream);
@@ -71,49 +89,52 @@ namespace ProjectMilan.Pipelines.Audio
 
             // STEP 2
             // Convert all .wavs to .wem in Converted folder with Wwise
-            await WwiseCliHandler.RunWwiseConversion(MEGame.LE3, exportedPath, 24000);
+            MilanLog.Information($"Converting {afcName} with WwiseCLI v134", customPrefix: LOG_CATEGORY);
+            WwiseCliHandler.RunWwiseConversion(MEGame.LE3, exportedPath, 24000).Wait();
 
             // STEP 3
-            // Add .wems to new .afc in the base AFC folder
-            var convertedPath = Path.Combine(afcFolder, "Converted");
-            var inventory = new AFCInventory(afcName, afcFolder);
+            // Use .wems to create new .afc in the pipeline AFC folder, building AFC afcContents as we go
+            MilanLog.Information($"Creating {afcName}.afc for Milan", customPrefix: LOG_CATEGORY);
 
-            // TODO
+            var convertedPath = Path.Combine(afcFolder, "Converted"); // Converted folder is where CLI converted .wems go
+            var contents = new AFCContents(afcName, afcFolder);
+
+            using MemoryStream memoryNewAfc = new MemoryStream();
+            var wems = Directory.EnumerateFiles(convertedPath).ToDictionary<string, string>(Path.GetFileNameWithoutExtension);
+            foreach(var stream in streams)
+            {
+                if(wems.TryGetValue(stream.ObjectNameString, out var wemPath))
+                {
+                    using var wemFileStream = new FileStream(wemPath, FileMode.Open, FileAccess.Read);
+                    contents.AddAFCItem(stream.ObjectNameString, wemFileStream.Length, memoryNewAfc.Position);
+                    wemFileStream.CopyTo(memoryNewAfc);
+                }
+            }
+            var newWemPath = Path.Combine(afcFolder, Path.ChangeExtension(afcName, ".afc"));
+            memoryNewAfc.WriteToFile(newWemPath);
 
             // STEP 4
-            // Create .json file as table of contents for .afc
-            inventory.WriteToFile(Path.Combine(afcFolder, Path.ChangeExtension(afcName, ".json")));
-            AFCMap.TryAdd(afcName, inventory);
+            // Create .json file to save table of afcContents for .afc
+            contents.WriteToFile(afcFolder);
 
-            // CLEANUP STEP
+            // STEP 5 - CLEANUP STEP
             // Delete .wav and .wem folder. Converted .afc and .json will serve as cache until wiped out.
-            //Utilities.DeleteFilesAndFoldersRecursively(exportedPath, deleteDirectoryItself: true);
-            //Utilities.DeleteFilesAndFoldersRecursively(convertedPath, deleteDirectoryItself: true);
+            Utilities.DeleteFilesAndFoldersRecursively(exportedPath, deleteDirectoryItself: true, quiet: true);
+            Utilities.DeleteFilesAndFoldersRecursively(convertedPath, deleteDirectoryItself: true, quiet: true);
         }
 
-        public static void RelinkWwiseStream(ExportEntry stream, string afcName, string afcFolder)
+        public static void RelinkWwiseStream(ExportEntry stream, AFCContents contents)
         {
-            AFCInventory inventory;
-            if(AFCMap.ContainsKey(afcName))
-            {
-                inventory = AFCMap[afcName];
-            }
-            else
-            {
-                inventory = new AFCInventory(afcName, afcFolder);
-                AFCMap[afcName] = inventory;
-            }
-
-            if(inventory.Streams.TryGetValue(stream.ObjectNameString, out var item))
+            if(contents.Streams.TryGetValue(stream.ObjectNameString, out var item))
             {
                 var streamObj = ObjectBinary.From<WwiseStream>(stream);
-                streamObj.DataOffset = item.Offset;
-                streamObj.DataSize = item.Size;
+                streamObj.DataOffset = (int)item.Offset;
+                streamObj.DataSize = (int)item.Size;
                 stream.WriteBinary(streamObj);
             }
             else
             {
-                MilanLog.Warning($"WwiseStream {stream.ObjectNameString} in {stream.FileRef.FileNameNoExtension} not in AFC Inventory!", customPrefix: LOG_CATEGORY);
+                MilanLog.Warning($"WwiseStream {stream.ObjectNameString} in {stream.FileRef.FileNameNoExtension} not in AFC contents!", customPrefix: LOG_CATEGORY);
             }
         }
 
