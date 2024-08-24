@@ -14,7 +14,7 @@ internal static class AudioPipeline
         BankConvertPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: false);
 
         // Rebuild AFC and WwiseStreams in v134 using Wwise CLI
-        AFCRebuildPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: true);
+        AFCRebuildPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: false);
 
         // TODO: Handle banks that have changed from LE to OT. Need to convert OT version even if newer LE version exists?
     }

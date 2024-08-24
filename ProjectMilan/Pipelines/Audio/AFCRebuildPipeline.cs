@@ -23,17 +23,26 @@ namespace ProjectMilan.Pipelines.Audio
                 Utilities.DeleteFilesAndFoldersRecursively(GetAfcCacheFolder(), deleteDirectoryItself: false, quiet: true);
             }
 
-            // Map of all AFCs already in output mod
+            // Map of all AFCs already in output mod. NOT basegame LE3, BEFORE copying any converted AFCs. These should exclusively be vanilla ME3 AFCs.
             var prePipelineAfcInventory = Directory.GetFileSystemEntries(Program.Settings.OutputModPath, "*.afc", SearchOption.AllDirectories)
                     .ToDictionary(s => Path.GetFileNameWithoutExtension(s).ToLower()) ?? new();
 
             foreach (var bank in banksToConvert)
             {
+
                 var streams = bank.GetStreams();
                 if (streams.Count == 0) break;
 
                 var afcName = streams.First().GetProperty<NameProperty>("Filename").Value.ToString().ToLower();
                 var afcFolder = Path.Combine(GetAfcCacheFolder(), afcName);
+
+                // If the AFC doesn't exist in Milan, but the bank was converted from v56, we can't convert the AFC. Streams will be broken.
+                // Could be a case where AFC exists in LE3, but we still need to convert from the ME3 version
+                if (!prePipelineAfcInventory.TryGetValue(afcName, out var oldAfcPath))
+                {
+                    MilanLog.Warning($"Referenced AFC {afcName} does not exist in output mod, skipping bank {bank.LocalizedInfo}", customPrefix: LOG_CATEGORY);
+                    continue;
+                }
 
                 if (!Directory.Exists(afcFolder))
                 {
@@ -45,10 +54,7 @@ namespace ProjectMilan.Pipelines.Audio
                 var afcContents = new AFCContents(contentsPath); // Metadata for new afc
 
                 // Delete existing afc and copy the new one to output mod
-                if(prePipelineAfcInventory.TryGetValue(afcName, out var oldAfcPath))
-                {
-                    File.Delete(oldAfcPath);
-                }
+                File.Delete(oldAfcPath);
 
                 var outputModAfcPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", Path.ChangeExtension(afcName, ".afc"));
                 if(File.Exists(afcCachedPath))
@@ -85,7 +91,7 @@ namespace ProjectMilan.Pipelines.Audio
             {
                 var wwstream = ObjectBinary.From<WwiseStream>(stream);
                 var waveStream = wwstream.CreateWaveStream();
-                if(waveStream is null)
+                if(WaveStreamSanityCheck(waveStream))
                 {
                     break;
                 }
@@ -128,6 +134,23 @@ namespace ProjectMilan.Pipelines.Audio
             // Delete .wav and .wem folder. Converted .afc and .json will serve as cache until wiped out.
             Utilities.DeleteFilesAndFoldersRecursively(exportedPath, deleteDirectoryItself: true, quiet: true);
             Utilities.DeleteFilesAndFoldersRecursively(convertedPath, deleteDirectoryItself: true, quiet: true);
+        }
+
+        /// <summary>
+        /// Returns true if stream is invalid
+        /// </summary>
+        /// <param name="waveStream"></param>
+        /// <returns></returns>
+        public static bool WaveStreamSanityCheck(MemoryStream waveStream)
+        {
+            if (waveStream is null) return true;
+
+            waveStream.Position = 0;
+            var riff = waveStream.ReadStringASCII(4);
+            if (riff != "RIFF") return true;
+            waveStream.Position = 0;
+
+            return false;
         }
 
         public static void RelinkWwiseStream(ExportEntry stream, AFCContents contents)
