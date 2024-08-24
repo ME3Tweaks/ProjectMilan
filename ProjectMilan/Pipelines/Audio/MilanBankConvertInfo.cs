@@ -1,4 +1,5 @@
 ﻿using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal;
 using ME3Tweaks.Wwiser;
 using LECWwiseBank = LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank;
 
@@ -19,6 +20,8 @@ internal class MilanBankConvertInfo
     public WwiseBankParser? BankParser { get; set; }
     
     public LocalizedIFP LocalizedInfo { get; set; }
+
+    public string AFCName { get; set; }
     
     public MilanBankConvertInfo(ExportEntry le3BankExport)
     {
@@ -31,9 +34,13 @@ internal class MilanBankConvertInfo
             InstancedFullPath = LE3BankExport.InstancedFullPath
         };
 
+        var firstStream = LE3BankExport.FileRef.Exports.FirstOrDefault(e => e.ClassName == "WwiseStream" && e.InstancedFullPath.Contains(LE3BankExport.ObjectNameString));
+        AFCName = firstStream?.GetProperty<NameProperty>("Filename").Value ?? "";
+
         ObjectBinary = LE3BankExport.GetBinaryData<LECWwiseBank>();
         if (ObjectBinary.BnkFile.Length == 0) return;
         BankParser = new WwiseBankParser(new MemoryStream(ObjectBinary.BnkFile));
+
     }
 
     public string GetDecompiledFolderName()
@@ -46,6 +53,7 @@ internal class MilanBankConvertInfo
 
         return outDir;
     }
+
 
     public List<ExportEntry> GetStreams()
     {
