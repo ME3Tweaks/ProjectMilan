@@ -1,10 +1,12 @@
 ﻿using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using ME3Tweaks.Wwiser;
+using System.Diagnostics;
 using LECWwiseBank = LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank;
 
 namespace ProjectMilan.Pipelines.Audio;
 
+[DebuggerDisplay("{LocalizedInfo}")]
 internal class MilanBankConvertInfo
 {
     /// <summary>
