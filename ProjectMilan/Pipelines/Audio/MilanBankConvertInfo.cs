@@ -38,7 +38,7 @@ internal class MilanBankConvertInfo
 
     public string GetDecompiledFolderName()
     {
-        var outDir = Path.Combine(AudioPipeline.GetDecompiledBanksFolder(), LE3BankExport.ObjectName);
+        var outDir = Path.Combine(DeprecatedAudioPipeline.GetDecompiledBanksFolder(), LE3BankExport.ObjectName);
         if (LocalizedInfo.Localization != MELocalization.None)
         {
             outDir += $"_{LocalizedInfo.Localization}";

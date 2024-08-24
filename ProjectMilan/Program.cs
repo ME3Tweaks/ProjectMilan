@@ -196,11 +196,7 @@ namespace ProjectMilan
             // Content pipelines will use the milan ME3 cache
             MilanShared.EnsureTFCsAvailable();
             MilanShared.EnsureAFCsAvailable();
-
-            // Post pipelines require additional items to load
-            // We load them here so you don't find out later and have to run it again
-            // MilanShared.EnsureVGMStreamAvailable();
-            WwiseProjectRebuild.EnsureWwise7110();
+            AudioPipeline.EnsureWwise7110();
 
 
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages

@@ -47,7 +47,7 @@ namespace ProjectMilan.Utility
 
             foreach (string subDir in Directory.GetDirectories(targetDirectory))
             {
-                result &= DeleteFilesAndFoldersRecursively(subDir, throwOnFailed, true);
+                result &= DeleteFilesAndFoldersRecursively(subDir, throwOnFailed, true, quiet);
             }
 
             if (deleteDirectoryItself)

@@ -16,10 +16,14 @@ namespace ProjectMilan.Pipelines.Audio
 
         public static Dictionary<string, AFCContents> AFCMap = new();
 
-        public static void RunPipeline(List<MilanBankConvertInfo> banksToConvert)
+        public static void RunPipeline(List<MilanBankConvertInfo> banksToConvert, bool clearCacheOnRebuild = false)
         {
-            Utilities.DeleteFilesAndFoldersRecursively(GetAfcCacheFolder(), quiet: true); // Uncomment me to rebuild AFC cache on every Milan run
+            if(clearCacheOnRebuild)
+            {
+                Utilities.DeleteFilesAndFoldersRecursively(GetAfcCacheFolder(), deleteDirectoryItself: false, quiet: true);
+            }
 
+            // Map of all AFCs already in output mod
             var prePipelineAfcInventory = Directory.GetFileSystemEntries(Program.Settings.OutputModPath, "*.afc", SearchOption.AllDirectories)
                     .ToDictionary(s => Path.GetFileNameWithoutExtension(s).ToLower()) ?? new();
 
@@ -33,11 +37,12 @@ namespace ProjectMilan.Pipelines.Audio
 
                 if (!Directory.Exists(afcFolder))
                 {
-                    ConvertAFC(streams, afcName, afcFolder); // If the AFC isn't found, convert it to v134 and save it in the cache
+                    ConvertAFC(streams, afcName, afcFolder); // If the AFC isn't found on disk, convert it to v134 and save it in the cache
                 }
 
-                string afcCachedPath = Path.Combine(afcFolder, Path.ChangeExtension(afcName, ".afc"));
-                AFCContents afcContents = new AFCContents(afcName, afcFolder); // Metadata for new afc
+                var afcCachedPath = Path.Combine(afcFolder, Path.ChangeExtension(afcName, ".afc"));
+                var contentsPath = Path.ChangeExtension(afcCachedPath, ".json");
+                var afcContents = new AFCContents(contentsPath); // Metadata for new afc
 
                 // Delete existing afc and copy the new one to output mod
                 if(prePipelineAfcInventory.TryGetValue(afcName, out var oldAfcPath))
@@ -52,11 +57,12 @@ namespace ProjectMilan.Pipelines.Audio
                     File.Copy(afcCachedPath, outputModAfcPath);
                 }
 
+                // Relink each stream for this bank
                 foreach (var stream in streams)
                 {
-                    // Relink each stream for this bank. This will copy the cached AFC into the output mod folder as needed.
                     RelinkWwiseStream(stream, afcContents);
                 }
+                bank.LE3BankExport.FileRef.Save();
             }
         }
 
@@ -97,7 +103,8 @@ namespace ProjectMilan.Pipelines.Audio
             MilanLog.Information($"Creating {afcName}.afc for Milan", customPrefix: LOG_CATEGORY);
 
             var convertedPath = Path.Combine(afcFolder, "Converted"); // Converted folder is where CLI converted .wems go
-            var contents = new AFCContents(afcName, afcFolder);
+            var contentsPath = Path.Combine(afcFolder, Path.ChangeExtension(afcName, ".json"));
+            var contents = new AFCContents(contentsPath);
 
             using MemoryStream memoryNewAfc = new MemoryStream();
             var wems = Directory.EnumerateFiles(convertedPath).ToDictionary<string, string>(Path.GetFileNameWithoutExtension);
@@ -115,7 +122,7 @@ namespace ProjectMilan.Pipelines.Audio
 
             // STEP 4
             // Create .json file to save table of afcContents for .afc
-            contents.WriteToFile(afcFolder);
+            contents.WriteToFile(contentsPath);
 
             // STEP 5 - CLEANUP STEP
             // Delete .wav and .wem folder. Converted .afc and .json will serve as cache until wiped out.
@@ -130,6 +137,7 @@ namespace ProjectMilan.Pipelines.Audio
                 var streamObj = ObjectBinary.From<WwiseStream>(stream);
                 streamObj.DataOffset = (int)item.Offset;
                 streamObj.DataSize = (int)item.Size;
+                // Do we need to update the Filename property here? Probably not. Pipeline is written to never change AFC name
                 stream.WriteBinary(streamObj);
             }
             else

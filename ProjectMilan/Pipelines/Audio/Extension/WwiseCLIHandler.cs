@@ -104,8 +104,8 @@ public static class WwiseCliHandler
         // Uncomment the two calls to route Wwise log to Milan log
         await Cli.Wrap(wwiseCLIPath)
                  .WithArguments([projFile, "-ConvertExternalSources", "Windows"])
-                 //.WithStandardOutputPipe(PipeTarget.ToDelegate(s => MilanLog.Information(s, customPrefix: "WWISE")))
-                 //.WithStandardErrorPipe(PipeTarget.ToDelegate(s => MilanLog.Error(s, customPrefix: "WWISE")))
+                 .WithStandardOutputPipe(PipeTarget.ToDelegate(s => MilanLog.Information(s, customPrefix: "WWISE")))
+                 .WithStandardErrorPipe(PipeTarget.ToDelegate(s => MilanLog.Error(s, customPrefix: "WWISE")))
                  .ExecuteAsync().ConfigureAwait(false);
 
         //Files generates

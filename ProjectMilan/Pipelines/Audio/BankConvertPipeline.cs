@@ -18,7 +18,7 @@ internal static class BankConvertPipeline
 {
     private const string LOG_CATEGORY = @"MILAN-Audio-WwiserConvert";
 
-    public static void RunPipeline(List<MilanBankConvertInfo> bankInventory)
+    public static void RunPipeline(List<MilanBankConvertInfo> bankInventory, bool clearCacheOnRebuild = false)
     {
         MilanLog.Information("Converting banks using Wwiser.NET", customPrefix: LOG_CATEGORY);
 
@@ -26,8 +26,21 @@ internal static class BankConvertPipeline
 
         var bankCacheFolder = Path.Combine(MilanShared.PipelineRoot, "Audio", "ConvertedBankCache");
         Directory.CreateDirectory(bankCacheFolder);
-        Utilities.DeleteFilesAndFoldersRecursively(bankCacheFolder, deleteDirectoryItself:false);
+        if(clearCacheOnRebuild)
+        {
+            Utilities.DeleteFilesAndFoldersRecursively(bankCacheFolder, deleteDirectoryItself:false, quiet:true);
+        }
+
         var bankCache = new ConcurrentDictionary<string, string>();
+
+        // Load any existing banks on disk into lookup cache.
+        foreach(var bnkFile in Directory.GetFiles(bankCacheFolder))
+        {
+            if(Path.GetExtension(bnkFile) == ".bnk")
+            {
+                bankCache.TryAdd(Path.GetFileNameWithoutExtension(bnkFile), bnkFile);
+            }
+        }
         
         //BusIdMap.RebuildBusIdMap(); // run this when more bus ids have been found
         BusIdMap.LoadBusIdMap();

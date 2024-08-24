@@ -24,7 +24,7 @@ namespace ProjectMilan.Pipelines.Audio
     ///
     /// Runs all audio through Wwise authoring interface
     /// </summary>
-    internal static class WwiseProjectRebuild
+    internal static class DeprecatedWwiseProjectRebuild
     {
         private const string LOG_CATEGORY = @"MILAN-Audio-RebuildInWwise";
 
@@ -291,20 +291,6 @@ namespace ProjectMilan.Pipelines.Audio
 
         }
 
-        public static bool EnsureWwise7110()
-        {
-            var wwisePath = Environment.GetEnvironmentVariable("WWISEROOT");
-            if (wwisePath == null || !Directory.Exists(wwisePath))
-            {
-                MilanLog.Fatal("This pipeline requires Wwise 7110 to be installed. Ensure WWISEROOT is set as an environment variable.", customPrefix: LOG_CATEGORY);
-                Environment.Exit(1);
-                return false;
-            }
-
-            return true;
-        }
-
-
         private static async void AddWwiseBankToProject(AudioVars vars, MilanBankRebuildInfo bankRebuildInfo)
         {
 
@@ -322,7 +308,7 @@ namespace ProjectMilan.Pipelines.Audio
 
             // Generate CSV records for import.
             var records = new List<WwiseImportRow>();
-            var srcDir = Path.Combine(AudioPipeline.GetDecompiledBanksFolder(), bankRebuildInfo.GetDecompiledFolderName());
+            var srcDir = Path.Combine(DeprecatedAudioPipeline.GetDecompiledBanksFolder(), bankRebuildInfo.GetDecompiledFolderName());
 
             foreach (var evtStream in bankRebuildInfo.EventToStreamMap)
             {
