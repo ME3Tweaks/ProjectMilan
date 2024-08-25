@@ -98,20 +98,32 @@ public static class WwiseCliHandler
         conversionDoc.Save(conversionSettingsFile);
         //Run Conversion
 
-        string projFile = Path.Combine(templatefolder, "TemplateProject.wproj");
-
-
-        // Uncomment the two calls to route Wwise log to Milan log
-        await Cli.Wrap(wwiseCLIPath)
-                 .WithArguments([projFile, "-ConvertExternalSources", "Windows"])
-                 //.WithStandardOutputPipe(PipeTarget.ToDelegate(s => MilanLog.Information(s, customPrefix: "WWISE")))
-                 //.WithStandardErrorPipe(PipeTarget.ToDelegate(s => MilanLog.Error(s, customPrefix: "WWISE")))
-                 .ExecuteAsync().ConfigureAwait(false);
-
         //Files generates
+        string projFile = Path.Combine(templatefolder, "TemplateProject.wproj");
         string outputDirectory = Path.Combine(Path.GetTempPath(), "TemplateProject", "OutputFiles");
         string copyToDirectory = Path.Combine(exportParentFolder, "Converted");
         Directory.CreateDirectory(copyToDirectory);
+
+
+        // Uncomment the two calls to route Wwise log to Milan log
+        var result = await Cli.Wrap(wwiseCLIPath)
+                 .WithArguments([projFile, "-ConvertExternalSources", "Windows"])
+                 //.WithStandardOutputPipe(PipeTarget.ToDelegate(s => MilanLog.Information(s, customPrefix: "WWISE")))
+                 .WithStandardErrorPipe(PipeTarget.ToDelegate(s => MilanLog.Error(s, customPrefix: "WWISE")))
+                 .WithValidation(CommandResultValidation.None)
+                 .ExecuteAsync().ConfigureAwait(false);
+
+        if(result.ExitCode != 0)
+        {
+            MilanLog.Warning($"WwiseCLI.exe returned non-zero exit code {result.ExitCode}. Retrying", customPrefix: "WWISE");
+            Utilities.DeleteFilesAndFoldersRecursively(outputDirectory, quiet: true);
+            await Cli.Wrap(wwiseCLIPath)
+                 .WithArguments([projFile, "-ConvertExternalSources", "Windows"])
+                 //.WithStandardOutputPipe(PipeTarget.ToDelegate(s => MilanLog.Information(s, customPrefix: "WWISE")))
+                 .WithStandardErrorPipe(PipeTarget.ToDelegate(s => MilanLog.Error(s, customPrefix: "WWISE")))
+                 .WithValidation(CommandResultValidation.None)
+                 .ExecuteAsync().ConfigureAwait(false);
+        }
 
         var extension = game is MEGame.ME3 ? ".ogg" : ".wem";
 

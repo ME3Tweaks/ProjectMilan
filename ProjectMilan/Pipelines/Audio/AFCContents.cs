@@ -4,15 +4,25 @@ namespace ProjectMilan.Pipelines.Audio;
 
 public class AFCContents
 {
-    public Dictionary<string, AFCItem> Streams = new();
+    public Dictionary<string, AFCItem> Streams { get; set; } = new();
+    public string AFCName { get; set; } = "";
+    public bool ForceUpdateFileName { get; set; }
 
-    public AFCContents(string contentsPath)
+    public AFCContents(string contentsPath, string afcName)
     {
+        AFCName = afcName;
         if(File.Exists(contentsPath))
         {
             var json = File.ReadAllText(contentsPath);
-            Streams = JsonSerializer.Deserialize<Dictionary<string, AFCItem>>(json) ?? throw new InvalidOperationException();
+            var newContents = JsonSerializer.Deserialize<AFCContents>(json) ?? throw new InvalidOperationException();
+            Streams = newContents.Streams;
+            AFCName = newContents.AFCName;
+            ForceUpdateFileName = newContents.ForceUpdateFileName;
         }
+    }
+
+    public AFCContents()
+    {
     }
 
     public void AddAFCItem(string streamName, long wemSize, long wemOffset)
@@ -22,7 +32,7 @@ public class AFCContents
 
     public void WriteToFile(string contentsPath)
     {
-        var json = JsonSerializer.Serialize(Streams);
+        var json = JsonSerializer.Serialize(this);
         File.WriteAllText(contentsPath, json);
     }
 }

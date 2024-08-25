@@ -364,7 +364,8 @@ namespace ProjectMilanCore
                 "ss_mp_annex_upload_narr_v1_D",
                 "ss_mp_disarm_dsble_narr_v1_D",
                 "ss_mp_disarm_enble_narr_v1_D",
-                "ss_mp_extraction_narr_v1_D"
+                "ss_mp_extraction_narr_v1_D",
+                "VocalizationBanks"
             };
 
             // We have to fake a dlc dir for AFC's  'get files loaded in game'

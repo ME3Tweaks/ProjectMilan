@@ -15,7 +15,7 @@ internal static class AudioPipeline
         BankConvertPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: false);
 
         // Rebuild AFC and WwiseStreams in v134 using Wwise CLI
-        AFCRebuildPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: true);
+        AFCRebuildPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: false);
 
         // TODO: Handle banks that have changed from LE to OT if they exist. Need to convert OT version even if newer LE version exists?
     }
@@ -31,19 +31,13 @@ internal static class AudioPipeline
             foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank"))
             {
                 var bankInfo = new MilanBankConvertInfo(exp);
-
-                // TEMPORARY: Don't convert any VocalizationBanks
-               if (!bankInfo.LocalizedInfo.ToString().Contains("ss_mp", StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrEmpty(bankInfo.AFCName))
                 {
                     MilanLog.Information($"Skipping bank {bankInfo.LocalizedInfo}", customPrefix: LOG_CATEGORY);
                     continue;
                 }
-                if (bankInfo.AFCName.Contains("VocalizationBank", StringComparison.OrdinalIgnoreCase)) {
-                    MilanLog.Information($"Skipping vocalization bank {bankInfo.LocalizedInfo}", customPrefix: LOG_CATEGORY);
-                    continue;
-                } 
 
-                if(bankInfo.BankParser is { Version: 56 }) bankInventory.Add(bankInfo);
+                if (bankInfo.BankParser is { Version: 56 }) bankInventory.Add(bankInfo);
             }
         }
         return bankInventory;

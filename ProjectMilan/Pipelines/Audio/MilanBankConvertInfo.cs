@@ -23,8 +23,16 @@ internal class MilanBankConvertInfo
     
     public LocalizedIFP LocalizedInfo { get; set; }
 
+    /// <summary>
+    /// Original ME3 AFC name for bank, if applicable
+    /// </summary>
     public string AFCName { get; set; }
-    
+
+    /// <summary>
+    /// Milan AFC name for bank, if applicable
+    /// </summary>
+    public string MilanAFCName { get; set; }
+
     public MilanBankConvertInfo(ExportEntry le3BankExport)
     {
         if (le3BankExport.ClassName != "WwiseBank") throw new ArgumentException("Export must be WwiseBank!");
@@ -38,6 +46,7 @@ internal class MilanBankConvertInfo
 
         var firstStream = LE3BankExport.FileRef.Exports.FirstOrDefault(e => e.ClassName == "WwiseStream" && e.InstancedFullPath.Contains(LE3BankExport.ObjectNameString));
         AFCName = firstStream?.GetProperty<NameProperty>("Filename").Value ?? "";
+        MilanAFCName = AFCName;
 
         ObjectBinary = LE3BankExport.GetBinaryData<LECWwiseBank>();
         if (ObjectBinary.BnkFile.Length == 0) return;
@@ -63,10 +72,12 @@ internal class MilanBankConvertInfo
 
         foreach(var e in LE3BankExport.FileRef.Exports.Where(e => e.ClassName == "WwiseStream"))
         {
-            // Looking for streams that are underneath the package export containing the name of the bank.
+            // Looking for streams that contain ",(bankname),"
+            // EG: fr-fr,ss_mp_narr,ss_mp_escort_narr_v1,00747435_m_wav for bank ss_mp_escort_narr_v1
             // TODO: Is this true for all banks? bankname_D package always?
 
-            if (e.InstancedFullPath.Contains(LE3BankExport.ObjectNameString))
+            var withCommas = "," + LE3BankExport.ObjectNameString + ",";
+            if (e.ObjectNameString.Contains(withCommas))
             {
                 streams.Add(e);
             }

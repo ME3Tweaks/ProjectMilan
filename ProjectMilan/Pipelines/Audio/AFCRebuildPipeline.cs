@@ -37,26 +37,41 @@ namespace ProjectMilan.Pipelines.Audio
                 var streams = bank.GetStreams();
                 if (streams.Count == 0) continue;
 
-                // Paths
                 var afcName = bank.AFCName.ToLower();
+                // Change vocalization banks AFC name here to force streams into new milan afc
+                if(afcName.Contains("vocalizationbanks", StringComparison.OrdinalIgnoreCase))
+                {
+                    afcName = afcName.Replace("vocalizationbanks", "vocalizationbanksmilan");
+                    bank.MilanAFCName = afcName;
+                }
+
+
+                // Paths
                 var afcFolder = Path.Combine(GetAfcCacheFolder(), afcName);
                 var afcCachedPath = Path.Combine(afcFolder, Path.ChangeExtension(afcName, ".afc"));
                 var contentsPath = Path.ChangeExtension(afcCachedPath, ".json");
 
                 // If the AFC doesn't exist in Milan, but the bank was converted from v56, we can't convert the AFC. Streams will be broken.
                 // Could be a case where AFC exists in LE3, but we still need to convert from the ME3 version
-                if (!prePipelineAfcInventory.TryGetValue(afcName, out var oldAfcPath))
+                if (!prePipelineAfcInventory.TryGetValue(bank.AFCName.ToLower(), out var oldAfcPath))
                 {
-                    MilanLog.Warning($"Referenced AFC {afcName} does not exist in output mod, skipping bank {bank.LocalizedInfo}", customPrefix: LOG_CATEGORY);
+                    MilanLog.Warning($"Referenced AFC {bank.AFCName.ToLower()} does not exist in output mod, skipping bank {bank.LocalizedInfo}", customPrefix: LOG_CATEGORY);
                     continue;
                 }
 
-                var contents = new AFCContents(contentsPath); // Metadata for new afc
+                var contents = new AFCContents(contentsPath, afcName); // Metadata for new afc
+                // Change vocalization banks AFC name here to force streams into new milan afc
+                if(afcName.Contains("vocalizationbanks", StringComparison.OrdinalIgnoreCase))
+                {
+                    contents.ForceUpdateFileName = true;
+                }
 
+
+                MilanLog.Information($"Converting streams for {bank.LocalizedInfo}", customPrefix: LOG_CATEGORY);
                 // If the AFC isn't found on disk, convert all streams to v134 and save it in the cache
                 if (!Directory.Exists(afcFolder))
                 {
-                    ConvertStreamsToAFC(streams, afcName, afcFolder, contents);
+                    ConvertStreamsToAFC(streams, afcName, afcFolder, contents, bank);
                 }
 
                 // Mark AFC as needs to copy to output mod
@@ -69,7 +84,7 @@ namespace ProjectMilan.Pipelines.Audio
                 if(streamsNotInAFC.Count > 0)
                 {
                     // If we have any streams that aren't contained in the proper AFC, also convert these.
-                    ConvertStreamsToAFC(streamsNotInAFC.ToList(), afcName, afcFolder, contents);
+                    ConvertStreamsToAFC(streamsNotInAFC.ToList(), afcName, afcFolder, contents, bank);
                 }
 
                 // Relink each stream for this bank
@@ -88,7 +103,11 @@ namespace ProjectMilan.Pipelines.Audio
                 var afcName = Path.GetFileName(tuple.Item2);
                 var outputModAfcPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", afcName);
 
-                MilanLog.Information($"Copying {afcName} to output mod and relinking streams", customPrefix: LOG_CATEGORY);
+                MilanLog.Information($"Copying Milan's {afcName} to output mod", customPrefix: LOG_CATEGORY);
+                if (File.Exists(outputModAfcPath)) // Weird corner case on renamed banks
+                {
+                    File.Delete(outputModAfcPath);
+                }
                 File.Copy(tuple.Item2, outputModAfcPath);
             }
         }
@@ -98,7 +117,7 @@ namespace ProjectMilan.Pipelines.Audio
             return Path.Combine(MilanShared.PipelineRoot, "Audio", "ConvertedAFCCache");
         }
 
-        public static void ConvertStreamsToAFC(List<ExportEntry> streams, string afcName, string afcFolder, AFCContents contents)
+        public static void ConvertStreamsToAFC(List<ExportEntry> streams, string afcName, string afcFolder, AFCContents contents, MilanBankConvertInfo mbci)
         {
             if (!Directory.Exists(afcFolder)) Directory.CreateDirectory(afcFolder);
 
@@ -113,7 +132,7 @@ namespace ProjectMilan.Pipelines.Audio
 
             // STEP 1
             // Export all streams to .wav in Exported folder
-            MilanLog.Information($"Extracting and converting {streams.Count} streams from ME3 {afcName}.afc with Wwise 7110", customPrefix: LOG_CATEGORY);
+            MilanLog.Information($"Extracting and converting {streams.Count} streams from ME3 {mbci.AFCName}.afc with Wwise 7110", customPrefix: LOG_CATEGORY);
             ExportStreamsToWav(streams, exportedPath);
 
             // STEP 2
@@ -201,8 +220,12 @@ namespace ProjectMilan.Pipelines.Audio
                 var streamObj = ObjectBinary.From<WwiseStream>(stream);
                 streamObj.DataOffset = (int)item.Offset;
                 streamObj.DataSize = (int)item.Size;
-                // Do we need to update the Filename property here? Probably not. Pipeline is written to never change AFC name
                 stream.WriteBinary(streamObj);
+                
+                if(contents.ForceUpdateFileName)
+                {
+                    stream.WriteProperty(new NameProperty(contents.AFCName, "Filename"));
+                }
             }
             else
             {
