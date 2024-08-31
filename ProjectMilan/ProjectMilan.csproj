@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="MilanUDK\NewFolder\" />
     <Folder Include="Pipelines\Levels\BioP_MPGeth\Donors\" />
     <Folder Include="Pipelines\Levels\BioP_MPHosp\Donors\Auto\" />
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />

@@ -301,7 +301,8 @@ namespace ProjectMilan
 #if DEBUG
             // Put your method in Research class and call it here.
             // Research.TestTextureToInstancesMap();
-            Research.DumpRefShaderNames();
+            // Research.DumpRefShaderNames();
+            UDKSetup.DecookMaterials();
 #endif
         }
     }
