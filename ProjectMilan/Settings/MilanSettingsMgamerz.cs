@@ -62,8 +62,32 @@ namespace ProjectMilan.Settings
         public bool RunWeaponsPipeline { get; set; } = true;
         public bool RunRejectionPipeline { get; set; }
         public bool RunRedemptionPipeline { get; set; }
+        public bool IsStaticLightingBuild { get; set; } = false;
+
+        private string _milanUDKPath;
+        public string MilanUDKPath
+        {
+            get
+            {
+                if (_milanUDKPath != null)
+                    return _milanUDKPath;
+                var desktopPath = @"S:\Milan\UDK";
+                if (Directory.Exists(desktopPath))
+                {
+                    _milanUDKPath = desktopPath;
+                    return _milanUDKPath;
+                }
+
+
+                // Laptop
+                _milanUDKPath = @"E:\Milan\UDK";
+                return _milanUDKPath;
+            }
+            set { _milanUDKPath = value; }
+        }
+
         public bool RunLevelsPipeline { get; set; } = true;
-        public bool RunAudioPipeline { get; set; } = false;
+        public bool RunAudioPipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = true;
         public bool RunResynthesis { get; set; } = false;
 

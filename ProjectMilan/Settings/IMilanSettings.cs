@@ -67,6 +67,16 @@
         /// </summary>
         bool RunRedemptionPipeline { get; set; }
 
+        /// <summary>
+        /// If this build is for producing static lighting in UDK, not for normal gameplay - don't import lightmaps, etc.
+        /// </summary>
+        bool IsStaticLightingBuild { get; set; }
+
+        /// <summary>
+        /// Location of a custom installation of UDK that is used only for Project Milan, to avoid pollution with other things such as materials. Milan will manage the packages in this target, and content WILL be deleted automatically from it.
+        /// </summary>
+        string MilanUDKPath { get; set; }
+
         #endregion
 
         #region Content cleanup and optimization
@@ -95,6 +105,9 @@
         /// If the mod folder should not be deleted
         /// </summary>
         bool DontDeleteModFolder { get; set; }
+
+
+
         #endregion
     }
 }
