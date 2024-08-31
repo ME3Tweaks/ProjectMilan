@@ -48,10 +48,10 @@ properties
         "Unk": 0
       }
     ],
-    "unkUint1": 0,
-    "udkUnk2": 0,
-    "udkUnk3": 0,
-    "udkUnk4": 0
+    "DummyDroppedFallbackComponents": 0,
+    "BlendModeOverrideValue": 0,
+    "bIsBlendModeOverrided": false,
+    "bIsMaskOverrideValue": false
   },
   "SM2MaterialResource": {
     "CompileErrors": [],
@@ -68,9 +68,9 @@ properties
     "unkBool1": false,
     "UsingTransforms": 0,
     "TextureLookups": [],
-    "unkUint1": 0,
-    "udkUnk2": 0,
-    "udkUnk3": 0,
-    "udkUnk4": 0
+    "DummyDroppedFallbackComponents": 0,
+    "BlendModeOverrideValue": 0,
+    "bIsBlendModeOverrided": false,
+    "bIsMaskOverrideValue": false
   }
 }
