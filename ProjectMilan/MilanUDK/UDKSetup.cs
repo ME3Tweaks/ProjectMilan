@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LegendaryExplorerCore.GameFilesystem;
+﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
@@ -12,8 +6,8 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.UDK;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using ProjectMilanCore;
 
 namespace ProjectMilan.MilanUDK
 {
@@ -74,6 +68,8 @@ namespace ProjectMilan.MilanUDK
         {
             EnsureUDK();
             var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, true, includeModDLC: false);
+            addExtraFilesToLoadedFiles(loadedFiles);
+
             var stagingPath = Directory.CreateDirectory(Path.Combine(UDKDirectory.DefaultGamePath, "MilanMaterialDecook")).FullName;
 
             // Remove existing files in decook folder
@@ -98,22 +94,158 @@ namespace ProjectMilan.MilanUDK
             SecondStageDecook(stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true)); // Could technically be combined with Stage 4 but for debug its best to have intermediate
             GC.Collect();
 
-            // Stage 4: Decook package again to dump out unused imports and exports
+            // Stage 4: (TEMPORARY) - Substitute in material expressions so they can be rendered in UDK, even if inaccurate
+            InsertMaterialExpressions(stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true));
+
+            // Stage 5: Decook package again to dump out unused imports and exports
             ThirdStageDecook(stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true));
             GC.Collect();
 
-            // Stage 5: Port items to UDK, with heuristic for generating materials that will preview in editor
+            // Stage 5: Port items to UDK
             PortMaterialsToUDK(stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true));
         }
 
+        private static void addExtraFilesToLoadedFiles(CaseInsensitiveDictionary<string> loadedFiles)
+        {
+            // Blank - DO NOT REMOVE THIS EXISTS FOR A REASON.
+        }
+
+        private static void InsertMaterialExpressions(string stagingPath, TieredPackageCache promotableCache)
+        {
+            var udkResources = MEPackageHandler.OpenMEPackageFromStream(LegendaryExplorerCoreUtilities.GetCustomAppResourceStream(MEGame.UDK));
+
+            // This will replace existing material in-place, we will then fix up the expressions on it
+            ExportEntry sourceReplacementMaterial = udkResources.Exports.First(exp => exp.ObjectName == "NormDiffMat");
+
+            foreach (var file in Directory.GetFiles(stagingPath).Where(x => x.RepresentsPackageFilePath()))
+            {
+                if (!DebugFilterFiles(file))
+                    return;
+
+                var sourcePackage = MEPackageHandler.OpenMEPackage(file);
+                foreach (var mat in sourcePackage.Exports.Where(x => x.IsA("Material")).ToList())
+                {
+                    if (mat.GetProperty<BoolProperty>("bCanCompileInUDK") is BoolProperty bp && bp.Value)
+                        continue; // Do not modify expressions
+
+                    List<IEntry> textures = new MaterialInstanceConstant(mat, null, false).Textures;
+
+                    // HEURISTIC FOR MATERIALS
+                    // Determine norm and diff 
+                    IEntry diff = null;
+                    foreach (IEntry texEntry in textures)
+                    {
+                        if (texEntry.ObjectName.Name.Contains("diff", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (diff != null)
+                            {
+                                var currentDiffName = diff.ObjectName.Instanced;
+                                var testDiffName = texEntry.ObjectName.Instanced;
+                                var currentDist = currentDiffName.LevenshteinDistance(mat.ObjectName.Instanced); // Match to mat
+                                var testDist = testDiffName.LevenshteinDistance(mat.ObjectName.Instanced); // Match to mat
+                                if (testDist < currentDist)
+                                {
+                                    // Has closer matching name
+                                    MilanLog.Information($"LEV DISTANCE SWAPPING DIFF TO {texEntry.ObjectName.Instanced} to match {mat.ObjectName.Instanced}");
+                                    diff = texEntry;
+                                }
+                                continue;
+                            }
+
+                            diff = texEntry;
+                            // May be more diffs
+                        }
+                    }
+
+                    // We do a SECOND pass for norms since we use diff for heuristic.
+                    IEntry norm = null;
+                    foreach (IEntry texEntry in textures)
+                    {
+                        if (texEntry.ObjectName.Name.Contains("norm", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (diff != null && norm != null)
+                            {
+                                var currentNormName = norm.ObjectName.Instanced;
+                                var testNormName = texEntry.ObjectName.Instanced;
+                                var currentDist = currentNormName.LevenshteinDistance(diff.ObjectName.Instanced); // Match to diff
+                                var testDist = testNormName.LevenshteinDistance(diff.ObjectName.Instanced); // Match to diff
+                                if (testDist < currentDist)
+                                {
+                                    // Has closer matching name
+                                    MilanLog.Information($"LEV DISTANCE SWAPPING NORM TO {texEntry.ObjectName.Instanced} to match {diff.ObjectName.Instanced}");
+                                    norm = texEntry;
+                                }
+
+                                continue;
+                            }
+                            // Set if null or take existing
+                            norm = texEntry;
+
+                            // We do not break as there may be more than one norm
+                        }
+                    }
+
+
+                    // Nuke the expressions
+                    EntryPruner.TrashEntries(sourcePackage, sourcePackage.Exports.Where(x => x.Parent == mat));
+
+                    // Replace data of material with ours. This will overwrite expressions list
+                    EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceReplacementMaterial, sourcePackage, mat, true, new RelinkerOptionsPackage(promotableCache), out _);
+
+                    // START HEURISTIC EXPRESSION REPLACEMENT ----------------------
+                    var matBin = ObjectBinary.From<Material>(mat);
+                    matBin.SM3MaterialResource.UniformExpressionTextures = new[] { norm?.UIndex ?? 0, diff?.UIndex ?? 0 };
+                    mat.WriteBinary(matBin);
+                    if (mat.GetProperty<ArrayProperty<ObjectProperty>>("Expressions") is { Count: >= 2 } expressionsProp)
+                    {
+                        ExportEntry diffExpression = sourcePackage.GetUExport(expressionsProp[0].Value);
+                        ExportEntry normExpression = sourcePackage.GetUExport(expressionsProp[1].Value);
+                        diffExpression.WriteProperty(new ObjectProperty(diff?.UIndex ?? 0, "Texture"));
+                        normExpression.WriteProperty(new ObjectProperty(norm?.UIndex ?? 0, "Texture"));
+                    }
+                    // END HEURISTIC EXPRESSION REPLACEMENT ------------------------
+                }
+
+                MilanLog.Information($"Saving heuristic-modified package {sourcePackage.FileNameNoExtension}");
+                sourcePackage.Save();
+            }
+        }
 
         private static bool DebugFilterFiles(string inPath)
         {
             // DEBUG: Return false to filter out file
-            // return inPath.Contains("BioApl_GUI_terminal", StringComparison.OrdinalIgnoreCase);
-            
+            //return inPath.Contains("SFXGame", StringComparison.OrdinalIgnoreCase)
+            ;// || inPath.Contains("BioVFX_Z_TEXTURES", StringComparison.OrdinalIgnoreCase);
+
             // Always perform work
             return true;
+        }
+
+        private static bool ShouldPort(ExportEntry exp, bool packageIsCooked)
+        {
+            if (exp.GetRootName().CaseInsensitiveEquals("TheWorld"))
+                return false; // Port nothing in a level.
+            var isTexture = exp.IsA("Texture");
+            var assetCanPort = isTexture || exp.IsA("Material") || exp.ClassName == "MaterialInstanceConstant";
+            if (!assetCanPort)
+                return false;
+
+            // Separated cause it makes debugging easier
+            if (!packageIsCooked)
+            {
+                // Will not have forced export flags
+                // Is not a map
+                return true;
+            }
+
+            // May be a map (may also not be)
+            if (isTexture)
+            {
+                return !exp.IsA("ShadowMapTexture2D") && !exp.IsA("LightMapTexture2D");
+            }
+
+            var isForcedExport = exp.ExportFlags.Has(UnrealFlags.EExportFlags.ForcedExport);
+            return isForcedExport;
         }
 
         /// <summary>
@@ -131,10 +263,14 @@ namespace ProjectMilan.MilanUDK
                 if (file.Key is "Core.pcc" or "Engine.pcc")
                     return;
 
+                if (!DebugFilterFiles(file.Value))
+                    return;
                 var package = MEPackageHandler.UnsafePartialLoad(file.Value, x => false);
-                foreach (var mat in package.Exports.Where(x =>
-                             !x.IsDefaultObject && (x.IsA("Material") || x.IsA("Texture")) &&
-                             Enums.Has(x.ExportFlags, UnrealFlags.EExportFlags.ForcedExport)))
+                var isCooked = package.Flags.Has(UnrealFlags.EPackageFlags.Cooked);
+
+
+                var itemsToPort = package.Exports.Where(x => !x.IsDefaultObject && ShouldPort(x, isCooked)).ToList();
+                foreach (var mat in itemsToPort)
                 {
                     var linker = mat.GetLinker();
 
@@ -159,16 +295,64 @@ namespace ProjectMilan.MilanUDK
 
                 Interlocked.Increment(ref i);
                 if (i % 25 == 0)
-                    Debug.WriteLine($"Inventoried {i} files");
+                    MilanLog.Information($"Inventoried {i} files");
             });
 
             // Print results
             foreach (var linker in linkerMap)
             {
-                Debug.WriteLine($"{linker.Key} => {linker.Value.Count} materials");
+                MilanLog.Information($"{linker.Key} => {linker.Value.Count(x => x.Value.EntryClass.CaseInsensitiveEquals("Material"))} materials, {linker.Value.Count(x => x.Value.EntryClass.Contains("Texture", StringComparison.OrdinalIgnoreCase))} textures");
             }
 
             return linkerMap;
+        }
+
+        private static void PregeneratePackage(IMEPackage package, CaseInsensitiveDictionary<LEXOpenable> linkerItems)
+        {
+            //if (package.FileNameNoExtension != "BioVFX_Z_TEXTURES")
+            //    return;
+
+            foreach (var linkerItem in linkerItems)
+            {
+                var externalPackage = MEPackageHandler.OpenMEPackage(linkerItem.Value.FilePath);
+                var exp = externalPackage.GetUExport(linkerItem.Value.EntryUIndex);
+                PortNonLinkerReferencesAsImports(package, exp);
+            }
+            //package.Save();
+        }
+
+        private static void PortNonLinkerReferencesAsImports(IMEPackage package, ExportEntry exp)
+        {
+            if (package.FindEntry(exp.InstancedFullPath) != null)
+                return; // Object is already in the package
+
+            var references = EntryImporter.GetAllReferencesOfExport(exp);
+            var externalToLinkerReferences = references.Where(x => !x.GetLinker().CaseInsensitiveEquals(package.FileNameNoExtension)).ToList();
+
+            // Generate all items external to the link as imports so we don't port them
+            var topDownOrdering = externalToLinkerReferences.OrderBy(x => x.InstancedFullPath.Count(x => x == '.')).ToList();
+            foreach (var eRef in topDownOrdering)
+            {
+                if (package.FindEntry(eRef.InstancedFullPath, eRef.ClassName) != null)
+                    continue; // Object is already in the package
+
+                IEntry parent = eRef.Parent != null ? package.FindImport(eRef.Parent.InstancedFullPath) : null;
+                if (eRef.Parent != null && parent == null)
+                {
+                    // Doesn't exist yet. Port it in
+                    parent = EntryExporter.PortParents(eRef, package, true);
+                }
+                ImportEntry imp = null;
+                if (eRef is ExportEntry exRef)
+                {
+                    imp = new ImportEntry(exRef, parent?.UIndex ?? 0, package);
+                    package.AddImport(imp);
+                }
+                else if (eRef is ImportEntry exImpRef)
+                {
+                    EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, eRef, package, parent, true, new RelinkerOptionsPackage(), out _);
+                }
+            }
         }
 
         /// <summary>
@@ -178,14 +362,24 @@ namespace ProjectMilan.MilanUDK
         private static void InitialDecook(CaseInsensitiveDictionary<CaseInsensitiveDictionary<LEXOpenable>> linkerMap, string stagingPath, TieredPackageCache promotableCache)
         {
             var syncObj = new object();
-
-            Parallel.ForEach(linkerMap, matList =>
+            promotableCache.PackagePromotionThreshold = 8;
+            promotableCache.CacheMaxSize = 22; // We have to limit the size of this as decooking uses a ton of memory.
+            int numDone = 0;
+            int numTotal = linkerMap.Count;
+            Parallel.ForEach(linkerMap.OrderByDescending(x => x.Value.Count), new ParallelOptions() { MaxDegreeOfParallelism = 8 }, matList =>
             {
-                if (!DebugFilterFiles(matList.Key))
-                    return;
+                // Linker map was computed with package list.
+                // We don't want to filter it here or it will not find exports from other packages.
+                //if (!DebugFilterFiles(matList.Key))
+                //    return;
+                //if (matList.Key != "BioT_Human_Ext")
+                //    return;
 
-                var localCache = promotableCache.ChainNewCache();
-                var package = MEPackageHandler.CreateAndOpenPackage(Path.Combine(stagingPath, matList.Key + ".pcc"), MEGame.LE3);
+                using var localCache = promotableCache.ChainNewCache();
+                using var package = MEPackageHandler.CreateAndOpenPackage(Path.Combine(stagingPath, matList.Key + ".pcc"), MEGame.LE3);
+                PregeneratePackage(package, matList.Value);
+                package.Save();
+
                 foreach (var mat in matList.Value)
                 {
                     var fPath = mat.Value.FilePath;
@@ -215,52 +409,11 @@ namespace ProjectMilan.MilanUDK
 
                     var sourceExp = sourcePackage.GetUExport(mat.Value.EntryUIndex);
                     sourceExp.RemoveProperty("PhysMaterial"); // Often brings in things like Wwise which is not supported by UDK
-                    //int originalIndexValue = sourceExp.indexValue;
-                    //if (isGlobalFileSource)
-                    //{
-                    //    sourceExp.indexValue = 1000000; // This won't be used. I hope!
-                    //    // Material params may reference textures, which won't be under material
-                    //    // We need to move these over manually
-                    //    var extraTextures = EntryImporter.GetAllReferencesOfExport(sourceExp).OfType<ExportEntry>().Where(x => x.Parent != sourceExp && x.IsA("Texture")).ToList();
-                    //    foreach (var tex in extraTextures)
-                    //    {
-                    //        var tiv = tex.indexValue;
-                    //        tex.indexValue = 100000;
-                    //        EntryExporter.ExportExportToPackage(tex, package, out var portedTex, localCache, new RelinkerOptionsPackage() { Cache = localCache, PortImportsMemorySafe = true });
-                    //        tex.indexValue = tiv; // Restore
-                    //        portedTex.indexValue = tiv; // Restore ported
-                    //    }
-                    //}
-
-                    EntryExporter.ExportExportToPackage(sourceExp, package, out var portedObj, localCache, new RelinkerOptionsPackage() { Cache = localCache, PortImportsMemorySafe = true });
-
-                    //if (isGlobalFileSource)
-                    //{
-                    //    portedObj.indexValue = originalIndexValue; // Restore it
-
-                    //    sourceExp.indexValue = 1000000; // This won't be used. I hope!
-                    //                                    // Material params may reference textures, which won't be under material
-                    //                                    // We need to move these over manually
-                    //    var extraTextures = EntryImporter.GetAllReferencesOfExport(sourceExp).OfType<ExportEntry>().Where(x => x.Parent != sourceExp && x.IsA("Texture")).ToList();
-                    //    foreach (var tex in extraTextures)
-                    //    {
-                    //        var tiv = tex.indexValue;
-                    //        tex.indexValue = 100000;
-                    //        EntryExporter.ExportExportToPackage(tex, package, out var portedTex, localCache, new RelinkerOptionsPackage() { Cache = localCache, PortImportsMemorySafe = true });
-                    //        tex.indexValue = tiv; // Restore
-                    //        portedTex.indexValue = tiv; // Restore ported
-                    //    }
-                    //}
+                    PortNonLinkerReferencesAsImports(package, sourceExp);
+                    EntryExporter.ExportExportToPackage(sourceExp, package, out var portedObj, localCache, new RelinkerOptionsPackage() { Cache = localCache, PortImportsMemorySafe = true, });
                 }
 
-                //package.Save();
-
-                // Clean up forced export and move up to linker so memory path is correct
-                var linkerPackage = package.FindExport(package.FileNameNoExtension);
-                foreach (var exp in package.Exports.Where(x => x.GetLinker() == package.FileNameNoExtension))
-                {
-                    exp.ExportFlags &= ~UnrealFlags.EExportFlags.ForcedExport; // Remove forced export
-                }
+                // package.Save();
 
                 // If resources are stored in globally importable files we have to convert these imports to exports.
                 var relinkMap = new ListenableDictionary<IEntry, IEntry>();
@@ -268,20 +421,22 @@ namespace ProjectMilan.MilanUDK
                 // We cannot trash as we go because .RemoveTrailingTrash() will delete stuff, and that will cause invalid references
                 // We cannot have invalid references until relink is completed so we track what we're going to trash and then trash it
                 List<IEntry> trashItems = new List<IEntry>();
-                trashItems.Add(linkerPackage); // Don't want this in the final result
 
                 // Fix up any imports that came over under the linker. 
-                var importsToConvert = package.Imports.Where(x => x.GetRoot() == linkerPackage 
+                var linkerPackage = package.FindEntry(package.FileNameNoExtension);
+                var importsToConvert = package.Imports.Where(x => x.GetRoot() == linkerPackage
                                                                   && !x.ObjectName.Name.StartsWith("PENDINGTRASH_")).ToList();
                 while (importsToConvert.Any())
                 {
                     foreach (var imp in importsToConvert)
                     {
-                        var exp = EntryImporter.ResolveImport(imp, localCache, instancedFullPathOverride: imp.InstancedFullPath.Replace("PENDINGTRASH_", ""));
+                        var exp = EntryImporter.ResolveImport(imp, localCache,
+                            instancedFullPathOverride: imp.InstancedFullPath.Replace("PENDINGTRASH_", ""));
                         // EntryPruner.TrashEntries(package, [imp]); // Get rid of this
                         imp.ObjectName = $"PENDINGTRASH_{imp.ObjectName}";
                         trashItems.Add(imp);
-                        EntryExporter.ExportExportToPackage(exp, package, out var portedSingle, localCache, new RelinkerOptionsPackage() { Cache = localCache });
+                        EntryExporter.ExportExportToPackage(exp, package, out var portedSingle, localCache,
+                            new RelinkerOptionsPackage() { Cache = localCache });
                         var portedExp = (ExportEntry)portedSingle;
                         portedExp.ExportFlags &= ~UnrealFlags.EExportFlags.ForcedExport; // Remove forced export
                         relinkMap[imp] = portedExp;
@@ -296,20 +451,28 @@ namespace ProjectMilan.MilanUDK
                             }
                         }
                     }
-                    
+
                     // Loop this to convert dependencies that came in
                     importsToConvert = package.Imports.Where(x => x.GetRoot() == linkerPackage
                         && !x.ObjectName.Name.StartsWith("PENDINGTRASH_")).ToList();
                 }
 
+                // Clean up forced export and move up to linker so memory path is correct
+                linkerPackage = package.FindEntry(package.FileNameNoExtension);
+                foreach (var exp in package.Exports.Where(x => x.GetLinker() == package.FileNameNoExtension))
+                {
+                    exp.ExportFlags &= ~UnrealFlags.EExportFlags.ForcedExport; // Remove forced export
+                }
 
-                foreach (var exp in package.Exports.Where(x => x.GetRoot() == linkerPackage))
+                linkerPackage = package.FindEntry(package.FileNameNoExtension); // Re-fetch linker package as it may be export now instead of import
+                var exportsToReparent = package.Exports.Where(x => x.Parent == linkerPackage).ToList();
+                foreach (var exp in exportsToReparent)
                 {
                     exp.Parent = null;
                 }
 
 
-                //package.Save();
+                package.Save();
                 foreach (var imp in package.Imports.Where(x => x.GetRoot() == linkerPackage && x.ClassName != "Package").ToList())
                 {
                     var exp = EntryImporter.ResolveImport(imp, localCache, instancedFullPathOverride: imp.InstancedFullPath.Replace("PENDINGTRASH_", ""));
@@ -359,7 +522,7 @@ namespace ProjectMilan.MilanUDK
                     }
                 }
 
-                package.Save();
+                // package.Save();
                 if (relinkMap.Any())
                 {
                     // Relink required
@@ -368,67 +531,94 @@ namespace ProjectMilan.MilanUDK
 
                 EntryPruner.TrashEntries(package, trashItems);
 
-                Debug.WriteLine($"Saving package {package.FileNameNoExtension}");
+                Interlocked.Increment(ref numDone);
+                var percentDone = 100.0f * numDone / numTotal;
+                MilanLog.Information($"Saving package {package.FileNameNoExtension} - {percentDone}%");
                 package.Save();
             });
+
+            promotableCache.Dispose();
         }
 
-        private static void SecondStageDecook(string stagingPath, TieredPackageCache chainNewCache)
+        private static void SecondStageDecook(string stagingPath, TieredPackageCache promotableCache)
         {
-            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
-
-            foreach (var file in Directory.GetFiles(stagingPath).Where(x => x.RepresentsPackageFilePath()))
+            //foreach (var file in Directory.GetFiles(stagingPath).Where(x => x.RepresentsPackageFilePath()))
+            var files = Directory.GetFiles(stagingPath).Where(x => x.RepresentsPackageFilePath()).ToList();
+            int numDone = 0;
+            int numTotal = files.Count;
+            Parallel.ForEach(files, file =>
             {
-                if (!DebugFilterFiles(file))
-                    return;
+                //if (!DebugFilterFiles(file))
+                //    return;
 
+                using var cache = promotableCache.ChainNewCache();
+
+                // We create new package, as modifying object name to TEMP will cause lookup tree to constantly be invalidated
+                // which is really bad for performance
                 var package = MEPackageHandler.OpenMEPackage(file);
+                var tempPackage = MEPackageHandler.CreateMemoryEmptyPackage(file, package.Game);
 
+                // Exports outside of the linker. Ordered by number of packages in heirarchy
+                var exportsOutsideOfLinker = package.Exports.OfType<IEntry>()
+                    .Where(x => x.GetLinker() != package.FileNameNoExtension).OrderBy(x => x.InstancedFullPath.Count(x => x == '.'))
+                    .ToList();
 
-                // Exports outside of the linker - ordered longest IFP to shortest so it goes bottom up
-                var exportsOutsideOfLinker =
-                    package.Exports.OfType<IEntry>().Where(x => x.GetLinker() != package.FileNameNoExtension)
-                        //.Concat(package.Imports.Where(x => x.GetLinker() != package.FileNameNoExtension))
-                        .OrderByDescending(x => x.InstancedFullPath.Length).ToList();
+                // Port existing imports first
+                foreach (var imp in package.Imports.OrderBy(x => x.InstancedFullPath.Count(y => y == '.')))
+                {
+                    var parent = imp.HasParent ? tempPackage.FindEntry(imp.ParentInstancedFullPath) : null;
 
-                // Manual package relink
-                var relinkMap = new ListenableDictionary<IEntry, IEntry>();
+                    // Port import
+                    EntryImporter.GetOrAddCrossImportOrPackage(imp.InstancedFullPath, package, tempPackage,
+                        new RelinkerOptionsPackage(), forcedLink: parent?.UIndex);
+
+                }
 
                 foreach (var entry in exportsOutsideOfLinker)
                 {
-                    var originalIFP = entry.InstancedFullPath;
+                    var parent = entry.HasParent ? tempPackage.FindEntry(entry.ParentInstancedFullPath) : null;
                     if (entry is ExportEntry exp)
                     {
-                        ImportEntry imp = new ImportEntry(exp, exp.idxLink, exp.FileRef);
-                        exp.ObjectName = "TEMP_" + exp.ObjectName;
-                        exp.FileRef.AddImport(imp);
-                        relinkMap[exp] = imp;
+                        // Generate import
+                        ImportEntry imp = new ImportEntry(exp, parent?.UIndex ?? 0, tempPackage);
+                        tempPackage.AddImport(imp);
                     }
-
-                    var reParent = package.FindEntry(originalIFP);
-                    var children = package.Tree.GetDirectChildrenOf(entry);
-                    foreach (var child in children)
+                    else
                     {
-                        child.Parent = reParent; // Reparent to new import so it doesn't get trashed right away.
+                        // Port import
+                        EntryImporter.GetOrAddCrossImportOrPackage(entry.InstancedFullPath, package, tempPackage,
+                            new RelinkerOptionsPackage(), forcedLink: parent?.UIndex);
                     }
                 }
 
-                Relinker.RelinkSamePackage(package, relinkMap);
+                // Port remaining content
+                foreach (var exp in package.Exports)
+                {
+                    if (tempPackage.FindEntry(exp.InstancedFullPath, exp.ClassName) == null)
+                    {
+                        EntryExporter.ExportExportToPackage(exp, tempPackage, out _, cache);
+                    }
+                }
 
-                EntryPruner.TrashEntries(package, exportsOutsideOfLinker.OfType<ExportEntry>());
 
+                Interlocked.Increment(ref numDone);
+                var percentDone = 100.0f * numDone / numTotal;
+                MilanLog.Information($"Saving second stage package {package.FileNameNoExtension} - {percentDone}%");
+                tempPackage.Save();
+            });
 
-                Debug.WriteLine($"Saving second stage package {package.FileNameNoExtension}");
-                package.Save();
-            }
+            promotableCache.Dispose();
         }
 
         private static void ThirdStageDecook(string stagingPath, TieredPackageCache promotableCache)
         {
-            foreach (var file in Directory.GetFiles(stagingPath).Where(x => x.RepresentsPackageFilePath()))
+            var files = Directory.GetFiles(stagingPath).Where(x => x.RepresentsPackageFilePath()).ToList();
+            int numDone = 0;
+            int numTotal = files.Count;
+            foreach (var file in files)
             {
-                if (!DebugFilterFiles(file))
-                    return;
+                //if (!DebugFilterFiles(file))
+                //    return;
 
                 var localCache = promotableCache.ChainNewCache();
                 var sourcePackage = MEPackageHandler.OpenMEPackage(file);
@@ -439,7 +629,9 @@ namespace ProjectMilan.MilanUDK
                 }
 
                 // Overwrite the original.
-                Debug.WriteLine($"Saving third stage package {sourcePackage.FileNameNoExtension}");
+                Interlocked.Increment(ref numDone);
+                var percentDone = 100.0f * numDone / numTotal;
+                MilanLog.Information($"Saving third stage package {destPackage.FileNameNoExtension} - {percentDone}%");
                 destPackage.Save(file);
             }
         }
