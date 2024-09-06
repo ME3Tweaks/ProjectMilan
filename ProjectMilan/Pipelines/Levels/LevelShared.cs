@@ -4,6 +4,7 @@ using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Shaders;
+using LegendaryExplorerCore.UDK;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
@@ -86,7 +87,7 @@ namespace ProjectMilan.Pipelines.Levels
                             PortImportsMemorySafe = true,
                             DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                             SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
-                            CustomDonorImporter = DonorBuilderPipeline.MaterialDonorImporter
+                            CustomDonorImporter = DonorBuilderPipeline.MaterialDonorImporter,
                         }, out var _);
                     if (badLinks.Any())
                     {
@@ -279,11 +280,27 @@ namespace ProjectMilan.Pipelines.Levels
                 }
             }
 
+            // If not static lighting build, see if we have static lighting to import
+            if (!Program.Settings.IsStaticLightingBuild)
+            {
+                var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", levelPipeline.BioP, $"{destPackage.FileNameNoExtension}.udk");
+                if (File.Exists(staticLightingPath))
+                {
+                    // Import static lighting
+                    LightingImportSetup setup = new LightingImportSetup()
+                    {
+                        IncludeSubLevels = false,
+                        UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName
+                    };
+
+                    StaticLightingImporter.ImportStaticLighting(destPackage, setup);
+                }
+            }
+
             // Calculate a very basic texture to instances map
             LevelTools.CalculateTextureToInstancesMap(destPackage, levelPipeline.Cache);
 
-            MilanLog.Information($"  Saving ported package {packageBaseName}.pcc",
-                customPrefix: levelPipeline.LogCategory);
+            MilanLog.Information($"  Saving ported package {packageBaseName}.pcc", customPrefix: levelPipeline.LogCategory);
             destPackage.Save();
             MilanShared.RefreshMilanFiles = true;
 
