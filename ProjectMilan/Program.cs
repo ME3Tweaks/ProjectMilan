@@ -5,6 +5,7 @@ using LegendaryExplorerCore;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
+using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Finalize;
@@ -152,6 +153,12 @@ namespace ProjectMilan
             {
                 MilanLog.Error($"Must point your settings at your mod library version of the DLC folder! Make sure you import the template from July 1 2024 (or newer) in #links.");
                 Environment.Exit(1);
+            }
+
+            // Set up UDK dependencies here
+            if (Program.Settings.IsStaticLightingBuild)
+            {
+                UDKSetup.EnsureUDK();
             }
 
             // Map settings into Core library.
@@ -302,7 +309,8 @@ namespace ProjectMilan
             // Put your method in Research class and call it here.
             // Research.TestTextureToInstancesMap();
             // Research.DumpRefShaderNames();
-            UDKSetup.DecookMaterials();
+            // UDKSetup.DecookGameToUDK();
+            UDKSetup.TestConvertToUDK();
 #endif
         }
     }
