@@ -8,6 +8,7 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Pipelines.StaticLighting;
 
 namespace ProjectMilan.MilanUDK
 {
@@ -16,7 +17,7 @@ namespace ProjectMilan.MilanUDK
     /// </summary>
     internal class UDKSetup
     {
-        private static void EnsureUDK()
+        public static void EnsureUDK()
         {
             var udkDir = Program.Settings.MilanUDKPath;
             if (string.IsNullOrWhiteSpace(udkDir) || !Directory.Exists(udkDir))
@@ -53,7 +54,7 @@ namespace ProjectMilan.MilanUDK
             {
                 // Set up lighting in the ini files.
                 // Todo: Copy from LE3.
-
+                ConfigureLightmass();
                 setup["bSetupLightingIni"].Value = "true";
             }
 
@@ -61,16 +62,40 @@ namespace ProjectMilan.MilanUDK
             config.WriteToFile(configPath);
         }
 
+        private static void ConfigureLightmass()
+        {
+            var defaultIniPath = Path.Combine(UDKDirectory.UDKGamePath, "Config", "DefaultLightmass.ini");
+            var defaultIni = File.Exists(defaultIniPath) ? DuplicatingIni.LoadIni(defaultIniPath) : new DuplicatingIni();
+
+            var sl = defaultIni.GetOrAddSection("DevOptions.StaticLighting");
+            sl.SetSingleEntry("bAllowLightmapCompression", "False"); // We will handle lightmap compression ourselves.
+            sl.SetSingleEntry("DefaultStaticMeshLightingRes", 128); // Default is 32. Lets make default a bit higher res.
+
+            var ss = defaultIni.GetOrAddSection("DevOptions.StaticShadows");
+            ss.SetSingleEntry("bFilterShadowFactor", "False"); // BioWare sets this (from True)
+            ss.SetSingleEntry("minunoccludedfraction", 0.01f); // BioWare sets this (from 0.005)
+            ss.SetSingleEntry("NumBounceShadowRays", 4); // BioWare sets this (from 1)
+
+            var pcdol = defaultIni.GetOrAddSection("DevOptions.PrecomputedDynamicObjectLighting");
+            pcdol.SetSingleEntry("bvisualizevolumelightsamples", "True"); // BioWare sets this (from False) - probably editor only
+            pcdol.SetSingleEntry("surfacelightsamplespacing", 750); // BioWare sets this (from 210)
+
+
+            defaultIni.WriteToFile(defaultIniPath);
+        }
+
         /// <summary>
         /// Decooks game materials and textures into source-side packages that can be used by UDK. This will take a long time.
         /// </summary>
-        public static void DecookMaterials()
+        public static void DecookGameToUDK()
         {
             EnsureUDK();
             var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, true, includeModDLC: false);
             addExtraFilesToLoadedFiles(loadedFiles);
 
-            var stagingPath = Directory.CreateDirectory(Path.Combine(UDKDirectory.DefaultGamePath, "MilanMaterialDecook")).FullName;
+            var stagingPath = GetMilanDecookedMaterialsStagingDirectory();
+            // Global Cache
+            var globalTierCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
 
             // Remove existing files in decook folder
             var existingFiles = Directory.GetFiles(stagingPath);
@@ -79,30 +104,42 @@ namespace ProjectMilan.MilanUDK
                 File.Delete(file);
             }
 
-            // Global Cache
-            var globalTierCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
-
             // This process is pretty complicated, but flows like this:
             // Stage 1: Group materials and textures by linker
             CaseInsensitiveDictionary<CaseInsensitiveDictionary<LEXOpenable>> linkerMap = GenerateLinkerMap(loadedFiles);
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
 
             // Stage 2: Begin decook by porting materials to their specified packages (same game). We will generate best-effort materials.
-            InitialDecook(linkerMap, stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true));
-            GC.Collect();
+            InitialDecookv2(linkerMap, stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true));
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
 
             // Stage 3: Regenerate packages by converting exports dependencies to imports
             SecondStageDecook(stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true)); // Could technically be combined with Stage 4 but for debug its best to have intermediate
-            GC.Collect();
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
 
             // Stage 4: (TEMPORARY) - Substitute in material expressions so they can be rendered in UDK, even if inaccurate
             InsertMaterialExpressions(stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true));
 
             // Stage 5: Decook package again to dump out unused imports and exports
             ThirdStageDecook(stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true));
-            GC.Collect();
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Aggressive, true, true);
 
             // Stage 5: Port items to UDK
             PortMaterialsToUDK(stagingPath, globalTierCache.ChainNewCache(canPromoteInto: true));
+        }
+
+        private static string GetMilanDecookedMaterialsStagingDirectory()
+        {
+            return Directory.CreateDirectory(Path.Combine(Program.Settings.MilanUDKPath, "MilanMaterialDecook")).FullName;
+        }
+
+        /// <summary>
+        /// Gets path where Milan's decooked materials are stored
+        /// </summary>
+        /// <returns></returns>
+        public static string GetMilanDecookedMaterialsDirectory()
+        {
+            return Path.Combine(UDKDirectory.GetSharedPath(Program.Settings.MilanUDKPath), "MilanMaterials");
         }
 
         private static void addExtraFilesToLoadedFiles(CaseInsensitiveDictionary<string> loadedFiles)
@@ -225,8 +262,7 @@ namespace ProjectMilan.MilanUDK
         {
             if (exp.GetRootName().CaseInsensitiveEquals("TheWorld"))
                 return false; // Port nothing in a level.
-            var isTexture = exp.IsA("Texture");
-            var assetCanPort = isTexture || exp.IsA("Material") || exp.ClassName == "MaterialInstanceConstant";
+            var assetCanPort = IsDecookAsset(exp);
             if (!assetCanPort)
                 return false;
 
@@ -239,7 +275,7 @@ namespace ProjectMilan.MilanUDK
             }
 
             // May be a map (may also not be)
-            if (isTexture)
+            if (exp.IsA("Texture"))
             {
                 return !exp.IsA("ShadowMapTexture2D") && !exp.IsA("LightMapTexture2D");
             }
@@ -294,7 +330,7 @@ namespace ProjectMilan.MilanUDK
                 }
 
                 Interlocked.Increment(ref i);
-                if (i % 25 == 0)
+                if (i % 100 == 0)
                     MilanLog.Information($"Inventoried {i} files");
             });
 
@@ -316,43 +352,100 @@ namespace ProjectMilan.MilanUDK
             {
                 var externalPackage = MEPackageHandler.OpenMEPackage(linkerItem.Value.FilePath);
                 var exp = externalPackage.GetUExport(linkerItem.Value.EntryUIndex);
-                PortNonLinkerReferencesAsImports(package, exp);
+                ConvertToUDK.PortNonLinkerReferencesAsImports(package, exp);
             }
             //package.Save();
         }
 
-        private static void PortNonLinkerReferencesAsImports(IMEPackage package, ExportEntry exp)
+        private static void InitialDecookv2(CaseInsensitiveDictionary<CaseInsensitiveDictionary<LEXOpenable>> linkerMap, string stagingPath, TieredPackageCache promotableCache)
         {
-            if (package.FindEntry(exp.InstancedFullPath) != null)
-                return; // Object is already in the package
-
-            var references = EntryImporter.GetAllReferencesOfExport(exp);
-            var externalToLinkerReferences = references.Where(x => !x.GetLinker().CaseInsensitiveEquals(package.FileNameNoExtension)).ToList();
-
-            // Generate all items external to the link as imports so we don't port them
-            var topDownOrdering = externalToLinkerReferences.OrderBy(x => x.InstancedFullPath.Count(x => x == '.')).ToList();
-            foreach (var eRef in topDownOrdering)
+            var syncObj = new object();
+            promotableCache.PackagePromotionThreshold = 8;
+            promotableCache.CacheMaxSize = 22; // We have to limit the size of this as decooking uses a ton of memory.
+            int numDone = 0;
+            int numTotal = linkerMap.Count;
+            Parallel.ForEach(linkerMap.OrderByDescending(x => x.Value.Count), new ParallelOptions() { MaxDegreeOfParallelism = 8 }, matList =>
             {
-                if (package.FindEntry(eRef.InstancedFullPath, eRef.ClassName) != null)
-                    continue; // Object is already in the package
+                // Linker map was computed with package list.
+                // We don't want to filter it here or it will not find exports from other packages.
+                //if (!DebugFilterFiles(matList.Key))
+                //    return;
 
-                IEntry parent = eRef.Parent != null ? package.FindImport(eRef.Parent.InstancedFullPath) : null;
-                if (eRef.Parent != null && parent == null)
+                // Only generates specific package
+                //if (!matList.Key.CaseInsensitiveEquals("BioVFX_Env_Hologram"))
+                //    return;
+
+                using var localCache = promotableCache.ChainNewCache();
+                using var package = MEPackageHandler.CreateAndOpenPackage(Path.Combine(stagingPath, matList.Key + ".pcc"), MEGame.LE3);
+                var linkerPackage = ExportCreator.CreatePackageExport(package, matList.Key);
+                PregeneratePackage(package, matList.Value);
+                // package.Save();
+
+                foreach (var mat in matList.Value)
                 {
-                    // Doesn't exist yet. Port it in
-                    parent = EntryExporter.PortParents(eRef, package, true);
+                    var fPath = mat.Value.FilePath;
+
+                    IMEPackage sourcePackage = null;
+                    var fileName = Path.GetFileName(fPath);
+                    bool isGlobalFileSource = EntryImporter.IsSafeToImportFrom(fPath, MEGame.LE3, null) && !fileName.CaseInsensitiveEquals("Engine.pcc"); // we want imports from engine as they will also be in UDK
+                    if (isGlobalFileSource)
+                    {
+                        // We are going to be porting out of a global file.
+                        // We should open a copy, so we don't get a cached version,
+                        // and before porting, we should rename the object, so any children of it don't get pulled in as imports
+                        // This is a bit of a hack; this will not cover anything beyond children of this object.
+                        sourcePackage = MEPackageHandler.OpenMEPackage(fPath, forceLoadFromDisk: true);
+                        sourcePackage.SetInternalFilepath("EXPORTABLE_GLOBALFILE.pcc");
+                    }
+                    else
+                    {
+                        sourcePackage = localCache.GetCachedPackage(fPath, openPackageMethod: x =>
+                        {
+                            lock (syncObj)
+                            {
+                                return MEPackageHandler.OpenMEPackage(x);
+                            }
+                        });
+                    }
+
+                    var sourceExp = sourcePackage.GetUExport(mat.Value.EntryUIndex);
+                    if (sourceExp.GetLinker() == sourcePackage.FileNameNoExtension && sourceExp.GetRootName() != sourcePackage.FileNameNoExtension)
+                    {
+                        EntryExporter.PrepareGlobalFileForPorting(sourcePackage, sourcePackage.FileNameNoExtension);
+                    }
+
+                    sourceExp.RemoveProperty("PhysMaterial"); // Often brings in things like Wwise which is not supported by UDK
+                    ConvertToUDK.PortNonLinkerReferencesAsImports(package, sourceExp);
+                    EntryExporter.ExportExportToPackage(sourceExp, package, out var portedObj, localCache, new RelinkerOptionsPackage() { Cache = localCache, PortImportsMemorySafe = true, });
                 }
-                ImportEntry imp = null;
-                if (eRef is ExportEntry exRef)
+
+                // package.Save();
+                ConvertToUDK.ConvertImportsToExportsUnderLinker(package, localCache);
+
+                // Clean up forced export and move up to linker so memory path is correct
+                foreach (var exp in package.Exports.Where(x => x.GetLinker() == package.FileNameNoExtension))
                 {
-                    imp = new ImportEntry(exRef, parent?.UIndex ?? 0, package);
-                    package.AddImport(imp);
+                    exp.ExportFlags &= ~UnrealFlags.EExportFlags.ForcedExport; // Remove forced export
+                    exp.RemoveProperty("PhysMaterial"); // Often brings in things like Wwise which is not supported by UDK.
                 }
-                else if (eRef is ImportEntry exImpRef)
+
+                // Move items under linker package up to the root
+                foreach (var exp in package.Exports.Where(x => x.Parent == linkerPackage))
                 {
-                    EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, eRef, package, parent, true, new RelinkerOptionsPackage(), out _);
+                    exp.Parent = null;
                 }
-            }
+
+                // Get rid of linker package now
+                EntryPruner.TrashEntries(package, [linkerPackage]);
+
+
+                Interlocked.Increment(ref numDone);
+                var percentDone = 100.0f * numDone / numTotal;
+                MilanLog.Information($"Saving package {package.FileNameNoExtension} - {percentDone}%");
+                package.Save();
+            });
+
+            promotableCache.Dispose();
         }
 
         /// <summary>
@@ -372,8 +465,10 @@ namespace ProjectMilan.MilanUDK
                 // We don't want to filter it here or it will not find exports from other packages.
                 //if (!DebugFilterFiles(matList.Key))
                 //    return;
-                //if (matList.Key != "BioT_Human_Ext")
-                //    return;
+
+                // Only generates specific package
+                if (!matList.Key.CaseInsensitiveEquals("BioVFX_C_Grenades"))
+                    return;
 
                 using var localCache = promotableCache.ChainNewCache();
                 using var package = MEPackageHandler.CreateAndOpenPackage(Path.Combine(stagingPath, matList.Key + ".pcc"), MEGame.LE3);
@@ -409,7 +504,7 @@ namespace ProjectMilan.MilanUDK
 
                     var sourceExp = sourcePackage.GetUExport(mat.Value.EntryUIndex);
                     sourceExp.RemoveProperty("PhysMaterial"); // Often brings in things like Wwise which is not supported by UDK
-                    PortNonLinkerReferencesAsImports(package, sourceExp);
+                    ConvertToUDK.PortNonLinkerReferencesAsImports(package, sourceExp);
                     EntryExporter.ExportExportToPackage(sourceExp, package, out var portedObj, localCache, new RelinkerOptionsPackage() { Cache = localCache, PortImportsMemorySafe = true, });
                 }
 
@@ -472,7 +567,7 @@ namespace ProjectMilan.MilanUDK
                 }
 
 
-                package.Save();
+                //package.Save();
                 foreach (var imp in package.Imports.Where(x => x.GetRoot() == linkerPackage && x.ClassName != "Package").ToList())
                 {
                     var exp = EntryImporter.ResolveImport(imp, localCache, instancedFullPathOverride: imp.InstancedFullPath.Replace("PENDINGTRASH_", ""));
@@ -486,7 +581,19 @@ namespace ProjectMilan.MilanUDK
                     EntryExporter.ExportExportToPackage(exp, package, out var portedSingle, localCache, new RelinkerOptionsPackage() { Cache = localCache });
                     var portedExp = (ExportEntry)portedSingle;
                     portedExp.ExportFlags &= ~UnrealFlags.EExportFlags.ForcedExport; // Remove forced export
-                    portedExp.Parent = null; // Move to root
+                    if (portedExp.HasParent)
+                    {
+                        if (portedExp.Parent.HasParent)
+                        {
+                            // It's double nested, move under parent
+                            portedExp.Parent = package.FindEntry(portedExp.ParentInstancedFullPath.Substring(portedExp.GetRootName().Length + 1)); // Move to root
+                        }
+                        else
+                        {
+                            // Just move to root
+                            portedExp.Parent = null;
+                        }
+                    }
                     relinkMap[imp] = portedExp;
                     foreach (var child in package.Tree.GetDirectChildrenOf(imp))
                     {
@@ -500,6 +607,7 @@ namespace ProjectMilan.MilanUDK
                     }
                 }
 
+                //package.Save();
                 // Pass for reparenting after conversion. There should be new exports so this should 
                 // allow us to find new parent packages
                 foreach (var exp in package.Exports.Where(x => x != linkerPackage && x.GetRoot() == linkerPackage))
@@ -518,11 +626,19 @@ namespace ProjectMilan.MilanUDK
                     else
                     {
                         // Parent is linker package
-                        exp.Parent = null;
+                        if (package.FindExport(exp.ObjectName.Instanced) == null)
+                        {
+                            exp.Parent = null;
+                        }
+                        else
+                        {
+                            // Already exists
+                            trashItems.Add(exp);
+                        }
                     }
                 }
 
-                // package.Save();
+                //package.Save();
                 if (relinkMap.Any())
                 {
                     // Relink required
@@ -596,6 +712,18 @@ namespace ProjectMilan.MilanUDK
                 {
                     if (tempPackage.FindEntry(exp.InstancedFullPath, exp.ClassName) == null)
                     {
+                        if (exp.IsA("MaterialInstanceConstant"))
+                        {
+                            // Remove static permutation resource before porting second stage
+                            exp.RemoveProperty("bHasStaticPermutationResource");
+                            exp.WriteBinary([]);
+                        }
+                        else if (exp.IsA("RB_BodySetup"))
+                        {
+                            // Remove any references to physical materials, they almost always will contain Wwise audio
+                            exp.RemoveProperty("PhysMaterial");
+                        }
+
                         EntryExporter.ExportExportToPackage(exp, tempPackage, out _, cache);
                     }
                 }
@@ -623,7 +751,7 @@ namespace ProjectMilan.MilanUDK
                 var localCache = promotableCache.ChainNewCache();
                 var sourcePackage = MEPackageHandler.OpenMEPackage(file);
                 var destPackage = MEPackageHandler.CreateMemoryEmptyPackage(file, MEGame.LE3);
-                foreach (var mat in sourcePackage.Exports.Where(x => x.IsA("Material") || x.IsA("Texture")))
+                foreach (var mat in sourcePackage.Exports.Where(IsDecookAsset))
                 {
                     EntryExporter.ExportExportToPackage(mat, destPackage, out _, localCache);
                 }
@@ -636,10 +764,34 @@ namespace ProjectMilan.MilanUDK
             }
         }
 
+        private static bool IsDecookAsset(ExportEntry x)
+        {
+            if (x.IsA("Material"))
+                return true;
+            if (x.IsA("Texture"))
+                return true;
+
+            // Don't want bio version
+            if (x.ClassName.CaseInsensitiveEquals("MaterialInstanceConstant"))
+                return true;
+
+            // Might be IsA()
+            if (x.ClassName.CaseInsensitiveEquals("StaticMesh"))
+                return true;
+            return false;
+        }
+
 
         private static void PortMaterialsToUDK(string stagingPath, TieredPackageCache chainNewCache)
         {
-            UDKMaterialPort.PortMaterialsIntoUDK(MEGame.LE3, stagingPath, "MilanMaterials", Program.Settings.MilanUDKPath);
+            UDKMaterialPort.PortMaterialsIntoUDK(MEGame.LE3, stagingPath, "MilanMaterials", Program.Settings.MilanUDKPath, IsDecookAsset);
+        }
+
+        public static void TestConvertToUDK()
+        {
+            var biop = @"Z:\ModLibrary\LE3\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels\BioP_MPJngl\BioP_MPJngl.pcc";
+            var package = MEPackageHandler.OpenMEPackage(biop);
+            StaticLightingExport.ExportLevelToUDK(package);
         }
     }
 }
