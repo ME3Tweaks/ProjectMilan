@@ -9,6 +9,7 @@ using ProjectMilan.Pipelines.Levels.BioP_MPGeth;
 using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
 using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Shared;
+using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
 
@@ -111,6 +112,12 @@ namespace ProjectMilan.Pipelines.Levels
                 else
                 {
                     BeginPortingGeneric(level, parent);
+                }
+
+                // Static lighting does not save the source package, so we are now free to modify it now that the final save has occurred
+                if (Program.Settings.IsStaticLightingBuild)
+                {
+                    StaticLightingExport.ExportLevelToUDK(level.LE3BioP);
                 }
 
                 level.ClearReferences();
