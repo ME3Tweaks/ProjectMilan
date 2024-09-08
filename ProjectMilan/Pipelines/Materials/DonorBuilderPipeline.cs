@@ -153,16 +153,18 @@ namespace ProjectMilan.Pipelines.Materials
 
         private static List<string> DonorObjects = new();
 
-        private static void InventoryDonorPackages()
+        public static void InventoryDonorPackages()
         {
             var packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build");
+            if (Directory.Exists(packageOutputFolder))
+            {
             DonorObjects.ReplaceAll(Directory.GetFiles(packageOutputFolder, "*.pcc", SearchOption.AllDirectories).Select(Path.GetFileNameWithoutExtension));
+        }
         }
 
         private static void InternalRunPipeline(DonorBuildVars vars)
         {
             // CompileShaders();
-            InventoryDonorPackages();
             BuildDonorPackages(vars);
         }
 
