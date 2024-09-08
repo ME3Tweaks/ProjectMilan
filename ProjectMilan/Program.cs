@@ -58,7 +58,6 @@ namespace ProjectMilan
         /// Initialize Project Milan
         /// </summary>
         /// <param name="obj"></param>
-        /// <exception cref="NotImplementedException"></exception>
         private static void Init(CLIOptions obj)
         {
 #if DEBUG
