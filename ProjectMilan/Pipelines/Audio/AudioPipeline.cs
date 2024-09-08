@@ -1,5 +1,4 @@
 ﻿using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Unreal;
 namespace ProjectMilan.Pipelines.Audio;
 
 internal static class AudioPipeline
@@ -9,18 +8,16 @@ internal static class AudioPipeline
     public static void RunPipeline()
     {
         // Find all banks that need to be converted
-        var banksToConvert = GetWwiseV56BanksInOutputMod();
+        var banksToConvert = GetBanksToConvertInOutputMod();
 
         // Convert WwiseBank binary to v134
         BankConvertPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: false);
 
         // Rebuild AFC and WwiseStreams in v134 using Wwise CLI
-        AFCRebuildPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: false);
-
-        // TODO: Handle banks that have changed from LE to OT if they exist. Need to convert OT version even if newer LE version exists?
+        AFCRebuildPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: true);
     }
 
-    private static List<MilanBankConvertInfo> GetWwiseV56BanksInOutputMod()
+    private static List<MilanBankConvertInfo> GetBanksToConvertInOutputMod()
     {
         var bankInventory = new List<MilanBankConvertInfo>();
         foreach (var pf in Directory.GetFileSystemEntries(Program.Settings.OutputModPath, "*.pcc",
@@ -31,12 +28,14 @@ internal static class AudioPipeline
             foreach (var exp in package.Exports.Where(x => x.ClassName == @"WwiseBank"))
             {
                 var bankInfo = new MilanBankConvertInfo(exp);
+                // Can add filters here to test specific banks
                 if (string.IsNullOrEmpty(bankInfo.AFCName))
                 {
                     MilanLog.Information($"Skipping bank {bankInfo.LocalizedInfo}", customPrefix: LOG_CATEGORY);
                     continue;
                 }
 
+                // Only convert banks that are v56 - non-donor banks from ME3.
                 if (bankInfo.BankParser is { Version: 56 }) bankInventory.Add(bankInfo);
             }
         }
