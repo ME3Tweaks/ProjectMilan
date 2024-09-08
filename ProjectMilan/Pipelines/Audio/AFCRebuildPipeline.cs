@@ -1,12 +1,10 @@
-﻿using LegendaryExplorerCore.Packages;
+﻿using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using ProjectMilan.Pipelines.Audio.Extension;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
-using ProjectMilan.Pipelines.Audio.Extension;
-using LegendaryExplorerCore.Helpers;
-using System.IO;
-using ME3Tweaks.Wwiser.Model;
 
 
 namespace ProjectMilan.Pipelines.Audio
@@ -60,7 +58,6 @@ namespace ProjectMilan.Pipelines.Audio
                 }
 
                 var contents = new AFCContents(contentsPath, afcName); // Metadata for new afc
-                // Change vocalization banks AFC name here to force streams into new milan afc
                 if(afcName.Contains("vocalizationbanks", StringComparison.OrdinalIgnoreCase))
                 {
                     contents.ForceUpdateFileName = true;

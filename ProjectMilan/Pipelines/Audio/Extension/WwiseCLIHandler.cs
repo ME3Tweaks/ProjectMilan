@@ -42,13 +42,13 @@ public static class WwiseCliHandler
 
         //Extract the template project to temp
         string templateproject = GetWwiseTemplateProject(game);
-        string templatefolder = Path.Combine(Path.GetTempPath(), "TemplateProject"); // Same template as in LEX
+        string templatefolder = Path.Combine(AFCRebuildPipeline.GetAfcCacheFolder(), "TemplateProject"); // Same template as in LEX
 
         using (StreamReader stream = new StreamReader(templateproject))
         {
             await TryDeleteDirectory(templatefolder);
             ZipArchive archive = new ZipArchive(stream.BaseStream);
-            archive.ExtractToDirectory(Path.GetTempPath());
+            archive.ExtractToDirectory(AFCRebuildPipeline.GetAfcCacheFolder());
         }
 
         //Generate the external sources document
@@ -100,7 +100,7 @@ public static class WwiseCliHandler
 
         //Files generates
         string projFile = Path.Combine(templatefolder, "TemplateProject.wproj");
-        string outputDirectory = Path.Combine(Path.GetTempPath(), "TemplateProject", "OutputFiles");
+        string outputDirectory = Path.Combine(AFCRebuildPipeline.GetAfcCacheFolder(), "TemplateProject", "OutputFiles");
         string copyToDirectory = Path.Combine(exportParentFolder, "Converted");
         Directory.CreateDirectory(copyToDirectory);
 
@@ -180,7 +180,7 @@ public static class WwiseCliHandler
 
     internal static async void DeleteTemplateProjectDirectory()
     {
-        var templateDirectory = Path.Combine(Path.GetTempPath(), "TemplateProject");
+        var templateDirectory = Path.Combine(AFCRebuildPipeline.GetAfcCacheFolder(), "TemplateProject");
         if (Directory.Exists(templateDirectory))
         {
             await TryDeleteDirectory(templateDirectory);

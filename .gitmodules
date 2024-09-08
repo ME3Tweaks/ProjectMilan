@@ -4,6 +4,3 @@
 [submodule "WwiseTools"]
 	path = WwiseTools
 	url = https://github.com/ME3Tweaks/WwiseTools.git
-[submodule "Wwiser.NET"]
-	path = Wwiser.NET
-	url = https://github.com/ME3Tweaks/Wwiser.NET
