@@ -14,12 +14,12 @@ namespace ProjectMilan.MilanUDK
             // May need to look at decomp to figure out default values. Some don't work without expressions, others do.
             switch (exp.ClassName)
             {
-                case "BioMaterialExpressionAnsioSpec":
+                case "BioMaterialExpressionAnisoSpec":
                     return new BioMaterialExpressionAnisoSpec(exp);
                 case "BioMaterialExpressionBlinnSpec":
                     return new BioMaterialExpressionBlinnSpec(exp);
-                case "BioMaterialExpressionEffectMatBase":
-                    return null; //return new BioMaterialExpressionEffectMatBase(exp);
+                case "BioMaterialExpressionEffectMatBaseProperty":
+                    return new BioMaterialExpressionEffectMatBaseProperty(exp);
                 case "BioMaterialExpressionFresnel":
                     return new BioMaterialExpressionFresnel(exp);
                 case "BioMaterialExpressionKeyedFlipbook":
@@ -29,7 +29,7 @@ namespace ProjectMilan.MilanUDK
                 case "BioMaterialExpressionSpecPower":
                     return new BioMaterialExpressionSpecPower(exp);
                 case "BioMaterialExpressionWound":
-                    return null; //new BioMaterialExpressionWound(exp);
+                    return new BioMaterialExpressionWound(exp);
 
                 default:
                     return null;
@@ -176,6 +176,33 @@ namespace ProjectMilan.MilanUDK
         }
     }
 
+    public class BioMaterialExpressionWound(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
+    {
+        protected override string GetHLSLCode(PropertyCollection originalProps)
+        {
+            // Properties
+            // This has a numWounds property that determines which GetWoundParams method is called.
+            // Unsure this works in UDK
+            // Just taking the default undefined variable version from the .usf
+
+            // HLSL
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("float3 Local17 = (float(1.00000000) - UniformPixelVector_0.rgb);");
+            sb.AppendLine("float3 Local19 = (half4(Parameters.ScreenPosition.xyz, length(Parameters.ScreenPosition)).rgb * Local17);"); // Originally GetWoundParameterX
+            sb.AppendLine("return Local19;");
+
+            // Result
+            return sb.ToString();
+        }
+
+        protected override void AddCustomInputs(ArrayProperty<StructProperty> inputsArray, PropertyCollection originalProps)
+        {
+            // No inputs
+        }
+    }
+
+
+
     public class BioMaterialExpressionSpecPower(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
     {
         protected override string GetHLSLCode(PropertyCollection originalProps)
@@ -198,6 +225,86 @@ namespace ProjectMilan.MilanUDK
         protected override void AddCustomInputs(ArrayProperty<StructProperty> inputsArray, PropertyCollection originalProps)
         {
             AddCustomInput(inputsArray, "Input", originalProps.GetProp<StructProperty>("Input"));
+        }
+    }
+
+    public class BioMaterialExpressionEffectMatBaseProperty(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
+    {
+        protected override string GetHLSLCode(PropertyCollection originalProps)
+        {
+            // This expression is pretty complicated according to decomp
+
+            // Properties
+            var baseProperty = originalProps.GetProp<EnumProperty>("BaseProperty")?.Value ?? "MP_DiffuseColor";
+            var inputUIndex = originalProps.GetProp<ObjectProperty>("Input")?.Value ?? 0;
+
+            // Parsing
+            var input = inputUIndex > 0 ? Export.FileRef.GetUExport(inputUIndex) : null;
+
+            // HLSL
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("float3 Local29 = (float(1.00000000) - UniformPixelVector_0.rgb);");
+
+            if (input == null)
+            {
+                // Defaults as shown in decomp.
+                switch (baseProperty)
+                {
+                    case "MP_EmissiveColor":
+                    case "MP_TwoSidedLightingMask":
+                    case "MP_DiffuseColor":
+                    case "MP_SpecularColor":
+                        sb.AppendLine("float3 Local30 = (float3(0.00000000, 0.00000000, 0.00000000) * Local29);");
+                        break;
+
+                    case "MP_Opacity":
+                    case "MP_OpacityMask":
+                        sb.AppendLine("float3 Local30 = (float(1.00000000) * Local29);");
+                        break;
+
+                    case "MP_Distortion":
+                        sb.AppendLine("float3 Local30 = (float3(float2(0.00000000,0.00000000),0) * Local29);");
+                        break;
+
+                    case "MP_SpecularPower":
+                        sb.AppendLine("float3 Local30 = (float(15.00000000) * Local29);");
+                        break;
+
+                    case "MP_Normal":
+                        sb.AppendLine("float3 Local30 = (float3(0.00000000,0.00000000,1.00000000) * Local29);");
+                        break;
+
+                    case "MP_CustomLighting":
+                        sb.AppendLine("float3 Local30 = (float3(0.00000000,0.00000000,0.00000000) * Local29);");
+                        break;
+
+                    case "MP_TMissionColor":
+                        sb.AppendLine("float3 Local30 = (float3(1.00000000,1.00000000,1.00000000) * Local29);");
+                        break;
+
+                    default:
+                        sb.AppendLine("float3 Local30 = (float(0.00000000) * Local29);");
+                        break;
+                }
+            }
+            else
+            {
+                // They all seem to compile to this
+                sb.AppendLine("float3 Local30 = (float(Input) * Local29);");
+            }
+
+            sb.AppendLine("return Local30;");
+            
+            return sb.ToString();
+        }
+        protected override void AddCustomInputs(ArrayProperty<StructProperty> inputsArray, PropertyCollection originalProperties)
+        {
+            var input = originalProperties.GetProp<ObjectProperty>("Input");
+            if (input != null && input.Value != 0)
+            {
+                StructProperty sp = new StructProperty("ExpressionInput", false, new ObjectProperty(input.Value, "Expression"));
+                AddCustomInput(inputsArray, "Input", sp);
+            }
         }
     }
 
@@ -251,6 +358,7 @@ namespace ProjectMilan.MilanUDK
             };
 
             parent.FileRef.AddExport(exp);
+            var test = exp.GetProperties();
 
             return exp;
         }

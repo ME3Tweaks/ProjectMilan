@@ -196,7 +196,7 @@ namespace ProjectMilan.MilanUDK
                     if (mat.GetProperty<BoolProperty>("bCanCompileInUDK") is BoolProperty bp && bp.Value)
                         continue; // Do not modify expressions
 
-                    List<IEntry> textures = new MaterialInstanceConstant(mat, null, false).Textures;
+                    var textures = new MaterialInstanceConstant(mat, null, false).Textures;
 
                     // HEURISTIC FOR MATERIALS
                     // Determine norm and diff 

@@ -15,6 +15,8 @@ using LegendaryExplorerCore.Misc.ME3Tweaks;
 using ProjectMilan.Pipelines.Init;
 using System.Reflection;
 using LegendaryExplorerCore.Localization;
+using LegendaryExplorerCore.Textures;
+using LegendaryExplorerCore.Unreal.Classes;
 
 namespace ProjectMilan.MilanUDK
 {
@@ -28,7 +30,6 @@ namespace ProjectMilan.MilanUDK
             MilanShared.LE3ObjectDB = MilanInit.LoadObjectDB(MEGame.LE3);
 
             var outPathS1 = @"S:\Milan\UDK\MilanMaterialDecook_T3D";
-
             CompileGameAssets(outPathS1);
         }
 
@@ -36,10 +37,13 @@ namespace ProjectMilan.MilanUDK
         {
             var outPathS1 = @"S:\Milan\UDK\MilanMaterialDecook_T3D";
             var outPathFinal = @"S:\Milan\UDK\UDKGame\Content\MilanAssets";
+            ConvertAssetsToUDK(outPathFinal, outPathS1);
         }
 
         private static void ConvertAssetsToUDK(string outPathFinal, params string[] inputPaths)
         {
+            // goto end;
+
             MilanLog.Information("Clearing Final Result UPK packages");
             foreach (var file in Directory.GetFiles(outPathFinal))
             {
@@ -57,8 +61,8 @@ namespace ProjectMilan.MilanUDK
                     if (le3P.FileNameNoExtension == "BioS_Matrix") // bugged atm
                         return;
 
-                    if (le3P.FileNameNoExtension != "biot_rubble") // debug filter
-                        return;
+                    //if (le3P.FileNameNoExtension != "BIOA_GalaxyMap_T") // debug filter
+                    //    return;
 
                     if (le3P.FileNameNoExtension.StartsWith("Engine", StringComparison.OrdinalIgnoreCase))
                         return;
@@ -115,6 +119,53 @@ namespace ProjectMilan.MilanUDK
                     //}
                 });
             }
+
+            end:
+            GenerateMissingTexturePackage(outPathFinal);
+        }
+
+        private static void GenerateMissingTexturePackage(string outPathFinal)
+        {
+
+            var files = Directory.GetFiles(outPathFinal);
+            ExportEntry clonable = null;
+            var missingTexPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(outPathFinal, "MissingTextures.upk"), MEGame.UDK);
+            foreach (var f in files)
+            {
+                var package = MEPackageHandler.UnsafePartialLoad(f, x => false);
+                var missingTexturesImp = package.FindImport("MissingTextures");
+                if (missingTexturesImp == null)
+                    continue;
+
+                MilanLog.Information($"MissingTextures build for {package.FileNameNoExtension}");
+                foreach (var item in package.Imports.Where(x => x.idxLink == missingTexturesImp.UIndex))
+                {
+                    if (missingTexPackage.FindExport(item.ObjectName, item.ClassName) == null)
+                    {
+                        if (item.ClassName == "Texture2D")
+                        {
+                            if (clonable == null)
+                            {
+                                clonable = Texture2D.CreateTexture(missingTexPackage, item.ObjectName, 512, 512, PixelFormat.DXT1, true, null);
+                                var t2d = new Texture2D(clonable);
+                                var im = Image.LoadFromFile(Path.Combine(MilanShared.PipelineRoot, "..", "MilanUDK", "MissingTexture.png"), PixelFormat.DXT1);
+                                t2d.Replace(im, clonable.GetProperties(), isPackageStored: true);
+                            }
+                            else
+                            {
+                                var newExp = EntryCloner.CloneEntry(clonable);
+                                newExp.ObjectName = item.ObjectName;
+                            }
+                        } 
+                        else if (item.ClassName == "TextureCube")
+                        {
+                            // Do this thing
+                        }
+                    }
+                }
+            }
+
+            missingTexPackage.Save();
         }
 
         private static bool ConvertBioMaterialExpressionForUDK(IMEPackage importingpcc, ExportEntry relinkingexport, ref int uindex, string propertyname, string prefix, RelinkerOptionsPackage rop, out EntryStringPair result)
@@ -124,6 +175,12 @@ namespace ProjectMilan.MilanUDK
             var sourceExport = importingpcc.GetEntry(uindex);
             if (sourceExport is ExportEntry exp)
             {
+                if (rop.CrossPackageMap.TryGetValue(sourceExport, out var newEntry))
+                {
+                    // Previously relinked
+                    uindex = newEntry.UIndex;
+                    return true;
+                }
                 var converter = BioMaterialExpressionConverters.GetConverter(exp);
                 if (converter != null)
                 {
@@ -131,6 +188,13 @@ namespace ProjectMilan.MilanUDK
                     var destParent = relinkingexport.FileRef.FindExport(sourceExport.Parent.InstancedFullPath);
                     var converted = converter.ConvertExpression(destParent, rop);
                     uindex = converted.UIndex;
+                    rop.CrossPackageMap[sourceExport] = converted;
+
+                    if (uindex == 172)
+                    {
+                        relinkingexport.FileRef.Save();
+                    }
+
                     return true;
                 }
             }
@@ -199,7 +263,6 @@ namespace ProjectMilan.MilanUDK
             // All packages that will be generated
             var allPackageNames = new CaseInsensitiveDictionary<string>();
 
-            // All folders will have a package (once we figure out the bio expressions).
             foreach (var p in Directory.GetDirectories(inputFolder).Select(Path.GetFileName))
             {
                 allPackageNames.Add(p, p);
@@ -211,16 +274,20 @@ namespace ProjectMilan.MilanUDK
             AddPackagesToList(allPackageNames, texDb);
             var packages = allPackageNames.Select(x => x.Key).OrderBy(x => x).ToList();
 
+            File.WriteAllLines(@"S:\Milan\UDK\packagelist.txt", packages);
+            
             foreach (var packageName in packages)
             {
+                Debug.WriteLine($"{packageName}");
+
                 var folder = Path.Combine(inputFolder, packageName);
-                //if (!packageName.CaseInsensitiveEquals("biot_rubble")) // debug filter
+                //if (!packageName.CaseInsensitiveEquals("EffectsMaterials")) // debug filter
                 //    continue;
 
                 if (packageName.StartsWith("Engine", StringComparison.OrdinalIgnoreCase))
                     continue;
                 if (packageName.StartsWith("Editor", StringComparison.OrdinalIgnoreCase))
-                    return;
+                    continue;
                 if (packageName.StartsWith("NodeBuddies", StringComparison.OrdinalIgnoreCase))
                     continue;
                 if (packageName.StartsWith("MaterialTemplates", StringComparison.OrdinalIgnoreCase))
@@ -231,23 +298,21 @@ namespace ProjectMilan.MilanUDK
                 var packagePath = Path.Combine(outputFolder, $"{packageName}.pcc");
 
                 // TEMP - DO NOT WIPE EXISTING
-                //if (File.Exists(packagePath))
-                //    continue;
+                if (File.Exists(packagePath))
+                    continue;
                 // END TEMP
-
-                Debug.WriteLine($"{packageName}");
 
                 using var package = MEPackageHandler.CreateAndOpenPackage(packagePath, MEGame.LE3);
                 MilanLog.Information($"Compiling package {package.FileNameNoExtension}");
                 CompilePackageMaterials(package, folder);
-                AddTextureAssets(package, texDb);
+                AddTextures(package, texDb);
                 PreparePackageForUDKify(package);
-                AddTextureAssets(package, "MaterialInstanceConstant", micDb);
+                AddObjects(package, "MaterialInstanceConstant", micDb);
                 PreparePackageForUDKify(package);
-                AddTextureAssets(package, "StaticMesh", smDb);
+                AddObjects(package, "StaticMesh", smDb);
                 PreparePackageForUDKify(package);
 
-                if (package.Exports.All(x=> x.ClassName == "Package")) // UDK prep will add package name export so we only check if we have a non-package export
+                if (package.Exports.All(x => x.ClassName == "Package")) // UDK prep will add package name export so we only check if we have a non-package export
                 {
                     File.Delete(packagePath);
                 }
@@ -263,6 +328,8 @@ namespace ProjectMilan.MilanUDK
                         Debugger.Break();
                     }
 
+                    // Set flags to match what source side package would. This affects import resolution code.
+                    package.setFlags(UnrealFlags.EPackageFlags.AllowDownload | UnrealFlags.EPackageFlags.NoExportsData);
                     package.Save();
                 }
             }
@@ -275,7 +342,7 @@ namespace ProjectMilan.MilanUDK
         /// </summary>
         /// <param name="package"></param>
         /// <param name="assetMap"></param>
-        private static void AddTextureAssets(IMEPackage package, CaseInsensitiveDictionary<ObjectLocation> assetMap)
+        private static void AddTextures(IMEPackage package, CaseInsensitiveDictionary<ObjectLocation> assetMap)
         {
             var packageName = package.FileNameNoExtension;
             var assets = assetMap.Where(x => x.Value.memoryfullpath.StartsWith(packageName + ".", StringComparison.OrdinalIgnoreCase));
@@ -333,7 +400,8 @@ namespace ProjectMilan.MilanUDK
             foreach (var item in db)
             {
                 var mfp = item.Value.memoryfullpath;
-                allPackageNames.TryAdd(mfp[..mfp.IndexOf('.')], null); // BioT_Thessia.Texture -> BioT_Thessia
+                var packageName = mfp[..mfp.IndexOf('.')];
+                allPackageNames.TryAdd(packageName, packageName); // BioT_Thessia.Texture -> BioT_Thessia
             }
         }
 
@@ -346,7 +414,7 @@ namespace ProjectMilan.MilanUDK
             }
         }
 
-        private static void AddTextureAssets(IMEPackage package, string classType, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> assetMap)
+        private static void AddObjects(IMEPackage package, string classType, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> assetMap)
         {
             if (assetMap.TryGetValue(package.FileNameNoExtension, out var assetList))
             {
@@ -690,12 +758,6 @@ namespace ProjectMilan.MilanUDK
                     MilanLog.Error(msg);
                 }
             }
-
-            //var invalidPackage = package.Exports.Any(x => x.ClassName.StartsWith("BioMaterialExp"));
-            //if (invalidPackage)
-            //{
-            //    // Breakpoint
-            //}
 
             return;
 
