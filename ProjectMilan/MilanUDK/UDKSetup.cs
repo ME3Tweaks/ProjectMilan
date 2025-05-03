@@ -14,6 +14,8 @@ using ProjectMilan.Pipelines.StaticLighting;
 
 namespace ProjectMilan.MilanUDK
 {
+    // DEPRECATED - USE UDKSetupT3D.
+
     /// <summary>
     /// Sets up UDK for use with Milan. It is best to make a brand new installation of UDK, separate from the one you use for LEX.
     /// </summary>
@@ -170,7 +172,7 @@ namespace ProjectMilan.MilanUDK
         /// <returns></returns>
         public static string GetMilanDecookedMaterialsDirectory()
         {
-            return Path.Combine(UDKDirectory.GetSharedPath(Program.Settings.MilanUDKPath), "MilanMaterials");
+            return Path.Combine(UDKDirectory.GetContentPath(Program.Settings.MilanUDKPath), "MilanAssets");
         }
 
         private static void addExtraFilesToLoadedFiles(CaseInsensitiveDictionary<string> loadedFiles)
