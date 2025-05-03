@@ -37,6 +37,23 @@ namespace ProjectMilan.MilanUDK
         }
     }
 
+    public class MaterialExpressionDefaults
+    {
+        public StructProperty OriginalProperty;
+        public string Name;
+        public string DefaultValue;
+
+        public static MaterialExpressionDefaults Generate(PropertyCollection properties, string propertyName, string defaults)
+        {
+            MaterialExpressionDefaults med = new MaterialExpressionDefaults()
+            {
+
+            };
+
+            return med;
+        }
+    }
+
     // Only verified on LE3
     public class BioMaterialExpressionFresnel(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
     {
@@ -46,9 +63,12 @@ namespace ProjectMilan.MilanUDK
             var inverted = originalProps.GetProp<BoolProperty>("Inverted")?.Value ?? false;
             var power = originalProps.GetProp<FloatProperty>("Power")?.Value ?? 1f;
 
+            var normalInput = originalProps.GetProp<StructProperty>("Normal")?.GetProp<ObjectProperty>("Expression")?.Value > 0;
+            var normalDefault = "float3(0.0, 0.0, 1.0)";
+
             // HLSL
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(@"float local = max( 0.0, min( 1.0, dot( float3(0.00000000,0.00000000,1.00000000), Normal ) ) );");
+            sb.AppendLine($@"float local = max( 0.0, min( 1.0, dot( float3(0.00000000,0.00000000,1.00000000), {(normalInput ? "Normal" : normalDefault)} ) ) );");
             if (inverted)
             {
                 sb.AppendLine(@"local = 1-local;");
@@ -62,7 +82,12 @@ namespace ProjectMilan.MilanUDK
         }
         protected override void AddCustomInputs(ArrayProperty<StructProperty> inputsArray, PropertyCollection originalProperties)
         {
-            AddCustomInput(inputsArray, "Normal", originalProperties.GetProp<StructProperty>("Normal"));
+            // If Normal is not set in original, we don't set it as an input
+            var normalInput = originalProperties.GetProp<StructProperty>("Normal")?.GetProp<ObjectProperty>("Expression")?.Value > 0;
+            if (normalInput)
+            {
+                AddCustomInput(inputsArray, "Normal", originalProperties.GetProp<StructProperty>("Normal"));
+            }
         }
     }
 
@@ -151,6 +176,11 @@ namespace ProjectMilan.MilanUDK
 
     public class BioMaterialExpressionPhongSpec(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
     {
+        protected override string GetReturnType()
+        {
+            return "CMOT_Float3";
+        }
+
         protected override string GetHLSLCode(PropertyCollection originalProps)
         {
             // Unsure how Masks affect this
@@ -348,7 +378,10 @@ namespace ProjectMilan.MilanUDK
             generatingProps.AddOrReplaceProp(inputsArray);
 
             // OutputType
-            // NOT CHANGED.
+            generatingProps.AddOrReplaceProp(new EnumProperty(GetReturnType(), "ECustomMaterialOutputType", MEGame.UDK, "OutputType"));
+
+            // Metadata
+            generatingProps.AddOrReplaceProp(new StrProperty(GetDescription(), "Description"));
 
             var classObj = EntryImporter.EnsureClassIsInFile(parent.FileRef, "MaterialExpressionCustom", rop);
             ExportEntry exp = new ExportEntry(parent.FileRef, parent, parent.FileRef.GetNextIndexedName("MaterialExpressionCustom"), properties: generatingProps)
@@ -359,6 +392,8 @@ namespace ProjectMilan.MilanUDK
 
             parent.FileRef.AddExport(exp);
             var test = exp.GetProperties();
+
+
 
             return exp;
         }
@@ -386,6 +421,20 @@ namespace ProjectMilan.MilanUDK
             }
 
             inputsArray.Add(new StructProperty("CustomInput", pc, "Inputs"));
+        }
+
+        /// <summary>
+        /// Value used as output type
+        /// </summary>
+        /// <returns></returns>
+        protected virtual string GetReturnType()
+        {
+            return "CMOT_Float1";
+        }
+
+        private string GetDescription()
+        {
+            return $"Original object: {Export.ObjectName.Instanced}";
         }
     }
 }
