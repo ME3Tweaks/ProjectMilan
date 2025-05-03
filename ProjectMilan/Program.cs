@@ -196,6 +196,8 @@ namespace ProjectMilan
 
             // Content build pipelines
             // This should not be required anymore
+            DonorBuilderPipeline.InventoryDonorPackages(); // This is outside of the RunPipeline because if you skip this pipeline, this will make it so it properly ports donors 
+
                 if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath)) // These require BIOP_MP_COMMON
                 return;
                 MilanShared.InstallMPCommonClassInfo(mpCommonPath);
@@ -239,6 +241,7 @@ namespace ProjectMilan
             RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
 
             // Conformance
+            if (false)
             RunPipeline(true, Conformance.RunPipeline, "Conformance");
 
             // Verification
@@ -305,12 +308,22 @@ namespace ProjectMilan
 
         private static void RunResearch()
         {
-#if DEBUG
+#if TRUE || DEBUG
             // Put your method in Research class and call it here.
             // Research.TestTextureToInstancesMap();
             // Research.DumpRefShaderNames();
-            // UDKSetup.DecookGameToUDK();
-            UDKSetup.TestConvertToUDK();
+            //UDKSetup.DecookGameToUDK();
+            //MELoadedFiles.InvalidateCaches();
+            //UDKSetup.TestConvertToUDK();
+            //UDKSetup.TestFixingUDKCrash();
+
+            //UDKSetupT3D.GeneratePackageInfos();
+
+            //Research.GeneratePerPackageNesting();
+            //UDKSetupT3D.DecookME3MPDLC();
+            //UDKSetupT3D.CompileT3Ds();
+            UDKSetupT3D.ConvertAssetsToUDK();
+            // Research.LightingBake();
 #endif
         }
     }
