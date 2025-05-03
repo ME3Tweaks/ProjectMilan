@@ -72,22 +72,9 @@ namespace ProjectMilan.Pipelines.Kits
 
             var kitSourcePackage = MilanShared.GetME3Package(kitPipeline.PackageName + ".pcc");
 
-            // Port classes first - this works around weird issue in tools where you're porting across games
-            // an entirely new class which doesn't exist in the destination game
-
-            //foreach (var cls in kitSourcePackage.Exports.Where(x => x.IsClass))
-            //{
-            //    if (kitDestPackage.FindExport(cls.InstancedFullPath) == null)
-            //    {
-            //        var rop2 = new RelinkerOptionsPackage() { Cache = kitPipeline.Cache, TargetGameDonorDB = MilanShared.LE3ObjectDB };
-            //        var results2 = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, cls,
-            //            kitDestPackage, null, true,
-            //            rop2,
-            //            out var newEntry2);
-            //    }
-            //}
-
-
+            // Before we port object referencer, we port loose classes found in the package from our catalog of classes
+            // This way we can pre-apply fixes in source rather than in post which makes for a cleaner build
+            MilanShared.PrePortClasses(kitSourcePackage, kitSourcePackage, kitPipeline.Cache, kitPipeline.LogCategory, DonorBuilderPipeline.MaterialDonorImporter);
 
             MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory, DonorBuilderPipeline.MaterialDonorImporter);
             MilanShared.PortLocalizations(kitPipeline.PackageName, outputPath, kitPipeline.Cache, kitPipeline.LogCategory);

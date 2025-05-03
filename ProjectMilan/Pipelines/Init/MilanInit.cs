@@ -165,7 +165,7 @@ namespace ProjectMilan.Pipelines.Init
             }
         }
 
-        private static ObjectInstanceDB LoadObjectDB(MEGame game)
+        public static ObjectInstanceDB LoadObjectDB(MEGame game)
         {
             MilanLog.Information($"Loading {game} object database");
             using var zip = ZipFile.OpenRead(Path.Combine(MilanShared.PipelineRoot, @"Init", $@"{game}ObjectDatabase.zip"));
@@ -174,7 +174,6 @@ namespace ProjectMilan.Pipelines.Init
             dbStream.CopyTo(memStr);
             memStr.Position = 0;
             return ObjectInstanceDB.Deserialize(game, memStr);
-
         }
     }
 }

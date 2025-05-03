@@ -282,8 +282,6 @@ namespace ProjectMilan.Pipelines.Weapons
 
         public static string DecompileClass(ExportEntry classExp, FileLib fileLib, PackageCache cache)
         {
-            if (classExp.ObjectName == "DamageType")
-                Debug.WriteLine("");
             var usingTestPatch = false;
             if (classExp.Game == MEGame.ME3)
             {
@@ -349,7 +347,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
             // Insert metadata about autogen
             //newFunction.Insert(0, $"// Source: {classExp.FileRef.Game}, {classExp.FileRef.FileNameNoExtension}");
-            //newFunction.Insert(1, $"// Decompiled {DateTime.Now}");
+            //newFunction.Insert(1, $"// Initial decompilation: {DateTime.Now}");
             return string.Join('\n', newFunction);
             //File.WriteAllLines(ucOutPath, newFunction);
         }

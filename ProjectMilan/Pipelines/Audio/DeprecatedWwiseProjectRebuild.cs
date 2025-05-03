@@ -36,6 +36,9 @@ namespace ProjectMilan.Pipelines.Audio
         // This will probably be one of the later pipelines
         public static void RunPipeline(List<MilanBankRebuildInfo> bankInventory, AudioVars vars)
         {
+            // DEPRECATED AND DISABLED
+
+            /*
             MilanLog.Information("The following banks will be built into the WwiseProject:", customPrefix: LOG_CATEGORY);
             foreach (var lifp in bankInventory)
             {
@@ -97,6 +100,7 @@ namespace ProjectMilan.Pipelines.Audio
             {
                 InstallWwiseBanksInto(pf, banksCache);
             }
+            */
         }
 
         private static void InstallWwiseBanksInto(string pf, PackageCache banksCache)

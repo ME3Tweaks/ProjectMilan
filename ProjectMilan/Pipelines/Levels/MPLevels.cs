@@ -93,8 +93,14 @@ namespace ProjectMilan.Pipelines.Levels
         {
             TieredPackageCache parent = MilanShared.GetMPCommonTieredPackageCache();
 
+            // 04/30/2025 - If we are not doing static lighting, we can use our 
+            // donors, at least until we figure out how to compile shaders for LE
+            // from the HLSL builder
+            if (!Program.Settings.IsStaticLightingBuild)
+            {
             // Register our custom made donors generated from the donor build pipeline
             SharedMaterialDonor.RegisterLocalDonors(Path.Combine(MilanShared.PipelineRoot, "Materials", "Build"));
+            }
 
             foreach (var level in levelVars.LevelPipelines)
             {
@@ -223,7 +229,7 @@ namespace ProjectMilan.Pipelines.Levels
             // SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetDonorsPath());
 
             // Print donors for global shader converter.
-            MilanLog.Information("Material donors required: ", customPrefix: levelPipeline.LogCategory);
+            // MilanLog.Information("Material donors required: ", customPrefix: levelPipeline.LogCategory);
             //List<string> shadersListed = new List<string>();
             //foreach (var me3BrokenMat in levelPipeline.MaterialsNeedingDonors)
             //{

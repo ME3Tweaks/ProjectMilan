@@ -1,0 +1,3 @@
+﻿The LooseClasses folder contains loose classes that can be selectively compiled into a package. All modifications should be denoted with Milan comments and dates.
+
+DO NOT DELETE FILES OUT OF THIS FOLDER.

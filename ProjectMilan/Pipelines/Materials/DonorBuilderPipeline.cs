@@ -1,10 +1,4 @@
-﻿using ProjectMilan.Pipelines.Weapons;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.UnrealScript;
 using ProjectMilanCore;
@@ -14,7 +8,6 @@ using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal.Classes;
 using ProjectMilan.Utility;
-using CsvHelper.Configuration;
 using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
@@ -22,9 +15,7 @@ using ProjectMilan.Pipelines.Shared;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Shaders;
-using Serilog;
 using SharpDX.D3DCompiler;
-using SixLabors.ImageSharp.ColorSpaces;
 
 namespace ProjectMilan.Pipelines.Materials
 {
@@ -158,8 +149,8 @@ namespace ProjectMilan.Pipelines.Materials
             var packageOutputFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Build");
             if (Directory.Exists(packageOutputFolder))
             {
-            DonorObjects.ReplaceAll(Directory.GetFiles(packageOutputFolder, "*.pcc", SearchOption.AllDirectories).Select(Path.GetFileNameWithoutExtension));
-        }
+                DonorObjects.ReplaceAll(Directory.GetFiles(packageOutputFolder, "*.pcc", SearchOption.AllDirectories).Select(Path.GetFileNameWithoutExtension));
+            }
         }
 
         private static void InternalRunPipeline(DonorBuildVars vars)
@@ -170,6 +161,9 @@ namespace ProjectMilan.Pipelines.Materials
 
         private static void BuildDonorPackages(DonorBuildVars vars)
         {
+
+            //04/15/2025 - Disabling as we are trying to use game compiler
+            return; // Not doing this for now.
 
             var texturesFolder = Path.Combine(MilanShared.PipelineRoot, "Materials", "Textures");
             foreach (var tex in Directory.GetFiles(texturesFolder, "*.*"))
@@ -408,7 +402,7 @@ namespace ProjectMilan.Pipelines.Materials
             }
         }
 
-        private static IEntry DonorBuildResolver(IMEPackage destPackage, string ifp)
+        private static IEntry DonorBuildResolver(IMEPackage destPackage, string ifp, string classname)
         {
             var possibleDonors = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp, destPackage.Localization);
             if (possibleDonors == null)
