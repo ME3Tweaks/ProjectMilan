@@ -843,12 +843,12 @@ namespace ProjectMilanCore
         public static PackageCache LE3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
         public static PackageCache ME3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3).ChainNewCache();
 
-        public static IEntry MissingObjectResolverExportsAsImports(IMEPackage package, string ifp)
+        public static IEntry MissingObjectResolverExportsAsImports(IMEPackage package, string ifp, string classname)
         {
             return MissingObjectResolver(package, ifp, true);
         }
 
-        public static IEntry MissingObjectResolver(IMEPackage package, string ifp)
+        public static IEntry MissingObjectResolver(IMEPackage package, string ifp, string className)
         {
             return MissingObjectResolver(package, ifp, false);
         }
