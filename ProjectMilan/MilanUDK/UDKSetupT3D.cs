@@ -127,6 +127,7 @@ namespace ProjectMilan.MilanUDK
             // Decooked
             var outPathS1 = @"S:\Milan\UDK\MilanMaterialDecook_T3D";
             var outPathS2 = @"S:\Milan\UDK\MilanMaterialDecook_ME3MP";
+            var outPathS3 = @"Z:\ModLibrary\LE3\Project Milan\Extras\Packages\LE3";
 
             // Merge (decooked also)
             var mergePathS1 = @"S:\Milan\UDK\MilanMaterialDecook_ToCombine";
@@ -136,7 +137,7 @@ namespace ProjectMilan.MilanUDK
             MilanShared.LE3ObjectDB ??= MilanInit.LoadObjectDB(MEGame.LE3);
             MilanShared.ME3ObjectDB ??= MilanInit.LoadObjectDB(MEGame.ME3);
 
-            ConvertAssetsToUDK(outPathFinal, [outPathS1, outPathS2], [mergePathS1]);
+            ConvertAssetsToUDK(outPathFinal, [outPathS1, outPathS2, outPathS3], [mergePathS1]);
         }
 
         /// <summary>
@@ -188,10 +189,11 @@ namespace ProjectMilan.MilanUDK
                     using var udkP = MEPackageHandler.CreateAndOpenPackage(outPath, MEGame.UDK);
 
                     ConvertPackageToUncooked(le3P);
+                    TrimExportToUDKProps(le3P);
 
 
                     // referencer will already exist, this will return it
-                    var referencer = ExportCreator.CreateObjectReferencer(le3P);
+                    var referencer = le3P.CreateObjectReferencer();
 
 
                     var rop = new RelinkerOptionsPackage()
@@ -279,6 +281,21 @@ namespace ProjectMilan.MilanUDK
 
         end:
             GenerateMissingTexturePackage(outPathFinal);
+        }
+
+        /// <summary>
+        /// Trims specific properties we don't want carried over to UDK
+        /// </summary>
+        /// <param name="le3P"></param>
+        private static void TrimExportToUDKProps(IMEPackage le3P)
+        {
+            foreach(var exp in le3P.Exports)
+            {
+                if (exp.IsA("Material") || exp.IsA("MaterialInstance"))
+                {
+                    exp.RemoveProperty("PhysMaterial");
+                }
+            }
         }
 
         /// <summary>
@@ -426,7 +443,7 @@ namespace ProjectMilan.MilanUDK
 
             // Reference objects - we will port the referencer
             var referencedObjects = le3P.Exports.Where(x => x != selfExp && x.ClassName != "Package").ToList();
-            var referencer = ExportCreator.CreateObjectReferencer(le3P);
+            var referencer = le3P.CreateObjectReferencer();
             referencer.WriteProperty(new ArrayProperty<ObjectProperty>(referencedObjects.Select(x => new ObjectProperty(x)), "ReferencedObjects"));
 
             // If object is not directly referenced, keep it in package anyways.

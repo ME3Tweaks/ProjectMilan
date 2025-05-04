@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Utility;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 
 namespace ProjectMilan.Pipelines.StaticLighting
 {
@@ -25,13 +26,13 @@ namespace ProjectMilan.Pipelines.StaticLighting
             return Directory.CreateDirectory(Path.Combine(UDKDirectory.SharedPath, "Assets", mapName)).FullName;
         }
 
-        public static void ExportLevelToUDK(IMEPackage Pcc)
+        public static void ExportLevelToUDK(IMEPackage levelMaster)
         {
             // Set UDK paths so we don't have to change LEC code. This doesn't persist.
             UDKDirectory.DefaultGamePath = Program.Settings.MilanUDKPath;
             LegendaryExplorerCoreLibSettings.Instance.UDKCustomDirectory = Program.Settings.MilanUDKPath;
 
-            string persistentLevelFileName = Pcc.FileNameNoExtension;
+            string persistentLevelFileName = levelMaster.FileNameNoExtension;
 
             var mapOutputPath = GetMapOutputPath(persistentLevelFileName);
             var assetOutputPath = GetAssetsOutputPath(persistentLevelFileName);
@@ -41,19 +42,38 @@ namespace ProjectMilan.Pipelines.StaticLighting
             Utilities.DeleteFilesAndFoldersRecursively(assetOutputPath, deleteDirectoryItself: false);
             var decookedMaterialsDir = UDKSetup.GetMilanDecookedMaterialsDirectory();
 
-            string persistentPath = ConvertToUDK.GenerateUDKFileForLevel(Pcc, mapOutputPath, assetOutputPath, decookedMaterialsDir);
+            // This is kind of a hack. This is just so we can pass the delegates through 
+            // without having to change stuff in LEC right now.
+            RelinkerOptionsPackage delegatesROP = new RelinkerOptionsPackage();
+            delegatesROP.CustomRelinkUIndex = UDKSetupT3D.ImportOutsideOfPackageRelink;
+
+            string persistentPath = ConvertToUDK.GenerateUDKFileForLevel(levelMaster, mapOutputPath, assetOutputPath, decookedMaterialsDir);
             var levelFiles = new List<string>();
-            if (Pcc is MEPackage mePackage)
+            if (levelMaster is MEPackage mePackage)
             {
-                var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(Pcc.Game);
+                var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(levelMaster.Game);
                 foreach (string additionalPackage in mePackage.AdditionalPackagesToCook)
                 {
                     if (loadedFiles.TryGetValue($"{additionalPackage}.pcc", out string filePath))
                     {
                         MilanLog.Information($"Converting sublevel {additionalPackage} to UDK", customPrefix: LOG_CATEGORY);
                         using IMEPackage levPcc = MEPackageHandler.OpenMEPackage(filePath); 
-                        levelFiles.Add(ConvertToUDK.GenerateUDKFileForLevel(levPcc, mapOutputPath, assetOutputPath, decookedMaterialsDir));
+                        levelFiles.Add(ConvertToUDK.GenerateUDKFileForLevel(levPcc, mapOutputPath, assetOutputPath, decookedMaterialsDir, delegatesROP));
+                        continue;
                     }
+
+                    // Not found; try local directory for master
+                    var masterFolder = Directory.GetParent(levelMaster.FilePath).FullName;
+                    var testFile = Path.Combine(masterFolder, additionalPackage + ".pcc");
+                    if (File.Exists(testFile))
+                    {
+                        MilanLog.Information($"Converting sublevel {additionalPackage} to UDK", customPrefix: LOG_CATEGORY);
+                        using IMEPackage levPcc = MEPackageHandler.OpenMEPackage(testFile);
+                        levelFiles.Add(ConvertToUDK.GenerateUDKFileForLevel(levPcc, mapOutputPath, assetOutputPath, decookedMaterialsDir, delegatesROP));
+                        continue;
+                    }
+
+                    MilanLog.Error($"Sublevel file not found: {additionalPackage}, skipping...", customPrefix: LOG_CATEGORY);
                 }
 
                 using IMEPackage persistentUDK = MEPackageHandler.OpenUDKPackage(persistentPath);
