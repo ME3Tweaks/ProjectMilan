@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ME3Tweaks.Wwiser", "Legenda
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MilanShaderCompiler", "MilanShaderCompiler\MilanShaderCompiler.vcxproj", "{5611BE38-299C-4D73-9A5E-BCA786E52AE1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MilanShaderHost", "MilanShaderHost\MilanShaderHost.csproj", "{89C14AD8-A2DA-486A-86CA-862667833CC6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -355,6 +357,42 @@ Global
 		{5611BE38-299C-4D73-9A5E-BCA786E52AE1}.WinRelease|x64.Build.0 = Release|x64
 		{5611BE38-299C-4D73-9A5E-BCA786E52AE1}.WinRelease|x86.ActiveCfg = Release|Win32
 		{5611BE38-299C-4D73-9A5E-BCA786E52AE1}.WinRelease|x86.Build.0 = Release|Win32
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Debug|x64.Build.0 = Debug|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Debug|x86.Build.0 = Debug|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Release|x64.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Release|x64.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Release|x86.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.Release|x86.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureRelease|Any CPU.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureRelease|x64.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureRelease|x64.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureRelease|x86.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureRelease|x86.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureTest|Any CPU.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureTest|Any CPU.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureTest|x64.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureTest|x64.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureTest|x86.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinAzureTest|x86.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinDebug|Any CPU.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinDebug|Any CPU.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinDebug|x64.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinDebug|x64.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinDebug|x86.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinDebug|x86.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinRelease|Any CPU.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinRelease|x64.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinRelease|x64.Build.0 = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinRelease|x86.ActiveCfg = Release|Any CPU
+		{89C14AD8-A2DA-486A-86CA-862667833CC6}.WinRelease|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
