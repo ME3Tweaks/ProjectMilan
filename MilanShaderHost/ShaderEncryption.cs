@@ -45,7 +45,7 @@ namespace MilanShaderHost
             for (int inputIndex = 0; inputIndex < input.Length; inputIndex++, cipherIndex++)
             {
                 var actualCipherIndex = cipherIndex % 761; // Keep in bounds of the table.
-                input[inputIndex] = (byte)(input[inputIndex] ^ CipherTable[actualCipherIndex]);
+                input[inputIndex] ^= CipherTable[actualCipherIndex];
             }
         }
 

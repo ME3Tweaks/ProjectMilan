@@ -3,7 +3,7 @@
     /// <summary>
     /// Describes the result of a compilation
     /// </summary>
-    internal class D3D11ShaderCompileResult
+    public class D3D11ShaderCompileResult
     {
         public D3D11ShaderCompileResult()
         {

@@ -1,16 +1,18 @@
 ﻿using LegendaryExplorerCore.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MilanShaderHost
 {
     /// <summary>
     /// Represents the task that is submitted to UE3ShaderCompileWorker.
     /// </summary>
-    class ShaderCompilerJobList
+    public class ShaderCompilerJobList
     {
         public ShaderCompilerJobList() { }
 
@@ -24,8 +26,8 @@ namespace MilanShaderHost
             }
         }
 
-        public void Serialize() {
-
+        public void Serialize()
+        {
             using var fs = File.OpenWrite(Path.Combine(WorkingDirectory, InputFilename));
             Serialize(fs);
         }
@@ -98,8 +100,8 @@ namespace MilanShaderHost
         /// List of jobs in the file
         /// </summary>
         public List<ShaderJob> Jobs { get; } = new();
-        public string WorkingDirectory { get; internal set; }
-        public string InputFilename { get; internal set; }
-        public string OutputFilename { get; internal set; }
+        public string WorkingDirectory { get; set; }
+        public string InputFilename { get; set; }
+        public string OutputFilename { get; set; }
     }
 }

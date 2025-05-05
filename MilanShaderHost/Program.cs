@@ -17,16 +17,16 @@ namespace MilanShaderHost
 
         public async static Task Main(string[] args)
         {
-            var inputHlsl = File.ReadAllText(@"E:\UDK2015\MilanShaderComp\PickUpSwipe_MM.hlsl");
+            var inputHlsl = File.ReadAllText(@"S:\Milan\UDK\MilanShaderComp\PickUpSwipe_MM.hlsl");
             var wasOK = await CompileShader(inputHlsl);
         }
 
-        public async static Task<bool> CompileShader()
+        public async static Task<bool> CompileShader(string hlsl)
         {
-            var processPath = "E:\\SteamLibrary\\steamapps\\common\\Mass Effect Legendary Edition\\Game\\ME3\\Binaries\\ShaderCompiler\\UE3ShaderCompileWorker.exe";
+            var processPath = "S:\\SteamLibrary\\steamapps\\common\\Mass Effect Legendary Edition\\Game\\ME3\\Binaries\\ShaderCompiler\\UE3ShaderCompileWorker.exe";
 
             // Where files go
-            var workingDirectory = "E:\\UDK2015\\MilanShaderComp\\Scratch\\";
+            var workingDirectory = "S:\\Milan\\UDK\\MilanShaderComp\\Scratch\\";
 
             // Process id of calling proc?
             var parentId = Process.GetCurrentProcess().Id.ToString();
@@ -43,14 +43,19 @@ namespace MilanShaderHost
 
             var inputFilePath = $@"{workingDirectory}\{inFileName}";
 
+
+            // This is for debugging only - this puts down the rest of the packet
+            File.Copy(@"S:\Milan\UDK\MilanShaderComp\WorkerInputOnly.in", Path.Combine(workingDirectory, inFileName), true);
+
             var sci = new ShaderCompilerJobList();
             sci.WorkingDirectory = workingDirectory;
             sci.InputFilename = inFileName;
             sci.OutputFilename = outFileName;
+            sci.ReadInput();
+            sci.Jobs[0].ShaderInput.SourceText = hlsl;
 
             sci.Serialize();
 
-            sci.ReadInput();
             
             var result = await Cli.Wrap(processPath)
                      .WithArguments([workingDirectory, parentId, threadId, inFileName, outFileName])

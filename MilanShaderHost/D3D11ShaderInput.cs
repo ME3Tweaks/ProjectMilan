@@ -9,6 +9,17 @@ namespace MilanShaderHost
     /// </summary>
     public class D3D11ShaderInput
     {
+        /// <summary>
+        /// Shader type. We only care about D3D11, so this is always 0.
+        /// </summary>
+        public int ShaderJobType { get; set; }
+
+        /// <summary>
+        /// Version number of file format
+        /// </summary>
+        public byte JobVersion { get; set; }
+
+        // Shader stuff.
         public string SourceFileName { get; set; }
         public string SourceText { get; set; }
         public string EntryPoint { get; set; }
@@ -19,49 +30,63 @@ namespace MilanShaderHost
         public CaseInsensitiveDictionary<string> Includes { get; } = new();
         public CaseInsensitiveDictionary<string> Macros { get; } = new();
 
-        public D3D11ShaderInput(Stream inStream)
+        public D3D11ShaderInput(Stream fs)
         {
-            SourceFileName = inStream.ReadUnrealString();
-            SourceText = inStream.ReadUnrealString();
-            EntryPoint = inStream.ReadUnrealString();
-            ShaderProfile = inStream.ReadUnrealString();
-            CompileFlags = inStream.ReadInt32();
-            IncludesPath = inStream.ReadUnrealString();
-            var numIncludes = inStream.ReadInt32();
+            var inPos = fs.Position;
+            ShaderJobType = fs.ReadInt32();
+            JobVersion = (byte) fs.ReadByte();
+
+            SourceFileName = fs.ReadUnrealString();
+            SourceText = fs.ReadUnrealString();
+            EntryPoint = fs.ReadUnrealString();
+            ShaderProfile = fs.ReadUnrealString();
+            CompileFlags = fs.ReadInt32();
+            IncludesPath = fs.ReadUnrealString();
+
+            var numIncludes = fs.ReadInt32();
             while (numIncludes > 0)
             {
-                Includes[inStream.ReadUnrealString()] = inStream.ReadUnrealString();
+                Includes[fs.ReadUnrealString()] = fs.ReadUnrealString();
                 numIncludes--;
             }
 
-            var numMacros = inStream.ReadInt32();
+            var numMacros = fs.ReadInt32();
             while (numMacros > 0)
             {
-                Macros[inStream.ReadUnrealString()] = inStream.ReadUnrealString();
+                Macros[fs.ReadUnrealString()] = fs.ReadUnrealString();
                 numMacros--;
             }
+            Console.WriteLine($"ShaderInputLen: {(fs.Position - inPos)}");
+
         }
 
         public void Serialize(Stream fs)
         {
-            fs.WriteUnrealStringUnicode(SourceFileName);
-            fs.WriteUnrealStringUnicode(SourceText);
-            fs.WriteUnrealStringUnicode(EntryPoint);
-            fs.WriteUnrealStringUnicode(ShaderProfile);
+            var inPos = fs.Position;
+            fs.WriteInt32(ShaderJobType);
+            fs.WriteByte(JobVersion);
+
+            fs.WriteShaderString(SourceFileName);
+            fs.WriteShaderString(SourceText);
+            fs.WriteShaderString(EntryPoint);
+            fs.WriteShaderString(ShaderProfile);
             fs.WriteInt32(CompileFlags);
-            fs.WriteUnrealStringUnicode(IncludesPath);
+            fs.WriteShaderString(IncludesPath);
+
             fs.WriteInt32(Includes.Count);
             foreach (var inc in Includes)
             {
-                fs.WriteUnrealStringUnicode(inc.Key);
-                fs.WriteUnrealStringUnicode(inc.Value);
+                fs.WriteShaderString(inc.Key);
+                fs.WriteShaderString(inc.Value);
             }
             fs.WriteInt32(Macros.Count);
             foreach (var macro in Macros)
             {
-                fs.WriteUnrealStringUnicode(macro.Key);
-                fs.WriteUnrealStringUnicode(macro.Value);
+                fs.WriteShaderString(macro.Key);
+                fs.WriteShaderString(macro.Value);
             }
+            var outPos = fs.Position;
+            Console.WriteLine($"Reserialized ShaderInputLen: {(outPos - inPos)}");
         }
 
         public void Print()
