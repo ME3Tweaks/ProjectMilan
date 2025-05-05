@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using LegendaryExplorerCore.Helpers;
 
 namespace MilanShaderHost
 {
@@ -51,6 +47,35 @@ namespace MilanShaderHost
                 var actualCipherIndex = cipherIndex % 761; // Keep in bounds of the table.
                 input[inputIndex] = (byte)(input[inputIndex] ^ CipherTable[actualCipherIndex]);
             }
+        }
+
+        /// <summary>
+        /// Decrypts UDK shader sources to .usf files.
+        /// </summary>
+        public static void DecryptShaderSources()
+        {
+            // Enter path to UDK shaders folder
+            var baseDir = @"E:\UDK2015\Engine\Shaders";
+            var encryptedDir = Path.Combine(baseDir, "Binaries");
+            var decrypteddir = Path.Combine(baseDir, "Sources");
+
+            var files = Directory.GetFiles(encryptedDir);
+            Directory.CreateDirectory(decrypteddir);
+
+            foreach (var f in files)
+            {
+                Console.WriteLine($"Decrypting {f}");
+                using var fs = File.OpenRead(f);
+
+                // Some sort of header... decomp shows it just skips 24 bytes for some reason
+                fs.Skip(24); // First int seems to always be 1.
+
+                var remaining = fs.ReadFully();
+                ShaderEncryption.ApplyXorCipher(remaining);
+                var outPath = Path.Combine(decrypteddir, $"{Path.GetFileNameWithoutExtension(f)}.usf");
+                File.WriteAllBytes(outPath, remaining);
+            }
+
         }
     }
 }
