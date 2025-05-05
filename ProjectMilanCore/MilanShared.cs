@@ -503,6 +503,8 @@ namespace ProjectMilanCore
             public bool Completed;
         }
 
+        private static object globalDumpObj = new object();
+
         /// <summary>
         /// Ports an object referencer across games.
         /// </summary>
@@ -639,6 +641,30 @@ namespace ProjectMilanCore
             }
 
 
+#if DEBUG
+            // Dump classes out to loose classes folder
+            foreach (var cls in destPackage.Exports.Where(x => x.IsClass))
+            {
+                var linker = cls.GetLinker();
+                if (linker.CaseInsensitiveEquals("SFXGame"))
+                {
+                    continue;
+                }
+                if (linker.CaseInsensitiveEquals("SFXGameContent"))
+                {
+                    continue;
+                }
+                var outFolder = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, "Shared", "ClassLibrary", "LooseClasses", cls.GetLinker())).FullName;
+                var existingUC = Path.Combine(outFolder, cls.ObjectName+".uc");
+                lock (globalDumpObj)
+                {
+                    if (!File.Exists(existingUC))
+                    {
+                        MilanShared.DecompileClassToFile(cls, lib, cache, existingUC);
+                    }
+                }
+            }
+#endif
 
             //foreach (var clsIFP in ClassesToDoubleRecompile)
             //{
@@ -655,6 +681,67 @@ namespace ProjectMilanCore
             destPackage.Save();
             MilanShared.RefreshMilanFiles = true;
         }
+
+        /// <summary>
+        /// Decompiles a class to the file path specified, prepending milan autogen information
+        /// </summary>
+        /// <param name="classExp"></param>
+        /// <param name="fileLib"></param>
+        /// <param name="cache"></param>
+        /// <param name="outputPath"></param>
+        public static void DecompileClassToFile(ExportEntry classExp, FileLib fileLib, PackageCache cache, string outputPath)
+        {
+            var usingTestPatch = false;
+            if (classExp.Game == MEGame.ME3)
+            {
+                // We must first see if this is in testpatch!!
+                var testPatchClass = MilanShared.GetTestPatchClass(classExp);
+                if (testPatchClass != null)
+                {
+                    usingTestPatch = true;
+                    classExp = testPatchClass;
+                    fileLib = null; // Must re-init
+                }
+            }
+
+            MilanLog.Information($"Decompiling {classExp.FileRef.Game} {classExp.InstancedFullPath}", customPrefix: @"MILAN-Decompiler");
+            if (usingTestPatch)
+            {
+                MilanLog.Information($@"  Using DLC_TestPatch version of {classExp.InstancedFullPath}", customPrefix: @"MILAN-Decompiler");
+            }
+            UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+            {
+                Cache = cache,
+            };
+
+            if (fileLib == null)
+            {
+                // Initialize filelib if it wasn't.
+                try
+                {
+
+                    fileLib = new FileLib(classExp.FileRef);
+                    if (!fileLib.Initialize(usop))
+                    {
+                        MilanShared.LogFailedFileLibInit(fileLib);
+                    }
+                }
+                catch
+                {
+                    //we're not checking if it failed to initialize because we don't really care, since decompilation doesn't actually need an initialized filelib,
+                    //it just makes the output a bit nicer (at the time of this writing all it does is resolve some integer literals into enum values)
+                }
+            }
+
+            (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib, usop);
+
+            var newClassText = functionText.Split('\n').ToList();
+
+            // Insert metadata about autogen
+            newClassText.Insert(0, $"// Source: {classExp.FileRef.Game}, {classExp.FileRef.FileNameNoExtension}");
+            newClassText.Insert(1, $"// Initial decompilation: {DateTime.Now}");
+            File.WriteAllLines(outputPath, newClassText);
+            }
 
         private static IMEPackage GetME3Package(string arg)
         {
@@ -1301,6 +1388,56 @@ namespace ProjectMilanCore
                     MilanShared.RefreshMilanFiles = true;
                 }
             }
+        }
+
+        /// <summary>
+        /// Maps a class name to preloaded source text for use when compiling classes out of the class library
+        /// </summary>
+        private static CaseInsensitiveConcurrentDictionary<string> _classLibraryToSourceMap = new();
+
+        /// <summary>
+        /// Uses LooseClassCompiler to compile classes from source out of the ClassLibrary, for classes in the source package into the destination package.
+        /// </summary>
+        /// <param name="me3Package"></param>
+        /// <param name="le3Package"></param>
+        /// <param name="cache"></param>
+        /// <param name="logCategory"></param>
+        /// <param name="materialDonorImporter"></param>
+        public static bool PrePortClasses(IMEPackage me3Package, IMEPackage le3Package, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, IEntry> materialDonorImporter)
+        {
+            // Load classes from the class library
+
+            UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+            {
+                Cache = cache,
+                MissingObjectResolver = MilanShared.MissingObjectResolverExportsAsImports,
+                CustomFileResolver = MilanShared.LE3PackageResolver,
+                GetVTableFromDonor = MilanShared.GetVTableFromDonor
+            };
+
+            MilanLog.Information(@"Compiling LE3 class package", customPrefix: logCategory);
+            return true;
+            /*
+            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(le3Package, classes, usop);
+
+            if (log.HasErrors)
+            {
+                //if (AttemptToFindMissingClasses(log, pipeline, out var containingPackage, out var lClass))
+                //{
+                //    AddClassToCompilation(classes, containingPackage, lClass);
+                //    return false; // False - forces recomp
+                //}
+                MilanLog.Error($"PRE-PORTING OF CLASSES FAILED IN PACKAGE {le3Package.FileNameNoExtension}", customPrefix: logCategory);
+                foreach (var error in log.AllErrors)
+                {
+                    MilanLog.Error($"  {error}", customPrefix: logCategory);
+                }
+
+                return false;
+            }
+
+            return true;
+            */
         }
     }
 }
