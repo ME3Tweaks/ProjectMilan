@@ -1,11 +1,4 @@
 ﻿using LegendaryExplorerCore.Helpers;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MilanShaderHost
 {
@@ -28,7 +21,7 @@ namespace MilanShaderHost
 
         public void Serialize()
         {
-            using var fs = File.OpenWrite(Path.Combine(WorkingDirectory, InputFilename));
+            using var fs = File.Create(Path.Combine(WorkingDirectory, InputFilename));
             Serialize(fs);
         }
 
@@ -92,6 +85,41 @@ namespace MilanShaderHost
         }
 
         /// <summary>
+        /// Propogates changes that compiler needs to work.
+        /// </summary>
+        /// <param name="compiler">The compiler target</param>
+        internal void SetCompiler(ECompiler compiler)
+        {
+            foreach (var job in Jobs)
+            {
+                job.ShaderInput.SetJobType(compiler);
+            }
+        }
+
+        /// <summary>
+        /// For LE only.
+        /// </summary>
+        /// <param name="usfName"></param>
+        internal void SetUSF(string usfName)
+        {
+            var exeDir = Directory.GetParent(SimulatedExeLocation).FullName;
+            Jobs[0].ShaderInput.SourceFileName = usfName;
+            Jobs[0].ShaderInput.SourceText = File.ReadAllText(Path.Combine(exeDir, Jobs[0].ShaderInput.IncludesPath, $"{usfName}.usf"));
+        }
+
+        internal void SetVertexFactory(string v)
+        {
+            var exeDir = Directory.GetParent(SimulatedExeLocation).FullName;
+            Jobs[0].ShaderInput.Includes.Add("VertexFactory.usf", File.ReadAllText(Path.Combine(exeDir, Jobs[0].ShaderInput.IncludesPath, $"{v}.usf")));
+        }
+
+        internal void SetMaterial(string hlsl)
+        {
+            var exeDir = Directory.GetParent(SimulatedExeLocation).FullName;
+            Jobs[0].ShaderInput.Includes.Add("Material.usf", hlsl);
+        }
+
+        /// <summary>
         ///  Seems to always be zero. Decomp shows this value is checked to be zero. Probably a version check
         /// </summary>
         public uint BatchVersion { get; set; }
@@ -103,5 +131,10 @@ namespace MilanShaderHost
         public string WorkingDirectory { get; set; }
         public string InputFilename { get; set; }
         public string OutputFilename { get; set; }
+
+        /// <summary>
+        /// Used to compute paths as they would be from the exe we are going to run.
+        /// </summary>
+        public string SimulatedExeLocation { get; set; }
     }
 }

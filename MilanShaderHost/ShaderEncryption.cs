@@ -39,7 +39,7 @@ namespace MilanShaderHost
             // Every byte read increments the index, which is modulo'd to stay in the
             // cipher table. That index is then xor'd against the byte at the input index
             // The starting index is chosen based on the input size
-            uint cipherIndex = (uint) (240169 + (244109 * input.Length));
+            uint cipherIndex = (uint)(240169 + (244109 * input.Length));
 
             // We increment both input and cipher indices since both have to move together.
             for (int inputIndex = 0; inputIndex < input.Length; inputIndex++, cipherIndex++)
@@ -75,7 +75,32 @@ namespace MilanShaderHost
                 var outPath = Path.Combine(decrypteddir, $"{Path.GetFileNameWithoutExtension(f)}.usf");
                 File.WriteAllBytes(outPath, remaining);
             }
+        }
 
+        /// <summary>
+        /// Encrypts LE shader sources to .bin files, so UE3ShaderCompileWorker from UDK will see them.
+        /// </summary>
+        public static void EncryptShaderSources()
+        {
+            // Enter path to LE shaders folder
+            var baseDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\Engine\Shaders";
+            var encryptedDir = Path.Combine(baseDir, "Binaries");
+
+            var files = Directory.GetFiles(baseDir);
+            Directory.CreateDirectory(encryptedDir);
+
+            foreach (var f in files)
+            {
+                Console.WriteLine($"Encrypting {f}");
+                var ms = new MemoryStream();
+                ms.WriteZeros(24); // These don't seem to matter?
+
+                var payload = File.ReadAllBytes(f);
+                ShaderEncryption.ApplyXorCipher(payload);
+                ms.Write(payload);
+                var outPath = Path.Combine(encryptedDir, $"{Path.GetFileNameWithoutExtension(f)}.bin");
+                ms.WriteToFile(outPath);
+            }
         }
     }
 }

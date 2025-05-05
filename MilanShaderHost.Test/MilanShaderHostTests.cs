@@ -30,6 +30,12 @@ namespace MilanShaderHost.Test
                 LegendaryExplorerCore.DebugTools.DebugUtilities.CompareByteArrays(originalData, newData);
             }
             Assert.IsTrue(dataIsSame, "Reserialization of ShaderCompilerJobList produced a different end result than the input.");
+
+
+            sci.Jobs[0].ShaderInput.SourceText = "BlahBlahBlah";
+            var ms2 = new MemoryStream();
+            sci.Serialize(ms2);
+            Assert.IsFalse(originalData.SequenceEqual(ms2.ToArray()), "Reserialization of was the same, even though we changed the source text!");
         }
 
         /// <summary>

@@ -133,5 +133,13 @@ namespace MilanShaderHost
                 File.WriteAllText(outPath, inc.Value);
             }
         }
+
+        internal void SetJobType(ECompiler compiler)
+        {
+            if (compiler == ECompiler.BIOWARE)
+                ShaderJobType = 1; // D3D "10" according to decomp. Probably D3D11 in reality.
+            else
+                ShaderJobType = 0; // D3D11
+        }
     }
 }
