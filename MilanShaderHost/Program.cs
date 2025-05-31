@@ -1,4 +1,5 @@
 ﻿using CliWrap;
+using LegendaryExplorerCore;
 using System.Diagnostics;
 
 namespace MilanShaderHost
@@ -13,6 +14,25 @@ namespace MilanShaderHost
 
         public async static Task Main(string[] args)
         {
+            Console.WriteLine("Welcome to Milan Shader Host");
+            Console.WriteLine("By ME3Tweaks");
+            Console.WriteLine();
+
+            // Initialize
+            LegendaryExplorerCoreLib.InitLib(null, x => { });
+            MilanShaderPackageBuilder.SourceFolders.Add(@"Z:\ModLibrary\LE3\Project Milan\Extras\Packages\LE3");
+            MilanShaderPackageBuilder.SourceFolders.Add(@"S:\Milan\UDK\MilanMaterialDecook_T3D");
+
+            // Build the map package that contains the shaders we want to compile
+            //MilanShaderPackageBuilder.BuildMapPackage(@"Z:\ModLibrary\LE3\Project Milan\Extras\Packages\LE3\BioT_GthMP.pcc");
+            //return;
+
+            // Start the pipe server.
+            HLSLServer server = new HLSLServer();
+            server.StartListening();
+
+            return;
+            
             var inputHlsl = File.ReadAllText(@"S:\Milan\UDK\MilanShaderComp\PickUpSwipe_MM.hlsl");
             var wasOK = await CompileShader(inputHlsl);
         }
