@@ -54,17 +54,22 @@ private:
 
 	STDMETHOD(Open)(D3D_INCLUDE_TYPE Type, LPCSTR Name, LPCVOID ParentData, LPCVOID* Data, UINT* Bytes)
 	{
+		// d00t: I think the Data / Bytes pair doesn't need null-termination,
+		//  so I commented out the extra null character. Also basic_string::c_str
+		//  always returns a null-terminated string anyway, so you can copy (size + 1)
+		//  characters and then avoid setting the null-terminator separately.
+
 		// Is this the material data we are compiling?
 		if (strcmp(Name, "Material.usf") == 0)
 		{
 			// Set the USF data for this file.
-			const std::string::size_type size = MaterialHLSL.size();
-			char* buffer = new char[size + 1];   //we need extra char for NUL
-			memcpy(buffer, MaterialHLSL.c_str(), size + 1);
-			buffer[size] = '\0'; // Null-terminate the string
+			auto const size = MaterialHLSL.size();
+			char* const buffer = new char[size];   //we need extra char for NUL
+			memcpy(buffer, MaterialHLSL.c_str(), size);
+			//buffer[size] = '\0'; // Null-terminate the string
 
 			*Data = buffer;
-			*Bytes = size + 1;
+			*Bytes = size;
 		}
 		else
 		{
@@ -72,7 +77,7 @@ private:
 			if (strcmp(Name, "VertexFactory.usf") == 0)
 			{
 				// Load our shader factory
-				FileContents = LoadShaderSourceFile(VertexFactoryFilename.c_str(), "VertexFactory.usf");
+				FileContents = LoadShaderSourceFile(VertexFactoryFilename.c_str(), Name);
 			}
 			else
 			{
@@ -80,14 +85,14 @@ private:
 				FileContents = LoadShaderSourceFile(Name, "");
 			}
 
-			const std::string::size_type size = FileContents.size();
-			char* buffer = new char[size + 1];   //we need extra char for NUL
+			auto const size = FileContents.size();
+			char* const buffer = new char[size];   //we need extra char for NUL
 			memcpy(buffer, FileContents.c_str(), size);
-			buffer[size] = '\0'; // Null-terminate the string
+			//buffer[size] = '\0'; // Null-terminate the string
 
 			// Write the result to the output parameters.
 			*Data = (LPCVOID)buffer;
-			*Bytes = size + 1;
+			*Bytes = size;
 
 
 			/*
@@ -124,7 +129,7 @@ private:
 	STDMETHOD(Close)(LPCVOID Data)
 	{
 		// Delete given data.
-		delete[] Data;
+		delete[] (char*)Data;
 		return S_OK;
 	}
 };

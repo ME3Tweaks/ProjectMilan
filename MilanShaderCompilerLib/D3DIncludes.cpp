@@ -10,7 +10,7 @@
 /// <returns></returns>
 std::string MilanD3DInclude::LoadShaderSourceFile(const std::string filename, std::string logFname) {
 
-	if (logFname.size() != 0) {
+	if (!logFname.empty()) {
 		std::cout << "Loading shader source file: " << filename << " (for " << logFname << ")\n";
 	}
 	else {
@@ -23,10 +23,23 @@ std::string MilanD3DInclude::LoadShaderSourceFile(const std::string filename, st
 
 	// Read file.
 
-	auto size = std::filesystem::file_size(full_path);
-	std::string content(size, '\0');
-	std::ifstream in(full_path);
-	in.read(&content[0], size);
+	std::string content{};
+	{
+		// TODO: Log I/O errors.
+
+		auto const handle = _wfopen(full_path.c_str(), L"rb");
+		if (handle == nullptr) return {};
+		if (fseek(handle, 0, SEEK_END) != 0) return {};
+		
+		auto const length = ftell(handle);
+		if (length == -1) return {};
+		if (fseek(handle, 0, SEEK_SET) != 0) return {};
+
+		content.resize(static_cast<std::size_t>(length), '\0');
+		if (fread(content.data(), sizeof(char), content.size(), handle) != content.size()) return {};
+
+		fclose(handle);
+	}
 	return content;
 
 

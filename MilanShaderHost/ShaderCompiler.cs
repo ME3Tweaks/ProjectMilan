@@ -189,7 +189,7 @@ namespace MilanShaderHost
                 new D3D_SHADER_MACRO("PIXELSHADER", "1"),
                 new D3D_SHADER_MACRO("DOMAINSHADER", "0"),
                 new D3D_SHADER_MACRO("HULLSHADER", "0"),
-                new D3D_SHADER_MACRO("VERTEXSHADER", "1"),
+                new D3D_SHADER_MACRO("VERTEXSHADER", "0"),
                 new D3D_SHADER_MACRO("GEOMETRYSHADER", "0"),
                 new D3D_SHADER_MACRO("COMPUTESHADER", "0"),
                 new D3D_SHADER_MACRO("ALLOW_NVIDIA_STEREO_3D", "1"),
