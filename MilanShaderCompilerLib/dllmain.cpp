@@ -2,7 +2,6 @@
 #include "dllmain.h"
 #include "D3DIncludes.h"
 #include <iostream>
-#include <d3dx11.h>
 
 LIBRARY_API int CompileShader(const char* baseShaderName, const char* materialHlsl, const char* vertexFactoryName, const wchar_t* includesDirectory, D3D_SHADER_MACRO* macros , const char* entryPoint, const char* shaderType, 
 	int& outShaderBytesSize,
@@ -46,22 +45,22 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 	std::cout << includer.BaseShader << "\n";
 
 	// D3D Modern
-	//HRESULT Result = D3DCompile(
-	//	includer.BaseShader,
-	//	includer.BaseShaderLen,
-	//	"DirectionalLightPixelShader", //includer.BaseShaderName.c_str(),
-	//	pDefines,
-	//	&includer,
-	//	entryPoint.c_str(),
-	//	shaderProfile.c_str(),
-	//	flags,
-	//	0,
-	//	&OutBlob,
-	//	&OutErrorBlob
-	//);
+	HRESULT Result = D3DCompile(
+		includer.BaseShader.c_str(),
+		includer.BaseShader.size(),
+		includer.BaseShaderName.c_str(),
+		pDefines,
+		&includer,
+		entryPoint.c_str(),
+		shaderProfile.c_str(),
+		flags,
+		0,
+		&OutBlob,
+		&OutErrorBlob
+	);
 
-	// D3D Legacy
-	HRESULT Result = D3DX11CompileFromMemory(
+	// D3DX11 (Legacy)
+	/*HRESULT Result = D3DX11CompileFromMemory(
 		includer.BaseShader.c_str(),
 		includer.BaseShader.size(),
 		includer.BaseShaderName.c_str(),
@@ -75,7 +74,7 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 		&OutBlob,
 		&OutErrorBlob,
 		NULL
-	);
+	);*/
 
 	if (FAILED(Result))
 	{
