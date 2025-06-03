@@ -24,10 +24,10 @@
     <ClInclude Include="defines.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dllmain.h">
+    <ClInclude Include="D3DIncludes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="D3DIncludes.h">
+    <ClInclude Include="dllmain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
