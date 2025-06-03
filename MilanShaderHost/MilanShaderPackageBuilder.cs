@@ -8,7 +8,6 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using System.Diagnostics;
-using LegendaryExplorerCore.Helpers;
 using MilanShaderHost.LEX;
 
 namespace MilanShaderHost

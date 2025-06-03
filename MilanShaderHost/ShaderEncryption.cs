@@ -1,4 +1,5 @@
-﻿using LegendaryExplorerCore.Helpers;
+﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Helpers;
 
 namespace MilanShaderHost
 {
@@ -83,7 +84,7 @@ namespace MilanShaderHost
         public static void EncryptShaderSources()
         {
             // Enter path to LE shaders folder
-            var baseDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\Engine\Shaders";
+            var baseDir = Path.Combine(LE3Directory.DefaultGamePath, "Engine", "Shaders");
             var encryptedDir = Path.Combine(baseDir, "Binaries");
 
             var files = Directory.GetFiles(baseDir);

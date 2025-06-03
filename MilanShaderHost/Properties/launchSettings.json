@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MilanShaderHost": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

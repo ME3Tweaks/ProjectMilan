@@ -5,6 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
+    <ProjectReference Include="..\MilanShaderCompilerLib\MilanShaderCompilerLib.vcxproj" />
   </ItemGroup>
 
 </Project>

@@ -22,6 +22,7 @@ namespace MilanShaderHost
         public void Serialize()
         {
             using var fs = File.Create(Path.Combine(WorkingDirectory, InputFilename));
+            Console.WriteLine($"Serializing USCW job to {fs.Name}");
             Serialize(fs);
         }
 
@@ -97,7 +98,7 @@ namespace MilanShaderHost
         }
 
         /// <summary>
-        /// For LE only.
+        /// For LE only - Sets the base shader file that contains the entrypoint
         /// </summary>
         /// <param name="usfName"></param>
         internal void SetUSF(string usfName)
@@ -107,12 +108,20 @@ namespace MilanShaderHost
             Jobs[0].ShaderInput.SourceText = File.ReadAllText(Path.Combine(exeDir, Jobs[0].ShaderInput.IncludesPath, $"{usfName}.usf"));
         }
 
+        /// <summary>
+        /// Sets include for VertexFactory.usf
+        /// </summary>
+        /// <param name="v"></param>
         internal void SetVertexFactory(string v)
         {
             var exeDir = Directory.GetParent(SimulatedExeLocation).FullName;
             Jobs[0].ShaderInput.Includes.Add("VertexFactory.usf", File.ReadAllText(Path.Combine(exeDir, Jobs[0].ShaderInput.IncludesPath, $"{v}.usf")));
         }
 
+        /// <summary>
+        /// Sets include for Material.usf
+        /// </summary>
+        /// <param name="hlsl"></param>
         internal void SetMaterial(string hlsl)
         {
             var exeDir = Directory.GetParent(SimulatedExeLocation).FullName;
