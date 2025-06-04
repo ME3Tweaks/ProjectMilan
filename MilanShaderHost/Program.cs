@@ -1,6 +1,7 @@
 ﻿using CliWrap;
 using LegendaryExplorerCore;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 using System.Diagnostics;
 
 namespace MilanShaderHost
@@ -34,12 +35,13 @@ namespace MilanShaderHost
             */
 
             var inputHlsl = File.ReadAllText(Path.Combine(LE3Directory.DefaultGamePath, "Engine", "ShaderComp", "PickUpSwipe_MM.hlsl"));
-            
+
             // Compile using UE3ShaderCompileWorker
-            var wasOK = await CompileShader(inputHlsl);
+            // var wasOK = await CompileShaderThroughUSCW(inputHlsl);
 
             // Compile using MilanShaderCompileLib
-            ShaderCompiler.CompileShadersFor(inputHlsl);
+            ShaderCache sc = new ShaderCache();
+            ShaderCompiler.CompileShadersFor(inputHlsl, sc);
         }
 
         /// <summary>
@@ -55,7 +57,7 @@ namespace MilanShaderHost
             return true;
         }
 
-        public async static Task<bool> CompileShader(string hlsl)
+        public async static Task<bool> CompileShaderThroughUSCW(string hlsl)
         {
             var processPath = Path.Combine(LE3Directory.DefaultGamePath, "Binaries\\ShaderCompiler_UE\\UE3ShaderCompileWorker.exe");
 
@@ -118,7 +120,7 @@ namespace MilanShaderHost
 
             // Will have to figure this stuff out... 
             sci.Jobs[0].ShaderInput.ShaderProfile = "ps_5_0";
-            sci.SetUSF("DirectionalLightPixelShader"); // Base shader being compiled.
+            sci.SetBaseShader("DirectionalLightPixelShader"); // Base shader being compiled.
             sci.SetVertexFactory("LocalVertexFactory"); // Vertex factory, if base shader includes VertexFactory.usf.
             sci.SetMaterial(hlsl);
 

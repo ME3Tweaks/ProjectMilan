@@ -1,4 +1,6 @@
-﻿using System.IO.Pipes;
+﻿using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
+using System.IO.Pipes;
 using System.Text;
 
 namespace MilanShaderHost
@@ -109,7 +111,9 @@ namespace MilanShaderHost
             File.WriteAllText(outFile, materialHLSL);
 
             // Compile shader
-            ShaderCompiler.CompileShadersFor(materialHLSL);
+            ShaderCache sc = ShaderCache.Create();
+            ShaderCompiler.CompileShadersFor(materialHLSL, sc);
+            var package = MEPackageHandler.CreateAndOpenPackage(@"S:\Milan\UDK\MilanShaderComp\ShaderPackage.pcc", MEGame.LE3);
         }
     }
 }

@@ -4,6 +4,8 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using static LegendaryExplorerCore.Unreal.UnrealFlags;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Unreal.BinaryConverters.Shaders;
+using static LegendaryExplorerCore.Unreal.BinaryConverters.Shaders.Shader;
 
 namespace MilanShaderHost
 {
@@ -32,7 +34,8 @@ namespace MilanShaderHost
             ref int outShaderBytesSize,
             byte[] outShaderBytes,
             ref int outErrorMsgSize,
-            byte[] outErrorMsg);
+            byte[] outErrorMsg
+            );
 
         /// <summary>
         /// Compiles a shader with MilanShaderCompilerLib.
@@ -106,6 +109,17 @@ namespace MilanShaderHost
                             errorMessage = System.Text.Encoding.ASCII.GetString(errorBuffer, 0, errorBufferSize);
                         }
                     }
+                    else
+                    {
+                        // Shader buffer should be populated
+                        // We copy it since we can shrink it.
+                        // There's probably a more efficient way to do this.
+                        shaderBytes = new byte[shaderBufferSize];
+                        if (shaderBufferSize > 0)
+                        {
+                            Buffer.BlockCopy(shaderBuffer, 0, shaderBytes, 0, shaderBufferSize);
+                        }
+                    }
 
                     return result;
                 }
@@ -160,7 +174,7 @@ namespace MilanShaderHost
         /// Compiles all shader types for the given material HLSL.
         /// </summary>
         /// <param name="materialHLSL"></param>
-        internal static void CompileShadersFor(string materialHLSL)
+        internal static void CompileShadersFor(string materialHLSL, ShaderCache sc)
         {
             // This is a placeholder for the actual shader compilation logic.
             // You would typically call CompileShader with the appropriate parameters here.
@@ -207,9 +221,30 @@ namespace MilanShaderHost
                 Console.WriteLine($"Shader compilation failed: {errorMessage}");
                 return;
             }
-            Console.WriteLine("Shader compiled successfully.");
+            Console.WriteLine($"Shader compiled successfully. Bytecode size: {shaderBytes.Length}");
 
-            // Here you would typically insert the compiled shader into the shader cache.
+
+            // TODO: FIGURE THIS OUT.
+
+            // Need to make or get guid here..
+            var guid = Guid.NewGuid();
+            var shader = new MilanShader()
+            {
+                Guid = guid,
+                Frequency = ShaderFrequency.Pixel,
+                Platform = 5, // PC
+                ShaderType = "", // How on earth do we figure this out...?
+                InstructionCount = 20, // Can probably get from D3D API
+                ParameterMapCRC = 0, // Not sure what this is for
+                ShaderByteCode = shaderBytes,
+                // VertexFactoryType = // Not sure yet how this is to be done.
+            };
+            
+            //
+            sc.Shaders.Add(shader.Guid, shader);
         }
+
     }
+
+    public class MilanShader : Shader { };
 }

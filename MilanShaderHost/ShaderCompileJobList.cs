@@ -101,7 +101,7 @@ namespace MilanShaderHost
         /// For LE only - Sets the base shader file that contains the entrypoint
         /// </summary>
         /// <param name="usfName"></param>
-        internal void SetUSF(string usfName)
+        internal void SetBaseShader(string usfName)
         {
             var exeDir = Directory.GetParent(SimulatedExeLocation).FullName;
             Jobs[0].ShaderInput.SourceFileName = usfName;
