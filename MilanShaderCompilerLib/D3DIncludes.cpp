@@ -10,12 +10,12 @@
 /// <returns></returns>
 std::string MilanD3DInclude::LoadShaderSourceFile(const std::string filename, std::string logFname) {
 
-	if (!logFname.empty()) {
+	/*if (!logFname.empty()) {
 		std::cout << "Loading shader source file: " << filename << " (for " << logFname << ")\n";
 	}
 	else {
 		std::cout << "Loading shader source file: " << filename << "\n";
-	}
+	}*/
 
 	std::filesystem::path dir(ShaderSourcePath);
 	std::filesystem::path file(filename);
@@ -41,26 +41,6 @@ std::string MilanD3DInclude::LoadShaderSourceFile(const std::string filename, st
 		fclose(handle);
 	}
 	return content;
-
-
-	//FILE* IncludeFile = NULL;
-	//errno_t ErrorCode = fopen_s(&IncludeFile, full_path.string().c_str(), "rb");
-	//if (ErrorCode == 0)
-	//{
-	//	int FileId = _fileno(IncludeFile);
-	//	long FileLength = _filelength(FileId);
-
-	//	// Read the contents.
-	//	BYTE* FileContents = new BYTE[FileLength + 1];
-	//	size_t NumRead = fread(FileContents, sizeof(BYTE), FileLength, IncludeFile);
-	//	fclose(IncludeFile);
-
-	//	*outBytes = FileContents;
-	//	*outNumBytes = (UINT)NumRead;
-	//	return true;
-	//}
-
-	//return false;
 }
 
 /// <summary>

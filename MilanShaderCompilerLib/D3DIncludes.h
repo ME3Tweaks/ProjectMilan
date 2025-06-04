@@ -66,7 +66,6 @@ private:
 			auto const size = MaterialHLSL.size();
 			char* const buffer = new char[size];   //we need extra char for NUL
 			memcpy(buffer, MaterialHLSL.c_str(), size);
-			//buffer[size] = '\0'; // Null-terminate the string
 
 			*Data = buffer;
 			*Bytes = size;
@@ -88,39 +87,10 @@ private:
 			auto const size = FileContents.size();
 			char* const buffer = new char[size];   //we need extra char for NUL
 			memcpy(buffer, FileContents.c_str(), size);
-			//buffer[size] = '\0'; // Null-terminate the string
 
 			// Write the result to the output parameters.
 			*Data = (LPCVOID)buffer;
 			*Bytes = size;
-
-
-			/*
-			BYTE* FileContents = NULL;
-			UINT FileSize = 0;
-			bool loaded = false;
-			if (strcmp(Name, "VertexFactory.usf") == 0)
-			{
-				// Load our shader factory
-				loaded = LoadShaderSourceFile(VertexFactoryFilename.c_str(), "VertexFactory.usf", &FileContents, &FileSize);
-			}
-			else
-			{
-				// Load the shader from disk
-				loaded = LoadShaderSourceFile(Name, "", &FileContents, &FileSize);
-			}
-
-
-			if (loaded)
-			{
-				*Data = FileContents;
-				*Bytes = FileSize;
-			}
-			else
-			{
-				// Failed to load the file.
-				return E_FAIL;
-			}*/
 		}
 
 		return S_OK;

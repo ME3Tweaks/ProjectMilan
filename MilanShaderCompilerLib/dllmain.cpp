@@ -14,21 +14,25 @@ LIBRARY_API int CompileShader(const char* baseShaderName, const char* materialHl
 	mIncludes.VertexFactoryFilename = vertexFactoryName;
 	mIncludes.ShaderSourcePath = includesDirectory;
 
-	std::cout << "----------------- MILAN SHADER COMPILER LIB -------------------------------\n";
+	//cstd::cout << "----------------- MILAN SHADER COMPILER LIB -------------------------------\n";
 	std::string shaderTypeStr = shaderType; //ps/vs
 	shaderTypeStr = shaderTypeStr.append("_5_0"); //ps_5_0/vs_5_0
 
-	D3D_SHADER_MACRO* test = macros;
+	/*D3D_SHADER_MACRO* test = macros;
 	while (test != nullptr && test->Name != nullptr && test->Definition != nullptr) {
 		std::cout << "new D3D_SHADER_MACRO(\"" << test->Name << "\", \"" << test->Definition << "\"),\n";
 		test++;
-	}
+	}*/
 
 
-	return InternalCompileShader(mIncludes, macros, entryPoint, shaderTypeStr /*, outShaderBytes*/, outErrorMsgSize, outErrorMsg);
+	return InternalCompileShader(mIncludes, macros, entryPoint, shaderTypeStr, outShaderBytesSize, outShaderBytes, outErrorMsgSize, outErrorMsg);
 }
 
-int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines, std::string entryPoint, std::string shaderProfile, /*byte& outShaderBytes, */ int& outErrorMsgLen, char& outErrorMsg) {
+int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines, std::string entryPoint, std::string shaderProfile, 
+	int& outShaderLen,
+	byte& outShaderBytes, 
+	int& outErrorMsgLen, 
+	char& outErrorMsg) {
 
 	// Load base shader from disk.
 	includer.LoadBaseShader();
@@ -37,12 +41,13 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 
 	auto flags = 36864; // BACKCOMPAT, OPTIMIZATION LEVEL 3
 
+	/*
 	std::cout << "SourceFileName: " << includer.BaseShaderName.c_str() << "\n";
 	std::cout << "SrcLen: " << includer.BaseShaderLen << "\n";
 	std::cout << "FunctionName: " << entryPoint.c_str() << "\n";
 	std::cout << "Profile: " << shaderProfile.c_str() << "\n";
 	std::cout << "Flags: " << flags << "\n";
-	std::cout << includer.BaseShader << "\n";
+	std::cout << includer.BaseShader << "\n";*/
 
 	// D3D Modern
 	HRESULT Result = D3DCompile(
@@ -59,23 +64,6 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 		&OutErrorBlob
 	);
 
-	// D3DX11 (Legacy)
-	/*HRESULT Result = D3DX11CompileFromMemory(
-		includer.BaseShader.c_str(),
-		includer.BaseShader.size(),
-		includer.BaseShaderName.c_str(),
-		pDefines,
-		&includer,
-		entryPoint.c_str(),
-		shaderProfile.c_str(),
-		flags,
-		0,
-		NULL,
-		&OutBlob,
-		&OutErrorBlob,
-		NULL
-	);*/
-
 	if (FAILED(Result))
 	{
 		if (OutErrorBlob)
@@ -83,6 +71,21 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 			auto error = (char*)OutErrorBlob->GetBufferPointer();
 			outErrorMsgLen = strlen(error);
 			memcpy(&outErrorMsg, error, outErrorMsgLen);
+		}
+	}
+	else {
+		if (OutBlob)
+		{
+			outShaderLen = OutBlob->GetBufferSize();
+			memcpy(&outShaderBytes, OutBlob->GetBufferPointer(), outShaderLen);
+
+			// Also get number of instructions
+			// https://learn.microsoft.com/en-us/windows/win32/api/d3d11shader/nn-d3d11shader-id3d11shaderreflection
+			// Todo
+		}
+		else
+		{
+			outShaderLen = 0;
 		}
 	}
 	return Result;
