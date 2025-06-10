@@ -18,11 +18,18 @@ LIBRARY_API int CompileShader(const char* baseShaderName, const char* materialHl
 	std::string shaderTypeStr = shaderType; //ps/vs
 	shaderTypeStr = shaderTypeStr.append("_5_0"); //ps_5_0/vs_5_0
 
-	/*D3D_SHADER_MACRO* test = macros;
+	//D3D_SHADER_MACRO* test = macros;
+	//while (test != nullptr && test->Name != nullptr && test->Definition != nullptr) {
+	//	std::cout << "new D3D_SHADER_MACRO(\"" << test->Name << "\", \"" << test->Definition << "\"),\n";
+	//	test++;
+	//}
+
+	// Print the macros used for compile.
+	D3D_SHADER_MACRO* test = macros;
 	while (test != nullptr && test->Name != nullptr && test->Definition != nullptr) {
-		std::cout << "new D3D_SHADER_MACRO(\"" << test->Name << "\", \"" << test->Definition << "\"),\n";
+		std::cout << "      " << test->Name << "=" << test->Definition << "\n";
 		test++;
-	}*/
+	}
 
 
 	return InternalCompileShader(mIncludes, macros, entryPoint, shaderTypeStr, outShaderBytesSize, outShaderBytes, outErrorMsgSize, outErrorMsg);
@@ -36,9 +43,10 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 
 	// Load base shader from disk.
 	includer.LoadBaseShader();
-	ID3DBlob* OutBlob;
-	ID3DBlob* OutErrorBlob;
+	ID3DBlob* OutBlob = NULL;
+	ID3DBlob* OutErrorBlob = NULL;
 
+	// Some flags might be set by shader type, we probably need to pass this through
 	auto flags = 36864; // BACKCOMPAT, OPTIMIZATION LEVEL 3
 
 	/*
@@ -59,7 +67,7 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 		entryPoint.c_str(),
 		shaderProfile.c_str(),
 		flags,
-		0,
+		0, // We don't use these.
 		&OutBlob,
 		&OutErrorBlob
 	);
