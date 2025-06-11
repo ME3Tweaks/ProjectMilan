@@ -35,6 +35,24 @@ LIBRARY_API int CompileShader(const char* baseShaderName, const char* materialHl
 	return InternalCompileShader(mIncludes, macros, entryPoint, shaderTypeStr, outShaderBytesSize, outShaderBytes, outErrorMsgSize, outErrorMsg);
 }
 
+
+LIBRARY_API void GetShaderInfo(int shaderBufferSize, void* shaderBuffer, int& outInstructionCount) {
+	// Currently only gets shader instruction count.
+
+	ID3D11ShaderReflection* d3dReflector = NULL;
+	D3DReflect(shaderBuffer, shaderBufferSize, IID_ID3D11ShaderReflection, (void**)&d3dReflector);
+
+	// Get Shader Info
+	D3D11_SHADER_DESC ShaderDesc;
+	d3dReflector->GetDesc(&ShaderDesc);
+
+	// Set the number of instructions.
+	outInstructionCount = ShaderDesc.InstructionCount;
+
+	// Dump the object.
+	d3dReflector->Release();
+}
+
 int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines, std::string entryPoint, std::string shaderProfile, 
 	int& outShaderLen,
 	byte& outShaderBytes, 

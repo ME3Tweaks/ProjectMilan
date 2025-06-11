@@ -1,5 +1,5 @@
 #pragma once
-#include "D3Dcompiler.h"
+#include "d3dcompiler.h"
 #include <d3d11Shader.h>
 #include <filesystem>
 #include <fstream>
