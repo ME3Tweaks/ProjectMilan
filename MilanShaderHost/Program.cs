@@ -23,16 +23,21 @@ namespace MilanShaderHost
             // Initialize
             LegendaryExplorerCoreLib.InitLib(null, x => { });
 
+
+
             // Build the map package that contains the shaders we want to compile
-            /*MilanShaderPackageBuilder.SourceFolders.Add(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D");
-            MilanShaderPackageBuilder.BuildMapPackage(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D\BioT_GthMP.pcc");
+            // MilanShaderPackageBuilder.SourceFolders.Add(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D");
+            // MilanShaderPackageBuilder.BuildMapPackage(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D\BioT_GthMP.pcc");
 
             // Start the pipe server.
-            HLSLServer server = new HLSLServer();
-            server.StartListening();
+            ShaderHost sh = new ShaderHost();
+            sh.StartListening();
+
+            //HLSLServer server = new HLSLServer();
+            //server.StartListening();
 
             return;
-            */
+            
 
             var inputHlsl = File.ReadAllText(Path.Combine(LE3Directory.DefaultGamePath, "Engine", "ShaderComp", "PickUpSwipe_MM.hlsl"));
 
