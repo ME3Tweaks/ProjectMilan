@@ -17,4 +17,14 @@
     <ProjectReference Include="..\MilanShaderCompilerLib\MilanShaderCompilerLib.vcxproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="EntryMenu\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="EntryMenu\entry_LE3.pcc">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

@@ -5,12 +5,9 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using LegendaryExplorerCore.Gammtek.Extensions;
+using LegendaryExplorerCore.Misc.ME3Tweaks;
 
 namespace MilanShaderHost
 {
@@ -22,35 +19,83 @@ namespace MilanShaderHost
     {
         private static List<string> PackageFilesToProcess = new List<string>();
 
+        public static void KillGame()
+        {
+            // Kill existing game processes.
+            foreach (var exeName in MEDirectories.ExecutableNames(Program.Game))
+            {
+                foreach (var exe in Process.GetProcessesByName(Path.GetFileNameWithoutExtension(exeName)))
+                {
+                    Console.WriteLine($"Killing process {exe.Id} {exe.ProcessName}");
+                    exe.Kill();
+                }
+            }
+        }
 
         /// <summary>
         /// Starts the game start/stop loop for the shader host.
         /// </summary>
         public static void StartFlow()
         {
+            KillGame();
             SetupFileList();
             ShaderHost.ShaderCacheUpdated += OnShaderCacheUpdated;
-            foreach(var file in PackageFilesToProcess)
+            foreach (var file in PackageFilesToProcess)
             {
-                BuildShaders(file);
-                StartGameAndWaitForExit();
-                // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() file should have triggered.
+                Console.WriteLine($"Building shaders for: {Path.GetFileNameWithoutExtension(file)}");
 
+                scPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(MEDirectories.GetDLCPath(Program.Game), @"DLC_MOD_MorePhotoFilters1\CookedPCConsole\ShaderCompiler.pcc"), Program.Game);
+
+                // Builds materials into the map
+                SetupEntry(file);
+
+                // Runs game, which builds shaders and feeds them back to us.
+                StartGameAndWaitForExit();
+
+                // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
+                Console.WriteLine($"Finished compiling shaders for {Path.GetFileNameWithoutExtension(file)}");
+            }
+
+
+            Console.WriteLine($"Shader compiling complete.");
+        }
+
+        private static void SetupEntry(string sourcePath)
+        {
+            // Have to figure this out for LE2 as it doesn't have entry map.
+            var inPath = Path.Combine(ME3TweaksBackups.GetGameBackupPath(Program.Game), "BioGame", "CookedPCConsole", "entry.pcc");
+            var outPath = Path.Combine(MEDirectories.GetCookedPath(Program.Game), "entry.pcc");
+
+            var package = MilanShaderPackageBuilder.BuildIntoExistingPackage(inPath, sourcePath);
+            package.Save(outPath);
+            return;
+
+            var level = package.GetLevelBinary();
+            if (level.GameSequences.Length == 1 && level.GameSequences[0] == 0)
+            {
+                Console.WriteLine($"Setting up entry.pcc for automated shader compiling.");
+                // Install our sequence
+                var flowPackagePath = $"EntryMenu/entry_{Program.Game}.pcc"; // copied to output path by compile step.
+                var flowPackage = MEPackageHandler.OpenMEPackage(flowPackagePath);
+                var seq = flowPackage.FindExport("ShaderCompilerSequence");
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, seq, package, package.GetLevel(), true, new RelinkerOptionsPackage(), out var portedSeq);
+                level.GameSequences = [portedSeq.UIndex];
+                package.GetLevel().WriteBinary(level);
+                package.Save(outPath);
             }
         }
 
         private static void OnShaderCacheUpdated(object? sender, EventArgs e)
         {
             // Merge materials from scPackage into the shader cache package so they stay linked up, as the guids are randomly generated.
-            foreach(var exp in scPackage.Exports.Where(x=>x.ClassName == "Material"))
+            foreach (var exp in scPackage.Exports.Where(x => x.ClassName == "Material"))
             {
-
             }
         }
 
         private static void SetupFileList()
         {
-            PackageFilesToProcess.Add(@"");
+            PackageFilesToProcess.Add(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D\BioT_MPJungle.pcc");
         }
 
         /// <summary>
@@ -62,9 +107,9 @@ namespace MilanShaderHost
             // Find source objects    
             using IMEPackage sourcePackage = MEPackageHandler.OpenMEPackage(inputFile);
             // @todo Make this dynamic
-            scPackage = MEPackageHandler.CreateAndOpenPackage(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\DLC\DLC_MOD_MorePhotoFilters1\CookedPCConsole\ShaderCompiler.pcc", MEGame.LE3);
+            scPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(MEDirectories.GetDLCPath(Program.Game), @"DLC_MOD_MorePhotoFilters1\CookedPCConsole\ShaderCompiler.pcc"), Program.Game);
 
-            ConfigAssetBundle dlcMod = ConfigAssetBundle.FromDLCFolder(MEGame.LE3, @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\DLC\DLC_MOD_MorePhotoFilters1\CookedPCConsole", @"DLC_MOD_MorePhotoFilters1");
+            ConfigAssetBundle dlcMod = ConfigAssetBundle.FromDLCFolder(MEGame.LE3, Path.Combine(MEDirectories.GetDLCPath(Program.Game), @"DLC_MOD_MorePhotoFilters1\CookedPCConsole"), @"DLC_MOD_MorePhotoFilters1");
             var bioInput = dlcMod.GetAsset("BioInput");
             var photo = bioInput.GetOrAddSection("sfxgame.sfxgamemodephoto");
             photo.Clear(); // remove any existing entries.
@@ -81,7 +126,7 @@ namespace MilanShaderHost
                 ObjectBinary.EditBinary<Material>(buildingMat, (x) =>
                 {
                     // Set new guid so it can't find in ref shader map and is not invalid
-                    x.SM3MaterialResource.ID = Guid.NewGuid(); 
+                    x.SM3MaterialResource.ID = Guid.NewGuid();
                 });
 
                 // Create matinst

@@ -1,6 +1,7 @@
 ﻿using CliWrap;
 using LegendaryExplorerCore;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using System.Diagnostics;
 
@@ -11,6 +12,8 @@ namespace MilanShaderHost
     /// </summary>
     internal class Program
     {
+        public static MEGame Game { get; internal set; }
+
         // This application will handle interop between dumping HLSL from the games
         // and feeding it to the shader compiler to produce permutations of shaders.
 
@@ -20,14 +23,15 @@ namespace MilanShaderHost
             Console.WriteLine("By ME3Tweaks");
             Console.WriteLine();
 
+            // Eventually make this command line when we support the other games.
+            Game = MEGame.LE3;
+
             // Initialize
             LegendaryExplorerCoreLib.InitLib(null, x => { });
 
 
-
-            // Build the map package that contains the shaders we want to compile
-            // MilanShaderPackageBuilder.SourceFolders.Add(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D");
-            // MilanShaderPackageBuilder.BuildMapPackage(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D\BioT_GthMP.pcc");
+            // Uncomment to do automated shader compiler flow
+            // Task.Run(MilanShaderBuilderFlow.StartFlow);
 
             // Start the pipe server.
             ShaderHost sh = new ShaderHost();
