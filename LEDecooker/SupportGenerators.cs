@@ -5,7 +5,6 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
 using System.Diagnostics;
-using System.IO.Compression;
 namespace LEDecooker
 {
     internal class SupportGenerators

@@ -8,11 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="materials\materials.zip" />
     <None Remove="missingtexture.png" />
     <None Remove="supportfiles\supportdbs.zip" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="materials\materials.zip" />
     <EmbeddedResource Include="missingtexture.png" />
     <EmbeddedResource Include="supportfiles\supportdbs.zip" />
   </ItemGroup>
@@ -26,9 +28,4 @@
   <ItemGroup>
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="databases\" />
-  </ItemGroup>
-
 </Project>

@@ -197,22 +197,39 @@ namespace LEDecooker
         /// <param name="outputFolder"></param>
         public static void CompileGameAssets(string outputFolder)
         {
+            DecookerShared.TargetObjectDB = DecookerShared.LoadObjectDB(CLIOptions.ParsedOptions.Game);
+
             // DecookerLog.Information("Clearing Stage 1 T3D packages");
             foreach (var file in Directory.GetFiles(outputFolder))
             {
-                File.Delete(file);
+                //File.Delete(file);
             }
 
-            var inputFolder = Path.Combine(CLIOptions.ParsedOptions.T3DInputfolder, CLIOptions.ParsedOptions.Game.ToString());
+            DecookerLog.Information("Loading material data...");
+            var t3dZipB = DecookerShared.ExtractResource("LEDecooker.materials.materials.zip");
+            var t3dZipM = new MemoryStream(t3dZipB);
+            var t3dZip = new ZipArchive(t3dZipM);
             LoadExtraData();
 
             // All packages that will be generated
             var allPackageNames = new CaseInsensitiveDictionary<string>();
 
-            foreach (var p in Directory.GetDirectories(inputFolder).Select(Path.GetFileName))
+            var gameStr = CLIOptions.ParsedOptions.Game.ToString();
+            foreach (var entry in t3dZip.Entries)
             {
-                allPackageNames.Add(p, p);
+                if (!entry.FullName.StartsWith(gameStr))
+                    continue;
+                var parts = entry.FullName.Split('/');
+                if (!string.IsNullOrWhiteSpace(parts[1]))
+                {
+                    allPackageNames[parts[1]] = parts[1];
+                }
             }
+
+            //foreach (var p in Directory.GetDirectories(inputFolder).Select(Path.GetFileName))
+            //{
+            //    allPackageNames.Add(p, p);
+            //}
 
             // We also want to add texture and mesh-only packages
             AddPackagesToList(allPackageNames, StaticMeshLookupDB);
@@ -230,12 +247,11 @@ namespace LEDecooker
                 done++;
                 // Debug.WriteLine($"{packageName}");
 
-                var folder = Path.Combine(inputFolder, packageName);
-                //if (!packageName.CaseInsensitiveEquals("biot_redrock_ter")
-                //    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
-                //    // && !bypass // debug filter
-                //    )
-                //    continue;
+                if (!packageName.CaseInsensitiveEquals("BIOG_APL_INT_G_Hex_Barrier_01_L")
+                    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
+                    && !bypass // debug filter. uncomment to make it continue after this single one.
+                    )
+                    continue;
 
                 bypass = true;
 
@@ -259,7 +275,7 @@ namespace LEDecooker
 
                 using var package = MEPackageHandler.CreateAndOpenPackage(packagePath, CLIOptions.ParsedOptions.Game);
                 DecookerLog.Information($"Compiling package {package.FileNameNoExtension} [{done}/{total}]");
-                CompilePackageMaterials(package, folder, MaterialIFPDB);
+                CompilePackageMaterials(package, t3dZip, MaterialIFPDB);
                 AddTextures(package, TextureLookupDB);
                 package.PreparePackageForUDKify();
                 AddObjects(package, "MaterialInstanceConstant", MaterialInstanceConstantLookupDB);
@@ -293,47 +309,35 @@ namespace LEDecooker
 
         }
 
-        private static string ReadSupportFile(ZipArchive archive, string fileName)
-        {
-            foreach(var entry in archive.Entries)
-            {
-                if (entry.Name == fileName)
-                {
-                    var sr = new StreamReader(entry.Open(), Encoding.Default);
-                    return sr.ReadToEnd();
-                }
-            }
-
-            DecookerLog.Error($"Did not find support file: {fileName}");
-            return null;
-        }
-
+        /// <summary>
+        /// Loads extra supporting data
+        /// </summary>
         private static void LoadExtraData()
         {
             using var ms = new MemoryStream(DecookerShared.ExtractResource($@"LEDecooker.supportfiles.supportdbs.zip"));
             using var zip = new ZipArchive(ms);
 
             // T3D doesnt contain in-package pathing. This DB is used to try to fix that
-            var supportData = ReadSupportFile(zip, $"materialifps_{CLIOptions.ParsedOptions.Game}.json");
+            var supportData = DecookerShared.ReadSupportFileString(zip, $"materialifps_{CLIOptions.ParsedOptions.Game}.json");
             MaterialIFPDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
             // List of all textures. We use this to make sure we just pull in all game textures
-            supportData = ReadSupportFile(zip, $"texturedb_{CLIOptions.ParsedOptions.Game}.json");
+            supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{CLIOptions.ParsedOptions.Game}.json");
             TextureLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
 
             if (CLIOptions.ParsedOptions.Game == MEGame.LE1)
             {
                 // Load ME1 DB as well as we pull textures from there.
-                supportData = ReadSupportFile(zip, $"texturedb_{MEGame.ME1}.json");
+                supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{MEGame.ME1}.json");
                 TextureLookupDBME1 = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
             }
 
             // Static meshes are used during lighting and udk export, so we pull them in
-            supportData = ReadSupportFile(zip, $"staticmeshdb_{CLIOptions.ParsedOptions.Game}.json");
+            supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{CLIOptions.ParsedOptions.Game}.json");
             StaticMeshLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
             // Material Instance Constants are very often assigned to static meshes in udk, so we pull them in here
-            supportData = ReadSupportFile(zip, $"materialinstanceconstantdb_{CLIOptions.ParsedOptions.Game}.json");
+            supportData = DecookerShared.ReadSupportFileString(zip, $"materialinstanceconstantdb_{CLIOptions.ParsedOptions.Game}.json");
             MaterialInstanceConstantLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
         }
 
@@ -527,11 +531,8 @@ namespace LEDecooker
             return true;
         }
 
-        private static void CompilePackageMaterials(IMEPackage package, string folder, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> matIfpDb)
+        private static void CompilePackageMaterials(IMEPackage package, ZipArchive archive, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> matIfpDb)
         {
-            if (!Directory.Exists(folder))
-                return; // This folder doesn't exist
-
             using var cache = new PackageCache();
             var usop = new UnrealScriptOptionsPackage
             {
@@ -539,7 +540,7 @@ namespace LEDecooker
                 Cache = cache
             };
 
-            var result = CompileFolder(folder, null);
+            var result = CompileFolder(package.FileNameNoExtension, archive, null);
 
             // We align to cooked version for now.
             package.PreparePackageForUDKify();
@@ -555,34 +556,28 @@ namespace LEDecooker
 
             return;
 
-            MessageLog CompileFolder(string folder, IEntry parent)
+            MessageLog CompileFolder(string packageName, ZipArchive archive, IEntry parent)
             {
-                var packageName = Path.GetFileName(folder);
-                foreach (string t3dFilePath in Directory.EnumerateFiles(folder, "*.t3d",
-                             SearchOption.TopDirectoryOnly))
+                var prefix = $"{CLIOptions.ParsedOptions.Game}/{packageName}/";
+                var len = prefix.Length;
+                foreach (var entry in archive.Entries.Where(x => x.FullName.StartsWith(prefix) && x.FullName.Length > len))
                 {
-                    var matName = Path.GetFileNameWithoutExtension(t3dFilePath);
-                    //if (matName != "PhotoMode_Filter_RetroLCD")
-                    //    continue;
+                    var matName = Path.GetFileNameWithoutExtension(entry.FullName);
 
-                    var sourceLines = File.ReadAllLines(t3dFilePath);
+                    // Pretty inefficient...
+                    var source = new StreamReader(entry.Open(), Encoding.Default).ReadToEnd();
+                    var sourceLines = source.SplitLines();
                     sourceLines = sourceLines.Where(x =>
                         !x.Trim().StartsWith("ReferencedTextureGuids") &&
                         !x.Trim().StartsWith("EditorComments") && // This will be important to keep later
                         true
                         ).ToArray();
 
-                    //if (sourceLines.Any(x => x.Contains("BioMaterialExpression", StringComparison.OrdinalIgnoreCase)))
-                    //{
-                    //    // We cannot compile this in UDK currently.
-                    //    continue;
-                    //}
-
                     DecookerLog.Information($"\tCompiling material {matName}");
                     MessageLog log = UnrealScriptCompiler.CompileT3D(string.Join('\n', sourceLines), package, parent, usop);
                     if (log.HasLexErrors || log.HasErrors)
                     {
-                        log.LogError($"Failed to compile {t3dFilePath}");
+                        log.LogError($"Failed to compile {entry.FullName}");
                         return log;
                     }
 
@@ -638,7 +633,7 @@ namespace LEDecooker
                 {
                     // We should look in OT ME1... quality will be total trash,
                     // but it's probably better than nothing.
-                    portedItem = TryPortTexture(package, sourcepackage, lookupName, classname,TextureLookupDBME1);
+                    portedItem = TryPortTexture(package, sourcepackage, lookupName, classname, TextureLookupDBME1);
                     if (portedItem != null)
                     {
                         Debug.WriteLine($"Using ME1 texture: {instancedfullpath}");

@@ -14,6 +14,7 @@ using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO.Compression;
+using System.Text;
 
 namespace LEDecooker
 {
@@ -32,17 +33,45 @@ namespace LEDecooker
         /// </summary>
         public static ObjectInstanceDB OTObjectDB { get; set; }
 
-
         public static ObjectInstanceDB LoadObjectDB(MEGame game)
         {
             DecookerLog.Information($"Loading {game} object database");
-            using var ms = new MemoryStream(DecookerShared.ExtractResource($@"databases/{game}ObjectDatabase.zip"));
+            using var ms = new MemoryStream(DecookerShared.ExtractResource($@"LEDecooker.supportfiles.supportdbs.zip"));
             using var zip = new ZipArchive(ms);
-            var dbStream = zip.GetEntry($"{game}.bin").Open();
-            var memStr = new MemoryStream();
-            dbStream.CopyTo(memStr);
-            memStr.Position = 0;
-            return ObjectInstanceDB.Deserialize(game, memStr);
+            var entry = zip.Entries.FirstOrDefault(x => x.Name == $"{game}.bin");
+            MemoryStream oms = new MemoryStream((int)entry.Length);
+            entry.Open().CopyTo( oms );
+            oms.Position = 0;
+            return ObjectInstanceDB.Deserialize(game, oms);
+        }
+
+        public static string ReadSupportFileString(ZipArchive archive, string fileName)
+        {
+            foreach (var entry in archive.Entries)
+            {
+                if (entry.Name == fileName)
+                {
+                    var sr = new StreamReader(entry.Open(), Encoding.Default);
+                    return sr.ReadToEnd();
+                }
+            }
+
+            DecookerLog.Error($"Did not find support file: {fileName}");
+            return null;
+        }
+
+        public static Stream ReadSupportFileBinary(ZipArchive archive, string fileName)
+        {
+            foreach (var entry in archive.Entries)
+            {
+                if (entry.Name == fileName)
+                {
+                    return entry.Open();
+                }
+            }
+
+            DecookerLog.Error($"Did not find support file: {fileName}");
+            return null;
         }
 
         /// <summary>
@@ -173,9 +202,12 @@ namespace LEDecooker
 #endif
             using (Stream resFilestream = a.GetManifestResourceStream(filename))
             {
-                if (resFilestream == null) 
+                if (resFilestream == null)
+                {
+                    Debugger.Break();
                     return null; // Asset not found
-                byte[] ba = new byte[resFilestream.Length];
+                }
+                    byte[] ba = new byte[resFilestream.Length];
                 resFilestream.Read(ba, 0, ba.Length);
                 return ba;
             }
@@ -304,7 +336,7 @@ namespace LEDecooker
                     var sourceObj = objDb.GetFilesContainingObject(sourceEntry.InstancedFullPath);
                     if (sourceObj != null)
                     {
-                        var firstFile = Path.Combine(ME3TweaksBackups.GetGameBackupPath(MEGame.LE3), sourceObj[0]);
+                        var firstFile = Path.Combine(ME3TweaksBackups.GetGameBackupPath(CLIOptions.ParsedOptions.Game), sourceObj[0]);
                         if (ImportObject(firstFile, ie, ref uindex, null))
                         {
                             return true;
