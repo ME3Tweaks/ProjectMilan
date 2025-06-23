@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LEDecooker - LE1 - Decook": {
+      "commandName": "Project",
+      "commandLineArgs": "--t3dinputfolder \"Z:\\MaterialExport\" --outputfolder \"E:\\Decooked\" --game LE1"
+    }
+  }
+}

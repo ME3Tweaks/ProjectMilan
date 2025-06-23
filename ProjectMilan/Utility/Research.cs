@@ -74,35 +74,6 @@ namespace ProjectMilan.Utility
             destPackage.Save();
             return destPackage;
         }
-
-        public static void GeneratePerPackageNesting()
-        {
-            // Maps PackageName -> (MaterialName -> IFP)
-            var mapping = new CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>();
-            foreach (var f in MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, gameRootOverride: ME3TweaksBackups.GetGameBackupPath(MEGame.LE3)))
-            {
-                Console.WriteLine(f.Key);
-                var p = MEPackageHandler.UnsafePartialLoad(f.Value, x => false);
-                foreach (var mat in p.Exports.Where(x => x.IsA("Material")))
-                {
-                    var package = mat.GetLinker();
-                    if (!mapping.TryGetValue(package, out var subMapping))
-                    {
-                        // Map the list
-                        subMapping = new CaseInsensitiveDictionary<string>();
-                        mapping[package] = subMapping;
-                    }
-
-                    var subPath = mat.MemoryFullPath.Substring(mat.GetLinker().Length + 1);
-                    if (subPath.Contains("."))
-                    {
-                        subMapping[mat.ObjectName.Instanced] = subPath;
-                    }
-                }
-            }
-
-            File.WriteAllText(@"C:\users\mgame\matifps.json", JsonConvert.SerializeObject(mapping, Formatting.Indented));
-        }
 #endif
     }
 }
