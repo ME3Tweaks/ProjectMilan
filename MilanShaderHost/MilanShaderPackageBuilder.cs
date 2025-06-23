@@ -50,6 +50,43 @@ namespace MilanShaderHost
             _ => throw new NotImplementedException(),
         };
 
+        /// <summary>
+        /// Builds material refs into the existing given map file. Does NOT save the package it creates.
+        /// </summary>
+        /// <param name="entryPath"></param>
+        public static IMEPackage BuildIntoExistingPackage(string entryPath, string sourceStylePath)
+        {
+            var startupLevel = MEPackageHandler.OpenMEPackage(entryPath);
+
+            // Load our input package we are building shaders out of
+            var sourceStylePackage = MEPackageHandler.OpenMEPackage(sourceStylePath);
+
+            ConvertSourceToForcedExport(sourceStylePackage);
+
+            List<ExportEntry> portedMats = new List<ExportEntry>();
+            foreach (var mat in sourceStylePackage.Exports.Where(x => x.IsA("Material")))
+            {
+                var pMat = PortSourceToCooked(mat, startupLevel);
+                if (pMat != null)
+                {
+                    portedMats.Add(pMat);
+                }
+            }
+
+            Point3D startPos = new Point3D(0, 0, 0);
+
+            foreach (var pMat in portedMats)
+            {
+                AddStaticMeshActorForMaterial(pMat, startPos);
+                startPos.Y -= 256;
+            }
+
+
+            // Add static meshes that contain our materials.
+            return startupLevel;
+        }
+
+
         public static void BuildMapPackage(string packagePath)
         {
             //var outDir = @"S:\Milan\UDK\MilanShaderMapPackages";
@@ -86,7 +123,7 @@ namespace MilanShaderHost
 
             AddStaticMeshActor(startupLevel, GetFloorAsset(sourceStylePackage.Game), startPos, "PlayerFloor");
 
-            
+
             // Static mesh lighting
             AddDominantLight(startupLevel);
 
@@ -337,7 +374,7 @@ namespace MilanShaderHost
         {
             var package = material.FileRef;
             var level = package.GetLevel();
-            var meshSMA = ExportCreator.CreateExport(package, $"StaticMeshActor_{material.ObjectName}", "StaticMeshActor", level, createWithStack: true);
+            var meshSMA = ExportCreator.CreateExport(package, $"StaticMeshActor_{material.ObjectName}", "StaticMeshActor", level, createWithStack: true, indexed: false);
             PathEdUtils.SetLocation(meshSMA, location);
             var meshSMC = ExportCreator.CreateExport(package, "StaticMeshComponent", "StaticMeshComponent", meshSMA);
             meshSMC.ObjectFlags |= UnrealFlags.EObjectFlags.Transactional;
@@ -416,15 +453,20 @@ namespace MilanShaderHost
             }
 
             // Create imports from top down.
-            var packageExport = (IEntry)ExportCreator.CreatePackageExport(package, packageFile);
+            var packageEntry = package.FindEntry(packageFile);
+            packageEntry ??= (IEntry)ExportCreator.CreatePackageExport(package, packageFile);
 
             // This doesn't work if the part of the parents already exist.
-            var attachParent = packageExport;
+            var attachParent = packageEntry;
             foreach (var item in children)
             {
-                ImportEntry imp = new ImportEntry(item as ExportEntry, packageExport.UIndex, package);
-                imp.idxLink = attachParent.UIndex;
-                package.AddImport(imp);
+                ImportEntry imp = package.FindImport($"{attachParent.InstancedFullPath}.{item.ObjectName.Instanced}");
+                if (imp == null)
+                {
+                    imp = new ImportEntry(item as ExportEntry, packageEntry.UIndex, package);
+                    imp.idxLink = attachParent.UIndex;
+                    package.AddImport(imp);
+                }
                 attachParent = imp;
                 result = imp;
             }

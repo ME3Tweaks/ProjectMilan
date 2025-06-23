@@ -15,17 +15,32 @@ namespace MilanShaderHost
     {
         private const string pipeName = @"milanshaderhost";
 
+        // Todo: make this more dynamic
+        private string shaderCacheFile = @"C:\users\public\MilanShaderCache.pcc";
+
         enum EReadMode
         {
             None = 0,
             // INT size
             // BYTE[size]
-            ShaderCache = 1
+            /// <summary>
+            /// A ShaderCache binary is about to be sent to us.
+            /// </summary>
+            ShaderCache = 1,
+            /// <summary>
+            /// ShaderHost should kill the game process as it is no longer needed.
+            /// </summary>
+            TerminateGame = 2,
+            /// <summary>
+            /// ShaderClient failed to compile a shader, the error message will follow.
+            /// </summary>
+            ShaderCompilationFailed = 3,
+            /// <summary>
+            /// A MaterialResource is about to be sent to us.
+            /// </summary>
+            MaterialResource = 4,
         }
 
-
-
-        IMEPac
         MEGame game = MEGame.LE3;
         EReadMode CurrentReadMode = EReadMode.None;
         int IncomingShaderCacheSize = 0;
@@ -34,12 +49,18 @@ namespace MilanShaderHost
 
         internal void StartListening()
         {
+            if (File.Exists(shaderCacheFile))
+            {
+                File.Delete(shaderCacheFile);
+            }
+
             ShaderCache buildingCache = null;
 
             using var server = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte);
             var reader = new BinaryReader(server, Encoding.Unicode);
             var writer = new StreamWriter(server);
-            Console.WriteLine($"Listening for ShaderCache data on named pipe '{pipeName}'");
+            Console.WriteLine($"Listening for shader data on named pipe '{pipeName}'...");
+
             while (true)
             {
                 if (!server.IsConnected)
@@ -59,11 +80,19 @@ namespace MilanShaderHost
                     continue;
                 }
 
+
                 if (CurrentReadMode == EReadMode.None)
                 {
                     // Read a command
-                    var commandByte = reader.ReadByte();
-                    CurrentReadMode = (EReadMode)commandByte;
+                    try
+                    {
+                        var commandByte = reader.ReadByte();
+                        CurrentReadMode = (EReadMode)commandByte;
+                    }
+                    catch (IOException)
+                    {
+                        // We just exit, it may be pipe disconnected
+                    }
                     continue;
 
                 }
@@ -72,6 +101,7 @@ namespace MilanShaderHost
                     if (IncomingShaderCacheSize == 0)
                     {
                         IncomingShaderCacheSize = reader.ReadInt32();
+                        Console.WriteLine($"Incoming shader cache, {IncomingShaderCacheSize} bytes");
                         // continue;
                     }
 
@@ -84,6 +114,7 @@ namespace MilanShaderHost
                     WriteFakeGlobalCacheHeader(incomingCache, game);
                     incomingCacheTemp.CopyTo(incomingCache);
                     incomingCache.Position = 0;
+                    // incomingCache.WriteToFile(@"C:\users\public\shadercache.bin");
                     var cache = ShaderCache.ReadGlobalShaderCache(incomingCache, game);
 
                     if (buildingCache == null)
@@ -95,25 +126,50 @@ namespace MilanShaderHost
                         cache.MergeInto(buildingCache, true);
                     }
                     WriteCacheToFile(buildingCache);
+                    CurrentReadMode = EReadMode.None; // Reset
                     continue;
+                }
+                else if (CurrentReadMode == EReadMode.TerminateGame)
+                {
+                    MilanShaderBuilderFlow.KillGame();
+                    CurrentReadMode = EReadMode.None;
+                }
+                else if (CurrentReadMode == EReadMode.ShaderCompilationFailed)
+                {
+                    var errorMessage = reader.ReadSZString();
+                    Console.WriteLine(errorMessage);
+                    CurrentReadMode = EReadMode.None;
+                }
+                else if (CurrentReadMode == EReadMode.MaterialResource)
+                {
+                    // String incoming.
+                    var strLen = reader.ReadInt32();
+                    var strData = reader.ReadBytes(strLen); // Unicode
+                    var materialName = Encoding.Unicode.GetString(strData);
+                    Console.WriteLine($"Incoming material data: {materialName}");
+                    
+                    // Material binary incoming.
+                    var incomingDataLen = reader.ReadInt32();
+                    var materialResourceBin = reader.ReadBytes(incomingDataLen);
+                    var outF = Path.Combine(@"C:\users\public\matbins", materialName + ".bin");
+                    File.WriteAllBytes(outF, materialResourceBin);
+
+                    Console.WriteLine($"Received material resource binary for {materialName}, {incomingDataLen} bytes");
+
+                    CurrentReadMode = EReadMode.None;
                 }
             }
         }
 
         private void WriteCacheToFile(ShaderCache cache)
         {
-            var shaderOutputFile = @"C:\users\public\MilanShaderCache.pcc";
+            // Switch to package-based serialization.
+            cache.Packageless = false;
+
             IMEPackage package = null;
-            if (File.Exists(shaderOutputFile))
+            if (File.Exists(shaderCacheFile))
             {
-                package = MEPackageHandler.OpenMEPackage(shaderOutputFile);
-                var sfsc = ExportCreator.CreateExport(package, "SeekFreeShaderCache", "ShaderCache", indexed: false);
-                sfsc.WriteProperty(new NoneProperty());
-                sfsc.WriteBinary(cache);
-            }
-            else
-            {
-                package = MEPackageHandler.CreateAndOpenPackage(shaderOutputFile, MEGame.LE3);
+                package = MEPackageHandler.OpenMEPackage(shaderCacheFile);
                 var existingCacheExport = package.FindExport("SeekFreeShaderCache");
                 if (existingCacheExport != null)
                 {
@@ -125,6 +181,12 @@ namespace MilanShaderHost
                 {
                     Debugger.Break();
                 }
+            }
+            else
+            {
+                package = MEPackageHandler.CreateAndOpenPackage(shaderCacheFile, MEGame.LE3);
+                var sfsc = ExportCreator.CreateExport(package, "SeekFreeShaderCache", "ShaderCache", indexed: false, prePropBinary: [0x0, 0x0, 0x0, 0x0]);
+                sfsc.WriteBinary(cache);
             }
 
             package.Save();
