@@ -27,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MilanShaderCompilerLib", "M
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEDecooker", "LEDecooker\LEDecooker.csproj", "{5B5BFC0C-C3C3-43FE-9C68-D365C3F6DA9B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShaderCompare", "ShaderCompare\ShaderCompare.csproj", "{456E33CF-F1C6-4DF6-9FA8-4627B2310307}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -469,6 +471,42 @@ Global
 		{5B5BFC0C-C3C3-43FE-9C68-D365C3F6DA9B}.WinRelease|x64.Build.0 = Release|Any CPU
 		{5B5BFC0C-C3C3-43FE-9C68-D365C3F6DA9B}.WinRelease|x86.ActiveCfg = Release|Any CPU
 		{5B5BFC0C-C3C3-43FE-9C68-D365C3F6DA9B}.WinRelease|x86.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Debug|x64.Build.0 = Debug|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Debug|x86.Build.0 = Debug|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Release|Any CPU.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Release|x64.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Release|x64.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Release|x86.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.Release|x86.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureRelease|Any CPU.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureRelease|x64.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureRelease|x64.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureRelease|x86.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureRelease|x86.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureTest|Any CPU.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureTest|Any CPU.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureTest|x64.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureTest|x64.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureTest|x86.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinAzureTest|x86.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinDebug|Any CPU.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinDebug|Any CPU.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinDebug|x64.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinDebug|x64.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinDebug|x86.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinDebug|x86.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|Any CPU.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|x64.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|x64.Build.0 = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|x86.ActiveCfg = Release|Any CPU
+		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
