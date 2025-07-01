@@ -10,11 +10,14 @@ namespace LEDecooker
     {
         public static CLIOptions ParsedOptions { get; set; }
 
-        [Option('o', "outputfolder", HelpText = "Specifies where output files should be placed.", Required = true)]
-        public string CompiledT3DOutputFolder { get; set; } = string.Empty;
+        [Option('o', "outputfolder", HelpText = "Specifies where output files should be placed", Required = true)]
+        public string CompiledAssetsOutputFolder { get; set; } = string.Empty;
 
-        [Option('t', "t3dinputfolder", HelpText = "Folder that contains game-specific T3D folders.", Required = false)]
-        public string T3DInputfolder { get; set; } = string.Empty;
+        [Option('c', "compileassets", HelpText = "Compiles T3D (materials) and other assets to decooked packages")]
+        public bool CompileAssets { get; set; }
+
+        [Option('u', "convert", HelpText = "Converts decooked assets to UDK asset packages")]
+        public bool ConvertAssetsToUDK { get; set; }
 
         [Option('g', "game", HelpText = "Game to run the operation on.", Required = true)]
         public MEGame Game { get; set; }

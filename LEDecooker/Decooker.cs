@@ -39,11 +39,11 @@ namespace LEDecooker
         /// <param name="targetGame">The game to compile assets for</param>
         public static void CompileT3Ds()
         {
-            var compiledOutputFolder = Path.Combine(CLIOptions.ParsedOptions.CompiledT3DOutputFolder, CLIOptions.ParsedOptions.Game.ToString());
+            var compiledOutputFolder = Path.Combine(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game.ToString());
             Directory.CreateDirectory(compiledOutputFolder);
 
             CompileGameAssets(compiledOutputFolder);
-            FixImports(CLIOptions.ParsedOptions.CompiledT3DOutputFolder, CLIOptions.ParsedOptions.Game);
+            FixImports(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game);
         }
 
         /// <summary>
@@ -247,7 +247,7 @@ namespace LEDecooker
                 done++;
                 // Debug.WriteLine($"{packageName}");
 
-                if (!packageName.CaseInsensitiveEquals("BIOG_APL_INT_G_Hex_Barrier_01_L")
+                if (!packageName.CaseInsensitiveEquals("BioVFX_Env_Water")
                     // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
                     && !bypass // debug filter. uncomment to make it continue after this single one.
                     )
@@ -298,6 +298,7 @@ namespace LEDecooker
                         {
                             DecookerLog.Error($"Duplicate object found in {package.FileNameNoExtension}: {dup.Entry.InstancedFullPath}");
                         }
+                        package.Save();
                         Debugger.Break();
                     }
 
@@ -694,6 +695,13 @@ namespace LEDecooker
                     CustomRelinkUIndex = DecookerShared.ImportOutsideOfPackageRelink,
                     CustomImportDependency = ImportDependencyOutsideOfPackage
                 };
+
+                if (!sourceTex.IsForcedExport)
+                {
+                    // Move to forced export to reduce number of name collisions
+                    EntryExporter.PrepareGlobalFileForPorting(sourceTex.FileRef, sourceTex.FileRef.FileNameNoExtension);
+                }
+
 
                 EntryExporter.ExportExportToPackage(sourceTex, package, out var ported, customROP: rop);
                 return ported;

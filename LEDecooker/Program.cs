@@ -45,10 +45,16 @@ namespace LEDecooker
             }
 
             bool didSomething = false;
-            if (!string.IsNullOrWhiteSpace(options.T3DInputfolder) && Directory.Exists(options.T3DInputfolder))
+            if (options.CompileAssets)
             {
                 didSomething = true;
                 Decooker.CompileT3Ds();
+            }
+
+            if (options.ConvertAssetsToUDK)
+            {
+                didSomething = true;
+                ConvertToUDK.ConvertAssetsToUDK();
             }
 
             if (!didSomething)

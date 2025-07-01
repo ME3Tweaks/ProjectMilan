@@ -254,19 +254,23 @@ namespace LEDecooker
                     if (parentEntry is ImportEntry imp)
                     {
                         var resolved = EntryImporter.ResolveImport(imp, rop.Cache);
-                        rvr = resolved; // This is from another package!
+                        rvr = resolved; // This is from another package! The UIndex will be for that package!
                     }
 
                     bool fromAnotherPackage = false;
 
                     var baseMatObj = rvr.GetProperty<ObjectProperty>("m_pBaseMaterial");
                     var baseMatRef = baseMatObj.ResolveToExport(rvr.FileRef, rop.Cache);
+                    var originalUIndex = uindex;
                     uindex = baseMatRef.UIndex; // We're going to retrigger this method but use a different source export.
 
                     if (ImportOutsideOfPackageRelink(baseMatRef.FileRef, relinkingexport, ref uindex, propertyname, prefix, rop, out result))
                     {
                         return true; // We took care of this
                     }
+
+                    // Restore the original uindex; we are going to be using the normal code path
+                    uindex = originalUIndex;
                 }
             }
 
@@ -344,7 +348,7 @@ namespace LEDecooker
                     }
 
                     // We cannot use this import
-                    Debugger.Break();
+                     Debugger.Break();
                 }
 
                 // An export being ported in within our linker might be coming from a global-only package, which will trigger it to port as an import

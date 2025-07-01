@@ -14,7 +14,7 @@ namespace LEDecooker
         /// <returns></returns>
         public static string GetAssetOutputPath()
         {
-            var outPath = Path.Combine(CLIOptions.ParsedOptions.CompiledT3DOutputFolder, CLIOptions.ParsedOptions.Game.ToString());
+            var outPath = Path.Combine(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game.ToString());
             return Directory.CreateDirectory(outPath).FullName;
         }
 
