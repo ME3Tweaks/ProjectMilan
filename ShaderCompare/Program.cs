@@ -8,7 +8,9 @@ namespace ShaderCompare
     {
         ST_Parameter,
         ST_Resource,
-        ST_VertexFactory
+        ST_VertexFactory,
+        ST_IndexedParameterTArray,
+        ST_IndexedResourceParameterTArray
     }
 
     [DebuggerDisplay("{Type} {ParameterName}")]
@@ -29,6 +31,7 @@ namespace ShaderCompare
     {
         public string ShaderTypeName { get; set; }
         public List<SingleSerialization> Parameters = new();
+        public bool IsVertexFactory { get; set; }
 
         internal SingleSerialization GetParameter(int index)
         {
@@ -65,45 +68,93 @@ namespace ShaderCompare
 
         public List<string> ShaderTypesOnlyInGame1 { get; set; }
         public List<string> ShaderTypesOnlyInGame2 { get; set; }
+        public List<string> VertexFactoryTypesOnlyInGame1 { get; set; }
+        public List<string> VertexFactoryTypesOnlyInGame2 { get; set; }
 
-        /// <summary>
+        #region VERTEX FACTORY
         /// Shader types that have different serializations
         /// </summary>
-        public Dictionary<string, List<ShaderSerializationDifference>> SerializationDifferences = new();
+        public Dictionary<string, List<ShaderSerializationDifference>> VertexFactorySerializationDifferences = new();
 
         /// <summary>
         /// List of same-serialization types
         /// </summary>
-        public List<string> SerializationIdenticals = new();
-        internal void AddSerializationDifference(string stn, int i, string msg)
+        public List<string> VertexFactorySerializationIdenticals = new();
+
+        internal void AddVertexFactorySerializationDifference(string stn, int i, string msg)
         {
-            if (!SerializationDifferences.ContainsKey(stn))
+            if (!VertexFactorySerializationDifferences.ContainsKey(stn))
             {
-                SerializationDifferences[stn] = new List<ShaderSerializationDifference>();
+                VertexFactorySerializationDifferences[stn] = new List<ShaderSerializationDifference>();
             }
-            SerializationDifferences[stn].Add(new ShaderSerializationDifference
+            VertexFactorySerializationDifferences[stn].Add(new ShaderSerializationDifference
             {
                 SerializationIndex = i,
                 Message = msg
             });
         }
+        #endregion
+
+        #region SHADER
+        /// <summary>
+        /// Shader types that have different serializations
+        /// </summary>
+        public Dictionary<string, List<ShaderSerializationDifference>> ShaderSerializationDifferences = new();
+
+        /// <summary>
+        /// List of same-serialization types
+        /// </summary>
+        public List<string> ShaderSerializationIdenticals = new();
+
+
+        internal void AddShaderSerializationDifference(string stn, int i, string msg)
+        {
+            if (!ShaderSerializationDifferences.ContainsKey(stn))
+            {
+                ShaderSerializationDifferences[stn] = new List<ShaderSerializationDifference>();
+            }
+            ShaderSerializationDifferences[stn].Add(new ShaderSerializationDifference
+            {
+                SerializationIndex = i,
+                Message = msg
+            });
+        }
+        #endregion
 
         internal void PrintDifferences()
         {
             Console.WriteLine($"------------------{Game1} vs {Game2} SHADER SERIALIZATION ----------------------------");
+            Console.WriteLine($"---Unique Vertex Factory Types---");
+            Console.WriteLine($"{Game1} has {VertexFactoryTypesOnlyInGame1.Count} vertex shader types that are not in {Game2}");
+            Console.WriteLine($"{Game2} has {VertexFactoryTypesOnlyInGame2.Count} vertex shaders types that are not in {Game1}");
+            PrintUniqueShaderTypes(Game1, VertexFactoryTypesOnlyInGame1);
+            PrintUniqueShaderTypes(Game2, VertexFactoryTypesOnlyInGame2);
+            Console.WriteLine($"--- {VertexFactorySerializationIdenticals.Count} Identical Vertex Factory Serializations---");
+            foreach (var si in VertexFactorySerializationIdenticals)
+            {
+                Console.WriteLine($"  {si}");
+            }
+
+            Console.WriteLine($"--- {VertexFactorySerializationDifferences.Count} Unique Vertex Factory Serializations---");
+            foreach (var suKVP in VertexFactorySerializationDifferences)
+            {
+                PrintSerializationDifferences(suKVP.Key, suKVP.Value);
+            }
+
+
             Console.WriteLine($"---Unique Shader Types---");
             Console.WriteLine($"{Game1} has {ShaderTypesOnlyInGame1.Count} shader types that are not in {Game2}");
             Console.WriteLine($"{Game2} has {ShaderTypesOnlyInGame2.Count} shader types that are not in {Game1}");
             PrintUniqueShaderTypes(Game1, ShaderTypesOnlyInGame1);
             PrintUniqueShaderTypes(Game2, ShaderTypesOnlyInGame2);
-            Console.WriteLine($"--- {SerializationIdenticals.Count} Identical Serializations---");
-            foreach(var si in SerializationIdenticals)
+            Console.WriteLine($"--- {ShaderSerializationIdenticals.Count} Identical Shader Serializations---");
+            foreach (var si in ShaderSerializationIdenticals)
             {
                 Console.WriteLine($"  {si}");
             }
 
-            Console.WriteLine($"--- {SerializationDifferences.Count} Unique Serializations---");
-            foreach(var suKVP in SerializationDifferences)
+            Console.WriteLine($"--- {ShaderSerializationDifferences.Count} Unique Shader Serializations---");
+            foreach (var suKVP in ShaderSerializationDifferences)
             {
                 PrintSerializationDifferences(suKVP.Key, suKVP.Value);
             }
@@ -136,7 +187,7 @@ namespace ShaderCompare
         }
     }
 
-        [DebuggerDisplay("{Game} GSC | {ShaderTypes.Count} Shader Types")]
+    [DebuggerDisplay("{Game} GSC | {ShaderTypes.Count} Shader Types")]
     class GameShaderCompilation
     {
         public MEGame Game { get; init; }
@@ -144,6 +195,7 @@ namespace ShaderCompare
         public GameShaderCompilation(MEGame game) { Game = game; }
 
         public Dictionary<string, ShaderSerialization> ShaderTypes = new Dictionary<string, ShaderSerialization>();
+        public Dictionary<string, ShaderSerialization> VertexFactoryTypes = new Dictionary<string, ShaderSerialization>();
 
         private static ESerializationType GetSerializationType(string typeName)
         {
@@ -159,6 +211,14 @@ namespace ShaderCompare
             {
                 return ESerializationType.ST_VertexFactory;
             }
+            else if (typeName.StartsWith("IndexedParameterTArray"))
+            {
+                return ESerializationType.ST_IndexedParameterTArray;
+            }
+            else if (typeName.StartsWith("IndexedResourceParameterTArray"))
+            {
+                return ESerializationType.ST_IndexedResourceParameterTArray;
+            }
             else
             {
                 throw new ArgumentException($"Unknown serialization type: {typeName}");
@@ -172,17 +232,34 @@ namespace ShaderCompare
             {
                 if (!line.StartsWith("  "))
                 {
+                    bool parsingVF = false;
+                    string typeName = line.Trim();
+                    if (typeName.StartsWith("[VF"))
+                    {
+                        // Vertex Factory
+                        parsingVF = true;
+                        typeName = typeName.Substring(4); // Remove [VF]
+                    }
+
                     // Start of a new shader type
                     if (currentShader != null)
                     {
                         // Cache last one
-                        ShaderTypes[currentShader.ShaderTypeName] = currentShader;
+                        if (currentShader.IsVertexFactory)
+                        {
+                            VertexFactoryTypes[currentShader.ShaderTypeName] = currentShader;
+                        }
+                        else
+                        {
+                            ShaderTypes[currentShader.ShaderTypeName] = currentShader;
+                        }
                     }
 
                     // Start new shader obj
                     currentShader = new ShaderSerialization
                     {
-                        ShaderTypeName = line.Trim()
+                        ShaderTypeName = typeName,
+                        IsVertexFactory = parsingVF
                     };
                 }
                 else
@@ -209,7 +286,11 @@ namespace ShaderCompare
             }
 
             // Cache final
-            if (currentShader != null)
+            if (currentShader.IsVertexFactory)
+            {
+                VertexFactoryTypes[currentShader.ShaderTypeName] = currentShader;
+            }
+            else
             {
                 ShaderTypes[currentShader.ShaderTypeName] = currentShader;
             }
@@ -225,11 +306,62 @@ namespace ShaderCompare
         internal GameComparison Compare(GameShaderCompilation other)
         {
             GameComparison gc = new GameComparison(Game, other.Game);
+            gc.VertexFactoryTypesOnlyInGame1 = CompareVertexFactoryTypeNames(other);
+            gc.VertexFactoryTypesOnlyInGame2 = other.CompareVertexFactoryTypeNames(this);
             gc.ShaderTypesOnlyInGame1 = CompareShaderTypeNames(other);
             gc.ShaderTypesOnlyInGame2 = other.CompareShaderTypeNames(this);
 
             // Compare serializations
-            var allShaderTypeNames = ShaderTypes.Keys.Concat(other.ShaderTypes.Keys).Distinct().OrderBy(x => x).ToList();
+            var allVertexFactoryTypeNames = VertexFactoryTypes.Keys.Concat(other.VertexFactoryTypes.Keys).Distinct().OrderBy(x => x).ToList();
+            foreach (var stn in allVertexFactoryTypeNames)
+            {
+                if (gc.VertexFactoryTypesOnlyInGame1.Contains(stn) || gc.VertexFactoryTypesOnlyInGame2.Contains(stn))
+                {
+                    // We know this difference
+                    continue;
+                }
+
+                var game1Serialization = VertexFactoryTypes[stn];
+                var game2Serialization = other.VertexFactoryTypes[stn];
+
+                var numSerializations = Math.Max(game1Serialization.Parameters.Count, game2Serialization.Parameters.Count);
+                bool typeIsDifferent = false;
+                for (int i = 0; i < numSerializations; i++)
+                {
+                    var game1s = game1Serialization.GetParameter(i);
+                    var game2s = game2Serialization.GetParameter(i);
+
+                    if (game1s != null && game2s == null)
+                    {
+                        // In game 1 but not game 2
+                        gc.AddVertexFactorySerializationDifference(stn, i, $"[{i}] << {gc.Game1} {game1s.ParameterName} | {gc.Game2} NULL");
+                        typeIsDifferent = true;
+                    }
+                    else if (game1s == null && game2s != null)
+                    {
+                        // Not in game 1 but in game 2
+                        gc.AddVertexFactorySerializationDifference(stn, i, $"[{i}] >> {gc.Game2} {game2s.ParameterName} | {gc.Game1} NULL");
+                        typeIsDifferent = true;
+                    }
+                    else if (!game1s.Equals(game2s))
+                    {
+                        gc.AddVertexFactorySerializationDifference(stn, i, $"[{i}] !! {gc.Game1} {game1s.ParameterName} | {gc.Game2} {game2s.ParameterName}");
+                        typeIsDifferent = true;
+                    }
+                    else
+                    {
+                        // Serialization is same
+                    }
+                }
+
+                if (!typeIsDifferent)
+                {
+                    gc.VertexFactorySerializationIdenticals.Add(stn);
+                }
+            }
+
+
+                var allShaderTypeNames = ShaderTypes.Keys.Concat(other.ShaderTypes.Keys).Distinct().OrderBy(x => x).ToList();
             foreach (var stn in allShaderTypeNames)
             {
                 if (gc.ShaderTypesOnlyInGame1.Contains(stn) || gc.ShaderTypesOnlyInGame2.Contains(stn))
@@ -241,54 +373,13 @@ namespace ShaderCompare
                 var game1Serialization = ShaderTypes[stn];
                 var game2Serialization = other.ShaderTypes[stn];
 
-
-
-
-
-                // STANDARD COMPARE
-                if (false) {
-                    var numSerializations = Math.Max(game1Serialization.Parameters.Count, game2Serialization.Parameters.Count);
-                    bool typeIsDifferent = false;
-                    for (int i = 0; i < numSerializations; i++)
-                    {
-                        var game1s = game1Serialization.GetParameter(i);
-                        var game2s = game2Serialization.GetParameter(i);
-
-                        if (game1s != null && game2s == null)
-                        {
-                            // In game 1 but not game 2
-                            gc.AddSerializationDifference(stn, i, $"[{i}] << {gc.Game1} {game1s.ParameterName} | {gc.Game2} NULL");
-                            typeIsDifferent = true;
-                        }
-                        else if (game1s == null && game2s != null)
-                        {
-                            // Not in game 1 but in game 2
-                            gc.AddSerializationDifference(stn, i, $"[{i}] >> {gc.Game2} {game2s.ParameterName} | {gc.Game1} NULL");
-                            typeIsDifferent = true;
-                        }
-                        else if (!game1s.Equals(game2s))
-                        {
-                            gc.AddSerializationDifference(stn, i, $"[{i}] !! {gc.Game1} {game1s.ParameterName} | {gc.Game2} {game2s.ParameterName}");
-                            typeIsDifferent = true;
-                        }
-                        else
-                        {
-                            // Serialization is same
-                        }
-                    }
-
-                    if (!typeIsDifferent)
-                    {
-                        gc.SerializationIdenticals.Add(stn);
-                    }
-                }
-
                 // SHIFTED COMPARE
-                if (true) {
+                if (true)
+                {
                     var sizeDiff = Math.Abs(game1Serialization.Parameters.Count - game2Serialization.Parameters.Count);
                     bool hasDifferentCounts = game1Serialization.Parameters.Count != game2Serialization.Parameters.Count;
-                    
-                    
+
+
                     var numSerializations = Math.Max(game1Serialization.Parameters.Count, game2Serialization.Parameters.Count);
                     bool typeIsDifferent = false;
                     int ig1 = -1;
@@ -305,11 +396,11 @@ namespace ShaderCompare
                         {
                             if (game1s.ParameterName == "SceneColorTexture" && sizeDiff >= 4)
                             {
-                                gc.AddSerializationDifference(stn, i, $"[{i}] << {gc.Game1} [FSceneTextureShaderParameters] | {gc.Game2} NULL");
+                                gc.AddShaderSerializationDifference(stn, i, $"[{i}] << {gc.Game1} [FSceneTextureShaderParameters] | {gc.Game2} NULL");
                                 game2Serialization.Parameters.Insert(i, game1Serialization.GetParameter(ig1));
-                                game2Serialization.Parameters.Insert(i+1, game1Serialization.GetParameter(ig1+1));
-                                game2Serialization.Parameters.Insert(i+2, game1Serialization.GetParameter(ig1+2));
-                                game2Serialization.Parameters.Insert(i+3, game1Serialization.GetParameter(ig1+3));
+                                game2Serialization.Parameters.Insert(i + 1, game1Serialization.GetParameter(ig1 + 1));
+                                game2Serialization.Parameters.Insert(i + 2, game1Serialization.GetParameter(ig1 + 2));
+                                game2Serialization.Parameters.Insert(i + 3, game1Serialization.GetParameter(ig1 + 3));
                                 typeIsDifferent = true;
                                 continue;
                             }
@@ -318,18 +409,18 @@ namespace ShaderCompare
                         if (game1s != null && game2s == null)
                         {
                             // In game 1 but not game 2
-                            gc.AddSerializationDifference(stn, i, $"[{i}] << {gc.Game1} {game1s.ParameterName} | {gc.Game2} NULL");
+                            gc.AddShaderSerializationDifference(stn, i, $"[{i}] << {gc.Game1} {game1s.ParameterName} | {gc.Game2} NULL");
                             typeIsDifferent = true;
                         }
                         else if (game1s == null && game2s != null)
                         {
                             // Not in game 1 but in game 2
-                            gc.AddSerializationDifference(stn, i, $"[{i}] >> {gc.Game2} {game2s.ParameterName} | {gc.Game1} NULL");
+                            gc.AddShaderSerializationDifference(stn, i, $"[{i}] >> {gc.Game2} {game2s.ParameterName} | {gc.Game1} NULL");
                             typeIsDifferent = true;
                         }
                         else if (!game1s.Equals(game2s))
                         {
-                            gc.AddSerializationDifference(stn, i, $"[{i}] !! {gc.Game1} {game1s.ParameterName} | {gc.Game2} {game2s.ParameterName}");
+                            gc.AddShaderSerializationDifference(stn, i, $"[{i}] !! {gc.Game1} {game1s.ParameterName} | {gc.Game2} {game2s.ParameterName}");
                             typeIsDifferent = true;
                         }
                         else
@@ -340,7 +431,7 @@ namespace ShaderCompare
 
                     if (!typeIsDifferent)
                     {
-                        gc.SerializationIdenticals.Add(stn);
+                        gc.ShaderSerializationIdenticals.Add(stn);
                     }
 
                     //if (ig1 != game1Serialization.Parameters.Count-1)
@@ -352,6 +443,20 @@ namespace ShaderCompare
             }
 
             return gc;
+        }
+
+        private List<string> CompareVertexFactoryTypeNames(GameShaderCompilation other)
+        {
+            List<string> onlyInMe = new List<string>();
+            foreach (var stn in VertexFactoryTypes.Keys)
+            {
+                if (!other.VertexFactoryTypes.ContainsKey(stn))
+                {
+                    onlyInMe.Add(stn);
+                }
+            }
+
+            return onlyInMe;
         }
 
         private List<string> CompareShaderTypeNames(GameShaderCompilation other)
@@ -376,7 +481,7 @@ namespace ShaderCompare
         {
             var le1File = File.ReadAllLines(@"S:\Milan\ShaderResearch\LE1ShaderSerialization.txt");
             var le2File = File.ReadAllLines(@"S:\Milan\ShaderResearch\LE2ShaderSerialization.txt");
-            // var le3File = File.ReadAllLines(@"S:\Milan\ShaderResearch\LE3ShaderSerialization.txt");
+            var le3File = File.ReadAllLines(@"S:\Milan\ShaderResearch\LE3ShaderSerialization.txt");
 
             var le1Info = new GameShaderCompilation(MEGame.LE1);
             le1Info.ReadOutput(le1File);
@@ -384,19 +489,21 @@ namespace ShaderCompare
             var le2Info = new GameShaderCompilation(MEGame.LE2);
             le2Info.ReadOutput(le2File);
 
-            var le1le2Diff = le1Info.Compare(le2Info);
-            var le2le1Diff = le2Info.Compare(le1Info);
+            var le3Info = new GameShaderCompilation(MEGame.LE3);
+            le3Info.ReadOutput(le3File);
 
-            if (le1le2Diff.SerializationDifferences.Count != le2le1Diff.SerializationDifferences.Count)
-            {
-                //Debugger.Break();
-            }
+            //var le1le2Diff = le1Info.Compare(le2Info);
+            //var le2le1Diff = le2Info.Compare(le1Info);
 
-            le1le2Diff.PrintDifferences();
+            var le1le3Diff = le1Info.Compare(le3Info);
+            var le2le3Diff = le2Info.Compare(le3Info);
+
+
+            le1le3Diff.PrintDifferences();
+            //le2le3Diff.PrintDifferences();
 
             Console.WriteLine("End of report");
             Console.ReadLine();
-            var le3Info = new GameShaderCompilation(MEGame.LE3);
             // le3Info.ReadOutput(le3File); // Placeholder for LE3, using LE1 as an example
 
         }
