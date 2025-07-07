@@ -344,16 +344,23 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 			outErrorMsgLen = strlen(error);
 			memcpy(&outErrorMsg, error, outErrorMsgLen);
 		}
+
+		auto def = pDefines;
+		std::cout << "ShaderFilename: " << includer.BaseShaderName.c_str() << ", Entrypoint: " << entryPoint.c_str() << ", Macros:\n";
+		D3D_SHADER_MACRO macro;
+		do {
+			macro = *def;
+			if (macro.Name != nullptr) {
+				std::cout << "  " << macro.Name << "=" << macro.Definition << std::endl;
+			}
+			def++;
+		} while (macro.Name != nullptr);
 	}
 	else {
 		if (OutBlob)
 		{
 			outShaderLen = OutBlob->GetBufferSize();
 			memcpy(&outShaderBytes, OutBlob->GetBufferPointer(), outShaderLen);
-
-			// Also get number of instructions
-			// https://learn.microsoft.com/en-us/windows/win32/api/d3d11shader/nn-d3d11shader-id3d11shaderreflection
-			// Todo
 		}
 		else
 		{
