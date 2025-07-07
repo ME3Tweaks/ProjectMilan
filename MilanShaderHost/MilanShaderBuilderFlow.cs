@@ -6,6 +6,8 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using System.Diagnostics;
+using LegendaryExplorerCore.Shaders;
+using System.Diagnostics;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 
@@ -18,6 +20,16 @@ namespace MilanShaderHost
     internal class MilanShaderBuilderFlow
     {
         private static List<string> PackageFilesToProcess = new List<string>();
+
+        /// <summary>
+        /// Package the final shader cache will be saved into. Materials will be transferred into this as well once compiling is complete and then linked up.
+        /// </summary>
+        private static IMEPackage scPackage;
+
+        /// <summary>
+        /// A transient package that we copy assets into that are also copied into the level package. This package is where we pull data from to build the shader cache package result.
+        /// </summary>
+        private static IMEPackage transientPackage;
 
         public static void KillGame()
         {
@@ -37,36 +49,63 @@ namespace MilanShaderHost
         /// </summary>
         public static void StartFlow()
         {
+            MilanShaderPackageBuilder.SourceFolders.Add(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D");
+
+
             KillGame();
             SetupFileList();
-            ShaderHost.ShaderCacheUpdated += OnShaderCacheUpdated;
+            ShaderHost.NewShaderCacheGenerated += OnMaterialCompiled;
             foreach (var file in PackageFilesToProcess)
             {
-                Console.WriteLine($"Building shaders for: {Path.GetFileNameWithoutExtension(file)}");
+                var outPath = Path.Combine(@"S:\Milan\ShaderResearch\CompiledShaderPackages", Path.GetFileNameWithoutExtension(file) + ".pcc");
 
-                scPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(MEDirectories.GetDLCPath(Program.Game), @"DLC_MOD_MorePhotoFilters1\CookedPCConsole\ShaderCompiler.pcc"), Program.Game);
+                if (false)
+                {
+                    Console.WriteLine($"Building shaders for: {Path.GetFileNameWithoutExtension(file)}");
 
-                // Builds materials into the map
-                SetupEntry(file);
+                    scPackage = MEPackageHandler.CreateMemoryEmptyPackage(Path.GetFileName(file), Program.Game);
+                    scPackage.CreateShaderCache();
 
-                // Runs game, which builds shaders and feeds them back to us.
-                StartGameAndWaitForExit();
+                    // Builds materials into the map
+                    SetupEntry(file, false);
+
+                    // Runs game, which builds shaders and feeds them back to us.
+                    StartGameAndWaitForExit();
+
+                    scPackage.Save(outPath);
+                }
 
                 // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
                 Console.WriteLine($"Finished compiling shaders for {Path.GetFileNameWithoutExtension(file)}");
+
+                // Test...
+                if (true)
+                {
+                    Console.WriteLine($"Rebuilding with compiled shaders for previewing");
+                    SetupEntry(outPath, true);
+                    StartGameAndWaitForExit();
+                }
             }
 
 
             Console.WriteLine($"Shader compiling complete.");
         }
 
-        private static void SetupEntry(string sourcePath)
+        private static void SetupEntry(string sourcePath, bool buildWithMeshes)
         {
             // Have to figure this out for LE2 as it doesn't have entry map.
             var inPath = Path.Combine(ME3TweaksBackups.GetGameBackupPath(Program.Game), "BioGame", "CookedPCConsole", "entry.pcc");
             var outPath = Path.Combine(MEDirectories.GetCookedPath(Program.Game), "entry.pcc");
+            transientPackage = MEPackageHandler.CreateMemoryEmptyPackage("Transient.pcc", Program.Game);
+            var package = MilanShaderPackageBuilder.BuildIntoExistingPackage(inPath, sourcePath, transientPackage, buildWithMeshes);
+            if (buildWithMeshes)
+            {
+                // Copy SeekFreeShaderCache
+                using var tPackage = MEPackageHandler.OpenMEPackage(sourcePath, forceLoadFromDisk: true);
+                var cache = tPackage.FindExport("SeekFreeShaderCache");
+                EntryExporter.ExportExportToPackage(cache, package, out var cacheExport);
+            }
 
-            var package = MilanShaderPackageBuilder.BuildIntoExistingPackage(inPath, sourcePath);
             package.Save(outPath);
             return;
 
@@ -85,12 +124,41 @@ namespace MilanShaderHost
             }
         }
 
-        private static void OnShaderCacheUpdated(object? sender, EventArgs e)
+        private static void OnMaterialCompiled(object? sender, CompileResult cr)
         {
-            // Merge materials from scPackage into the shader cache package so they stay linked up, as the guids are randomly generated.
-            foreach (var exp in scPackage.Exports.Where(x => x.ClassName == "Material"))
+            // Merge material into the package.
+            var matchingMat = transientPackage.Exports.FirstOrDefault(x => x.ObjectNameString == cr.MaterialName && x.ClassName == "Material");
+            if (matchingMat == null)
             {
+                Console.WriteLine($"No matching material found for {cr.MaterialName} in transient package. Skipping.");
+                return;
             }
+
+            // Export matching material from transient package to final compiled package
+            EntryExporter.ExportExportToPackage(matchingMat, scPackage, out var pMat);
+            var matExp = (ExportEntry)pMat;
+
+            // Replace the final package material resource with the one we got from the game.
+            var ms = new MemoryStream(cr.MaterialResource);
+            var matSerializer = new PackagelessWithObjectsSerializingContainer(ms, scPackage, true) { Game = transientPackage.Game };
+            var sm3r = new MaterialResource();
+            matSerializer.Serialize(ref sm3r);
+
+            // Also need to copy in the binary for the material resource. Not sure how to do that.
+            ObjectBinary.EditBinary<Material>(matExp, (x) =>
+            {
+                x.SM3MaterialResource = sm3r;
+            });
+            // Merge shader cache into the package.
+            var cache = scPackage.FindExport("SeekFreeShaderCache");
+            ObjectBinary.EditBinary<ShaderCache>(cache, (x) =>
+            {
+                cr.Cache.MergeInto(x);
+            });
+
+            // We need to link up the guids.
+            Console.WriteLine($"Merged {cr.MaterialName} into result package");
+
         }
 
         private static void SetupFileList()
@@ -98,10 +166,6 @@ namespace MilanShaderHost
             PackageFilesToProcess.Add(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D\BioT_MPJungle.pcc");
         }
 
-        /// <summary>
-        /// Current shader cache package that the game is using to build
-        /// </summary>
-        private static IMEPackage scPackage;
         private static void BuildShaders(string inputFile)
         {
             // Find source objects    

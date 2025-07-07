@@ -54,7 +54,7 @@ namespace MilanShaderHost
         /// Builds material refs into the existing given map file. Does NOT save the package it creates.
         /// </summary>
         /// <param name="entryPath"></param>
-        public static IMEPackage BuildIntoExistingPackage(string entryPath, string sourceStylePath)
+        public static IMEPackage BuildIntoExistingPackage(string entryPath, string sourceStylePath, IMEPackage transientPackage, bool buildWithMeshes)
         {
             var startupLevel = MEPackageHandler.OpenMEPackage(entryPath);
 
@@ -64,7 +64,19 @@ namespace MilanShaderHost
             ConvertSourceToForcedExport(sourceStylePackage);
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
+
+            // Port materials into transient
             foreach (var mat in sourceStylePackage.Exports.Where(x => x.IsA("Material")))
+            {
+                var pMat = PortSourceToCooked(mat, transientPackage);
+                if (pMat != null)
+                {
+                    portedMats.Add(pMat);
+                }
+            }
+
+            // Also port materials into the startup level. This should be faster... I hope
+            foreach (var mat in transientPackage.Exports.Where(x => x.IsA("Material")))
             {
                 var pMat = PortSourceToCooked(mat, startupLevel);
                 if (pMat != null)
@@ -77,7 +89,7 @@ namespace MilanShaderHost
 
             foreach (var pMat in portedMats)
             {
-                AddStaticMeshActorForMaterial(pMat, startPos);
+                AddStaticMeshActorForMaterial(pMat, startPos, buildWithMeshes);
                 startPos.Y -= 256;
             }
 
@@ -86,7 +98,7 @@ namespace MilanShaderHost
             return startupLevel;
         }
 
-
+        // Not used.
         public static void BuildMapPackage(string packagePath)
         {
             //var outDir = @"S:\Milan\UDK\MilanShaderMapPackages";
@@ -134,7 +146,7 @@ namespace MilanShaderHost
 
             foreach (var pMat in portedMats)
             {
-                AddStaticMeshActorForMaterial(pMat, startPos);
+                AddStaticMeshActorForMaterial(pMat, startPos, true);
                 startPos.Y -= 256;
             }
 
@@ -160,6 +172,12 @@ namespace MilanShaderHost
             // Move all root non-forced export objects to forced export
             foreach (var exp in sourcePackage.Exports.Where(x => x.idxLink == 0 && x != fileRefExp && (x.ExportFlags & UnrealFlags.EExportFlags.ForcedExport) == 0))
             {
+                if (exp.ObjectName == "SeekFreeShaderCache")
+                {
+                    // Do not move this object
+                    continue;
+                }
+
                 exp.idxLink = fileRefExp.UIndex;
             }
 
@@ -216,6 +234,10 @@ namespace MilanShaderHost
                             uIndex = portedSourceObj.UIndex;
                             return true;
                         }
+                    } 
+                    else
+                    {
+                        Console.WriteLine($"Not porting as export: {imp.InstancedFullPath} ({imp.ClassName})");
                     }
                 }
             }
@@ -370,7 +392,7 @@ namespace MilanShaderHost
             package.AddImport(impPackage);
         }
 
-        private static ExportEntry AddStaticMeshActorForMaterial(ExportEntry material, Point3D location)
+        private static ExportEntry AddStaticMeshActorForMaterial(ExportEntry material, Point3D location, bool setMesh)
         {
             var package = material.FileRef;
             var level = package.GetLevel();
@@ -396,9 +418,17 @@ namespace MilanShaderHost
             };
             meshSMC.WriteBinary(smcb);
 
-            var cube = package.FindImport("EngineMeshes.Cube");
-            meshSMC.WriteProperty(new ObjectProperty(cube, "StaticMesh"));
-
+            if (setMesh)
+            {
+                var engineMeshes = package.CreatePackageImport("EngineMeshes");
+                var cube = package.CreateImport("StaticMesh", "Cube", engineMeshes);
+                meshSMC.WriteProperty(new ObjectProperty(cube, "StaticMesh"));
+            }
+            else
+            {
+                // Null - prevents crashes since we can't actually compile on demand
+                meshSMC.WriteProperty(new ObjectProperty(0, "StaticMesh"));
+            }
             if (material != null)
                 SetMaterial(meshSMC, material);
 

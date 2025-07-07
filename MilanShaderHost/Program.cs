@@ -31,7 +31,7 @@ namespace MilanShaderHost
 
 
             // Uncomment to do automated shader compiler flow
-            // Task.Run(MilanShaderBuilderFlow.StartFlow);
+            Task.Run(MilanShaderBuilderFlow.StartFlow);
 
             // Start the pipe server.
             ShaderHost sh = new ShaderHost();

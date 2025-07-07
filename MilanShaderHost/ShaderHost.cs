@@ -41,11 +41,13 @@ namespace MilanShaderHost
             MaterialResource = 4,
         }
 
-        MEGame game = MEGame.LE3;
         EReadMode CurrentReadMode = EReadMode.None;
         int IncomingShaderCacheSize = 0;
 
-        public static event EventHandler ShaderCacheUpdated;
+        /// <summary>
+        /// Invoked when a new shader cache is generated (a material has been successfully compiled)
+        /// </summary>
+        public static event EventHandler<CompileResult> NewShaderCacheGenerated;
 
         internal void StartListening()
         {
@@ -54,7 +56,8 @@ namespace MilanShaderHost
                 File.Delete(shaderCacheFile);
             }
 
-            ShaderCache buildingCache = null;
+            // Used to pass to the flow to compile a package
+            CompileResult cr = null;
 
             using var server = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte);
             var reader = new BinaryReader(server, Encoding.Unicode);
@@ -88,6 +91,7 @@ namespace MilanShaderHost
                     {
                         var commandByte = reader.ReadByte();
                         CurrentReadMode = (EReadMode)commandByte;
+                        // Console.WriteLine($"Received command: {CurrentReadMode}");
                     }
                     catch (IOException)
                     {
@@ -106,27 +110,26 @@ namespace MilanShaderHost
                     }
 
                     var incomingShaderCache = reader.ReadBytes(IncomingShaderCacheSize);
-                    MemoryStream incomingCacheTemp = new MemoryStream(incomingShaderCache);
-                    incomingCacheTemp.Skip(4); // Netindex
-                    incomingCacheTemp.ReadUnrealString(); // None
+                    // Console.WriteLine($"Read {IncomingShaderCacheSize} bytes from client");
 
+                    MemoryStream incomingCacheTemp = new MemoryStream(incomingShaderCache);
+                    // incomingCacheTemp.WriteToFile(@"C:\users\public\shadercache_raw.bin");
+                    incomingCacheTemp.Skip(4); // Netindex
+                    var inStr = incomingCacheTemp.ReadUnrealString(); // None
+                    // Debug.WriteLine("Should be none: " + inStr);
                     MemoryStream incomingCache = new MemoryStream();
-                    WriteFakeGlobalCacheHeader(incomingCache, game);
                     incomingCacheTemp.CopyTo(incomingCache);
                     incomingCache.Position = 0;
                     // incomingCache.WriteToFile(@"C:\users\public\shadercache.bin");
-                    var cache = ShaderCache.ReadGlobalShaderCache(incomingCache, game);
-
-                    if (buildingCache == null)
-                    {
-                        buildingCache = cache;
-                    }
-                    else
-                    {
-                        cache.MergeInto(buildingCache, true);
-                    }
-                    WriteCacheToFile(buildingCache);
+                    var packagelessSC = new PackagelessSerializingContainer(incomingCache, null, true) { Game = Program.Game };
+                    var cache = new ShaderCache() { Packageless = true };
+                    cache.PublicSerialize(packagelessSC);
+                    
+                    cr = new CompileResult() { Cache = cache };
+                    // WriteCacheToFile(buildingCache);
+                    IncomingShaderCacheSize = 0; // Reset
                     CurrentReadMode = EReadMode.None; // Reset
+                    // Console.WriteLine();
                     continue;
                 }
                 else if (CurrentReadMode == EReadMode.TerminateGame)
@@ -147,16 +150,20 @@ namespace MilanShaderHost
                     var strData = reader.ReadBytes(strLen); // Unicode
                     var materialName = Encoding.Unicode.GetString(strData);
                     Console.WriteLine($"Incoming material data: {materialName}");
-                    
+
                     // Material binary incoming.
                     var incomingDataLen = reader.ReadInt32();
                     var materialResourceBin = reader.ReadBytes(incomingDataLen);
                     var outF = Path.Combine(@"C:\users\public\matbins", materialName + ".bin");
                     File.WriteAllBytes(outF, materialResourceBin);
+                    cr.MaterialName = materialName;
+                    cr.MaterialResource = materialResourceBin;
+                    NewShaderCacheGenerated?.Invoke(this, cr);
+                    cr = null; // Reset
 
-                    Console.WriteLine($"Received material resource binary for {materialName}, {incomingDataLen} bytes");
-
+                    //Console.WriteLine($"Received material resource binary for {materialName}, {incomingDataLen} bytes");
                     CurrentReadMode = EReadMode.None;
+                    Console.WriteLine();
                 }
             }
         }
@@ -190,12 +197,6 @@ namespace MilanShaderHost
             }
 
             package.Save();
-
-            // Notify listeners that we have just updated the shader cache
-            if (ShaderCacheUpdated != null)
-            {
-                ShaderCacheUpdated.Invoke(this, EventArgs.Empty);
-            }
         }
 
 
