@@ -14,12 +14,7 @@ internal class MilanBankConvertInfo
     /// </summary>
     public ExportEntry LE3BankExport { get; set; }
     
-    public LECWwiseBank ObjectBinary { get; set; }
-    
-    /// <summary>
-    /// Instance of Wwiser.NET bank
-    /// </summary>
-    public WwiseBankParser? BankParser { get; set; }
+    public uint BankVersion { get; set; }
     
     public LocalizedIFP LocalizedInfo { get; set; }
 
@@ -48,10 +43,9 @@ internal class MilanBankConvertInfo
         AFCName = firstStream?.GetProperty<NameProperty>("Filename").Value ?? "";
         MilanAFCName = AFCName;
 
-        ObjectBinary = LE3BankExport.GetBinaryData<LECWwiseBank>();
-        if (ObjectBinary.BnkFile.Length == 0) return;
-        BankParser = new WwiseBankParser(new MemoryStream(ObjectBinary.BnkFile));
-
+        var stream = LE3BankExport.GetReadOnlyBinaryStream();
+        stream.Seek(sizeof(int) * 4, SeekOrigin.Begin);
+        (BankVersion, _) = WwiseBankParser.ReadWwiseHeaderInfo(stream);
     }
 
     public string GetDecompiledFolderName()

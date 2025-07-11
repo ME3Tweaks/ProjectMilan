@@ -7,6 +7,7 @@ using ProjectMilan.Utility;
 using ProjectMilanCore;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using ME3Tweaks.Wwiser.BankConversion;
 using WwiseBankLEC = LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank;
 
 namespace ProjectMilan.Pipelines.Audio;
@@ -63,16 +64,14 @@ internal static class BankConvertPipeline
                         MilanLog.Information(
                             $" - Converting {b.LocalizedInfo} in {Path.GetFileName(b.LE3BankExport.FileRef.FilePath)}",
                             customPrefix: LOG_CATEGORY);
-                        if (b.BankParser is null) continue;
                         try
                         {
-                            var bankArray = ConvertBank(b).ToArray();
-                            WwiseBankLEC.WriteBankRaw(bankArray, b.LE3BankExport);
+                            var bank = ConvertAndWriteBank(b);
                             
                             var cacheFileName = Path.Combine(bankCacheFolder, $"{b.LocalizedInfo}.bnk");
                             if (bankCache.TryAdd(b.LocalizedInfo.ToString(), cacheFileName))
                             {
-                                File.WriteAllBytes(cacheFileName, bankArray);
+                                File.WriteAllBytes(cacheFileName, bank.BnkFile);
                             }
                         }
                         catch (Exception e)
@@ -105,22 +104,19 @@ internal static class BankConvertPipeline
         return packageMap;
     }
 
-    private static MemoryStream ConvertBank(MilanBankConvertInfo b)
+    private static WwiseBankLEC ConvertAndWriteBank(MilanBankConvertInfo b)
     {
-        if (b.BankParser is null) return new MemoryStream();
+        var bin = b.LE3BankExport.GetBinaryData<WwiseBankLEC>();
         
-        b.BankParser.Deserialize(); // Deserialize binary into object graph
-
-        b.BankParser.ConvertToVersion(134); // Run Wwiser version convert
+        WwiseBankConverter.ConvertBank(bin.Bank, 134); // Run wwiser veresion convert
         
-        if (b.BankParser.WwiseBank != null)
+        if (bin.Bank != null)
         {
-            SetMilanSpecificBankData(b.BankParser.WwiseBank);
+            SetMilanSpecificBankData(bin.Bank);
         }
 
-        var dataOut = new MemoryStream();
-        b.BankParser.SerializeTo(dataOut);
-        return dataOut;
+        b.LE3BankExport.WriteBinary(bin);
+        return bin;
     }
 
     private static void SetMilanSpecificBankData(WwiseBank bank)
@@ -138,7 +134,7 @@ internal static class BankConvertPipeline
         bank.STID = null;
 
         // Padding that seems to be found on banks that ordinarily would have zero?
-        if (bank.DATA is null)
+        if (bank.EmbeddedFiles.Count == 0)
         {
             bank.BKHD.Padding.Padding = new byte[4];
         }

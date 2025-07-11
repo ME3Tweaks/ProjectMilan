@@ -36,7 +36,7 @@ internal static class AudioPipeline
                 }
 
                 // Only convert banks that are v56 - non-donor banks from ME3.
-                if (bankInfo.BankParser is { Version: 56 }) bankInventory.Add(bankInfo);
+                if (bankInfo.BankVersion == 56 ) bankInventory.Add(bankInfo);
             }
         }
         return bankInventory;
