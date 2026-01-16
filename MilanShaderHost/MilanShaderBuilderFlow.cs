@@ -140,7 +140,8 @@ namespace MilanShaderHost
 
             // Replace the final package material resource with the one we got from the game.
             var ms = new MemoryStream(cr.MaterialResource);
-            var matSerializer = new PackagelessWithObjectsSerializingContainer(ms, scPackage, true) { Game = transientPackage.Game };
+            var matSerializer = new PackagelessWithObjectsSerializingContainer(ms, scPackage, true);
+            matSerializer.SetGame(transientPackage.Game);
             var sm3r = new MaterialResource();
             matSerializer.Serialize(ref sm3r);
 
