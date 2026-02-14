@@ -124,6 +124,8 @@ namespace ProjectMilan.Pipelines.Levels
                 if (Program.Settings.IsStaticLightingBuild)
                 {
                     StaticLightingExport.ExportLevelToUDK(level.LE3BioP);
+                    // This doesn't work reliably right now, unfortunately.
+                    //StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension);
                 }
 
                 level.ClearReferences();
