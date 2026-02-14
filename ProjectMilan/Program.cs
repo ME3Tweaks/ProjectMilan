@@ -179,6 +179,10 @@ namespace ProjectMilan
         {
             MilanInit.Init(); // Initialize shared pipeline data
 
+            // You can uncomment these (along with DontDeleteModFolder) to skip to a specific step.
+            // goto postMpCommon;
+
+
             // Uncomment to run DonorDB build
             //DonorTooling.BuildDonorDB();
             //return;
@@ -193,7 +197,7 @@ namespace ProjectMilan
 
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
             RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
-
+        postMpCommon:
             // Content build pipelines
             // This should not be required anymore
             DonorBuilderPipeline.InventoryDonorPackages(); // This is outside of the RunPipeline because if you skip this pipeline, this will make it so it properly ports donors 
@@ -207,8 +211,9 @@ namespace ProjectMilan
             MilanShared.EnsureAFCsAvailable();
             AudioPipeline.EnsureWwise7110();
 
-
+        kitsBuild:
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
+        weaponsBuild:
             RunPipeline(Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
 
             // This pipeline must come after weapons as it depends on Collector SMG.
@@ -221,11 +226,13 @@ namespace ProjectMilan
                 MilanLog.Error(@"MP4Enemies pipeline cannot run without SFXWeapons, pipeline being skipped.");
             }
 
+        levelBuild:
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
             MilanShared.DropMPCommonTieredPackageCache(); // Release lots of memory
-
+        rejectionBuild:
             RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
+        redemptionBuild:
             RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipeline, "Redemption"); // Builds Redemption Maps
 
 
@@ -246,6 +253,10 @@ namespace ProjectMilan
 
             // Verification
             RunPipeline(true, VerifyMod.RunPipeline, "Verify");
+
+            // Licensee conversion
+            // Don't enable until we get stuff working in LEX
+            //RunPipeline(true, LMPLicensee.RunPipeline, "Licensee");
 
             // Patch for multi instance
             MultiInstance.PatchForMultiInstance();
@@ -322,8 +333,10 @@ namespace ProjectMilan
             //Research.GeneratePerPackageNesting();
             //UDKSetupT3D.DecookME3MPDLC();
             //UDKSetupT3D.CompileT3Ds();
-            UDKSetupT3D.ConvertAssetsToUDK();
-            // Research.LightingBake();
+            // UDKSetupT3D.ConvertAssetsToUDK();
+            //Research.LightingBake();
+            // Research.ScanForShaderCompPackages();
+            Research.InstallCompiledShaders();
 #endif
         }
     }

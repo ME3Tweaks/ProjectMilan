@@ -57,7 +57,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
                     if (loadedFiles.TryGetValue($"{additionalPackage}.pcc", out string filePath))
                     {
                         MilanLog.Information($"Converting sublevel {additionalPackage} to UDK", customPrefix: LOG_CATEGORY);
-                        using IMEPackage levPcc = MEPackageHandler.OpenMEPackage(filePath); 
+                        using IMEPackage levPcc = MEPackageHandler.OpenMEPackage(filePath);
                         levelFiles.Add(ConvertToUDK.GenerateUDKFileForLevel(levPcc, mapOutputPath, assetOutputPath, decookedMaterialsDir, delegatesROP));
                         continue;
                     }
