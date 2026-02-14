@@ -121,7 +121,8 @@ namespace MilanShaderHost
                     incomingCacheTemp.CopyTo(incomingCache);
                     incomingCache.Position = 0;
                     // incomingCache.WriteToFile(@"C:\users\public\shadercache.bin");
-                    var packagelessSC = new PackagelessSerializingContainer(incomingCache, null, true) { Game = Program.Game };
+                    var packagelessSC = new PackagelessSerializingContainer(incomingCache, null, true);
+                    packagelessSC.SetGame(Program.Game);
                     var cache = new ShaderCache() { Packageless = true };
                     cache.PublicSerialize(packagelessSC);
                     
