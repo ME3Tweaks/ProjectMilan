@@ -16,6 +16,7 @@ using LegendaryExplorerCore.Localization;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Gammtek.IO;
 
 namespace ProjectMilan.MilanUDK
 {
@@ -27,13 +28,15 @@ namespace ProjectMilan.MilanUDK
             //return;
             MilanShared.LE3ObjectDB = MilanInit.LoadObjectDB(MEGame.LE3);
             MilanShared.ME3ObjectDB = MilanInit.LoadObjectDB(MEGame.ME3);
-            DecookME3MPDLC();
-            return;
+            //DecookME3MPDLC();
+            //return;
 
 
             var outPathS1 = @"S:\Milan\UDK\MilanMaterialDecook_T3D";
-            CompileGameAssets(outPathS1);
-            FixImports(outPathS1);
+            var outPathS2 = @"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D";
+            Directory.CreateDirectory(outPathS2);
+            CompileGameAssets(outPathS2);
+            FixImports(outPathS2);
         }
 
         /// <summary>
@@ -125,9 +128,9 @@ namespace ProjectMilan.MilanUDK
         public static void ConvertAssetsToUDK()
         {
             // Decooked
-            var outPathS1 = @"S:\Milan\UDK\MilanMaterialDecook_T3D";
-            var outPathS2 = @"S:\Milan\UDK\MilanMaterialDecook_ME3MP";
-            var outPathS3 = @"Z:\ModLibrary\LE3\Project Milan\Extras\Packages\LE3";
+            var outPathS1 = @"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D";
+            //var outPathS2 = @"S:\Milan\UDK\MilanMaterialDecook_ME3MP";
+            //var outPathS3 = @"Z:\ModLibrary\LE3\Project Milan\Extras\Packages\LE3";
 
             // Merge (decooked also)
             var mergePathS1 = @"S:\Milan\UDK\MilanMaterialDecook_ToCombine";
@@ -137,7 +140,7 @@ namespace ProjectMilan.MilanUDK
             MilanShared.LE3ObjectDB ??= MilanInit.LoadObjectDB(MEGame.LE3);
             MilanShared.ME3ObjectDB ??= MilanInit.LoadObjectDB(MEGame.ME3);
 
-            ConvertAssetsToUDK(outPathFinal, [outPathS1, outPathS2, outPathS3], [mergePathS1]);
+            ConvertAssetsToUDK(outPathFinal, [outPathS1 /*, outPathS2, outPathS3*/], [mergePathS1]);
         }
 
         /// <summary>
@@ -160,7 +163,7 @@ namespace ProjectMilan.MilanUDK
             foreach (var inputFolder in packagePaths)
             {
                 var packages = Directory.GetFiles(inputFolder, "*.pcc");
-                Parallel.ForEach(packages, packageF =>
+                Parallel.ForEach(packages, new() { /*MaxDegreeOfParallelism=1*/},packageF =>
                 {
                     //foreach (var packageF in packages)
                     //{
@@ -168,7 +171,7 @@ namespace ProjectMilan.MilanUDK
                     if (le3P.FileNameNoExtension == "BioS_Matrix") // bugged atm
                         return;
 
-                    //if (le3P.FileNameNoExtension != "BioT_MPThes") 
+                    //if (le3P.FileNameNoExtension != "BioApl_Ind_BreedingTank01") 
                     //    && le3P.FileNameNoExtension != "biog_rpr_can_nkd_r") // debug filter
                     //    return;
 
@@ -190,7 +193,6 @@ namespace ProjectMilan.MilanUDK
 
                     ConvertPackageToUncooked(le3P);
                     TrimExportToUDKProps(le3P);
-
 
                     // referencer will already exist, this will return it
                     var referencer = le3P.CreateObjectReferencer();
@@ -289,7 +291,7 @@ namespace ProjectMilan.MilanUDK
         /// <param name="le3P"></param>
         private static void TrimExportToUDKProps(IMEPackage le3P)
         {
-            foreach(var exp in le3P.Exports)
+            foreach (var exp in le3P.Exports)
             {
                 if (exp.IsA("Material") || exp.IsA("MaterialInstance"))
                 {
@@ -484,6 +486,7 @@ namespace ProjectMilan.MilanUDK
 
         // Textures
         private static CaseInsensitiveDictionary<ObjectLocation> texDb = new();
+        private static CaseInsensitiveDictionary<ObjectLocation> texDbME3 = new();
         //private static CaseInsensitiveDictionary<string> ifpDb = new();
 
         /// <summary>
@@ -542,13 +545,15 @@ namespace ProjectMilan.MilanUDK
             // MilanLog.Information("Clearing Stage 1 T3D packages");
             foreach (var file in Directory.GetFiles(outputFolder))
             {
-                File.Delete(file);
+                // File.Delete(file);
             }
 
-            var inputFolder = @"Z:\MaterialExport\LE3";
+            var inputFolder = @"Z:\MaterialExport\Merged";
 
             var matIfpDb = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(File.ReadAllText(@"S:\Milan\UDK\matifps.json"));
             texDb = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(File.ReadAllText(@"S:\Milan\UDK\TextureDBforT3D.json"));
+            texDbME3 = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(File.ReadAllText(@"S:\Milan\UDK\TextureDBforT3D_ME3.json"));
+
             var smDb = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(File.ReadAllText(@"S:\Milan\UDK\PackageMappingForStaticMesh.json"));
             var micDb = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(File.ReadAllText(@"S:\Milan\UDK\PackageMappingForMaterialInstanceConstant.json"));
 
@@ -574,11 +579,11 @@ namespace ProjectMilan.MilanUDK
                 Debug.WriteLine($"{packageName}");
 
                 var folder = Path.Combine(inputFolder, packageName);
-                //if (!packageName.CaseInsensitiveEquals("biot_redrock_ter")
-                //    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
-                //    // && !bypass // debug filter
-                //    )
-                //    continue;
+                if (!packageName.CaseInsensitiveEquals("BioS_Geth")
+                //    // && !packagename.caseinsensitiveequals("biod_cithub_wards")
+                //    && !bypass // debug filter
+                    )
+                    continue;
 
                 bypass = true;
 
@@ -603,7 +608,9 @@ namespace ProjectMilan.MilanUDK
                 using var package = MEPackageHandler.CreateAndOpenPackage(packagePath, MEGame.LE3);
                 MilanLog.Information($"Compiling package {package.FileNameNoExtension}");
                 CompilePackageMaterials(package, folder, matIfpDb);
+                package.Save();
                 AddTextures(package, texDb);
+                AddTextures(package, texDbME3);
                 PreparePackageForUDKify(package);
                 AddObjects(package, "MaterialInstanceConstant", micDb);
                 PreparePackageForUDKify(package);
@@ -726,8 +733,8 @@ namespace ProjectMilan.MilanUDK
                         CustomImportDependency = ImportDependencyOutsideOfPackage,
                     };
 
-                    // Convert to Seek Free porting
-                    if (sourceAsset.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
+                    // Convert to cooked-format before porting.
+                    if (!sourceAsset.IsForcedExport)
                     {
                         EntryExporter.PrepareGlobalFileForPorting(sourceAsset.FileRef, sourceAsset.FileRef.FileNameNoExtension);
                     }
@@ -761,7 +768,7 @@ namespace ProjectMilan.MilanUDK
             if (assetMap.TryGetValue(package.FileNameNoExtension, out var assetList))
             {
                 MilanLog.Information($"\tAdding asset type '{classType}' to package");
-                using PackageCache cache = new PackageCache();
+                using var cache = new TieredPackageCache(null);
                 foreach (var asset in assetList)
                 {
                     // Does this already exist in the package?
@@ -778,8 +785,8 @@ namespace ProjectMilan.MilanUDK
                     using var sourcePackage = cache.GetCachedPackage(asset.Value);
                     var sourceAsset = sourcePackage.FindExport(asset.Key) ?? sourcePackage.FindExport(asset.Key.Substring(asset.Key.IndexOf('.') + 1));
 
-                    // Convert to Seek Free porting
-                    if (sourceAsset.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
+                    // Convert to cooked-format before porting.
+                    if (!sourceAsset.IsForcedExport)
                     {
                         EntryExporter.PrepareGlobalFileForPorting(sourceAsset.FileRef, sourceAsset.FileRef.FileNameNoExtension);
                     }
@@ -851,6 +858,8 @@ namespace ProjectMilan.MilanUDK
                 return true;
             }
 
+            var localCache = (rop?.Cache as TieredPackageCache)?.ChainNewCache();
+
             if (propertyname.CaseInsensitiveEquals("Parent") && relinkingexport.ClassName.CaseInsensitiveEquals("MaterialInstanceConstant"))
             {
                 // Check if the parent is a RvrEffectsMaterialUser - UDK does not support this
@@ -896,7 +905,7 @@ namespace ProjectMilan.MilanUDK
             {
                 // Inside this package
 
-                // Maybe the path is wrong from T3D. Do we have an export with same name and class under teh root, since we don't have path info?
+                // Maybe the path is wrong from T3D. Do we have an export with same name and class under the root, since we don't have path info?
                 var existingDiffLevel = relinkingexport.FileRef.FindExport($"{relinkingexport.FileRef.FileNameNoExtension}.{sourceEntry.ObjectName.Instanced}", sourceEntry.ClassName);
                 if (existingDiffLevel != null)
                 {
@@ -920,7 +929,7 @@ namespace ProjectMilan.MilanUDK
                             var testIFP = $"{parent.InstancedFullPath}.{sourceEntry.ObjectName.Instanced}";
                             var testObj = relinkingexport.FileRef.FindExport(testIFP, sourceEntry.ClassName);
 
-                            if (testObj != null)
+                            if (testObj == null)
                             {
                                 // Nest under correct path.
                                 existingDiffLevel.idxLink = parent.UIndex;
@@ -938,7 +947,7 @@ namespace ProjectMilan.MilanUDK
                     // Try linker.
                     if (MELoadedFiles.GetFilesLoadedInGame(ie.Game).TryGetValue($"{linker}.pcc", out var selfPackage))
                     {
-                        if (ImportObject(selfPackage, ie, ref uindex, null))
+                        if (ImportObject(selfPackage, ie, ref uindex, null, localCache))
                         {
                             return true;
                         }
@@ -950,7 +959,7 @@ namespace ProjectMilan.MilanUDK
                     if (sourceObj != null)
                     {
                         var firstFile = Path.Combine(ME3TweaksBackups.GetGameBackupPath(MEGame.LE3), sourceObj[0]);
-                        if (ImportObject(firstFile, ie, ref uindex, null))
+                        if (ImportObject(firstFile, ie, ref uindex, null, localCache))
                         {
                             return true;
                         }
@@ -985,7 +994,7 @@ namespace ProjectMilan.MilanUDK
             return true;
 
 
-            bool ImportObject(string sPackagePath, IEntry sIe, ref int sUIndex, IMEPackage tempPackage)
+            bool ImportObject(string sPackagePath, IEntry sIe, ref int sUIndex, IMEPackage tempPackage, PackageCache cache)
             {
                 // looks like a seek free
 
@@ -1007,8 +1016,28 @@ namespace ProjectMilan.MilanUDK
                     }
                     else
                     {
-                        tempPackage = MEPackageHandler.OpenMEPackage(sPackagePath);
-                        EntryExporter.PrepareGlobalFileForPorting(tempPackage, tempPackage.FileNameNoExtension);
+                        if (cache != null)
+                        {
+                            var cachedPackage = cache?.GetCachedPackage(sPackagePath, false);
+                            if (cachedPackage != null)
+                            {
+                                tempPackage = cachedPackage;
+                                // Already converted
+                            }
+                            else
+                            {
+                                tempPackage = cache.GetCachedPackage(sPackagePath);
+                                // Prepare file for porting, ONCE.
+                                EntryExporter.PrepareGlobalFileForPorting(tempPackage, tempPackage.FileNameNoExtension);
+
+                            }
+                        } else
+                        {
+                            // Open without cache. This will be slow if it's a big file.
+                            tempPackage = cache != null ? cache.GetCachedPackage(sPackagePath) : MEPackageHandler.OpenMEPackage(sPackagePath);
+                            EntryExporter.PrepareGlobalFileForPorting(tempPackage, tempPackage.FileNameNoExtension);
+                        }
+                       
                     }
                 }
 
@@ -1076,12 +1105,19 @@ namespace ProjectMilan.MilanUDK
             return currentParent;
         }
 
+        // COMPILE HACKS
+        // Hacks to fix issues due to BioWare naming systems.
+
+        private static bool CompiledLE3_Rubble_Decal_MM_Once = false;
+
+        // END COMPILE HACKS
+
         private static void CompilePackageMaterials(IMEPackage package, string folder, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> matIfpDb)
         {
             if (!Directory.Exists(folder))
                 return; // This folder doesn't exist
 
-            using var cache = new PackageCache();
+            using var cache = new TieredPackageCache(null);
             var usop = new UnrealScriptOptionsPackage
             {
                 MissingObjectResolver = MissingObjectResolver,
@@ -1114,38 +1150,29 @@ namespace ProjectMilan.MilanUDK
                     //if (matName != "PhotoMode_Filter_RetroLCD")
                     //    continue;
 
-                    var sourceLines = File.ReadAllLines(t3dFilePath);
-                    sourceLines = sourceLines.Where(x =>
-                        !x.Trim().StartsWith("ReferencedTextureGuids") &&
-                        !x.Trim().StartsWith("EditorComments") && // This will be important to keep later
-                        true
-                        ).ToArray();
+                    CompileSingleMaterial(matName, t3dFilePath, package, parent, usop);
 
-                    //if (sourceLines.Any(x => x.Contains("BioMaterialExpression", StringComparison.OrdinalIgnoreCase)))
-                    //{
-                    //    // We cannot compile this in UDK currently.
-                    //    continue;
-                    //}
-
-                    MilanLog.Information($"\tCompiling material {matName}");
-                    MessageLog log = UnrealScriptCompiler.CompileT3D(string.Join('\n', sourceLines), package, parent, usop);
-                    if (log.HasLexErrors || log.HasErrors)
-                    {
-                        log.LogError($"Failed to compile {t3dFilePath}");
-                        return log;
-                    }
+                    var obj = package.FindExport(matName);
 
                     // 04/18/2025 - check mat ifp db to see if it needs to be nested.
                     if (matIfpDb.TryGetValue(packageName, out var packageInfo) && packageInfo.TryGetValue(matName, out var matIfp))
                     {
                         // NESTED - we must do parents.
                         MilanLog.Information($"\t\t-> Nesting material at {matIfp}");
-                        var obj = package.FindExport(matName);
 
                         // We nest under packagename as it doesn't make us deal with dupes of bringing in forced exports under their 
                         // nested parent. We will convert to that anyways after this step finishes
                         MoveToNested(obj, $"{packageName}.{matIfp}");
                     }
+                }
+
+                // Special compilation hacks.
+                if (packageName == "biot_rubble")
+                {
+                    // Has a duplicate material in it.
+                    // Compile it in proper place so we don't port it in and try to re-nest it over and over as other objects come in, as it has a dupe.
+                    CompileSingleMaterial("Rubble_Decal_MM", Path.Combine(folder, "Rubble_Decal_MM.t3d"), package, package.FindExport(package.FileNameNoExtension, "Package"), usop);
+                    package.Save();
                 }
 
                 // we don't compile subfolders
@@ -1165,14 +1192,16 @@ namespace ProjectMilan.MilanUDK
             IEntry MissingObjectResolver(IMEPackage sourcepackage, string instancedfullpath, string classname)
             {
                 // Resolve texture references
-                if (classname != "Texture2D" && classname != "TextureCube")
+                if (classname
+                is not "Texture2D"
+                //and not "LightMapTexture2D"
+                //and not "ShadowMapTexture2D"
+                //and not "TerrainWeightMapTexture"
+                and not "TextureFlipBook"
+                and not "TextureCube")
                 {
+                    // Use default importer
                     return null;
-                }
-
-                if (classname == "TextureCube")
-                {
-
                 }
 
                 var lookupName = instancedfullpath;
@@ -1197,25 +1226,32 @@ namespace ProjectMilan.MilanUDK
                     }
 
                     // We know it exists
-                    var sourcePackage = MEPackageHandler.UnsafePartialLoad(info.packagefile, x => x.ClassName is "Package" or "TextureCube" || x.IsTexture());
+                    // We have to do IsClass or some objects don't properly load when getting dependencies.
+                    var sourcePackage = MEPackageHandler.UnsafePartialLoad(info.packagefile, x => x.ClassName is "Package" or "TextureCube" || x.IsTexture() || x.IsClass);
                     var sourceTex = sourcePackage.Exports.First(x => x.MemoryFullPath.CaseInsensitiveEquals(info.memoryfullpath) && x.ClassName.CaseInsensitiveEquals(classname));
                     if (!sourceTex.IsDataLoaded())
                     {
                         Debugger.Break();
                     }
 
-                    if (sourceTex.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
+                    // If not forced export, we have to load data for the package, as we are going to move objects before port
+                    if (!sourceTex.IsForcedExport)
                     {
                         // Fully load
                         sourcePackage = MEPackageHandler.OpenMEPackage(info.packagefile);
                         sourceTex = sourcePackage.FindExport(sourceTex.InstancedFullPath);
+
+                        // Prepare for cooked-style
+                        EntryExporter.PrepareGlobalFileForPorting(sourcePackage, sourcePackage.FileNameNoExtension);
                     }
 
                     RelinkerOptionsPackage rop = new RelinkerOptionsPackage()
                     {
                         // Cache?
+                        Cache = new TieredPackageCache(null),
                         CustomRelinkUIndex = ImportOutsideOfPackageRelink,
-                        CustomImportDependency = ImportDependencyOutsideOfPackage
+                        CustomImportDependency = ImportDependencyOutsideOfPackage,
+                        CheckImportsWhenExportingToPackage = false
                     };
 
                     EntryExporter.ExportExportToPackage(sourceTex, package, out var ported, customROP: rop);
@@ -1225,6 +1261,32 @@ namespace ProjectMilan.MilanUDK
                 Debug.WriteLine($"Texture not found: {instancedfullpath}");
                 return null;
             }
+        }
+
+        private static MessageLog CompileSingleMaterial(string matName, string t3dFilePath, IMEPackage package, IEntry parent, UnrealScriptOptionsPackage usop)
+        {
+            var sourceLines = File.ReadAllLines(t3dFilePath);
+            sourceLines = sourceLines.Where(x =>
+                !x.Trim().StartsWith("ReferencedTextureGuids") &&
+                !x.Trim().StartsWith("EditorComments") && // This will be important to keep later
+                true
+                ).ToArray();
+
+            //if (sourceLines.Any(x => x.Contains("BioMaterialExpression", StringComparison.OrdinalIgnoreCase)))
+            //{
+            //    // We cannot compile this in UDK currently.
+            //    continue;
+            //}
+
+            MilanLog.Information($"\tCompiling material {matName}");
+            MessageLog log = UnrealScriptCompiler.CompileT3D(string.Join('\n', sourceLines), package, parent, usop);
+            if (log.HasLexErrors || log.HasErrors)
+            {
+                log.LogError($"Failed to compile {t3dFilePath}");
+                return log;
+            }
+
+            return null;
         }
 
         private static void PreparePackageForUDKify(IMEPackage package, string packageName = null)
