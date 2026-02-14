@@ -209,5 +209,23 @@ namespace MilanShaderHost
         }
 
 
+        public static byte[] ExtractResource(string filename)
+        {
+            System.Reflection.Assembly a = System.Reflection.Assembly.GetExecutingAssembly();
+#if DEBUG
+            var resources = a.GetManifestResourceNames(); // For reviewing.
+#endif
+            using (Stream resFilestream = a.GetManifestResourceStream(filename))
+            {
+                if (resFilestream == null)
+                {
+                    Debugger.Break();
+                    return null; // Asset not found
+                }
+                byte[] ba = new byte[resFilestream.Length];
+                resFilestream.Read(ba, 0, ba.Length);
+                return ba;
+            }
+        }
     }
 }

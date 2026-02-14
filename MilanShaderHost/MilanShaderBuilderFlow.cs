@@ -7,9 +7,9 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using System.Diagnostics;
 using LegendaryExplorerCore.Shaders;
-using System.Diagnostics;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
+using LegendaryExplorerCore.Helpers;
 
 namespace MilanShaderHost
 {
@@ -59,7 +59,7 @@ namespace MilanShaderHost
             {
                 var outPath = Path.Combine(@"S:\Milan\ShaderResearch\CompiledShaderPackages", Path.GetFileNameWithoutExtension(file) + ".pcc");
 
-                if (false)
+                if (true)
                 {
                     Console.WriteLine($"Building shaders for: {Path.GetFileNameWithoutExtension(file)}");
 
@@ -67,7 +67,7 @@ namespace MilanShaderHost
                     scPackage.CreateShaderCache();
 
                     // Builds materials into the map
-                    SetupEntry(file, false);
+                    SetupShaderLevel(file, false);
 
                     // Runs game, which builds shaders and feeds them back to us.
                     StartGameAndWaitForExit();
@@ -79,10 +79,11 @@ namespace MilanShaderHost
                 Console.WriteLine($"Finished compiling shaders for {Path.GetFileNameWithoutExtension(file)}");
 
                 // Test...
-                if (true)
+                if (false)
                 {
                     Console.WriteLine($"Rebuilding with compiled shaders for previewing");
-                    SetupEntry(outPath, true);
+                    SetupShaderLevel(outPath, true);
+                    //SetupEntry(outPath, true);
                     StartGameAndWaitForExit();
                 }
             }
@@ -101,7 +102,7 @@ namespace MilanShaderHost
             if (buildWithMeshes)
             {
                 // Copy SeekFreeShaderCache
-                using var tPackage = MEPackageHandler.OpenMEPackage(sourcePath, forceLoadFromDisk: true);
+                using var tPackage = MEPackageHandler.OpenMEPackage(sourcePath);
                 var cache = tPackage.FindExport("SeekFreeShaderCache");
                 EntryExporter.ExportExportToPackage(cache, package, out var cacheExport);
             }
@@ -124,6 +125,38 @@ namespace MilanShaderHost
             }
         }
 
+        private static void SetupShaderLevel(string sourcePath, bool buildWithMeshes)
+        {
+            var mapName = @"entry.pcc";
+
+            transientPackage = MEPackageHandler.CreateMemoryEmptyPackage("Transient.pcc", Program.Game);
+            var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, transientPackage, buildWithMeshes);
+            if (buildWithMeshes)
+            {
+                // Copy SeekFreeShaderCache
+                using var tPackage = MEPackageHandler.OpenMEPackage(sourcePath);
+                var cache = tPackage.FindExport("SeekFreeShaderCache");
+                EntryExporter.ExportExportToPackage(cache, package, out var cacheExport);
+            }
+            else
+            {
+                // Install auto exit sequence
+                var flowPackagePath = $"EntryMenu/entry_{Program.Game}.pcc"; // copied to output path by compile step.
+                var flowPackage = MEPackageHandler.OpenMEPackage(flowPackagePath);
+                var seq = flowPackage.FindExport("ShaderCompilerSequence");
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, seq, package, package.GetLevel(), true, new RelinkerOptionsPackage(), out var portedSeq);
+                var level = package.GetLevelBinary();
+                level.GameSequences = [portedSeq.UIndex];
+                package.GetLevel().WriteBinary(level);
+            }
+
+
+
+            var outDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
+            package.Save(Path.Combine(outDir, mapName));
+            return;
+        }
+
         private static void OnMaterialCompiled(object? sender, CompileResult cr)
         {
             // Merge material into the package.
@@ -133,6 +166,8 @@ namespace MilanShaderHost
                 Console.WriteLine($"No matching material found for {cr.MaterialName} in transient package. Skipping.");
                 return;
             }
+
+            Console.WriteLine($"Serializing material resource {cr.MaterialName}");
 
             // Export matching material from transient package to final compiled package
             EntryExporter.ExportExportToPackage(matchingMat, scPackage, out var pMat);
@@ -163,7 +198,29 @@ namespace MilanShaderHost
 
         private static void SetupFileList()
         {
-            PackageFilesToProcess.Add(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D\BioT_MPJungle.pcc");
+            var sourcePath = @"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D";
+            string[] files = [
+                "BioApl_Lvl_Foliage.pcc",
+                "BioS_MPJungle.pcc",
+                "BioS_MPLondon.pcc",
+                "biot_humanslumACID.pcc",
+                "BioT_MPCer2.pcc",
+                "BioT_MPHosp.pcc",
+                "BioT_MPOcean.pcc",
+                "BioT_MPThes.pcc",
+                "BioT_MPThes_Milan.pcc",
+                "BioT_SolMP.pcc",
+                "BioVFX_DLC_MP1_BatMelee.pcc",
+                "BioVFX_DLC_MP1_Geth.pcc",
+                "BioVFX_MP3_MPHosp.pcc",
+                "BioVFX_MP3_MPOcean.pcc",
+                "BioVFX_MP5_Gear.pcc"
+                ];
+
+            foreach (var f in files)
+            {
+                PackageFilesToProcess.Add(Path.Combine(sourcePath, f));
+            }
         }
 
         private static void BuildShaders(string inputFile)
