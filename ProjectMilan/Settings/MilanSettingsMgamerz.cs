@@ -14,14 +14,14 @@ namespace ProjectMilan.Settings
             {
                 if (_outputModPath != null)
                     return _outputModPath;
-                var networkedPath = $@"Z:\ModLibrary\LE3\Project Milan\{MilanShared.DLC_NAME}";
+                var networkedPath = $@"Z:\ModLibrary\LMP\Project Milan\{MilanShared.DLC_NAME}";
                 if (Directory.Exists(networkedPath))
                 {
                     _outputModPath = networkedPath;
                     return _outputModPath;
                 }
 
-                _outputModPath = $@"E:\LocalModLibrary\LE3\Project Milan\{MilanShared.DLC_NAME}";
+                _outputModPath = $@"E:\LocalModLibrary\LMP\Project Milan\{MilanShared.DLC_NAME}";
                 return _outputModPath;
             }
             set
@@ -38,14 +38,14 @@ namespace ProjectMilan.Settings
             {
                 if (_inputSyncPath != null)
                     return _inputSyncPath;
-                var networkedPath = @"Z:\ModLibrary\LE3\Project Milan\MilanSync";
+                var networkedPath = @"Z:\ModLibrary\LMP\Project Milan\MilanSync";
                 if (Directory.Exists(networkedPath))
                 {
                     _inputSyncPath = networkedPath;
                     return _inputSyncPath;
                 }
 
-                _inputSyncPath = @"E:\LocalModLibrary\LE3\Project Milan\MilanSync";
+                _inputSyncPath = @"E:\LocalModLibrary\LMP\Project Milan\MilanSync";
                 return _inputSyncPath;
             }
             set
@@ -57,7 +57,7 @@ namespace ProjectMilan.Settings
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunNonStartupPipeline { get; set; } = true;
         public bool RunDonorBuildPipeline { get; set; } = true;
-        public bool RunMP4EnemiesPipeline { get; set; } = false;
+        public bool RunMP4EnemiesPipeline { get; set; } = true;
         public bool RunKitsPipeline { get; set; } = true;
         public bool RunWeaponsPipeline { get; set; } = true;
         public bool RunRejectionPipeline { get; set; }
@@ -87,7 +87,7 @@ namespace ProjectMilan.Settings
         }
 
         public bool RunLevelsPipeline { get; set; } = true;
-        public bool RunAudioPipeline { get; set; } = true;
+        public bool RunAudioPipeline { get; set; } = false;
         public bool RunTexturePipeline { get; set; } = true;
         public bool RunResynthesis { get; set; } = false;
 
