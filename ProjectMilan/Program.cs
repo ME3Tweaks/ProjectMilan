@@ -187,6 +187,10 @@ namespace ProjectMilan
             //DonorTooling.BuildDonorDB();
             //return;
 
+            // TD conversation - do not commit
+            //RunPipeline(true, MaterialExpressionPipeline.RunPipeline, "MaterialExpression");
+            //return;
+
             // Requirements
             // MPCommon.HackPatchParents(); // Should no longer be necessary
 
@@ -197,14 +201,15 @@ namespace ProjectMilan
 
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
             RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
+
         postMpCommon:
             // Content build pipelines
             // This should not be required anymore
             DonorBuilderPipeline.InventoryDonorPackages(); // This is outside of the RunPipeline because if you skip this pipeline, this will make it so it properly ports donors 
 
-                if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath)) // These require BIOP_MP_COMMON
+            if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath)) // These require BIOP_MP_COMMON
                 return;
-                MilanShared.InstallMPCommonClassInfo(mpCommonPath);
+            MilanShared.InstallMPCommonClassInfo(mpCommonPath);
 
             // Content pipelines will use the milan ME3 cache
             MilanShared.EnsureTFCsAvailable();
@@ -238,18 +243,20 @@ namespace ProjectMilan
 
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
+#if WITH_WWISE
             RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
-
+#endif
             // Drop all extra packages from database. Conformance depends on vanilla DB.
             MilanShared.UnregisterObjectDBPackages();
 
-
+        resynthesis:
             // Package resynthesis
             RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
 
             // Conformance
             if (false)
-            RunPipeline(true, Conformance.RunPipeline, "Conformance");
+                RunPipeline(true, Conformance.RunPipeline, "Conformance");
+
 
             // Verification
             RunPipeline(true, VerifyMod.RunPipeline, "Verify");

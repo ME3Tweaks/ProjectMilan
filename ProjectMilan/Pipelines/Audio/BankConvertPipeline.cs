@@ -1,4 +1,5 @@
-﻿using LegendaryExplorerCore.Packages;
+﻿#if FALSE
+using LegendaryExplorerCore.Packages;
 using ME3Tweaks.Wwiser;
 using ME3Tweaks.Wwiser.Model;
 using ME3Tweaks.Wwiser.Model.Hierarchy;
@@ -193,3 +194,4 @@ internal static class BankConvertPipeline
         }
     }
 }
+#endif
