@@ -28,7 +28,13 @@ namespace MilanShaderHost
 
             // Initialize
             LegendaryExplorerCoreLib.InitLib(null, x => { });
+            MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use the shared cache.
 
+            //var package = MEPackageHandler.CreateMemoryEmptyPackage(@"f.pcc", Game);
+            //var ms = new MemoryStream(File.ReadAllBytes(@"C:\users\public\matbin.bin"));
+            //var psc = new PackagelessWithObjectsSerializingContainer(ms, package, true) { Game = Game };
+            //MaterialResource mat = new MaterialResource();
+            //psc.Serialize(ref mat);
 
             // Uncomment to do automated shader compiler flow
             Task.Run(MilanShaderBuilderFlow.StartFlow);
@@ -103,7 +109,6 @@ namespace MilanShaderHost
             var outFileName = "WorkerOutput.out";
 
             var inputFilePath = Path.Combine(workingDirectory, inFileName);
-
 
 
             // This is for debugging only - this puts down the rest of the packet

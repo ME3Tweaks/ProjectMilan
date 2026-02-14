@@ -1,14 +1,18 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Gammtek.Extensions;
+using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
+using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using LegendaryExplorerCore.Gammtek.Extensions;
-using System.Diagnostics;
 using MilanShaderHost.LEX;
+using System;
+using System.Diagnostics;
 
 namespace MilanShaderHost
 {
@@ -50,6 +54,29 @@ namespace MilanShaderHost
             _ => throw new NotImplementedException(),
         };
 
+        private static LEXOpenable GetSkyAsset(MEGame game) => game switch
+        {
+            //MEGame.LE1 => new LEXOpenable()
+            //{
+            //    EntryClass = "StaticMesh",
+            //    EntryPath = "BioS_AncientCity.Sky_Sphere",
+            //    FilePath = "BioA_Kro002_500city.pcc"
+            //},
+            //MEGame.LE2 => new LEXOpenable()
+            //{
+            //    EntryClass = "StaticMesh",
+            //    EntryPath = "BioS_AncientRuins_Ext.Sky_Sphere",
+            //    FilePath = "BioA_KroHub_130_MainHubArea.pcc"
+            //},
+            MEGame.LE3 => new LEXOpenable()
+            {
+                EntryClass = "StaticMeshCollectionActor",
+                EntryPath = "TheWorld.PersistentLevel.StaticMeshCollectionActor_1918",
+                FilePath = "BioA_MPNov.pcc"
+            },
+            _ => throw new NotImplementedException(),
+        };
+
         /// <summary>
         /// Builds material refs into the existing given map file. Does NOT save the package it creates.
         /// </summary>
@@ -69,10 +96,6 @@ namespace MilanShaderHost
             foreach (var mat in sourceStylePackage.Exports.Where(x => x.IsA("Material")))
             {
                 var pMat = PortSourceToCooked(mat, transientPackage);
-                if (pMat != null)
-                {
-                    portedMats.Add(pMat);
-                }
             }
 
             // Also port materials into the startup level. This should be faster... I hope
@@ -98,24 +121,27 @@ namespace MilanShaderHost
             return startupLevel;
         }
 
-        // Not used.
-        public static void BuildMapPackage(string packagePath)
+        public static IMEPackage BuildMapPackage(string mapName, string sourceStylePath, IMEPackage transientPackage, bool buildWithMeshes)
         {
             //var outDir = @"S:\Milan\UDK\MilanShaderMapPackages";
-            var outDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
-            var mapName = @"MilanShaderMap_" + Path.GetFileNameWithoutExtension(packagePath) + ".pcc";
-
-            var startupLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, MEGame.LE3);
+            var startupLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, Program.Game);
 
             // Add PlayerStart.
 
             // Load our input package we are building shaders out of
-            var sourceStylePackage = MEPackageHandler.OpenMEPackage(packagePath);
+            var sourceStylePackage = MEPackageHandler.OpenMEPackage(sourceStylePath);
 
             ConvertSourceToForcedExport(sourceStylePackage);
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
+            // Port materials into transient
             foreach (var mat in sourceStylePackage.Exports.Where(x => x.IsA("Material")))
+            {
+                var pMat = PortSourceToCooked(mat, transientPackage);
+            }
+
+            // Also port materials into the startup level. This should be faster... I hope
+            foreach (var mat in transientPackage.Exports.Where(x => x.IsA("Material")))
             {
                 var pMat = PortSourceToCooked(mat, startupLevel);
                 if (pMat != null)
@@ -133,7 +159,10 @@ namespace MilanShaderHost
             startPos.X += 300;
             startPos.Y += 300;
 
-            AddStaticMeshActor(startupLevel, GetFloorAsset(sourceStylePackage.Game), startPos, "PlayerFloor");
+            var floor = AddStaticMeshActor(startupLevel, GetFloorAsset(sourceStylePackage.Game), startPos, "PlayerFloor");
+            LevelTools.SetDrawScale3D(floor, 20, 20, 1);
+            // AddStaticMeshActor(startupLevel, GetSkyAsset(sourceStylePackage.Game), startPos, "SkyBox");
+            AddExistingMeshActor(startupLevel, GetSkyAsset(sourceStylePackage.Game), startPos, "SkyBox");
 
 
             // Static mesh lighting
@@ -142,18 +171,27 @@ namespace MilanShaderHost
             // Dynamic mesh lighting
             AddSkyLight(startupLevel);
 
-            startPos.Z = 0;
-
+            startPos.Z = 128;
             foreach (var pMat in portedMats)
             {
-                AddStaticMeshActorForMaterial(pMat, startPos, true);
+                AddStaticMeshActorForMaterial(pMat, startPos, buildWithMeshes);
                 startPos.Y -= 256;
             }
 
 
             // Add static meshes that contain our materials.
+            return startupLevel;
+            // startupLevel.Save(Path.Combine(outDir, mapName));
+        }
 
-            startupLevel.Save(Path.Combine(outDir, mapName));
+        private static void AddExistingMeshActor(IMEPackage package, LEXOpenable meshAsset, Point3D location, string name)
+        {
+            var exp = GetOpenableExport(package, meshAsset);
+            if (exp == null)
+                throw new Exception("Asset is null");
+
+            EntryExporter.ExportExportToPackage(exp, package, out var sma);
+            package.AddToLevelActorsIfNotThere((ExportEntry)sma);
         }
 
         /// <summary>
@@ -234,16 +272,73 @@ namespace MilanShaderHost
                             uIndex = portedSourceObj.UIndex;
                             return true;
                         }
-                    } 
+                    }
                     else
                     {
-                        Console.WriteLine($"Not porting as export: {imp.InstancedFullPath} ({imp.ClassName})");
+                        if (sourceObj.ClassName == "Texture2D")
+                        {
+                            Console.WriteLine($"Using missing texture for {imp.InstancedFullPath} ({imp.ClassName})");
+                            var missingtex = GetMissingTexture(imp);
+                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                            uIndex = portedSourceObj.UIndex;
+                            return true;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Not porting as export: {imp.InstancedFullPath} ({imp.ClassName})");
+                        }
                     }
                 }
             }
 
             // We don't handle unless it is an import
             return false;
+        }
+
+
+        private static ExportEntry missingTexturesExport;
+        private static ExportEntry GetMissingTexture(ImportEntry imp)
+        {
+            if (missingTexturesExport == null)
+            {
+                var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
+
+                missingTexturesExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", 512, 512, PixelFormat.DXT1, true, null);
+                var t2d = new Texture2D(missingTexturesExport);
+                var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
+                t2d.Replace(im, missingTexturesExport.GetProperties(), isPackageStored: true);
+                missingTexturesExport.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
+            }
+
+            var parent = CreateParents(missingTexturesExport.FileRef, imp.InstancedFullPath);
+            missingTexturesExport.Parent = parent;
+            return missingTexturesExport;
+        }
+
+        private static IEntry CreateParents(IMEPackage package, string ifp)
+        {
+            var pieces = ifp.Split('.').ToList();
+            pieces.RemoveAt(pieces.Count - 1);
+
+            IEntry parent = null;
+            foreach (var piece in pieces)
+            {
+                var tifp = parent?.InstancedFullPath;
+                if (tifp != null) tifp += ".";
+                tifp += piece;
+
+                var tparent = package.FindExport(tifp, "Package");
+                if (parent == null)
+                {
+                    parent = package.CreatePackageExport(piece, parent);
+                }
+                else
+                {
+                    parent = tparent;
+                }
+            }
+
+            return parent;
         }
 
         /// <summary>
