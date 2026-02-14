@@ -172,6 +172,7 @@ namespace ProjectMilan
             "henbagle" => new MilanSettingsHenBagle(),
             "d00t" => new MilanSettingsd00t(),
             "dropthesquid" => new MilanSettingsDropTheSquid(),
+            "beccatoria" => new MilanSettingsbeccatoria(),
             _ => throw new Exception($"Undefined configuration: {cliOptions.Config}")
         };
 
