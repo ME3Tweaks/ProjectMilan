@@ -104,7 +104,7 @@ namespace ProjectMilan.Pipelines.Startups
             var manifest = Path.Combine(stagingPath, "mprequiredchanges.json");
 
             MergeMod1 mm1 = new MergeMod1();
-            mm1.Game = MEGame.LE3;
+            mm1.Game = MEGame.LMP;
             mm1.FilesToMergeInto = new List<MergeFile1>()
             {
                 new MergeFile1()
