@@ -11,7 +11,8 @@ internal static class AudioPipeline
         var banksToConvert = GetBanksToConvertInOutputMod();
 
         // Convert WwiseBank binary to v134
-        BankConvertPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: false);
+        // Disabled due to BankConvertPipeline not compiling
+        // BankConvertPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: false);
 
         // Rebuild AFC and WwiseStreams in v134 using Wwise CLI
         AFCRebuildPipeline.RunPipeline(banksToConvert, clearCacheOnRebuild: true);
@@ -36,7 +37,7 @@ internal static class AudioPipeline
                 }
 
                 // Only convert banks that are v56 - non-donor banks from ME3.
-                if (bankInfo.BankParser is { Version: 56 }) bankInventory.Add(bankInfo);
+                // if (bankInfo.BankParser is { Version: 56 }) bankInventory.Add(bankInfo);
             }
         }
         return bankInventory;

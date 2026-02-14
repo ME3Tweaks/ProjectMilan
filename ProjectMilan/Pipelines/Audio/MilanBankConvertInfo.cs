@@ -16,11 +16,6 @@ internal class MilanBankConvertInfo
     
     public LECWwiseBank ObjectBinary { get; set; }
     
-    /// <summary>
-    /// Instance of Wwiser.NET bank
-    /// </summary>
-    public WwiseBankParser? BankParser { get; set; }
-    
     public LocalizedIFP LocalizedInfo { get; set; }
 
     /// <summary>
@@ -50,8 +45,9 @@ internal class MilanBankConvertInfo
 
         ObjectBinary = LE3BankExport.GetBinaryData<LECWwiseBank>();
         if (ObjectBinary.BnkFile.Length == 0) return;
-        BankParser = new WwiseBankParser(new MemoryStream(ObjectBinary.BnkFile));
 
+        // Hmm........
+        // Used to be B;nkParser here but it became static
     }
 
     public string GetDecompiledFolderName()
