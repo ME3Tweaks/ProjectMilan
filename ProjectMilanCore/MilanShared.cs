@@ -666,17 +666,6 @@ namespace ProjectMilanCore
             }
 #endif
 
-            //foreach (var clsIFP in ClassesToDoubleRecompile)
-            //{
-            //    var classX = destPackage.FindExport(clsIFP);
-            //    if (classX == null)
-            //        continue;
-
-            //    MilanLog.Information($"  Double recompiling {classX.ObjectName}", customPrefix: logCategory);
-            //    (_, string text) = UnrealScriptCompiler.DecompileExport(classX, lib, usop);
-            //    UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, classX);
-            //}
-
             MilanLog.Information("Saving package", customPrefix: logCategory);
             destPackage.Save();
             MilanShared.RefreshMilanFiles = true;
@@ -741,7 +730,7 @@ namespace ProjectMilanCore
             newClassText.Insert(0, $"// Source: {classExp.FileRef.Game}, {classExp.FileRef.FileNameNoExtension}");
             newClassText.Insert(1, $"// Initial decompilation: {DateTime.Now}");
             File.WriteAllLines(outputPath, newClassText);
-            }
+        }
 
         private static IMEPackage GetME3Package(string arg)
         {

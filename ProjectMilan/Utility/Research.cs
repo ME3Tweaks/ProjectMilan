@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines.StaticLighting;
+using LegendaryExplorerCore.Shaders;
 
 namespace ProjectMilan.Utility
 {
@@ -54,8 +55,7 @@ namespace ProjectMilan.Utility
         public static void LightingBake()
         {
             UDKSetup.SetupUDK();
-            using var master = MEPackageHandler.OpenMEPackage(@"Z:\ModLibrary\LE3\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels\BioP_MPMoon\BioP_MPMoon.pcc");
-            StaticLightingExport.ExportLevelToUDK(master);
+            StaticLightingCompute.ComputeLighting("BioP_MPGeth");
         }
 
         private static IMEPackage GenerateLevelMaster(string basePath, string level)
@@ -73,6 +73,89 @@ namespace ProjectMilan.Utility
 
             destPackage.Save();
             return destPackage;
+        }
+
+        internal static void ScanForShaderCompPackages()
+        {
+            SortedSet<string> packagesToCompile = new SortedSet<string>();
+            var packages = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
+            foreach (var p in packages)
+            {
+                var package = MEPackageHandler.OpenMEPackage(p);
+                var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
+                foreach (var mat in brokenMaterials)
+                {
+                    packagesToCompile.Add(mat.GetLinker());
+                }
+            }
+
+            foreach (var p in packagesToCompile)
+            {
+                Console.WriteLine(p);
+            }
+        }
+
+        /// <summary>
+        /// Scans the output directory for broken materials. Attempts to merge shader caches from our custom compiled versions and link them up.
+        /// </summary>
+        internal static void InstallCompiledShaders()
+        {
+            var compiledShaderPath = @"S:\Milan\ShaderResearch\CompiledShaderPackages";
+            var compiledShaderPackages = Directory.GetFiles(compiledShaderPath, "*.pcc");
+            CaseInsensitiveDictionary<string> packageMap = new();
+            var cache = new PackageCache();
+            // var packages = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
+            var packages = Directory.GetFiles(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan", "*.pcc", SearchOption.AllDirectories);
+            foreach (var p in compiledShaderPackages)
+            {
+                packageMap[Path.GetFileNameWithoutExtension(p)] = p;
+            }
+
+            foreach (var gamePackagePath in packages)
+            {
+                var gamePackage = MEPackageHandler.OpenMEPackage(gamePackagePath);
+
+                var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(gamePackage);
+                foreach (var mat in brokenMaterials)
+                {
+                    var linker = mat.GetLinker();
+                    if (packageMap.TryGetValue(linker, out var cmp))
+                    {
+                        var compiledPackage = cache.GetCachedPackage(cmp);
+                        var csc = compiledPackage.FindExport("SeekFreeShaderCache");
+                        if (csc == null)
+                            // dunno what happened here.
+                            continue;
+
+                        var matchingMat = compiledPackage.Exports.FirstOrDefault(x => x.ClassName == mat.ClassName && x.ObjectName.Instanced == x.ObjectName.Instanced);
+                        if (matchingMat == null)
+                        {
+                            // couldn't find the mat
+                            MilanLog.Information($"No compiled shaders for {mat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
+                        }
+                        else
+                        {
+                            MilanLog.Information($"Update shadercache for {mat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
+                            var shaderCache = ObjectBinary.From<ShaderCache>(csc);
+                            ShaderCacheManipulator.AddShadersToFile(gamePackage, shaderCache);
+                            // update the id of the material to match the compiled version
+                            var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
+                            ObjectBinary.EditBinary<Material>(mat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
+                        }
+                    }
+                }
+
+                ShaderCacheManipulator.CompactSeekFreeShaderCaches(gamePackage);
+                if (gamePackage.IsModified)
+                {
+                    gamePackage.Save();
+                }
+                brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(gamePackage);
+                foreach (var mat in brokenMaterials)
+                {
+                    MilanLog.Error($@"  Shader still broken for {mat.InstancedFullPath}");
+                }
+            }
         }
 #endif
     }
