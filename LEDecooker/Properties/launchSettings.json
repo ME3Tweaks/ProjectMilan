@@ -7,6 +7,10 @@
     "LEDecooker - LE1 - Decook DT": {
       "commandName": "Project",
       "commandLineArgs": "--t3dinputfolder \"Z:\\MaterialExport\" --outputfolder \"S:\\Decooked\" --game LE1"
+    },
+    "LEDecooker - LE3 - Decook LT": {
+      "commandName": "Project",
+      "commandLineArgs": "--outputfolder \"E:\\Decooked\" -m \"E:\\UDK2015\\UDKGame\\Content\\Shared\" -u --game LE3"
     }
   }
 }

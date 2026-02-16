@@ -20,8 +20,8 @@ namespace LEDecooker
 
         internal static string GetUDKOutputPath()
         {
-            // not ready for this yet
-            throw new NotImplementedException();
+            var outPath = Path.Combine(CLIOptions.ParsedOptions.ConvertedUDKAssetsOutputFolder, "Decooked", CLIOptions.ParsedOptions.Game.ToString());
+            return Directory.CreateDirectory(outPath).FullName;
         }
     }
 }

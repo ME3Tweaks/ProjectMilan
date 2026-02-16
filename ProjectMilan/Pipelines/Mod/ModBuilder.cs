@@ -112,6 +112,7 @@ namespace ProjectMilan.Pipelines.Mod
                 if (mdVer.HasValue && Version.TryParse(mdVer.Value, out var actualVersion) && actualVersion < CURRENT_VERSION)
                 {
                     MilanLog.Fatal($"moddesc.ini needs updated. Current version: {actualVersion}, Supported version: {CURRENT_VERSION}. Download a new templated version from #links in the Project Milan Discord");
+                    MilanLog.Fatal($"Path: {mdPath}");
                     Environment.Exit(1);
                 }
             }

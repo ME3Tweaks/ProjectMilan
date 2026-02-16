@@ -267,13 +267,13 @@ namespace LEDecooker
                 done++;
                 // Debug.WriteLine($"{packageName}");
 
-                if (!packageName.CaseInsensitiveEquals("BioVFX_Env_Water")
-                    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
-                    && !bypass // debug filter. uncomment to make it continue after this single one.
-                    )
-                    continue;
+                //if (!packageName.CaseInsensitiveEquals("BioVFX_Env_Water")
+                //    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
+                //    && !bypass // debug filter. uncomment to make it continue after this single one.
+                //    )
+                //    continue;
 
-                bypass = true;
+                //bypass = true;
 
                 if (packageName.StartsWith("Engine", StringComparison.OrdinalIgnoreCase))
                     continue;
