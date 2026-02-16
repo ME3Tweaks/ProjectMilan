@@ -254,6 +254,10 @@ namespace LEDecooker
                     if (parentEntry is ImportEntry imp)
                     {
                         var resolved = EntryImporter.ResolveImport(imp, rop.Cache);
+                        if (resolved == null)
+                        {
+                            Debugger.Break();
+                        }
                         rvr = resolved; // This is from another package! The UIndex will be for that package!
                     }
 
