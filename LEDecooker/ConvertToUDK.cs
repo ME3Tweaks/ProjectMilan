@@ -272,7 +272,7 @@ namespace LEDecooker
                             {
                                 clonable = Texture2D.CreateTexture(missingTexPackage, item.ObjectName, 512, 512, PixelFormat.DXT1, true, null);
                                 var t2d = new Texture2D(clonable);
-                                var im = Image.LoadFromFileMemory(DecookerShared.ExtractResource("missingtexture.png"), 2, PixelFormat.DXT1);
+                                var im = Image.LoadFromFileMemory(DecookerShared.ExtractResource("LEDecooker.missingtexture.png"), 2, PixelFormat.DXT1);
                                 t2d.Replace(im, clonable.GetProperties(), isPackageStored: true);
                                 clonable.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
                             }
