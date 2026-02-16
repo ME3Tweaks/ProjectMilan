@@ -24,10 +24,13 @@ namespace LEDecooker
     internal static class Decooker
     {
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialIFPDB;
+        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialIFPDBOT;
         private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupDB;
-        private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupDBME1; // Only populated when LE1 is the game
+        private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupDBOT;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> StaticMeshLookupDB;
+        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> StaticMeshLookupDBOT;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDB;
+        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDBOT;
 
 
 
@@ -226,6 +229,23 @@ namespace LEDecooker
                 }
             }
 
+            if (CLIOptions.ParsedOptions.Game == MEGame.LE3)
+            {
+                // Add ME3MP
+                foreach (var entry in t3dZip.Entries)
+                {
+                    if (!entry.FullName.StartsWith("ME3"))
+                        continue;
+                    var parts = entry.FullName.Split('/');
+                    if (!string.IsNullOrWhiteSpace(parts[1]) && !allPackageNames.ContainsKey(parts[1]))
+                    {
+                        allPackageNames[parts[1]] = parts[1];
+                    }
+                }
+            }
+
+
+
             //foreach (var p in Directory.GetDirectories(inputFolder).Select(Path.GetFileName))
             //{
             //    allPackageNames.Add(p, p);
@@ -322,24 +342,32 @@ namespace LEDecooker
             var supportData = DecookerShared.ReadSupportFileString(zip, $"materialifps_{CLIOptions.ParsedOptions.Game}.json");
             MaterialIFPDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
+            supportData = DecookerShared.ReadSupportFileString(zip, $"materialifps_{CLIOptions.ParsedOptions.Game.ToOppositeGeneration()}.json");
+            MaterialIFPDBOT = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
+
+
             // List of all textures. We use this to make sure we just pull in all game textures
             supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{CLIOptions.ParsedOptions.Game}.json");
             TextureLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
 
-            if (CLIOptions.ParsedOptions.Game == MEGame.LE1)
-            {
-                // Load ME1 DB as well as we pull textures from there.
-                supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{MEGame.ME1}.json");
-                TextureLookupDBME1 = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
-            }
+            supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{CLIOptions.ParsedOptions.Game.ToOppositeGeneration()}.json");
+            TextureLookupDBOT = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
+
 
             // Static meshes are used during lighting and udk export, so we pull them in
             supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{CLIOptions.ParsedOptions.Game}.json");
             StaticMeshLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
+            supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{CLIOptions.ParsedOptions.Game.ToOppositeGeneration()}.json");
+            StaticMeshLookupDBOT = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
+
+
             // Material Instance Constants are very often assigned to static meshes in udk, so we pull them in here
             supportData = DecookerShared.ReadSupportFileString(zip, $"materialinstanceconstantdb_{CLIOptions.ParsedOptions.Game}.json");
             MaterialInstanceConstantLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
+
+            supportData = DecookerShared.ReadSupportFileString(zip, $"materialinstanceconstantdb_{CLIOptions.ParsedOptions.Game.ToOppositeGeneration()}.json");
+            MaterialInstanceConstantLookupDBOT = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
         }
 
         //private static void NestObjects(IMEPackage package)
@@ -541,7 +569,7 @@ namespace LEDecooker
                 Cache = cache
             };
 
-            var result = CompileFolder(package.FileNameNoExtension, archive, null);
+            var result = CompileFolder(package, archive, null);
 
             // We align to cooked version for now.
             package.PreparePackageForUDKify();
@@ -557,11 +585,21 @@ namespace LEDecooker
 
             return;
 
-            MessageLog CompileFolder(string packageName, ZipArchive archive, IEntry parent)
+            MessageLog CompileFolder(IMEPackage _package, ZipArchive archive, IEntry parent)
             {
-                var prefix = $"{CLIOptions.ParsedOptions.Game}/{packageName}/";
+                var prefix = $"{_package.Game}/{_package.FileNameNoExtension}/";
                 var len = prefix.Length;
-                foreach (var entry in archive.Entries.Where(x => x.FullName.StartsWith(prefix) && x.FullName.Length > len))
+                var t3ds = archive.Entries.Where(x => x.FullName.StartsWith(prefix) && x.FullName.Length > len).ToList();
+
+                if (t3ds.Count == 0 && _package.Game == MEGame.LE3)
+                {
+                    // Try ME3
+                    prefix = $"ME3/{_package.FileNameNoExtension}/";
+                    len = prefix.Length;
+                    t3ds = archive.Entries.Where(x => x.FullName.StartsWith(prefix) && x.FullName.Length > len).ToList();
+                }
+
+                foreach (var entry in t3ds)
                 {
                     var matName = Path.GetFileNameWithoutExtension(entry.FullName);
 
@@ -583,7 +621,7 @@ namespace LEDecooker
                     }
 
                     // 04/18/2025 - check mat ifp db to see if it needs to be nested.
-                    if (matIfpDb.TryGetValue(packageName, out var packageInfo) && packageInfo.TryGetValue(matName, out var matIfp))
+                    if (matIfpDb.TryGetValue(_package.FileNameNoExtension, out var packageInfo) && packageInfo.TryGetValue(matName, out var matIfp))
                     {
                         // NESTED - we must do parents.
                         DecookerLog.Information($"\t\t-> Nesting material at {matIfp}");
@@ -591,7 +629,7 @@ namespace LEDecooker
 
                         // We nest under packagename as it doesn't make us deal with dupes of bringing in forced exports under their 
                         // nested parent. We will convert to that anyways after this step finishes
-                        MoveToNested(obj, $"{packageName}.{matIfp}");
+                        MoveToNested(obj, $"{_package.FileNameNoExtension}.{matIfp}");
                     }
                 }
 
@@ -617,11 +655,6 @@ namespace LEDecooker
                     return null;
                 }
 
-                if (classname == "TextureCube")
-                {
-
-                }
-
                 var lookupName = instancedfullpath;
                 if (instancedfullpath.Contains("."))
                 {
@@ -630,14 +663,13 @@ namespace LEDecooker
 
                 var portedItem = TryPortTexture(package, sourcepackage, lookupName, classname, TextureLookupDB);
 
-                if (CLIOptions.ParsedOptions.Game == MEGame.LE1 && portedItem == null)
+                if (TextureLookupDBOT != null && portedItem == null)
                 {
-                    // We should look in OT ME1... quality will be total trash,
-                    // but it's probably better than nothing.
-                    portedItem = TryPortTexture(package, sourcepackage, lookupName, classname, TextureLookupDBME1);
+                    // Try to pull from older gen
+                    portedItem = TryPortTexture(package, sourcepackage, lookupName, classname, TextureLookupDBOT);
                     if (portedItem != null)
                     {
-                        Debug.WriteLine($"Using ME1 texture: {instancedfullpath}");
+                        Debug.WriteLine($"Using {CLIOptions.ParsedOptions.Game.ToOppositeGeneration()} texture: {instancedfullpath}");
                     }
                 }
 
