@@ -65,7 +65,7 @@ namespace LEDecooker
         private static void ConvertAssetsToUDKInternal(string outPathFinal, string[] packagePaths, string[] mergePaths)
         {
             // goto end;
-
+            Directory.CreateDirectory(outPathFinal);
             DecookerLog.Information("Clearing Final Result UPK packages");
             foreach (var file in Directory.GetFiles(outPathFinal))
             {
@@ -106,7 +106,6 @@ namespace LEDecooker
 
                     le3P.ConvertPackageToUncooked();
                     TrimExportToUDKProps(le3P);
-
 
                     // referencer will already exist, this will return it
                     var referencer = le3P.CreateObjectReferencer();
@@ -200,7 +199,7 @@ namespace LEDecooker
         }
 
         /// <summary>
-        /// Trims specific properties we don't want carried over to UDK
+        /// Trims specific properties we don't want carried over to UDK, also corrects them
         /// </summary>
         /// <param name="le3P"></param>
         private static void TrimExportToUDKProps(IMEPackage le3P)
@@ -211,7 +210,99 @@ namespace LEDecooker
                 {
                     exp.RemoveProperty("PhysMaterial");
                 }
+                if (exp.IsA("MaterialInstance"))
+                {
+                    // Parent should not be a RvrEffectsMaterialUser
+
+                    var parent = exp.GetProperty<ObjectProperty>("Parent");
+                    if (parent.ResolveToEntry(exp.FileRef) is var parentEntry)
+                    {
+                        // Check if the parent is a RvrEffectsMaterialUser - UDK does not support this
+                        // We will relink parent up the parent material instead
+                        if (parentEntry.ClassName.CaseInsensitiveEquals("RvrEffectsMaterialUser"))
+                        {
+                            // Parent is a RvrMaterialUser
+                            // Get property on it and relink to it instead.
+                            PackageCache pc = new PackageCache();
+
+                            DecookerLog.Information("\t\t\tPassing through parent of RvrEffectsMaterialUser");
+
+                            // This export must be resolved!
+                            ExportEntry rvr = parentEntry as ExportEntry;
+                            if (parentEntry is ImportEntry imp)
+                            {
+                                var resolved = EntryImporter.ResolveImport(imp, pc);
+                                if (resolved == null)
+                                {
+                                    // About to die
+                                    Debugger.Break();
+                                }
+                                if (resolved.ClassName != imp.ClassName)
+                                {
+                                    // We resolved... something...
+                                    if (resolved.ClassName == "Package")
+                                    {
+                                        // We don't know what this is!
+                                        // How can we figure it out...?
+
+                                    }
+                                    Debugger.Break();
+                                }
+                                rvr = resolved; // This is from another package! The UIndex will be for that package!
+                            }
+
+                            var baseMatObj = rvr.GetProperty<ObjectProperty>("m_pBaseMaterial");
+                            var baseMatRef = baseMatObj.ResolveToExport(rvr.FileRef, pc);
+                            if (baseMatRef.FileRef == exp.FileRef)
+                            {
+                                // Update the parent to skip Rvr
+                                parent.Value = baseMatRef.UIndex;
+                            }
+                            else
+                            {
+                                // This is an import
+                                var pentry = CreateParentImports(exp.FileRef, baseMatRef.MemoryFullPath);
+                                parent.Value = exp.FileRef.CreateImport("Material", baseMatRef.ObjectName, pentry).UIndex;
+                            }
+
+                            exp.WriteProperty(parent);
+                        }
+                    }
+
+                }
             }
+        }
+
+        /// <summary>
+        /// Creates parents of the object as package imports
+        /// </summary>
+        /// <param name="package"></param>
+        /// <param name="ifp"></param>
+        /// <returns></returns>
+        private static IEntry CreateParentImports(IMEPackage package, string ifp)
+        {
+            var pieces = ifp.Split('.').ToList();
+            pieces.RemoveAt(pieces.Count - 1);
+
+            IEntry parent = null;
+            foreach (var piece in pieces)
+            {
+                var tifp = parent?.InstancedFullPath;
+                if (tifp != null) tifp += ".";
+                tifp += piece;
+
+                var tparent = package.FindExport(tifp, "Package");
+                if (parent == null)
+                {
+                    parent = package.CreatePackageExport(piece, parent);
+                }
+                else
+                {
+                    parent = tparent;
+                }
+            }
+
+            return parent;
         }
 
         private static bool ConvertBioMaterialExpressionForUDK(IMEPackage importingpcc, ExportEntry relinkingexport, ref int uindex, string propertyname, string prefix, RelinkerOptionsPackage rop, out EntryStringPair result)
