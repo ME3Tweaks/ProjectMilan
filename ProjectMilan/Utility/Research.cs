@@ -1,15 +1,17 @@
-﻿using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.GameFilesystem;
-using LegendaryExplorerCore.Pathing;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
+﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
+using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Pathing;
+using LegendaryExplorerCore.Shaders;
+using LegendaryExplorerCore.UDK;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines.StaticLighting;
-using LegendaryExplorerCore.Shaders;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Utility
 {
@@ -19,6 +21,16 @@ namespace ProjectMilan.Utility
     internal static class Research
     {
 #if DEBUG
+
+        public static void GenerateLightingForLevel()
+        {
+            var level = @"E:\Milan\BioP_MPJngl\BioP_MPJngl.pcc";
+            MilanLog.Information($"Generating static lighting for {level}");
+            using var levelP = MEPackageHandler.OpenMEPackage(level);
+            StaticLightingExport.ExportLevelToUDK(levelP);
+
+        }
+
         /// <summary>
         /// Calculates texture to instances map for a folder
         /// </summary>
@@ -154,6 +166,29 @@ namespace ProjectMilan.Utility
                 foreach (var mat in brokenMaterials)
                 {
                     MilanLog.Error($@"  Shader still broken for {mat.InstancedFullPath}");
+                }
+            }
+        }
+
+        internal static void ImportStaticLightingForLevel()
+        {
+            var level = @"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
+            foreach (var levelF in Directory.GetDirectories(level))
+            {
+                var levelName = Path.GetFileName(levelF);
+                var lmpMasterF = Path.Combine(level, levelName, $"{levelName}.pcc");
+                var lmpMaster = MEPackageHandler.OpenMEPackage(lmpMasterF);
+                var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", levelName, $"{levelName}.udk");
+                if (File.Exists(staticLightingPath))
+                {
+                    // Import static lighting
+                    LightingImportSetup setup = new LightingImportSetup()
+                    {
+                        IncludeSubLevels = true,
+                        UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName
+                    };
+
+                    StaticLightingImporter.ImportStaticLighting(lmpMaster, setup);
                 }
             }
         }
