@@ -17,7 +17,7 @@ namespace LEDecooker
         public bool CompileAssets { get; set; }
 
 
-        [Option('m', "udkoutputfolder", HelpText = "Specifies where converted UDK asset files should be placed", Required = true)]
+        [Option('m', "udkoutputfolder", HelpText = "Specifies where converted UDK asset files should be placed")]
         public string ConvertedUDKAssetsOutputFolder { get; set; } = string.Empty;
 
         [Option('u', "convert", HelpText = "Converts decooked assets to UDK asset packages")]
