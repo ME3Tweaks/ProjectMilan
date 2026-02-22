@@ -24,11 +24,26 @@ namespace ProjectMilan.Utility
 
         public static void GenerateLightingForLevel()
         {
-            var level = @"E:\Milan\BioP_MPJngl\BioP_MPJngl.pcc";
+            var levelPathBase = @"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
+            string[] levels = [
+                //"BioP_MPGeth",
+                //"BioP_MPMoon",
+                //"BioP_MPOcean",
+                "BioP_MPRoad"
+            ];
+
+            foreach (var l in levels)
+            {
+                var level = $@"{levelPathBase}\{l}\{l}.pcc";
+                if (!File.Exists(level))
+                {
+                    MilanLog.Warning($"Level file not present: {level}");
+                    continue;
+                }
             MilanLog.Information($"Generating static lighting for {level}");
             using var levelP = MEPackageHandler.OpenMEPackage(level);
             StaticLightingExport.ExportLevelToUDK(levelP);
-
+            }
         }
 
         /// <summary>
