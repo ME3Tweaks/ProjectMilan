@@ -12,9 +12,11 @@ using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using Newtonsoft.Json;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
+using static LegendaryExplorerCore.Unreal.TOCBinFile;
 
 namespace LEDecooker
 {
@@ -24,16 +26,17 @@ namespace LEDecooker
     internal static class Decooker
     {
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialIFPDB;
-        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialIFPDBOT;
         private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupDB;
-        private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupDBOT;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> StaticMeshLookupDB;
-        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> StaticMeshLookupDBOT;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDB;
-        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDBOT;
-
-
-
+        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> RvrEffectsMaterialUserLookupDB;
+        private static CaseInsensitiveConcurrentDictionary<string> PortingItems = new();
+        // Cache for ME3Tweaks backup paths so we don't repeatedly call into IO for the same game
+        private static readonly ConcurrentDictionary<MEGame, string> GameBackupPathCache = new();
+        private static string GetCachedGameBackupPath(MEGame game)
+        {
+            return GameBackupPathCache.GetOrAdd(game, g => ME3TweaksBackups.GetGameBackupPath(g));
+        }
         /// <summary>
         /// Compiles the T3D files for the specified game, generating packages with material expression data. It also generates the 
         /// source style packages for supporting assets that are needed for other things such as StaticMeshes, Material Instance Constants,
@@ -45,7 +48,10 @@ namespace LEDecooker
             var compiledOutputFolder = Path.Combine(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game.ToString());
             Directory.CreateDirectory(compiledOutputFolder);
 
-            CompileGameAssets(compiledOutputFolder);
+            // Compile LE
+            CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game, CLIOptions.ParsedOptions.Game);
+            // Compile OT -> LE
+            CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game.ToOppositeGeneration(), CLIOptions.ParsedOptions.Game);
             FixImports(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game);
         }
 
@@ -198,28 +204,32 @@ namespace LEDecooker
         /// Generates decooked packages that will later be converted to UPKs
         /// </summary>
         /// <param name="outputFolder"></param>
-        public static void CompileGameAssets(string outputFolder)
+        public static void CompileGameAssets(string outputFolder, MEGame sourceGame, MEGame targetGame)
         {
-            DecookerShared.TargetObjectDB = DecookerShared.LoadObjectDB(CLIOptions.ParsedOptions.Game);
+            DecookerShared.TargetObjectDB = DecookerShared.LoadObjectDB(sourceGame);
 
-            // DecookerLog.Information("Clearing Stage 1 T3D packages");
-            foreach (var file in Directory.GetFiles(outputFolder))
+            if (false)
             {
-                //File.Delete(file);
+                DecookerLog.Information("Clearing Stage 1 T3D packages");
+                foreach (var file in Directory.GetFiles(outputFolder))
+                {
+                    File.Delete(file);
+                }
             }
 
             DecookerLog.Information("Loading material data...");
             var t3dZipB = DecookerShared.ExtractResource("LEDecooker.materials.materials.zip");
             var t3dZipM = new MemoryStream(t3dZipB);
             var t3dZip = new ZipArchive(t3dZipM);
-            LoadExtraData();
+            LoadExtraData(sourceGame);
 
             // All packages that will be generated
             var allPackageNames = new CaseInsensitiveDictionary<string>();
 
-            var gameStr = CLIOptions.ParsedOptions.Game.ToString();
+            var gameStr = sourceGame.ToString();
             foreach (var entry in t3dZip.Entries)
             {
+                // Ignore entries not for game
                 if (!entry.FullName.StartsWith(gameStr))
                     continue;
                 var parts = entry.FullName.Split('/');
@@ -228,23 +238,6 @@ namespace LEDecooker
                     allPackageNames[parts[1]] = parts[1];
                 }
             }
-
-            if (CLIOptions.ParsedOptions.Game == MEGame.LE3)
-            {
-                // Add ME3MP
-                foreach (var entry in t3dZip.Entries)
-                {
-                    if (!entry.FullName.StartsWith("ME3"))
-                        continue;
-                    var parts = entry.FullName.Split('/');
-                    if (!string.IsNullOrWhiteSpace(parts[1]) && !allPackageNames.ContainsKey(parts[1]))
-                    {
-                        allPackageNames[parts[1]] = parts[1];
-                    }
-                }
-            }
-
-
 
             //foreach (var p in Directory.GetDirectories(inputFolder).Select(Path.GetFileName))
             //{
@@ -265,9 +258,19 @@ namespace LEDecooker
             foreach (var packageName in packages)
             {
                 done++;
-                // Debug.WriteLine($"{packageName}");
+                Debug.WriteLine($"{packageName}");
 
-                //if (!packageName.CaseInsensitiveEquals("BioVFX_Env_Water")
+                // Duplicates: 
+                //   BioD_MPRctr_100SP
+                //   BioD_Omg02A_400CntrlRm
+                //   biog_wpn_hvy_r
+                //   biot_rubble -> bioware screwed this one up.
+
+                // Crash out:
+                //   BIOG_WPN_SNP_M_CON_MP4 FIXED per import
+                //   BioS_MPJungle 
+                //   BioVFX_Env_Hologram
+                //if (!packageName.CaseInsensitiveEquals("TestOneOfEveryResource")
                 //    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
                 //    && !bypass // debug filter. uncomment to make it continue after this single one.
                 //    )
@@ -285,6 +288,11 @@ namespace LEDecooker
                     continue;
                 if (packageName.StartsWith("MobileEmulation", StringComparison.OrdinalIgnoreCase))
                     continue;
+                if (packageName.StartsWith("TestOneOfEveryResource", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                if (!packageName.StartsWith("BIOG_HMM_HED_PROMorph", StringComparison.OrdinalIgnoreCase))
+                    continue;
 
                 var packagePath = Path.Combine(outputFolder, $"{packageName}.pcc");
 
@@ -293,16 +301,32 @@ namespace LEDecooker
                 //    continue;
                 // END TEMP
 
-                using var package = MEPackageHandler.CreateAndOpenPackage(packagePath, CLIOptions.ParsedOptions.Game);
+                IMEPackage package;
+                if (File.Exists(packagePath))
+                {
+                    package = MEPackageHandler.OpenMEPackage(packagePath);
+                }
+                else
+                {
+                    package = MEPackageHandler.CreateAndOpenPackage(packagePath, targetGame);
+                }
+
                 DecookerLog.Information($"Compiling package {package.FileNameNoExtension} [{done}/{total}]");
-                CompilePackageMaterials(package, t3dZip, MaterialIFPDB);
-                AddTextures(package, TextureLookupDB);
+                CompilePackageMaterials(package, sourceGame, t3dZip, MaterialIFPDB);
+                AddTextures(package, sourceGame, TextureLookupDB);
                 package.PreparePackageForUDKify();
-                AddObjects(package, "MaterialInstanceConstant", MaterialInstanceConstantLookupDB);
+                // We must do this to ensure we have the RVR stuff set up as the MaterialInstanceConstant may reference it as a parent
+                CopyProperties(package, sourceGame, "RvrEffectsMaterialUser", RvrEffectsMaterialUserLookupDB);
                 package.PreparePackageForUDKify();
-                AddObjects(package, "StaticMesh", StaticMeshLookupDB);
+                AddObjects(package, sourceGame, "MaterialInstanceConstant", MaterialInstanceConstantLookupDB);
+                package.Save();
+
+                AddObjects(package, sourceGame, "StaticMesh", StaticMeshLookupDB);
                 package.PreparePackageForUDKify();
 
+                package.Save();
+                SpecialFixes(package, sourceGame);
+                package.Save();
                 // NestObjects(package);
 
                 if (package.Exports.All(x => x.ClassName == "Package")) // UDK prep will add package name export so we only check if we have a non-package export
@@ -318,56 +342,77 @@ namespace LEDecooker
                         {
                             DecookerLog.Error($"Duplicate object found in {package.FileNameNoExtension}: {dup.Entry.InstancedFullPath}");
                         }
-                        package.Save();
+                        //package.Save();
                         Debugger.Break();
                     }
 
                     // Set flags to match what source side package would. This affects import resolution code.
                     package.setFlags(UnrealFlags.EPackageFlags.AllowDownload | UnrealFlags.EPackageFlags.NoExportsData);
                     package.Save();
+                    /*if (package.IsModified)
+                    {
+                        package.Save(ChangeDirectory(package.FilePath, @"E:\Decooked\LE3ME3"));
+                    }*/
                 }
             }
 
+            foreach (var f in PortingItems)
+            {
+                Debug.WriteLine($"{f.Key}\t\t{f.Value}");
+            }
+        }
+
+        private static void SpecialFixes(IMEPackage package, MEGame sourceGame)
+        {
+            if (package.Game == MEGame.LE3 && package.FileNameNoExtension == "BIOG_HMM_HED_PROMorph")
+            {
+                // We don't have T3D for the duplicate illusave man B face (reaperized)
+                // We are just going to clone the existing one cause it has the same name.
+                if (package.FindExport("BIOG_HMM_HED_PROMorph.IllusiveMan.Illb.HMM_HED_PROIllusiveMan_Face_MASTER_MAT", "Material") == null)
+                {
+                    // Needs cloned - package hasn't been lifted to non-forced export yet
+                    var original = package.FindExport("BIOG_HMM_HED_PROMorph.IllusiveMan.HMM_HED_PROIllusiveMan_Face_MASTER_MAT");
+                    var targetLink = package.FindExport("BIOG_HMM_HED_PROMorph.IllusiveMan.Illb");
+                    IEntry newTreeRoot = EntryCloner.CloneTree(original, false);
+                    newTreeRoot.Parent = targetLink;
+                    DecookerLog.Information($"\t\tMade clone of IllusiveManB Face material");
+                }
+            }
+        }
+
+        private static string ChangeDirectory(string filePath, string newDirectory)
+        {
+            return Path.Combine(newDirectory, Path.GetFileName(filePath));
         }
 
         /// <summary>
         /// Loads extra supporting data
         /// </summary>
-        private static void LoadExtraData()
+        private static void LoadExtraData(MEGame game)
         {
             using var ms = new MemoryStream(DecookerShared.ExtractResource($@"LEDecooker.supportfiles.supportdbs.zip"));
             using var zip = new ZipArchive(ms);
 
             // T3D doesnt contain in-package pathing. This DB is used to try to fix that
-            var supportData = DecookerShared.ReadSupportFileString(zip, $"materialifps_{CLIOptions.ParsedOptions.Game}.json");
+            var supportData = DecookerShared.ReadSupportFileString(zip, $"materialifps_{game}.json");
             MaterialIFPDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
-            supportData = DecookerShared.ReadSupportFileString(zip, $"materialifps_{CLIOptions.ParsedOptions.Game.ToOppositeGeneration()}.json");
-            MaterialIFPDBOT = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
-
-
             // List of all textures. We use this to make sure we just pull in all game textures
-            supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{CLIOptions.ParsedOptions.Game}.json");
+            supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{game}.json");
             TextureLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
 
-            supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{CLIOptions.ParsedOptions.Game.ToOppositeGeneration()}.json");
-            TextureLookupDBOT = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
-
-
             // Static meshes are used during lighting and udk export, so we pull them in
-            supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{CLIOptions.ParsedOptions.Game}.json");
+            supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{game}.json");
             StaticMeshLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
-            supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{CLIOptions.ParsedOptions.Game.ToOppositeGeneration()}.json");
-            StaticMeshLookupDBOT = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
-
-
             // Material Instance Constants are very often assigned to static meshes in udk, so we pull them in here
-            supportData = DecookerShared.ReadSupportFileString(zip, $"materialinstanceconstantdb_{CLIOptions.ParsedOptions.Game}.json");
+            supportData = DecookerShared.ReadSupportFileString(zip, $"materialinstanceconstantdb_{game}.json");
             MaterialInstanceConstantLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
-            supportData = DecookerShared.ReadSupportFileString(zip, $"materialinstanceconstantdb_{CLIOptions.ParsedOptions.Game.ToOppositeGeneration()}.json");
-            MaterialInstanceConstantLookupDBOT = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
+            // RVR - Referenced by material instance parents
+            supportData = DecookerShared.ReadSupportFileString(zip, $"rvreffectsmaterialuserdb_{game}.json");
+            RvrEffectsMaterialUserLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
+
         }
 
         //private static void NestObjects(IMEPackage package)
@@ -418,14 +463,14 @@ namespace LEDecooker
         /// </summary>
         /// <param name="package"></param>
         /// <param name="assetMap"></param>
-        private static void AddTextures(IMEPackage package, CaseInsensitiveDictionary<ObjectLocation> assetMap)
+        private static void AddTextures(IMEPackage package, MEGame sourceGame, CaseInsensitiveDictionary<ObjectLocation> assetMap)
         {
             var packageName = package.FileNameNoExtension;
             var assets = assetMap.Where(x => x.Value.memoryfullpath.StartsWith(packageName + ".", StringComparison.OrdinalIgnoreCase));
             if (assets.Any())
             {
-                DecookerLog.Information($"\tAdding asset type '(Textures)' to package");
-                using PackageCache cache = new PackageCache();
+                DecookerLog.Information($"\tAdding asset type 'Textures' to package");
+                using SFARPackageCache cache = new SFARPackageCache();
                 foreach (var asset in assets)
                 {
                     if (asset.Value.classname == "TerrainWeightMapTexture")
@@ -449,8 +494,14 @@ namespace LEDecooker
 
                     // We know it exists
                     DecookerLog.Information($"\t\tPorting asset in: {memoryifp}");
+                    var path = asset.Value.packagefile;
+                    if (path.StartsWith("/") && path.Contains("/DLC/"))
+                    {
+                        path = GetCachedGameBackupPath(sourceGame) + path;
+                    }
+                    using var sourcePackage = cache.GetCachedPackage(path);
+                    PortingItems[asset.Key] = path;
 
-                    using var sourcePackage = cache.GetCachedPackage(asset.Value.packagefile);
                     var sourceAsset = sourcePackage.FindExport(memoryifp) ?? sourcePackage.FindExport(ifp);
 
                     RelinkerOptionsPackage rop = new RelinkerOptionsPackage()
@@ -490,12 +541,12 @@ namespace LEDecooker
             }
         }
 
-        private static void AddObjects(IMEPackage package, string classType, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> assetMap)
+        private static void AddObjects(IMEPackage package, MEGame sourceGame, string classType, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> assetMap)
         {
             if (assetMap.TryGetValue(package.FileNameNoExtension, out var assetList))
             {
                 DecookerLog.Information($"\tAdding asset type '{classType}' to package");
-                using PackageCache cache = new PackageCache();
+                using SFARPackageCache cache = new SFARPackageCache();
                 foreach (var asset in assetList)
                 {
                     // Does this already exist in the package?
@@ -508,9 +559,15 @@ namespace LEDecooker
                     // We know it exists
 
                     DecookerLog.Information($"\t\tPorting asset in: {asset.Key}");
-
-                    using var sourcePackage = cache.GetCachedPackage(asset.Value);
+                    var path = asset.Value;
+                    if (path.StartsWith("/") && path.Contains("/DLC/"))
+                    {
+                        path = GetCachedGameBackupPath(sourceGame) + path;
+                    }
+                    using var sourcePackage = cache.GetCachedPackage(path);
                     var sourceAsset = sourcePackage.FindExport(asset.Key) ?? sourcePackage.FindExport(asset.Key.Substring(asset.Key.IndexOf('.') + 1));
+
+                    PortingItems[asset.Key] = path;
 
                     // Convert to Seek Free porting
                     if (sourceAsset.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
@@ -530,6 +587,57 @@ namespace LEDecooker
                 }
             }
         }
+
+        private static void CopyProperties(IMEPackage package, MEGame sourceGame, string classType, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> assetMap)
+        {
+            if (assetMap.TryGetValue(package.FileNameNoExtension, out var assetList))
+            {
+                DecookerLog.Information($"\tCopying properties for asset type '{classType}' to package");
+                using SFARPackageCache cache = new SFARPackageCache();
+                foreach (var asset in assetList)
+                {
+                    // Does this already exist in the package?
+                    var targetAsset = package.FindExport(asset.Key, @"Package");
+
+                    if (targetAsset == null)
+                    {
+                        // Nothing to update
+                        continue;
+                    }
+                    // We know it exists
+                    DecookerLog.Information($"\t\tCopying properties for asset in: {asset.Key}");
+                    var path = asset.Value;
+                    if (path.StartsWith("/") && path.Contains("/DLC/"))
+                    {
+                        path = GetCachedGameBackupPath(sourceGame) + path;
+                    }
+                    using var sourcePackage = cache.GetCachedPackage(path);
+                    var sourceAsset = sourcePackage.FindExport(asset.Key) ?? sourcePackage.FindExport(asset.Key.Substring(asset.Key.IndexOf('.') + 1));
+
+                    PortingItems[asset.Key] = path;
+
+                    // Convert to Seek Free porting
+                    if (sourceAsset.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
+                    {
+                        EntryExporter.PrepareGlobalFileForPorting(sourceAsset.FileRef, sourceAsset.FileRef.FileNameNoExtension);
+                    }
+
+                    RelinkerOptionsPackage rop = new RelinkerOptionsPackage()
+                    {
+                        Cache = cache,
+                        CustomRelinkUIndex = DecookerShared.ImportOutsideOfPackageRelink,
+                        CustomImportDependency = ImportDependencyOutsideOfPackage,
+                    };
+
+
+                    var classX = EntryImporter.EnsureClassIsInFile(package, classType, rop, ME3TweaksBackups.GetGameBackupPath(sourceGame));
+                    targetAsset.Class = classX;
+                    EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceAsset, package, targetAsset, true, rop, out var _);
+                    
+                }
+            }
+        }
+
 
         private static bool ImportDependencyOutsideOfPackage(ExportEntry sourceEntry, IMEPackage targetpackage, RelinkerOptionsPackage customrop, out List<EntryStringPair> entrystringpairs)
         {
@@ -560,7 +668,7 @@ namespace LEDecooker
             return true;
         }
 
-        private static void CompilePackageMaterials(IMEPackage package, ZipArchive archive, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> matIfpDb)
+        private static void CompilePackageMaterials(IMEPackage package, MEGame sourceGame, ZipArchive archive, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> matIfpDb)
         {
             using var cache = new PackageCache();
             var usop = new UnrealScriptOptionsPackage
@@ -569,7 +677,7 @@ namespace LEDecooker
                 Cache = cache
             };
 
-            var result = CompileFolder(package, archive, null);
+            var result = CompileFolder(package, sourceGame, archive, null);
 
             // We align to cooked version for now.
             package.PreparePackageForUDKify();
@@ -585,23 +693,29 @@ namespace LEDecooker
 
             return;
 
-            MessageLog CompileFolder(IMEPackage _package, ZipArchive archive, IEntry parent)
+            MessageLog CompileFolder(IMEPackage _package, MEGame sourceGame, ZipArchive archive, IEntry parent)
             {
-                var prefix = $"{_package.Game}/{_package.FileNameNoExtension}/";
+                var prefix = $"{sourceGame}/{_package.FileNameNoExtension}/";
                 var len = prefix.Length;
                 var t3ds = archive.Entries.Where(x => x.FullName.StartsWith(prefix) && x.FullName.Length > len).ToList();
 
-                if (t3ds.Count == 0 && _package.Game == MEGame.LE3)
-                {
-                    // Try ME3
-                    prefix = $"ME3/{_package.FileNameNoExtension}/";
-                    len = prefix.Length;
-                    t3ds = archive.Entries.Where(x => x.FullName.StartsWith(prefix) && x.FullName.Length > len).ToList();
-                }
+                //if (t3ds.Count == 0 && _package.Game == MEGame.LE3)
+                //{
+                //    // Try ME3
+                //    prefix = $"ME3/{_package.FileNameNoExtension}/";
+                //    len = prefix.Length;
+                //    t3ds = archive.Entries.Where(x => x.FullName.StartsWith(prefix) && x.FullName.Length > len).ToList();
+                //}
 
                 foreach (var entry in t3ds)
                 {
                     var matName = Path.GetFileNameWithoutExtension(entry.FullName);
+
+                    if (_package.Exports.FirstOrDefault(x => x.ObjectName.Instanced == matName && x.IsA("Material")) != null)
+                    {
+                        // Already in package
+                        continue;
+                    }
 
                     // Pretty inefficient...
                     var source = new StreamReader(entry.Open(), Encoding.Default).ReadToEnd();
@@ -661,18 +775,7 @@ namespace LEDecooker
                     lookupName = instancedfullpath.Substring(instancedfullpath.LastIndexOf('.') + 1);
                 }
 
-                var portedItem = TryPortTexture(package, sourcepackage, lookupName, classname, TextureLookupDB);
-
-                if (TextureLookupDBOT != null && portedItem == null)
-                {
-                    // Try to pull from older gen
-                    portedItem = TryPortTexture(package, sourcepackage, lookupName, classname, TextureLookupDBOT);
-                    if (portedItem != null)
-                    {
-                        Debug.WriteLine($"Using {CLIOptions.ParsedOptions.Game.ToOppositeGeneration()} texture: {instancedfullpath}");
-                    }
-                }
-
+                var portedItem = TryPortTexture(package, sourcepackage, sourceGame, lookupName, classname, TextureLookupDB);
                 if (portedItem == null)
                 {
                     Debug.WriteLine($"Texture not found: {instancedfullpath}");
@@ -689,7 +792,7 @@ namespace LEDecooker
         /// <param name="lookupName"></param>
         /// <param name="db"></param>
         /// <returns></returns>
-        private static IEntry TryPortTexture(IMEPackage package, IMEPackage sourcepackage, string lookupName, string classname, CaseInsensitiveDictionary<ObjectLocation> db)
+        private static IEntry TryPortTexture(IMEPackage package, IMEPackage sourcepackage, MEGame sourceGame, string lookupName, string classname, CaseInsensitiveDictionary<ObjectLocation> db)
         {
             if (db.TryGetValue(lookupName, out var info))
             {
@@ -707,7 +810,8 @@ namespace LEDecooker
                 }
 
                 // We know it exists
-                var sourcePackage = MEPackageHandler.UnsafePartialLoad(info.packagefile, x => x.ClassName is "Package" or "TextureCube" || x.IsTexture());
+                using var sourcePackage = DecookerShared.OpenPackage(info.packagefile, sourceGame);
+                //   sourcePackage = MEPackageHandler.UnsafePartialLoad(path, x => x.ClassName is "Package" or "TextureCube" || x.IsTexture());
                 var sourceTex = sourcePackage.Exports.First(x => x.MemoryFullPath.CaseInsensitiveEquals(info.memoryfullpath) && x.ClassName.CaseInsensitiveEquals(classname));
                 if (!sourceTex.IsDataLoaded())
                 {
@@ -717,7 +821,7 @@ namespace LEDecooker
                 if (sourceTex.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
                 {
                     // Fully load
-                    sourcePackage = MEPackageHandler.OpenMEPackage(info.packagefile);
+                    // sourcePackage = MEPackageHandler.OpenMEPackage(info.packagefile);
                     sourceTex = sourcePackage.FindExport(sourceTex.InstancedFullPath);
                 }
 
@@ -804,7 +908,7 @@ namespace LEDecooker
             // var compiledFile = MEPackageHandler.OpenMEPackage(@"S:\Milan\UDK\LE3_Mats.pcc", forceLoadFromDisk: true);
 
 
-            var backupPath = ME3TweaksBackups.GetGameBackupPath(MEGame.LE3);
+            var backupPath = GetCachedGameBackupPath(MEGame.LE3);
             var files = Directory.GetFiles(backupPath, "*.pcc", SearchOption.AllDirectories);
             var set = new SortedSet<string>();
 
@@ -837,6 +941,11 @@ namespace LEDecooker
             var outJ = JsonConvert.SerializeObject(MatToMFP, Formatting.Indented);
             File.WriteAllText(@"S:\Milan\UDK\MFPDBForT3D.json", outJ);
             Debug.WriteLine(string.Join('\n', set));
+        }
+
+        public static void LayerGeneration(MEGame game)
+        {
+
         }
     }
 }
