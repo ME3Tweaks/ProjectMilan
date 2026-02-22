@@ -1,8 +1,6 @@
-﻿using LegendaryExplorerCore.GameFilesystem;
-using LegendaryExplorerCore.Helpers;
+﻿using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Localization;
 using LegendaryExplorerCore.Misc;
-using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Textures;
@@ -10,11 +8,7 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using LegendaryExplorerCore.UnrealScript;
-using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
-using Newtonsoft.Json;
 using System.Diagnostics;
-using System.IO.Compression;
 
 namespace LEDecooker
 {
@@ -46,13 +40,7 @@ namespace LEDecooker
             var outputPath = DecookerPaths.GetUDKOutputPath();
             // Todo: Support mergein paths for custom content.
             DecookerShared.TargetObjectDB ??= DecookerShared.LoadObjectDB(CLIOptions.ParsedOptions.Game);
-            if (CLIOptions.ParsedOptions.Game == MEGame.LE3)
-            {
-                DecookerShared.OTObjectDB ??= DecookerShared.LoadObjectDB(CLIOptions.ParsedOptions.Game.ToOppositeGeneration());
-            }
-
             ConvertAssetsToUDKInternal(outputPath, [inputPath], []);
-
         }
 
 
@@ -83,6 +71,9 @@ namespace LEDecooker
                     using var le3P = MEPackageHandler.OpenMEPackage(packageF);
                     if (le3P.FileNameNoExtension == "BioS_Matrix") // bugged atm
                         return;
+                    /*if (le3P.FileNameNoExtension != "BioTemp_Lev004")
+                        // Skip
+                        return;*/
 
                     //if (le3P.FileNameNoExtension != "BioT_MPThes") 
                     //    && le3P.FileNameNoExtension != "biog_rpr_can_nkd_r") // debug filter
@@ -198,13 +189,19 @@ namespace LEDecooker
             GenerateMissingTexturePackage(outPathFinal);
         }
 
+        private static IMEPackage localFileResolver(string packageName, PackageCache cache)
+        {
+            var testPath = Path.Combine(DecookerPaths.GetAssetOutputPath(), packageName);
+            return cache.GetCachedPackage(testPath);
+        }
+
         /// <summary>
-        /// Trims specific properties we don't want carried over to UDK, also corrects them
+        /// Trims specific properties we don't want carried over to UDK, also corrects them. This may modify the source package!
         /// </summary>
         /// <param name="le3P"></param>
         private static void TrimExportToUDKProps(IMEPackage le3P)
         {
-            foreach (var exp in le3P.Exports)
+            foreach (var exp in le3P.Exports.ToList())
             {
                 if (exp.IsA("Material") || exp.IsA("MaterialInstance"))
                 {
@@ -215,6 +212,12 @@ namespace LEDecooker
                     // Parent should not be a RvrEffectsMaterialUser
 
                     var parent = exp.GetProperty<ObjectProperty>("Parent");
+                    if (parent == null)
+                    {
+                        // This is probably not valid, but this happens
+                        // in a few materials
+                        continue;
+                    }
                     if (parent.ResolveToEntry(exp.FileRef) is var parentEntry)
                     {
                         // Check if the parent is a RvrEffectsMaterialUser - UDK does not support this
@@ -252,8 +255,8 @@ namespace LEDecooker
                             }
 
                             var baseMatObj = rvr.GetProperty<ObjectProperty>("m_pBaseMaterial");
-                            var baseMatRef = baseMatObj.ResolveToExport(rvr.FileRef, pc);
-                            if (baseMatRef.FileRef == exp.FileRef)
+                            var baseMatRef = baseMatObj.ResolveToExport(rvr.FileRef, pc, localFileResolver);
+                            if (baseMatRef.FileRef == exp.FileRef || baseMatRef.FileRef.FilePath.Equals(exp.FileRef.FilePath, StringComparison.OrdinalIgnoreCase))
                             {
                                 // Update the parent to skip Rvr
                                 parent.Value = baseMatRef.UIndex;
@@ -271,7 +274,41 @@ namespace LEDecooker
 
                 }
             }
+
+            // Gets the referencer
+            var referencer = le3P.CreateObjectReferencer();
+
+            // Ensure we have no objects that won't work in UDK
+            var referencedObjects = referencer.GetProperty<ArrayProperty<ObjectProperty>>("ReferencedObjects");
+            var count = referencedObjects.Count;
+            referencedObjects.RemoveAll(x =>
+            {
+                var obj = le3P.GetUExport(x.Value);
+                // Debug.WriteLine($"{obj.InstancedFullPath} | {obj.ClassName} | {obj.Class.GetLinker()}");
+                var tempObj = obj;
+                while (tempObj != null)
+                {
+                    // Debug.WriteLine($"\t{tempObj.InstancedFullPath} | {tempObj.ClassName}");
+                    if (tempObj.Class.GetLinker() == "SFXGame" && !tempObj.ClassName.StartsWith("BioMaterialExpression"))
+                    {
+                        // We convert BioMaterialExpressions, but other SFXGame classes are not supported in UDK,
+                        // so we trim the reference
+                        DecookerLog.Information($"\tTrimming ObjectReferencer reference to {obj.InstancedFullPath} as it has class not supported in UDK");
+                        return true;
+                    }
+                 
+                    tempObj = tempObj.Parent as ExportEntry;
+                }
+                return false;
+            });
+
+            if (referencedObjects.Count != count)
+            {
+                // Write back changes to referencer
+                referencer.WriteProperty(referencedObjects);
+            }
         }
+
 
         /// <summary>
         /// Creates parents of the object as package imports
