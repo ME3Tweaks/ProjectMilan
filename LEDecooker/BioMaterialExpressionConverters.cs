@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
@@ -31,8 +32,15 @@ namespace LEDecooker
                     return new BioMaterialExpressionSpecPower(exp);
                 case "BioMaterialExpressionWound":
                     return new BioMaterialExpressionWound(exp);
-
+                case "BioMaterialExpressionEffectMatFractionEnabled":
+                    return new BioMaterialExpressionEffectMatFractionEnabled(exp);
+                case "BioMaterialExpressionSineSubtend":
+                    return new BioMaterialExpressionSineSubtend(exp);
+                case "BioMaterialExpressionHalfAngle":
+                    return new BioMaterialExpressionHalfAngle(exp);
                 default:
+                    if (exp.ClassName.StartsWith("Bio"))
+                        Debugger.Break();
                     return null;
             }
         }
@@ -89,6 +97,21 @@ namespace LEDecooker
             {
                 AddCustomInput(inputsArray, "Normal", originalProperties.GetProp<StructProperty>("Normal"));
             }
+        }
+    }
+
+    public class BioMaterialExpressionHalfAngle(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
+    {
+        protected override string GetHLSLCode(PropertyCollection originalProps)
+        {
+            // Properties
+
+            // HLSL
+            return $@"return normalize( Parameters.TangentLightVector + Parameters.TangentCameraVector );";
+        }
+        protected override void AddCustomInputs(ArrayProperty<StructProperty> inputsArray, PropertyCollection originalProperties)
+        {
+            // Need to figure this out if any...
         }
     }
 
@@ -232,7 +255,57 @@ namespace LEDecooker
         }
     }
 
+    public class BioMaterialExpressionEffectMatFractionEnabled(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
+    {
+        protected override string GetHLSLCode(PropertyCollection originalProps)
+        {
+            // Properties
+            // This has a numWounds property that determines which GetWoundParams method is called.
+            // Unsure this works in UDK
+            // Just taking the default undefined variable version from the .usf
 
+            // HLSL
+            StringBuilder sb = new StringBuilder();
+            // Not entirely sure on this one, would probably have to go through hlsl translator
+            sb.AppendLine("return Parameters.EffectEnabled;");
+
+            // Result
+            return sb.ToString();
+        }
+
+        protected override void AddCustomInputs(ArrayProperty<StructProperty> inputsArray, PropertyCollection originalProps)
+        {
+            // No inputs
+        }
+    }
+
+    public class BioMaterialExpressionSineSubtend(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
+    {
+        protected override string GetHLSLCode(PropertyCollection originalProps)
+        {
+            // Properties
+            // This has a numWounds property that determines which GetWoundParams method is called.
+            // Unsure this works in UDK
+            // Just taking the default undefined variable version from the .usf
+
+            // HLSL
+            StringBuilder sb = new StringBuilder();
+            // Not entirely sure on this one, would probably have to go through hlsl translator
+            // Will need to put into material translator to figure out.
+            sb.AppendLine("sqrt(max(0,0, min(1.0, 1-dot(%s,%s)*dot(5s,%s))))");
+            sb.AppendLine("return 0;");
+
+            // Result
+            return sb.ToString();
+        }
+
+        protected override void AddCustomInputs(ArrayProperty<StructProperty> inputsArray, PropertyCollection originalProps)
+        {
+            // No inputs
+            AddCustomInput(inputsArray, "A", originalProps.GetProp<StructProperty>("A"));
+            AddCustomInput(inputsArray, "B", originalProps.GetProp<StructProperty>("B"));
+        }
+    }
 
     public class BioMaterialExpressionSpecPower(ExportEntry sourceExport) : BioMaterialExpressionBase(sourceExport)
     {
@@ -402,9 +475,9 @@ namespace LEDecooker
         /// <summary>
         /// Adds a custom input based on the original input. The reference copied over is from the original package; it will be relinked later.
         /// </summary>
-        /// <param name="inputsArray"></param>
-        /// <param name="normal"></param>
-        /// <param name="normalInput"></param>
+        /// <param name="inputsArray">The inputs array to emplace into</param>
+        /// <param name="inputName">The name of hte input to generate</param>
+        /// <param name="originalStruct">Original input struct</param>
         protected void AddCustomInput(ArrayProperty<StructProperty> inputsArray, string inputName, StructProperty originalStruct)
         {
             PropertyCollection pc = new PropertyCollection();
