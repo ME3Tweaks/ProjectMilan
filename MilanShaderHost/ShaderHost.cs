@@ -39,6 +39,10 @@ namespace MilanShaderHost
             /// A MaterialResource is about to be sent to us.
             /// </summary>
             MaterialResource = 4,
+            /// <summary>
+            /// The Material HLSL the game has generated for a material is about to be sent to us.
+            /// </summary>
+            MaterialHLSL = 5,
         }
 
         EReadMode CurrentReadMode = EReadMode.None;
@@ -125,7 +129,7 @@ namespace MilanShaderHost
                     packagelessSC.SetGame(Program.Game);
                     var cache = new ShaderCache() { Packageless = true };
                     cache.PublicSerialize(packagelessSC);
-                    
+
                     cr = new CompileResult() { Cache = cache };
                     // WriteCacheToFile(buildingCache);
                     IncomingShaderCacheSize = 0; // Reset
@@ -165,6 +169,25 @@ namespace MilanShaderHost
                     //Console.WriteLine($"Received material resource binary for {materialName}, {incomingDataLen} bytes");
                     CurrentReadMode = EReadMode.None;
                     Console.WriteLine();
+                }
+                else if (CurrentReadMode == EReadMode.MaterialHLSL)
+                {
+                    // String incoming.
+                    var strLen = reader.ReadInt32();
+                    var strData = reader.ReadBytes(strLen); // Unicode
+                    var materialIFP = Encoding.Unicode.GetString(strData);
+                    Console.WriteLine($"  Incoming HLSL for material: {materialIFP}");
+                    var hlslLen = reader.ReadInt32();
+                    var hlslData = reader.ReadBytes(hlslLen);
+                    var hlsl = Encoding.Unicode.GetString(hlslData);
+
+                    var outPath = Path.Combine(MilanShaderBuilderFlow.DecookedPackagesPath, "HLSL", MilanShaderBuilderFlow.Game.ToString());
+                    Directory.CreateDirectory(outPath);
+                    var hlslPath = Path.Combine(outPath, materialIFP + ".hlsl");
+                    File.WriteAllText(hlslPath, hlsl);
+                    cr = null; // Reset
+                    CurrentReadMode = EReadMode.None;
+                    // Console.WriteLine();
                 }
             }
         }

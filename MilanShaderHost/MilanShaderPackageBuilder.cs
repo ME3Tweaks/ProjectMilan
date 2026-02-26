@@ -258,7 +258,7 @@ namespace MilanShaderHost
                     var sourcePackagePath = Path.Combine(sourceFolder, $"{imp.GetLinker()}.pcc");
                     if (File.Exists(sourcePackagePath))
                     {
-                        Console.WriteLine($@"Attempting to port as export: {imp.InstancedFullPath}");
+                        // Console.WriteLine($@"Attempting to port as export: {imp.InstancedFullPath}");
                         // Source package exists
                         // todo: Maybe use cache.
                         using var sourcePackage = MEPackageHandler.OpenMEPackage(sourcePackagePath);

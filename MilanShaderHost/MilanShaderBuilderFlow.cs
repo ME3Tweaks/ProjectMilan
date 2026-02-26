@@ -10,6 +10,7 @@ using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 
 namespace MilanShaderHost
 {
@@ -21,9 +22,9 @@ namespace MilanShaderHost
     {
         private static List<string> PackageFilesToProcess = new List<string>();
 
-        private static string DecookedPackagesPath = @"E:\Decooked";
+        public static string DecookedPackagesPath = @"E:\Decooked";
 
-        private static MEGame Game;
+        public static MEGame Game;
 
         /// <summary>
         /// Package the final shader cache will be saved into. Materials will be transferred into this as well once compiling is complete and then linked up.
@@ -56,6 +57,57 @@ namespace MilanShaderHost
             Game = MEGame.LE3;
             var path = Path.Combine(DecookedPackagesPath, Game.ToString());
             MilanShaderPackageBuilder.SourceFolders.Add(path);
+
+            // Dump HLSL for package
+            SetupHLSLDumpFlow();
+
+            // Compile in-game
+            // SetupShaderCompileFlow();
+        }
+
+        static void SetupHLSLDumpFlow()
+        {
+            foreach (var folder in MilanShaderPackageBuilder.SourceFolders)
+            {
+                var files = Directory.GetFiles(folder);
+                files.Sort();
+                foreach (var file in files)
+                {
+                    if (!file.RepresentsPackageFilePath())
+                    {
+                        continue;
+                    }
+
+                    // Check output folder
+                    var outFiles = Directory.EnumerateFiles("Z:\\Decooked\\HLSL\\LE3");
+                    if (outFiles.Any(x => Path.GetFileNameWithoutExtension(x).StartsWith(Path.GetFileNameWithoutExtension(file), StringComparison.OrdinalIgnoreCase)))
+                    {
+                        Console.WriteLine($"Already dumped HLSL for package {Path.GetFileNameWithoutExtension(file)}, skipping.");
+                        continue;
+                    }
+
+
+                    // Builds materials into the map
+                    if (!SetupShaderLevel(file, false))
+                    {
+                        Console.WriteLine($"Skipping package {Path.GetFileNameWithoutExtension(file)}");
+                        continue;
+                    }
+
+                    Console.WriteLine($"Dumping HLSL for package {Path.GetFileNameWithoutExtension(file)}");
+
+                    // Runs game, which builds shaders and feeds them back to us.
+                    StartGameAndWaitForExit();
+
+                    // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
+                    Console.WriteLine($"  Finished dumping HLSL for {Path.GetFileNameWithoutExtension(file)}");
+
+                    // Thread.Sleep(100000000);
+                }
+            }
+        }
+        static void SetupShaderCompileFlow()
+        {
             var outDir = @"E:\CompiledShaderPackages";
             Directory.CreateDirectory(outDir);
 
@@ -97,6 +149,7 @@ namespace MilanShaderHost
 
 
             Console.WriteLine($"Shader compiling complete.");
+
         }
 
         private static void SetupEntry(string sourcePath, bool buildWithMeshes)
@@ -132,8 +185,15 @@ namespace MilanShaderHost
             }
         }
 
-        private static void SetupShaderLevel(string sourcePath, bool buildWithMeshes)
+        private static bool SetupShaderLevel(string sourcePath, bool buildWithMeshes)
         {
+            using var sp = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
+            if (sp.Exports.Count(x => x.IsA("Material")) == 0)
+            {
+                // No materials to compile
+                return false;
+            }
+
             var mapName = @"entry.pcc";
 
             transientPackage = MEPackageHandler.CreateMemoryEmptyPackage("Transient.pcc", Program.Game);
@@ -157,11 +217,9 @@ namespace MilanShaderHost
                 package.GetLevel().WriteBinary(level);
             }
 
-
-
-            var outDir = @"E:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
+            var outDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
             package.Save(Path.Combine(outDir, mapName));
-            return;
+            return true;
         }
 
         private static void OnMaterialCompiled(object? sender, CompileResult cr)
@@ -232,7 +290,7 @@ namespace MilanShaderHost
                     var testPath = Path.Combine(path, f);
                     if (File.Exists(testPath))
                     {
-                        found  = true;
+                        found = true;
                         PackageFilesToProcess.Add(testPath);
                         break;
                     }
