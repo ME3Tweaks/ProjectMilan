@@ -28,6 +28,8 @@
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
+    <Folder Include="Pipelines\Shared\Compiling\AutoDonor\SFXGameContent\" />
+    <Folder Include="Pipelines\Shared\Compiling\AutoDonor\SFXGame\" />
     <Folder Include="Pipelines\Shared\Compiling\FunctionOverride\SFXGameInfoMP_Lobby\" />
     <Folder Include="Pipelines\Shared\Compiling\Functions\" />
     <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />

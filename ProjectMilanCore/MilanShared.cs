@@ -640,7 +640,6 @@ namespace ProjectMilanCore
                 }
             }
 
-
 #if DEBUG
             // Dump classes out to loose classes folder
             foreach (var cls in destPackage.Exports.Where(x => x.IsClass))
@@ -693,7 +692,7 @@ namespace ProjectMilanCore
                 }
             }
 
-            MilanLog.Information($"Decompiling {classExp.FileRef.Game} {classExp.InstancedFullPath}", customPrefix: @"MILAN-Decompiler");
+            MilanLog.Information($"     Decompiling {classExp.FileRef.Game} {classExp.InstancedFullPath}", customPrefix: @"MILAN-Decompiler");
             if (usingTestPatch)
             {
                 MilanLog.Information($@"  Using DLC_TestPatch version of {classExp.InstancedFullPath}", customPrefix: @"MILAN-Decompiler");
