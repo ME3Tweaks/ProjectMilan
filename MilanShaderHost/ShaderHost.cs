@@ -155,8 +155,8 @@ namespace MilanShaderHost
                     // Material binary incoming.
                     var incomingDataLen = reader.ReadInt32();
                     var materialResourceBin = reader.ReadBytes(incomingDataLen);
-                    var outF = Path.Combine(@"C:\users\public\matbins", materialName + ".bin");
-                    File.WriteAllBytes(outF, materialResourceBin);
+                    //var outF = Path.Combine(out, materialName + ".bin");
+                    //File.WriteAllBytes(outF, materialResourceBin);
                     cr.MaterialName = materialName;
                     cr.MaterialResource = materialResourceBin;
                     NewShaderCacheGenerated?.Invoke(this, cr);

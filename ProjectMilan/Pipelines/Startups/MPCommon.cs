@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using CsvHelper;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
@@ -9,6 +9,7 @@ using ME3TweaksModManager.modmanager.objects.mod.merge.v1;
 using Newtonsoft.Json;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
+using System.Diagnostics;
 
 namespace ProjectMilan.Pipelines.Startups
 {
@@ -384,10 +385,19 @@ namespace ProjectMilan.Pipelines.Startups
         /// <returns></returns>
         private static IEnumerable<string> GetMPCommonClassFiles()
         {
-            return Directory.EnumerateFiles(GetMPClassesFolder(), "*.uc", SearchOption.AllDirectories).Concat(
-                Directory.EnumerateFiles(MilanShared.GetAutoDonorClassesPath(), "*.uc", SearchOption.AllDirectories)).Concat(
+            return GetCleanableMPCommonClassFiles().Concat(
                 Directory.EnumerateFiles(MilanShared.GetMilanNewMPCommonClassesPath(), "*.uc", SearchOption.AllDirectories));
 
+        }
+
+        /// <summary>
+        /// Returns files that can be deleted as they will be regenerated automatically
+        /// </summary>
+        /// <returns></returns>
+        public static IEnumerable<string> GetCleanableMPCommonClassFiles()
+        {
+            return Directory.EnumerateFiles(GetMPClassesFolder(), "*.uc", SearchOption.AllDirectories).Concat(
+                Directory.EnumerateFiles(MilanShared.GetAutoDonorClassesPath(), "*.uc", SearchOption.AllDirectories));
         }
 
         private static bool AttemptToFindMissingClasses(MessageLog log, PackageCache cache)
@@ -446,89 +456,12 @@ namespace ProjectMilan.Pipelines.Startups
                 if (decompiledClasses.Contains(className))
                     continue; // Already pending recompile
 
-                foreach (var cbp in commonBasePackages)
-                {
-                    string ifp;
-                    if (cbp == null)
-                    {
-                        ifp = className;
-                    }
-                    else
-                    {
-                        ifp = $"{cbp}.{className}";
-                    }
-
-                    // Look in LE3 for donor
-                    bool keepSearching = true;
-                    var foundObjs = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp);
-                    if (foundObjs != null)
-                    {
-                        foreach (var foundObj in foundObjs)
-                        {
-                            if (!keepSearching)
-                                break;
-                            var sourceFileName = Path.GetFileName(foundObj);
-                            var package = MilanShared.GetLE3Package(sourceFileName);
-
-                            // DLC system Milan uses doesn't look in SP files
-                            // So if obj database has SP stuff this will fail
-                            // Just keep going.
-                            if (package != null)
-                            {
-                                MilanLog.Information($@"Found missing class '{className}' in LE3: {foundObj}", customPrefix: LOG_CATEGORY);
-                                var export = package.FindExport(ifp);
-                                if (export != null)
-                                {
-                                    DecompileClass(export, null, true, cache);
-                                    decompiledClasses.Add(export.ObjectName);
-                                    keepSearching = false;
-                                    continue;
-                                }
-
-                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
-
-                            }
-                        }
-                    }
-
-                    // Looking ME3 for crossgen
-                    if (!keepSearching)
-                        continue; // Go to next error
-                    foundObjs = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp);
-                    if (foundObjs != null)
-                    {
-                        foreach (var foundObj in foundObjs)
-                        {
-                            if (!keepSearching)
-                                break;
-                            var sourceFileName = Path.GetFileName(foundObj);
-                            var package = MilanShared.GetME3Package(sourceFileName);
-
-                            // DLC system Milan uses doesn't look in SP files
-                            // So if obj database has SP stuff this will fail
-                            // Just keep going.
-                            if (package != null)
-                            {
-                                MilanLog.Information($@"Found missing class '{className}' in ME3: {foundObj}", customPrefix: LOG_CATEGORY);
-                                var export = package.FindExport(ifp);
-                                if (export != null)
-                                {
-                                    DecompileClass(export, null, true, cache);
-                                    decompiledClasses.Add(export.ObjectName);
-                                    keepSearching = false;
-                                    continue;
-                                }
-
-                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
-                            }
-                        }
-                    }
-
                 }
-            }
 
             return decompiledClasses.Any();
         }
+
+        // Add method that 
 
         /// <summary>
         /// Prepares classes for porting by reading their data out of ME3
@@ -637,6 +570,23 @@ namespace ProjectMilan.Pipelines.Startups
             return true;
         }
 
+        private static void EnsureDecompiledClasses()
+        {
+            // This method improves initial MPCommon build speed by decompiling loose/autodonor classes we know need decompiled.
+            // If this is not run it is done iteratively which will work but is much slower.
+            // This pre-decompiles what that process will decompile
+
+            string[] looseClasses = [
+
+                ];
+
+            foreach(var lc in looseClasses)
+            {
+
+            }
+
+        }
+
         private static bool ClassNeedsDecompiled(ExportEntry classExp)
         {
             var packageOutputPath = Path.Combine(GetMPClassesFolder(), classExp.HasParent ? classExp.ParentName : classExp.FileRef.FileNameNoExtension);
@@ -645,10 +595,17 @@ namespace ProjectMilan.Pipelines.Startups
             return needsDecompiled;
         }
 
+        /// <summary>
+        /// Decompiles the class export to disk
+        /// </summary>
+        /// <param name="classExp"></param>
+        /// <param name="fileLib"></param>
+        /// <param name="toShared"></param>
+        /// <param name="cache"></param>
         public static void DecompileClass(ExportEntry classExp, FileLib fileLib, bool toShared, PackageCache cache)
         {
-            if (classExp.ObjectName == "DamageType")
-                Debug.WriteLine("");
+            //if (classExp.ObjectName == "DamageType")
+            //    Debug.WriteLine("");
             var usingTestPatch = false;
             if (classExp.Game == MEGame.ME3)
             {
@@ -912,6 +869,16 @@ namespace ProjectMilan.Pipelines.Startups
         private static string GetMPClassesFolder()
         {
             return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"LooseClasses", @"MPCommon")).FullName;
+        }
+
+        internal static void Clean()
+        {
+            var files = GetCleanableMPCommonClassFiles();
+            foreach(var f in files)
+            {
+                MilanLog.Information($"Clean() on {f}", customPrefix: LOG_CATEGORY);
+                File.Delete(f);
+            }
         }
     }
 }

@@ -21,6 +21,10 @@ namespace MilanShaderHost
     {
         private static List<string> PackageFilesToProcess = new List<string>();
 
+        private static string DecookedPackagesPath = @"E:\Decooked";
+
+        private static MEGame Game;
+
         /// <summary>
         /// Package the final shader cache will be saved into. Materials will be transferred into this as well once compiling is complete and then linked up.
         /// </summary>
@@ -49,16 +53,19 @@ namespace MilanShaderHost
         /// </summary>
         public static void StartFlow()
         {
-            MilanShaderPackageBuilder.SourceFolders.Add(@"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D");
-
+            Game = MEGame.LE3;
+            var path = Path.Combine(DecookedPackagesPath, Game.ToString());
+            MilanShaderPackageBuilder.SourceFolders.Add(path);
+            var outDir = @"E:\CompiledShaderPackages";
+            Directory.CreateDirectory(outDir);
 
             KillGame();
             SetupFileList();
             ShaderHost.NewShaderCacheGenerated += OnMaterialCompiled;
+
             foreach (var file in PackageFilesToProcess)
             {
-                var outPath = Path.Combine(@"S:\Milan\ShaderResearch\CompiledShaderPackages", Path.GetFileNameWithoutExtension(file) + ".pcc");
-
+                var outPath = Path.Combine(outDir, Path.GetFileNameWithoutExtension(file) + ".pcc");
                 if (true)
                 {
                     Console.WriteLine($"Building shaders for: {Path.GetFileNameWithoutExtension(file)}");
@@ -79,7 +86,7 @@ namespace MilanShaderHost
                 Console.WriteLine($"Finished compiling shaders for {Path.GetFileNameWithoutExtension(file)}");
 
                 // Test...
-                if (false)
+                if (true)
                 {
                     Console.WriteLine($"Rebuilding with compiled shaders for previewing");
                     SetupShaderLevel(outPath, true);
@@ -152,7 +159,7 @@ namespace MilanShaderHost
 
 
 
-            var outDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
+            var outDir = @"E:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
             package.Save(Path.Combine(outDir, mapName));
             return;
         }
@@ -185,6 +192,7 @@ namespace MilanShaderHost
             {
                 x.SM3MaterialResource = sm3r;
             });
+
             // Merge shader cache into the package.
             var cache = scPackage.FindExport("SeekFreeShaderCache");
             ObjectBinary.EditBinary<ShaderCache>(cache, (x) =>
@@ -194,18 +202,16 @@ namespace MilanShaderHost
 
             // We need to link up the guids.
             Console.WriteLine($"Merged {cr.MaterialName} into result package");
-
         }
 
         private static void SetupFileList()
         {
-            var sourcePath = @"S:\Milan\UDK\MilanMaterialDecook_Merged_T3D";
             string[] files = [
-                "BioApl_Lvl_Foliage.pcc",
-                "BioS_MPJungle.pcc",
-                "BioS_MPLondon.pcc",
+                //"BioApl_Lvl_Foliage.pcc",
+                //"BioS_MPJungle.pcc",
+                //"BioS_MPLondon.pcc",
                 "biot_humanslumACID.pcc",
-                "BioT_MPCer2.pcc",
+                /*"BioT_MPCer2.pcc",
                 "BioT_MPHosp.pcc",
                 "BioT_MPOcean.pcc",
                 "BioT_MPThes.pcc",
@@ -215,12 +221,26 @@ namespace MilanShaderHost
                 "BioVFX_DLC_MP1_Geth.pcc",
                 "BioVFX_MP3_MPHosp.pcc",
                 "BioVFX_MP3_MPOcean.pcc",
-                "BioVFX_MP5_Gear.pcc"
+                "BioVFX_MP5_Gear.pcc"*/
                 ];
 
             foreach (var f in files)
             {
-                PackageFilesToProcess.Add(Path.Combine(sourcePath, f));
+                bool found = false;
+                foreach (var path in MilanShaderPackageBuilder.SourceFolders)
+                {
+                    var testPath = Path.Combine(path, f);
+                    if (File.Exists(testPath))
+                    {
+                        found  = true;
+                        PackageFilesToProcess.Add(testPath);
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    Console.Error.WriteLine($"Could not find source package {f} in any of the source folders.");
+                }
             }
         }
 
@@ -265,7 +285,7 @@ namespace MilanShaderHost
 
         private static void StartGameAndWaitForExit()
         {
-            var process = Process.Start(LE3Directory.ExecutablePath, "-RESUME");
+            var process = Process.Start(MEDirectories.GetExecutablePath(Game), "-NOHOMEDIR -RESUME");
             process.WaitForExit();
         }
 

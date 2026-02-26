@@ -2,6 +2,7 @@
 using System.Timers;
 using CommandLine;
 using LegendaryExplorerCore;
+using LegendaryExplorerCore.DebugTools;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
@@ -100,6 +101,9 @@ namespace ProjectMilan
                         Directory.CreateDirectory(Settings.OutputModPath);
                     }
                 }
+
+                // Comment this out when we don't want to clean
+                // CleanupMilan();
             }
 
             // Initialize LEC
@@ -107,6 +111,7 @@ namespace ProjectMilan
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
 
 #if DEBUG
+            LECLog.LogDebug = true;
             // For research methods
             if (researchMode)
             {
@@ -128,6 +133,14 @@ namespace ProjectMilan
                 _keepAwakeTimer.Stop();
                 SystemSleepManager.AllowSleep();
             }
+        }
+
+        /// <summary>
+        /// Deletes files that can be safely deleted
+        /// </summary>
+        public static void CleanupMilan()
+        {
+            MPCommon.Clean();
         }
 
         public static bool InstallModOnCompletion { get; set; }
@@ -329,6 +342,11 @@ namespace ProjectMilan
         {
 #if TRUE || DEBUG
             // Put your method in Research class and call it here.
+            Research.TestSFARTextureDecompression();
+            return;
+            Research.GenerateLightingForLevel();
+            // Research.ImportStaticLightingForLevel();
+            return;
             // Research.TestTextureToInstancesMap();
             // Research.DumpRefShaderNames();
             //UDKSetup.DecookGameToUDK();

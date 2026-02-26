@@ -69,7 +69,6 @@ namespace LEDecooker
         {
             MEGame[] games = [MEGame.ME1, MEGame.ME2, MEGame.ME3, MEGame.LE1, MEGame.LE2, MEGame.LE3];
 
-
             foreach (var g in games)
             {
                 // Textures
@@ -80,6 +79,9 @@ namespace LEDecooker
 
                 // Static Meshes
                 SupportGenerators.GenUObjDB(g, "StaticMesh", false);
+
+                // RVR
+                SupportGenerators.GenUObjDB(g, "RvrEffectsMaterialUser", false);
 
                 // Material IFP Database
                 SupportGenerators.GeneratePerPackageNesting(g);

@@ -1,14 +1,13 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
-using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.UDK;
+using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.Unreal.ObjectInfo;
-using Newtonsoft.Json;
+using LegendaryExplorerCore.Unreal.Classes;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilanCore;
@@ -22,13 +21,52 @@ namespace ProjectMilan.Utility
     {
 #if DEBUG
 
+        public static void TestSFARTextureDecompression()
+        {
+            for (int i = 1; i < 5; i++)
+            {
+                var sfarPath = $@"E:\EAGames\Mass Effect 3\BIOGame\DLC\DLC_CON_MP{i}\CookedPCConsole\Default.sfar";
+                var dlc = new DLCPackage(sfarPath);
+
+                foreach (var ent in dlc.Files.Where(x => x.isActualFile && x.FileName.RepresentsPackageFilePath()))
+                {
+                    using var stream = dlc.DecompressEntry(ent);
+                    using var package = MEPackageHandler.OpenMEPackageFromStream(stream);
+                    foreach (var tex in package.Exports.Where(x => x.IsTexture()))
+                    {
+                        // This will throw exception on decompression failure.
+                        MilanLog.Information($"Reading texture {tex.InstancedFullPath} in {ent.FileName}");
+                        var t2d = new Texture2D(tex);
+                        var top = t2d.GetImageBytesForMip(t2d.GetTopMip(), MEGame.ME3, false, out var mip);
+                    }
+                }
+            }
+        }
+
         public static void GenerateLightingForLevel()
         {
-            var level = @"E:\Milan\BioP_MPJngl\BioP_MPJngl.pcc";
-            MilanLog.Information($"Generating static lighting for {level}");
-            using var levelP = MEPackageHandler.OpenMEPackage(level);
-            StaticLightingExport.ExportLevelToUDK(levelP);
+            var levelPathBase = @"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
+            string[] levels = [
+                "BioP_MPGeth",
+                "BioP_MPMoon",
+                "BioP_MPThes",
+                "BioP_MPJngl"
+                //"BioP_MPOcean",
+                //"BioP_MPRoad"
+            ];
 
+            foreach (var l in levels)
+            {
+                var level = $@"{levelPathBase}\{l}\{l}.pcc";
+                if (!File.Exists(level))
+                {
+                    MilanLog.Warning($"Level file not present: {level}");
+                    continue;
+                }
+                MilanLog.Information($"Generating static lighting for {level}");
+                using var levelP = MEPackageHandler.OpenMEPackage(level);
+                StaticLightingExport.ExportLevelToUDK(levelP);
+            }
         }
 
         /// <summary>

@@ -27,12 +27,7 @@ namespace LEDecooker
         /// Target LE Game's Object DB
         /// </summary>
         public static ObjectInstanceDB TargetObjectDB { get; set; }
-
-        /// <summary>
-        /// For finding objects in the OT version of the game, if we have to.
-        /// </summary>
-        public static ObjectInstanceDB OTObjectDB { get; set; }
-
+        
         public static ObjectInstanceDB LoadObjectDB(MEGame game)
         {
             DecookerLog.Information($"Loading {game} object database");
@@ -213,6 +208,15 @@ namespace LEDecooker
             }
         }
 
+        public static IMEPackage OpenPackage(string path, MEGame sourceGame)
+        {
+            if (path.StartsWith("/") && path.Contains("/DLC/"))
+            {
+                path = ME3TweaksBackups.GetGameBackupPath(sourceGame) + path;
+            }
+            return new SFARPackageCache().GetCachedPackage(path);
+        }
+
         /// <summary>
         /// Relinks as imports for things outside of the linker
         /// </summary>
@@ -340,8 +344,7 @@ namespace LEDecooker
                     }
 
                     // We still don't have anything!
-                    var objDb = sourceEntry.Game == CLIOptions.ParsedOptions.Game ? TargetObjectDB : OTObjectDB;
-                    var sourceObj = objDb.GetFilesContainingObject(sourceEntry.InstancedFullPath);
+                    var sourceObj = TargetObjectDB.GetFilesContainingObject(sourceEntry.InstancedFullPath);
                     if (sourceObj != null)
                     {
                         var firstFile = Path.Combine(ME3TweaksBackups.GetGameBackupPath(CLIOptions.ParsedOptions.Game), sourceObj[0]);
@@ -397,12 +400,15 @@ namespace LEDecooker
                     var fullLoad = sIe.ClassName != "Texture2D" || Path.GetFileNameWithoutExtension(sPackagePath).StartsWith("BIOG_");
                     if (!fullLoad)
                     {
-                        tempPackage = MEPackageHandler.UnsafePartialLoad(sPackagePath,
-                            x => x.MemoryFullPath == sIe.MemoryFullPath || x.ClassName is "TextureCube" or "Package"); // Or for parent porting.
+                        tempPackage = DecookerShared.OpenPackage(sPackagePath, sIe.FileRef.Game);
+                        // This doesn't open SFAR
+                        //MEPackageHandler.UnsafePartialLoad(sPackagePath,
+                        //    x => x.MemoryFullPath == sIe.MemoryFullPath || x.ClassName is "TextureCube" or "Package"); // Or for parent porting.
                     }
                     else
                     {
-                        tempPackage = MEPackageHandler.OpenMEPackage(sPackagePath);
+                        tempPackage = DecookerShared.OpenPackage(sPackagePath, sIe.FileRef.Game);
+                        //tempPackage = MEPackageHandler.OpenMEPackage(sPackagePath);
                         EntryExporter.PrepareGlobalFileForPorting(tempPackage, tempPackage.FileNameNoExtension);
                     }
                 }
