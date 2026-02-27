@@ -2,12 +2,16 @@
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.UDK;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.BinaryConverters.Shaders;
 using LegendaryExplorerCore.Unreal.Classes;
+using LegendaryExplorerCore.Unreal.Collections;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilanCore;
@@ -20,6 +24,168 @@ namespace ProjectMilan.Utility
     internal static class Research
     {
 #if DEBUG
+        public static void SlashShaderCache(MEGame game)
+        {
+            Console.WriteLine($"Finding shaders to keep for {game}");
+            List<string> filesToKeepShadersFor = new List<string>();
+            //filesToKeepShadersFor.Add(@"entry.pcc");
+            filesToKeepShadersFor.Add(@"entrymenu.pcc");
+            filesToKeepShadersFor.Add(@"BIOG_HMM_ARM_SHP_R.pcc");
+            filesToKeepShadersFor.Add(@"BIOG_HMM_HED_Alignment.pcc");
+            filesToKeepShadersFor.Add(@"SFXGameEffects.pcc");
+            filesToKeepShadersFor.Add(@"SFXWeapon_Pistol_Predator.pcc");
+
+            filesToKeepShadersFor.Add(@"SFXGUI_Fonts.pcc");
+            filesToKeepShadersFor.Add(@"SFXGUI_A_LegalLogos.pcc");
+            filesToKeepShadersFor.Add(@"AreaMap_NumIcon.pcc");
+            filesToKeepShadersFor.Add(@"BIOG_UIWorld.pcc");
+            filesToKeepShadersFor.Add(@"Startup_HEN_PR.pcc");
+            filesToKeepShadersFor.Add(@"Startup_CON_END.pcc");
+            filesToKeepShadersFor.Add(@"Startup_EXP_Pack001.pcc");
+            filesToKeepShadersFor.Add(@"Startup_EXP_Pack002.pcc");
+            filesToKeepShadersFor.Add(@"Startup_EXP_Pack003_Base.pcc");
+            filesToKeepShadersFor.Add(@"Startup_EXP_Pack003.pcc");
+            filesToKeepShadersFor.Add(@"Startup_CON_DH1.pcc");
+            filesToKeepShadersFor.Add(@"SFXGUI_Fonts_DLC.pcc");
+            filesToKeepShadersFor.Add(@"SFXCharacterClass_Soldier.pcc");
+
+            // ME3_OPAQUE_MM 
+
+            var files = EntryImporter.FilesSafeToImportFrom(game).Concat(EntryImporter.FilesSafeToImportFromPostLoad(game));
+            filesToKeepShadersFor.AddRange(files);
+            var lFiles = MELoadedFiles.GetFilesLoadedInGame(game);
+            var idsToKeep = new Dictionary<StaticParameterSet, string>();
+            foreach (var file in filesToKeepShadersFor)
+            {
+                Console.WriteLine($"\t{file}");
+                if (!lFiles.TryGetValue(file, out var filePath))
+                {
+                    Console.WriteLine($"File not found: {file}");
+                    continue;
+                }
+                using var package = MEPackageHandler.OpenMEPackage(filePath);
+                foreach (var exp in package.Exports)
+                {
+                    if (exp.IsDefaultObject)
+                    {
+                        continue;
+                    }
+                    if (exp.IsA("MaterialInstance"))
+                    {
+                        var hasStaticParameter = exp.GetProperty<BoolProperty>("bHasStaticPermutationResource");
+                        if (hasStaticParameter != null && hasStaticParameter.Value)
+                        {
+                            var mat = ObjectBinary.From<MaterialInstance>(exp);
+                            idsToKeep[mat.SM3StaticParameterSet] = exp.InstancedFullPath;
+                            idsToKeep[(StaticParameterSet)mat.SM3StaticPermutationResource.ID] = exp.InstancedFullPath;
+                            Console.WriteLine($"\t\t{exp.InstancedFullPath} {exp.ClassName}");
+                        }
+                    }
+                    else if (exp.IsA("Material"))
+                    {
+                        var mat = ObjectBinary.From<Material>(exp);
+                        idsToKeep[(StaticParameterSet)mat.SM3MaterialResource.ID] = exp.InstancedFullPath;
+                        Console.WriteLine($"\t\t{exp.InstancedFullPath} {exp.ClassName}");
+                    }
+
+                }
+            }
+
+            var sparamSets = new HashSet<StaticParameterSet>();
+            foreach (var id in idsToKeep)
+            {
+                sparamSets.Add((StaticParameterSet)id.Key);
+            }
+            Console.WriteLine($"We are going to keep {idsToKeep.Count} shaders");
+
+
+            Console.WriteLine($"Loading ref shader cache");
+            var refShaderCacheF = Path.Combine(LE3Directory.DefaultGamePath, @"BioGame\CookedPCConsole\RefShaderCache-PC-D3D-SM5.upk");
+            using var refShaderCacheP = MEPackageHandler.OpenMEPackage(refShaderCacheF);
+
+            Console.WriteLine($"Parsing CacheObject");
+            var shaderCache = ObjectBinary.From<ShaderCache>(refShaderCacheP.Exports.FirstOrDefault());
+
+            Console.WriteLine($"Dumping material shader maps");
+            foreach (var ps in idsToKeep)
+            {
+                if (!shaderCache.MaterialShaderMaps.TryGetValue((StaticParameterSet)ps.Key, out var existing))
+                {
+                    Console.Error.WriteLine($"\t!!! NOT FOUND: {ps.Value} {ps.Key}");
+                }
+            }
+
+
+            var keptShaderMaps = shaderCache.MaterialShaderMaps.Where(x => sparamSets.Contains(x.Key)).ToList();
+            UMultiMap<StaticParameterSet, MaterialShaderMap> mm = new();
+            foreach (var kvp in keptShaderMaps)
+            {
+                mm.Add(kvp.Key, kvp.Value);
+            }
+            shaderCache.MaterialShaderMaps = mm;
+
+            Console.WriteLine($"Kept shader maps ({mm.Count}):");
+            foreach (var ksm in mm)
+            {
+                Console.WriteLine($"\t{ksm.Value.FriendlyName}");
+            }
+
+            // Now dump the shaders too
+            Console.WriteLine($"Dumping shaders");
+            var shaderIdsToKeep = new HashSet<Guid>();
+            var keptShaders = new Dictionary<Guid, Shader>();
+            foreach (var matMap in shaderCache.MaterialShaderMaps)
+            {
+                int count = 0;
+                Console.WriteLine($"\t{matMap.Value.FriendlyName}");
+                foreach (var shaderList in matMap.Value.Shaders)
+                {
+                    // Console.WriteLine($"\t\t{shaderList.Value.Id}");
+                    shaderIdsToKeep.Add(shaderList.Value.Id);
+                    if (shaderCache.Shaders.TryGetValue(shaderList.Value.Id, out var shader))
+                    {
+                        count++;
+                        keptShaders[shaderList.Value.Id] = shader;
+                    } else
+                    {
+                        Console.WriteLine($"\t\tNot found: {shaderList.Value.Id}");
+                    }
+                }
+
+                foreach (var meshShaderMap in matMap.Value.MeshShaderMaps)
+                {
+                    foreach (var mShader in meshShaderMap.Shaders)
+                    {
+                        shaderIdsToKeep.Add(mShader.Value.Id);
+                        if (shaderCache.Shaders.TryGetValue(mShader.Value.Id, out var shader))
+                        {
+                            count++;
+                            keptShaders[mShader.Value.Id] = shader;
+
+                        } else
+                        {
+                            Console.WriteLine($"\t\tNot found: {mShader.Value.Id}");
+                        }
+                    }
+                }
+                Console.WriteLine($"\t\tCount: {count}");
+            }
+
+            UMultiMap<Guid, Shader> s = new();
+            foreach (var shader in keptShaders)
+            {
+                s.Add(shader.Key, shader.Value);
+            }
+            shaderCache.Shaders = s;
+
+            // Write slashed shader cache
+            Console.WriteLine($"Saving cache");
+            refShaderCacheP.Exports.FirstOrDefault().WriteBinary(shaderCache);
+
+            // Test load
+            ObjectBinary.From<ShaderCache>(refShaderCacheP.Exports.FirstOrDefault());
+            refShaderCacheP.Save(compress: false);
+        }
 
         public static void TestSFARTextureDecompression()
         {
