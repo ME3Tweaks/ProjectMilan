@@ -24,6 +24,78 @@ namespace ProjectMilan.Utility
     internal static class Research
     {
 #if DEBUG
+        public static void GetMissingShaderPackages(string folder)
+        {
+            HashSet<string> brokenMaterialPackages = new HashSet<string>();
+            foreach (var f in Directory.GetFiles(folder, "*.pcc", SearchOption.AllDirectories))
+            {
+                using var p = MEPackageHandler.OpenMEPackage(f);
+                var brokenMats = ShaderCacheManipulator.GetBrokenMaterials(p);
+                foreach (var mat in brokenMats)
+                {
+                    brokenMaterialPackages.Add(mat.GetLinker());
+                }
+            }
+
+            foreach (var pkg in brokenMaterialPackages)
+            {
+                Console.WriteLine(pkg);
+            }
+        }
+
+        public static void InstallCompiledShaders(string folder)
+        {
+            var compiled = @"E:\CompiledShaderPackages";
+            var cache = new PackageCache();
+            HashSet<string> mergedShaderCaches = new HashSet<string>();
+            foreach (var f in Directory.GetFiles(folder, "*.pcc", SearchOption.AllDirectories))
+            {
+                bool needsSaved = false;
+                using var p = MEPackageHandler.OpenMEPackage(f);
+                var brokenMats = ShaderCacheManipulator.GetBrokenMaterials(p);
+                foreach (var mat in brokenMats)
+                {
+                    var linker = mat.GetLinker();
+                    var fname = linker + ".pcc";
+                    var fullPath = Path.Combine(compiled, fname);
+                    var compiledPackage = cache.GetCachedPackage(fullPath, true);
+                    if (compiledPackage != null)
+                    {
+                        var compiledMaterial = compiledPackage.FindExport(mat.InstancedFullPath) ?? compiledPackage.FindExport(mat.MemoryFullPath);
+                        if (compiledMaterial == null)
+                        {
+                            MilanLog.Error($"Could not find our compiled shader for {mat.InstancedFullPath}");
+                            continue;
+                        }
+
+                        // Port the material over.
+                        EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, compiledMaterial, p, mat, true, new RelinkerOptionsPackage() { Cache = cache }, out var _);
+
+                        // ... and merge the shader cache while we're at it.
+                        if (mergedShaderCaches.Contains(linker))
+                        {
+                            continue;
+                        }
+                        var sc = compiledPackage.FindExport("SeekFreeShaderCache");
+                        var scBin = ObjectBinary.From<ShaderCache>(sc);
+
+                        var localCache = ShaderCacheManipulator.CreateShaderCache(p);
+                        var localCacheBin = ObjectBinary.From<ShaderCache>(localCache);
+
+                        scBin.MergeInto(localCacheBin);
+                        localCache.WriteBinary(localCacheBin);
+                        needsSaved = true;
+                        mergedShaderCaches.Add(linker);
+                    }
+                }
+
+                if (needsSaved)
+                {
+                    p.Save();
+                }
+            }
+        }
+
         public static void SlashShaderCache(MEGame game)
         {
             Console.WriteLine($"Finding shaders to keep for {game}");
@@ -146,7 +218,8 @@ namespace ProjectMilan.Utility
                     {
                         count++;
                         keptShaders[shaderList.Value.Id] = shader;
-                    } else
+                    }
+                    else
                     {
                         Console.WriteLine($"\t\tNot found: {shaderList.Value.Id}");
                     }
@@ -162,7 +235,8 @@ namespace ProjectMilan.Utility
                             count++;
                             keptShaders[mShader.Value.Id] = shader;
 
-                        } else
+                        }
+                        else
                         {
                             Console.WriteLine($"\t\tNot found: {mShader.Value.Id}");
                         }
@@ -316,12 +390,12 @@ namespace ProjectMilan.Utility
         /// </summary>
         internal static void InstallCompiledShaders()
         {
-            var compiledShaderPath = @"S:\Milan\ShaderResearch\CompiledShaderPackages";
+            var compiledShaderPath = @"E:\CompiledShaderPackages";
             var compiledShaderPackages = Directory.GetFiles(compiledShaderPath, "*.pcc");
             CaseInsensitiveDictionary<string> packageMap = new();
             var cache = new PackageCache();
             // var packages = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
-            var packages = Directory.GetFiles(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan", "*.pcc", SearchOption.AllDirectories);
+            var packages = Directory.GetFiles(@"E:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Levels\BioP_MPOcean");
             foreach (var p in compiledShaderPackages)
             {
                 packageMap[Path.GetFileNameWithoutExtension(p)] = p;
@@ -332,9 +406,9 @@ namespace ProjectMilan.Utility
                 var gamePackage = MEPackageHandler.OpenMEPackage(gamePackagePath);
 
                 var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(gamePackage);
-                foreach (var mat in brokenMaterials)
+                foreach (var brokenMat in brokenMaterials)
                 {
-                    var linker = mat.GetLinker();
+                    var linker = brokenMat.GetLinker();
                     if (packageMap.TryGetValue(linker, out var cmp))
                     {
                         var compiledPackage = cache.GetCachedPackage(cmp);
@@ -343,25 +417,25 @@ namespace ProjectMilan.Utility
                             // dunno what happened here.
                             continue;
 
-                        var matchingMat = compiledPackage.Exports.FirstOrDefault(x => x.ClassName == mat.ClassName && x.ObjectName.Instanced == x.ObjectName.Instanced);
+                        var matchingMat = compiledPackage.FindExport(brokenMat.MemoryFullPath, brokenMat.ClassName) ?? compiledPackage.FindExport(brokenMat.InstancedFullPath, brokenMat.ClassName);
                         if (matchingMat == null)
                         {
                             // couldn't find the mat
-                            MilanLog.Information($"No compiled shaders for {mat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
+                            MilanLog.Information($"No compiled shaders for {brokenMat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
                         }
                         else
                         {
-                            MilanLog.Information($"Update shadercache for {mat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
+                            MilanLog.Information($"Update shadercache for {brokenMat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
                             var shaderCache = ObjectBinary.From<ShaderCache>(csc);
                             ShaderCacheManipulator.AddShadersToFile(gamePackage, shaderCache);
                             // update the id of the material to match the compiled version
                             var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
-                            ObjectBinary.EditBinary<Material>(mat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
+                            ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
                         }
                     }
                 }
 
-                ShaderCacheManipulator.CompactSeekFreeShaderCaches(gamePackage);
+                //ShaderCacheManipulator.CompactSeekFreeShaderCaches(gamePackage);
                 if (gamePackage.IsModified)
                 {
                     gamePackage.Save();
