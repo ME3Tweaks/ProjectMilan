@@ -109,7 +109,7 @@ namespace MilanShaderHost
                     Console.WriteLine($"Dumping HLSL for package {Path.GetFileNameWithoutExtension(file)}");
 
                     // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit();
+                    StartGameAndWaitForExit(false);
 
                     // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
                     Console.WriteLine($"  Finished dumping HLSL for {Path.GetFileNameWithoutExtension(file)}");
@@ -157,7 +157,7 @@ namespace MilanShaderHost
                     SetupShaderLevel(file, false, mRefShaderCache);
 
                     // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit();
+                    StartGameAndWaitForExit(false);
 
                     scPackage.Save(outPath);
                 }
@@ -165,13 +165,13 @@ namespace MilanShaderHost
                 // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
                 Console.WriteLine($"Finished compiling shaders for {Path.GetFileNameWithoutExtension(file)}");
 
-                // Test...
+                // Preview shader level.
                 if (true)
                 {
                     Console.WriteLine($"Rebuilding with compiled shaders for previewing");
                     SetupShaderLevel(outPath, true, mRefShaderCache);
                     //SetupEntry(outPath, true);
-                    StartGameAndWaitForExit();
+                    StartGameAndWaitForExit(true);
                 }
             }
 
@@ -224,7 +224,7 @@ namespace MilanShaderHost
                 return false;
             }
 
-            var mapName = @"entry.pcc";
+            var mapName = GetMapName(buildWithMeshes) + ".pcc";
 
             transientPackage = MEPackageHandler.CreateMemoryEmptyPackage("Transient.pcc", Program.Game);
             var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, transientPackage, buildWithMeshes, mRefShaderCache);
@@ -255,7 +255,7 @@ namespace MilanShaderHost
         private static void OnMaterialCompiled(object? sender, CompileResult cr)
         {
             // Merge material into the package.
-            var matchingMat = transientPackage.Exports.FirstOrDefault(x => x.ObjectNameString == cr.MaterialName && x.ClassName == "Material");
+            var matchingMat = transientPackage.FindExport(cr.MaterialName);
             if (matchingMat == null)
             {
                 Console.WriteLine($"No matching material found for {cr.MaterialName} in transient package. Skipping.");
@@ -373,10 +373,17 @@ namespace MilanShaderHost
             // Game is now ready.
         }
 
-        private static void StartGameAndWaitForExit()
+        private static void StartGameAndWaitForExit(bool isPreview)
         {
-            var process = Process.Start(MEDirectories.GetExecutablePath(Game), "-NOHOMEDIR -RESUME");
+            TOCCreator.CreateTOCForGame(Game);
+            var bootArg = isPreview ? "-ShaderPreview" : "-ShaderCompile";
+            var process = Process.Start(MEDirectories.GetExecutablePath(Game), $"{bootArg} -NOHOMEDIR");
             process.WaitForExit();
+        }
+
+        private static string GetMapName(bool isPreview)
+        {
+            return isPreview ? "shaderpreview" : "shadercompiler";
         }
 
         // From LEX ExperimentsM
