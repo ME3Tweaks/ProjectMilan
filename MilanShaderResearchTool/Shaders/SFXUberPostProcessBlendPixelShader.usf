@@ -1,0 +1,188 @@
+/*!
+  @file    SFXUberPostProcessBlendPixelShader.usf
+
+  Copyright (c) 2010 BioWare ULC
+
+  The source code included in this file is confidential,
+  secret, or proprietary information of BioWare ULC. It
+  may not be used in whole or in part without express
+  written permission from BioWare ULC.
+
+  @author  Rob Krajcarski
+  @date    September 13, 2010
+*/
+
+#if SFX_FILM_GRAIN
+
+SAMPLER2D(NoiseTexture);
+float4 NoiseTextureOffset;
+
+float FilmGrain_Scale;
+
+#endif // SFX_FILM_GRAIN
+
+#if SFX_FILMIC_TONEMAPPING || SFX_FILM_GRAIN || SFX_VIGNETTE
+float4 ScreenUVScaleBias;
+#endif // SFX_FILM_GRAIN || SFX_VIGNETTE
+
+#if SFX_FILMIC_TONEMAPPING
+#if SM5_PROFILE
+SAMPLER2D(smpFilmicLUT);
+#else
+SAMPLER1D(smpFilmicLUT);
+#endif
+#endif // SFX_FILMIC_TONEMAPPING
+
+#if XBOX && SFX_UBER_POST_PROCESS
+float4 HighPrecisionGamma;  // x - effective power (2.4); y - linear cutoff (0.04045); z - linear slope (12.92)
+#endif // XBOX
+
+/** Applies a filmic tone mapping operator to the input colour.  It is expected that both the
+ *	input and output are in linear space.  Applying a gamma correction before output is the
+ *	responsability of the caller.
+ */
+half3 ApplyFilmicResponse( half3 InColour, float2 UV )
+{
+#if SFX_FILMIC_TONEMAPPING
+	// Apply filmic tonemapping operator, apply gamma correction, perform HDR -> LDR conversion
+
+	#define KINDA_SMALL_NUMBER	(1.e-4)  
+
+	// fFilmicMaxColorValue must match FBioFilmicTonemappingTexture1D::cm_fMaxColorValue in BioProceduralTexture.cpp
+	// for the reasons outlined in that file
+  
+    // Max value for the linear tonemapping operator
+	const float fFilmicMaxColorValue = 16.2315f + KINDA_SMALL_NUMBER;
+	
+
+	half3 UVs = InColour / fFilmicMaxColorValue;
+
+    #if PS3
+    
+    // PS3 supports end-to-end-half texture sampling which is is twice as fast as default float sampling
+	InColour.r = h1tex1D( smpFilmicLUT, UVs.x );
+	InColour.g = h1tex1D( smpFilmicLUT, UVs.y );
+	InColour.b = h1tex1D( smpFilmicLUT, UVs.z );
+	
+    #else // PS3
+
+	InColour.r = tex1D( smpFilmicLUT, UVs.x );
+	InColour.g = tex1D( smpFilmicLUT, UVs.y );
+	InColour.b = tex1D( smpFilmicLUT, UVs.z );
+
+    #endif // PS3
+
+	return InColour;
+
+#else // SFX_FILMIC_TONEMAPPING
+
+#if PS3
+	// PS3 exhibits different behaviour for values exceeding 1, must clamp explicitly -PjW
+	return saturate(InColour);
+#else
+	return InColour;
+#endif
+		
+#endif
+}
+
+// pulled from the portion of the material defined with the material effect named:
+// MEPP_NAH_VignetteAndFilmGrain
+half3 ApplyVignette( half3 InColour, float2 UV )
+{
+	half3 VignetteColour = half3(0.04145200,0.00002300,0.65236998) * half(0.25000000);
+
+#if SFX_VIGNETTE
+	UV = UV * ScreenUVScaleBias.xy + ScreenUVScaleBias.zw;
+	
+	// skew based on the aspect ratio
+	half2 AspectSkew = half2(1.5,1.0);
+	half2 DistFromMiddle = half2(UV) - half2(0.5, 0.5);
+
+	// find the distance from the center of the screen
+	half2 SkewedPosition = DistFromMiddle * (AspectSkew / sqrt(dot(AspectSkew,AspectSkew)));
+	half DistFromMiddleSq = dot( SkewedPosition, SkewedPosition );
+
+	// apply some fun power curves to it to fit the artists desires
+#if SFX_HARDWARE_GAMMA_CORRECTION
+	// Recoded using smoothstep for performance reasons
+	//half InvertedDist = pow_unclamped( half( 1.0 ) - pow( DistFromMiddleSq, 3.25 ), half(460.0) );
+	half InvertedDist = half( 1.0 ) - smoothstep( half( 0.0 ), half( 0.25 ), DistFromMiddleSq);
+#else
+	// Recoded using smoothstep for performance reasons
+	//half InvertedDist = pow_unclamped( half( 1.0 ) - pow( DistFromMiddleSq, 3.25 ), half(200.0) );
+	half InvertedDist = half( 1.0 ) - smoothstep( half( 0.05 ), half( 0.30 ), DistFromMiddleSq);
+#endif
+
+	return InColour.rgb * ( VignetteColour + InvertedDist );
+#else // SFX_VIGNETTE
+	return InColour.rgb * ( VignetteColour + 1 );
+#endif
+}
+
+// pulled from the portion of the material defined with the material effect named:
+// MEPP_NAH_VignetteAndFilmGrain
+half3 ApplyFilmGrain( half3 InColour, float2 UV )
+{
+#if SFX_FILM_GRAIN
+// BW_START - Yefima, Matthew - 2020/4/13 - Disable old film grain and add new version
+#if SFX_FILM_GRAIN_ORIGINAL
+	UV = UV * ScreenUVScaleBias.xy + ScreenUVScaleBias.zw;
+	half3 FilmGrainScale = half3( 0.1, 0.15, 0.15 );
+
+	// texture was authored with a middle grey of 0.6...so, subtract that out so that we get 0 +/- something
+	half FilmGrainBias = -0.6;
+
+	half3 SignalStrength = pow( InColour.rgb, half( 0.5 ) );
+
+	// offset the texture by the random # supplied to the texture (the *2 is because the original mateial used a flip book)
+	half2 RandomUV = ( half2(UV) + NoiseTextureOffset.rg ) * 2.0;
+
+
+	half3 NoiseSample = tex2Dfast( NoiseTexture, RandomUV ).rgb + FilmGrainBias;
+
+	return InColour + NoiseSample * SignalStrength * FilmGrainScale;
+#else
+	UV = UV * NoiseTextureOffset.xy + NoiseTextureOffset.zw;
+	float n = tex2Dfast(NoiseTexture, UV).r;
+	float FilmGrainValue = (n - 0.5) * FilmGrain_Scale;
+	float3 Grain = float3(FilmGrainValue.xxx);
+
+    return InColour + Grain;
+#endif
+// BW_END
+
+#else // SFX_FILM_GRAIN
+	return InColour;
+#endif
+}
+
+#if XBOX && SFX_UBER_POST_PROCESS
+half3 ConvertHighPrecisionGamma( half3 InColour )
+{
+	half3 LowRange = InColour * HighPrecisionGamma.z;
+	half3 UpperRange = 1.055 * pow_unclamped( InColour, HighPrecisionGamma.x ) - 0.055;
+
+	return lerp( LowRange, UpperRange, ceil( InColour - HighPrecisionGamma.y ) );
+}
+#endif // XBOX
+
+/** Applies a gamma correction in the shader, if not using the hardware instead
+ */
+half3 ApplyGamma( half3 InColour, half4 GammaOverlayColor, half4 GammaColorScaleAndInverse )
+{
+	half3 GammaColor = GammaOverlayColor.rgb + InColour;
+	GammaColor = GammaColor.rgb * GammaColorScaleAndInverse.rgb;
+#if SFX_HARDWARE_GAMMA_CORRECTION
+	// On PS3, the hardware aproximate to ((f<=.0031308) ? 12.92 * f : 1.055 * pow(f,1.0/2.4) - 0.055)
+#else // SFX_HARDWARE_GAMMA_CORRECTION
+	#if XBOX && SFX_UBER_POST_PROCESS
+		// in order to support a dynamic gamma power coefficient we'll use a slightly different
+		// formula than the one defined in SFXConvert_Linear_sRGB_Full
+		GammaColor = ConvertHighPrecisionGamma( saturate( GammaColor ) );
+	#else
+		GammaColor = pow(saturate(GammaColor), GammaColorScaleAndInverse.a);
+	#endif
+#endif
+	return GammaColor;
+}

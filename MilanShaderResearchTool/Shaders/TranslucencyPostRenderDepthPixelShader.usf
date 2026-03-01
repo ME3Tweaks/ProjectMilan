@@ -1,0 +1,50 @@
+/*=============================================================================
+	TranslucencyPostRenderDepthPixelShader.usf: Depth pixel shader for
+	post-translucency depth rendering.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+#include "Material.usf"
+#include "VertexFactory.usf"
+
+void Main(
+#if !MATERIALBLENDING_SOLID
+	FVertexFactoryInterpolants FactoryInterpolants,
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 CameraVectorOrVertexColor : TEXCOORD4,
+	// BIOEND
+	float4 PixelPosition : TEXCOORD5,
+	OPTIONAL_FacingSign
+#endif
+#if MATERIAL_USE_SCREEN_DOOR_FADE && MATERIALBLENDING_SOFTMASKED
+	OPTIONAL_PixelShaderScreenPosition
+#endif
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+#if !MATERIALBLENDING_SOLID
+
+	FMaterialPixelParameters MaterialParameters = GetMaterialPixelParameters(FactoryInterpolants);
+	CalcMaterialParameters(MaterialParameters, FacingSign, CameraVectorOrVertexColor, PixelPosition);
+
+#if MATERIAL_LIT_TRANSLUCENCY_DEPTH_POSTPASS
+	GetMaterialClippingLitTranslucencyDepthPostPass(MaterialParameters);
+#endif
+
+#if MATERIALBLENDING_SOFTMASKED
+	GetMaterialClipping(MaterialParameters, PixelShaderScreenPosition.xy);
+#endif
+
+#endif
+
+#if SUPPORTS_DEPTH_TEXTURES 
+	OutColor = 0;
+#else
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	OutColor = RETURN_COLOR(half4(0,0,0,EncodeFloatW(MaterialParameters.ScreenPosition.w)));
+	// BIOEND
+#endif
+}

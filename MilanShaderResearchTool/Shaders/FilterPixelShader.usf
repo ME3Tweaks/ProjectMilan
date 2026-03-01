@@ -1,0 +1,218 @@
+/*=============================================================================
+	FilterPixelShader.usf: Filter pixel shader source.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+// needed for CompressDeviceZIntoHalfResTextureChannel()
+#include "DepthOfFieldCommon.usf"
+// ME3END
+
+SAMPLER2D(FilterTexture);
+half4 SampleWeights[NUM_SAMPLES];
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+// minv, minv, maxu,maxv
+float4 SampleMaskRect;
+
+// UV.y and UV.wz are the input UV coordinates
+half ComputeMask(float2 UV)
+{
+	// actual masking costs performance and might be not really needed
+	// (only required with spitscreen or not using full screen resolution)
+	// can be a shader combination but when measured it wasn't faster
+	// also the implementation can be changed to
+	//    float4 Mask = saturate(UV.xyxy*MulConst+AddConst);
+	//    return Mask2.x * Mask2.y * Mask2.y * Mask2.w;
+	// which is softer and might be even faster
+	half2 Mask = (UV > SampleMaskRect.xy) * (UV < SampleMaskRect.zw);
+
+	return Mask.x * Mask.y;
+}
+// ME3END
+
+void Main(
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 InOffsetUVs[(NUM_SAMPLES + 1) / 2] : TEXCOORD0,
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	int SampleIndex;
+	half4 Sum = 0;
+	for(SampleIndex = 0;SampleIndex < NUM_SAMPLES - 1;SampleIndex += 2)
+	{
+		// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+		//			- September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		half Mask; 
+		float4 UVUV = InOffsetUVs[SampleIndex / 2];
+		
+		Mask = ComputeMask(UVUV.xy);
+		Sum += tex2Dfast(FilterTexture,UVUV.xy) * Mask * SampleWeights[SampleIndex + 0];
+
+		Mask = ComputeMask(UVUV.wz);
+		Sum += tex2Dfast(FilterTexture,UVUV.wz) * Mask * SampleWeights[SampleIndex + 1];
+		//Sum += tex2D(FilterTexture,InOffsetUVs[SampleIndex / 2].xy) * SampleWeights[SampleIndex + 0];
+		//Sum += tex2D(FilterTexture,InOffsetUVs[SampleIndex / 2].wz) * SampleWeights[SampleIndex + 1];
+		// ME3END
+	}
+	if(SampleIndex < NUM_SAMPLES)
+	{
+		// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+		//			- September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		float4 UVUV = InOffsetUVs[SampleIndex / 2];
+
+		half Mask = ComputeMask(UVUV.xy);
+		Sum += tex2Dfast(FilterTexture,UVUV.xy) * Mask * SampleWeights[SampleIndex + 0];
+		//Sum += tex2D(FilterTexture,InOffsetUVs[SampleIndex / 2].xy) * SampleWeights[SampleIndex + 0];
+		// ME3END
+	}
+	// RETURN_COLOR not needed unless writing to SceneColor;
+	OutColor = Sum;
+}
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+// currently only used for downsampling, doesn't need to be masked as it doesn't read outside bounds
+void MainDepthInAlpha(
+	float4 InOffsetUVs[(NUM_SAMPLES + 1) / 2] : TEXCOORD0,
+	// ME3START - Rob Krajcarski - October 10, 2011 - MotionBlur shader optimizations
+	out half4 OutColor : SV_Target0
+	//out float4 OutColor : COLOR0
+	// ME3END
+	)
+{
+	int SampleIndex;
+	half4 Sum = 0;
+
+	for(SampleIndex = 0;SampleIndex < NUM_SAMPLES - 1;SampleIndex += 2)
+	{
+		{
+			float2 UV = InOffsetUVs[SampleIndex / 2].xy;
+			half Weight = SampleWeights[SampleIndex + 0].r;
+
+			// ME3START - Rob Krajcarski - October 10, 2011 - MotionBlur shader optimizations
+			Sum.rgb += tex2Dfast(FilterTexture, UV).rgb * Weight;
+			//Sum.rgb += tex2D(FilterTexture, UV).rgb * Weight;
+			// ME3END
+		}
+		{
+			float2 UV = InOffsetUVs[SampleIndex / 2].wz;
+			half Weight = SampleWeights[SampleIndex + 1].r;
+
+			// ME3START - Rob Krajcarski - October 10, 2011 - MotionBlur shader optimizations
+			Sum.rgb += tex2Dfast(FilterTexture, UV).rgb * Weight;
+			//Sum.rgb += tex2D(FilterTexture, UV).rgb * Weight;
+			// ME3END
+		}
+	}
+	if(SampleIndex < NUM_SAMPLES)
+	{
+		float2 UV = InOffsetUVs[SampleIndex / 2].xy;
+		half Weight = SampleWeights[SampleIndex + 0].r;
+
+		// ME3START - Rob Krajcarski - October 10, 2011 - MotionBlur shader optimizations
+		Sum.rgb += tex2Dfast(FilterTexture, UV).rgb * Weight;
+		//Sum.rgb += tex2D(FilterTexture, UV).rgb * Weight;
+		// ME3END
+	}
+// currently the depth in alpha feature is only used with 4 samples
+#if NUM_SAMPLES == 4
+	// to avoid leaking between far and near blur we don't do average on depth
+	// we take the sample that is nearest to the average
+	{
+		// ME3START - Rob Krajcarski - October 10, 2011 - MotionBlur shader optimizations
+		// Below is an attempted optimization which only worries about compressing to device Z
+		// on the selected sample, this is less accurate as we finding the sample that is closest
+		// to the average in DeviceZ space.  Unfortunately it does produce artifacts, so I'm leaving
+		// it disabled...but there's gotta be a better way to handle this code.
+// 		half4 Samples;
+// 		
+// 		Samples.x = GetSceneDeviceZ(InOffsetUVs[0].xy);
+// 		Samples.y = GetSceneDeviceZ(InOffsetUVs[0].wz);
+// 		Samples.z = GetSceneDeviceZ(InOffsetUVs[1].xy);
+// 		Samples.w = GetSceneDeviceZ(InOffsetUVs[1].wz);
+// 
+// 		half4 Delta = abs( dot( Samples, 0.25h ) - Samples );
+// 		half MinDelta = min( min( Delta.x, Delta.y ), min( Delta.z, Delta.w ) );
+// 		half4 Selector = half4(
+// 			Delta.x <= MinDelta ? 1.0h : 0.0h,
+// 			Delta.y <= MinDelta ? 1.0h : 0.0h,
+// 			Delta.z <= MinDelta ? 1.0h : 0.0h,
+// 			Delta.w <= MinDelta ? 1.0h : 0.0h );
+// 
+// 		Sum.a = CompressDeviceZIntoHalfResTextureChannel( dot( Selector, Samples ) / dot( Selector, 1.0h ) );
+		float4 Samples;
+		
+		Samples.x = CompressDeviceZIntoHalfResTextureChannel(GetSceneDeviceZ(InOffsetUVs[0].xy));
+		Samples.y = CompressDeviceZIntoHalfResTextureChannel(GetSceneDeviceZ(InOffsetUVs[0].wz));
+		Samples.z = CompressDeviceZIntoHalfResTextureChannel(GetSceneDeviceZ(InOffsetUVs[1].xy));
+		Samples.w = CompressDeviceZIntoHalfResTextureChannel(GetSceneDeviceZ(InOffsetUVs[1].wz));
+
+		float Avg = dot(Samples, 0.25f);
+
+		Samples -= Avg;
+
+		float Chosen = Samples.x;
+		Chosen = (abs(Samples.y) < abs(Chosen)) ? Samples.y : Chosen;
+		Chosen = (abs(Samples.z) < abs(Chosen)) ? Samples.z : Chosen;
+		Chosen = (abs(Samples.w) < abs(Chosen)) ? Samples.w : Chosen;
+		Sum.a = Chosen + Avg;
+		// ME3END
+	}
+#endif
+
+	// RETURN_COLOR not needed unless writing to SceneColor;
+	OutColor = Sum;
+}
+// ME3END
+
+// ME3START - Rob Krajcarski - January 30, 2011 - Preport of Epic VisualizeTexture (see SceneRendering.cpp for more details)
+
+// --------------------
+
+// to visualize the content of a texture to the screen, useful for debugging
+// use "VisualizeTexture" in the console to activate
+SAMPLER2D(VisualizeTexture);
+// [0]: RGBAdd, AMul, Add, FracScale
+// [1]: BlinkState=0/1, Frac when 0, saturate when 1, unused, unused
+float4 VisualizeParam[2];
+
+void VisualizeTexturePS(
+	float4 InOffsetUVs[1] : TEXCOORD0,
+	out float4 OutColor : SV_Target0)
+{
+	float2 UV = InOffsetUVs[0].xy;
+
+	float4 TexLookup = tex2D(VisualizeTexture, UV);
+
+	float Add = TexLookup.a * VisualizeParam[0].y + VisualizeParam[0].z;
+	OutColor.rgb = TexLookup.rgb * VisualizeParam[0].xxx + Add.xxx;
+
+	float3 ScaledColor = OutColor.rgb * VisualizeParam[0].w;
+	float3 FracOutColor = lerp(frac(ScaledColor), saturate(ScaledColor), VisualizeParam[1].y);
+
+	float3 AlternateColor = FracOutColor;
+
+	// blink green if >1
+	if(OutColor.r > 1.0f || OutColor.g > 1.0f || OutColor.b > 1.0f)
+	{
+		AlternateColor = float3(0,1,0);
+	}
+	
+	// blink red if <0
+	if(OutColor.r < 0.0f || OutColor.g < 0.0f || OutColor.b < 0.0f)
+	{
+		AlternateColor = float3(1,0,0);
+	}
+	
+	// blink blue if not finite
+	if (isfinite(OutColor.rgb).x == false)
+	{
+		AlternateColor = float3(0,0,1);
+	}
+
+	OutColor.rgb = lerp(FracOutColor, AlternateColor, VisualizeParam[1].x);
+	OutColor.a = 0;
+}
+// ME3END

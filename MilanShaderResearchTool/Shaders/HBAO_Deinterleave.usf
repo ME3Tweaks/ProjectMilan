@@ -1,0 +1,96 @@
+#include "HBAO_Common.usf"
+
+/*-----------------------------------------------------------------------------
+	DeinterleavePS
+-----------------------------------------------------------------------------*/
+struct Deinterleave_Out
+{
+	float	OutColor0 : SV_Target0;
+	float	OutColor1 : SV_Target1;
+	float	OutColor2 : SV_Target2;
+	float	OutColor3 : SV_Target3;
+	float	OutColor4 : SV_Target4;
+	float	OutColor5 : SV_Target5;
+	float	OutColor6 : SV_Target6;
+	float	OutColor7 : SV_Target7;
+};
+
+Deinterleave_Out MainPS( in HBAOInput Input ) 
+{
+  Deinterleave_Out output;
+
+  float2 adjPos = floor(Input.Pos.xy) * 4 + (Float2Offset + 0.5);
+  float2 adjUV  = adjPos * InvFullResolution;
+
+  // Gather sample ordering: (-,+),(+,+),(+,-),(-,-),
+  float4 S0 = gatherRed2D(SceneDepthTexture, adjUV);
+  float4 S1 = gatherRed2Doffset(SceneDepthTexture, adjUV, int2(2,0));
+
+  output.OutColor0 = ConvertFromDeviceZ(S0.w);
+  output.OutColor1 = ConvertFromDeviceZ(S0.z);
+  output.OutColor2 = ConvertFromDeviceZ(S1.w);
+  output.OutColor3 = ConvertFromDeviceZ(S1.z);
+
+  output.OutColor4 = ConvertFromDeviceZ(S0.x);
+  output.OutColor5 = ConvertFromDeviceZ(S0.y);
+  output.OutColor6 = ConvertFromDeviceZ(S1.x);
+  output.OutColor7 = ConvertFromDeviceZ(S1.y);
+
+  return output;
+}
+
+/*-----------------------------------------------------------------------------
+	DeinterleaveCS
+-----------------------------------------------------------------------------*/
+#define NUM_THREADS_X 8
+#define NUM_THREADS_Y 8
+#define NUM_THREADS_Z 1
+
+uint ArrayOffset;
+RWTexture2DArray<float>	DeinterleaveOut	 : register(u0);
+
+[numthreads( NUM_THREADS_X, NUM_THREADS_Y, NUM_THREADS_Z )]
+void MainCS( uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID ) 
+{
+  int2 iPixelCoord = DTid.xy + QuarterResOffset;
+  float2 fUV = (((float2(iPixelCoord) * float2(4.f, 4.f)) + 0.5f) * InvFullResolution);
+
+  int2 ArrayCoordOffset = int2(0, ArrayOffset / 4);
+
+  // Gather sample ordering: (-,+),(+,+),(+,-),(-,-),
+  float4 S0 = gatherRed2Doffset(SceneDepthTexture, fUV, ArrayCoordOffset);
+  float4 S1 = gatherRed2Doffset(SceneDepthTexture, fUV, int2(2,0) + ArrayCoordOffset);
+
+  DeinterleaveOut[int3(iPixelCoord, ArrayOffset + 0)] = ConvertFromDeviceZ(S0.w);
+  DeinterleaveOut[int3(iPixelCoord, ArrayOffset + 1)] = ConvertFromDeviceZ(S0.z);
+  DeinterleaveOut[int3(iPixelCoord, ArrayOffset + 2)] = ConvertFromDeviceZ(S1.w);
+  DeinterleaveOut[int3(iPixelCoord, ArrayOffset + 3)] = ConvertFromDeviceZ(S1.z);
+
+  DeinterleaveOut[int3(iPixelCoord, ArrayOffset + 4)] = ConvertFromDeviceZ(S0.x);
+  DeinterleaveOut[int3(iPixelCoord, ArrayOffset + 5)] = ConvertFromDeviceZ(S0.y);
+  DeinterleaveOut[int3(iPixelCoord, ArrayOffset + 6)] = ConvertFromDeviceZ(S1.x);
+  DeinterleaveOut[int3(iPixelCoord, ArrayOffset + 7)] = ConvertFromDeviceZ(S1.y);
+}
+
+/*-----------------------------------------------------------------------
+  Copyright (c) 2014-2015, NVIDIA. All rights reserved.
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   * Neither the name of its contributors may be used to endorse 
+     or promote products derived from this software without specific
+     prior written permission.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+  OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------*/

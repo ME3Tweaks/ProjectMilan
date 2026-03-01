@@ -1,0 +1,171 @@
+#include "Common.usf"
+
+#ifndef AO_DEINTERLEAVED
+  #define AO_DEINTERLEAVED 0
+#endif
+
+#define M_PI 3.14159265f
+#define RANDOM_TEXTURE_WIDTH 4
+
+// tweakables
+static const uint  NUM_STEPS = 4;
+static const uint  NUM_DIRECTIONS = 4; // texRandom/Jitter initialization depends on this
+
+float	RadiusToScreen;
+float	NegInvR2;
+float	NDotVBias;
+ 
+float2	InvFullResolution;
+float2	InvQuarterResolution;
+int2	FullResOffset;
+int2	QuarterResOffset; 
+  
+float	AOMultiplier;
+float	PowExponent;
+  
+float4	ProjInfo;
+float2  Float2Offset;
+
+float4  Jitter;
+  
+Texture2DArray QuarterResDepthTexture;
+SamplerState QuarterResDepthTextureSampler;
+
+SAMPLER2D( ViewNormalTex )
+SAMPLER2D( RandomTexture )
+
+/*-----------------------------------------------------------------------------
+-----------------------------------------------------------------------------*/
+float LoadDeviceZ( int2 Texel )
+{
+	return SceneDepthTexture.Load(int3(Texel,0)).r;
+}
+
+//----------------------------------------------------------------------------------
+float CalcSceneDepthCS( int2 Texel )
+{
+	// get depth buffer z value
+	half DeviceZ = LoadDeviceZ(Texel);
+
+	// convert it to clip space w
+	return ConvertFromDeviceZ(DeviceZ);
+}
+
+//----------------------------------------------------------------------------------
+float3 UVToView(float2 uv, float eye_z)
+{
+  return float3((uv * ProjInfo.xy + ProjInfo.zw) * eye_z, eye_z);
+}
+
+//----------------------------------------------------------------------------------
+float3 FetchQuarterResViewPos(float2 UV)
+{
+  float ViewDepth = QuarterResDepthTexture.SampleLevel(QuarterResDepthTextureSampler, float3(UV,0), 0);
+  return UVToView(UV,  ViewDepth);
+}
+
+//----------------------------------------------------------------------------------
+float3 FetchViewPos(float2 UV)
+{
+  float ViewDepth = CalcSceneDepth(UV);
+  return UVToView(UV, ViewDepth);
+}
+
+//----------------------------------------------------------------------------------
+float3 FetchViewPosCS(int2 Texel)
+{
+  float  ViewDepth = CalcSceneDepthCS(Texel);
+  float2 fUV = float2(Texel) * InvFullResolution;
+
+  return UVToView(fUV, ViewDepth);
+}
+
+//----------------------------------------------------------------------------------
+float3 MinDiff(float3 P, float3 Pr, float3 Pl)
+{
+  float3 V1 = Pr - P;
+  float3 V2 = P - Pl;
+  return (dot(V1,V1) < dot(V2,V2)) ? V1 : V2;
+}
+
+//----------------------------------------------------------------------------------
+float3 ReconstructNormal(float2 UV, float3 P)
+{
+  float3 Pr = FetchViewPos(UV + float2(InvFullResolution.x, 0));
+  float3 Pl = FetchViewPos(UV + float2(-InvFullResolution.x, 0));
+  float3 Pt = FetchViewPos(UV + float2(0, InvFullResolution.y));
+  float3 Pb = FetchViewPos(UV + float2(0, -InvFullResolution.y));
+
+  return normalize(cross(MinDiff(P, Pr, Pl), MinDiff(P, Pt, Pb)));
+}
+
+//----------------------------------------------------------------------------------
+float Falloff(float DistanceSquare)
+{
+  // 1 scalar mad instruction
+  return DistanceSquare * NegInvR2 + 1.0;
+}
+
+//----------------------------------------------------------------------------------
+// P = view-space position at the kernel center
+// N = view-space normal at the kernel center
+// S = view-space position of the current sample
+//----------------------------------------------------------------------------------
+float ComputeAO(float3 P, float3 N, float3 S)
+{
+  float3 V = S - P;
+  float VdotV = dot(V, V);
+  float NdotV = dot(N, V) * 1.0/sqrt(VdotV);
+
+  // Use saturate(x) instead of max(x,0.f) because that is faster on Kepler
+  return saturate(NdotV - NDotVBias) * saturate(Falloff(VdotV));
+}
+
+//----------------------------------------------------------------------------------
+float2 RotateDirection(float2 Dir, float2 CosSin)
+{
+  return float2(Dir.x*CosSin.x - Dir.y*CosSin.y,
+				Dir.x*CosSin.y + Dir.y*CosSin.x);
+}
+
+//----------------------------------------------------------------------------------
+float4 GetJitter(float4 InputPos)
+{
+  #if AO_DEINTERLEAVED
+    // Get the current jitter vector from the per-pass constant buffer
+    return Jitter;
+  #else
+    // (cos(Alpha),sin(Alpha),rand1,rand2)
+    return tex2D(RandomTexture, float3(InputPos.xy / RANDOM_TEXTURE_WIDTH, 0));
+  #endif
+}
+
+//----------------------------------------------------------------------------------
+struct HBAOInput
+{
+	float4 Pos			: SV_Position;
+	float2 TexCoord     : TEXCOORD;
+};
+
+/*-----------------------------------------------------------------------
+  Copyright (c) 2014-2015, NVIDIA. All rights reserved.
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   * Neither the name of its contributors may be used to endorse 
+     or promote products derived from this software without specific
+     prior written permission.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+  OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------*/

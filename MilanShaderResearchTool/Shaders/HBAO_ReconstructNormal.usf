@@ -1,0 +1,75 @@
+#include "HBAO_Common.usf"
+
+/*-----------------------------------------------------------------------------
+	ReinterleavePS
+-----------------------------------------------------------------------------*/
+float4 MainPS(in HBAOInput Input) : SV_Target0
+{
+    float3 ViewPosition = FetchViewPos(Input.TexCoord);
+    float3 ViewNormal = ReconstructNormal(Input.TexCoord, ViewPosition);
+
+    return float4(ViewNormal * 0.5 + 0.5, 0);
+}
+
+/*-----------------------------------------------------------------------------
+	ReinterleaveCS
+-----------------------------------------------------------------------------*/
+RWTexture2D<float3>	ReconstructNormalOut;
+
+#define NUM_THREADS_X 8
+
+groupshared float gs_DepthCache[100];
+
+ float MinDelta(float P, float P1, float P2)
+{
+	float DeltaA = P2 - P;
+	float DeltaB = P - P1;
+	return abs(DeltaA) < abs(DeltaB) ? DeltaA : DeltaB;
+}
+
+float3 ReconstructNormalCS(int iIdx, int2 iPixelCoord)
+{
+	float P  = gs_DepthCache[iIdx].x;
+    float Pr = gs_DepthCache[iIdx +  1].x;
+	float Pl = gs_DepthCache[iIdx -  1].x;
+	float Pt = gs_DepthCache[iIdx - 10].x;
+	float Pb = gs_DepthCache[iIdx + 10].x;
+    
+	float DeviceZDdx = MinDelta(P, Pl, Pr);
+	float DeviceZDdy = MinDelta(P, Pt, Pb);
+    
+    float3 mid   = UVToView( (float2(iPixelCoord + uint2(0, 0)) * InvFullResolution), P );
+    float3 right = UVToView( (float2(iPixelCoord + uint2(1, 0)) * InvFullResolution), P + DeviceZDdx ) - mid;
+    float3 down  = UVToView( (float2(iPixelCoord + uint2(0, 1)) * InvFullResolution), P + DeviceZDdy ) - mid;
+    
+    return normalize(cross(right, down));
+}
+
+[numthreads( NUM_THREADS_X, NUM_THREADS_X, 1 )]
+void MainCS( uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID, uint GIdx : SV_GroupIndex )
+{
+	int2 GroupUL  = ( Gid.xy << 3) - 1;
+	int2 ThreadUL = (GTid.xy << 1) + GroupUL;
+
+	// Load LDS
+	if((GTid.x < 5) && (GTid.y < 5))
+	{
+		float2 fUV = ((float2(ThreadUL+FullResOffset) + 0.5f) * InvFullResolution);
+		float4 fRawDepth = gatherRed2D(SceneDepthTexture, fUV);
+
+		int destIdx = (GTid.x * 2) + (GTid.y * 20);
+		gs_DepthCache[destIdx +  0] = ConvertFromDeviceZ(fRawDepth.w);
+		gs_DepthCache[destIdx +  1] = ConvertFromDeviceZ(fRawDepth.z);
+		gs_DepthCache[destIdx + 10] = ConvertFromDeviceZ(fRawDepth.x);
+		gs_DepthCache[destIdx + 11] = ConvertFromDeviceZ(fRawDepth.y);
+	}
+
+	// Sync
+	GroupMemoryBarrierWithGroupSync();
+
+	// Calc Normal
+	int  iIdx = (GTid.x + 1) + ((GTid.y + 1) * 10);
+	int2 iPixelCoord = DTid.xy + FullResOffset;
+	float3 ViewNormal = ReconstructNormalCS(iIdx, iPixelCoord);
+	ReconstructNormalOut[iPixelCoord] = (ViewNormal * 0.5f) + 0.5f;
+}

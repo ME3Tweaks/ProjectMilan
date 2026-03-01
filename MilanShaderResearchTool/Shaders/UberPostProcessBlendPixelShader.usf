@@ -1,0 +1,596 @@
+/*=============================================================================
+	UberPostProcessBlendPixelShader.usf: Pixel shader for blending multiple post processing results with the scene color.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+#include "DepthOfFieldCommon.usf"
+#include "MotionBlurCommon.usf"
+
+#if ORBIS
+#pragma argument (dx10clamp)
+#endif
+
+SAMPLER2D(BlurredImage);
+
+SAMPLER2D(DOFTexture);
+SAMPLER2D(DOFBlurredNear);
+SAMPLER2D(DOFBlurredFar);
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+float4 BloomTintAndScreenBlendThreshold;
+// ME3END
+
+SAMPLER2D(BlurredImageSeperateBloom);
+
+// minv, minv, maxu,maxu
+// to clamp the half resolution lookup inside it's content to avoid leaking in content from outside through bilinear filtering
+float4 HalfResMaskRect;
+
+// UV.y and UV.wz are the input UV coordinates
+float2 ComputeClampedHalfRes(float2 UV)
+{
+	return clamp(UV, HalfResMaskRect.xy, HalfResMaskRect.zw);
+}
+// ME3END
+
+#if USE_DOF_BLUR_BUFFER
+SAMPLER2D(DoFBlurBuffer);
+#endif
+
+// BIOSTART, woytiuk, Sept-20-2010, Pre-integrate of post-process LUT
+// PJWTODO: Head Epic code uses an array texture on the 360 to represent this.  UE3 doesn't support volume textures at
+// PJWTODO: all, these should be added for all other platforms.
+// robk - disabled use of volume texture since we don't have support for dynamically generating it for now
+#if USE_TONEMAP_AND_COLORGRADING
+	//#if XBOX
+	//	sampler3D ColorGradingLUT;
+	//#else // XBOX
+		SAMPLER2D(ColorGradingLUT);
+	//#endif // XBOX
+#endif // USE_TONEMAP_AND_COLORGRADING
+// BIOEND
+
+// scene material parameters
+// BIOSTART - September 10, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+#if !USE_TONEMAP_AND_COLORGRADING // These variables go into the colour grading lookup table, they can be ignored if the LUT is enabled
+half4 SceneShadowsAndDesaturation;  // RGB = SceneShadows, A = (1-SceneDesaturation)
+half4 SceneInverseHighLights;       // RGB = 1 / SceneHighLights
+half4 SceneMidTones;                // RGB = SceneMidTones
+half4 SceneScaledLuminanceWeights;  // RGB = LuminanceWeights * SceneDesaturation
+
+static half3 SceneShadows      = SceneShadowsAndDesaturation.rgb;
+static half  SceneDesaturation = SceneShadowsAndDesaturation.a;
+#endif // #if !USE_TONEMAP_AND_COLORGRADING
+// BIOEND
+
+// gamma correction parameters
+
+half4 GammaColorScaleAndInverse;
+half4 GammaOverlayColor;
+
+static half3 GammaColorScale = GammaColorScaleAndInverse.rgb; 
+static half  GammaInverse    = GammaColorScaleAndInverse.a;
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+//#if MOTION_BLUR
+//#include "MotionBlurCommon.usf"
+//#endif
+// ME3END
+
+// BIOSTART - Rob Krajcarski - September 30, 2008 - Added filmic response	
+#include "SFXUberPostProcessBlendPixelShader.usf"
+// BIOEND
+
+// BIOSTART, woytiuk, Sept-20-2010, Pre-integrate of post-process LUT
+#if USE_TONEMAP_AND_COLORGRADING
+//  @param InLDRColor in gamma space, has to be in 0..1 range
+half3 ColorLookupTable(half3 InLDRColor)
+{
+// BIOSTART, woytiuk, Oct-01-2010, Dynamic colour LUT generation
+	const float fResolution = SFX_COLORCUBE_RESOLUTION;
+// BIOEND
+//#if XBOX
+// BIOSTART, woytiuk, Oct-01-2010, Dynamic colour LUT generation
+//	half3 ret = tex3D( ColorGradingLUT, InLDRColor * (fResolution-1) / fResolution + 0.5f / fResolution);
+// BIOEND	
+//#else // XBOX
+// BIOSTART, woytiuk, Oct-01-2010, Dynamic colour LUT generation
+	// requires a volume texture 16x16x16 unwrapped in a 2d texture 256x16
+	// can be optimized by using a volume texture
+	float2 Offset = float2(0.5 /( fResolution*fResolution ), 0.5 / fResolution);
+	float Scale = (fResolution-1) / fResolution; 
+
+	// Also consider blur value in the blur buffer written by translucency
+	float IntB = floor(InLDRColor.b * (fResolution-1)) /fResolution;
+	float FracB = InLDRColor.b * (fResolution-1) - IntB * fResolution;
+
+	float U = IntB + InLDRColor.r * Scale / fResolution;
+	float V = InLDRColor.g * Scale;
+
+	float3 RG0 = tex2D(ColorGradingLUT, Offset + float2(U             , V)).rgb;
+	float3 RG1 = tex2D(ColorGradingLUT, Offset + float2(U + 1 / fResolution, V)).rgb;
+// BIOEND	
+
+	half3 ret = lerp(RG0, RG1, FracB);
+
+//#endif // XBOX
+
+	return ret;
+}
+#endif // USE_TONEMAP_AND_COLORGRADING
+// BIOEND, Oct-01-2010, Dynamic colour LUT generation
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+//			- Rob Krajcarski - October 9, 2011 - MotionBlur shader optimizations
+SAMPLER2D(LowResSceneBufferPoint);
+
+/**
+* Returns scene color in rgb, depth in a, point filtered
+*/
+float4 CalcSceneColorAndDepthHalfResPoint( float2 HalfResUV )
+{
+	half4 FocusedSceneColorAndDepth = tex2Dfast(LowResSceneBufferPoint, HalfResUV);
+	//float4 FocusedSceneColorAndDepth = tex2D(LowResSceneBufferPoint, HalfResUV);
+
+	// bring from texture usable range to worldspace range
+	FocusedSceneColorAndDepth.a = DecompressDeviceZFromHalfResTextureChannel(FocusedSceneColorAndDepth.a);
+
+	return FocusedSceneColorAndDepth;
+}
+// ME3END
+
+/** return the scene lighting texture */
+half3 CalcSceneColorNoMip(float2 ScreenUV)
+{
+	return tex2Dlod(SceneColorTexture, float4(ScreenUV, 0, 0)).rgb;
+}
+
+/** return the depth */
+half GetSceneDeviceZNoMip( float2 ScreenUV )
+{
+#if SUPPORTS_DEPTH_TEXTURES
+	/** return the depth value stored in the depth buffer - but convert it to w first */
+	// get depth buffer z value
+	return texDepth2Dlod(SceneDepthTexture, float4(ScreenUV, 0, 0)).r;
+#else
+	/** return the depth value stored in lighting target's alpha */
+	// depth stored in alpha
+	// clamp to fp 16 max to avoid INF on Geforce 6, 7 and RSX
+	return min(tex2Dlod(SceneColorTexture, float4(ScreenUV, 0, 0)).a, 65503.0f);
+#endif
+}
+
+/** return the world space converted depth (float precision needed for distances >65000, can affect fog) */
+float CalcSceneDepthNoMip( float2 ScreenUV )
+{
+	return ConvertFromDeviceZ(GetSceneDeviceZNoMip(ScreenUV));
+}
+
+/** Returns scene color in rgb, depth in a */
+half4 CalcSceneColorAndDepthNoMip(float2 ScreenUV)
+{
+	return half4(CalcSceneColorNoMip(ScreenUV), CalcSceneDepthNoMip(ScreenUV));
+}
+
+float RGBToLogLuminance( float3 LinearRGB )
+{
+	float fLuma = dot( LinearRGB, float3( 0.212671, 0.715160, 0.072169 ) );
+	return log2( 1 + fLuma * 15 ) / 4;
+}
+
+float3 DOFCombine( float2 UV, float4 FocusedSceneColorAndDepth )
+{
+	float3 OutColor = FocusedSceneColorAndDepth.rgb;
+	
+	if (MinMaxBlurClamp.x > 0.f || MinMaxBlurClamp.y > 0.f)
+	{
+		//const float Depth = FocusedSceneColorAndDepth.a;
+		//const float Depth = 1.f / tex2D(DOFTexture,UV).r;
+		const float Depth = ConvertFromDeviceZ(saturate(tex2D(DOFTexture,UV).r));
+		
+		float4 Near = (MinMaxBlurClamp.x > 0.f) ? tex2D(DOFBlurredNear, UV) : float4(0,0,0,0);
+		float4 Far  = (MinMaxBlurClamp.y > 0.f) ? tex2D(DOFBlurredFar, UV)  : float4(0,0,0,0);
+		
+		// Calculate CoC blend strength
+		float2 CoC = float2(ComputeNearCoC(Depth), ComputeFarCoC(Depth));
+		CoC *= MinMaxBlurClamp.xy;
+		//CoC.y = max(CoC.x, CoC.y);
+		//const float2 BlendOffset = float2(0.1f, 0.1f);
+		//CoC = saturate(CoC - BlendOffset);
+		CoC *= CoC;
+
+		Near.a = max(CoC.x, Near.a);
+		Far.a = min(CoC.y, Far.a);
+		
+		if (FalloffExponent > 0.f)
+		{
+			Near.a = smoothstep(0, 1, Near.a);
+			Far.a = saturate(Far.a * DOFKernelParams.y);
+		}
+		else
+		{
+			Near.a = saturate(Near.a * DOFKernelParams.x);
+			Far.a = saturate(Far.a * DOFKernelParams.y);
+		}
+		
+		OutColor = lerp(OutColor, Far.rgb, Far.a);
+		OutColor = lerp(OutColor, Near.rgb, Near.a);
+	}
+
+	return OutColor;
+}
+
+
+/*=============================================================================
+ * Pixel Shader
+ *============================================================================*/
+
+void Main(
+	in float4 ScreenPosition : TEXCOORD0,
+	// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+	in float2 FilterBufferUV : TEXCOORD1,
+	out float4 OutColor : SV_Target0
+#if SM5_PROFILE
+	, out float OutLuminance : SV_Target1
+#endif
+	)
+{
+	// ME3START - Rob Krajcarski - July 18, 2011 - Preport of Epic PostProcessAA system (see PostProcessAA.cpp for more details)
+	const half3 LuminanceWeights = half3(0.299h, 0.587h, 0.114h);
+	// ME3END
+
+	// full resolution 
+	float2 FullResUV = ScreenPosition.zw;
+
+	half4 SceneColorAndDepth = CalcScaledSceneColorAndDepth(FullResUV);
+
+#if MOTION_BLUR
+	// MotionWeight 0..1, 0=no motion
+	half3 MotionBlurColor;
+	half MotionWeight = SFXMotionBlur(SceneColorAndDepth, float4(ScreenPosition.xy, FullResUV * DynamicScale.xy), MotionBlurColor);
+
+	SceneColorAndDepth.rgb = lerp(SceneColorAndDepth.rgb, MotionBlurColor, MotionWeight);
+#endif
+
+	// Depth Of Field combine
+	float3 DOFResult = DOFCombine( FullResUV * DynamicScale.xy, SceneColorAndDepth );
+
+	// bloom
+	half3 BloomContribution = MAX_SCENE_COLOR * tex2Dfast(BlurredImageSeperateBloom, FullResUV * DynamicScale.xy).rgb * BloomTintAndScreenBlendThreshold.rgb;
+	
+	half Luminance = dot(DOFResult.rgb, LuminanceWeights);
+	half BloomScreenBlendFactor = saturate(BloomTintAndScreenBlendThreshold.a * exp2(-3 * Luminance));
+	BloomContribution *= BloomScreenBlendFactor;
+	DOFResult += BloomContribution;
+
+	// Material effect
+
+	// BIOSTART - Rob Krajcarski - September 30, 2008 - Added filmic response	
+	DOFResult = ApplyFilmicResponse( DOFResult, FullResUV );
+	// BIOEND
+
+
+	// BIOSTART, woytiuk, Sept-20-2010, Pre-integrate of post-process LUT
+	// 			- Wihlidal, Graham - September 10, 2010 - PS3 Fragment and Vertex Shader Optimizations
+	//			- Rob Krajcarski - September 18, 2010 - Merged film grain/vignette to the uber
+	//			- June 14, 2011 - Stephane Levesque - Added option to use PS3 hardware gamma correction in uber post process
+#if !USE_TONEMAP_AND_COLORGRADING
+	half3 Color = pow_unclamped(saturate(DOFResult - SceneShadows) * SceneInverseHighLights.rgb, SceneMidTones.rgb);
+	half3 ScaledLuminance = dot(Color.rgb, SceneScaledLuminanceWeights.rgb);
+	half3 LinearColor = Color * SceneDesaturation + ScaledLuminance;
+#else
+	// color grading based on 3D color LUT
+	// line can be commented out to see it without color grading 
+	// also includes ColorCorrection() (SceneShadows, MidTones, Highlights, Desaturation)
+	half3 LinearColor = ColorLookupTable(DOFResult);
+#endif
+
+	half3 GammaColor = ApplyGamma(LinearColor, GammaOverlayColor, GammaColorScaleAndInverse);
+	// BIOEND        
+
+	GammaColor = ApplyVignette(GammaColor, FullResUV);
+	GammaColor = ApplyFilmGrain(GammaColor, FullResUV);
+
+	OutColor = RETURN_COLOR( half4(GammaColor, 0.h) );
+
+
+	// ME3START - Rob Krajcarski - July 18, 2011 - Preport of Epic PostProcessAA system (see PostProcessAA.cpp for more details)
+	// FXAA requires the luminance to be in the alpha channel, so we store that here
+	OutColor.a = dot(OutColor.rgb, LuminanceWeights); // compute luma
+	// ME3END
+
+	// BW_START - 2020/10/22 - Stewart, Darrin - [DIVERGENCE] HDR Support for METR
+	// In HDR mode, this will be a float buffer to maintain extra precision before doing a final
+	// HDR Reconstruction pass. In SDR mode, this will be an 8-bit buffer, which naturally clamps at 255.
+	// So for consistency between SDR/HDR up until the final reconstruction step, go ahead and clamp.
+	// Otherwise, what can happen is values >1 in SDR will get totally blown out past the max brightness
+	// setting for HDR.
+	OutColor.xyz = saturate(OutColor.xyz);
+	// BW_END
+
+#if SM5_PROFILE
+	OutLuminance = RGBToLogLuminance(OutColor.rgb);
+#endif
+}
+
+// ME3START - Rob Krajcarski - October 12, 2011 - Reintroduced merged DOFAndBloom pass
+// this shader assumes there's no motion blur (and that dof and bloom are unified)
+void FullResMergedUberMain(
+	in float4 ScreenPosition : TEXCOORD0,
+	in float4 FilterBufferUV : TEXCOORD1,
+	out half4 OutColor : SV_Target0
+#if SM5_PROFILE
+  , out float OutLuminance : SV_Target1
+#endif
+	)
+{
+	const half3 LuminanceWeights = half3(0.299h, 0.587h, 0.114h);
+
+	// preserving input variable names, even though they don't really make sense
+	float2 UV = FilterBufferUV.zw;
+	float2 FilterUV = ScreenPosition.zw;
+
+	half4 FocusedSceneColorAndDepth = CalcSceneColorAndDepth(UV);
+
+    // DOF and bloom effect
+
+	//focused scene color in rgb, depth in a
+	half  FocusedWeight = saturate(1 - CalcUnfocusedPercent(FocusedSceneColorAndDepth.a));
+
+#if USE_DOF_BLUR_BUFFER
+	// Also consider blur value in the blur buffer written by translucency
+	FocusedWeight = max(FocusedWeight, tex2D(DoFBlurBuffer, UV).r);
+#endif
+
+	//UnfocusedSceneColor in .rgb, UnfocusedWeight in .a
+	//Scale color back up as it was compressed to the [0-1] range to fit in the fixed point filter buffer
+	//half4 UnfocusedSceneColorAndWeight = MAX_SCENE_COLOR * tex2Dfast(BlurredImage,UV);
+	half4 UnfocusedSceneColorAndWeight = MAX_SCENE_COLOR * tex2Dfast(BlurredImage,FilterUV);
+
+    half  WeightSum = FocusedWeight + UnfocusedSceneColorAndWeight.a;
+
+    half3 DOFResult = (FocusedSceneColorAndDepth.rgb * FocusedWeight + UnfocusedSceneColorAndWeight.rgb) / WeightSum;
+
+	DOFResult = ApplyFilmicResponse( DOFResult, UV );
+
+	// Material effect
+
+#if !USE_TONEMAP_AND_COLORGRADING
+	half3 Color = pow_unclamped(saturate(DOFResult - SceneShadows) * SceneInverseHighLights.rgb, SceneMidTones.rgb);
+	half3 ScaledLuminance = dot(Color.rgb, SceneScaledLuminanceWeights.rgb);
+	half3 LinearColor = Color * SceneDesaturation + ScaledLuminance;
+#else
+	// color grading based on 3D color LUT
+	// line can be commented out to see it without color grading 
+	// also includes ColorCorrection() (SceneShadows, MidTones, Highlights, Desaturation)
+	half3 LinearColor = ColorLookupTable(DOFResult);
+#endif
+
+	half3 GammaColor = ApplyGamma(LinearColor, GammaOverlayColor, GammaColorScaleAndInverse);
+
+	GammaColor = ApplyVignette(GammaColor, UV);
+	GammaColor = ApplyFilmGrain(GammaColor, UV);
+
+	OutColor = RETURN_COLOR( half4(GammaColor, 0.h) );
+
+	// FXAA requires the luminance to be in the alpha channel, so we store that here
+	OutColor.a = dot(OutColor.rgb, LuminanceWeights); // compute luma
+	// BW_START - 2020/10/22 - Stewart, Darrin - [DIVERGENCE] HDR Support for METR
+	// In HDR mode, this will be a float buffer to maintain extra precision before doing a final
+	// HDR Reconstruction pass. In SDR mode, this will be an 8-bit buffer, which naturally clamps at 255.
+	// So for consistency between SDR/HDR up until the final reconstruction step, go ahead and clamp.
+	// Otherwise, what can happen is values >1 in SDR will get totally blown out past the max brightness
+	// setting for HDR.
+	OutColor.xyz = saturate(OutColor.xyz);
+	// BW_END
+
+#if SM5_PROFILE
+	OutLuminance = RGBToLogLuminance(OutColor.rgb);
+#endif
+}
+// ME3END
+
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+// half resolution, runs before final uber postprocess pass
+// RGB color to add to FullResScene (MotionBlur, DOF, Bloom), A=0..1 weight of the FullResScene
+void UberHalfResMain(
+	in float4 ScreenPosition : TEXCOORD0,
+	in float4 FilterBufferUV : TEXCOORD1,
+	out float4 OutColor : SV_Target0
+	)
+{
+	// full resolution 
+	float2 FullResUV = FilterBufferUV.xy;
+	// 1:1 with rendertarget
+	float2 HalfResUV = FilterBufferUV.zw;
+	// quarter resolution
+	float2 QuarterResUV = ScreenPosition.zw;
+
+	half4 FocusedSceneColorAndDepth = CalcSceneColorAndDepthHalfResPoint(HalfResUV);
+
+	// 0..1, 0=take no FullResScene, 1=take 100% FullResScene
+	half FullResWeight = 1;
+
+    // DOF and bloom effect
+
+	//focused scene color in rgb, depth in a
+	half  FocusedWeight = saturate(1 - CalcUnfocusedPercent(FocusedSceneColorAndDepth.a));
+
+#if USE_DOF_BLUR_BUFFER
+	// Also consider blur value in the blur buffer written by translucency
+	FocusedWeight = max(FocusedWeight, tex2D(DoFBlurBuffer, FullResUV).r);
+#endif
+
+	half3 UnfocusedSceneColor;
+	
+#if USE_DOF_HIGHQUALITY
+	{
+		// Radius can be tweaked to get bigger bokeh (slower) 1->3x3, 2-> 5x5, 3->7x7, 4->9x9
+		const int PixelRadius = 1;
+
+		float4 SceneColorAndDepth = FocusedSceneColorAndDepth;
+
+		half CenterCircleRadius = saturate(CalcUnfocusedPercent(SceneColorAndDepth.a)) * (PixelRadius + 1);
+
+		float4 Accum = float4(0,0,0,0.00001f);
+		FLATTEN for(int y = -PixelRadius; y <= PixelRadius; ++y)
+		{
+			FLATTEN for(int x = -PixelRadius; x <= PixelRadius; ++x)
+			{
+				const float2 PixelRel = float2(x,y); 
+
+				half4 LocalSceneColorAndDepth = CalcSceneColorAndDepthHalfResPoint(HalfResUV + 2 * MinMaxBlurClamp.zw * float2(x, y));
+
+				// + small bias to avoid dark line where x == y == 0
+				half CircleRadius = saturate(CalcUnfocusedPercent(LocalSceneColorAndDepth.a)) * (PixelRadius + 1) + 0.01f;
+
+				// soft comparison -> AA bokeh shape
+				float LocalWeight = saturate(CircleRadius - length(PixelRel));
+
+				// bigger bokeh shapes become more transparent
+				LocalWeight /= CircleRadius*CircleRadius;
+
+				Accum += float4(LocalSceneColorAndDepth.rgb,1) * LocalWeight;
+			}
+		}
+		// normalize
+		UnfocusedSceneColor = Accum.rgb / Accum.w;
+
+		// tweaked to fade in full resolution pixels where needed
+		FocusedWeight = saturate(FocusedWeight*(2*PixelRadius + 0.5f) - 2*PixelRadius);
+	}
+
+#else // USE_DOF_HIGHQUALITY
+	{
+		//UnfocusedSceneColor in .rgb, UnfocusedWeight in .a
+		//Scale color back up as it was compressed to the [0-1] range to fit in the fixed point filter buffer
+		// ME3START - Rob Krajcarski - October 9, 2011 - MotionBlur shader optimizations
+		half4 UnfocusedSceneColorAndWeight = MAX_SCENE_COLOR * tex2Dfast(BlurredImage, QuarterResUV.xy);
+		//half4 UnfocusedSceneColorAndWeight = MAX_SCENE_COLOR * tex2D(BlurredImage, QuarterResUV.xy);
+		// ME3END
+
+		// the following two lines fix dark borders with strong DOF radius
+		half WeightSum = FocusedWeight + UnfocusedSceneColorAndWeight.a;
+		UnfocusedSceneColor = (FocusedSceneColorAndDepth.rgb * FocusedWeight + UnfocusedSceneColorAndWeight.rgb) / WeightSum;
+	}
+#endif // USE_DOF_HIGHQUALITY
+
+	FullResWeight *= FocusedWeight;
+
+#if MOTION_BLUR
+	// MotionWeight 0..1, 0=no motion
+	half3 MotionBlurColor;
+	half MotionWeight = MotionBlur(FocusedSceneColorAndDepth.rgb, float4(ScreenPosition.xy, HalfResUV), MotionBlurColor);
+
+	// strong DOF overrules the motionblur
+	MotionWeight *= FullResWeight;
+
+	UnfocusedSceneColor = lerp(UnfocusedSceneColor, MotionBlurColor, MotionWeight);
+	FullResWeight *= 1.0f - MotionWeight;
+#endif
+
+	OutColor = float4(UnfocusedSceneColor, FullResWeight);
+}
+// ME3END
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+
+// half resolution, runs before final uber postprocess pass
+// RGB color to add to FullResScene (MotionBlur, DOF, Bloom), A=0..1 weight of the FullResScene
+void SFXUberHalfResMain(
+	in float4 ScreenPosition : TEXCOORD0,
+	in float4 FilterBufferUV : TEXCOORD1,
+	out float4 OutColor : SV_Target0
+	)
+{
+	// full resolution 
+	float2 FullResUV = FilterBufferUV.xy;
+	// 1:1 with rendertarget
+	float2 HalfResUV = FilterBufferUV.zw;
+	// quarter resolution
+	float2 QuarterResUV = ScreenPosition.zw;
+
+	half4 FocusedSceneColorAndDepth = CalcSceneColorAndDepthHalfResPoint(HalfResUV);
+
+	// 0..1, 0=take no FullResScene, 1=take 100% FullResScene
+	half FullResWeight = 1;
+
+    // DOF and bloom effect
+
+	//focused scene color in rgb, depth in a
+	half  FocusedWeight = saturate(1 - CalcUnfocusedPercent(FocusedSceneColorAndDepth.a));
+
+#if USE_DOF_BLUR_BUFFER
+	// Also consider blur value in the blur buffer written by translucency
+	FocusedWeight = max(FocusedWeight, tex2D(DoFBlurBuffer, FullResUV).r);
+#endif
+
+	half3 UnfocusedSceneColor;
+	
+#if USE_DOF_HIGHQUALITY
+	{
+		// Radius can be tweaked to get bigger bokeh (slower) 1->3x3, 2-> 5x5, 3->7x7, 4->9x9
+		const int PixelRadius = 1;
+
+		float4 SceneColorAndDepth = FocusedSceneColorAndDepth;
+
+		half CenterCircleRadius = saturate(CalcUnfocusedPercent(SceneColorAndDepth.a)) * (PixelRadius + 1);
+
+		float4 Accum = float4(0,0,0,0.00001f);
+		FLATTEN for(int y = -PixelRadius; y <= PixelRadius; ++y)
+		{
+			FLATTEN for(int x = -PixelRadius; x <= PixelRadius; ++x)
+			{
+				const float2 PixelRel = float2(x,y); 
+
+				half4 LocalSceneColorAndDepth = CalcSceneColorAndDepthHalfResPoint(HalfResUV + 2 * MinMaxBlurClamp.zw * float2(x, y));
+
+				// + small bias to avoid dark line where x == y == 0
+				half CircleRadius = saturate(CalcUnfocusedPercent(LocalSceneColorAndDepth.a)) * (PixelRadius + 1) + 0.01f;
+
+				// soft comparison -> AA bokeh shape
+				float LocalWeight = saturate(CircleRadius - length(PixelRel));
+
+				// bigger bokeh shapes become more transparent
+				LocalWeight /= CircleRadius*CircleRadius;
+
+				Accum += float4(LocalSceneColorAndDepth.rgb,1) * LocalWeight;
+			}
+		}
+		// normalize
+		UnfocusedSceneColor = Accum.rgb / Accum.w;
+
+		// tweaked to fade in full resolution pixels where needed
+		FocusedWeight = saturate(FocusedWeight*(2*PixelRadius + 0.5f) - 2*PixelRadius);
+	}
+
+#else // USE_DOF_HIGHQUALITY
+	{
+		//UnfocusedSceneColor in .rgb, UnfocusedWeight in .a
+		//Scale color back up as it was compressed to the [0-1] range to fit in the fixed point filter buffer
+		half4 UnfocusedSceneColorAndWeight = MAX_SCENE_COLOR * tex2Dfast(BlurredImage, QuarterResUV.xy);
+
+		// the following two lines fix dark borders with strong DOF radius
+		half WeightSum = FocusedWeight + UnfocusedSceneColorAndWeight.a;
+		UnfocusedSceneColor = (FocusedSceneColorAndDepth.rgb * FocusedWeight + UnfocusedSceneColorAndWeight.rgb) / WeightSum;
+	}
+#endif // USE_DOF_HIGHQUALITY
+
+	FullResWeight *= FocusedWeight;
+
+#if MOTION_BLUR
+	// MotionWeight 0..1, 0=no motion
+	half3 MotionBlurColor;
+	half MotionWeight = SFXMotionBlur(FocusedSceneColorAndDepth, float4(ScreenPosition.xy, HalfResUV), MotionBlurColor);
+
+	// strong DOF overrules the motionblur
+	MotionWeight *= FullResWeight;
+
+	UnfocusedSceneColor = lerp(UnfocusedSceneColor, MotionBlurColor, MotionWeight);
+	FullResWeight *= 1.0f - MotionWeight;
+#endif
+
+	OutColor = float4(UnfocusedSceneColor, FullResWeight);
+}
+// ME3END

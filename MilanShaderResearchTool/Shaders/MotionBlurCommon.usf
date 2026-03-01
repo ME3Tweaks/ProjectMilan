@@ -1,0 +1,352 @@
+/*=============================================================================
+	MotionBlurCommon.usf: Common helper functionality for motion blur.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#ifndef NUM_SAMPLES
+#define NUM_SAMPLES 5
+#endif
+
+float4 RenderTargetClampParameter;
+
+float2 ClampUV(float2 UV)
+{
+// SM2 currently doesn't support correctly clamped motion blur (not enough instructions)
+#if !SM2_PROFILE
+	// Clamp the sampling UVs to avoid sampling from outside viewport region
+	// (hence render target size can be bigger than viewport region)
+	UV.x = clamp(UV.x, RenderTargetClampParameter.x, RenderTargetClampParameter.z);
+	UV.y = clamp(UV.y, RenderTargetClampParameter.y, RenderTargetClampParameter.w);
+#endif
+	return UV;
+}
+
+// ME3START - Rob Krajcarski - October 9, 2011 - MotionBlur shader optimizations
+// @return like length() without sqrt()
+half length2h(half2 vec)
+{
+	return dot(vec, vec);
+}
+// ME3END
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+// @return like length() without sqrt()
+float length2(float2 vec)
+{
+	return dot(vec, vec);
+}
+
+// xy=multipler for the masking to blend between high resolution image and motion blurred half resolution (includes aspect ratio), zw=unused
+float4 MotionBlurMaskScaleAndBias;
+
+// #if XBOX
+// // XY used for ScaleAndBias: { 3*SCENE_COLOR_BIAS_FACTOR, -2, 0, 0 }
+// //
+// float4 MotionBlurMaskScaleAndBias;
+// 
+// // AlphaValue can have four different values (0/3, 1/3, 2/3, 3/3).
+// // The MotionBlurMask bit is set when AlphaValue is 1/3 or 3/3, and this function
+// // returns 1.0 if the bit is set, otherwise 0.0.
+// half GetMotionBlurMask( half AlphaValue )
+// {
+// //	half MotionBlurMask = abs( AlphaValue*3.0f - 2.0f );
+// 	half MotionBlurMask = abs( AlphaValue*MotionBlurMaskScaleAndBias.x + MotionBlurMaskScaleAndBias.y );
+// 	return (AlphaValue < 0.001f) ? 0.0f : MotionBlurMask;
+// }
+// half4 GetMotionBlurMask4( half Alpha1, half Alpha2, half Alpha3, half Alpha4 )
+// {
+// //  half MotionBlurMask = abs( AlphaValue*3.0f - 2.0f );
+//     half4 AlphaValues = half4( Alpha1, Alpha2, Alpha3, Alpha4 );
+//     half4 MotionBlurMask = abs( AlphaValues*MotionBlurMaskScaleAndBias.x + MotionBlurMaskScaleAndBias.y );
+//     MotionBlurMask = (AlphaValues < 0.001f) ? 0.0f : MotionBlurMask;
+//     return MotionBlurMask;
+// }
+// #endif
+// ME3END
+
+SAMPLER2D(VelocityBuffer);
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+SAMPLER2D(LowResSceneBuffer);
+// ME3END
+float4x4	ScreenToWorld;
+float4x4	PrevViewProjMatrix;
+
+//{ 0.5f, -0.5f, MAX_PIXELVELOCITY, MAX_PIXELVELOCITY }
+float4 StaticVelocityParameters = { 0.5f, -0.5f, 16.0f/1280.0f, 16.0f/720.0f };
+// { 2.0f*MAX_PIXELVELOCITY, -2.0f*MAX_PIXELVELOCITY, 2.0f*MAX_TRANSLUCENT_PIXELVELOCITY, -2.0f*MAX_TRANSLUCENT_PIXELVELOCITY }
+float4 DynamicVelocityParameters = { 2.0f*16.0f/1280.0f, -2.0f*16.0f/720.0f, -64.0f/1280.0f, 64.0f/720.0f };
+
+// offsets/weights when sampling using opaque motion based velocity
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+// set by c++: {0, 1, -1, 2, -2};
+float StepOffsetsOpaque[NUM_SAMPLES];
+// set by c++: {2.0/10.0, 2/10.0, 2.0/10.0, 2.0/10.0, 2.0/10.0};
+float StepWeightsOpaque[NUM_SAMPLES];
+// ME3END
+
+// offsets/weights when sampling using translucent non-motion based velocity
+// set by c++: {0, 1, 2, 3, 4};
+float StepOffsetsTranslucent[NUM_SAMPLES];
+// set by c++: {1.0/5.0, 1.0/5.0, 1.0/5.0, 1.0/5.0, 1.5/5.0};
+float StepWeightsTranslucent[NUM_SAMPLES];
+// ME3END
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+// return 0..1, 0=no motionblur
+half MotionBlur( half3 SceneColor, float4 ScreenPosition, out half3 OutColor : SV_Target0 )
+// ME3END
+{
+	half2 PixelVelocity = 0;	
+	// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+	half2 RadialBlurVector = 0;
+	//half MaxMotionBlurMask = 0;
+    //half MaxNeighborMask = 0;
+    // ME3END
+
+	float2 UV = ScreenPosition.zw;
+
+	// scaling of step offset size for each sample
+	float StepOffsets[NUM_SAMPLES] = StepOffsetsOpaque;
+	// weight for contribution from each sample
+	float StepWeights[NUM_SAMPLES] = StepWeightsOpaque;
+	// texture samples
+
+	// NOTE: Maximum value for an fp16 depth-value is 65504.
+	half4	DynamicVelocity	= tex2D( VelocityBuffer, UV );	
+
+	// 0.0f (-1.0f after scale-and-bias) in the velocity buffer has special meaning. It means "use static background velocity".
+	// Velocity rendering clamps to 1/255, so every pixel it touches will fail this check.
+
+	// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+	//half SelectorOpaque = DynamicVelocity.x;
+	bool SelectorOpaque =  DynamicVelocity.x + DynamicVelocity.y > 0;
+	// ME3END
+	half SelectorTranslucent = DynamicVelocity.z;
+	if ( SelectorTranslucent > 0 )
+	{
+		// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+		// Scale from [0,1] to [-1,+1], flip y to be consistent with the code here
+		// ME3START - Rob Krajcarski - October 9, 2011 - MotionBlur shader optimizations
+		half2 NominalVelocity	= float2(DynamicVelocity.z, 1.0h - DynamicVelocity.w) * 2.0h - 1.0h;
+		//half2 NominalVelocity	= float2(DynamicVelocity.z, 1.0f - DynamicVelocity.w) * 2.0f - 1.0f;
+		// ME3END
+
+		// Scale dynamic velocity from [-1,+1] to [-MAX_TRANSLUCENT_PIXELVELOCITY,+MAX_TRANSLUCENT_PIXELVELOCITY] pixels
+		RadialBlurVector = NominalVelocity * DynamicVelocityParameters.zw;
+
+		// override offsets/weights to use translucent version
+		StepOffsets = StepOffsetsTranslucent;
+		// ME3START - Rob Krajcarski - October 9, 2011 - MotionBlur shader optimizations
+		//StepWeights = StepWeightsTranslucent;
+		// ME3END
+		// ME3END
+	}
+	// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+	if ( SelectorOpaque )
+	{
+		// Scale from [0,1] to [-1,+1]
+		// ME3START - Rob Krajcarski - October 9, 2011 - MotionBlur shader optimizations
+		half2 NominalVelocity	= DynamicVelocity.xy * 2.0h - 1.0h;
+		//half2 NominalVelocity	= DynamicVelocity.xy * 2.0f - 1.0f;
+		// ME3END
+
+		// Accumulate total pixel velocity
+		PixelVelocity += NominalVelocity;
+	}
+	// ME3END
+	else
+	{
+		half	CurrDepth			= min( CalcSceneDepth( UV ), 65504);
+		if ( CurrDepth < 14.0f )
+			CurrDepth = 65504.0f;
+		float4	ProjectedPosition	= float4( ScreenPosition.xy * CurrDepth, CurrDepth, 1 );
+		float4	PrevScreenPosition	= MulMatrix( PrevViewProjMatrix, ProjectedPosition );
+		PrevScreenPosition.xy		/= PrevScreenPosition.w;
+
+		// Scale static velocity from projection space to texel space and clamp to +/- MAX_VELOCITY pixels.
+		half2 StaticVelocity	= ScreenPosition.xy - PrevScreenPosition.xy;
+
+		// Accumulate total pixel velocity
+		PixelVelocity += StaticVelocity * StaticVelocityParameters.xy;
+	}
+	
+	// x: -1=left .. 1=right, y: -1=up .. 1=down
+
+	// clamp motion vector in a circle from -1 to 1
+	{
+		half Len = dot(PixelVelocity, PixelVelocity);
+		FLATTEN if(Len > 1)
+		{
+			PixelVelocity *= rsqrt(Len);
+		}
+	}
+
+	// Scale dynamic velocity from [-1,+1] to [-MAX_VELOCITY,+MAX_VELOCITY] pixels
+	half2 FinalVelocity = PixelVelocity * DynamicVelocityParameters.xy + RadialBlurVector;
+
+	half WeightSum = StepWeights[0];
+
+	OutColor = SceneColor * StepWeights[0];	
+
+	UNROLL 
+	for(int i=1; i<NUM_SAMPLES; i++)
+	{
+		// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+		float2 LocalUV = ClampUV(UV + FinalVelocity * StepOffsets[i]);
+
+		// anti leaking (if the velocity is very different we don't take that sample into account)
+		half2 SampleDynamicVelocity = tex2D( VelocityBuffer, LocalUV ).rg;	
+		half SampleWeight = saturate(1 - 10.0f *  length2(SampleDynamicVelocity - DynamicVelocity.rg));
+
+		SampleWeight *= StepWeights[i];
+
+		// sample motion blur from half resolution
+		OutColor += tex2D( LowResSceneBuffer, LocalUV ).rgb * SampleWeight;
+		WeightSum += SampleWeight;
+		// ME3END
+	}
+
+	// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+	OutColor /= WeightSum;
+
+	// compute motion strength to fade out motion blur if there is little movement
+	// to see the full resolution source image, tweaked value
+	// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+	float MotionStrength = saturate(length(FinalVelocity * MotionBlurMaskScaleAndBias.xy));
+	// ME3END
+
+	// 0..1 0:0% motionblur , 1:100% motion blur
+	return MotionStrength;
+// ME3END
+}
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+
+// this option allows us to control an excessive number of samples being taken of the velocity buffer
+// makes a significant performance impact (1+ms), and didn't seem to have any additional fidelity from
+// my limited tests
+#define WITH_ANTI_LEAKING 0
+
+// return 0..1, 0=no motionblur
+half SFXMotionBlur( half4 SceneColorDepth, float4 ScreenPosition, out half3 OutColor : SV_Target0 )
+{
+	const half StepWeight = 0.2h;
+	
+	half2 PixelVelocity = 0;	
+
+	float2 UV = ScreenPosition.zw;
+
+	// scaling of step offset size for each sample
+	float StepOffsets[NUM_SAMPLES] = StepOffsetsOpaque;
+	// weight for contribution from each sample
+	// texture samples
+
+	// NOTE: Maximum value for an fp16 depth-value is 65504.
+	half4	DynamicVelocity	= tex2Dfast( VelocityBuffer, UV );	
+
+	// 0.0f (-1.0f after scale-and-bias) in the velocity buffer has special meaning. It means "use static background velocity".
+	// Velocity rendering clamps to 1/255, so every pixel it touches will fail this check.
+
+	//bool SelectorOpaque =  DynamicVelocity.x + DynamicVelocity.y > 0.0h;
+
+#if WITH_RADIAL_BLUR
+	half2 RadialBlurVector = 0;
+
+	bool SelectorTranslucent = DynamicVelocity.z + DynamicVelocity.w > 0.0h;
+
+	/*if ( SelectorTranslucent )
+	{
+		// Scale from [0,1] to [-1,+1], flip y to be consistent with the code here
+		half2 NominalVelocity	= float2(DynamicVelocity.z, 1.0h - DynamicVelocity.w) * 2.0h - 1.0h;
+
+		// Scale dynamic velocity from [-1,+1] to [-MAX_TRANSLUCENT_PIXELVELOCITY,+MAX_TRANSLUCENT_PIXELVELOCITY] pixels
+		RadialBlurVector = NominalVelocity * DynamicVelocityParameters.zw;
+
+		// override offsets/weights to use translucent version
+		StepOffsets = StepOffsetsTranslucent;
+	}*/
+#endif // WITH_RADIAL_BLUR
+	/*if ( SelectorOpaque )
+	{
+		// Scale from [0,1] to [-1,+1]
+		half2 NominalVelocity	= DynamicVelocity.xy * 2.0h - 1.0h;
+
+		// Accumulate total pixel velocity
+		PixelVelocity += NominalVelocity;
+	}
+	else*/
+
+	half	CurrDepth			= min( CalcSceneDepth( UV ), 65504.0h);
+	if ( CurrDepth < 14.0h )
+		CurrDepth = 65504.0h;
+	float4	ProjectedPosition	= float4( ScreenPosition.xy * CurrDepth, CurrDepth, 1 );
+	float4	PrevScreenPosition	= MulMatrix( PrevViewProjMatrix, ProjectedPosition );
+	PrevScreenPosition.xy		/= PrevScreenPosition.w;
+
+	// Scale static velocity from projection space to texel space and clamp to +/- MAX_VELOCITY pixels.
+	half2 StaticVelocity	= ScreenPosition.xy - PrevScreenPosition.xy;
+
+	// Accumulate total pixel velocity
+	PixelVelocity += StaticVelocity * StaticVelocityParameters.xy;
+	
+	// x: -1=left .. 1=right, y: -1=up .. 1=down
+
+	// clamp motion vector in a circle from -1 to 1
+	{
+		half Len = dot(PixelVelocity, PixelVelocity);
+		PixelVelocity *= rsqrt( max( Len, 1.0h ) );
+	}
+
+	half DistanceFadeFactor = saturate(CurrDepth);// / 65504.0h;
+	DynamicVelocity.x *= DistanceFadeFactor;
+
+	// Scale dynamic velocity from [-1,+1] to [-MAX_VELOCITY,+MAX_VELOCITY] pixels
+	half2 FinalVelocity = PixelVelocity.xy * DynamicVelocity.xx * DynamicVelocityParameters.xy;
+
+#if WITH_RADIAL_BLUR
+	FinalVelocity += RadialBlurVector;
+#endif // WITH_RADIAL_BLUR
+
+	OutColor = SceneColorDepth.rgb * StepWeight;	
+
+	half WeightSum = StepWeight;
+
+	// Average NUM_SAMPLES screen colors along the velocity vector.
+	UNROLL 
+	for(int i=1; i<NUM_SAMPLES; i++)
+	{
+		float2 LocalUV = ClampUV(UV + FinalVelocity * StepOffsets[i]);
+
+#if WITH_ANTI_LEAKING
+		// anti leaking (if the velocity is very different we don't take that sample into account)
+		half2 SampleDynamicVelocity = tex2Dfast( VelocityBuffer, LocalUV ).rg;	
+		half SampleWeight = saturate(1 - 10.0h *  length2h(SampleDynamicVelocity - DynamicVelocity.rg));
+
+		SampleWeight *= StepWeight;
+
+		// sample motion blur from half resolution
+		OutColor += tex2Dfast( SceneColorTexture, LocalUV ).rgb * SampleWeight;
+		WeightSum += SampleWeight;
+#else
+
+		//float Weight = sample.x * StepWeight
+		//OutColor += sample * Weight
+		//WeightSum += Weight
+
+		half Weight = tex2Dfast( VelocityBuffer, LocalUV ).r * StepWeight;
+		OutColor += tex2Dfast( SceneColorTexture, LocalUV ).rgb * Weight;
+
+		WeightSum += Weight;
+
+#endif // WITH_ANTI_LEAKING	
+	}
+
+	OutColor /= WeightSum;
+
+	// compute motion strength to fade out motion blur if there is little movement
+	// to see the full resolution source image, tweaked value
+	float MotionStrength = saturate(length(FinalVelocity * MotionBlurMaskScaleAndBias.xy));
+
+	// 0..1 0:0% motionblur , 1:100% motion blur
+	return MotionStrength;
+}

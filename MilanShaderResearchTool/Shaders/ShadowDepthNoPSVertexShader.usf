@@ -1,0 +1,38 @@
+/*=============================================================================
+	ShadowDepthVertexShader.hlsl: Vertex shader for writing shadow depth.
+	Copyright 1998-2007 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+#include "Material.usf"
+#include "VertexFactory.usf"
+
+float4x4 ShadowMatrix;
+// BIOSTART, Peter Woytiuk, Jul-30-2009, NULL shadow depth pixel shader
+////float4x4 ProjectionMatrix;
+// BIOEND, Peter Woytiuk, Jul-30-2009, NULL shadow depth pixel shader
+
+void Main(
+	FVertexFactoryInput FactoryInput,
+// BIOSTART, Peter Woytiuk, Jul-30-2009, NULL shadow depth pixel shader
+	////out FVertexFactoryInterpolants OutInterpolants,
+	////out float4 OutShadowPosition : TEXCOORD7,
+	////out float4 OutPosition : POSITION
+
+	out float4 OutShadowPosition : SV_Position
+// BIOEND, Peter Woytiuk, Jul-30-2009, NULL shadow depth pixel shader
+	)
+{
+// BIOSTART, Peter Woytiuk, Jul-30-2009, NULL shadow depth pixel shader
+	////// BIOSTART - Rob Krajcarski - February 26, 2009 - Partial preport of Epic CL 243897
+	////float4 WorldPosition = VertexFactoryGetWorldPosition(FactoryInput);
+	////OutPosition = MulMatrix(ProjectionMatrix,WorldPosition);
+	////OutShadowPosition = MulMatrix(ShadowMatrix,WorldPosition);
+	////OutInterpolants = VertexFactoryGetInterpolants(FactoryInput);
+	////// BIOEND
+	float4 WorldPosition = VertexFactoryGetWorldPosition(FactoryInput);
+	OutShadowPosition = MulMatrix(ShadowMatrix,WorldPosition);
+	OutShadowPosition.xyw = OutShadowPosition.xyw/OutShadowPosition.w;
+	OutShadowPosition.z = saturate( OutShadowPosition.z );
+// BIOEND, Peter Woytiuk, Jul-30-2009, NULL shadow depth pixel shader
+}

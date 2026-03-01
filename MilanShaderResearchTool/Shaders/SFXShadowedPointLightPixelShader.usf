@@ -1,0 +1,113 @@
+/*=============================================================================
+	SFXShadowedPointLightPixelShader.hlsl: Point light pixel shader which
+	uses a light space shadow map rather then the view space attenuation 
+	map for it's shadowing.
+=============================================================================*/
+
+#define NEEDS_LIGHTMAP_COORDINATE 0
+
+#include "Common.usf"
+#include "Material.usf"
+#include "VertexFactory.usf"
+
+half4 LightColorAndFalloffExponent;
+SAMPLER2D(LightSpaceShadowMap);
+half4 ShadowFilter;
+half4 ShadowTextureRegion;
+// BW_START - Dec 18, 2020 - Chan, Patrick - Add console variable to test capping VSM attenuation
+half MaxVarianceShadowAttenuation;
+// BW_END
+
+static half VSM_Epsilon = ShadowFilter.x;
+static half VSM_Power = ShadowFilter.y;
+
+static half2 VSM_MinTextureCoord = ShadowTextureRegion.xy;
+static half2 VSM_MaxTextureCoord = ShadowTextureRegion.zw;
+
+// Unpack the light color and falloff exponent.
+static half3 LightColor = LightColorAndFalloffExponent.xyz;
+static half FalloffExponent = LightColorAndFalloffExponent.w;
+
+float ShadowAttenuation_VSM( float3 vShadowCoord )
+{
+    float4 vVSM   = tex2D( LightSpaceShadowMap, vShadowCoord.xy );
+    float  fAvgZ  = vVSM.r; // Filtered z
+    float  fAvgZ2 = vVSM.g; // Filtered z-squared
+    float fShadowDepth = vShadowCoord.z;
+
+    // Standard shadow map comparison
+    float p = ( fShadowDepth <= fAvgZ );
+
+    // Use variance shadow mapping to compute the maximum probability that the
+    // pixel is in shadow
+    float variance = ( fAvgZ2 ) - ( fAvgZ * fAvgZ );
+    variance       = min( 1.0f, max( VSM_Epsilon, variance ) );
+    
+    float mean     = fAvgZ;
+    float d        = fShadowDepth - mean;
+    float p_max    = variance / ( variance + d*d );
+
+    // To combat light-bleeding, experiment with raising p_max to some power
+    // (Try values from 0.1 to 100.0, if you like.)
+    return max( p, pow( p_max, VSM_Power ) );
+}
+
+float ProjectShadowMap( float4 LightSpacePos )
+{
+	LightSpacePos.xy = LightSpacePos.xy / LightSpacePos.w;
+	float2 WindowFunction = step( VSM_MinTextureCoord, LightSpacePos.xy ) * step( -VSM_MaxTextureCoord, -LightSpacePos.xy );
+	return all( WindowFunction ) ? ShadowAttenuation_VSM( LightSpacePos.xyz ) : 1.0;
+}
+
+void Main(
+	in FVertexFactoryInterpolants FactoryInterpolants,
+	in half3 TangentLightVector : TEXCOORD4,
+	in half4 WorldLightVector : TEXCOORD5,
+	in half4 OutCameraVectorOrVertexColor : TEXCOORD6,
+	in float4 PixelPosition : TEXCOORD7,
+	in float4 ShadowPos : TEXCOORD8,
+	OPTIONAL_FacingSign
+	OPTIONAL_PixelShaderScreenPosition
+	out half4 OutColor : SV_Target0
+	)
+{
+	FMaterialPixelParameters MaterialParameters = GetMaterialPixelParameters(FactoryInterpolants);
+	CalcMaterialParameters(MaterialParameters,FacingSign,OutCameraVectorOrVertexColor,PixelPosition,TangentLightVector);
+
+	// clip and early out if outside of the light radius or masked
+	OutColor = half4(0,0,0,0);
+	float LightDist = dot(WorldLightVector.xyz,WorldLightVector.xyz);
+	float LightAmount = (1 - LightDist);
+	clip(LightAmount);
+
+#if !PS3 && !SM5_PROFILE
+	// only emit the branch attribute on xbox, D3D platforms have too many restrictions. (tex2D can't be used inside the if)
+	#if XBOX
+		BRANCH
+	#endif
+	if( LightAmount > 0 ) 
+#endif
+	{
+		GetMaterialClipping(MaterialParameters,PixelShaderScreenPosition.xy);
+
+		// BW_START - Dec 18, 2020 - Chan, Patrick - Add console variable to test capping VSM attenuation
+		half3 ShadowAmount = half3(lerp(1.f - MaxVarianceShadowAttenuation, 1.f, ProjectShadowMap(ShadowPos)).xxx);
+		// BW_END
+
+		OutColor.rgb = 
+			GetMaterialPointLightTransfer(GetMaterialDiffuseColor(MaterialParameters),MaterialParameters,WorldLightVector.xyz,FalloffExponent,ShadowAmount,true) *
+			LightColor;
+
+		half Opacity = GetMaterialOpacity(MaterialParameters);
+
+#if MATERIALBLENDING_TRANSLUCENT
+		OutColor.a = Opacity;
+#elif MATERIALBLENDING_ADDITIVE || MATERIALBLENDING_SOFTMASKED
+		OutColor.rgb = OutColor.rgb * Opacity;
+		OutColor.a = 0.0f;
+#else
+		OutColor.a = 0.0f;
+#endif
+	}
+	OutColor = RETURN_COLOR(AccumulateSceneColor(OutColor));
+}

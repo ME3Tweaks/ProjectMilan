@@ -1,0 +1,190 @@
+/*=============================================================================
+	SimpleElementPixelShader.hlsl: Pixel shader for drawing simple elements.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+
+SAMPLER2D( _Texture )
+
+half4 TextureComponentReplicate;
+half4 TextureComponentReplicateAlpha;
+
+// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+void ReplicateRChannel(inout half4 BaseColor)
+// BIOEND
+{
+#if SM5_PROFILE
+	//In DX10, doing a texture lookup from a G8 texture gives float4(value,0,0,0), so we need to replicate it to the other channels.  
+	//On all other platforms, the value is replicated automatically.
+	if(any( (bool4) TextureComponentReplicate))
+	{
+		BaseColor = dot(BaseColor,TextureComponentReplicate);
+	}
+#endif
+	BaseColor.a = dot(BaseColor,TextureComponentReplicateAlpha);
+}
+
+void Main(
+	in float2 TextureCoordinate : TEXCOORD0,
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 Color : TEXCOORD1,
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 BaseColor = tex2Dfast(_Texture,TextureCoordinate);
+	// BIOEND
+	ReplicateRChannel(BaseColor);
+	OutColor = RETURN_COLOR(BaseColor * Color);	
+}
+
+half Gamma;
+
+void GammaMain(
+	in float2 TextureCoordinate : TEXCOORD0,
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 Color : TEXCOORD1,
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	float4 BaseColor = tex2D(_Texture,TextureCoordinate);
+	ReplicateRChannel(BaseColor);
+	OutColor = BaseColor * Color;
+	if( Gamma != 1.0 )
+	{
+		// Gamma correct the output color.
+		// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		OutColor.rgb = pow_unclamped(saturate(OutColor.rgb),Gamma);	
+		// BIOEND
+	}
+	OutColor = RETURN_COLOR(OutColor);
+}
+
+float ClipRef;
+
+void GammaMaskedMain(
+	in float2 TextureCoordinate : TEXCOORD0,
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 Color : TEXCOORD1,
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	float4 BaseColor = tex2D(_Texture,TextureCoordinate);
+	clip(BaseColor.a - ClipRef);
+	ReplicateRChannel(BaseColor);
+	OutColor = BaseColor * Color;
+	if( Gamma != 1.0 )
+	{
+		// Gamma correct the output color.
+		// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		OutColor.rgb = pow_unclamped(saturate(OutColor.rgb),Gamma);	
+		// BIOEND
+	}
+	OutColor = RETURN_COLOR(OutColor);
+}
+
+
+/** the width to smooth the edge the texture */
+float SmoothWidth;
+/** toggles drop shadow rendering */
+bool EnableShadow;
+/** 2d vector specifying the direction of shadow */
+float2 ShadowDirection;
+/** Color of the shadowed pixels */
+// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 ShadowColor;
+// BIOEND
+/** the width to smooth the edge the shadow of the texture */
+float ShadowSmoothWidth;
+/** toggles glow rendering */
+bool EnableGlow;
+/** base color to use for the glow */
+// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 GlowColor;
+// BIOEND
+/** outline glow outer radius */
+float2 GlowOuterRadius;
+/** outline glow inner radius */
+float2 GlowInnerRadius;
+
+/**
+* Distance field rendering of textured tile.
+* Alpha value represents distance to silhouette edge. A value of 0.5 is exactly on the edge.
+*
+* Based on the following paper:
+* http://www.valvesoftware.com/publications/2007/SIGGRAPH2007_AlphaTestedMagnification.pdf
+*/
+void GammaDistanceFieldMain(
+	in float2 TextureCoordinate : TEXCOORD0,
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 Color : TEXCOORD1,
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 BaseTexture = tex2D(_Texture,TextureCoordinate);
+	// BIOEND
+	ReplicateRChannel(BaseTexture);
+	float BaseDist = BaseTexture.a;
+	// smooth range between SmoothWidth texels around edge
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 BaseColor = half4(Color.rgb, smoothstep(0.5-SmoothWidth, 0.5+SmoothWidth, BaseDist));
+	// BIOEND
+	
+	if( EnableShadow )
+	{
+		// sample texture with shadow direction offset
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		half4 ShadowTexture = tex2D(_Texture,TextureCoordinate + ShadowDirection);
+		// BIOEND
+		ReplicateRChannel(ShadowTexture);
+		float ShadowDist = ShadowTexture.a;
+		// smooth range between ShadowSmoothWidth texels around edge
+		float4 ShadowResult = ShadowColor * smoothstep(0.5-ShadowSmoothWidth, 0.5+ShadowSmoothWidth, ShadowDist);
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		BaseColor = half4(lerp(ShadowResult,BaseColor,BaseColor.a));
+		// BIOEND
+	}
+
+// too complex for SM2
+#if !SM2_PROFILE	
+	if (EnableGlow)
+	{
+		// testing glow rendering
+		//GlowOuterRadius = float2(0.3,0.45);
+		//GlowInnerRadius = float2(0.45,0.5);	
+
+		if (BaseDist >= GlowOuterRadius[0] && BaseDist <= GlowInnerRadius[1])
+		{
+			float OutlineFactor=0.0;
+			if (BaseDist <= GlowOuterRadius[1])
+			{
+				OutlineFactor = smoothstep(GlowOuterRadius[0],GlowOuterRadius[1],BaseDist);
+			}
+			else
+			{
+				OutlineFactor = smoothstep(GlowInnerRadius[1],GlowInnerRadius[0],BaseDist);			
+			}
+			BaseColor = lerp(BaseColor,GlowColor,OutlineFactor);
+		}
+	}
+#endif
+ 	
+	clip(BaseColor.a - ClipRef);
+	OutColor = BaseColor;
+	OutColor.a *= Color.a;
+	if( Gamma != 1.0 )
+	{
+		// Gamma correct the output color.
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		OutColor.rgb = pow_unclamped(saturate(OutColor.rgb),Gamma);	
+		// BIOEND
+	}	
+	OutColor = RETURN_COLOR(OutColor);
+}
+

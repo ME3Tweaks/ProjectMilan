@@ -1,0 +1,882 @@
+/*=============================================================================
+	Common.hlsl: Common shader code.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Definitions.usf"
+
+#if ORBIS
+	#define ROW_MAJOR 0
+#else
+	// by default, matrices are row major
+	#define ROW_MAJOR 1
+#endif
+
+#ifdef __ORBIS__
+	#include "Orbis/OrbisCommon.usf"
+#endif
+
+#if   FORCE_RE_Z
+  #define FORCE_Z_MODE		[RE_Z_ATTR]
+#elif FORCE_EARLY_Z
+  #define FORCE_Z_MODE		[earlydepthstencil]
+#else
+  #define FORCE_Z_MODE
+#endif
+
+// BW_START - December 10, 2020 - Chan, Patrick - [JIRA:METR-39898] Allow backface shadows on Characters only
+#if ORBIS
+	#define Infinity intBitsToFloat(0x7F800000)
+#else
+	#define Infinity 1.#INF
+#endif
+// BW_END
+
+#if SM5_PROFILE
+	// In SM5, Textures / Samplers are separate, so define all samplers as textures
+	#define sampler2D Texture2D
+    #define sampler Texture1D
+
+	// Ignore half data types
+	#define half float
+	#define half2 float2
+	#define half3 float3
+	#define half4 float4
+	#define half3x3 float3x3
+
+	// Then, when we declare a texture declare a similarly named sampler
+	#define SAMPLER1D( name ) Texture1D name; SamplerState name##Sampler;
+	#define SAMPLER2D( name ) Texture2D name; SamplerState name##Sampler;
+	#define SAMPLERCUBE( name ) TextureCube name; SamplerState name##Sampler;
+
+	// Needed for material code generation
+	#define SM5ONLYPARAMETER( parameter ) parameter,
+
+	// The array version, uses one sampler for all of them
+	#define SAMPLER2DARRAY( name, count ) Texture2D name[count]; SamplerState name##Sampler[count];
+
+	// SM5 sampling requires passing in the sampler as well as the UV.  The format has also changed
+	// For backwards compatibility we are simply redefining all of these to the SM5 equivalents.
+    #define tex1D( tex, uv ) tex.Sample(tex##Sampler, uv)
+	#define tex2D( tex, uv ) tex.Sample(tex##Sampler, uv)
+	#define tex2Dsamp( tex, samp, uv ) tex.Sample( samp, uv )
+	#define tex1Dlod( tex, uv ) tex.SampleLevel( tex##Sampler, uv.r, uv.w )
+	#define tex2Dlod( tex, uv ) tex.SampleLevel( tex##Sampler, uv.rg, uv.w )
+	#define tex2Dproj( tex, uv ) tex.Sample( tex##Sampler, uv / uv.w )
+	#define tex2Dbias( tex, uv ) tex.SampleBias( tex##Sampler, uv, uv.w )
+	#define tex2Dcmp( tex, uv ) tex.SampleCmp( tex##ComparisonSampler, uv.xy, uv.z )
+	#define texCUBE( tex, uv ) tex.Sample( tex##Sampler, uv )
+	#define texCUBElod( tex, uv ) tex.Sample( tex##Sampler, uv, uv.w )
+
+	#define gatherRed2D( tex, uv) tex.GatherRed( tex##Sampler, uv )
+	#define gatherRed2Doffset( tex, uv, offset ) tex.GatherRed( tex##Sampler, uv, offset )
+
+	#define gatherGreen2D( tex, uv) tex.GatherGreen( tex##Sampler, uv )
+	#define gatherGreen2Doffset( tex, uv, offset ) tex.GatherGreen( tex##Sampler, uv, offset )
+
+	#define gatherBlue2D( tex, uv) tex.GatherBlue( tex##Sampler, uv )
+	#define gatherBlue2Doffset( tex, uv, offset ) tex.GatherBlue( tex##Sampler, uv, offset )
+
+	#define gatherAlpha2D( tex, uv) tex.GatherAlpha( tex##Sampler, uv )
+	#define gatherAlpha2Doffset( tex, uv, offset ) tex.GatherAlpha( tex##Sampler, uv, offset )
+#else
+	#define SAMPLER1D( name ) sampler name;
+	#define SAMPLER2D( name ) sampler2D name;
+	#define SAMPLERCUBE( name ) samplerCUBE name;
+	#define SAMPLER2DARRAY( name, count ) sampler2D name[count];
+	#define tex2Dsamp( tex, samp, uv ) tex2D(tex,uv)
+	#define tex2Dcmp( tex, uv ) tex2D(tex,uv.xy)
+
+	// Needed for material code generation
+	#define SM5ONLYPARAMETER( parameter )
+
+	#define SV_Target0 COLOR0
+	#define SV_Target1 COLOR1
+	#define SV_Target2 COLOR2
+	#define SV_Target3 COLOR3
+	#define SV_Target4 COLOR4
+	#define SV_Target5 COLOR5
+	#define SV_Target6 COLOR6
+	#define SV_Target7 COLOR7
+	#define SV_Position POSITION
+	#define SV_Depth DEPTH
+#endif
+
+#if PS3
+
+	// Tangent space bias
+	#define TangentBias(x)			( (x / 127.5) - 1 )
+	#define TangentNorm(x)			(x / 255.0)
+	
+	// Register keyword in CG. Note no pixel constant registers on PS3!
+	#define VERTEXREGISTER(cx)		: cx
+	#define PIXELREGISTER(cx)
+
+	// On PS3, remap Tangent and Binormal to slot 5 and 6, so they don't overlap texcoord 6 and 7
+	#define TANGENT					ATTR5
+	#define BINORMAL				ATTR6
+
+	// Input semantic for pixel shaders to get the screenspace pixel position (window position)
+	#define VPOS					WPOS
+	#define VFACE					FACE
+
+	// The PS3 reads our FColor values as ARGB; GBAR swizzles the components into the right order.
+	#define FCOLOR_COMPONENT_SWIZZLE .gbar
+
+#elif SM5_PROFILE
+
+	// Tangent space bias
+	#define TangentBias(x)			( (x * 2) - 1 )
+	#define TangentNorm(x)			(x)
+
+	#define TANGENTTOWORLD0			TEXCOORD10
+	#define TANGENTTOWORLD2			TEXCOORD11
+	
+	// Register keyword in HLSL 4.0
+	#define VERTEXREGISTER(cx)
+	#define PIXELREGISTER(cx)
+	#define COMPUTEREGISTER(cx)
+
+	// D3D10 vertex declarations read our FColor values as BGRA, so they need to be reversed.
+	#define FCOLOR_COMPONENT_SWIZZLE .bgra
+
+#else
+
+	// Tangent space bias
+	#define TangentBias(x)			( (x / 127.5) - 1 )
+	#define TangentNorm(x)			(x / 255.0)
+
+	// Note that in SM2 COLOR0 and COLOR1 are fixed point and clamped to [0,1]
+	#define TANGENTTOWORLD0			COLOR0
+	#define TANGENTTOWORLD2			COLOR1
+
+	// Register keyword in HLSL
+	#define VERTEXREGISTER(cx)		: register(cx)
+	#define PIXELREGISTER(cx)		: register(cx)
+
+	#define FCOLOR_COMPONENT_SWIZZLE .rgba
+#endif
+
+
+#if PS3
+	// Potentially normalizes and remaps a vector to [0,1] range, to fit in a COLOR interpolator.
+	float3	PackColor3( float3 UnpackedVector )
+	{
+		return normalize(UnpackedVector)*0.5f + 0.5f;
+	}
+	// Potentially normalizes and remaps a vector to [0,1] range, to fit in a COLOR interpolator.
+	float4	PackColor4( float4 UnpackedVector )
+	{
+		float4 PackedVector;
+		PackedVector.xyz = normalize(UnpackedVector.xyz);
+		PackedVector.w = UnpackedVector.w;
+		return PackedVector*0.5f + 0.5f;
+	}
+	// Potentially remaps a vector from [0,1] to [-1,+1] range, to unpack a vector from a COLOR interpolator.
+	half3	UnpackColor3( half3 PackedVector )
+	{
+		return PackedVector*2.0f - 1.0f;
+	}
+	// Potentially remaps a vector from [0,1] to [-1,+1] range, to unpack a vector from a COLOR interpolator.
+	half4	UnpackColor4( half4 PackedVector )
+	{
+		return PackedVector*2.0f - 1.0f;
+	}
+#elif SM2_PROFILE
+	// Potentially normalizes and remaps a vector to [0,1] range, to fit in a COLOR interpolator.
+	float3	PackColor3( float3 UnpackedVector )
+	{
+		return UnpackedVector*0.5f + 0.5f;
+	}
+	// Potentially normalizes and remaps a vector to [0,1] range, to fit in a COLOR interpolator.
+	float4	PackColor4( float4 UnpackedVector )
+	{
+		return UnpackedVector*0.5f + 0.5f;
+	}
+	// Potentially remaps a vector from [0,1] to [-1,+1] range, to unpack a vector from a COLOR interpolator.
+	half3	UnpackColor3( half3 PackedVector )
+	{
+		return PackedVector*2.0f - 1.0f;
+	}
+	// Potentially remaps a vector from [0,1] to [-1,+1] range, to unpack a vector from a COLOR interpolator.
+	half4	UnpackColor4( half4 PackedVector )
+	{
+		return PackedVector*2.0f - 1.0f;
+	}
+#else
+	// Potentially normalizes and remaps a vector to [0,1] range, to fit in a COLOR interpolator.
+	float3	PackColor3( float3 UnpackedVector )
+	{
+		return UnpackedVector;
+	}
+	// Potentially normalizes and remaps a vector to [0,1] range, to fit in a COLOR interpolator.
+	float4	PackColor4( float4 UnpackedVector )
+	{
+		return UnpackedVector;
+	}
+	// Potentially remaps a vector from [0,1] to [-1,+1] range, to unpack a vector from a COLOR interpolator.
+	half3	UnpackColor3( half3 PackedVector )
+	{
+		return PackedVector;
+	}
+	// Potentially remaps a vector from [0,1] to [-1,+1] range, to unpack a vector from a COLOR interpolator.
+	half4	UnpackColor4( half4 PackedVector )
+	{
+		return PackedVector;
+	}
+#endif
+
+// BIOSTART - October 21, 2010 - Wihlidal, Graham - Epic PrePort CL # 661000 - Fixed #TTP 160394 "QA Regression: PS3: Some maps have black pixelated artifacting."
+float UnClampedPow(float X, float Y)
+{
+	return pow(X, Y);
+}
+float2 UnClampedPow(float2 X, float2 Y)
+{
+	return pow(X, Y);
+}
+float3 UnClampedPow(float3 X, float3 Y)
+{
+	return pow(X, Y);
+}
+float4 UnClampedPow(float4 X, float4 Y)
+{
+	return pow(X, Y);
+}
+// BIOEND
+	// Clamp the base, so it's never <= 0.0f (INF/NaN).
+	float ClampedPow(float X,float Y)
+	{
+		return pow(max(abs(X),0.0001f),Y);
+	}
+	float2 ClampedPow(float2 X,float2 Y)
+	{
+		return pow(max(abs(X),float2(0.0001f,0.0001f)),Y);
+	}
+	float3 ClampedPow(float3 X,float3 Y)
+	{
+		return pow(max(abs(X),float3(0.0001f,0.0001f,0.0001f)),Y);
+	}
+	float4 ClampedPow(float4 X,float4 Y)
+	{
+		return pow(max(abs(X),float4(0.0001f,0.0001f,0.0001f,0.0001f)),Y);
+	}
+	#define pow(x,y)				ClampedPow(x,y)
+
+
+#if PS3
+	// When multiplying with a matrix that is passed in externally through a matrix parameter, you MUST use MulMatrix.
+	// When multiplying by a generated matrix (float3x3(VecA, VecB, VecC)), you MUST use mul
+	// Note that MulMatrix also works for multiplying vector by matrix (transforming by transposed matrix), e.g. MulMatrix( Vect, Mtx ).
+	#define MulMatrix(Mtx, Vect)	mul(Vect, Mtx)
+	#define MulBone(Mtx, Vect)		mul(Mtx, Vect)
+	
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	// No clamping, you must make sure that x >= 0 and y > 0
+	#define pow_unclamped(x,y)		UnClampedPow( (x), (y) )
+	
+	// Return half values when doing texture fetch
+	#define tex2Dfast				h4tex2D
+	// BIOEND
+	
+	// Clamp the base, so it's never <= 0.0f on PS3 (INF/NaN).
+	#define pow(x,y)				pow( max(abs(x), 0.000001f), (y) )
+
+#else
+	#define MulMatrix(Mtx, Vect)	mul(Mtx, Vect)
+	#define MulBone(Mtx, Vect)		mul(Vect, Mtx)
+
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	#define pow_unclamped(x,y)		UnClampedPow(x,y)
+	#define tex2Dfast				tex2D
+	// BIOEND
+	
+	#define pow(x,y)				ClampedPow(x,y)
+
+	// It's necessary to use these whenever you're reading a depth value from a depth texture
+    #define texDepth2D				tex2D
+	#define texDepth2Dlod			tex2Dlod
+	#define texDepth2Dproj			tex2Dproj
+#endif
+	
+#if !SM5_PROFILE
+	// SM5 is the only platform that natively supports uints in shaders; we just use floats on other platforms.
+	#define uint4	float4
+#endif
+
+#if !VERTEXSHADER
+	#undef VERTEXREGISTER
+	#define VERTEXREGISTER(cx)
+#endif
+
+#if !PIXELSHADER
+	#undef PIXELREGISTER
+	#define PIXELREGISTER(cx)
+#endif
+
+// Pixel and vertex shader constant registers that are reserved by the Engine.
+// ----------------------------------------------------------------------------------------
+// These #defines must match the enums EPixelShaderRegisters and EVertexShaderRegister
+// as they are defined in RHI.h.
+#define PSR_ColorBiasFactor			c0	// Factor applied to the color output from the pixelshader
+#define PSR_ScreenPositionScaleBias	c1	// Converts projection-space XY coordinates to texture-space UV coordinates
+#define PSR_MinZ_MaxZ_Ratio			c2	// Converts device Z values to clip-space W values
+#define PSR_DynamicScale			c3	// Dynamic Resolution Scale (used to scale dynamically down res'd viewports UVs to Full)
+#define VSR_ViewProjMatrix			c0	// View-projection matrix, transforming from World space to Projection space
+#define VSR_ViewOrigin				c4	// World space position of the camera
+#define VSR_PreViewTranslation		c5	// Offset applied to LocalToWorld to reduce precision problems far from the world space origin
+
+#if SM5_PROFILE
+
+	// Warning: The register offsets MUST match what is defined in D3D11ConstantBuffer.h!
+	cbuffer VSOffsetConstants : register(b1)
+	{
+		float4x4	ViewProjectionMatrix	VERTEXREGISTER(VSR_ViewProjMatrix);
+		float4		CameraPosition			VERTEXREGISTER(VSR_ViewOrigin);
+		float4		PreViewTranslation		VERTEXREGISTER(VSR_PreViewTranslation);
+	};
+	cbuffer PSOffsetConstants : register(b2)
+	{
+		// Converts projection-space XY coordinates to texture-space UV coordinates
+		float4		ScreenPositionScaleBias	PIXELREGISTER(PSR_ScreenPositionScaleBias);
+		float4	    MinZ_MaxZRatio			PIXELREGISTER(PSR_MinZ_MaxZ_Ratio);
+		float4		DynamicScale			PIXELREGISTER(PSR_DynamicScale);
+	};
+  #if COMPUTESHADER
+	cbuffer CSOffsetConstants : register(b2)
+	{
+		float4x4	ViewProjectionMatrixCS;
+		float4		CameraPositionCS;
+
+		// Converts projection-space XY coordinates to texture-space UV coordinates
+		float4		ScreenPositionScaleBiasCS;
+		float4	    MinZ_MaxZRatioCS;
+		float4		DynamicScaleCS;
+	};
+  #endif
+#else
+	float4x4	ViewProjectionMatrix		VERTEXREGISTER(VSR_ViewProjMatrix);
+	float4		CameraPosition				VERTEXREGISTER(VSR_ViewOrigin);
+	float4		PreViewTranslation			VERTEXREGISTER(VSR_PreViewTranslation);
+
+	// Converts projection-space XY coordinates to texture-space UV coordinates
+	float4		ScreenPositionScaleBias		PIXELREGISTER(PSR_ScreenPositionScaleBias);
+	float4	    MinZ_MaxZRatio				PIXELREGISTER(PSR_MinZ_MaxZ_Ratio);
+	float4		DynamicScale			PIXELREGISTER(PSR_DynamicScale);
+#endif
+
+#if XBOX
+	// The x component is set to 1 when rendering to an LDR buffer, otherwise 2^SCENE_COLOR_BIAS_FACTOR_EXP (See XeD3DRenderTarget.cpp)
+	float4	SCENE_COLOR_BIAS_FACTOR			PIXELREGISTER(PSR_ColorBiasFactor);
+#else
+	#define SCENE_COLOR_BIAS_FACTOR			1.0f
+#endif
+
+#if MATERIAL_TWOSIDED
+	// For two sided surfaces, this is the sign that should be applied to the normal.
+	// In SM2, the surfaces are drawn twice with opposite signs.
+	// In all other profiles, the surfaces are only drawn once without backface culling, and VFACE
+	// is used to determine which side is being drawn.  TwoSidedSign still contains useful information
+	// about whether the model is flipped in that case.
+	half TwoSidedSign;
+#endif
+
+SAMPLER2D(SceneDepthTexture)
+SAMPLER2D(SceneColorTexture)
+SAMPLER2D(LightAttenuationTexture)
+
+
+#if MATERIAL_LIGHTINGCURVE
+SAMPLER2D(LightCurveTexture)
+#endif // MATERIAL_LIGHTINGCURVE
+
+// ----------------------------------------------------------------------------------------
+
+#if XBOX
+	float4 BiasColor( float4 Color )
+	{
+		return float4( Color.rgb * SCENE_COLOR_BIAS_FACTOR.x, Color.a );
+	}
+	// RETURN_COLOR should only be used when rendering to the SceneColor surface
+	#define RETURN_COLOR( Color ) BiasColor( Color );
+#else
+	// We don't use an inline function so we can avoid type promotion/ coercion.
+	#define RETURN_COLOR( Color ) ( Color )
+#endif
+
+//the largest value any color component is allowed to have, scene color is clamped to this in DOFAndBloomGatherPixelShader.usf
+//also used to pack color into the fixed point filter buffer, which requires a range of [0-1]
+#define MAX_SCENE_COLOR 4.0f
+
+float Square(float A)
+{
+	return A * A;
+}
+
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 ExpandRGBE( half4 RGBE )
+{
+	return float4( ldexp( RGBE.xyz, half(255.0) * RGBE.w - half(128.0) ), 1.0 );
+}
+// BIOEND
+
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 ExpandCompressedRGBE( float4 RGBE )
+{
+	return half4( ldexp( RGBE.xyz, half(255.0) / 16.0 * RGBE.w - half(8.0) ), 1.0 );
+}
+// BIOEND
+
+// BW_START - Leonardo Benaducci - September 15th - Added WrapLightingCoefficients to simulate subsurface scattering
+half3 PointLightPhong(half3 DiffuseColor,half DiffusePower,half3 TransmissionMask,half3 SpecularColor,half SpecularPower, half3 L, float3 E, half3 N, float3 R, half3 WrapLightingCoeff = half3(0,0,0))
+// BW_END
+{
+	// BIOSTART - October 21, 2010 - Wihlidal, Graham - Epic PrePort CL # 661000 - Fixed #TTP 160394 "QA Regression: PS3: Some maps have black pixelated artifacting."
+	// BW_START - Leonardo Benaducci - September 15th - Added WrapLightingCoefficients to simulate subsurface scattering
+	half3	DiffuseLighting = ClampedPow(saturate((dot(N,L) + WrapLightingCoeff) / (1.h + WrapLightingCoeff)),DiffusePower);
+	// BW_END
+	// BIOEND
+#ifndef DISABLE_DYNAMIC_SPECULAR
+	// BIOSTART - October 21, 2010 - Wihlidal, Graham - Epic PrePort CL # 661000 - Fixed #TTP 160394 "QA Regression: PS3: Some maps have black pixelated artifacting."
+	half3	SpecularLighting = ClampedPow(saturate(dot(R,L)),SpecularPower);
+	// BIOEND
+#else
+	half3	SpecularLighting = half3(0.0f, 0.0f, 0.0f);
+#endif
+
+	// Only apply transmission to diffuse, not specular
+	return DiffuseColor * lerp(DiffuseLighting, TransmissionMask, TransmissionMask) + SpecularLighting * SpecularColor;
+}
+
+float3 PointLightAnisotropic(half3 DiffuseColor,half3 TransmissionMask,half3 SpecularColor,half SpecularPower, half3 L, float3 E, half3 N, float3 R, half3 T)
+{
+	// from http://ati.amd.com/developer/shaderx/ShaderX_PerPixelAniso.pdf
+	half3	DiffuseLighting = sqrt(1.0-Square(dot(L,T)));
+	half3	VdotR = sqrt(1.0-Square(dot(L,T))) * sqrt(1.0-Square(dot(E,T))) - dot(L,T) * dot(E,T);
+#ifndef DISABLE_DYNAMIC_SPECULAR
+	// BIOSTART - October 21, 2010 - Wihlidal, Graham - Epic PrePort CL # 661000 - Fixed #TTP 160394 "QA Regression: PS3: Some maps have black pixelated artifacting."
+	half3	SpecularLighting = ClampedPow(saturate(VdotR),SpecularPower);
+	// BIOEND
+#else
+	half3	SpecularLighting = half3(0.0f, 0.0f, 0.0f);
+#endif
+			
+	// We attenuate the diffuse and specular on the side facing away from the light
+	// because otherwise we get horrible hard edges at the shadow map edge.
+	half	DiffuseAttenuation = saturate(dot(N,L));
+	// BIOSTART - October 21, 2010 - Wihlidal, Graham - Epic PrePort CL # 661000 - Fixed #TTP 160394 "QA Regression: PS3: Some maps have black pixelated artifacting."
+	half	SpecularAttenuation = ClampedPow(saturate(dot(N,L)), 0.3);
+	// BIOEND
+
+	// Only apply transmission to diffuse, not specular
+	return DiffuseColor * lerp(DiffuseAttenuation * DiffuseLighting, TransmissionMask, TransmissionMask) + SpecularAttenuation * SpecularLighting * SpecularColor;
+}
+
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 PreviousLighting(float4 ScreenPosition)
+{
+	return tex2Dfast(SceneColorTexture,ScreenPosition.xy / ScreenPosition.w * ScreenPositionScaleBias.xy + ScreenPositionScaleBias.wz);
+}
+// BIOEND
+
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half RadialAttenuation(float3 WorldLightVector,half FalloffExponent)
+{
+	return pow(
+		saturate(half(1.0) - dot(WorldLightVector,WorldLightVector)),
+		FalloffExponent
+		);
+}
+// BIOEND
+
+half4 GetLightAttenuation(float4 ScreenPosition)
+{
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	return tex2Dfast(LightAttenuationTexture, ScreenPosition.xy / ScreenPosition.w * ScreenPositionScaleBias.xy + ScreenPositionScaleBias.wz);
+	// BIOEND
+}
+
+/** return the scene lighting texture */
+half3 CalcSceneColor(float2 ScreenUV)
+{
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	return tex2Dfast(SceneColorTexture,ScreenUV).rgb;
+	// BIOEND
+}
+half3 CalcScaledSceneColor(float2 ScreenUV)
+{
+	return tex2D(SceneColorTexture, (ScreenUV * DynamicScale.xy)).rgb;
+}
+/** return all channels of the scene lighting texture */
+half4 CalcFullSceneColor(float2 ScreenUV)
+{
+      return tex2D(SceneColorTexture,ScreenUV);
+}
+
+half ConvertFromDeviceZ(half DeviceZ)
+{
+	//bsg-pghiocel - 2/26/2018 - Had to add max clamp as it was causing an issue where if the DeviceZ was 1.0f, it would cause bad calculation
+  #if COMPUTESHADER
+	return 1.f / max(DeviceZ * MinZ_MaxZRatioCS[2] - MinZ_MaxZRatioCS[3], 0.0000001f);
+  #else
+	return 1.f / max(DeviceZ * MinZ_MaxZRatio[2] - MinZ_MaxZRatio[3], 0.0000001f);
+  #endif
+	//bsg-pghiocel - 2/26/2018 - end
+
+}
+
+/** Encodes the W coordinate of a pixel for storage in floating point. */
+half EncodeFloatW(float W)
+{
+	#if SUPPORTS_DEPTH_TEXTURES
+		return 0;
+	#else
+		float DepthAdd = MinZ_MaxZRatio[0];
+		float DepthMul = MinZ_MaxZRatio[1];
+		return DepthMul + DepthAdd / W;
+	#endif
+}
+
+// ME3START - Rob Krajcarski - March 29, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+/** return the depth */
+half GetSceneDeviceZ( float2 ScreenUV )
+{
+#if SUPPORTS_DEPTH_TEXTURES
+	/** return the depth value stored in the depth buffer - but convert it to w first */
+	// get depth buffer z value
+	return texDepth2D(SceneDepthTexture, ScreenUV).r;
+#elif SM2_PROFILE
+	/** return the depth value stored in lighting target's alpha */
+	// depth stored in alpha
+	return tex2D(SceneDepthTexture, ScreenUV).a;
+#else
+	/** return the depth value stored in lighting target's alpha */
+	// depth stored in alpha
+	// clamp to fp 16 max to avoid INF on Geforce 6, 7 and RSX
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	//return min(tex2D(SceneColorTexture, ScreenUV).a, 65503.0f);
+	return min(tex2Dfast(SceneColorTexture,ScreenUV).a, 65504.0f);
+	// BIOEND
+#endif
+}
+	
+/** return the world space converted depth */
+half CalcSceneDepth( float2 ScreenUV )
+{
+	return ConvertFromDeviceZ(GetSceneDeviceZ(ScreenUV));
+}
+
+float CalcScaledSceneDepth( float2 ScreenUV )
+{
+	// get depth buffer z value
+	half DeviceZ = GetSceneDeviceZ(ScreenUV * DynamicScale.xy);
+
+	// convert it to clip space w
+	return ConvertFromDeviceZ(DeviceZ);
+}
+
+// #if SUPPORTS_DEPTH_TEXTURES
+// 
+// 	/** return the depth value stored in the depth buffer - but convert it to w first */
+// 	half CalcSceneDepth( float2 ScreenUV )
+// 	{
+// 		// get depth buffer z value
+// 		half DeviceZ = texDepth2D(SceneDepthTexture,ScreenUV).r;
+// 
+// 		// convert it to clip space w
+// 		return ConvertFromDeviceZ(DeviceZ);
+// 	}
+// 
+// #elif SM2_PROFILE
+// 
+// 	/** return the depth value stored in lighting target's alpha */
+// 	half CalcSceneDepth( float2 ScreenUV )
+// 	{
+// 		// depth stored in alpha
+// 		return ConvertFromDeviceZ(tex2D(SceneDepthTexture,ScreenUV).a);
+// 	}
+// 
+// #else
+// 
+// 	/** return the depth value stored in lighting target's alpha */
+// 	half CalcSceneDepth( float2 ScreenUV )
+// 	{
+// 		// depth stored in alpha
+// 		// clamp to fp 16 max to avoid INF on Geforce 6, 7 and RSX
+// 		// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+// 		return ConvertFromDeviceZ(min(tex2Dfast(SceneColorTexture,ScreenUV).a, 65503.0f));
+// 		// BIOEND
+// 	}
+// 
+// #endif
+// ME3END
+
+/**
+* Returns scene color in rgb, depth in a
+*/
+half4 CalcSceneColorAndDepth( float2 ScreenUV )
+{
+	return half4(CalcSceneColor(ScreenUV), CalcSceneDepth(ScreenUV));
+}
+
+half4 CalcScaledSceneColorAndDepth( float2 ScreenUV )
+{
+	return half4(CalcScaledSceneColor(ScreenUV), CalcScaledSceneDepth(ScreenUV));
+}
+
+#if SM2_PROFILE
+	/**
+	* Used to output a scale value based on scene color luminance when additively blending.
+	*/
+	half4 AccumulateSceneColor(half4 InSceneColor)
+	{
+		// Tweakable luminance scale
+		const half SceneColorAccumulationFactor = 0.1f;
+		const half MaxLuminanceScale = 0.1f;
+		const half3 LuminanceWeights = half3(.3f, .59f, .11f) * SceneColorAccumulationFactor;
+		half ScaledLuminance = clamp(dot(InSceneColor.rgb, LuminanceWeights), 0.0f, MaxLuminanceScale);
+		return half4(InSceneColor.rgb, ScaledLuminance * ScaledLuminance);
+	}
+#else
+	half4 AccumulateSceneColor(half4 InSceneColor)
+	{
+		return InSceneColor;
+	}
+#endif
+
+half PreviousDepth(float4 ScreenPosition)
+{
+	return CalcSceneDepth(ScreenPosition.xy / ScreenPosition.w * ScreenPositionScaleBias.xy + ScreenPositionScaleBias.wz);
+}
+
+#if PS3
+	half PreviousDepthForShadows(float4 ScreenPosition)
+	{
+		float2 ScreenUV = ScreenPosition.xy / ScreenPosition.w * ScreenPositionScaleBias.xy + ScreenPositionScaleBias.wz;
+
+		// get depth buffer z value
+		half DeviceZ = texDepth2D(SceneDepthTexture,ScreenUV).r;
+
+		// convert it to clip space w
+		return ConvertFromDeviceZ(DeviceZ);
+	}
+#else
+	half PreviousDepthForShadows(float4 ScreenPosition)
+	{
+		return PreviousDepth(ScreenPosition);
+	}
+#endif
+
+/** 
+ * aligns the clip space position so that it can be used as a texture coordinate
+ * to properly align in screen space
+ */
+float4 ScreenAlignedPosition( float4 ScreenPosition )
+{
+	return float4(ScreenPosition.xy / ScreenPosition.w * ScreenPositionScaleBias.xy + ScreenPositionScaleBias.wz, ScreenPosition.z/ScreenPosition.w,1);
+}
+
+/** 
+ * Aligns the [0,1] UV to match the view within the backbuffer
+ */
+half2 ScreenAlignedUV( half2 UV )
+{
+  #if COMPUTESHADER
+	return (UV*half2(2,-2) + half2(-1,1))*ScreenPositionScaleBiasCS.xy + ScreenPositionScaleBiasCS.wz;
+  #else
+	return (UV*half2(2,-2) + half2(-1,1))*ScreenPositionScaleBias.xy + ScreenPositionScaleBias.wz;
+  #endif
+}
+
+/**
+ * Calculate the normal Z component from X and Y
+ */
+float4 NormalCalcZ( float4 Normal )
+{
+	// BW_START - Fawcett, Matthew - 2020.02.12 - Need to ensure the dot product here doesnt go above 1.0 so we dont get NaNs - some content has normal maps that are not normalized
+	return float4( Normal.xy, sqrt(1.0 - min(dot(Normal.xy,Normal.xy),1.0)), 1 );
+	// BW_END
+}
+ 
+/*
+ * Bias the normal sampled from a texture to the range of (-1..1, -1..1, -1..1, 0..1)
+ */
+float4 BiasNormalMap( float4 Normal )
+{
+	return Normal * float4(2.f,2.f,2.f,1.f) - float4(1.f,1.f,1.f,0.f);
+}
+
+#if PS3
+
+float4 BiasNormalizeNormalMap_DXT1( float4 Normal ) { return Normal; }
+float4 BiasNormalizeNormalMap_DXT5( float4 Normal ) { return BiasNormalMap(Normal); }
+float4 BiasNormalizeNormalMap_V8U8( float4 Normal ) { return NormalCalcZ(Normal); }
+
+#elif XBOX
+
+// these cause problems with the Xbox shader compiler so we use a #define instead.
+/*
+float4 BiasNormalizeNormalMap_DXT1( float4 Normal ) { return BiasNormalMap(Normal); }
+float4 BiasNormalizeNormalMap_DXT5( float4 Normal ) { return BiasNormalMap(Normal); }
+float4 BiasNormalizeNormalMap_V8U8( float4 Normal ) { return NormalCalcZ(Normal); }
+float4 BiasNormalizeNormalMap_BC5( float4 Normal ) { return NormalCalcZ(BiasNormalMap(Normal)); }
+*/
+
+#define NORMALCALCZ(Normal) (float4((Normal).xy, sqrt(1.f - dot((Normal).xy,(Normal).xy)), 1.f))
+#define BIASNORMALMAP(Normal) ((Normal) * float4(2.f,2.f,2.f,1.f) - float4(1.f,1.f,1.f,0.f))
+
+#define BiasNormalizeNormalMap_DXT1(Normal) BIASNORMALMAP(Normal)
+#define BiasNormalizeNormalMap_DXT5(Normal) BIASNORMALMAP(Normal)
+#define BiasNormalizeNormalMap_V8U8(Normal) NORMALCALCZ(Normal)
+#define BiasNormalizeNormalMap_BC5(Normal) NORMALCALCZ(BIASNORMALMAP(Normal))
+
+#else
+
+float4 BiasNormalizeNormalMap_DXT1( float4 Normal ) { return BiasNormalMap(Normal); }
+float4 BiasNormalizeNormalMap_DXT5( float4 Normal ) { return BiasNormalMap(Normal); }
+float4 BiasNormalizeNormalMap_V8U8( float4 Normal ) { return NormalCalcZ(Normal); }
+float4 BiasNormalizeNormalMap_BC5( float4 Normal ) { return NormalCalcZ(BiasNormalMap(Normal)); }
+float4 BiasNormalizeNormalMap_BC7( float4 Normal ) { return BiasNormalMap(Normal); }
+
+#endif
+
+// Antialiased version of a binary comparison between ThresholdConst and a texture channel.
+// BW_START - Leonardo Benaducci - October 21, 2020 - Added Sampler as a parameter to fix flickering objects issues
+float AntialiasedTextureMask( sampler2D Tex, SamplerState Sampler, float2 UV, float ThresholdConst, int Channel )
+// BW_END
+{
+	// By setting MaskConst to 0001, 0010, 0100 or 1000 individual channels can be chosen (the compiler should be able to optimize that).
+	half4 MaskConst = half4(Channel == 0, Channel == 1, Channel == 2, Channel == 3);
+
+	// border width in pixels, for antialiasing 1 .. 1.5 is good but 1.0 is good for optimizations 
+	const float WidthConst = 1.0f;			
+	float InvWidthConst = 1 / WidthConst;
+
+	// Problem:
+
+	// A simple texture lookup with a comparison against some thresold value allows to get a mask useful
+	// for many purposes (e.g. text rendering, signs, oil/water/paint). Antialiased masks look much better
+	// and mip mapping provides that but only for minification. So when the texture resolution is lower than
+	// the rendering size results get blurry.
+
+	// Idea:
+
+	// We compute the distance to the threshold line in pixels (with subpixel precision). We can visualize
+	// the problem as a heightmap that intersects a axis aligned plane at the threshold height. Only surface
+	// above the threshold plane contributes to the mask. Looking at one pixel the heightmap can be approximated
+	// by a plane. We can easily get the plane center value form a texture lookup and get the plane equation from
+	// ddx and ddy of that value (only one value per 2x2 block) or some other more precise method. We can reduce the
+	// 3d problem to 2d (looking at the steepest angle only) and the resulting value tells us how much the texture value
+	// changes for one pixel. This allows us to scale and bias (threshold) the texture value the so it maps to the
+	// distance function. We rescaling the distance to 0.5 coverage at the line, >1 half a pixel inside and <0 half
+	// a pixel outside. Clamping this value in the range from 0..1 gives us a good approximation of the pixel coverage.
+
+	// We tried multiple possible implementations - this is the cheapest and looks ok is most cases.
+	// If quality improvements are needed we can add an option to the node later on.
+	float Result;
+	{
+		// optimized, ddx/ddy only for every 2x2 block (bad for distant stuff)
+		// BW_START - Leonardo Benaducci - October 21, 2020 - Added Sampler as a parameter to fix flickering objects issues
+		float Sample1 = dot(MaskConst, tex2Dsamp(Tex, Sampler, UV));
+		//BW_END
+
+		// compute the derivatives of the texture content
+		float2 TexDD = float2(ddx(Sample1), ddy(Sample1));
+
+		float TexDDLength = max(abs(TexDD.x), abs(TexDD.y)); 
+		float Top = InvWidthConst * (Sample1 - ThresholdConst);
+		Result = Top / TexDDLength + ThresholdConst;
+	}
+
+	Result = saturate(Result);	// no always needed (e.g. DX9 framebuffer blending)
+
+	return Result;
+}
+
+// ME3START - Rob Krajcarski - December 7, 2011 - Moved gamma->linear conversion to the shader on Xbox360
+// the following in a more accurate representation of pow_unclamped( Input, 2.2 );
+half3 SFXConvert_sRGB_Linear_Full( half3 Input )
+{
+	half3 LowRange = Input / 12.92;
+	half3 UpperRange = pow_unclamped( ( Input + 0.055 ) / 1.055, 2.4 );
+
+	return lerp( LowRange, UpperRange, ceil( Input - 0.04045 ) );
+}
+
+half3 SFXConvert_Linear_sRGB_Full( half3 Input )
+{
+	half3 LowRange = Input * 12.92;
+	half3 UpperRange = 1.055 * pow_unclamped( Input, 1.0/2.4 ) - 0.055;
+
+	return lerp( LowRange, UpperRange, ceil( Input - 0.0031308 ) );
+}
+
+half3 SFXConvert_sRGB_Linear_Default( half3 Input )
+{
+	return pow_unclamped( Input, 2.2 );
+}
+
+half3 SFXConvert_Linear_sRGB_Default( half3 Input )
+{
+	return pow_unclamped( Input, 1.0/2.2 );
+}
+
+half3 SFXConvert_sRGB_Linear_Cheap( half3 Input )
+{
+	return Input*Input;
+}
+
+half3 SFXConvert_Linear_sRGB_Cheap( half3 Input )
+{
+	return sqrt( Input );
+}
+
+half4 SFXConvert_sRGB_Linear_Full( half4 Input )
+{
+	return half4( SFXConvert_sRGB_Linear_Full( Input.rgb ), Input.a );
+}
+
+half4 SFXConvert_Linear_sRGB_Full( half4 Input )
+{
+	return half4( SFXConvert_Linear_sRGB_Full( Input.rgb ), Input.a );
+}
+
+half4 SFXConvert_sRGB_Linear_Default( half4 Input )
+{
+	return half4( SFXConvert_sRGB_Linear_Default( Input.rgb ), Input.a );
+}
+
+half4 SFXConvert_Linear_sRGB_Default( half4 Input )
+{
+	return half4( SFXConvert_Linear_sRGB_Default( Input.rgb ), Input.a );
+}
+
+half4 SFXConvert_sRGB_Linear_Cheap( half4 Input )
+{
+	return half4( SFXConvert_sRGB_Linear_Cheap( Input.rgb ), Input.a );
+}
+
+half4 SFXConvert_Linear_sRGB_Cheap( half4 Input )
+{
+	return half4( SFXConvert_Linear_sRGB_Cheap( Input.rgb ), Input.a );
+}
+
+half3 SFXConvert_sRGB_Linear( half3 Input )
+{
+#if USE_SRGB_LINEAR_QUALITY_DEFAULT
+	return SFXConvert_sRGB_Linear_Default( Input );
+#elif USE_SRGB_LINEAR_QUALITY_HIGH
+	return SFXConvert_sRGB_Linear_Full( Input );
+#elif USE_SRGB_LINEAR_QUALITY_LOW
+	return SFXConvert_sRGB_Linear_Cheap( Input );
+#else
+	return Input;
+#endif
+}
+
+half4 SFXConvert_sRGB_Linear( half4 Input )
+{
+	return half4( SFXConvert_sRGB_Linear( Input.rgb ), Input.a );
+}
+
+// ME3END

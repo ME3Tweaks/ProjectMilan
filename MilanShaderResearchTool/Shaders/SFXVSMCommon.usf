@@ -1,0 +1,58 @@
+/*!
+  @file    SFXVSMCommon.usf
+
+  Copyright (c) 2010 BioWare ULC
+
+  The source code included in this file is confidential,
+  secret, or proprietary information of BioWare ULC. It
+  may not be used in whole or in part without express
+  written permission from BioWare ULC.
+
+  Some common functions that are used within the VSM shadow implementation
+
+  @author  Rob Krajcarski
+  @date    August 16, 2010
+*/
+
+#if PS3
+
+/** 
+ * Reads a 4-component (ubyte) value (i.e one packed into A8R8G8B8) and retrieves
+ * 2 half floats.
+ */
+half2 DecodeComponent( half4 inColour )
+{
+	float fPackedComponents = pack_4ubyte(inColour);
+    half2 hComponents = unpack_2half(fPackedComponents);
+    return hComponents;
+}
+
+/** 
+ * Writes a 4-component (ubyte) value (i.e one packed into A8R8G8B8) given 2 half floats
+ */
+half4 EncodeComponent( half2 inComponents)
+{
+    float fPackedComponents = pack_2half(inComponents);
+    half4 hColours = unpack_4ubyte(fPackedComponents);
+    return hColours.bgra;
+}
+
+#else // PS3
+
+/** 
+ * Simple pass through implementation
+ */
+half2 DecodeComponent( half4 inColour )
+{
+	return inColour.xy;
+}
+
+/** 
+ * Simple pass through implementation
+ */
+half4 EncodeComponent( half2 inValue)
+{
+	return half4( inValue, 0.0, 0.0 );
+}
+
+#endif // PS3

@@ -1,0 +1,120 @@
+#include "Common.usf"
+#include "HDRCommon.usf"
+
+#if __ORBIS__
+#include "Orbis/OrbisCommon.usf"
+#endif
+
+SAMPLER2D(SourceTexture)
+
+struct FHDRCalibrationParameters
+{
+	float4 BlockColor;		// Color of the calibration block to render 
+	float4 Bounds;			// in UV space, float4(u0,v0,u1,v1), masks out the area of the screen where calibration is rendered
+	float CalibrationNits;	// Custom paperwhite nits value to use during calibration mode
+	int bApplyContrast;		// Depending on the calibration mode we may not want to apply contrast
+	int Pad0;
+	int Pad1;
+};
+
+cbuffer HDRParamsIn : register(b0)
+{
+	FHDRParameters HDRParameters;
+};
+
+cbuffer CalibrationParamsIn : register(b1)
+{
+	FHDRCalibrationParameters CalibrationParameters;
+};
+
+void HDRReconstructVS(
+	in float4 InPosition : POSITION,
+	in float2 InTexCoord : TEXCOORD0,
+	out float2 OutTexCoord : TEXCOORD0,
+	out float4 OutPosition : SV_Position
+	)
+{
+	OutPosition = InPosition;
+	OutTexCoord = InTexCoord;
+}
+
+void HDRCalibrationBoxTexturedPS(in float2 UV : TEXCOORD0, out float4 OutColor : SV_Target0)
+{
+	float4 HDR = tex2D(SourceTexture, UV);
+	clip(HDR.a - 1.0);
+	HDR.xyz = 1;	// TODO: Original texture has some garbage on the borders...need to get a clean copy of this
+	OutColor = HDR * CalibrationParameters.BlockColor;
+}
+
+void HDRCalibrationBoxSolidColorPS(out float4 OutColor : SV_Target0)
+{
+	OutColor = CalibrationParameters.BlockColor;
+}
+
+float3 DoHDRCalibration(float3 Color)
+{
+	// Skip the reconstruction. The area of the screen we do calibration on is considered to
+	// already be HDR mastered. Then use a custom version of the color correction step, which
+	// has been altered to skip contrast adjustment and uses a custom nits setting to assist
+	// with calibration.
+	float3 HDR = Color;
+
+	// Only apply contrast if requested (depends which stage of calibration you're in)
+	if (CalibrationParameters.bApplyContrast)
+	{
+		HDR = AdjustHDRContrast(HDR, HDRParameters);
+	}
+
+	// Normalize the scene value like the non-calibration path, but with a custom nit setting
+	HDR = NormalizeHDRSceneValue(HDR, CalibrationParameters.CalibrationNits);
+
+	// Move into HDR10 space
+	HDR = LinearToST2084(HDR);
+
+	// Some PC modes only. For HDR10_float mode (16-bit colors), we need to move into a different space
+	if (!HDRParameters.bIsHDR10)
+	{
+		HDR.rgb = HDR10ToScRgb(HDR);
+	}
+
+	return HDR;
+}
+
+void HDRReconstructPS(
+	in float2 UV : TEXCOORD0,
+	out float4 OutColor : SV_Target0
+	#if DINGO
+	, out float4 OutColorDVR : SV_Target1
+	#endif
+	)
+{
+	float4 HDR = tex2D(SourceTexture, UV);
+
+	#if DINGO
+	// Game DVR (xbox) requires we output an low dynamic range image. Just output the color without reconstruction.
+	OutColorDVR = HDR;
+	#endif
+
+#if HDR_CALIBRATION_MODE
+	if (UV.x >= CalibrationParameters.Bounds.x &&
+		UV.y >= CalibrationParameters.Bounds.y &&
+		UV.x <= CalibrationParameters.Bounds.z &&
+		UV.y <= CalibrationParameters.Bounds.w)
+	
+	{
+		HDR.xyz = DoHDRCalibration(HDR.xyz);
+		OutColor = HDR;
+		return;
+	}
+#endif // HDR_CALIBRATION_MODE
+
+	// Post effects in UE3 puts the image into gamma corrected space. Move back to linear space.
+	HDR.xyz = pow(HDR.xyz, HDRParameters.DisplayGamma);
+
+	// Reconstruct HDR from an SDR image, which will do a reverse tone mapping operation.
+	HDR.xyz = ReconstructHDR(HDR.xyz, HDRParameters);
+
+	// Move into the correct color space PQ or Linear or whatever...
+	HDR.xyz = DoHDRColorCorrection(HDR.xyz, HDRParameters);
+	OutColor = HDR;
+}

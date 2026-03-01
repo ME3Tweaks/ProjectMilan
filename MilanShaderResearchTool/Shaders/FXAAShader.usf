@@ -1,0 +1,104 @@
+#include "Common.usf"
+
+#if ORBIS || DINGO
+
+#define FXAA_GREEN_AS_LUMA 0
+#define FXAA_GATHER4_ALPHA 0
+#define FXAA_CALC_LUMA 1
+
+#else
+
+#define FXAA_GREEN_AS_LUMA 1
+
+#endif
+
+#if XBOX
+    #define FXAA_360 1
+#elif PS3
+    #define FXAA_PS3 1
+#else 
+    #define FXAA_PC 1
+
+#if ORBIS || DINGO
+    #define FXAA_HLSL_5 1
+#else
+    #define FXAA_HLSL_5 1
+#endif
+
+    #define FXAA_QUALITY__PRESET 39
+#endif
+
+#include "FXAA.usf"
+
+float4              QualityParamsA;
+float4              QualityParamsB;
+
+#if XBOX || PS3 || ORBIS || DINGO
+float4              ConsoleRcpFrameOpt;
+float4              ConsoleRcpFrameOpt2;
+#else
+const float4        ConsoleRcpFrameOpt = float4(0,0,0,0);
+const float4        ConsoleRcpFrameOpt2 = float4(0,0,0,0);
+#endif 
+
+#if XBOX
+float4              Console360ConstDir;
+float4              Console360RcpFrameOpt2;
+#else
+const float4        Console360ConstDir = float4(0,0,0,0);
+const float4        Console360RcpFrameOpt2 = float4(0,0,0,0);
+#endif
+
+void FXAAVertexMain(
+	in float4 InPosition    : POSITION,
+	in float2 UV            : TEXCOORD0,
+	out float2 OutCenterUV  : TEXCOORD1,
+	out float4 OutPosition  : SV_Position
+	)
+{
+	OutPosition = InPosition;
+
+    // {xy} = center of pixel
+	OutCenterUV.xy = UV.xy;
+}
+
+
+void FXAAPixelMain(
+    in float2 CenterUV : TEXCOORD1,
+	out float4 OutColor : SV_Target
+	)
+{
+    // {xy__} = upper left of pixel
+    // {__zw} = lower right of pixel
+    float4 PosPosUV = 1;
+    PosPosUV.xy = CenterUV.xy + (float2(-QualityParamsB.z, -QualityParamsB.w)/2.0f);
+    PosPosUV.zw = CenterUV.xy + (float2( QualityParamsB.z,  QualityParamsB.w)/2.0f);
+
+#if ORBIS
+    FxaaTex SceneColorTextureFxaa = { SceneColorTexture.sampler, SceneColorTexture.texture };
+#elif DINGO
+    FxaaTex SceneColorTextureFxaa = { SceneColorTexture.samplerQQ, SceneColorTexture.textureQQ };
+#else
+    FxaaTex SceneColorTextureFxaa = { SceneColorTextureSampler, SceneColorTexture };
+
+#endif
+    OutColor.rgba = RETURN_COLOR(FxaaPixelShader(
+        CenterUV.xy,                    // FxaaFloat2 pos, 
+        PosPosUV,                       // FxaaFloat4 fxaaConsolePosPos, 
+        SceneColorTextureFxaa,          // FxaaTex tex,
+        SceneColorTextureFxaa,          // FxaaTex fxaaConsole360TexExpBiasNegOne, 
+        SceneColorTextureFxaa,          // FxaaTex fxaaConsole360TexExpBiasNegTwo,
+        QualityParamsB.zw,              // FxaaFloat2 fxaaQualityRcpFrame,
+        ConsoleRcpFrameOpt,             // FxaaFloat4 fxaaConsoleRcpFrameOpt,
+        ConsoleRcpFrameOpt2,            // FxaaFloat4 fxaaConsoleRcpFrameOpt2,
+        Console360RcpFrameOpt2,         // FxaaFloat4 fxaaConsole360RcpFrameOpt2,
+        QualityParamsA.x,               // FxaaFloat fxaaQualitySubpix,
+        QualityParamsA.y,               // FxaaFloat fxaaQualityEdgeThreshold,
+        QualityParamsA.z,               // FxaaFloat fxaaQualityEdgeThresholdMin,
+        QualityParamsA.w,               // FxaaFloat fxaaConsoleEdgeSharpness,
+        QualityParamsB.x,               // FxaaFloat fxaaConsoleEdgeThreshold,
+        QualityParamsB.y,               // FxaaFloat fxaaConsoleEdgeThresholdMin,
+        Console360ConstDir              // FxaaFloat4 fxaaConsole360ConstDir
+        ));
+}
+

@@ -1,0 +1,237 @@
+#include "HBAO_Common.usf"
+
+#define HBAO_DISTANCE_MULTIPLIER (128.f)
+#define DISCONTINUITY_THRESHOLD (0.5f)
+#define DISCONTINUITY_MASK_MIN (0.3f)
+#define DILATION_LEVEL (4) // Must be integer minimum of 1 (one dilation pass), maximum of 4 (four dilation passes)
+
+SAMPLER2D( AOTexture )
+// BIOSTART - Zach Boehm - October 13, 2020 - Don't sample blur pixels outside of AOTex dimensions
+float2 AOTexDimensions;
+// BIOEND
+
+float2 BlurSharpness;
+
+// Radius of the blur kernel, in full-res pixels
+#define KERNEL_RADIUS 3
+#define NUM_THREADS_X 8
+
+#define SIZE_X NUM_THREADS_X+(KERNEL_RADIUS*2)
+#define SIZE_Y NUM_THREADS_X+(KERNEL_RADIUS*2)
+
+groupshared float2 gs_AOCache[SIZE_X][SIZE_Y];
+
+//----------------------------------------------------------------------------------
+float CrossBilateralWeight(float R, float SampleDepth, float CenterDepth, float Sharpness)
+{
+    const float BlurSigma = (float)KERNEL_RADIUS * 0.5;
+    const float BlurFalloff = 1.0 / (2.0*BlurSigma*BlurSigma);
+
+    float DeltaZ = (SampleDepth - CenterDepth) * Sharpness;
+
+    return exp2(-R*R*BlurFalloff - DeltaZ*DeltaZ);
+}
+
+//-------------------------------------------------------------------------
+void ProcessSample(float2 AOZ,
+                   float R,
+                   float CenterDepth,
+                   inout float TotalAO,
+                   inout float TotalW)
+{
+    float AO = AOZ.x;
+    float Z = AOZ.y;
+
+    float W = CrossBilateralWeight(R, Z, CenterDepth, BlurSharpness.x);
+    TotalAO += W * AO;
+    TotalW += W;
+}
+
+//-------------------------------------------------------------------------
+void ProcessRadius(float2 DeltaUV,
+				   float2 UV,
+                   float CenterDepth,
+                   inout float TotalAO,
+                   inout float TotalW)
+{
+    [unroll]
+    for (float R = 1; R <= KERNEL_RADIUS; R += 1)
+    {
+        float2 adjUV = R * DeltaUV + UV;
+        float2 AOZ = tex2D(AOTexture, adjUV).xy;
+        ProcessSample(AOZ, R, CenterDepth, TotalAO, TotalW);
+    }
+}
+
+//-------------------------------------------------------------------------
+float ComputeBlur( float2 InputUV, float2 AO, float2 DeltaUV )
+{
+    float CenterDepth = AO.y;
+    float TotalAO = AO.x;
+    float TotalW = 1.0;
+
+    ProcessRadius(DeltaUV, InputUV, CenterDepth, TotalAO, TotalW);
+    ProcessRadius(-DeltaUV, InputUV, CenterDepth, TotalAO, TotalW);
+
+    return TotalAO / TotalW;
+}
+
+//-------------------------------------------------------------------------
+float4 BlurMain( in HBAOInput Input ) : SV_Target0
+{
+	float2 InputAO = tex2D(AOTexture, Input.TexCoord).xy;
+
+  #if VERTICAL_ORIENTATION
+    float AO = ComputeBlur(Input.TexCoord, InputAO, float2(0.f, InvFullResolution.y));
+	float CalcAO = pow(saturate(AO), PowExponent);
+    return float4(float3(CalcAO, CalcAO, CalcAO), 1.f);
+  #else
+    float AO = ComputeBlur(Input.TexCoord, InputAO, float2(InvFullResolution.x, 0.f));
+    return float4(AO, InputAO.y, 0.f, 0.f);
+  #endif
+}
+
+//-------------------------------------------------------------------------
+
+float2 ProcessSampleCS(float2 AOZ, float Radius, float CenterDepth, float Sharpness)
+{
+    float AO = AOZ.x;
+    float Z = AOZ.y;
+
+    float W = CrossBilateralWeight(Radius, Z, CenterDepth, Sharpness);
+	return float2((W * AO), W);
+}
+
+RWTexture2D<float>	BlurOut	 : register(u0);
+groupshared float2 CacheAO[144];
+
+float ProcessAOSamples( float2 Center, float2 SampleA, float2 SampleB, float2 SampleC, float2 SampleD, float Sharpness )
+{
+	float CenterDepth = Center.y;
+
+	float2 ResultA = ProcessSampleCS(SampleA, 2, CenterDepth, Sharpness);
+	float2 ResultB = ProcessSampleCS(SampleB, 1, CenterDepth, Sharpness);
+	float2 ResultC = ProcessSampleCS(SampleC, 1, CenterDepth, Sharpness);
+	float2 ResultD = ProcessSampleCS(SampleD, 2, CenterDepth, Sharpness);
+
+	float2 Result = (ResultA + ResultB + ResultC + ResultD) + float2(Center.x, 1.f);
+	return (Result.x/Result.y);
+}
+
+void BlurHorizontally( uint Index )
+{
+    float2 c, ll, l, r, rr;
+
+	ll = float2(CacheAO[Index-2]);
+	 l = float2(CacheAO[Index-1]);
+	 c = float2(  CacheAO[Index]);
+	 r = float2(CacheAO[Index+1]);
+	rr = float2(CacheAO[Index+2]);   
+
+	CacheAO[Index].x = ProcessAOSamples( c, ll, l, r, rr, BlurSharpness.x);
+}
+
+float2 BlurVertically( uint Index )
+{
+    float2 c, uu, u, d, dd;
+
+	uu = float2(CacheAO[Index-24]);
+	 u = float2(CacheAO[Index-12]);
+	 c = float2(   CacheAO[Index]);
+	 d = float2(CacheAO[Index+12]);
+	dd = float2(CacheAO[Index+24]);   
+
+	float AO = saturate(ProcessAOSamples(c, uu, u, d, dd, BlurSharpness.y));
+	return float2(pow(AO, PowExponent), c.y);
+}
+
+[numthreads( NUM_THREADS_X, NUM_THREADS_X, 1 )]
+void BlurCS( uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID )
+{	
+	// Load LDS
+	int2 GroupUL  = ( Gid.xy << 3) - 2;				// Upper-left pixel coordinate of group read location					[-1,-1]
+	int2 ThreadUL = (GTid.xy << 1) + GroupUL;		// Upper-left pixel coordinate of quad that this thread will read
+
+	// BW_START - April 9, 2021 - Amanda Meythaler - Remove AO temporal blur
+	if( (GTid.x < ((NUM_THREADS_X/2) + 2)) && (GTid.y < ((NUM_THREADS_X/2) + 2)) )
+	{
+		int destIdx = (GTid.x * 2) + (GTid.y * 24);
+
+		int2 iPixelCoord = ThreadUL + FullResOffset;
+
+		// BIOSTART - Zach Boehm - October 13, 2020 - Don't sample blur pixels outside of AOTex dimensions
+		int2 SampleCoord = int2(min(max(iPixelCoord.x, 0),AOTexDimensions.x-1), min(max(iPixelCoord.y, 0),AOTexDimensions.y-1));
+		CacheAO[destIdx +  0] = AOTexture[SampleCoord].xy;
+
+		SampleCoord = int2(min(max(iPixelCoord.x + 1, 0),AOTexDimensions.x-1), min(max(iPixelCoord.y, 0),AOTexDimensions.y-1));
+		CacheAO[destIdx +  1] = AOTexture[SampleCoord].xy;
+
+		SampleCoord = int2(min(max(iPixelCoord.x, 0),AOTexDimensions.x-1), min(max(iPixelCoord.y + 1, 0),AOTexDimensions.y-1));
+		CacheAO[destIdx + 12] = AOTexture[SampleCoord].xy;
+
+		SampleCoord = int2(min(max(iPixelCoord.x + 1, 0),AOTexDimensions.x-1), min(max(iPixelCoord.y + 1, 0),AOTexDimensions.y-1));
+		CacheAO[destIdx + 13] = AOTexture[SampleCoord].xy;
+		// BIOEND
+	}
+
+	// Sync
+	GroupMemoryBarrierWithGroupSync();
+
+	//
+	int Idx = (GTid.x + 2) + ((GTid.y + 2) * 12);
+	BlurHorizontally(Idx);
+
+	// BW_START - April 6, 2121 - Amanda Meythaler - AO Blur and Normal calculation improvements
+	if (GTid.y == 0)
+	{
+		int tIdx = (GTid.x + 2) + (GTid.y) * 12;
+		BlurHorizontally(tIdx);
+		tIdx = (GTid.x + 2) + (GTid.y + 1) * 12;
+		BlurHorizontally(tIdx);
+	}
+	else if (GTid.y == NUM_THREADS_X - 1)
+	{
+		int tIdx = (GTid.x + 2) + (GTid.y + 3) * 12;
+		BlurHorizontally(tIdx);
+		tIdx = (GTid.x + 2) + (GTid.y + 4) * 12;
+		BlurHorizontally(tIdx);
+	}
+	// BW_END
+
+	// Sync
+	GroupMemoryBarrierWithGroupSync();
+
+	BlurOut[DTid.xy + FullResOffset] = BlurVertically(Idx);
+	// BW_END
+}
+
+//-------------------------------------------------------------------------
+float4 ApplyBlurMain( in HBAOInput Input ) : SV_Target0
+{
+	float3 AO = tex2D(AOTexture, Input.TexCoord).rrr;
+
+    return float4(AO, 1.f);
+}
+
+/*-----------------------------------------------------------------------
+  Copyright (c) 2014-2015, NVIDIA. All rights reserved.
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   * Neither the name of its contributors may be used to endorse 
+     or promote products derived from this software without specific
+     prior written permission.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+  OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------*/

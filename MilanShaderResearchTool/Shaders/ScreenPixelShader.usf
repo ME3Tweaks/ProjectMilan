@@ -1,0 +1,20 @@
+/*=============================================================================
+	ScreenPixelShader.usf: Filter pixel shader source.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+
+SAMPLER2D( _Texture )
+
+void Main(
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half2 InUV : TEXCOORD0,
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+    OutColor = tex2Dfast(_Texture, InUV);
+    // BIOEND
+}

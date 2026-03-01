@@ -1,0 +1,15 @@
+/*=============================================================================
+	ColorPixelShader.usf: Shader for writing translucent sprites.
+	Owned By: Jonathan Baldwin
+	Creation Data: December 2, 2006
+	Copyright © 2006 BioWare Corp.
+=============================================================================*/
+
+#include "Common.usf"
+
+float4 Color;
+
+void Main( out float4 OutColor : SV_Target0 )
+{
+	OutColor = RETURN_COLOR(Color);
+}

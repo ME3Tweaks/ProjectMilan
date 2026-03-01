@@ -1,0 +1,51 @@
+/*=============================================================================
+	Simple pixel shader for rendering shadow frustum to set stencil for shadow
+	receivers.  Compares LightDirection with the normal sampled from the
+	scene normals that have previously been rendered out, and kills the pixel
+	if it's a backface from the perspective of the light.
+
+	Copyright (c) 2020 BioWare ULC
+=============================================================================*/
+
+#include "Common.usf"
+
+float3 LightDirection;
+SAMPLER2D(SceneNormalTexture);
+
+/** Used to update stencil values for areas we don't want modulated shadows */
+void Main(
+	in float4 ScreenPosition : TEXCOORD0,
+	out float4 OutColor : SV_Target0
+	)
+{
+	float4 PixelPosition = ScreenAlignedPosition(ScreenPosition);
+
+	// sample normal and move from 0..1 to -1..1
+	// BW_START - December 10, 2020 - Chan, Patrick - [JIRA:METR-39898] Allow backface shadows on Characters only
+	float2 PartialNormal = tex2D(SceneNormalTexture, PixelPosition.xy).ba;
+	float3 normal = float3(0,0,0);
+	float NDotL = 0.f;
+
+	// values will be #INF if it's a SkeletalMesh (want to allow them to render shadows on backfaces for characters, etc)
+	//  - no need to check/clip NDotL for backface geometry, so just the normal at 0, and allow fragment to write to stencil
+	if (!isinf(PartialNormal.x))
+	{
+		// expand and reconstruct normal
+		normal = normalize(NormalCalcZ(BiasNormalMap(float4(PartialNormal,0.f,0.f))).xyz);
+
+		// clip pixel if backfacing.  But ignore clipping for characters
+		//   - the alpha from the SurfaceNormals texture should be masking characters (1 for characters/things that use BioDynamicLightEnvironmentComponent, 0 for everything else).  
+		//     We want to allow backfacing shadows on characters, otherwise they can get horrible dynamic shadows cast across their face/etc
+		NDotL = dot(normal, LightDirection);
+
+		// imprecision due to using UNORM surface can cause issues when light direction and receiver surface are near orthogonal, so err to the side of casting shadows
+		if (NDotL < 0.035)
+			NDotL = 0.0;
+	}
+	// BW_END
+
+	clip(-NDotL);
+
+	// color write should be disabled, so not necessary
+	OutColor = float4(1,0,0,1);  
+}

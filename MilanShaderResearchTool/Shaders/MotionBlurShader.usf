@@ -1,0 +1,129 @@
+/*=============================================================================
+	MotionBlurPixelShader.usf: Blurs based on velocity vector.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+#include "MotionBlurCommon.usf"
+
+
+/*=============================================================================
+ * Vertex Shader
+ *============================================================================*/
+
+void MainVertexShader(
+	float4 InPosition : POSITION,
+	float2 InScreenUV : TEXCOORD0,
+	out float4 OutScreenPosition : TEXCOORD0,
+	out float4 OutPosition : SV_Position
+	)
+{
+	OutPosition = InPosition;								// Target position
+	OutScreenPosition = float4(InPosition.xy,InScreenUV);	// Background UV and position
+}
+
+
+/*=============================================================================
+ * Pixel Shaders
+ *============================================================================*/
+
+// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+void MainPixelShader( float4 ScreenPosition : TEXCOORD0, out half4 OutColor : SV_Target0 )
+// BIOEND
+{
+	float2	ScreenUV = ScreenPosition.zw;
+
+	// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+	// 1st motion blur sample, can be half res or full res depending on platform
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 Color = tex2Dfast(SceneColorTexture, ScreenUV);
+	//half4 Color = tex2D(SceneColorTexture, ScreenUV);
+	// BIOEND
+
+	half3 MotionBlurColor;
+	
+	half Weight = MotionBlur(Color.rgb, ScreenPosition, MotionBlurColor);
+
+	// to avoid half res look with little motion
+	// Weight = 0..1, 0 = no motion blur
+	Color.rgb = lerp(Color.rgb, MotionBlurColor, Weight);
+
+	// Fix post-translucency depths on PS3
+#if PS3
+	Color.a = 1;
+#endif
+
+	OutColor = RETURN_COLOR( Color );
+	// ME3END
+}
+
+// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+void MainPixelShaderDynamicVelocitiesOnly( float4 ScreenPosition : TEXCOORD0, out half4 OutColor : SV_Target0 )
+// BIOEND
+{
+	half2	ScreenUV			= ScreenPosition.zw;
+	half4	DynamicVelocity	= tex2D( VelocityBuffer, ScreenUV );
+
+	// scaling of step offset size for each sample
+	float StepOffsets[NUM_SAMPLES] = StepOffsetsOpaque;
+	// weight for contribution from each sample
+	float StepWeights[NUM_SAMPLES] = StepWeightsOpaque;
+	// texture samples
+	half4 StepSamples[NUM_SAMPLES];
+
+	// 0.0f (-1.0f after scale-and-bias) in the velocity buffer has special meaning. It means "use static background velocity".
+	// Velocity rendering clamps to 1/255, so every pixel it touches will fail this check.
+	half SelectorOpaque = DynamicVelocity.x;
+	half SelectorTranslucent = DynamicVelocity.z;
+	if ( SelectorTranslucent > 0 )
+	{
+		// Scale dynamic velocity from [-1,+1] to [-MAX_VELOCITY,+MAX_VELOCITY] pixels
+		half2 NominalVelocity	= DynamicVelocity.zw * 2.0f - 1.0f;
+		half2 PixelVelocity		= NominalVelocity * DynamicVelocityParameters.zw;
+		StepOffsets = StepOffsetsTranslucent;
+		StepWeights = StepWeightsTranslucent;
+
+		half3 Color = 0;
+		// Average NUM_SAMPLES screen colors along the velocity vector.
+		half2 Step = PixelVelocity / NUM_SAMPLES;
+		UNROLL 
+		for(int i=0; i<NUM_SAMPLES; i++)
+		{
+			// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+			Color += tex2Dfast( SceneColorTexture, ClampUV(ScreenUV + Step*StepOffsets[i]) ).rgb * StepWeights[i];
+			// BIOEND
+		}
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		OutColor = RETURN_COLOR( half4(Color, 1) );
+		// BIOEND
+	}
+	else if ( SelectorOpaque > 0 )
+	{
+		// Scale velocity from [-1,+1] to [-MAX_VELOCITY,+MAX_VELOCITY] pixels
+		half2	NominalVelocity	= DynamicVelocity.xy * 2.0f - 1.0f;
+		half	Scale			= dot(NominalVelocity, NominalVelocity);
+		half2	PixelVelocity	= NominalVelocity * DynamicVelocityParameters.xy;
+		PixelVelocity			*= Scale;
+	
+		half3 Color = 0;
+		// Average NUM_SAMPLES screen colors along the velocity vector.
+		half2 Step = PixelVelocity / NUM_SAMPLES;
+		UNROLL 
+		for(int i=0; i<NUM_SAMPLES; i++)
+		{
+			// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+			Color += tex2Dfast( SceneColorTexture, ClampUV(ScreenUV + Step*StepOffsets[i]) ).rgb * StepWeights[i];
+			// BIOEND
+		}
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		OutColor = RETURN_COLOR( half4(Color, 1) );
+		// BIOEND
+	}
+	else
+	{
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		half3 Color = tex2Dfast( SceneColorTexture, ScreenUV ).rgb;
+		OutColor = RETURN_COLOR( half4(Color, 1) );
+		// BIOEND
+	}
+}

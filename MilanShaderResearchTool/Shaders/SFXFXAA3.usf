@@ -1,0 +1,61 @@
+/*=============================================================================
+	SFXFXAA3.usf: Wrapper for Fxaa3.h/usf
+=============================================================================*/
+#include "Common.usf"
+// {x_} = 1.0/screenWidthInPixels
+// {_y} = 1.0/screenHeightInPixels
+float2 rcpFrame;
+
+// This must be from a constant/uniform.
+// {x___} = 2.0/screenWidthInPixels
+// {_y__} = 2.0/screenHeightInPixels
+// {__z_} = 0.5/screenWidthInPixels
+// {___w} = 0.5/screenHeightInPixels
+float4 rcpFrameOpt;
+
+/*-----------------------------------------------------------------------------
+	FXAA3 vertex shader
+-----------------------------------------------------------------------------*/
+void SFX_FXAA3_VS(
+	in float4 InPosition : POSITION,
+	in float2 UV : TEXCOORD0,
+	out float2 OutCenterUV : TEXCOORD0,
+	out float4 OutPosPos : TEXCOORD1,
+	out float4 OutPosition : SV_Position
+	)
+{
+	OutPosition = InPosition;
+    
+    // {xy} = center of pixel
+	OutCenterUV = UV.xy;
+	
+    // {xy__} = upper left of pixel
+    // {__zw} = lower right of pixel
+	OutPosPos = float4( UV.xy + rcpFrameOpt.zw, UV.xy - rcpFrameOpt.zw);
+}
+
+/*-----------------------------------------------------------------------------
+	FXAA3 stubbed pixel shader
+-----------------------------------------------------------------------------*/
+#if PIXELSHADER
+//METR_TODO : fix old non compute shader for dx9 if nedded
+//#include "Fxaa3.usf"
+
+//SAMPLER2D(SceneColorTexture);
+//#if ORBIS
+//    FxaaTex SceneColorTextureFxaa = { SceneColorTexture.sampler, SceneColorTexture.texture };
+//#elif DINGO
+//    FxaaTex SceneColorTextureFxaa = { SceneColorTexture.samplerQQ, SceneColorTexture.textureQQ };
+//#else
+//    FxaaTex SceneColorTextureFxaa = { SceneColorTextureSampler, SceneColorTexture };
+//
+//#endif
+void SFX_FXAA3_PS(
+	float2 Tex : TEXCOORD0,
+	float4 posPos : TEXCOORD1,
+	out float4 OutColor : SV_Target )
+{
+	OutColor = 1.0f;//FxaaPixelShader(Tex, posPos, SceneColorTextureFxaa, rcpFrame, rcpFrameOpt);
+}
+
+#endif

@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "MilanShaderResearchTool": {
+      "commandName": "Project"
+    },
+    "MilanShaderResearchTool (Native)": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

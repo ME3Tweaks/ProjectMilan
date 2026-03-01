@@ -1,0 +1,11 @@
+#include "HBAO_Common.usf"
+
+HBAOInput VSMain(in  float4 InPosition  : POSITION,
+				 in  float2 InTexCoord  : TEXCOORD0 )
+{
+	HBAOInput output;
+	output.Pos = InPosition;
+	output.TexCoord = InTexCoord;
+
+	return output;
+}

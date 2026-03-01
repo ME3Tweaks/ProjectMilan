@@ -1,0 +1,224 @@
+struct FHDRParameters
+{
+	float MaxReconstructedNits;			// How bright (in nits) should the tonemapped SDR value of 1.0 be
+	float ReconstructedColorSaturation; // Lerping between per luma and per color channel reconstruction, where 0 = only use per luma reconstruction, 1 = use only per color channel reconstruction
+	float PaperWhiteNits;				// Defines how bright white is (in nits), which controls how bright the SDR range in the image will be
+	float UIBrightnessScale;			// Scale that's applied to UI when doing a merge pass so that white UI matches the UI paperwhite nit settings
+	float DisplayGamma;					// The gamma that the user had set for SDR output (before our reverse tonemapping). Note this is separate from HDRGamma only because art deemed they didn't like default SDR gamma and changed that instead of the tonemap parameters. :()
+	float HDRGamma;						// The contrast setting used for HDR
+	float SoftShoulderStart2084;		// Threshold at beginning of soft shoulder for HDR display mapping, normalized non-linear ST.2084 value
+	float MaxBrightnessOfDisplay2084;	// Max perceived brightness of TV, nits converted to normalized non-linear ST.2084 value 
+	float MaxBrightnessOfScene2084;		// Max perceived brightness of HDR scene, nits converted to normalized non-linear ST.2084 value 
+	int bIsHDR10;						// When TRUE, this is an HDR10 target (using 10 bit and Rec.2020)
+	int bUseGamutExpansion;				// When TRUE, use a custom color space that is slightly bigger than Rec.709 to produce more saturated colors, if FALSE, just use Rec.709
+	int Pad0;
+};
+
+// The ST.2084 spec defines max nits as 10,000 nits
+static const float MaxNitsFor2084 = 10000.0f;         
+
+// Color rotation matrix to rotate Rec.709 color primaries into Rec.2020
+static const float3x3 From709to2020 =
+{
+    { 0.6274040f, 0.3292820f, 0.0433136f },
+    { 0.0690970f, 0.9195400f, 0.0113612f },
+    { 0.0163916f, 0.0880132f, 0.8955950f }
+};
+
+// Color rotation matrix to rotate Rec.2020 color primaries into Rec.709
+static const float3x3 From2020to709 =
+{
+    { 1.6604910f, -0.5876411f, -0.0728499f },
+    { -0.1245505f, 1.1328999f, -0.0083494f },
+    { -0.0181508f, -0.1005789f, 1.1187297f }
+};
+
+// Color rotation matrix to rotate DCI-P3 color primaries into Rec.2020
+static const float3x3 FromP3to2020 =
+{
+    { 0.753845, 0.198593, 0.047562 },
+    { 0.0457456, 0.941777, 0.0124772 },
+    { -0.00121055, 0.0176041, 0.983607 }
+};
+
+// Rotation matrix describing a custom color space which is bigger than Rec.709, but a little smaller than P3
+// This enhances colors, especially in the SDR range, by being a little more saturated. This can be used instead
+// of from709to2020.
+static const float3x3 FromExpanded709to2020 =
+{
+    { 0.6274040f, 0.3292820f, 0.0433136f },
+    { 0.0457456, 0.941777, 0.0124772 },
+    { -0.00121055, 0.0176041, 0.983607 }
+};
+
+float3 NormalizeHDRSceneValue(float3 HDRSceneValue, float PaperWhiteNits)
+{
+    float3 NormalizedLinearValue = HDRSceneValue * PaperWhiteNits / MaxNitsFor2084;
+    return NormalizedLinearValue;       // Don't clamp between [0..1], so we can still perform operations on scene values higher than 10,000 nits
+}
+
+// Calc luminance
+float RGBToLuminance(float3 X)
+{
+    return dot(X, float3(0.212671, 0.715160, 0.072169)); // Defined for sRGB/Rec.709 gamut
+}
+
+// Inverse tonemap based on Reinhard, bending the curve so that the value of 0.5 returns paper white nits, and the value of 1.0f
+// returns a specified max nits value, e.g. 1000 nits. Refer to slides 12-15 of the Xfest 2017 presentation "HDR Tips and Tricks from the Trenches" http://aka.ms/XF17022
+float4 InverseToneMap(float4 X, float MaxReconstructedNits, float PaperWhiteNits)
+{
+    // SDR range, [0..0.5] -> [0..PaperWhiteNits]
+    float4 SDR = X / (1.0001f - X); // Some post-tonemap operation might take x to 1.0, so use 1.0001f
+
+    // HDR range, [0.5..1.0] -> [PaperWhiteNits..MaxReconstructedNits]
+    float HDRMaxSceneValue = MaxReconstructedNits / PaperWhiteNits;
+    HDRMaxSceneValue += 0.0001f;
+    float B = HDRMaxSceneValue / (HDRMaxSceneValue - 1.0f);
+    float A = 1.0f - ((0.5f * B) / (B - 0.5f));
+    float4 HDR = A + ((B * X) / (B - X));
+
+    return (X > 0.5f) ? HDR : SDR;
+}
+
+// Convert linear SDR values to linear HDR values. Per luminance can look a bit desaturated, but per color channel can look too saturated, so interpolate between them
+float3 ReconstructHDR(float3 SDR, FHDRParameters Params)
+{
+    float Luma = RGBToLuminance(SDR);
+    float4 InvToneMapped = InverseToneMap(float4(SDR.rgb, Luma), Params.MaxReconstructedNits, Params.PaperWhiteNits);
+    float3 PerChannel = InvToneMapped.rgb;
+    float3 PerLuma = SDR / (Luma + 0.0001f) * InvToneMapped.a;
+
+    // Interpolate per luminance and per color channel, 0.25 works well, but it's nice to have control over this
+    float3 ReconstructedHDR = ((1.0f - Params.ReconstructedColorSaturation) * PerLuma) + (Params.ReconstructedColorSaturation * PerChannel);
+
+    return ReconstructedHDR;
+}
+
+float3 LinearToST2084(float3 NormalizedLinearValue)
+{
+	const float m0 = (2610.0 / 4096.0 / 4.0);
+	const float m1 = (2523.0 / 4096.0 * 128.0);
+	const float c1 = (3424.0 / 4096.0);
+	const float c2 = (2413.0 / 4096.0 * 32.0);
+	const float c3 = (2392.0 / 4096.0 * 32.0);
+
+	float3 ColToPow = pow_unclamped(abs(NormalizedLinearValue), m0);
+	float3 Numerator = c1 + c2 * ColToPow;
+	float3 Denominator = 1.0 + c3 * ColToPow;
+	float3 PQ = pow_unclamped(Numerator / Denominator, m1);
+
+    return PQ;
+}
+
+float3 ST2084ToLinear(float3 ST2084)
+{
+	const float m0 = (2610.0 / 4096.0 / 4.0);	// 0.1593017578125
+	const float m1 = (2523.0 / 4096.0 * 128.0); // 78.84375
+	const float c1 = (3424.0 / 4096.0);			// 0.8359375
+	const float c2 = (2413.0 / 4096.0 * 32.0);	// 18.8515625
+	const float c3 = (2392.0 / 4096.0 * 32.0);	// 18.6875
+
+	float3 InvPQ = pow_unclamped(abs(ST2084), 1.0f / m1);
+
+	float3 NormalizedLinear = pow_unclamped(abs(max(InvPQ - c1, 0.0f) / (c2 - c3 * InvPQ)), 1.0f / m0);
+	return NormalizedLinear;
+}
+
+float3 HDR10ToScRgb(float3 ST2084)
+{
+	// Back to linear space. rewind the transfer function
+	float3 Normalized2084 = ST2084ToLinear(ST2084);
+
+	// 80 nits = 1.0 in this mode
+	// Just scale from the ST2084 max
+	float3 HDR = Normalized2084 * (MaxNitsFor2084 / 80.0);
+
+	// And rotate back into rec.709 space
+	HDR = mul(From2020to709, HDR);
+
+	return HDR;
+}
+
+float3 AdjustHDRContrast(float3 x, FHDRParameters Params)
+{
+    if (Params.HDRGamma >= 1.0f)
+    {
+        return pow_unclamped(abs(x), Params.HDRGamma);
+    }
+    else
+    {
+        float3 t = saturate((2.0f - x) * (2.0f - x) * (2.0f - x));
+        float3 y = (x * (1.0f - t)) + (pow_unclamped(abs(x), Params.HDRGamma) * t);
+        return y;
+    }
+}
+
+float3 ExpandColorGamut(float3 HdrSceneValue, float ColorGamutExpansion)
+{
+    // Rotate into Rec.2020 color primaries, using color gamut expansion
+    float3 ExpandedSDR = mul(FromExpanded709to2020, HdrSceneValue.rgb); // Expand SDR, using a custom rotation matrix instead of fromRec709to2020
+    float3 ExpandedHDR = mul(FromP3to2020, HdrSceneValue.rgb);          // Expand HDR into the full P3 space, using the color rotation matrix fromP3to2020 instead of fromRec709to2020
+
+    // Interpolate between expanded SDR/HDR
+    float Lum = max(max(HdrSceneValue.r, HdrSceneValue.g), HdrSceneValue.b);
+	// NOTE: The HDR Calibration sample app uses 2/10 for these constants but the HDR Reconstruction sample app uses 1/2 for these constants. Why the difference?
+    float Start = 2.0f; // At this HDR value, we get the expanded SDR value
+    float Stop = 10.0f; // At this HDR value, we get the expanded HDR value
+    float Lerp = saturate((Lum - Start) / (Stop - Start));
+    float3 ExpandedColor = ((1 - Lerp) * ExpandedSDR) + (Lerp * ExpandedHDR); // Lerp between expanded Rec.709 and P3
+	return ((1 - ColorGamutExpansion) * mul(From709to2020, HdrSceneValue.rgb)) + (ColorGamutExpansion * ExpandedColor); // Lerp between expanded Rec.709 and P3
+}
+
+float3 MapHDRSceneToDisplayCapabilities(float3 NormalizedLinearValue, FHDRParameters Params)
+{
+    float3 ST2084 = LinearToST2084(NormalizedLinearValue);
+
+    // Use a simple Bezier curve to create a soft shoulder
+    const float P0 = Params.SoftShoulderStart2084;				// First point is: soft shoulder start nits
+    const float P1 = Params.MaxBrightnessOfDisplay2084;			// Middle point is: TV max nits
+    const float P2 = Params.MaxBrightnessOfDisplay2084;			// Last point is also TV max nits, since values higher than TV max nits are essentially clipped to TV max brightness
+    const float SceneMax = Params.MaxBrightnessOfScene2084;		// To determine range, use max brightness of HDR scene
+
+    float3 T = saturate((ST2084 - P0) / (SceneMax - P0));		// Amount to lerp wrt current value
+    float3 B0 = (P0 * (1 - T)) + (P1 * T);						// Lerp between p0 and p1
+    float3 B1 = (P1 * (1 - T)) + (P2 * T);						// Lerp between p1 and p2
+    float3 MappedValue = (B0 * (1 - T)) + (B1 * T);				// Final lerp for Bezier
+
+    MappedValue = min(MappedValue, ST2084);						// If HDR scene max luminance is too close to shoulders, then it could end up producing a higher value than the ST.2084 curve,
+																// which will saturate colors, i.e. the opposite of what HDR display mapping should do, therefore always take minimum of the two
+    return (ST2084 > Params.SoftShoulderStart2084) ? MappedValue : ST2084;
+}
+
+float3 DoHDRColorCorrection(float3 SceneColor, FHDRParameters Params)
+{
+	// Convert from Rec.709 color primaries to Rec.2020 primaries. Optionally expand the color gamut
+	// to mimic what TVs often do to make the image look more colorful.
+	float3 HDR = ExpandColorGamut(SceneColor, Params.bUseGamutExpansion ? 1.0 : 0.0);
+
+	// Adjust the contrast based on user preferences or calibration screen. This is required because
+	// not all TVs/Monitors will do a great job with displaying HDR so you lose detail in the dark areas.
+	HDR = AdjustHDRContrast(HDR, Params);
+
+	// Normalize the value into a linear ST 2084 range
+	HDR = NormalizeHDRSceneValue(HDR, Params.PaperWhiteNits);
+
+	// Convert from Linear space into the proper ST 2084 values, but also apply the user brightness setting.
+	// Not all HDR displays are of high quality, so this brightness adjustment compensates for
+	// TVs with weak peak brightness or TVs that use whole panel illumination instead of local illumination.
+	// (Assuming the user set this up correctly with a calibration screen)
+	HDR = MapHDRSceneToDisplayCapabilities(HDR, Params);
+
+	if (!Params.bIsHDR10)
+	{
+		// The previous color correction code is optimized to work with rec.2020 primaries and ST 2084
+		// perceptual quantizer, which is what consoles want and what windows desktop works best with
+		// (using 10 bit frame buffer).
+
+		// But some PCs may use 16-bit Rec709 instead (if going through hardware vendor API). In that case,
+		// convert back to Rec709. This should be the exception rather than the norm.
+		HDR = HDR10ToScRgb(HDR);
+	}
+
+	return HDR;
+}
+

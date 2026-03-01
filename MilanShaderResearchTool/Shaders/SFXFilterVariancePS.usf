@@ -1,0 +1,42 @@
+/*!
+  @file    SFXVSMCommon.usf
+
+  Copyright (c) 2010 BioWare ULC
+
+  The source code included in this file is confidential,
+  secret, or proprietary information of BioWare ULC. It
+  may not be used in whole or in part without express
+  written permission from BioWare ULC.
+
+  Filter implementation for 2 component surfaces (specialized since we need to encode
+  the resulting data)
+
+  @author  Rob Krajcarski
+  @date    August 16, 2010
+*/
+#include "Common.usf"
+#include "SFXVSMCommon.usf"
+
+SAMPLER2D(VarianceTexture)
+half4 SampleWeights[NUM_SAMPLES];
+
+void SFXFilterVariancePS(
+	float4 InOffsetUVs[(NUM_SAMPLES + 1) / 2] : TEXCOORD0,
+	out half4 OutColor : SV_Target0
+	)
+{
+	int SampleIndex;
+	half2 Sum = 0;
+	for(SampleIndex = 0;SampleIndex < NUM_SAMPLES - 1;SampleIndex += 2)
+	{
+		Sum += tex2D(VarianceTexture,InOffsetUVs[SampleIndex / 2].xy) * SampleWeights[SampleIndex + 0];
+		Sum += tex2D(VarianceTexture,InOffsetUVs[SampleIndex / 2].wz) * SampleWeights[SampleIndex + 1];
+	}
+	if(SampleIndex < NUM_SAMPLES)
+	{
+		Sum += tex2D(VarianceTexture,InOffsetUVs[SampleIndex / 2].xy) * SampleWeights[SampleIndex + 0];
+	}
+	// RETURN_COLOR not needed unless writing to SceneColor;
+	OutColor = EncodeComponent( Sum );
+}
+

@@ -1,0 +1,157 @@
+#include "Common.usf"
+#include "SFXVSMCommon.usf"
+
+#if __ORBIS__
+#include "Orbis/OrbisCommon.usf"
+#endif
+
+#define ThreadCountX 8
+#define ThreadCountY 32
+
+// BW_START - Dec 18, 2020 - Chan, Patrick - Enlarge VSM blur kernel to be roughly proportional to what it used to be (2 radius on 512, now 6 radius on 1280)
+static const int KernelSize = 13;
+static const int KernelRadius = 6;
+static const float FilterWeights[KernelSize] = { 0.0100, 0.0144, 0.0241, 0.0511, 0.0975, 0.1695, 0.2668, 0.1695, 0.0975, 0.0511, 0.0241, 0.0144, 0.0100 };
+// BW_END
+
+cbuffer Inputs : register( b0 )
+{
+	int4	SubRect;
+};
+
+Texture2D<float> DepthTexture : register( t0 );
+RWTexture2D<float2> VarianceTexture : register( u0 );
+groupshared float2 LocalSamples[ThreadCountX+KernelRadius*2][ThreadCountY+KernelRadius*2];
+groupshared float2 HorizontalBlur[ThreadCountX][ThreadCountY+KernelRadius*2];
+
+float2 SampleDepth(uint2 offset)
+{
+	float Depth = DepthTexture.Load(uint3(offset,0));
+	return float2(Depth,Depth*Depth);
+}
+
+void CollectLocalSamples(int BlockX, int DestY, int ImageX, int ImageY)
+{
+	// Let's say gaussian blur kernel is 5x5, then the local sample array will look like this,
+	// where the values to the left and right of the double-bars are oversampling at the edges of the thread group.
+	// +----+----++---+---------------------------++---+---+
+	// | -2 | -1 || 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 || 8 | 9 |
+	// +----+----++---+---------------------------++---+---+
+
+
+	// Extra samples at the left for oversampling
+	if (BlockX < KernelRadius)
+	{
+		// Clamp out of bound samples at the left edge of image subrect
+		int X = max(ImageX- KernelRadius, SubRect.x);
+		LocalSamples[BlockX][DestY] = SampleDepth(uint2(X, ImageY));
+	}
+
+	// Extra samples at the right for oversampling
+	if (BlockX >= ThreadCountX - KernelRadius)
+	{
+		int X = min(ImageX + KernelRadius, SubRect.z - 1);
+		LocalSamples[BlockX+2*KernelRadius][DestY] = SampleDepth(uint2(X, ImageY));
+	}
+
+	// And sample normally.
+	LocalSamples[BlockX + KernelRadius][DestY] = SampleDepth(uint2(ImageX, ImageY));
+}
+
+void DoHorizontalBlur(int LocalX, int Row)
+{
+	float2 BlurValue = float2(0, 0);
+
+	[unroll]
+	for (int i = -KernelRadius; i <= KernelRadius; ++i)
+	{
+		int k = LocalX + KernelRadius + i;
+		BlurValue += LocalSamples[k][Row] * FilterWeights[i + KernelRadius];
+	}
+
+	HorizontalBlur[LocalX][Row] = BlurValue;
+}
+
+[numthreads(ThreadCountX, ThreadCountY, 1)]
+void SFXFilterVarianceCS(
+	uint2 GroupThreadId : SV_GroupThreadID,
+	uint2 DispatchThreadId : SV_DispatchThreadID
+	)
+{
+	int2 BlockPixel = (int2)GroupThreadId;
+	int2 ImagePixel = (int2)DispatchThreadId;
+
+	///////////////////////////////////////////////////////////////////////////
+	// STEP ONE: Fill local thread storage with samples to use for blurring
+	///////////////////////////////////////////////////////////////////////////
+
+	// Let's say gaussian blur kernel is 5x5, then one row of the local sample array will look like this,
+	// where the values to the left and right of the double-bars are oversampling at the edges of the thread group.
+	// +---+---++---+---------------------------++---+---+
+	// |-2 |-1 || 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 || 8 | 9 |
+	// +---+---++---+---------------------------++---+---+
+	//
+	// Vertically it looks similar (just transpose that image)
+
+	// Extra samples at the top for oversampling
+	if (BlockPixel.y < KernelRadius)
+	{
+		// Clamp to the subrect of the source image so we don't sample outside the bounds
+		int DestY = BlockPixel.y;
+		int ImageRow = max(ImagePixel.y - KernelRadius, SubRect.y);
+		CollectLocalSamples(BlockPixel.x, DestY, ImagePixel.x, ImageRow);
+	}
+
+	// Extra samples at the bottom for oversampling
+	if (BlockPixel.y >= ThreadCountY - KernelRadius)
+	{
+		// Clamp to the subrect of the source image so we don't sample outside the bounds
+		int DestY = BlockPixel.y + 2 * KernelRadius;
+		int ImageRow = min(ImagePixel.y + KernelRadius, SubRect.w - 1);
+		CollectLocalSamples(BlockPixel.x, DestY, ImagePixel.x, ImageRow);
+	}
+
+	// And sample normally
+	CollectLocalSamples(BlockPixel.x, BlockPixel.y + KernelRadius, ImagePixel.x, ImagePixel.y);
+
+	// Wait for all threads to finish
+	GroupMemoryBarrierWithGroupSync();
+
+	///////////////////////////////////////////////////////////////////////////
+	// STEP TWO: Horizontal blur
+	///////////////////////////////////////////////////////////////////////////
+
+	// Extra blur at the top for oversampling
+	if (BlockPixel.y < KernelRadius)
+	{
+		DoHorizontalBlur(BlockPixel.x, BlockPixel.y);
+	}
+
+	// Extra blur at the bottom for oversampling
+	if (BlockPixel.y >= ThreadCountY - KernelRadius)
+	{
+		DoHorizontalBlur(BlockPixel.x, BlockPixel.y + 2 * KernelRadius);
+	}
+
+	// Normal horizontal blur
+	DoHorizontalBlur(BlockPixel.x, BlockPixel.y + KernelRadius);
+
+	// Wait for all threads to finish
+	GroupMemoryBarrierWithGroupSync();
+
+	///////////////////////////////////////////////////////////////////////////
+	// STEP THREE: Vertical blur
+	///////////////////////////////////////////////////////////////////////////
+
+	float2 BlurValue = float2(0, 0);
+
+	[unroll]
+	for (int i = -KernelRadius; i <= KernelRadius; ++i)
+	{
+		int k = BlockPixel.y + KernelRadius + i;
+		BlurValue += HorizontalBlur[BlockPixel.x][k] * FilterWeights[i + KernelRadius];
+	}
+
+	VarianceTexture[ImagePixel.xy + SubRect.xy] = BlurValue;
+}
+

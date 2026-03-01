@@ -1,0 +1,101 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+//  SFXWorldNormalShader.usf
+//
+//  Copyright (c) 2011 BioWare Corp.
+//
+//  The source code included in this file is confidential,
+//  secret, or proprietary information of BioWare Corp. It
+//  may not be used in whole or in part without express
+//  written permission from BioWare Corp.
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+//  SFXWorldNormalShader.usf
+//
+////////////////////////////////////////////////////////////////////////////////
+//
+//  Owned By: Stephane Levesque
+//  Created On: March 03, 2011
+//
+//	
+////////////////////////////////////////////////////////////////////////////////
+
+#undef WORLD_COORDS
+#define WORLD_COORDS 1
+
+#include "Common.usf"
+#include "Material.usf"
+#include "VertexFactory.usf"
+
+
+/*=============================================================================
+	Vertex Shader
+=============================================================================*/
+
+void MainVertexShader(
+	FVertexFactoryInput Input,
+	out FVertexFactoryInterpolants OutFactoryInterpolants,
+	out float4 OutCameraVectorOrVertexColor : TEXCOORD6,
+	out float4 OutPixelPosition : TEXCOORD7,
+	out float4 OutPosition : SV_Position
+	)
+{
+	FVertexFactoryIntermediates VFIntermediates = GetVertexFactoryIntermediates(Input);
+	float4 WorldPosition = VertexFactoryGetWorldPosition(Input, VFIntermediates);
+	float3x3 TangentBasis = VertexFactoryGetTangentBasis(Input, VFIntermediates);
+
+	FMaterialVertexParameters VertexParameters = GetMaterialVertexParameters(Input, VFIntermediates, WorldPosition.xyz, TangentBasis);
+	// Isolate instructions used for world position offset on xbox 360, 
+	// As these cause the optimizer to generate different position calculating instructions in each pass, resulting in self-z-fighting.
+	// This is only necessary for shaders used in passes that have depth testing enabled.
+	ISOLATE
+	{
+		WorldPosition.xyz += GetMaterialWorldPositionOffset(VertexParameters);
+	}
+
+	OutPosition = MulMatrix(ViewProjectionMatrix,WorldPosition);
+	OutFactoryInterpolants = VertexFactoryGetInterpolants(Input, VFIntermediates);
+#if WORLD_POS
+	OutPixelPosition = WorldPosition;
+#else
+	OutPixelPosition = OutPosition;
+#endif
+
+	OutCameraVectorOrVertexColor = 1;
+#if PER_PIXEL_CAMERA_VECTOR
+	OutCameraVectorOrVertexColor = VertexFactoryGetVertexColor( Input, VFIntermediates );
+#else
+	OutCameraVectorOrVertexColor.xyz = VertexFactoryWorldToTangentSpace(Input,VFIntermediates,TangentBasis,CameraPosition.xyz - WorldPosition.xyz * CameraPosition.w);
+#endif
+
+}
+
+
+
+/*=============================================================================
+	Pixel Shader
+=============================================================================*/
+
+void MainPixelShader(
+	in FVertexFactoryInterpolants FactoryInterpolants,
+	in half4 CameraVectorOrVertexColor : TEXCOORD6,
+	in float4 PixelPosition : TEXCOORD7,
+	OPTIONAL_FacingSign
+	OPTIONAL_PixelShaderScreenPosition
+	out half4 OutColor : SV_Target
+	)
+{
+	FMaterialPixelParameters MaterialParameters = GetMaterialPixelParameters(FactoryInterpolants);
+	CalcMaterialParameters(MaterialParameters,FacingSign,CameraVectorOrVertexColor,PixelPosition,half3(0,0,1));
+
+	// Allow the material to mask out pixels.
+	GetMaterialClipping(MaterialParameters, PixelShaderScreenPosition.xy);
+
+	// Transform the surface normal and the reflected camera vector into world-space.
+	float3 WorldNormal = TransformTangentVectorToWorld(MaterialParameters, MaterialParameters.TangentNormal);
+	
+	WorldNormal = (WorldNormal * 0.5f) + 0.5f;
+
+	OutColor = RETURN_COLOR( float4( WorldNormal, 1.0f ) )	;
+}

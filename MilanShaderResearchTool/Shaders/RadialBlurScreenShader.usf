@@ -1,0 +1,152 @@
+/*=============================================================================
+	RadialBlurScreenShader.usf: Renders radial blur.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+#include "Material.usf"
+
+float4 WorldCenterPos;
+
+struct FRadialBlurVertexOutput
+{
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half2 TexCoord				: TEXCOORD0;
+	half4 ScreenPosition		: TEXCOORD1;
+	half4 ScreenPositionCenter	: TEXCOORD2;
+	// BIOEND
+};
+
+/**
+ * Vertex shader for rendering radial blur screen quad
+ */
+void MainRadialBlurVS(
+	in float4 InPosition : POSITION,
+	in float2 InTexCoord : TEXCOORD0,
+	out FRadialBlurVertexOutput Output,
+	out float4 OutPosition : SV_Position
+	)
+{
+	OutPosition = InPosition;
+	Output.TexCoord = InTexCoord;
+	Output.ScreenPosition = OutPosition;
+	Output.ScreenPositionCenter = MulMatrix( ViewProjectionMatrix, WorldCenterPos );
+	Output.ScreenPositionCenter.w = abs(Output.ScreenPositionCenter.w);	
+}
+
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half RadialBlurScale;
+half RadialBlurFalloffExp;
+half RadialBlurOpacity;
+// BIOEND
+
+/**
+ * Calculates the screen space 2d offset vector for radial blur
+ * based on the current pixel screen positon and the object origin screen position.
+ */
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half2 CalcScreenOffsetVec(half4 CurScreenPosition, half4 ScreenPositionCenter)
+{
+	half2 ScreenPositionN = clamp(CurScreenPosition.xy / CurScreenPosition.w,-1,1);
+	half2 ScreenPositionCenterN = clamp(ScreenPositionCenter.xy / ScreenPositionCenter.w,-1,1);
+	half2 RadialVector = ScreenPositionCenterN - ScreenPositionN;
+	half RadialVectorLen = length(RadialVector);
+	half2 RadialVectorN = RadialVector / RadialVectorLen;	
+	return RadialVectorN * pow(RadialVectorLen,RadialBlurFalloffExp) * RadialBlurScale;
+}
+// BIOEND
+
+/**
+ * Pixel shader for rendering radial blur screen quad. 
+ * Samples scene color multiple times for the blur.
+ */
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+void MainRadialBlurPS(in FRadialBlurVertexOutput Input, out half4 OutColor : SV_Target0)
+// BIOEND
+{
+	float2 OffsetUV = CalcScreenOffsetVec(Input.ScreenPosition,Input.ScreenPositionCenter);
+
+	FMaterialPixelParameters MaterialParameters;
+#if NUM_MATERIAL_TEXCOORDS
+	for(int CoordinateIndex = 0;CoordinateIndex < NUM_MATERIAL_TEXCOORDS;CoordinateIndex++)
+	{
+		MaterialParameters.TexCoords[CoordinateIndex] = Input.TexCoord.xy;
+	}
+#endif
+	MaterialParameters.VertexColor = 1;
+	MaterialParameters.TangentNormal = 0;
+	MaterialParameters.TangentCameraVector = 0;
+	MaterialParameters.TangentReflectionVector = 0;
+	MaterialParameters.ScreenPosition = Input.ScreenPosition;
+	MaterialParameters.TangentLightVector = 0;
+#if WORLD_COORDS
+	MaterialParameters.TangentToWorld = 0;
+#endif
+#if WORLD_POS
+	MaterialParameters.WorldPosition = 0;
+#endif
+	OffsetUV *= GetMaterialOpacity(MaterialParameters);
+	OffsetUV /= 4.0f;
+
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	OutColor = half4(0,0,0,RadialBlurOpacity);
+	// BIOEND
+	const int MAX_ITERATIONS=5;
+	for(int i=0; i<MAX_ITERATIONS; i++)
+	{
+		OutColor.rgb += CalcSceneColor( ((Input.ScreenPosition.xy / Input.ScreenPosition.w) + OffsetUV*i/(FLOAT)MAX_ITERATIONS) * ScreenPositionScaleBias.xy + ScreenPositionScaleBias.wz );
+	}
+	OutColor.rgb /= MAX_ITERATIONS;	
+	OutColor = RETURN_COLOR(OutColor);
+}
+
+/**
+ * Pixel shader for rendering radial blur screen quad. 
+ * Renders to the velocity buffer for the blur.
+ */
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+void MainRadialBlurVelocityPS(in FRadialBlurVertexOutput Input, out half4 OutColor : SV_Target0)
+// BIOEND
+{
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half2 OffsetUV = CalcScreenOffsetVec(Input.ScreenPosition,Input.ScreenPositionCenter);		
+	// BIOEND
+
+	FMaterialPixelParameters MaterialParameters;
+#if NUM_MATERIAL_TEXCOORDS
+	for(int CoordinateIndex = 0;CoordinateIndex < NUM_MATERIAL_TEXCOORDS;CoordinateIndex++)
+	{
+		MaterialParameters.TexCoords[CoordinateIndex] = Input.TexCoord.xy;
+	}
+#endif
+	MaterialParameters.VertexColor = 1;
+	MaterialParameters.TangentNormal = 0;
+	MaterialParameters.TangentCameraVector = 0;
+	MaterialParameters.TangentReflectionVector = 0;
+	MaterialParameters.ScreenPosition = Input.ScreenPosition;
+	MaterialParameters.TangentLightVector = 0;
+#if WORLD_COORDS
+	MaterialParameters.TangentToWorld = 0;
+#endif
+#if WORLD_POS
+	MaterialParameters.WorldPosition = 0;
+#endif
+	OffsetUV *= GetMaterialOpacity(MaterialParameters);	
+
+	OffsetUV = OffsetUV * 0.5f + 0.5f;
+
+	// clamp to valid velocity range	
+	// (0/255) is a special value that represents no velocity based blur
+	// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	const half MinVelocity = 1.0/255.0;
+ 	const half MaxVelocity = 1.0;
+ 	// BIOEND
+	OffsetUV = clamp(OffsetUV,MinVelocity,MaxVelocity);
+
+	OutColor = 0;
+	// blue|alpha channels used for translucent velocities
+	OutColor.ba = OffsetUV.xy;
+}
+
+
+

@@ -1,0 +1,24 @@
+/*=============================================================================
+	UberPostprocessVertexShader.usf:
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+#include "Common.usf"
+
+// ME3START - Rob Krajcarski - October 2, 2011 - Preport of MotionBlur improvements (see UberPostProcessEffect.cpp for more details)
+float4 SceneCoordinate1ScaleBias;
+float4 SceneCoordinate2ScaleBias;
+float4 SceneCoordinate3ScaleBias;
+// ME3END
+void Main(
+	float4 InPosition : POSITION,
+	float2 InScreenUV : TEXCOORD0,
+	out float4 OutScreenPosition : TEXCOORD0,
+	out float2 OutFilterBufferUV : TEXCOORD1,
+	out float4 OutPosition : SV_Position
+	)
+{
+	OutPosition = InPosition;								// Target position
+	float2 SceneUV = InPosition.xy / InPosition.w * SceneCoordinate1ScaleBias.xy + SceneCoordinate1ScaleBias.wz;
+	OutScreenPosition = float4(InPosition.xy,SceneUV);		// Background position and UV
+	OutFilterBufferUV = InScreenUV;
+}

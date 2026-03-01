@@ -1,0 +1,59 @@
+// BIOSTART, woytiuk, Sept-20-2010, Pre-integrate of post-process LUT, This file includes everything up to & including CL# 598301
+
+/*=============================================================================
+	PostprocessCommon.hlsl: Common shader code.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+
+
+// scene material parameters
+
+float4 SceneShadowsAndDesaturation;  // RGB = SceneShadows, A = (1-SceneDesaturation)
+float4 SceneInverseHighLights;       // RGB = 1 / SceneHighLights
+float4 SceneMidTones;                // RGB = SceneMidTones
+float4 SceneScaledLuminanceWeights;  // RGB = LuminanceWeights * SceneDesaturation
+
+static float3 SceneShadows      = SceneShadowsAndDesaturation.rgb;
+static float  SceneDesaturation = SceneShadowsAndDesaturation.a;
+
+// gamma correction parameters
+
+float4 GammaColorScaleAndInverse;
+// W unused
+float4 GammaOverlayColor;
+
+// width, height, 1.0/width, 1.0/height useful to access neighbor pixels (useful for Sharpen/SoftEdge)
+float4 RenderTargetExtent;          
+
+static float3 GammaColorScale = GammaColorScaleAndInverse.rgb;
+// not used, might be useful later on
+static float  GammaInverse    = GammaColorScaleAndInverse.a;
+
+//   ideally there should be no need for the max but as pow(x,y) is implemented as exp2(log2(x)*y) 0 is not defined
+//   the pow with 0.000001f made black appear grey so locally we use a smaller value. Later we can try to get rid of the max
+//   or use the smaller value in other places as well.
+static float SmallPowConst = 0.00000001f;
+
+
+
+
+
+// @param InLDRColor needs to be LDR (0..1) and in linear space
+half3 ColorCorrection(half3 InLDRColor)
+{
+	// BIOSTART, woytiuk, Sept-20-2010, Pre-integrate of post-process LUT
+	half3 Color = pow_unclamped(max(saturate(InLDRColor - SceneShadows) * SceneInverseHighLights.rgb, SmallPowConst), SceneMidTones.rgb);
+	// BIOEND
+	
+	half3 ScaledLuminance = dot(Color.rgb, SceneScaledLuminanceWeights.rgb);
+
+	half3 MaterialResult = Color * SceneDesaturation + ScaledLuminance;
+
+	half3 LinearColor = MaterialResult.rgb * GammaColorScale.rgb + GammaOverlayColor.rgb;
+
+	return LinearColor;
+}
+
+// BIOEND, woytiuk, Sept-20-2010, Pre-integrate of post-process LUT, This file includes everything up to & including CL# 598301

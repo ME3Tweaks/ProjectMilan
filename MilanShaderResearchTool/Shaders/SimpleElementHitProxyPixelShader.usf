@@ -1,0 +1,28 @@
+/*=============================================================================
+	SimpleElementHitProxyPixelShader.hlsl: Pixel shader for drawing simple element hit proxies.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+
+SAMPLER2D( _Texture);
+
+void Main(
+	in float2 TextureCoordinate : TEXCOORD0,
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 Color : TEXCOORD1,
+	// BIOEND
+	in float4 HitProxyId : COLOR1,
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	float alpha = tex2D(_Texture,TextureCoordinate).a;
+	OutColor = float4(HitProxyId.rgb,alpha);
+
+#if SM5_PROFILE
+	// Dx11 doesn't do alpha test, so manually clip.
+	clip(alpha - 1.f/255.f);
+#endif
+}

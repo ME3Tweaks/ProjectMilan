@@ -1,0 +1,98 @@
+/*=============================================================================
+	DirectionalLightPixelShader.hlsl: Directional light pixel shader.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#define NEEDS_LIGHTMAP_COORDINATE STATICLIGHTING_TEXTUREMASK
+
+#if ENABLE_DISTANCE_SHADOW_FADING
+	// World position is needed when fading based on distance between dynamic and precomputed shadows
+	#undef WORLD_POS
+	#define WORLD_POS 1
+#endif
+
+#include "Common.usf"
+#include "Material.usf"
+#include "VertexFactory.usf"
+
+half3 LightColor;
+/** Bias to transform distance into the penumbra in x, scale in y, exponent in z. */
+float3 DistanceFieldParameters;
+SAMPLER2D(ShadowTexture);
+bool bReceiveDynamicShadows;
+
+void Main(
+	in FVertexFactoryInterpolants FactoryInterpolants,
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half3 TangentLightVector : TEXCOORD4,
+	in half4 WorldLightVector : TEXCOORD5,
+	in half4 CameraVectorOrVertexColor : TEXCOORD6,
+	// BIOEND
+	in float4 PixelPosition : TEXCOORD7,
+	OPTIONAL_FacingSign
+	OPTIONAL_PixelShaderScreenPosition
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	FMaterialPixelParameters MaterialParameters = GetMaterialPixelParameters(FactoryInterpolants);
+	CalcMaterialParameters(MaterialParameters,FacingSign,CameraVectorOrVertexColor,PixelPosition,TangentLightVector);
+
+#if STATICLIGHTING_TEXTUREMASK
+	#if STATICLIGHTING_SIGNEDDISTANCEFIELD
+		half TransitionDistance = tex2D(ShadowTexture,GetLightMapCoordinate(FactoryInterpolants)).x;
+		half ShadowFactor = (TransitionDistance + DistanceFieldParameters.x) * DistanceFieldParameters.y;
+		half LightMask = pow(saturate(ShadowFactor), DistanceFieldParameters.z); 
+	#else
+		half LightMask = tex2D(ShadowTexture,GetLightMapCoordinate(FactoryInterpolants)).r; 
+	#endif
+#elif STATICLIGHTING_VERTEXMASK
+	half	LightMask = WorldLightVector.w;
+#else
+	half	LightMask = 1;
+#endif
+
+	GetMaterialClipping(MaterialParameters, PixelShaderScreenPosition.xy);
+
+	half3 CombinedShadowFactor = LightMask;
+	#if MATERIALBLENDING_SOLID || MATERIALBLENDING_MASKED
+		if (bReceiveDynamicShadows)
+		{
+			// .rgb contains accumulated per-object normal shadow factors * light function output
+			// .a contains the dominant whole scene shadow, if one was rendered
+			half4 AccumulatedShadowFactors = GetLightAttenuation(MaterialParameters.ScreenPosition);
+			#if ENABLE_DISTANCE_SHADOW_FADING
+				// Static branching to only calculate the distance fade when enabled
+				if (bEnableDistanceShadowFading)
+				{
+					half DynamicShadowFraction = DistanceFromCameraFade(MaterialParameters.WorldPosition);
+					// Replace the precomputed dominant shadow with the whole scene dynamic shadow based on distance
+					CombinedShadowFactor = lerp(CombinedShadowFactor, AccumulatedShadowFactors.aaa, DynamicShadowFraction);
+				}
+			#endif
+			// Combine the whole scene dominant light shadow with per-object shadows and the light function if one was rendered
+			CombinedShadowFactor *= AccumulatedShadowFactors.rgb;
+		}
+	#endif
+
+	OutColor.rgb = 
+		// ME3START - Rob Krajcarski - April 9, 2011 - Preport of Epic CL 596199
+		GetMaterialPointLightTransfer(GetMaterialDiffuseColor(MaterialParameters),MaterialParameters,0,0,CombinedShadowFactor,false) *
+		//GetMaterialPointLightTransfer(MaterialParameters,0,0,CombinedShadowFactor,false) *
+		// ME3END
+		LightColor;
+
+	half Opacity = GetMaterialOpacity(MaterialParameters);
+
+#if MATERIALBLENDING_TRANSLUCENT
+	OutColor.a = Opacity;
+#elif MATERIALBLENDING_ADDITIVE || MATERIALBLENDING_SOFTMASKED
+	OutColor.rgb = OutColor.rgb * Opacity;
+	OutColor.a = 0.0f;
+#else
+	OutColor.a = 0.0f;
+#endif
+		
+	OutColor = RETURN_COLOR(AccumulateSceneColor(OutColor));
+}

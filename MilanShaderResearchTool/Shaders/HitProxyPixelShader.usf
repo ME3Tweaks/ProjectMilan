@@ -1,0 +1,30 @@
+/*=============================================================================
+	HitProxyPixelShader.hlsl: Pixel shader for rendering scene hit proxies.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+#include "Material.usf"
+#include "VertexFactory.usf"
+
+float4 HitProxyId;
+
+void Main(
+	FVertexFactoryInterpolants Interpolants,
+	float4 PixelPosition	: TEXCOORD6,
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 CameraVectorOrVertexColor : TEXCOORD7,
+	// BIOEND
+	OPTIONAL_FacingSign
+	OPTIONAL_PixelShaderScreenPosition
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	out half4 OutColor		: SV_Target0
+	// BIOEND
+	)
+{
+	FMaterialPixelParameters MaterialParameters = GetMaterialPixelParameters(Interpolants);
+	CalcMaterialParameters(MaterialParameters,FacingSign,CameraVectorOrVertexColor,PixelPosition);
+
+	GetMaterialClipping(MaterialParameters, PixelShaderScreenPosition.xy);
+	OutColor = HitProxyId;
+}

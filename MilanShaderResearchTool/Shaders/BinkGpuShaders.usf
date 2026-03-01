@@ -1,0 +1,90 @@
+#include "Common.usf"
+
+SAMPLER2D(YTex)
+SAMPLER2D(CrCbTex)
+#if USE_ALPHA
+SAMPLER2D(ATex)
+#endif
+SAMPLER2D(HTex)
+
+float4 cmatrix[4];
+float4 alpha_mult;
+float4 hdr;
+float4 ctcp;
+
+struct VS_IN
+{
+	float4 Position : POSITION;
+	float2 T0 : TEXCOORD0;
+};
+
+struct VS_OUT
+{
+	float2 T0: TEXCOORD0;
+	float4 Position : SV_Position;
+};
+
+void VertexShaderMain(
+	in VS_IN In,
+	out VS_OUT Out
+	)
+{
+	Out.Position = In.Position;
+	Out.T0 = In.T0;
+}
+
+float4 MainHDR( VS_OUT In ) : SV_Target0
+{
+  float I0 = tex2D(YTex, In.T0 ).x;
+  float2 CtCp = tex2D(CrCbTex, In.T0 ).xy;
+  float I1 = tex2D(HTex, In.T0 ).x;
+
+  CtCp.x = CtCp.x * ctcp.x + ctcp.z;
+  CtCp.y = CtCp.y * ctcp.y + ctcp.w;
+
+  float3 LMS = (I0 + I1) * hdr.x;
+  LMS += CtCp.x * float3(0.00860903703793281, -0.00860903703793281, 0.56003133571067909);
+  LMS += CtCp.y * float3(0.11102962500302593, -0.11102962500302593, -0.32062717498731880);
+  LMS = max(LMS, 0);
+
+  // SMPTE-2084 decode
+  LMS = pow(LMS, 1/(2523.f/4096*128)); 
+  float3 num = max(0, LMS - (3424.f/4096));
+  float3 denom = (2413.f/4096*32) - (2392.f/4096*32) * LMS;
+  LMS = pow(abs(num / denom), 1/(2610.f/16384));
+
+  float3 rgb = LMS.x * (float3(3.4366066943330793, -0.7913295555989289, -0.0259498996905927) * 125);
+  rgb += LMS.y * (float3(-2.5064521186562705, 1.9836004517922909, -0.0989137147117265) * 125);
+  rgb += LMS.z * (float3(0.0698454243231915, -0.1922708961933620, 1.1248636144023192) * 125);
+
+  float4 p = float4(rgb,1);
+
+  p.xyz *= hdr.y;  //exposure
+
+//#ifdef TONEMAP // Simplified Reinhard
+//  p.xyz /= p.xyz+1;
+//  p.xyz *= hdr.z;
+//#endif
+
+#if USE_ALPHA
+  p.w = tex2D(ATex, In.T0 ).x;
+#endif
+
+  p *= alpha_mult;
+
+  return p;
+}
+
+float4 MainYCrCbToRGB(VS_OUT v) : SV_Target0
+{
+    float Y = tex2D(YTex, v.T0).x;
+    float2 CrCb = tex2D(CrCbTex, v.T0).xy;
+  #if USE_ALPHA
+    float A = tex2D(ATex, v.T0).x;
+  #else
+    float A = 1.f;
+  #endif
+
+    float3 col = Y*cmatrix[3].xyz + CrCb.x*cmatrix[0].xyz + CrCb.y*cmatrix[1].xyz + cmatrix[2].xyz;
+    return float4(col, A) * alpha_mult;
+}

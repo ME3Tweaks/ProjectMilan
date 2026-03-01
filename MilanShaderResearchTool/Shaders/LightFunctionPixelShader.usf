@@ -1,0 +1,40 @@
+/*=============================================================================
+	LightFunction.usf: Pixel shader for computing a light function.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+#include "Material.usf"
+
+extern float4x4 ScreenToLight;
+
+void Main(
+	in float4 ScreenPosition : TEXCOORD0,
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	out half4 OutColor : SV_Target0
+	// BIOEND
+	)
+{
+	half SceneW = PreviousDepth(ScreenPosition);
+	float3 LightVector = MulMatrix(ScreenToLight, float4(ScreenPosition.xy * SceneW, SceneW, 1)).xyz;
+
+	FMaterialPixelParameters MaterialParameters;
+#if NUM_MATERIAL_TEXCOORDS
+	for(int CoordinateIndex = 0;CoordinateIndex < NUM_MATERIAL_TEXCOORDS;CoordinateIndex++)
+	{
+		MaterialParameters.TexCoords[CoordinateIndex] = LightVector.xy;
+	}
+#endif
+	MaterialParameters.VertexColor = 1;
+	MaterialParameters.TangentNormal = 0;
+	MaterialParameters.TangentCameraVector = LightVector;
+	MaterialParameters.TangentReflectionVector = 0;
+	MaterialParameters.ScreenPosition = ScreenPosition;
+	MaterialParameters.TangentLightVector = LightVector;
+#if WORLD_COORDS
+	MaterialParameters.TangentToWorld = 0;
+#endif
+
+	half4 Color = float4( GetMaterialEmissive(MaterialParameters), 1 );
+	OutColor = RETURN_COLOR(Color);
+}

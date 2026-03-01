@@ -1,0 +1,403 @@
+/*=============================================================================
+	LightShaftShader.usf: Shaders for rendering light shafts
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#include "Common.usf"
+
+/** If this is defined to 0, the apply will occur uniformly, ignoring the
+    original scene brightnesss, which saves a sample from the full-sized
+    texture and some math at the cost of some oversaturation in bright areas */
+#define APPLY_USES_SCENE_COLOR_TO_AVOID_OVERSATURATION 1
+
+/** Transform from [-1, 1] screen space to world. */
+float4x4 ScreenToWorld;
+
+void DownsampleLightShaftsVertexMain(
+	in float2 InPosition : POSITION,
+	in float2 InUV       : TEXCOORD0,
+	out float2 OutTexCoord : TEXCOORD0,
+	out float3 OutScreenVector : TEXCOORD1,
+	out float4 OutPosition : SV_Position
+	)
+{	
+	OutPosition = float4(InPosition, 0, 1);
+	OutTexCoord = InUV;
+	OutScreenVector = MulMatrix(ScreenToWorld, float4(InPosition, 1, 0)).xyz;	
+}
+
+/** Origin in texture coordinates in xy. */
+float2 TextureSpaceBlurOrigin;
+
+float4 WorldSpaceBlurOriginAndRadius;
+
+/** Spot light direction. */
+float3 WorldSpaceSpotDirection;
+
+/** SpotLightInfo->CosOuterCone in x, SpotLightInfo->InvCosConeDifference in y. */
+float2 SpotAngles;
+
+float4 WorldSpaceCameraPositionAndDistance;
+
+/** Mins in xy, Maxes in zw. */
+// ME3START - Oct-24-2011 - Peter Woytiuk - Precalculated values to reduce shader instructions, converted float to half
+half4 UVMinMax;
+
+half4 AspectRatioAndInvAspectRatio;
+
+/** 1.0f / OcclusionDepthRange in x, BloomScale in y, RadialBlurPercent / 100 in z, OcclusionMaskDarkness in w. */
+half4 LightShaftParameters;
+half OcclusionValueLimit; // 1.f - 0.5.f * OcclusionMaskDarkness
+
+/** Tint in rgb, threshold in a. */
+half4 BloomTintAndThreshold;
+
+/** Transitions to 1 when the light shafts should no longer be seen. */
+/** X:fade Y:1.f-fade Z:fade^2 W:fade^3 */
+half4 DistanceFade;
+// ME3END
+
+/** Result of the previous pass, rgb contains bloom color and a contains an occlusion mask. */
+SAMPLER2D(SourceTexture);
+
+/** Scene color source on Xbox 360. */
+SAMPLER2D(SmallSceneColorTexture);
+
+/** Offsets for downsampling by a factor of 4 in each dimension. */
+float4 SampleOffsets[2];
+
+void DownsampleLightShaftsPixelMain(
+	float2 InUV : TEXCOORD0,
+	float3 ScreenVector : TEXCOORD1,
+	out float4 OutColor : SV_Target0
+	)
+{
+#if XBOX
+	// 4 bilinear samples
+	float4 SceneColorAndDepth00; 
+	// Get scene color from the already downsampled color texture
+	// Scale up by a tweaked factor to make the scene color stored in SmallSceneColorTexture match up with the actual floating point full res SceneColor
+	SceneColorAndDepth00.rgb = tex2D(SmallSceneColorTexture, InUV) * 2.0f;
+	SceneColorAndDepth00.a = CalcSceneDepth(InUV);
+	float4 SceneColorAndDepth10;
+	SceneColorAndDepth10.rgb = tex2D(SmallSceneColorTexture, InUV - SampleOffsets[0].zw) * 2.0f;
+	SceneColorAndDepth10.a = CalcSceneDepth(InUV - SampleOffsets[0].zw);
+	float4 SceneColorAndDepth01;
+	SceneColorAndDepth01.rgb = tex2D(SmallSceneColorTexture, InUV - SampleOffsets[1].xy) * 2.0f;
+	SceneColorAndDepth01.a = CalcSceneDepth(InUV - SampleOffsets[1].xy);
+	float4 SceneColorAndDepth11;
+	SceneColorAndDepth11.rgb = tex2D(SmallSceneColorTexture, InUV - SampleOffsets[1].zw) * 2.0f;
+	SceneColorAndDepth11.a = CalcSceneDepth(InUV - SampleOffsets[1].zw);
+#elif PS3
+	// 1 bilinear sample
+	float4 SceneColorAndDepth00 = CalcSceneColorAndDepth(InUV);
+    // ME3START - Jan-16-2012 - Peter Woytiuk - Fix for PS3 overblooming with multiple additive VFX and extreme negative framebuffer values
+    SceneColorAndDepth00.rgb = clamp( SceneColorAndDepth00.rgb, float3( -MAX_SCENE_COLOR, -MAX_SCENE_COLOR, -MAX_SCENE_COLOR), float3( MAX_SCENE_COLOR, MAX_SCENE_COLOR, MAX_SCENE_COLOR ) );
+    // ME3END
+	float4 SceneColorAndDepth10 = SceneColorAndDepth00;
+	float4 SceneColorAndDepth01 = SceneColorAndDepth00;
+	float4 SceneColorAndDepth11 = SceneColorAndDepth00;
+#else
+	// 4 bilinear samples
+	float4 SceneColorAndDepth00 = CalcSceneColorAndDepth(InUV);
+	float4 SceneColorAndDepth10 = CalcSceneColorAndDepth(InUV - SampleOffsets[0].zw);
+	float4 SceneColorAndDepth01 = CalcSceneColorAndDepth(InUV - SampleOffsets[1].xy);
+	float4 SceneColorAndDepth11 = CalcSceneColorAndDepth(InUV - SampleOffsets[1].zw);
+#endif
+
+	float4 SceneDepths = float4(SceneColorAndDepth00.a, SceneColorAndDepth10.a, SceneColorAndDepth01.a, SceneColorAndDepth11.a);
+
+	float2 NormalizedCoordinates = (InUV - UVMinMax.xy) / UVMinMax.zw;
+	// Setup a mask that is 1 at the edges of the screen and 0 at the center
+	float EdgeMask = 1.0f - NormalizedCoordinates.x * (1.0f - NormalizedCoordinates.x) * NormalizedCoordinates.y * (1.0f - NormalizedCoordinates.y) * 8.0f;
+	EdgeMask = EdgeMask * EdgeMask * EdgeMask * EdgeMask;
+	// Downsample scene color
+	half3 DownsampledColor = .25f * (SceneColorAndDepth00.rgb + SceneColorAndDepth10.rgb + SceneColorAndDepth01.rgb + SceneColorAndDepth11.rgb);
+	// Only bloom colors over BloomThreshold
+	// ME3START - Dec-07-2011 - Peter Woytiuk - Fix for PS3 overblooming when luminance clamp value is used
+	// EPIC-ORIGINAL half Luminance = max(dot(DownsampledColor, half3(.3f, .59f, .11f)), 6.10352e-5);
+	half Luminance = max(dot(DownsampledColor, half3(.3f, .59f, .11f)), 1.f/255.f);
+	// ME3END
+	half AdjustedLuminance = max(Luminance - BloomTintAndThreshold.a, 0.0f);
+	half3 BloomColor = LightShaftParameters.y * DownsampledColor / Luminance * AdjustedLuminance * 2.0f;
+
+#if POINT_LIGHT_SHAFTS
+	float3 WorldPosition00 = ScreenVector * SceneColorAndDepth00.a + WorldSpaceCameraPositionAndDistance.xyz;
+	float3 WorldPosition10 = ScreenVector * SceneColorAndDepth10.a + WorldSpaceCameraPositionAndDistance.xyz;
+	float3 WorldPosition01 = ScreenVector * SceneColorAndDepth01.a + WorldSpaceCameraPositionAndDistance.xyz;
+	float3 WorldPosition11 = ScreenVector * SceneColorAndDepth11.a + WorldSpaceCameraPositionAndDistance.xyz;
+
+	float3 WorldLightVector00 = WorldPosition00 - WorldSpaceBlurOriginAndRadius.xyz;
+	float3 WorldLightVector10 = WorldPosition10 - WorldSpaceBlurOriginAndRadius.xyz;
+	float3 WorldLightVector01 = WorldPosition01 - WorldSpaceBlurOriginAndRadius.xyz;
+	float3 WorldLightVector11 = WorldPosition11 - WorldSpaceBlurOriginAndRadius.xyz;
+	
+	float InvOcclusionDepthRange = LightShaftParameters.x;
+
+	// 1 at the radius of the light, 0 at the center of the light
+	float4 Distances = float4(
+		length(WorldLightVector00),
+		length(WorldLightVector10),
+		length(WorldLightVector01),
+		length(WorldLightVector11));
+
+	float4 NormalizedDistances = Distances / WorldSpaceBlurOriginAndRadius.w;
+	// Setup a mask that only allows occlusion between the camera and the light's center
+	// This prevents pixels behind the light from occluding light shafts
+	float InFrontOfLightMask = 1.0f - saturate((WorldSpaceCameraPositionAndDistance.w - length(WorldPosition00 - WorldSpaceCameraPositionAndDistance.xyz)) / WorldSpaceBlurOriginAndRadius.w);
+	// Filter the occlusion mask instead of the depths
+	float OcclusionMask = max(dot(saturate(NormalizedDistances), .25f), InFrontOfLightMask);
+
+	float SpotLightAttenuation = 1.0f;
+#if SPOT_LIGHT_SHAFTS
+	
+	// Setup a mask that only allows occlusion or blooming from pixels in the spotlight's cone
+	float4 SpotDotProducts = float4(
+		dot(WorldLightVector00, WorldSpaceSpotDirection),
+		dot(WorldLightVector10, WorldSpaceSpotDirection),
+		dot(WorldLightVector01, WorldSpaceSpotDirection),
+		dot(WorldLightVector11, WorldSpaceSpotDirection));
+
+	// Filter the spotlight mask instead of the depths
+	SpotLightAttenuation = Square(dot(saturate((SpotDotProducts / Distances - SpotAngles.xxxx) * SpotAngles.yyyy), .25f));
+
+#endif
+	
+	// Apply the edge mask to the occlusion factor
+    // ME3START - Oct-24-2011 - Peter Woytiuk - Precalculated values to reduce shader instructions
+    OutColor.a = max(max(OcclusionMask * OcclusionMask * OcclusionMask * OcclusionMask, EdgeMask), max(DistanceFade.z, 1.0f - SpotLightAttenuation));
+    // ME3END
+
+	// Only allow blooming from pixels within 1/3rd of the light's radius
+	//@todo - this excludes translucency which may be composing the majority of the light's emissive component
+	float BlurOriginDistanceMask = 1.0f - dot(saturate(NormalizedDistances * 3.0f), .25f);
+	// Calculate bloom color with masks applied
+	// ME3START - Oct-24-2011 - Peter Woytiuk - Precalculated values to reduce shader instructions
+	OutColor.rgb = BloomColor * (1.0f - EdgeMask) * DistanceFade.y * BlurOriginDistanceMask * BlurOriginDistanceMask * SpotLightAttenuation;
+	// ME3END
+#else
+	float InvOcclusionDepthRange = LightShaftParameters.x;
+	// Filter the occlusion mask instead of the depths
+	float OcclusionMask = dot(saturate(SceneDepths * InvOcclusionDepthRange), .25f);
+	// Apply the edge mask to the occlusion factor
+    OutColor.a = max(OcclusionMask, EdgeMask);
+
+	// Only allow bloom from pixels whose depth are in the far half of OcclusionDepthRange
+	float BloomDistanceMask = dot(saturate((SceneDepths - .5f / InvOcclusionDepthRange) * InvOcclusionDepthRange), .25f);
+	// Setup a mask that is 0 at TextureSpaceBlurOrigin and increases to 1 over distance
+	float BlurOriginDistanceMask = 1.0f - saturate(length(TextureSpaceBlurOrigin.xy - InUV * AspectRatioAndInvAspectRatio.zw) * 5.0f);
+	// Calculate bloom color with masks applied
+	OutColor.rgb = BloomColor * BloomDistanceMask * (1.0f - EdgeMask) * BlurOriginDistanceMask * BlurOriginDistanceMask;
+#endif
+
+	// Using a fixed point or low-precision float filter buffer, so we compress into [0, 1] to avoid clamping
+	OutColor.rgb /= MAX_SCENE_COLOR;
+}
+
+float BlurPassIndex;
+
+/** Number of radial blur samples, must be a multiple of 2. */
+// ME3START - Oct-24-2011 - Peter Woytiuk - Moved blur weights into constant space
+#if XBOX
+	//EPIC-ORIGINAL static const float NumSamples = 48;
+	#define NumSamples 48
+#elif PS3
+	//EPIC-ORIGINAL static const float NumSamples = 48;
+	#define NumSamples 36
+#else
+	//EPIC-ORIGINAL static const float NumSamples = 64;
+	#define NumSamples 64
+#endif
+
+// Precalculating the weight values and storing them in constant space saves 1.0ms on the PS3 when doing 48 samples
+static const float2 LinearWeight = 2 *(NumSamples.xx - float2(0, 1)) / (float)(NumSamples.xx);
+static const float2 LinearWeightDelta = -float2(4, 4) / (float)(NumSamples.xx);
+#define DELTA_WEIGHT(i) (LinearWeight + i*LinearWeightDelta)
+#define MIN_WEIGHT_FUNC(j) (4.0f * DELTA_WEIGHT(j) * DELTA_WEIGHT(j) < DELTA_WEIGHT(j)) ? 4.0f * DELTA_WEIGHT(j) * DELTA_WEIGHT(j) : DELTA_WEIGHT(j)
+#define WEIGHT_ARRAY_ENTRY(k) half4( float2(MIN_WEIGHT_FUNC(k)), float2(DELTA_WEIGHT(k)) )
+
+#define WEIGHT_ARRAY_NUM NumSamples/2
+static const half4 BlurWeights[ WEIGHT_ARRAY_NUM ] = 
+	{
+		WEIGHT_ARRAY_ENTRY( 0 ),
+		WEIGHT_ARRAY_ENTRY( 1  ),
+		WEIGHT_ARRAY_ENTRY( 2  ),
+		WEIGHT_ARRAY_ENTRY( 3  ),
+		WEIGHT_ARRAY_ENTRY( 4  ),
+		WEIGHT_ARRAY_ENTRY( 5  ),
+		WEIGHT_ARRAY_ENTRY( 6  ),
+		WEIGHT_ARRAY_ENTRY( 7  ),
+		WEIGHT_ARRAY_ENTRY( 8  ),
+		WEIGHT_ARRAY_ENTRY( 9  ),
+		WEIGHT_ARRAY_ENTRY( 10 ),
+		WEIGHT_ARRAY_ENTRY( 11 ),
+		WEIGHT_ARRAY_ENTRY( 12 ),
+		WEIGHT_ARRAY_ENTRY( 13 ),
+		WEIGHT_ARRAY_ENTRY( 14 ),
+  		WEIGHT_ARRAY_ENTRY( 15 ),
+		WEIGHT_ARRAY_ENTRY( 16 ),
+		WEIGHT_ARRAY_ENTRY( 17 ),
+#if !PS3				
+		WEIGHT_ARRAY_ENTRY( 18 ),
+		WEIGHT_ARRAY_ENTRY( 19 ),
+		WEIGHT_ARRAY_ENTRY( 20 ),
+		WEIGHT_ARRAY_ENTRY( 21 ),
+		WEIGHT_ARRAY_ENTRY( 22 ),
+		WEIGHT_ARRAY_ENTRY( 23 ),
+#if !XBOX 
+		WEIGHT_ARRAY_ENTRY( 24 ),
+  		WEIGHT_ARRAY_ENTRY( 25 ),
+		WEIGHT_ARRAY_ENTRY( 26 ),
+		WEIGHT_ARRAY_ENTRY( 27 ),
+		WEIGHT_ARRAY_ENTRY( 28 ),
+		WEIGHT_ARRAY_ENTRY( 29 ),
+		WEIGHT_ARRAY_ENTRY( 30 ),
+		WEIGHT_ARRAY_ENTRY( 31 )
+#endif //-- !XBOX
+#endif //-- !PS3
+	};
+// ME3END - Oct-24-2011 - Peter Woytiuk - Moved blur weights into constant space
+
+void BlurLightShaftsMain(
+	float2 InUV : TEXCOORD0,
+	out float4 OutColor : SV_Target0
+	)
+{
+	float4 BlurredValues = float4(0,0,0,0);
+	// Scale the UVs so that the blur will be the same pixel distance in x and y
+	float2 AspectCorrectedUV = InUV * AspectRatioAndInvAspectRatio.zw;
+	float2 BlurVector = (TextureSpaceBlurOrigin.xy - AspectCorrectedUV);
+	float BlurLength = length(BlurVector) * 0.5f;
+	// Shorten the length of the vector to limit undersampling
+	BlurVector = BlurVector / BlurLength * min(sqrt(BlurLength) * .5f, BlurLength);
+	BlurVector *= LightShaftParameters.z / (float)(NumSamples);
+
+	// ME3START - Oct-24-2011 - Peter Woytiuk - Moved blur weights into constant space
+	//EPIC-ORIGINAL float2 LinearWeight = 2 *(NumSamples.xx - float2(0, 1)) / (float)(NumSamples.xx);
+	//EPIC-ORIGINAL float2 LinearWeightDelta = -float2(4, 4) / (float)(NumSamples.xx);
+	
+	// Converting the following variables to half didn't make any performance difference on PS3
+	// ME3END
+	float4 SampleUVs = AspectCorrectedUV.xyxy + BlurVector.xyxy * float4(0, 0, 1, 1);
+	float4 SampleUVsDelta = BlurVector.xyxy * 2;
+	
+	SampleUVs *= AspectRatioAndInvAspectRatio.xyxy;
+	SampleUVsDelta *= AspectRatioAndInvAspectRatio.xyxy;
+	// Operate on two samples at a time to minimize ALU instructions
+	// ME3START - Oct-24-2011 - Peter Woytiuk - Moved blur weights into constant space
+	//EPIC-ORIGINAL for (int i = 0; i < NumSamples; i += 2)
+	for (int i = 0; i < WEIGHT_ARRAY_NUM; i++ )
+	// ME3END
+	{
+		// Use a weight that is linearly increasing away from the blur origin
+		// This allows the tail of an occluder to blend out smoothly
+		// ME3START - Oct-24-2011 - Peter Woytiuk - Moved blur weights into constant space
+		//EPIC-ORIGINAL float2 Weight = min(4.0f * LinearWeight * LinearWeight, LinearWeight);
+		// ME3END
+		// Clamp the sample position to make sure we only sample valid parts of the texture
+		// Note: the result of the texture lookup is compressed to fit in the fixed point buffer,
+		// But we don't need to expand it since we're just averaging and not compressing the result
+		// Undo the aspect ratio scaling before sampling
+		// ME3START - Oct-24-2011 - Peter Woytiuk - Moved blur weights into constant space
+		// The PS3 compiler strips the following branches out when it unrolls the loop. The clamps are only required
+		// as the blur vector approaches the edge of the filtered image, they are wasteful anywhere else - the branching
+		// removed 30 instructions from the PS3 shader when doing 24 taps.  The value 3 was arrived at by empirical means
+		float4 ClampedUVs;
+		if ( i < 3 )
+		{
+			ClampedUVs = clamp(SampleUVs, UVMinMax.xyxy, UVMinMax.zwzw);
+		}
+		else if (i > WEIGHT_ARRAY_NUM-1 - 3)
+		{
+			ClampedUVs = clamp(SampleUVs, UVMinMax.xyxy, UVMinMax.zwzw);
+		}
+		else
+		{
+			ClampedUVs = SampleUVs;
+		}
+		
+		BlurredValues += tex2Dfast(SourceTexture, ClampedUVs.xy) * half4(BlurWeights[i].xxx, BlurWeights[i].z);
+		BlurredValues += tex2Dfast(SourceTexture, ClampedUVs.zw) * half4(BlurWeights[i].yyy, BlurWeights[i].w);		
+		//EPIC-ORIGINAL BlurredValues += tex2D(SourceTexture, ClampedUVs.xy) * float4(Weight.xxx, LinearWeight.x);
+		//EPIC-ORIGINAL BlurredValues += tex2D(SourceTexture, ClampedUVs.zw) * float4(Weight.yyy, LinearWeight.y);
+		
+		//EPIC-ORIGINAL LinearWeight += LinearWeightDelta;
+		// ME3END
+		SampleUVs += SampleUVsDelta;
+	}
+	
+	OutColor = BlurredValues / NumSamples;
+}
+
+float4 SourceTextureScaleBias;
+float4 SceneColorScaleBias;
+
+void ApplyLightShaftsVertexMain(
+	in float2 InPosition : POSITION,
+	out float2 OutSourceUV : TEXCOORD0,
+	out float2 OutSceneColorUV : TEXCOORD1,
+	out float4 OutPosition : SV_Position
+	)
+{	
+	OutPosition = float4(InPosition, 0, 1);
+	OutSourceUV = InPosition * SourceTextureScaleBias.xy + SourceTextureScaleBias.wz;
+	OutSceneColorUV = InPosition * SceneColorScaleBias.xy + SceneColorScaleBias.wz;
+}
+
+// ME3START - Oct-24-2011 - Peter Woytiuk - Corrected precision
+// Do not change the apply shader to use halfs, it introduces banding on the PS3 in certain circumstances eg:Cat003
+// ME3END
+float BloomScreenBlendThreshold;
+
+void ApplyLightShaftsPixelMain(
+	float2 InSourceUV : TEXCOORD0,
+	float2 InSceneColorUV : TEXCOORD1,
+	out float4 OutColor : SV_Target0
+	)
+{
+	half4 LightShaftColorAndMask = tex2Dfast(SourceTexture, half2(InSourceUV));
+
+	// Expand from the [0, 1] range stored by the radial blur step
+	LightShaftColorAndMask.rgb *= MAX_SCENE_COLOR;
+
+	// LightShaftParameters.w is OcclusionMaskDarkness, use that to control what an occlusion value of 0 maps to
+	// Lerp an occlusion value of 1 to a multiplier greater than one to balance out the brightness of the scene
+	// ME3START - Oct-24-2011 - Peter Woytiuk - Optimized apply phase
+	float SceneColorMultiplier = lerp(LightShaftParameters.w, OcclusionValueLimit, LightShaftColorAndMask.w * LightShaftColorAndMask.w);
+	// ME3END
+	// Setup a mask based on where the blur origin is
+	float BlurOriginDistanceMask = saturate(length(TextureSpaceBlurOrigin.xy - InSourceUV * AspectRatioAndInvAspectRatio.zw) * 0.5f);
+	// Fade out occlusion over distance away from the blur origin
+	SceneColorMultiplier = lerp(SceneColorMultiplier, 1, BlurOriginDistanceMask);
+	// Fade to no darkening based on distance from the light for point lights
+	// ME3START - Oct-24-2011 - Peter Woytiuk - Optimized apply phase
+	SceneColorMultiplier = lerp(SceneColorMultiplier, 1, DistanceFade.w);
+	// ME3END
+
+#if APPLY_USES_SCENE_COLOR_TO_AVOID_OVERSATURATION
+
+#if XBOX
+	half3 SceneColor = tex2D(SmallSceneColorTexture, InSceneColorUV) * 2.0f;
+#else
+	half3 SceneColor = CalcSceneColor(InSceneColorUV);
+#endif
+
+	half Luminance = dot(SceneColor, half3(.3f, .59f, .11f));
+	// Use an exponential function that converges on 0 slowly
+	// This minimizes the halo created by the screen blend when the source image is a bright gradient
+	half BloomScreenBlendFactor = saturate(BloomScreenBlendThreshold * exp2(-3 * Luminance));
+#else
+	half BloomScreenBlendFactor = BloomScreenBlendThreshold; // The other path does Luminance=1, /8, Luminance=0, /1
+#endif
+
+	// Use a screen blend to apply bloom to scene color, darken scene color by the occlusion factor
+	// ME3START - Rob Krajcarski - October 5, 2011 - work around for driver issue introduced by ATI
+	half3 SceneColorResult = LightShaftColorAndMask.rgb * BloomTintAndThreshold.rgb * BloomScreenBlendFactor;
+	#if !CONSOLE
+	// ATI clips when the result it 0, but we need the blending to work, so we add a bias term
+		SceneColorResult += 0.00001f;
+	#endif // !CONSOLE
+	OutColor = RETURN_COLOR(half4(SceneColorResult, SceneColorMultiplier));
+	//OutColor = RETURN_COLOR(half4(LightShaftColorAndMask.rgb * BloomTintAndThreshold.rgb * BloomScreenBlendFactor, SceneColorMultiplier));
+	// ME3END
+}

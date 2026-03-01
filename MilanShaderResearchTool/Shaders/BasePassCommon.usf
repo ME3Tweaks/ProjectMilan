@@ -1,0 +1,108 @@
+/*=============================================================================
+	BasePassCommon.usf: Base pass definitions used by both vertex and pixel shader
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#if XBOX || PS3
+	#define SUPPORTS_MULTITYPE_BASEPASS_LIGHT	1
+#else
+	#define SUPPORTS_MULTITYPE_BASEPASS_LIGHT	0
+#endif
+
+#define V_INPUT_CAMERAVECTOR		TEXCOORD6
+#define V_INPUT_SKYVECTOR			TEXCOORD7
+#define V_INPUT_TANGENTLIGHTVECTOR	TEXCOORD8
+#define V_INPUT_WORLDLIGHTVECTOR	TEXCOORD9
+
+#define TANGENT_LIGHT_VECTOR_DEFINED 0
+
+#define ENABLE_TRANSLUCENCY_DOF (MATERIALBLENDING_TRANSLUCENT || MATERIALBLENDING_ADDITIVE || MATERIALBLENDING_MODULATE || MATERIALBLENDING_SOFTMASKED)
+
+struct FBasePassInterpolants
+{
+	#if VERTEX_LIGHTMAP
+		// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		half3 LightMapA	: TEXCOORD2;
+		// ME3START - Rob Krajcarski - January 15, 2011 - Added custom lightmaps
+		#if NUM_LIGHTMAP_COEFFICIENTS > 1
+		// ME3END
+		half3 LightMapB	: TEXCOORD3;
+		// ME3START - Rob Krajcarski - January 15, 2011 - Added custom lightmaps
+		#endif // NUM_LIGHTMAP_COEFFICIENTS > 1
+		// ME3END
+		#if NEEDS_BASEPASS_FOGGING
+			half4 VertexFog	: TEXCOORD4;
+		#endif
+		// BIOEND
+	#else
+		#if SIMPLE_VERTEX_LIGHTMAP
+			// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+			half3 LightMapA		: TEXCOORD2;
+			// BIOEND
+		#endif
+		//for texture-lightmapped translucency we can pass the vertex fog in its own interpolator
+		#if NEEDS_BASEPASS_FOGGING
+			#if (ENABLE_DIRECTIONAL_LIGHT || ENABLE_MULTITYPE_BASEPASS_LIGHT) && !MATERIAL_LIGHTINGMODEL_UNLIT
+				#undef TANGENT_LIGHT_VECTOR_DEFINED
+				#define TANGENT_LIGHT_VECTOR_DEFINED 1
+				// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+				half4 TangentLightVector	: TEXCOORD3;
+				// BIOEND
+			#endif
+			// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+			half4 VertexFog		: TEXCOORD4;
+			// BIOEND
+		#elif ENABLE_DIRECTIONAL_LIGHT || ENABLE_MULTITYPE_BASEPASS_LIGHT
+			#undef TANGENT_LIGHT_VECTOR_DEFINED
+			#define TANGENT_LIGHT_VECTOR_DEFINED 1
+			// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+			half4 TangentLightVector	: TEXCOORD4;
+			// BIOEND
+		#endif
+	#endif
+
+	float4 PixelPosition	: TEXCOORD5;
+
+	// If we're computing the camera vector per-pixel, then we don't need to transport it to the pixel
+	// shader in an interpolator.  Instead, we'll use this slot for storing vertex color, which we
+	// normally wouldn't have space for (due to tangent -> world matrix for WORLD_COORDS=1)
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 CameraVectorOrVertexColor : V_INPUT_CAMERAVECTOR;
+	// BIOEND
+
+	#if !MATERIAL_LIGHTINGMODEL_UNLIT
+		#if ENABLE_TRANSLUCENCY_DOF	
+			// Translucency DoF blur amount is stored in SkyVector.w
+			// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+			half4 SkyVector	: V_INPUT_SKYVECTOR;
+			// BIOEND
+			#define TranslucencyDepth SkyVector.w
+		#else
+			// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+			half3 SkyVector	: V_INPUT_SKYVECTOR;
+			// BIOEND
+		#endif
+	#else
+		#if ENABLE_TRANSLUCENCY_DOF
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		half TranslucencyDepth : V_INPUT_SKYVECTOR;
+		// BIOEND
+		#endif		
+	#endif
+
+	// If TangentLightVector couldn't be allocated and ENABLE_DIRECTIONAL_LIGHT || ENABLE_MULTITYPE_BASEPASS_LIGHT is enabled, 
+	// Use one of the extended interpolators that PC SM3 doesn't support
+	#if (ENABLE_DIRECTIONAL_LIGHT || ENABLE_MULTITYPE_BASEPASS_LIGHT) && !TANGENT_LIGHT_VECTOR_DEFINED && SUPPORTS_MULTITYPE_BASEPASS_LIGHT
+		#undef TANGENT_LIGHT_VECTOR_DEFINED
+		#define TANGENT_LIGHT_VECTOR_DEFINED 1
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		half4 TangentLightVector : V_INPUT_TANGENTLIGHTVECTOR;
+		// BIOEND
+	#endif
+
+	#if ENABLE_MULTITYPE_BASEPASS_LIGHT
+		// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+		half3 WorldLightVector : V_INPUT_WORLDLIGHTVECTOR;
+		// BIOEND
+	#endif
+};

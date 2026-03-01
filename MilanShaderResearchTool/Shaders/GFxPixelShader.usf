@@ -1,0 +1,367 @@
+/*=============================================================================
+	Pixel Shader code used by MwyUI / Scaleform GFX
+	These shaders are converted to HLSL/cg from the example DX9 assembly
+	renderer in ScaleForm's SDK
+=============================================================================*/
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+#include "Common.usf"
+
+#if PS3
+// GW: Hint to Cgc that the primary texture format here is ARGB8, resulting in much tighter optimization
+//     of sampler reads.
+#pragma texformat TextureImage ARGB8
+#pragma texformat TextureImage2 ARGB8
+#pragma texformat TextureImage3 ARGB8
+#pragma texformat TextureImage4 ARGB8
+#endif
+// BIOEND
+
+SAMPLER2D(TextureImage);
+SAMPLER2D(TextureImage2);
+SAMPLER2D(TextureImage3);
+SAMPLER2D(TextureImage4);
+
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 ConstantColor;
+half4 ColorScale;
+half4 ColorBias;
+// BIOEND
+half   InverseGamma;
+
+// BW_START - 2020/10/22 - Stewart, Darrin - [DIVERGENCE] HDR Support for METR
+#if SFX_OUTPUT_HDR
+FLOAT HDRBrightnessScale;
+#endif
+// BW_END
+
+// BIOSTART - August 25, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 CorrectGamma(half4 color)
+{
+	// BW_START - 2020/10/22 - Stewart, Darrin - [DIVERGENCE] HDR Support for METR
+	// In HDR mode, we're writing to a linear buffer. Scale it to the desired paperwhite nits value for HDR
+#if SFX_OUTPUT_HDR
+	color = saturate(float4(pow(color.rgb, InverseGamma), color.a));
+	return float4(color.rgb * HDRBrightnessScale, color.a);
+#else
+	return half4(saturate(pow(color.rgb, InverseGamma)), color.a);
+#endif
+	// BW_END
+}
+// BIOEND
+
+// BW_START - 2020/10/22 - Stewart, Darrin - [DIVERGENCE] HDR Support for METR
+float4 CorrectGammaNoHDRScale(float4 color)
+{
+	// For multipy blends (which are essentially darkening operations),
+	// it doesn't make sense to apply HDR brightness scale. Keep the
+	// input in 0..1 range.
+	return half4(saturate(pow(color.rgb, InverseGamma)), color.a);
+}
+// BW_END
+
+// ME3START - Chris Orthner - Jan 21, 2011 - Preport Epic Changelist# 625251
+float4 CorrectGamma22(float4 color)
+{
+	// BW_START - 2020/10/22 - Stewart, Darrin - [DIVERGENCE] HDR Support for METR
+	// In HDR mode, we're writing to a linear buffer. Scale it to the desired paperwhite nits value for HDR
+#if SFX_OUTPUT_HDR
+	color = saturate(float4(pow(saturate(color.rgb), 0.4545454545f), color.a));
+	return float4(color.rgb * HDRBrightnessScale, color.a);
+#else
+    return RETURN_COLOR(float4(pow(saturate(color.rgb), 0.4545454545f), color.a));
+#endif
+}
+
+float4 CorrectGamma22NoHDRScale(float4 color)
+{
+	// For multipy blends (which are essentially darkening operations),
+	// it doesn't make sense to apply HDR brightness scale. Keep the
+	// input in 0..1 range.
+    return RETURN_COLOR(float4(pow(saturate(color.rgb), 0.4545454545f), color.a));
+}
+// ME3END
+
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_SolidColor(
+// BIOEND
+	) : SV_Target0
+{
+	// BW_START - 2020/10/22 - Stewart, Darrin - [DIVERGENCE] HDR Support for METR
+#if SFX_OUTPUT_HDR
+	return float4(ConstantColor.rgb * HDRBrightnessScale, ConstantColor.a);
+#else
+	return ConstantColor;
+#endif
+	// BW_END
+}
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_CxformTexture(
+// BIOEND
+	in float2 TextureCoordinate : TEXCOORD0	
+	) : SV_Target0
+{
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 Sample = tex2Dfast(TextureImage,TextureCoordinate);	
+	// BIOEND
+	return CorrectGamma(Sample * ColorScale + ColorBias);
+}
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_CxformTextureMultiply(
+// BIOEND
+	in float2 TextureCoordinate : TEXCOORD0	
+	) : SV_Target0
+{
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 Sample = tex2Dfast(TextureImage,TextureCoordinate);	
+	// BIOEND
+	float4 BiasedSample = Sample * ColorScale + ColorBias;
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	return CorrectGammaNoHDRScale(lerp( half4(1,1,1,1), BiasedSample, BiasedSample.a ));
+	// BIOEND
+}
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_Glyph(
+// BIOEND
+	in float2 TextureCoordinate : TEXCOORD0,
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 Color0 : COLOR0
+	// BIOEND
+	) : SV_Target0
+{	
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 Sample = tex2Dfast(TextureImage,TextureCoordinate);
+	// BIOEND
+	Color0.a = Color0.a * Sample.r;
+	return CorrectGamma(Color0 * ColorScale + ColorBias);	
+}
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_GlyphColor(
+// BIOEND
+	in float2 TextureCoordinate : TEXCOORD0,
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 Color0 : COLOR0
+	// BIOEND
+	) : SV_Target0
+{	
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 Sample = tex2Dfast(TextureImage,TextureCoordinate) * ColorScale + ColorBias;
+	// BIOEND
+	return CorrectGamma(Sample);	
+}
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_GlyphColorMultiply(
+// BIOEND
+	in float2 TextureCoordinate : TEXCOORD0,
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 Color0 : COLOR0
+	// BIOEND
+	) : SV_Target0
+{	
+	// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	half4 Sample = tex2Dfast(TextureImage,TextureCoordinate) * ColorScale + ColorBias;
+	return CorrectGammaNoHDRScale(lerp( half4(1,1,1,1), Sample, Sample.a) );	
+	// BIOEND
+}
+
+// ME3START - Chris Orthner - Jan 21, 2011 - Preport Epic Changelist# 625251
+float4 Main_GlyphSRGB(
+	in float2 TextureCoordinate : TEXCOORD0,
+	in float4 Color0 : COLOR0
+	) : SV_Target0
+{	
+	float4 Sample = tex2D(TextureImage,TextureCoordinate) * ColorScale + ColorBias;	
+	return CorrectGamma22(Sample * Color0);	
+}
+
+float4 Main_GlyphSRGBMultiply(
+	in float2 TextureCoordinate : TEXCOORD0,
+	in float4 Color0 : COLOR0
+	) : SV_Target0
+{	
+	float4 Sample = tex2D(TextureImage,TextureCoordinate) * ColorScale + ColorBias;
+	return CorrectGamma22NoHDRScale(lerp( float4(1,1,1,1), Sample, Sample.a) );	
+}
+// ME3END
+
+// The below Shaders are used when Gouraud shading / Edge AA is enabled
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_CxformGouraud(
+	in half4 Color0 : COLOR0,
+	in half4 Color1 : COLOR1
+	) : SV_Target0
+{
+	half4 BiasedColor = Color0 * ColorScale + ColorBias;
+	return CorrectGamma(half4( BiasedColor.rgb, BiasedColor.a * Color1.a ));
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_CxformGouraudMultiply(
+	in half4 Color0 : COLOR0,
+	in half4 Color1 : COLOR1
+	) : SV_Target0
+{
+	half4 BiasedColor = Color0 * ColorScale + ColorBias;
+	BiasedColor.a *= Color1.a;
+	return CorrectGammaNoHDRScale(lerp( half4(1,1,1,1), BiasedColor, BiasedColor.a ));
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_CxformGouraud_NoAddAlpha(
+	in half4 Color0 : COLOR0
+// BIOEND
+	) : SV_Target0
+{
+	return CorrectGamma(Color0 * ColorScale + ColorBias);
+}
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_CxformGouraudMultiply_NoAddAlpha(
+	in half4 Color0 : COLOR0
+	) : SV_Target0
+{
+	half4 BiasedColor = Color0 * ColorScale + ColorBias;
+	return CorrectGammaNoHDRScale(lerp( half4(1,1,1,1), BiasedColor, BiasedColor.a ));
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_CxformGouraudTexture(
+	in half4 Color0 : COLOR0,
+	in half4 Color1 : COLOR1,
+	in float2 TextureCoordinate : TEXCOORD0
+	) : SV_Target0
+{
+	half4 Sample = tex2Dfast(TextureImage,TextureCoordinate);
+	half4 InterpolatedColor = lerp( Color0, Sample, Color1.b );
+	half4 BiasedColor = InterpolatedColor * ColorScale + ColorBias;
+	return CorrectGamma(half4( BiasedColor.rgb, BiasedColor.a * Color1.a ));
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+float4 Main_CxformGouraudMultiplyTexture(
+	in float4 Color0 : COLOR0,
+	in float4 Color1 : COLOR1,
+	in float2 TextureCoordinate : TEXCOORD0
+	) : SV_Target0
+{
+	half4 Sample = tex2Dfast(TextureImage,TextureCoordinate);
+	half4 InterpolatedColor = lerp( Color0, Sample, Color1.b );
+	half4 BiasedColor = InterpolatedColor * ColorScale + ColorBias;
+	BiasedColor.a *= Color1.a;
+	return CorrectGammaNoHDRScale(lerp( half4(1,1,1,1), BiasedColor, BiasedColor.a ));
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_Cxform2Texture(
+	in half4 Color0 : COLOR0,
+	in half4 Color1 : COLOR1,
+	in float2 TextureCoordinate0 : TEXCOORD0,
+	in float2 TextureCoordinate1 : TEXCOORD1
+	) : SV_Target0
+{
+	half4 Sample0 = tex2Dfast(TextureImage,  TextureCoordinate0);
+	half4 Sample1 = tex2Dfast(TextureImage2, TextureCoordinate1);
+	
+	half4 InterpolatedColor = lerp(Sample1, Sample0, Color1.b);
+	return CorrectGamma(InterpolatedColor * ColorScale + ColorBias);
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_CxformMultiply2Texture(
+	in half4 Color0 : COLOR0,
+	in half4 Color1 : COLOR1,
+	in float2 TextureCoordinate0 : TEXCOORD0,
+	in float2 TextureCoordinate1 : TEXCOORD1
+	) : SV_Target0
+{
+	half4 Sample0 = tex2Dfast(TextureImage,  TextureCoordinate0);
+	half4 Sample1 = tex2Dfast(TextureImage2, TextureCoordinate1);
+	
+	half4 InterpolatedColor = lerp(Sample1, Sample0, Color1.b);
+	half4 BiasedColor = InterpolatedColor * ColorScale + ColorBias;
+	
+	return CorrectGammaNoHDRScale(lerp( half4(1,1,1,1), BiasedColor, BiasedColor.a ));
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_GlyphYUV(
+	in float2 TextureCoordinate : TEXCOORD0,
+	in half4 Color0 : COLOR0
+	) : SV_Target0
+{	
+    half  Y = (half)tex2Dfast(TextureImage, TextureCoordinate).r;
+    half  U = (half)tex2Dfast(TextureImage2,TextureCoordinate).r - 128.f/255.f;
+    half  V = (half)tex2Dfast(TextureImage3,TextureCoordinate).r - 128.f/255.f;
+    half3 color = (half3(Y, Y, Y) - half3(16.f/255.f, 16.f/255.f, 16.f/255.f)) * 1.164;
+    color.r +=  V * 1.596f;
+    color.g += -U * 0.392f - V * 0.813f;
+    color.b +=  U * 2.017f;
+	return CorrectGamma(ColorScale * half4(color,1) + ColorBias);
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_GlyphYUVMultiply(
+	in float2 TextureCoordinate : TEXCOORD0,
+	in half4 Color0 : COLOR0
+	) : SV_Target0
+{	
+    half  Y = (half)tex2Dfast(TextureImage, TextureCoordinate).r;
+    half  U = (half)tex2Dfast(TextureImage2,TextureCoordinate).r - 128.f/255.f;
+    half  V = (half)tex2Dfast(TextureImage3,TextureCoordinate).r - 128.f/255.f;
+    half3 color = (half3(Y, Y, Y) - half3(16.f/255.f, 16.f/255.f, 16.f/255.f)) * 1.164;
+    color.r +=  V * 1.596f;
+    color.g += -U * 0.392f - V * 0.813f;
+    color.b +=  U * 2.017f;
+    half4 BiasedColor = ColorScale * half4(color,1) + ColorBias;
+	return CorrectGammaNoHDRScale(lerp( half4(1,1,1,1), BiasedColor, BiasedColor.a ));
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_GlyphYUVA(
+	in float2 TextureCoordinate : TEXCOORD0,
+	in half4 Color0 : COLOR0
+	) : SV_Target0
+{	
+    half  Y = (half)tex2Dfast(TextureImage, TextureCoordinate).r;
+    half  U = (half)tex2Dfast(TextureImage2,TextureCoordinate).r - 128.f/255.f;
+    half  V = (half)tex2Dfast(TextureImage3,TextureCoordinate).r - 128.f/255.f;
+    half3 color = (half3(Y, Y, Y) - half3(16.f/255.f, 16.f/255.f, 16.f/255.f)) * 1.164;
+    color.r +=  V * 1.596f;
+    color.g += -U * 0.392f - V * 0.813f;
+    color.b +=  U * 2.017f;
+	return CorrectGamma(ColorScale * half4(color,tex2Dfast(TextureImage4, TextureCoordinate).r) + ColorBias);
+}
+// BIOEND
+
+// BIOSTART - September 16, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+half4 Main_GlyphYUVAMultiply(
+	in float2 TextureCoordinate : TEXCOORD0,
+	in half4 Color0 : COLOR0
+	) : SV_Target0
+{	
+    half  Y = (half)tex2Dfast(TextureImage, TextureCoordinate).r;
+    half  U = (half)tex2Dfast(TextureImage2,TextureCoordinate).r - 128.f/255.f;
+    half  V = (half)tex2Dfast(TextureImage3,TextureCoordinate).r - 128.f/255.f;
+    half3 color = (half3(Y, Y, Y) - half3(16.f/255.f, 16.f/255.f, 16.f/255.f)) * 1.164;
+    color.r +=  V * 1.596f;
+    color.g += -U * 0.392f - V * 0.813f;
+    color.b +=  U * 2.017f;
+    half4 BiasedColor = ColorScale * half4(color,tex2Dfast(TextureImage4, TextureCoordinate).r) + ColorBias;
+	return CorrectGammaNoHDRScale(lerp( half4(1,1,1,1), BiasedColor, BiasedColor.a ));
+}
+// BIOEND

@@ -1,0 +1,257 @@
+#include "HBAO_Common.usf"
+
+//----------------------------------------------------------------------------------
+float CoarseAO(float2 fUV, float RadiusPixels, float4 Rand, float3 ViewPosition, float3 ViewNormal)
+{
+#if AO_DEINTERLEAVED
+  RadiusPixels /= 4.0;
+#endif
+
+  // Divide by NUM_STEPS+1 so that the farthest samples are not fully attenuated
+  float StepSizePixels = RadiusPixels / (NUM_STEPS + 1);
+
+  const float Alpha = 2.0 * M_PI / NUM_DIRECTIONS;
+  float AO = 0;
+
+  UNROLL
+  for (uint DirectionIndex = 0; DirectionIndex < NUM_DIRECTIONS; ++DirectionIndex)
+  {
+    float Angle = Alpha * float(DirectionIndex);
+
+    // Compute normalized 2D direction
+    float2 Direction = RotateDirection(float2(cos(Angle), sin(Angle)), Rand.xy);
+
+    // Jitter starting sample within the first step
+    float RayPixels = (Rand.z * StepSizePixels + 1.f);
+
+	UNROLL
+    for (uint StepIndex = 0; StepIndex < NUM_STEPS; ++StepIndex)
+    {
+	#if AO_DEINTERLEAVED
+		float2 SnappedUV = round(RayPixels * Direction) * InvQuarterResolution + fUV;
+		float3 S = FetchQuarterResViewPos(SnappedUV);
+	#else
+		float2 SnappedUV = round(RayPixels * Direction) * InvFullResolution + fUV;
+		float3 S = FetchViewPos(SnappedUV);
+	#endif
+
+      RayPixels += StepSizePixels;
+
+      AO += ComputeAO(ViewPosition, ViewNormal, S);
+    }
+  }
+
+  AO *= AOMultiplier / (NUM_DIRECTIONS * NUM_STEPS);
+  return saturate(1.0 - AO * 2.0);
+}
+
+//----------------------------------------------------------------------------------
+float4 RenderHBAO( in HBAOInput Input ) : SV_Target0
+{ 
+#if AO_DEINTERLEAVED
+  Input.Pos.xy = floor(Input.Pos.xy) * 4.0 + Float2Offset;
+  Input.TexCoord = Input.Pos.xy * (InvQuarterResolution / 4.0);
+
+ float3 ViewPosition = FetchQuarterResViewPos(Input.TexCoord);
+ // BW_START - December 10, 2020 - Chan, Patrick - [JIRA:METR-39898] Allow backface shadows on Characters only
+ float2 PartialNormal = ViewNormalTex.Load(int3(Input.Pos.xy,0)).rg;
+ float3 ViewNormal = normalize(NormalCalcZ(BiasNormalMap(float4(PartialNormal,0.f,0.f))).xyz);
+ // BW_END
+#else
+  float3 ViewPosition = FetchViewPos(Input.TexCoord);
+
+  // Reconstruct view-space normal from nearest neighbors
+  float3 ViewNormal = ReconstructNormal(Input.TexCoord, ViewPosition);
+#endif
+
+  // Compute projection of disk of radius control.R into screen space
+  float RadiusPixels = RadiusToScreen / ViewPosition.z;
+
+  // Get jitter vector for the current full-res pixel
+  float4 Rand = GetJitter(Input.Pos);
+
+  float AO = CoarseAO(Input.TexCoord, RadiusPixels, Rand, ViewPosition, ViewNormal);
+
+#if AO_DEINTERLEAVED
+  return float4(AO, 0.f, 0.f, 0.f);
+#else
+  return float4(pow(AO, PowExponent), ViewPosition.z, 0.f, 0.f);
+#endif
+}
+//----------------------------------------------------------------------------------
+#define NUM_THREADS_X		8
+#define NUM_THREADS_Y		2
+#define NUM_THREADS_Z		4
+
+#define REINTERLEAVE		1
+#define EPSILON				float(1.e-14f)
+#define APPROX_RSQRT		1
+#define USE_TANGENTS		1
+
+int							ArrayOffset;
+float4						JitterCS[8];
+Texture2DArray<float>		QuarterResDepthCS;
+
+// BW_START - April 9, 2021 - Amanda Meythaler - Remove AO temporal blur
+#if REINTERLEAVE
+  RWTexture2D<float2>		OutAO;
+#else
+  RWTexture2D<float>		OutAO;
+#endif
+// BW_END
+
+float3 FetchQuarterResViewPosCS(int2 iTexel, int ArrayIdx)
+{
+	float  ViewDepth = QuarterResDepthCS[int3(iTexel,ArrayIdx)].r;
+	// BW_START - April 5, 2121 - Amanda Meythaler - Fix for ambient occlusion flickering
+	float2 fUV = float2(iTexel * int2(4, 4) + int2(ArrayIdx % 4, ArrayIdx / 4)) * InvFullResolution;
+	// BW_END
+	return UVToView(fUV, ViewDepth);
+}
+
+float fast_rsqrt(float inX)
+{
+#if APPROX_RSQRT
+	int x = asint(inX);
+	x = 0x5f3759df - (x >> 1);
+	return asfloat(x);
+#else
+	return rsqrt(inX);
+#endif
+}
+
+float3 tangent_vector(float2 deltaUV, float3 dPdu, float3 dPdv)
+{
+	return deltaUV.x * dPdu + deltaUV.y * dPdv;
+}
+
+float vec_sin(float3 V)
+{
+	return -V.z * fast_rsqrt(dot(V, V) + EPSILON);
+}
+
+float ComputeCoarseAO(int2 iTexel, float RadiusPixels, float4 Rand, float3 ViewPosition, float3 ViewNormal, int ArrayIdx)
+{
+	// Divide by NUM_STEPS+1 so that the farthest samples are not fully attenuated
+	const float StepSizePixels = RadiusPixels / (NUM_STEPS + 1);
+	float AO = 0;
+
+	const float2 fDirections[] =
+	{
+		RotateDirection(float2( 1.f, 0.f), Rand.xy),
+		RotateDirection(float2( 0.f, 1.f), Rand.xy),
+		RotateDirection(float2(-1.f, 0.f), Rand.xy),
+		RotateDirection(float2( 0.f,-1.f), Rand.xy)
+	};
+
+	// Jitter starting sample within the first step
+	const float RayPixels = (Rand.z * StepSizePixels + 1.f);
+
+#if USE_TANGENTS
+	const float3 P = ViewPosition;
+	const float3 N = ViewNormal;
+	// BW_START - April 6, 2121 - Amanda Meythaler - AO Blur and Normal calculation improvements
+	const float3 dPdu = float3(-mad(P.y, N.y, -P.z), P.y*N.x, P.z*N.x) * ProjInfo.x;
+	const float3 dPdv = float3(P.x*N.y, -mad(P.x, N.x, -P.z), P.z*N.y) * ProjInfo.y;
+	// BW_END
+	const float sinAngleBias = NDotVBias;
+	const float sqrRadius = 1.0f / -NegInvR2;
+
+	[unroll]
+	for (uint DirectionIndex = 0; DirectionIndex < NUM_DIRECTIONS; ++DirectionIndex)
+	{
+		float2 snapped_duv = round(RayPixels * fDirections[DirectionIndex].xy * DynamicScaleCS.xy);
+		float2 snapped_uv = iTexel;
+
+		float3 T = tangent_vector(snapped_duv, dPdu, dPdv);
+		float sinH = vec_sin(T);
+
+		[unroll]
+		for (uint StepIndex = 0; StepIndex < NUM_STEPS; StepIndex++)
+		{
+			snapped_uv += snapped_duv;
+			float3 S = FetchQuarterResViewPosCS(snapped_uv, ArrayIdx);
+			float3 V = S - P;
+			float VdotV = dot(V, V);
+			float d2 = VdotV + EPSILON;
+			float sinS = -V.z * fast_rsqrt(d2);
+			float sinDiff = saturate(sinS - sinH - sinAngleBias) * (d2 < sqrRadius);
+			AO += sinDiff * Falloff(d2);
+			sinH += sinDiff;
+		}
+	}
+#else
+	[unroll]
+	for (uint DirectionIndex = 0; DirectionIndex < NUM_DIRECTIONS; ++DirectionIndex)
+	{
+		[unroll]
+		for (uint StepIndex = 0; StepIndex < NUM_STEPS/2; StepIndex += 2)
+		{
+			float2 fStep   = RayPixels.xx + (StepSizePixels * float2((StepIndex + 0),(StepIndex + 1))); 			
+			int4 SnappedUV = round(fStep.xxyy * fDirections[DirectionIndex].xyxy) + iTexel.xyxy;
+
+		    float3 S0 = FetchQuarterResViewPosCS(SnappedUV.xy, ArrayIdx);
+		    float3 S1 = FetchQuarterResViewPosCS(SnappedUV.zw, ArrayIdx);
+			AO += ComputeAO(ViewPosition, ViewNormal, S0);
+			AO += ComputeAO(ViewPosition, ViewNormal, S1);
+		}
+	}
+#endif
+
+	AO *= AOMultiplier / (NUM_DIRECTIONS * NUM_STEPS);
+	return saturate(1.f - (AO * 2.f));
+}
+
+[numthreads( NUM_THREADS_X, NUM_THREADS_Y, NUM_THREADS_Z )]
+void ComputeHBAO( uint3 Gid : SV_GroupID, uint3 GTid : SV_GroupThreadID, uint3 DTid : SV_DispatchThreadID )
+{ 
+	int ArraySlice = ((Gid.z * NUM_THREADS_Z) + GTid.z) + ArrayOffset;
+	int2 iFullResTexel = (DTid.xy * 4) + int2((ArraySlice&3), (ArraySlice/4)) + FullResOffset;
+	int2 iTexel = DTid.xy + QuarterResOffset;
+
+	float3 ViewPosition = FetchQuarterResViewPosCS(iTexel, ArraySlice);
+	// BW_START - April 6, 2121 - Amanda Meythaler - AO Blur and Normal calculation improvements
+	float3 ViewNormal = float3(ViewNormalTex.Load(int3(iFullResTexel.xy, 0)).rg * 2.0f - 1.0f, 0.0f); // No need to calculate Z because it is unused.
+	// BW_END
+
+	// Compute projection of disk of radius control.R into screen space
+	float RadiusPixels = RadiusToScreen / ViewPosition.z;
+
+// BW_START - April 9, 2021 - Amanda Meythaler - Remove AO temporal blur
+#if !REINTERLEAVE
+	OutAO[DTid.xy] = ComputeCoarseAO(iTexel, RadiusPixels, JitterCS[ArraySlice&7], ViewPosition, ViewNormal, ArraySlice);
+#else
+
+	// BW_START - April 5, 2121 - Amanda Meythaler - Fix for ambient occlusion flickering
+	float AO = ComputeCoarseAO(iTexel, RadiusPixels / 4, JitterCS[(ArraySlice) & 7], ViewPosition, ViewNormal, ArraySlice);
+	// BW_END
+	
+	OutAO[iFullResTexel] = float2(AO, ViewPosition.z);
+
+#endif
+
+// BW_END
+}
+
+/*-----------------------------------------------------------------------
+  Copyright (c) 2014-2015, NVIDIA. All rights reserved.
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions
+  are met:
+   * Redistributions of source code must retain the above copyright
+     notice, this list of conditions and the following disclaimer.
+   * Neither the name of its contributors may be used to endorse 
+     or promote products derived from this software without specific
+     prior written permission.
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS ``AS IS'' AND ANY
+  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+  PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+  OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+-----------------------------------------------------------------------*/

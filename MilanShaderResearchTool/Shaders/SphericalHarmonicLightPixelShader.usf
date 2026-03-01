@@ -1,0 +1,57 @@
+/*=============================================================================
+	SphericalHarmonicLightPixelShader.usf: Lights an object using a single SH environment.
+	Copyright 1998-2010 Epic Games, Inc. All Rights Reserved.
+=============================================================================*/
+
+#undef WORLD_COORDS
+#define WORLD_COORDS 1
+
+#include "Common.usf"
+#include "Material.usf"
+#include "VertexFactory.usf"
+#include "SphericalHarmonicCommon.usf"
+
+void Main(
+	in FVertexFactoryInterpolants FactoryInterpolants,
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	in half4 CameraVectorOrVertexColor : TEXCOORD6,
+	// BIOEND
+	in float4 PixelPosition : TEXCOORD7,
+	OPTIONAL_FacingSign
+	OPTIONAL_PixelShaderScreenPosition
+	out float4 OutColor : SV_Target0
+	)
+{
+	FMaterialPixelParameters MaterialParameters = GetMaterialPixelParameters(FactoryInterpolants);
+	// BIOSTART - September 15, 2010 - Wihlidal, Graham - PS3 Fragment and Vertex Shader Optimizations
+	CalcMaterialParameters(MaterialParameters,FacingSign,CameraVectorOrVertexColor,PixelPosition,half3(0,0,1));
+	// BIOEND
+
+	// Allow the material to mask out pixels.
+	GetMaterialClipping(MaterialParameters, PixelShaderScreenPosition.xy);
+
+	// Transform the surface normal and the reflected camera vector into world-space.
+	float3 WorldNormal = TransformTangentVectorToWorld(MaterialParameters, MaterialParameters.TangentNormal);
+
+	// ME3START - Rob Krajcarski - April 9, 2011 - Preport of Epic CL 596199
+	#if MATERIAL_LIGHTINGMODEL_CUSTOM
+		float3 CustomLightingDiffuse = GetMaterialCustomLightingDiffuse(MaterialParameters);
+	#else
+		float3 CustomLightingDiffuse = float3(0,0,0);
+	#endif
+	OutColor.rgb = ComputeSHLighting(GetMaterialDiffuseColor(MaterialParameters), CustomLightingDiffuse, WorldNormal, MaterialParameters);
+	//OutColor.rgb = ComputeSHLighting(WorldNormal, MaterialParameters);
+	// ME3END
+	half Opacity = GetMaterialOpacity(MaterialParameters);
+	
+#if MATERIALBLENDING_TRANSLUCENT
+		OutColor.a = Opacity;
+#elif MATERIALBLENDING_ADDITIVE || MATERIALBLENDING_SOFTMASKED
+		OutColor.rgb = OutColor.rgb * Opacity;
+		OutColor.a = 0.0f;
+#else
+		OutColor.a = 0.0f;
+#endif
+
+	OutColor = RETURN_COLOR(AccumulateSceneColor(OutColor));
+}
