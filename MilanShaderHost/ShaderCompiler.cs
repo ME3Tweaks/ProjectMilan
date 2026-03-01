@@ -30,6 +30,7 @@ namespace MilanShaderHost
 
         [DllImport("MilanShaderCompilerLib.dll", EntryPoint = "CompileShader", ExactSpelling = true)]
         private static extern unsafe int CompileShader_Native(byte* baseShaderName, byte* materialHlsl, byte* vertexFactoryName, ushort* includesDirectory, void* macros, byte* entryPoint, byte* shaderType,
+            int compileFlags,
             // Out parameters.
             ref int outShaderBytesSize,
             byte[] outShaderBytes,
@@ -48,7 +49,7 @@ namespace MilanShaderHost
         /// <param name="entryPoint"></param>
         /// <param name="shaderType"></param>
         /// <returns></returns>
-        public static unsafe int CompileShader(string baseShaderName, string materialHlsl, string vertexFactoryName, string includesDirectory, D3D_SHADER_MACRO[] macros, string entryPoint, string shaderType, out byte[] shaderBytes, out string errorMessage)
+        public static unsafe int CompileShader(string baseShaderName, string materialHlsl, string vertexFactoryName, string includesDirectory, D3D_SHADER_MACRO[] macros, string entryPoint, string shaderType, int compileFlags, out byte[] shaderBytes, out string errorMessage)
         {
             errorMessage = string.Empty;
             shaderBytes = Array.Empty<byte>();
@@ -101,7 +102,7 @@ namespace MilanShaderHost
 
                     byte[] shaderBuffer = new byte[shaderBufferSize]; // 4MiB 
                     byte[] errorBuffer = new byte[errorBufferSize]; // 2KiB
-                    var result = CompileShader_Native(baseShaderName_native, materialHlsl_native, vertexFactoryName_native, (ushort*)includesDirectory_native, macroStrings, entryPoint_native, shaderType_native, ref shaderBufferSize, shaderBuffer, ref errorBufferSize, errorBuffer);
+                    var result = CompileShader_Native(baseShaderName_native, materialHlsl_native, vertexFactoryName_native, (ushort*)includesDirectory_native, macroStrings, entryPoint_native, shaderType_native, compileFlags, ref shaderBufferSize, shaderBuffer, ref errorBufferSize, errorBuffer);
                     if (result != 0)
                     {
                         if (errorBufferSize > 0)
@@ -215,7 +216,7 @@ namespace MilanShaderHost
             string shaderType = "ps";
             byte[] shaderBytes;
             string errorMessage;
-            int result = CompileShader(baseShaderName, materialHLSL, vertexFactoryName, includesDirectory, macros, entryPoint, shaderType, out shaderBytes, out errorMessage);
+            int result = CompileShader(baseShaderName, materialHLSL, vertexFactoryName, includesDirectory, macros, entryPoint, shaderType, 36864, out shaderBytes, out errorMessage);
             if (result != 0)
             {
                 Console.WriteLine($"Shader compilation failed: {errorMessage}");

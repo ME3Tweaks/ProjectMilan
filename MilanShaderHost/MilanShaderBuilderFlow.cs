@@ -59,14 +59,26 @@ namespace MilanShaderHost
             MilanShaderPackageBuilder.SourceFolders.Add(path);
 
             // Dump HLSL for package
-            SetupHLSLDumpFlow();
+            // SetupHLSLDumpFlow();
 
             // Compile in-game
-            // SetupShaderCompileFlow();
+            SetupShaderCompileFlow();
         }
 
         static void SetupHLSLDumpFlow()
         {
+            ShaderCache mRefShaderCache = null;
+            var refShaderCachePath = Path.Combine(MEDirectories.GetCookedPath(Program.Game), "RefShaderCache-PC-D3D-SM5.upk");
+            if (new FileInfo(refShaderCachePath).Length != RefShaderCacheReader.GetVanillaRefSize(Program.Game))
+            {
+                using (var refShaderCachePackage = MEPackageHandler.OpenMEPackage(refShaderCachePath))
+                {
+                    Console.WriteLine($"Reference shader cache at {refShaderCachePath} is not vanilla, loading for level builds.");
+                    var cacheObj = refShaderCachePackage.FindExport("CacheObject");
+                    mRefShaderCache = ObjectBinary.From<ShaderCache>(cacheObj);
+                }
+            }
+
             foreach (var folder in MilanShaderPackageBuilder.SourceFolders)
             {
                 var files = Directory.GetFiles(folder);
@@ -88,7 +100,7 @@ namespace MilanShaderHost
 
 
                     // Builds materials into the map
-                    if (!SetupShaderLevel(file, false))
+                    if (!SetupShaderLevel(file, false, mRefShaderCache))
                     {
                         Console.WriteLine($"Skipping package {Path.GetFileNameWithoutExtension(file)}");
                         continue;
@@ -114,10 +126,26 @@ namespace MilanShaderHost
             KillGame();
             SetupFileList();
             ShaderHost.NewShaderCacheGenerated += OnMaterialCompiled;
+            ShaderCache mRefShaderCache = null;
+            var refShaderCachePath = Path.Combine(MEDirectories.GetCookedPath(Program.Game), "RefShaderCache-PC-D3D-SM5.upk");
+            if (new FileInfo(refShaderCachePath).Length != RefShaderCacheReader.GetVanillaRefSize(Program.Game))
+            {
+                using (var refShaderCachePackage = MEPackageHandler.OpenMEPackage(refShaderCachePath))
+                {
+                    Console.WriteLine($"Reference shader cache at {refShaderCachePath} is not vanilla, loading for level builds.");
+                    var cacheObj = refShaderCachePackage.FindExport("CacheObject");
+                    mRefShaderCache = ObjectBinary.From<ShaderCache>(cacheObj);
+                }
+            }
 
             foreach (var file in PackageFilesToProcess)
             {
-                var outPath = Path.Combine(outDir, Path.GetFileNameWithoutExtension(file) + ".pcc");
+                var baseName = Path.GetFileNameWithoutExtension(file);
+                /*if (!baseName.Equals("BIOG_PhotoModeFilters", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }*/
+                var outPath = Path.Combine(outDir, baseName + ".pcc");
                 if (true)
                 {
                     Console.WriteLine($"Building shaders for: {Path.GetFileNameWithoutExtension(file)}");
@@ -126,7 +154,7 @@ namespace MilanShaderHost
                     scPackage.CreateShaderCache();
 
                     // Builds materials into the map
-                    SetupShaderLevel(file, false);
+                    SetupShaderLevel(file, false, mRefShaderCache);
 
                     // Runs game, which builds shaders and feeds them back to us.
                     StartGameAndWaitForExit();
@@ -141,7 +169,7 @@ namespace MilanShaderHost
                 if (true)
                 {
                     Console.WriteLine($"Rebuilding with compiled shaders for previewing");
-                    SetupShaderLevel(outPath, true);
+                    SetupShaderLevel(outPath, true, mRefShaderCache);
                     //SetupEntry(outPath, true);
                     StartGameAndWaitForExit();
                 }
@@ -185,9 +213,11 @@ namespace MilanShaderHost
             }
         }
 
-        private static bool SetupShaderLevel(string sourcePath, bool buildWithMeshes)
+        private static bool SetupShaderLevel(string sourcePath, bool buildWithMeshes, ShaderCache mRefShaderCache)
         {
             using var sp = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
+            // Once we get normal materials working we can work on making this accept MaterialInstances.
+            // Then we can pre-bake the bHasStaticPermutation version.
             if (sp.Exports.Count(x => x.IsA("Material")) == 0)
             {
                 // No materials to compile
@@ -197,7 +227,7 @@ namespace MilanShaderHost
             var mapName = @"entry.pcc";
 
             transientPackage = MEPackageHandler.CreateMemoryEmptyPackage("Transient.pcc", Program.Game);
-            var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, transientPackage, buildWithMeshes);
+            var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, transientPackage, buildWithMeshes, mRefShaderCache);
             if (buildWithMeshes)
             {
                 // Copy SeekFreeShaderCache
@@ -217,7 +247,7 @@ namespace MilanShaderHost
                 package.GetLevel().WriteBinary(level);
             }
 
-            var outDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
+            var outDir = @"E:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
             package.Save(Path.Combine(outDir, mapName));
             return true;
         }
@@ -265,22 +295,24 @@ namespace MilanShaderHost
         private static void SetupFileList()
         {
             string[] files = [
+                "Biot_Normandy_Int.pcc",
                 //"BioApl_Lvl_Foliage.pcc",
                 //"BioS_MPJungle.pcc",
                 //"BioS_MPLondon.pcc",
-                "biot_humanslumACID.pcc",
-                /*"BioT_MPCer2.pcc",
-                "BioT_MPHosp.pcc",
-                "BioT_MPOcean.pcc",
-                "BioT_MPThes.pcc",
-                "BioT_MPThes_Milan.pcc",
-                "BioT_SolMP.pcc",
-                "BioVFX_DLC_MP1_BatMelee.pcc",
-                "BioVFX_DLC_MP1_Geth.pcc",
-                "BioVFX_MP3_MPHosp.pcc",
-                "BioVFX_MP3_MPOcean.pcc",
-                "BioVFX_MP5_Gear.pcc"*/
-                ];
+                //"BIOG_PhotoModeFilters.pcc",
+                //"biot_humanslumACID.pcc",
+                //"BioT_MPCer2.pcc",
+                //"BioT_MPHosp.pcc",
+                //"BioT_MPOcean.pcc",
+                //"BioT_MPThes.pcc",
+                //"BioT_MPThes_Milan.pcc",
+                //"BioT_SolMP.pcc",
+                //"BioVFX_DLC_MP1_BatMelee.pcc",
+                //"BioVFX_DLC_MP1_Geth.pcc",
+                //"BioVFX_MP3_MPHosp.pcc",
+                //"BioVFX_MP3_MPOcean.pcc",
+                //"BioVFX_MP5_Gear.pcc"
+            ];
 
             foreach (var f in files)
             {

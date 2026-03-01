@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
+using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
@@ -121,10 +122,10 @@ namespace MilanShaderHost
             return startupLevel;
         }
 
-        public static IMEPackage BuildMapPackage(string mapName, string sourceStylePath, IMEPackage transientPackage, bool buildWithMeshes)
+        public static IMEPackage BuildMapPackage(string mapName, string sourceStylePath, IMEPackage transientPackage, bool buildWithMeshes, ShaderCache miniRefShaderCache = null)
         {
             //var outDir = @"S:\Milan\UDK\MilanShaderMapPackages";
-            var startupLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, Program.Game);
+            var shaderCompilingLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, Program.Game);
 
             // Add PlayerStart.
 
@@ -135,41 +136,62 @@ namespace MilanShaderHost
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
             // Port materials into transient
+            
             foreach (var mat in sourceStylePackage.Exports.Where(x => x.IsA("Material")))
             {
                 var pMat = PortSourceToCooked(mat, transientPackage);
             }
 
-            // Also port materials into the startup level. This should be faster... I hope
+            // Also port materials into the compiler level. This should be faster to port... I hope
             foreach (var mat in transientPackage.Exports.Where(x => x.IsA("Material")))
             {
-                var pMat = PortSourceToCooked(mat, startupLevel);
+                var pMat = PortSourceToCooked(mat, shaderCompilingLevel);
                 if (pMat != null)
                 {
                     portedMats.Add(pMat);
                 }
             }
 
-            AddCubeMesh(startupLevel);
+            // 02/27/2026 - Ensure all shaders necessary are in the file or ref cache so it doesn't try to compile anything else
+            if (miniRefShaderCache != null)
+            {
+                //if (portingCache == null && !isCrossGame)
+                //{
+                //    portingCache = ShaderCacheManipulator.GetLocalShadersForMaterials(rop.CrossPackageMap.Keys.OfType<ExportEntry>().ToList(), rop.GamePathOverride);
+                //}
+
+                //if (!rop.ForceAllowMaterialPorting && !allowedToPortShaders)
+                //{
+                //    rop.ErrorOccurredCallback?.Invoke($"You cannot port Materials from {sourcePcc.Game} into {destPcc.Game}");
+                //}
+
+
+                //if (portingCache is not null)
+                //{
+                //    ShaderCacheManipulator.AddShadersToFile(destPcc, portingCache);
+                //}
+            }
+
+            AddCubeMesh(shaderCompilingLevel);
 
             var startPos = new Point3D(0, 0, 1000);
-            AddPlayerStart(startupLevel, startPos);
+            AddPlayerStart(shaderCompilingLevel, startPos);
 
             startPos.Z -= 1000;
             startPos.X += 300;
             startPos.Y += 300;
 
-            var floor = AddStaticMeshActor(startupLevel, GetFloorAsset(sourceStylePackage.Game), startPos, "PlayerFloor");
+            var floor = AddStaticMeshActor(shaderCompilingLevel, GetFloorAsset(sourceStylePackage.Game), startPos, "PlayerFloor");
             LevelTools.SetDrawScale3D(floor, 20, 20, 1);
             // AddStaticMeshActor(startupLevel, GetSkyAsset(sourceStylePackage.Game), startPos, "SkyBox");
-            AddExistingMeshActor(startupLevel, GetSkyAsset(sourceStylePackage.Game), startPos, "SkyBox");
+            AddExistingMeshActor(shaderCompilingLevel, GetSkyAsset(sourceStylePackage.Game), startPos, "SkyBox");
 
 
             // Static mesh lighting
-            AddDominantLight(startupLevel);
+            AddDominantLight(shaderCompilingLevel);
 
             // Dynamic mesh lighting
-            AddSkyLight(startupLevel);
+            AddSkyLight(shaderCompilingLevel);
 
             startPos.Z = 128;
             foreach (var pMat in portedMats)
@@ -180,7 +202,7 @@ namespace MilanShaderHost
 
 
             // Add static meshes that contain our materials.
-            return startupLevel;
+            return shaderCompilingLevel;
             // startupLevel.Save(Path.Combine(outDir, mapName));
         }
 
