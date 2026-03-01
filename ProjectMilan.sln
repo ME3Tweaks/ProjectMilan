@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.7.34009.444
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11520.95 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProjectMilan", "ProjectMilan\ProjectMilan.csproj", "{5C926340-6B6E-4EDB-B837-0D16F3A6472D}"
 EndProject
@@ -28,6 +28,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LEDecooker", "LEDecooker\LEDecooker.csproj", "{5B5BFC0C-C3C3-43FE-9C68-D365C3F6DA9B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShaderCompare", "ShaderCompare\ShaderCompare.csproj", "{456E33CF-F1C6-4DF6-9FA8-4627B2310307}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MilanShaderResearchTool", "MilanShaderResearchTool\MilanShaderResearchTool.csproj", "{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -507,6 +509,25 @@ Global
 		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|x64.Build.0 = Release|Any CPU
 		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|x86.ActiveCfg = Release|Any CPU
 		{456E33CF-F1C6-4DF6-9FA8-4627B2310307}.WinRelease|x86.Build.0 = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.Debug|x64.ActiveCfg = Debug|x64
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.Debug|x64.Build.0 = Debug|x64
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.Release|x64.ActiveCfg = Release|x64
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.Release|x86.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinAzureRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinAzureRelease|x64.ActiveCfg = Release|x64
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinAzureRelease|x86.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinAzureTest|Any CPU.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinAzureTest|x64.ActiveCfg = Release|x64
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinAzureTest|x86.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinDebug|Any CPU.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinDebug|x64.ActiveCfg = Release|x64
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinDebug|x86.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinRelease|Any CPU.ActiveCfg = Release|Any CPU
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinRelease|x64.ActiveCfg = Release|x64
+		{A51FE186-4CC1-41CF-B37C-9ACFD60F518F}.WinRelease|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
