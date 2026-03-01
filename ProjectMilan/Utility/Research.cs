@@ -28,7 +28,7 @@ namespace ProjectMilan.Utility
         {
             Console.WriteLine($"Finding shaders to keep for {game}");
             List<string> filesToKeepShadersFor = new List<string>();
-            //filesToKeepShadersFor.Add(@"entry.pcc");
+            filesToKeepShadersFor.Add(@"entry.pcc");
             filesToKeepShadersFor.Add(@"entrymenu.pcc");
             filesToKeepShadersFor.Add(@"BIOG_HMM_ARM_SHP_R.pcc");
             filesToKeepShadersFor.Add(@"BIOG_HMM_HED_Alignment.pcc");

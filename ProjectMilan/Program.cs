@@ -63,7 +63,7 @@ namespace ProjectMilan
         {
 #if DEBUG
             // Change to true to run the research() method, for quick research tasks. Like LEX experiments.
-            bool researchMode = false;
+            bool researchMode = true;
 #else
             // DO NOT CHANGE.
             bool researchMode = false;
@@ -342,6 +342,8 @@ namespace ProjectMilan
         {
 #if TRUE || DEBUG
             // Put your method in Research class and call it here.
+            Research.SlashShaderCache(MEGame.LE3);
+            return;
             Research.TestSFARTextureDecompression();
             return;
             Research.GenerateLightingForLevel();
