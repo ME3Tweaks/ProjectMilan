@@ -5,6 +5,7 @@
 #include <iostream>
 
 LIBRARY_API int CompileShader(const char* baseShaderName, const char* materialHlsl, const char* vertexFactoryName, const wchar_t* includesDirectory, D3D_SHADER_MACRO* macros, const char* entryPoint, const char* shaderType,
+	int compileFlags,
 	int& outShaderBytesSize,
 	byte& outShaderBytes,
 	int& outErrorMsgSize,
@@ -34,11 +35,207 @@ LIBRARY_API int CompileShader(const char* baseShaderName, const char* materialHl
 	}*/
 
 
-	return InternalCompileShader(mIncludes, macros, entryPoint, shaderTypeStr, outShaderBytesSize, outShaderBytes, outErrorMsgSize, outErrorMsg);
+	return InternalCompileShader(mIncludes, macros, entryPoint, shaderTypeStr, compileFlags, outShaderBytesSize, outShaderBytes, outErrorMsgSize, outErrorMsg);
 }
 
 
 LIBRARY_API void GetShaderInfo(int shaderBufferSize, void* shaderBuffer, int& outInstructionCount, int& outNumParameters, NamedParameterAllocation* allocationArray) {
+	// Currently only gets shader instruction count.
+
+	ID3D11ShaderReflection* d3dReflector = NULL;
+	D3DReflect(shaderBuffer, shaderBufferSize, IID_ID3D11ShaderReflection, (void**)&d3dReflector);
+
+	// Get Shader Info
+	D3D11_SHADER_DESC d3dShaderInfo;
+	d3dReflector->GetDesc(&d3dShaderInfo);
+
+	// Set the number of instructions.
+	outInstructionCount = d3dShaderInfo.InstructionCount;
+
+	// Get Shader Parameters that are bound,
+	// the game checks the allocations to see if they are bound,
+	// and if they are, they set the proper data on the parameter.
+	// if they are missing then it makes it black.
+
+	// We put shader bindings on here
+	std::vector<NamedParameterAllocation> ParameterMap{};
+
+	// Add parameters for shader resources
+	// This is ugly
+	for (UINT resourceIndex = 0; resourceIndex < d3dShaderInfo.BoundResources; resourceIndex++)
+	{
+		D3D11_SHADER_INPUT_BIND_DESC bindDesc;
+		d3dReflector->GetResourceBindingDesc(resourceIndex, &bindDesc);
+
+		// There are 4 bind types
+		// D3D_SIT_CBUFFER/TBUFFER
+		// D3D_SIT_TEXTURE
+		// D3D_SIT_UAV_RWTYPED
+		// D3D_SIT_SAMLPER
+
+		// Constant buffer / Texture Buffer
+		if (bindDesc.Type == D3D_SIT_CBUFFER || bindDesc.Type == D3D_SIT_TBUFFER)
+		{
+			// Get the bind point
+			const UINT constantBufferIndex = bindDesc.BindPoint;
+			ID3D11ShaderReflectionConstantBuffer* constantBuffer = d3dReflector->GetConstantBufferByName(bindDesc.Name);
+			D3D11_SHADER_BUFFER_DESC constantBufferDescription;
+			constantBuffer->GetDesc(&constantBufferDescription);
+
+			// Enumerate constant buffer
+			for (UINT cIndex = 0; cIndex < constantBufferDescription.Variables; cIndex++)
+			{
+				// See if variable flag marks it as used
+				ID3D11ShaderReflectionVariable* variable = constantBuffer->GetVariableByIndex(cIndex);
+				D3D11_SHADER_VARIABLE_DESC variableDesc;
+				variable->GetDesc(&variableDesc);
+				if (variableDesc.uFlags & D3D_SVF_USED)
+				{
+					// Add parameter
+					ParameterMap.push_back(CreateNamedParameterAllocation(variableDesc.Name,
+						constantBufferIndex,
+						variableDesc.StartOffset,
+						variableDesc.Size,
+						0));
+				}
+			}
+		}
+		// Texture Resource
+		else if (bindDesc.Type == D3D_SIT_TEXTURE)
+		{
+			// Find matching 
+			BOOL hasSampler = FALSE;
+			for (UINT i = 0; i < d3dShaderInfo.BoundResources; i++)
+			{
+				D3D11_SHADER_INPUT_BIND_DESC textureDesc;
+				d3dReflector->GetResourceBindingDesc(i, &textureDesc);
+				if (textureDesc.Type == D3D_SIT_SAMPLER)
+				{
+					if (strcmp(textureDesc.Name, bindDesc.Name) == 0)
+					{
+						// Found the texture that is for this binding
+						hasSampler = TRUE;
+						break;
+					}
+				}
+			}
+
+
+			if (!hasSampler)
+			{
+				TCHAR name[1024];
+				UINT numTimesBound = 1;
+				wcscpy(name, s2ws(bindDesc.Name).c_str());
+
+				// Get rid of []
+				TCHAR* brackedLoc = wcschr(name, TEXT('['));
+				if (brackedLoc)
+				{
+					*brackedLoc = 0;
+					const INT preBracketPos = brackedLoc - name;
+					while (resourceIndex + 1 < d3dShaderInfo.BoundResources)
+					{
+						D3D11_SHADER_INPUT_BIND_DESC BindDesc2;
+						d3dReflector->GetResourceBindingDesc(resourceIndex + 1, &BindDesc2);
+
+						if (BindDesc2.Type == D3D_SIT_TEXTURE && strncmp(BindDesc2.Name, bindDesc.Name, preBracketPos) == 0)
+						{
+							numTimesBound++;
+							resourceIndex++;
+						}
+						else
+						{
+							break;
+						}
+					}
+				}
+
+				ParameterMap.push_back(
+					CreateNamedParameterAllocationW(
+						name,
+						0,
+						bindDesc.BindPoint,
+						numTimesBound,
+						USHRT_MAX
+					));
+			}
+		}
+		else if (bindDesc.Type == D3D_SIT_UAV_RWTYPED)
+		{
+			// Read write buffer.
+			TCHAR name[1024];
+			UINT numTimesBound = 1;
+			wcscpy(name, s2ws(bindDesc.Name).c_str());
+
+			ParameterMap.push_back(CreateNamedParameterAllocationW(
+				name,
+				0,
+				bindDesc.BindPoint,
+				numTimesBound,
+				USHRT_MAX
+			));
+		}
+		else if (bindDesc.Type == D3D_SIT_SAMPLER)
+		{
+			// Sampler.
+
+			BOOL foundTexture = FALSE;
+			// Find matching texture
+			for (UINT i = 0; i < d3dShaderInfo.BoundResources; i++)
+			{
+				D3D11_SHADER_INPUT_BIND_DESC textureDesc;
+				d3dReflector->GetResourceBindingDesc(i, &textureDesc);
+				if (textureDesc.Type == D3D_SIT_TEXTURE)
+				{
+					if (!strcmp(textureDesc.Name, bindDesc.Name))
+					{
+						ParameterMap.push_back(CreateNamedParameterAllocation(
+							bindDesc.Name,
+							0,
+							textureDesc.BindPoint,
+							textureDesc.BindCount,
+							bindDesc.BindPoint
+						));
+						break;
+					}
+				}
+			}
+
+			if (!foundTexture)
+			{
+				// Add a parameter for the sampler only, the texture index will be invalid
+				ParameterMap.push_back(CreateNamedParameterAllocation(
+					bindDesc.Name,
+					0,
+					USHRT_MAX,
+					bindDesc.BindCount,
+					bindDesc.BindPoint
+				));
+			}
+		}
+	}
+
+	outNumParameters = ParameterMap.size();
+
+	// Set the parameter outputs.
+	int paramNum = 0;
+	for (auto& param : ParameterMap) {
+		wcscpy(allocationArray[paramNum].Name, param.Name);
+		allocationArray[paramNum].Allocation.BaseIndex = param.Allocation.BaseIndex;
+		allocationArray[paramNum].Allocation.BufferIndex = param.Allocation.BufferIndex;
+		allocationArray[paramNum].Allocation.Size = param.Allocation.Size;
+		allocationArray[paramNum].Allocation.SamplerIndex = param.Allocation.SamplerIndex;
+		paramNum++;
+	}
+
+
+
+	// Dump the object.
+	d3dReflector->Release();
+}
+
+
+LIBRARY_API void GetShaderInfo_OLD(int shaderBufferSize, void* shaderBuffer, int& outInstructionCount, int& outNumParameters, NamedParameterAllocation* allocationArray) {
 	// Currently only gets shader instruction count.
 
 	ID3D11ShaderReflection* d3dReflector = NULL;
@@ -300,6 +497,7 @@ LIBRARY_API void GetShaderInfo(int shaderBufferSize, void* shaderBuffer, int& ou
 }
 
 int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines, std::string entryPoint, std::string shaderProfile,
+	int compileFlags,
 	int& outShaderLen,
 	byte& outShaderBytes,
 	int& outErrorMsgLen,
@@ -310,8 +508,7 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 	ID3DBlob* OutBlob = NULL;
 	ID3DBlob* OutErrorBlob = NULL;
 
-	// Some flags might be set by shader type, we probably need to pass this through
-	auto flags = 36864; // BACKCOMPAT, OPTIMIZATION LEVEL 3
+	auto flags = compileFlags;
 
 	/*
 	std::cout << "SourceFileName: " << includer.BaseShaderName.c_str() << "\n";
