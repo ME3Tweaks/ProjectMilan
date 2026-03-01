@@ -342,6 +342,12 @@ namespace ProjectMilan
         {
 #if TRUE || DEBUG
             // Put your method in Research class and call it here.
+
+            Research.InstallCompiledShaders();
+            return;
+
+            Research.GetMissingShaderPackages(@"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels\BioP_MPOcean");
+            return;
             Research.SlashShaderCache(MEGame.LE3);
             return;
             Research.TestSFARTextureDecompression();
