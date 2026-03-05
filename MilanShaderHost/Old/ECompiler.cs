@@ -1,4 +1,4 @@
-﻿namespace MilanShaderHost
+﻿namespace MilanShaderHost.Old
 {
     /// <summary>
     /// Compiler type

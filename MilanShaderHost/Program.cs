@@ -1,8 +1,10 @@
 ﻿using CliWrap;
+using CommandLine;
 using LegendaryExplorerCore;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using MilanShaderHost.Old;
 using System.Diagnostics;
 
 namespace MilanShaderHost
@@ -12,6 +14,14 @@ namespace MilanShaderHost
     /// </summary>
     internal class Program
     {
+        /// <summary>
+        /// The command line arguments for the app.
+        /// </summary>
+        public static CLIOptions ParsedOptions;
+
+        /// <summary>
+        /// Game we are compiling/running shaders for. Eventually will move to ParsedOptions.
+        /// </summary>
         public static MEGame Game { get; internal set; }
 
         // This application will handle interop between dumping HLSL from the games
@@ -19,6 +29,19 @@ namespace MilanShaderHost
 
         public async static Task Main(string[] args)
         {
+            Parser.Default.ParseArguments<CLIOptions>(args).WithParsed(Init);
+        }
+
+        private static void Init(CLIOptions options)
+        {
+            if (options.CompileShaders == false && options.PreviewShaders == false)
+            {
+                Console.WriteLine("Must specify an operation: --compile, --preview, or both");
+                return;
+            }
+
+            ParsedOptions = options;
+
             Console.WriteLine("Welcome to Milan Shader Host");
             Console.WriteLine("By ME3Tweaks");
             Console.WriteLine();
@@ -30,33 +53,11 @@ namespace MilanShaderHost
             LegendaryExplorerCoreLib.InitLib(null, x => { });
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use the shared cache.
 
-            //var package = MEPackageHandler.CreateMemoryEmptyPackage(@"f.pcc", Game);
-            //var ms = new MemoryStream(File.ReadAllBytes(@"C:\users\public\matbin.bin"));
-            //var psc = new PackagelessWithObjectsSerializingContainer(ms, package, true) { Game = Game };
-            //MaterialResource mat = new MaterialResource();
-            //psc.Serialize(ref mat);
-
-            // Uncomment to do automated shader compiler flow
             Task.Run(MilanShaderBuilderFlow.StartFlow);
 
             // Start the pipe server.
             ShaderHost sh = new ShaderHost();
             sh.StartListening();
-
-            //HLSLServer server = new HLSLServer();
-            //server.StartListening();
-
-            return;
-            
-
-            var inputHlsl = File.ReadAllText(Path.Combine(LE3Directory.DefaultGamePath, "Engine", "ShaderComp", "PickUpSwipe_MM.hlsl"));
-
-            // Compile using UE3ShaderCompileWorker
-            // var wasOK = await CompileShaderThroughUSCW(inputHlsl);
-
-            // Compile using MilanShaderCompileLib
-            ShaderCache sc = new ShaderCache();
-            ShaderCompiler.CompileShadersFor(inputHlsl, sc);
         }
 
         /// <summary>

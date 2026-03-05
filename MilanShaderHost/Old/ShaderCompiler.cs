@@ -7,7 +7,7 @@ using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Unreal.BinaryConverters.Shaders;
 using static LegendaryExplorerCore.Unreal.BinaryConverters.Shaders.Shader;
 
-namespace MilanShaderHost
+namespace MilanShaderHost.Old
 {
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
     struct D3D_SHADER_MACRO

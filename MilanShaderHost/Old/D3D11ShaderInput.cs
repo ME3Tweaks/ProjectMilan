@@ -3,7 +3,7 @@ using LegendaryExplorerCore.Misc;
 using System.Diagnostics;
 using System.Text;
 
-namespace MilanShaderHost
+namespace MilanShaderHost.Old
 {
     [Flags]
     public enum D3DCompileFlags

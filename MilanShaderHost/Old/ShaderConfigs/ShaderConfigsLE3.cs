@@ -1,4 +1,4 @@
-﻿namespace MilanShaderHost.ShaderConfigs
+﻿namespace MilanShaderHost.Old.ShaderConfigs
 {
     internal class ShaderConfigsLE3
     {

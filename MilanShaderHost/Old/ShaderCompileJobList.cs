@@ -1,6 +1,6 @@
 ﻿using LegendaryExplorerCore.Helpers;
 
-namespace MilanShaderHost
+namespace MilanShaderHost.Old
 {
     /// <summary>
     /// Represents the task that is submitted to UE3ShaderCompileWorker.

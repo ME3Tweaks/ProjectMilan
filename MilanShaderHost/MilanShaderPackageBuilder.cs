@@ -1,22 +1,38 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Gammtek.Extensions;
-using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
-using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using MilanShaderHost.LEX;
-using System;
 using System.Diagnostics;
 
 namespace MilanShaderHost
 {
+    /// <summary>
+    /// Descibes what kind of level to build
+    /// </summary>
+    public enum EShaderLevelMode
+    {
+        /// <summary>
+        /// Build a level for inventorying slashing the shader cache for.
+        /// </summary>
+        SlashLevel,
+        /// <summary>
+        /// If the level being built is the preview level
+        /// </summary>
+        Preview,
+        /// <summary>
+        /// If the level build built is the compile level (no meshes, improves build time)
+        /// </summary>
+        Compile
+    }
+
     /// <summary>
     /// Contains the logic for building packages to feed to the game to trigger shader compilation.
     /// </summary>
@@ -114,6 +130,7 @@ namespace MilanShaderHost
             foreach (var pMat in portedMats)
             {
                 AddStaticMeshActorForMaterial(pMat, startPos, buildWithMeshes);
+
                 startPos.Y -= 256;
             }
 
@@ -122,58 +139,67 @@ namespace MilanShaderHost
             return startupLevel;
         }
 
-        public static IMEPackage BuildMapPackage(string mapName, string sourceStylePath, IMEPackage transientPackage, bool buildWithMeshes, ShaderCache miniRefShaderCache = null)
+
+        /// <summary>
+        /// Builds the map package for shader compile/preview/cacheslashing. Does NOT save the package it creates.
+        /// </summary>
+        /// <param name="mapName"></param>
+        /// <param name="sourceStylePath"></param>
+        /// <param name="transientPackage"></param>
+        /// <param name="buildMode"></param>
+        /// <returns></returns>
+        public static IMEPackage BuildMapPackage(string mapName, string sourceStylePath, IMEPackage transientPackage, EShaderLevelMode buildMode)
         {
-            //var outDir = @"S:\Milan\UDK\MilanShaderMapPackages";
             var shaderCompilingLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, Program.Game);
 
-            // Add PlayerStart.
-
-            // Load our input package we are building shaders out of
-            var sourceStylePackage = MEPackageHandler.OpenMEPackage(sourceStylePath);
-
-            ConvertSourceToForcedExport(sourceStylePackage);
-
             List<ExportEntry> portedMats = new List<ExportEntry>();
-            // Port materials into transient
-            
-            foreach (var mat in sourceStylePackage.Exports.Where(x => x.IsA("Material")))
-            {
-                var pMat = PortSourceToCooked(mat, transientPackage);
-            }
 
-            // Also port materials into the compiler level. This should be faster to port... I hope
-            foreach (var mat in transientPackage.Exports.Where(x => x.IsA("Material")))
+            // If slashing cache level don't put other materials into it
+            if (buildMode != EShaderLevelMode.SlashLevel)
             {
-                var pMat = PortSourceToCooked(mat, shaderCompilingLevel);
-                if (pMat != null)
+                // Load our input package we are building shaders out of
+                var sourceStylePackage = MEPackageHandler.OpenMEPackage(sourceStylePath);
+
+                ConvertSourceToForcedExport(sourceStylePackage);
+
+
+                // Port materials into transient
+                foreach (var mat in sourceStylePackage.Exports.Where(x => x.IsA("Material")))
                 {
-                    portedMats.Add(pMat);
+                    var bUsedWithStaticLighting = mat.GetProperty<BoolProperty>("bUsedWithStaticLighting");
+                    if (mat.Game == MEGame.LE1 && mat.Game == MEGame.LE3 && bUsedWithStaticLighting == null)
+                    {
+                        // LE1 sets this to true, LE3 doesn't have it defined (so its false). 
+                        // If the mat doesn't explicitly specify, write it here, then port it over.
+                        mat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+                    }
+
+                    // Custom milan additions for now.
+                    mat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+                    mat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
+                    mat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
+
+                    var pMat = PortSourceToCooked(mat, transientPackage);
+                }
+
+                // Also port materials into the compiler level. This should be faster to port... I hope
+                foreach (var mat in transientPackage.Exports.Where(x => x.IsA("Material")))
+                {
+                    // This should already have the bUsedWithStaticLighting set.
+                    var pMat = PortSourceToCooked(mat, shaderCompilingLevel);
+                    if (pMat != null)
+                    {
+                        portedMats.Add(pMat);
+                    }
                 }
             }
-
-            // 02/27/2026 - Ensure all shaders necessary are in the file or ref cache so it doesn't try to compile anything else
-            if (miniRefShaderCache != null)
+            else
             {
-                //if (portingCache == null && !isCrossGame)
-                //{
-                //    portingCache = ShaderCacheManipulator.GetLocalShadersForMaterials(rop.CrossPackageMap.Keys.OfType<ExportEntry>().ToList(), rop.GamePathOverride);
-                //}
-
-                //if (!rop.ForceAllowMaterialPorting && !allowedToPortShaders)
-                //{
-                //    rop.ErrorOccurredCallback?.Invoke($"You cannot port Materials from {sourcePcc.Game} into {destPcc.Game}");
-                //}
-
-
-                //if (portingCache is not null)
-                //{
-                //    ShaderCacheManipulator.AddShadersToFile(destPcc, portingCache);
-                //}
+                // Force text mesh and material into package for slashing.
+                LevelBuildTools.CreateTextMesh(shaderCompilingLevel, "TextMeshMaterialReference");
             }
 
-            AddCubeMesh(shaderCompilingLevel);
-
+            // PlayerStart is required or we can't even load into it
             var startPos = new Point3D(0, 0, 1000);
             AddPlayerStart(shaderCompilingLevel, startPos);
 
@@ -181,29 +207,49 @@ namespace MilanShaderHost
             startPos.X += 300;
             startPos.Y += 300;
 
-            var floor = AddStaticMeshActor(shaderCompilingLevel, GetFloorAsset(sourceStylePackage.Game), startPos, "PlayerFloor");
-            LevelTools.SetDrawScale3D(floor, 20, 20, 1);
-            // AddStaticMeshActor(startupLevel, GetSkyAsset(sourceStylePackage.Game), startPos, "SkyBox");
-            AddExistingMeshActor(shaderCompilingLevel, GetSkyAsset(sourceStylePackage.Game), startPos, "SkyBox");
-
-
-            // Static mesh lighting
-            AddDominantLight(shaderCompilingLevel);
-
-            // Dynamic mesh lighting
-            AddSkyLight(shaderCompilingLevel);
-
-            startPos.Z = 128;
-            foreach (var pMat in portedMats)
+            if (buildMode != EShaderLevelMode.Compile)
             {
-                AddStaticMeshActorForMaterial(pMat, startPos, buildWithMeshes);
-                startPos.Y -= 256;
+                Console.WriteLine("Adding playable components");
+                AddCubeMesh(shaderCompilingLevel);
+
+                var floor = AddStaticMeshActor(shaderCompilingLevel, GetFloorAsset(shaderCompilingLevel.Game), startPos, "PlayerFloor");
+                LevelTools.SetDrawScale3D(floor, 20, 20, 1);
+                AddExistingMeshActor(shaderCompilingLevel, GetSkyAsset(shaderCompilingLevel.Game), startPos, "SkyBox");
             }
 
+            if (buildMode == EShaderLevelMode.Preview)
+            {
 
-            // Add static meshes that contain our materials.
+                // Static mesh lighting
+                AddDominantLight(shaderCompilingLevel);
+
+                // Dynamic mesh lighting
+                AddSkyLight(shaderCompilingLevel);
+            }
+
+            if (buildMode is EShaderLevelMode.Preview or EShaderLevelMode.Compile)
+            {
+                startPos.Z = 127; // Helps reduce Zfighting on the bottom face
+
+                // Add static meshes for each material
+                // In compile mode we need mesh here still to force it to compile.
+                foreach (var pMat in portedMats)
+                {
+                    // Required - if missing, the game will crash when trying to compile, not sure why.
+                    AddStaticMeshActorForMaterial(pMat, startPos, buildMode == EShaderLevelMode.Preview);
+
+                    if (buildMode == EShaderLevelMode.Preview)
+                    {
+                        var textMesh = LevelBuildTools.CreateTextMesh(pMat.FileRef, pMat.ObjectName.Instanced);
+                        var textMA = AddStaticMeshActorForMaterial(pMat, startPos, buildMode == EShaderLevelMode.Preview, textMesh, "Text_", false);
+                        // Adjust mesh actor positioning once we figure out what we want...
+                    }
+
+                    startPos.Y -= 257; // Helps reduce Z-fighting
+                }
+            }
+
             return shaderCompilingLevel;
-            // startupLevel.Save(Path.Combine(outDir, mapName));
         }
 
         private static void AddExistingMeshActor(IMEPackage package, LEXOpenable meshAsset, Point3D location, string name)
@@ -294,6 +340,44 @@ namespace MilanShaderHost
                             uIndex = portedSourceObj.UIndex;
                             return true;
                         }
+
+                        // Could not find import!
+                        if (sourceObj.ClassName == "Texture2D")
+                        {
+                            Console.WriteLine($"Using missing texture for {imp.InstancedFullPath} ({imp.ClassName})");
+                            var missingtex = GetMissingTexture(imp);
+                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                            uIndex = portedSourceObj.UIndex;
+                            return true;
+                        }
+                        else if (sourceObj.ClassName == "TextureCube")
+                        {
+                            Console.WriteLine($"Using missing texture cube for {imp.InstancedFullPath} ({imp.ClassName})");
+                            var missingtex = GetMissingTextureCube(imp);
+                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                            uIndex = portedSourceObj.UIndex;
+                            return true;
+                        }
+                        else if (sourceObj.ClassName == "TextureRenderTarget2D")
+                        {
+                            Console.WriteLine($"Using missing texture render target 2D for {imp.InstancedFullPath} ({imp.ClassName})");
+                            var missingtex = GetMissingTextureRenderTarget2D(imp);
+                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                            uIndex = portedSourceObj.UIndex;
+                            return true;
+                        }
+                        else if (sourceObj.ClassName == "TextureRenderTargetCube")
+                        {
+                            Console.WriteLine($"Using missing texture render target cube for {imp.InstancedFullPath} ({imp.ClassName})");
+                            var missingtex = GetMissingTextureRenderTargetCube(imp);
+                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                            uIndex = portedSourceObj.UIndex;
+                            return true;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Unknown source class {imp.InstancedFullPath} ({imp.ClassName})");
+                        }
                     }
                     else
                     {
@@ -301,6 +385,14 @@ namespace MilanShaderHost
                         {
                             Console.WriteLine($"Using missing texture for {imp.InstancedFullPath} ({imp.ClassName})");
                             var missingtex = GetMissingTexture(imp);
+                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                            uIndex = portedSourceObj.UIndex;
+                            return true;
+                        }
+                        else if (sourceObj.ClassName == "TextureFlipBook")
+                        {
+                            Console.WriteLine($"Using missing texture flipbook for {imp.InstancedFullPath} ({imp.ClassName})");
+                            var missingtex = GetMissingTextureFlipbook(imp);
                             EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
                             uIndex = portedSourceObj.UIndex;
                             return true;
@@ -335,6 +427,112 @@ namespace MilanShaderHost
             var parent = CreateParents(missingTexturesExport.FileRef, imp.InstancedFullPath);
             missingTexturesExport.Parent = parent;
             return missingTexturesExport;
+        }
+
+        private static ExportEntry missingTexturesFlipbookExport;
+        private static ExportEntry GetMissingTextureFlipbook(ImportEntry imp)
+        {
+            if (missingTexturesFlipbookExport == null)
+            {
+                var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
+
+                missingTexturesFlipbookExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", 512, 512, PixelFormat.DXT1, true, null);
+                var t2d = new Texture2D(missingTexturesFlipbookExport);
+                var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
+                t2d.Replace(im, missingTexturesFlipbookExport.GetProperties(), isPackageStored: true);
+                missingTexturesFlipbookExport.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
+                missingTexturesFlipbookExport.Class = EntryImporter.EnsureClassIsInFile(missingTexturesPackage, "TextureFlipbook", new RelinkerOptionsPackage());
+
+                // Some placeholders
+                missingTexturesFlipbookExport.WriteProperty(new IntProperty(8, "HorizontalImages"));
+                missingTexturesFlipbookExport.WriteProperty(new IntProperty(8, "VerticalImages"));
+                missingTexturesFlipbookExport.WriteProperty(new FloatProperty(20.0f, "FrameRate"));
+                missingTexturesFlipbookExport.WriteProperty(new FloatProperty(0.0500000007f, "FrameTime"));
+            }
+
+            var parent = CreateParents(missingTexturesFlipbookExport.FileRef, imp.InstancedFullPath);
+            missingTexturesFlipbookExport.Parent = parent;
+            return missingTexturesFlipbookExport;
+        }
+
+        private static ExportEntry missingTextureRenderTarget2DExport;
+        private static ExportEntry GetMissingTextureRenderTarget2D(ImportEntry imp)
+        {
+            if (missingTextureRenderTarget2DExport == null)
+            {
+                var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
+
+                missingTextureRenderTarget2DExport = ExportCreator.CreateExport(missingTexturesPackage, "MissingTextureRenderTarget2D", "TextureRenderTarget2D");
+                missingTextureRenderTarget2DExport.WriteProperty(new IntProperty(1024, "SizeX"));
+                missingTextureRenderTarget2DExport.WriteProperty(new IntProperty(1024, "SizeY"));
+                missingTextureRenderTarget2DExport.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
+            }
+
+            var parent = CreateParents(missingTextureRenderTarget2DExport.FileRef, imp.InstancedFullPath);
+            missingTextureRenderTarget2DExport.Parent = parent;
+            return missingTextureRenderTarget2DExport;
+        }
+
+        private static ExportEntry missingTextureRenderTargetCube;
+        private static ExportEntry GetMissingTextureRenderTargetCube(ImportEntry imp)
+        {
+            if (missingTextureRenderTargetCube == null)
+            {
+                var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
+
+                missingTextureRenderTargetCube = ExportCreator.CreateExport(missingTexturesPackage, "MissingTextureRenderTargetCube", "TextureRenderTargetCube");
+                missingTextureRenderTargetCube.WriteProperty(new IntProperty(256, "SizeX"));
+                missingTextureRenderTargetCube.WriteProperty(new EnumProperty("TEXTUREGROUP_Environment_512", "TextureGroup", Program.Game, "LODGroup"));
+                missingTextureRenderTargetCube.WriteBinary(new UTextureRenderTarget2D());
+                missingTextureRenderTargetCube.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
+            }
+
+            var parent = CreateParents(missingTextureRenderTargetCube.FileRef, imp.InstancedFullPath);
+            missingTextureRenderTargetCube.Parent = parent;
+            return missingTextureRenderTargetCube;
+        }
+
+        private static ExportEntry missingTextureCubeExport;
+        private static ExportEntry GetMissingTextureCube(ImportEntry imp)
+        {
+            if (missingTextureCubeExport == null)
+            {
+                var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
+
+                missingTextureCubeExport = ExportCreator.CreateExport(missingTexturesPackage, "MissingTextureCube", "TextureCube", indexed: false);
+                var props = missingTextureCubeExport.GetProperties();
+
+                // Make the face of a cube
+                for (int i = 0; i < 6; i++)
+                {
+                    var tex = Texture2D.CreateTexture(missingTexturesPackage, $"CubemapFace{i}", 512, 512, PixelFormat.DXT1, true, missingTextureCubeExport);
+                    var t2d = new Texture2D(tex);
+                    var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
+                    t2d.Replace(im, tex.GetProperties(), isPackageStored: true);
+                    tex.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
+                    string propName = i switch
+                    {
+                        0 => "FacePosX",
+                        1 => "FacePosY",
+                        2 => "FaceNegX",
+                        3 => "FaceNegY",
+                        4 => "FacePosZ",
+                        5 => "FaceNegZ",
+                        _ => "Blorbo"
+                    };
+                    props.Add(new ObjectProperty(tex, propName));
+                }
+
+                props.Add(new BoolProperty(true, "CompressionNone"));
+                props.Add(new EnumProperty("TEXTUREGROUP_Environment_512", "TextureGroup", Program.Game, "LODGroup"));
+                missingTextureCubeExport.WriteProperties(props);
+                missingTextureCubeExport.WriteBinary(new UTextureCube());
+            }
+
+            // Parent to match import so it ports across at same path
+            var parent = CreateParents(missingTextureCubeExport.FileRef, imp.InstancedFullPath);
+            missingTextureCubeExport.Parent = parent;
+            return missingTextureCubeExport;
         }
 
         private static IEntry CreateParents(IMEPackage package, string ifp)
@@ -496,6 +694,10 @@ namespace MilanShaderHost
             package.AddToLevelActorsIfNotThere(skyLight);
         }
 
+        /// <summary>
+        /// Adds the import for the cube mesh
+        /// </summary>
+        /// <param name="package"></param>
         private static void AddCubeMesh(IMEPackage package)
         {
             var engineMeshes = ExportCreator.CreatePackageImport(package, "EngineMeshes");
@@ -509,11 +711,11 @@ namespace MilanShaderHost
             package.AddImport(impPackage);
         }
 
-        private static ExportEntry AddStaticMeshActorForMaterial(ExportEntry material, Point3D location, bool setMesh)
+        private static ExportEntry AddStaticMeshActorForMaterial(ExportEntry material, Point3D location, bool setMesh, ExportEntry mesh = null, string namePrefix = "", bool assignMaterials = true)
         {
             var package = material.FileRef;
             var level = package.GetLevel();
-            var meshSMA = ExportCreator.CreateExport(package, $"StaticMeshActor_{material.ObjectName}", "StaticMeshActor", level, createWithStack: true, indexed: false);
+            var meshSMA = ExportCreator.CreateExport(package, $"{namePrefix}StaticMeshActor_{material.ObjectName}", "StaticMeshActor", level, createWithStack: true, indexed: false);
             PathEdUtils.SetLocation(meshSMA, location);
             var meshSMC = ExportCreator.CreateExport(package, "StaticMeshComponent", "StaticMeshComponent", meshSMA);
             meshSMC.ObjectFlags |= UnrealFlags.EObjectFlags.Transactional;
@@ -537,16 +739,24 @@ namespace MilanShaderHost
 
             if (setMesh)
             {
-                var engineMeshes = package.CreatePackageImport("EngineMeshes");
-                var cube = package.CreateImport("StaticMesh", "Cube", engineMeshes);
-                meshSMC.WriteProperty(new ObjectProperty(cube, "StaticMesh"));
+                if (mesh != null)
+                {
+                    // Use passed in mesh.
+                    meshSMC.WriteProperty(new ObjectProperty(mesh, "StaticMesh"));
+                }
+                else
+                {
+                    var engineMeshes = package.CreatePackageImport("EngineMeshes");
+                    var cube = package.CreateImport("StaticMesh", "Cube", engineMeshes);
+                    meshSMC.WriteProperty(new ObjectProperty(cube, "StaticMesh"));
+                }
             }
             else
             {
                 // Null - prevents crashes since we can't actually compile on demand
                 meshSMC.WriteProperty(new ObjectProperty(0, "StaticMesh"));
             }
-            if (material != null)
+            if (material != null && assignMaterials)
                 SetMaterial(meshSMC, material);
 
 

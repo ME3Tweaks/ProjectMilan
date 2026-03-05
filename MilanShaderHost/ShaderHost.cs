@@ -2,6 +2,8 @@
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using MilanShaderHost.Old;
+using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
@@ -43,6 +45,10 @@ namespace MilanShaderHost
             /// The Material HLSL the game has generated for a material is about to be sent to us.
             /// </summary>
             MaterialHLSL = 5,
+            /// <summary>
+            /// Debug package JSON is coming in next
+            /// </summary>
+            DebugPackage = 6,
         }
 
         EReadMode CurrentReadMode = EReadMode.None;
@@ -109,7 +115,7 @@ namespace MilanShaderHost
                     if (IncomingShaderCacheSize == 0)
                     {
                         IncomingShaderCacheSize = reader.ReadInt32();
-                        Console.WriteLine($"Incoming shader cache, {IncomingShaderCacheSize} bytes");
+                        Console.WriteLine($"Incoming shader cache, {IncomingShaderCacheSize} bytes ({FileSize.FormatSize(IncomingShaderCacheSize)})");
                         // continue;
                     }
 
@@ -188,6 +194,34 @@ namespace MilanShaderHost
                     cr = null; // Reset
                     CurrentReadMode = EReadMode.None;
                     // Console.WriteLine();
+                }
+                else if (CurrentReadMode == EReadMode.DebugPackage)
+                {
+                    var strLen = reader.ReadInt32();
+                    var strData = reader.ReadBytes(strLen); // Unicode
+                    var materialIFP = Encoding.Unicode.GetString(strData);
+                    var packageName = materialIFP.Substring(0, materialIFP.IndexOf('.'));
+                    var localIFP = materialIFP.Substring(materialIFP.IndexOf('.') + 1);
+
+                    // Console.WriteLine($"  Incoming debug package JSON for {materialIFP}");
+                    var jsonLen = reader.ReadInt32();
+                    var jsonData = reader.ReadBytes(jsonLen);
+                    var json = Encoding.ASCII.GetString(jsonData);
+
+                    var materialOutPath = Path.Combine(MilanShaderBuilderFlow.DecookedPackagesPath, "DebugPackages", MilanShaderBuilderFlow.Game.ToString(), packageName);
+                    
+                    var obj = JsonConvert.DeserializeObject<ShaderClientDebugPackage>(json);
+
+                    var vertexFactory = obj.vertexFactoryType;
+                    var shaderName = obj.shaderType.Replace("<", "[").Replace(">","]");
+
+                    var shaderOutPath = Path.Combine(materialOutPath, localIFP, vertexFactory);
+                    Directory.CreateDirectory(shaderOutPath);
+
+                    var jsonPath = Path.Combine(shaderOutPath, shaderName + ".json");
+                    File.WriteAllText(jsonPath, json);
+
+                    CurrentReadMode = EReadMode.None;
                 }
             }
         }

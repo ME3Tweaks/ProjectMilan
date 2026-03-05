@@ -1,4 +1,4 @@
-﻿namespace MilanShaderHost.ShaderConfigs
+﻿namespace MilanShaderHost.Old.ShaderConfigs
 {
     /// <summary>
     /// Describes the info needed to compile a shader type

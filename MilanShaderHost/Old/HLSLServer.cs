@@ -3,7 +3,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using System.IO.Pipes;
 using System.Text;
 
-namespace MilanShaderHost
+namespace MilanShaderHost.Old
 {
     enum EReadMode
     {
@@ -89,7 +89,7 @@ namespace MilanShaderHost
                         case EReadMode.MaterialName:
                             // Read material name
                             CurrentMaterialName = line.Trim();
-                            Console.WriteLine($"Incoming material HLSL: {CurrentMaterialName}");
+                            Console.WriteLine($"  Incoming material HLSL: {CurrentMaterialName}");
                             break;
                         case EReadMode.MaterialHLSL:
                             // Read material HLSL

@@ -1,6 +1,6 @@
 ﻿using LegendaryExplorerCore.Helpers;
 
-namespace MilanShaderHost
+namespace MilanShaderHost.Old
 {
     /// <summary>
     /// Describes a job for shader compile

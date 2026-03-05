@@ -1,7 +1,13 @@
 {
   "profiles": {
-    "MilanShaderHost": {
+    "MilanShaderHost - Compile + Preview": {
       "commandName": "Project",
+      "commandLineArgs": "--compile --preview",
+      "nativeDebugging": false
+    },
+    "MilanShaderHost - Compile Only": {
+      "commandName": "Project",
+      "commandLineArgs": "--compile",
       "nativeDebugging": false
     }
   }

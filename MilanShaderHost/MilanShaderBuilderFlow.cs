@@ -11,6 +11,7 @@ using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using MilanShaderHost.Old;
 
 namespace MilanShaderHost
 {
@@ -56,29 +57,24 @@ namespace MilanShaderHost
         {
             Game = MEGame.LE3;
             var path = Path.Combine(DecookedPackagesPath, Game.ToString());
+            MilanShaderPackageBuilder.SourceFolders.Add(Path.Combine(DecookedPackagesPath, "LE1"));
             MilanShaderPackageBuilder.SourceFolders.Add(path);
 
             // Dump HLSL for package
-            // SetupHLSLDumpFlow();
+            if (Program.ParsedOptions.DumpHLSL)
+            {
+                SetupHLSLDumpFlow();
+            }
 
             // Compile in-game
-            SetupShaderCompileFlow();
+            if (Program.ParsedOptions.CompileShaders || Program.ParsedOptions.PreviewShaders)
+            {
+                SetupShaderCompileFlow();
+            }
         }
 
         static void SetupHLSLDumpFlow()
         {
-            ShaderCache mRefShaderCache = null;
-            var refShaderCachePath = Path.Combine(MEDirectories.GetCookedPath(Program.Game), "RefShaderCache-PC-D3D-SM5.upk");
-            if (new FileInfo(refShaderCachePath).Length != RefShaderCacheReader.GetVanillaRefSize(Program.Game))
-            {
-                using (var refShaderCachePackage = MEPackageHandler.OpenMEPackage(refShaderCachePath))
-                {
-                    Console.WriteLine($"Reference shader cache at {refShaderCachePath} is not vanilla, loading for level builds.");
-                    var cacheObj = refShaderCachePackage.FindExport("CacheObject");
-                    mRefShaderCache = ObjectBinary.From<ShaderCache>(cacheObj);
-                }
-            }
-
             foreach (var folder in MilanShaderPackageBuilder.SourceFolders)
             {
                 var files = Directory.GetFiles(folder);
@@ -100,7 +96,7 @@ namespace MilanShaderHost
 
 
                     // Builds materials into the map
-                    if (!SetupShaderLevel(file, false, mRefShaderCache))
+                    if (SetupShaderLevel(file, EShaderLevelMode.Compile) == null)
                     {
                         Console.WriteLine($"Skipping package {Path.GetFileNameWithoutExtension(file)}");
                         continue;
@@ -109,7 +105,7 @@ namespace MilanShaderHost
                     Console.WriteLine($"Dumping HLSL for package {Path.GetFileNameWithoutExtension(file)}");
 
                     // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit(false);
+                    StartGameAndWaitForExit(EShaderLevelMode.Compile);
 
                     // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
                     Console.WriteLine($"  Finished dumping HLSL for {Path.GetFileNameWithoutExtension(file)}");
@@ -118,6 +114,9 @@ namespace MilanShaderHost
                 }
             }
         }
+
+        private static IMEPackage nextLevelPackage;
+
         static void SetupShaderCompileFlow()
         {
             var outDir = @"E:\CompiledShaderPackages";
@@ -126,16 +125,15 @@ namespace MilanShaderHost
             KillGame();
             SetupFileList();
             ShaderHost.NewShaderCacheGenerated += OnMaterialCompiled;
-            ShaderCache mRefShaderCache = null;
-            var refShaderCachePath = Path.Combine(MEDirectories.GetCookedPath(Program.Game), "RefShaderCache-PC-D3D-SM5.upk");
-            if (new FileInfo(refShaderCachePath).Length != RefShaderCacheReader.GetVanillaRefSize(Program.Game))
+
+            if (Program.ParsedOptions.SlashRefShaderCache && !ShaderCacheTools.IsCacheSlashed(Program.Game))
             {
-                using (var refShaderCachePackage = MEPackageHandler.OpenMEPackage(refShaderCachePath))
-                {
-                    Console.WriteLine($"Reference shader cache at {refShaderCachePath} is not vanilla, loading for level builds.");
-                    var cacheObj = refShaderCachePackage.FindExport("CacheObject");
-                    mRefShaderCache = ObjectBinary.From<ShaderCache>(cacheObj);
-                }
+                Console.WriteLine($"Slashing shader cache for {Program.Game} before compiling");
+
+                // Build slash level first
+                var slashPath = SetupShaderLevel(null, EShaderLevelMode.SlashLevel);
+
+                ShaderCacheTools.SlashShaderCache(Program.Game);
             }
 
             foreach (var file in PackageFilesToProcess)
@@ -146,7 +144,7 @@ namespace MilanShaderHost
                     continue;
                 }*/
                 var outPath = Path.Combine(outDir, baseName + ".pcc");
-                if (true)
+                if (Program.ParsedOptions.CompileShaders) // Shader compile
                 {
                     Console.WriteLine($"Building shaders for: {Path.GetFileNameWithoutExtension(file)}");
 
@@ -154,10 +152,10 @@ namespace MilanShaderHost
                     scPackage.CreateShaderCache();
 
                     // Builds materials into the map
-                    SetupShaderLevel(file, false, mRefShaderCache);
+                    SetupShaderLevel(file, EShaderLevelMode.Compile);
 
                     // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit(false);
+                    StartGameAndWaitForExit(EShaderLevelMode.Compile);
 
                     scPackage.Save(outPath);
                 }
@@ -166,12 +164,17 @@ namespace MilanShaderHost
                 Console.WriteLine($"Finished compiling shaders for {Path.GetFileNameWithoutExtension(file)}");
 
                 // Preview shader level.
-                if (true)
+                if (Program.ParsedOptions.PreviewShaders)
                 {
-                    Console.WriteLine($"Rebuilding with compiled shaders for previewing");
-                    SetupShaderLevel(outPath, true, mRefShaderCache);
-                    //SetupEntry(outPath, true);
-                    StartGameAndWaitForExit(true);
+                    Console.WriteLine($"Generating preview level for {baseName}'s shaders");
+                    var shaderPreviewLevelPath = SetupShaderLevel(outPath, EShaderLevelMode.Preview);
+                    if (Program.ParsedOptions.OutputPathForResults != null)
+                    {
+                        var savePath = Path.Combine(Program.ParsedOptions.OutputPathForResults, $"shaderpreview_{baseName}.pcc");
+                        Console.WriteLine($"Saving preview level to {savePath}");
+                        File.Copy(shaderPreviewLevelPath, savePath, true);
+                    }
+                    StartGameAndWaitForExit(EShaderLevelMode.Preview);
                 }
             }
 
@@ -180,6 +183,7 @@ namespace MilanShaderHost
 
         }
 
+#if OLD
         private static void SetupEntry(string sourcePath, bool buildWithMeshes)
         {
             // Have to figure this out for LE2 as it doesn't have entry map.
@@ -212,30 +216,33 @@ namespace MilanShaderHost
                 package.Save(outPath);
             }
         }
-
-        private static bool SetupShaderLevel(string sourcePath, bool buildWithMeshes, ShaderCache mRefShaderCache)
+#endif
+        private static string SetupShaderLevel(string sourcePath, EShaderLevelMode buildMode)
         {
-            using var sp = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
-            // Once we get normal materials working we can work on making this accept MaterialInstances.
-            // Then we can pre-bake the bHasStaticPermutation version.
-            if (sp.Exports.Count(x => x.IsA("Material")) == 0)
+            if (buildMode != EShaderLevelMode.SlashLevel)
             {
-                // No materials to compile
-                return false;
+                using var sp = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
+                // Once we get normal materials working we can work on making this accept MaterialInstances.
+                // Then we can pre-bake the bHasStaticPermutation version.
+                if (sp.Exports.Count(x => x.IsA("Material")) == 0)
+                {
+                    // No materials to compile
+                    return null;
+                }
             }
 
-            var mapName = GetMapName(buildWithMeshes) + ".pcc";
+            var mapName = GetMapName(buildMode) + ".pcc";
 
             transientPackage = MEPackageHandler.CreateMemoryEmptyPackage("Transient.pcc", Program.Game);
-            var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, transientPackage, buildWithMeshes, mRefShaderCache);
-            if (buildWithMeshes)
+            var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, transientPackage, buildMode);
+            if (buildMode == EShaderLevelMode.Preview)
             {
                 // Copy SeekFreeShaderCache
                 using var tPackage = MEPackageHandler.OpenMEPackage(sourcePath);
                 var cache = tPackage.FindExport("SeekFreeShaderCache");
                 EntryExporter.ExportExportToPackage(cache, package, out var cacheExport);
             }
-            else
+            else if (buildMode == EShaderLevelMode.Compile)
             {
                 // Install auto exit sequence
                 var flowPackagePath = $"EntryMenu/entry_{Program.Game}.pcc"; // copied to output path by compile step.
@@ -247,15 +254,23 @@ namespace MilanShaderHost
                 package.GetLevel().WriteBinary(level);
             }
 
-            var outDir = @"E:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
-            package.Save(Path.Combine(outDir, mapName));
-            return true;
+            Console.WriteLine("Saving...");
+            var outDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
+            var finalOut = Path.Combine(outDir, mapName);
+            package.Save(finalOut);
+            return finalOut;
         }
 
         private static void OnMaterialCompiled(object? sender, CompileResult cr)
         {
             // Merge material into the package.
             var matchingMat = transientPackage.FindExport(cr.MaterialName);
+            if (!matchingMat.IsA("Material"))
+            {
+                // Bad naming...
+                matchingMat = transientPackage.Exports.FirstOrDefault(x => x.InstancedFullPath == cr.MaterialName && x.IsA("Material"));
+            }
+
             if (matchingMat == null)
             {
                 Console.WriteLine($"No matching material found for {cr.MaterialName} in transient package. Skipping.");
@@ -295,7 +310,27 @@ namespace MilanShaderHost
         private static void SetupFileList()
         {
             string[] files = [
-                "Biot_Normandy_Int.pcc",
+                //"BioT_Arctic",
+                //"biot_ancientcity.pcc",
+                "BIOA_NOR10_T.pcc",
+                "BIOA_STA60_T.pcc",
+                "BIOA_STA60_02_T.pcc",
+                //"BIOA_PRC2_MatFX.pcc",
+                "BIOA_STA30_T.pcc",
+                "BIOA_JUG40_T.pcc",
+                "BIOA_Jug20_T.pcc",
+                "BIOA_JUG80_T.pcc",
+                "BIOA_JUG00_T.pcc",
+                //"BIOG_APL_PHY_Crate_XLarge_01_L.pcc",
+                "BIOG__SKIES__.pcc",
+                //"BIOA_FRE10_T.pcc",
+                //"BIOA_LOS40_APL_DOR_FFDoor_L.pcc",
+                "BIOG_V_Env_Jug_WaveCrash_Z.pcc",
+                //"VFX_zz_ME1_Global_METR.pcc",
+                //"BIOG_V_Env_Hologram_Z.pcc",
+                //"BIOA_LAV20_T.pcc"
+
+                //"Biot_Normandy_Int.pcc",
                 //"BioApl_Lvl_Foliage.pcc",
                 //"BioS_MPJungle.pcc",
                 //"BioS_MPLondon.pcc",
@@ -316,10 +351,16 @@ namespace MilanShaderHost
 
             foreach (var f in files)
             {
+                var realf = f;
+                if (!realf.EndsWith(".pcc"))
+                {
+                    realf += ".pcc";
+                }
+
                 bool found = false;
                 foreach (var path in MilanShaderPackageBuilder.SourceFolders)
                 {
-                    var testPath = Path.Combine(path, f);
+                    var testPath = Path.Combine(path, realf);
                     if (File.Exists(testPath))
                     {
                         found = true;
@@ -329,7 +370,7 @@ namespace MilanShaderHost
                 }
                 if (!found)
                 {
-                    Console.Error.WriteLine($"Could not find source package {f} in any of the source folders.");
+                    Console.Error.WriteLine($"Could not find source package {realf} in any of the source folders.");
                 }
             }
         }
@@ -373,17 +414,38 @@ namespace MilanShaderHost
             // Game is now ready.
         }
 
-        private static void StartGameAndWaitForExit(bool isPreview)
+        private static void StartGameAndWaitForExit(EShaderLevelMode buildMode)
         {
+            Console.WriteLine("Starting game");
             TOCCreator.CreateTOCForGame(Game);
-            var bootArg = isPreview ? "-ShaderPreview" : "-ShaderCompile";
+            if (buildMode == EShaderLevelMode.SlashLevel)
+            {
+                throw new Exception("Can't start game for shader slash level");
+            }
+
+            var bootArg = buildMode switch
+            {
+                EShaderLevelMode.Preview => "-ShaderPreview -NoShaderCompile",
+                EShaderLevelMode.Compile => "-ShaderCompile -NoSplash -ResX=640 -ResY=360",
+                _ => throw new Exception("Unhandled build mode: " + buildMode)
+            };
+
             var process = Process.Start(MEDirectories.GetExecutablePath(Game), $"{bootArg} -NOHOMEDIR");
             process.WaitForExit();
         }
 
-        private static string GetMapName(bool isPreview)
+        private static string GetMapName(EShaderLevelMode buildMode)
         {
-            return isPreview ? "shaderpreview" : "shadercompiler";
+            switch (buildMode)
+            {
+                case EShaderLevelMode.Preview:
+                    return "shaderpreview";
+                case EShaderLevelMode.Compile:
+                    return "shadercompiler";
+                case EShaderLevelMode.SlashLevel:
+                    return "shaderslash";
+            }
+            throw new Exception("Unhandled build mode: " + buildMode);
         }
 
         // From LEX ExperimentsM

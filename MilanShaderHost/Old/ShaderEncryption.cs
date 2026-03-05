@@ -1,7 +1,7 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 
-namespace MilanShaderHost
+namespace MilanShaderHost.Old
 {
     /// <summary>
     /// Class for handling UE3 shader encryption

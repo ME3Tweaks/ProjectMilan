@@ -1,4 +1,4 @@
-﻿namespace MilanShaderHost
+﻿namespace MilanShaderHost.Old
 {
     /// <summary>
     /// Describes the result of a compilation
