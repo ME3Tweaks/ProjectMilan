@@ -1,14 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Channels;
-using System.Threading.Tasks;
-using LegendaryExplorerCore.GameFilesystem;
+﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
+using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
@@ -16,10 +10,12 @@ using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using LegendaryExplorerCore.UnrealScript.Language.Tree;
+using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
+using System.Diagnostics;
+using System.Numerics;
 using NameProperty = LegendaryExplorerCore.Unreal.NameProperty;
 
 namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
@@ -47,15 +43,15 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                 },
                 LevelFilesMap = new()
                 {
-                    {"BIOA_PRC2_CCTHAI", "BioA_PSTropical"},
-                    {"BIOA_PRC2_CCTHAI_L", "BioA_PSTropical_Lighting"},
-                    {"BIOA_PRC2_CCTHAI_DSG", "BioD_PSTropical"},
-                    {"BIOA_PRC2_CCTHAI01_LAY","BioD_PSTropical_LAY1"},
-                    {"BIOA_PRC2_CCTHAI02_LAY","BioD_PSTropical_LAY2"},
-                    {"BIOA_PRC2_CCTHAI03_LAY","BioD_PSTropical_LAY3"},
-                    {"BIOA_PRC2_CCTHAI04_LAY","BioD_PSTropical_LAY4"},
-                    {"BIOA_PRC2_CCTHAI05_LAY","BioD_PSTropical_LAY5"},
-                    {"BIOA_PRC2_CCTHAI06_LAY","BioD_PSTropical_LAY6"}
+                    {"BIOA_PRC2_CCTHAI", "BioA_MPPSTropical"},
+                    {"BIOA_PRC2_CCTHAI_L", "BioA_MPPSTropical_Lighting"},
+                    {"BIOA_PRC2_CCTHAI_DSG", "BioD_MPPSTropical"},
+                    {"BIOA_PRC2_CCTHAI01_LAY","BioD_MPPSTropical_LAY1"},
+                    {"BIOA_PRC2_CCTHAI02_LAY","BioD_MPPSTropical_LAY2"},
+                    {"BIOA_PRC2_CCTHAI03_LAY","BioD_MPPSTropical_LAY3"},
+                    {"BIOA_PRC2_CCTHAI04_LAY","BioD_MPPSTropical_LAY4"},
+                    {"BIOA_PRC2_CCTHAI05_LAY","BioD_MPPSTropical_LAY5"},
+                    {"BIOA_PRC2_CCTHAI06_LAY","BioD_MPPSTropical_LAY6"}
                     // "BIOA_PRC2_CCTHAI06_SND", // Don't know how this can be ported across games
                 },
                 StartLocation = new Vector3(879,-22803,-2541),
@@ -244,6 +240,9 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             //    info.BioP.GetBioWorldInfo().WriteProperty(ppStruct);
             //}
 
+            // Add BioLedgeMeshActor class
+            AddBioLedgeMeshClass(info.BioP);
+
             // Set AdditionalPackagesToCook
             (info.BioP as MEPackage).AdditionalPackagesToCook.ReplaceAll(info.CrossPackageMapping.Select(x => x.Value.FileNameNoExtension));
 
@@ -279,7 +278,18 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                 }
 
                 return false;
-            }).Select(x => sourcePackage.GetUExport(x));
+            }).Select(x => sourcePackage.GetUExport(x)).ToList();
+
+            // Pre-porting corrections
+            foreach (var exp in actors)
+            {
+                switch (exp.ClassName)
+                {
+                    //case "BioLedgeMeshActor":
+                    //    exp.Class = EntryImporter.EnsureClassIsInFile(exp.FileRef, "StaticMeshActor", new RelinkerOptionsPackage());
+                    //    break;
+                }
+            }
 
             foreach (var sm in actors)
             {
@@ -310,6 +320,8 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                     if (badLinks.Any())
                     {
                         // uh oh
+
+                        Debug.WriteLine("oi vey");
                     }
                 }
             }
@@ -501,6 +513,29 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             // Calculate a very basic texture to instances map
             LevelTools.CalculateTextureToInstancesMap(destPackage, info.Cache);
 
+            // Link in the pathing
+            CorrectPathfindingNetwork(sourcePackage, destPackage);
+
+            // Apply ShaderCache
+            RevertLE1SpecificMaterialChanges(destPackage, info);
+            InstallCompiledShadersToPackage(destPackage, info);
+
+            // Test only - strip lightmaps
+            if (false)
+            {
+                foreach (var smcx in destPackage.Exports.Where(x => x.ClassName == "StaticMeshComponent"))
+                {
+
+                    var smc = ObjectBinary.From<StaticMeshComponent>(smcx);
+                    foreach (var lod in smc.LODData)
+                    {
+                        lod.LightMap = new LightMap(); // This means no lightmap.
+                    }
+
+                    smcx.WriteBinary(smc);
+                }
+            }
+
             MilanLog.Information($"  Saving ported package {destPackage.FileNameNoExtension}.pcc", customPrefix: info.LogCategory);
             destPackage.Save();
             MilanShared.RefreshMilanFiles = true;
@@ -520,6 +555,73 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             //}
 
             return destPackage;
+        }
+
+        /// <summary>
+        /// Installs shaders to the package for materials that are marked as broken. If a material isn't broken,
+        /// this won't update their shaders!
+        /// </summary>
+        /// <param name="target"></param>
+        public static void InstallCompiledShadersToPackage(IMEPackage package, ECLevelInfo info)
+        {
+            var decookedPath = @"E:\CompiledShaderPackages";
+            var compiledShaderPath = @"E:\CompiledShaderPackages";
+            var compiledShaderPackages = Directory.GetFiles(compiledShaderPath, "*.pcc");
+            CaseInsensitiveDictionary<string> packageMap = new();
+            var cache = new PackageCache();
+            foreach (var p in compiledShaderPackages)
+            {
+                packageMap[Path.GetFileNameWithoutExtension(p)] = p;
+            }
+
+            var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
+            foreach (var brokenMat in brokenMaterials)
+            {
+                var linker = brokenMat.GetLinker();
+                if (packageMap.TryGetValue(linker, out var cmp))
+                {
+                    var compiledPackage = cache.GetCachedPackage(cmp);
+                    var csc = compiledPackage.FindExport("SeekFreeShaderCache");
+                    if (csc == null)
+                        // dunno what happened here.
+                        continue;
+
+                    var matchingMat = compiledPackage.FindExport(brokenMat.MemoryFullPath, brokenMat.ClassName) ?? compiledPackage.FindExport(brokenMat.InstancedFullPath, brokenMat.ClassName);
+                    if (matchingMat == null)
+                    {
+                        // couldn't find the mat
+                        MilanLog.Warning($"No compiled shaders for {brokenMat.InstancedFullPath} in {package.FileNameNoExtension}", customPrefix: info.LogCategory);
+                    }
+                    else
+                    {
+                        MilanLog.Information($"Updating shadercache for {brokenMat.InstancedFullPath}", customPrefix: info.LogCategory);
+                        var shaderCache = ObjectBinary.From<ShaderCache>(csc);
+                        ShaderCacheManipulator.AddShadersToFile(package, shaderCache);
+                        // update the id of the material to match the compiled version
+                        var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
+                        ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
+
+                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
+                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
+                    }
+                }
+            }
+
+            MilanLog.Information($"Compacting ShaderCache", customPrefix: info.LogCategory);
+            ShaderCacheManipulator.CompactSeekFreeShaderCaches(package);
+#if DEBUG
+            // Disabled for now, we know a bunch will be broken
+            if (false)
+            {
+                brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
+                foreach (var mat in brokenMaterials)
+                {
+                    MilanLog.Error($@"  Shader still broken for {mat.InstancedFullPath}");
+                }
+            }
+
+#endif
         }
 
         /// <summary>
@@ -656,10 +758,155 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             return new StructProperty("Cylinder", pc, name, false);
         }
 
+        /// <summary>
+        /// When we ported ME1->LE1 there were some materials that we had to change, they got renamed.
+        /// When porting to LMP it wont' find shaders cause name is different. Since we can compile shader
+        /// we should undo our name changes.
+        /// </summary>
+        /// <param name="package"></param>
+        internal static void RevertLE1SpecificMaterialChanges(IMEPackage package, ECLevelInfo info)
+        {
+            // From CrossgenV:
+            /*
+            var portWindow = me1Package.FindExport("BIOA_PRC2_S.BIOA_PRC2_PortWindow");
+            portWindow.ObjectName = "SpaceVista_Window_Mat";
+            */
+
+            // These two textures have same IFP as their materials, so they got renamed when we renamed the materials.
+            // We need to rename them back to match the compiled shader packages or it will be missingtexture
+            // Maybe this needs to be in ShaderHost and not here.
+            /*
+            if (exp.ClassName == "Texture2D")
+            {
+                if (exp.InstancedFullPath == "BIOA_JUG80_T.JUG80_SAIL")
+                {
+                    // Rename to match crossgen
+                    exp.ObjectName = "JUG80_SAIL_CROSSGENFIX";
+                }
+                else if (exp.InstancedFullPath == "BIOA_ICE60_T.checker")
+                {
+                    // Rename to match crossgen
+                    exp.ObjectName = "BIOA_ICE60_T.checker_CROSSGENFIX";
+                }
+            }*/
+
+            if (package.FindExport("BIOA_Jug20_T.CROSSGEN_Jug20_2waywetsandB", "Material") is ExportEntry sandBar)
+            {
+                sandBar.ObjectName = "Jug20_2waywetsandB";
+            }
+            //if (package.FindExport("BIOA_JUG20_T.CROSSGEN_Jug20_2waywetsandB", "Material") is ExportEntry sandBar)
+            //{
+            //    sandBar.ObjectName = "CROSSGEN_Jug20_2waywetsandB";
+            //}
+            if (package.FindExport("BIOA_PRC2_MatFX.Holodeck_Grid_MAT", "Material") is ExportEntry holodeck)
+            {
+                // We need to find a donor or recompile the original material
+                // Original material is the LE1 version of BIOA_GalaxyMap_V_FX_Z.Scanner_Grid_Mat
+            }
+        }
+
+
+        private static void CorrectPathfindingNetwork(IMEPackage le1File, IMEPackage le3File)
+        {
+            var le3PL = le3File.FindExport("TheWorld.PersistentLevel");
+            if (le3PL == null)
+                return; // This file doesn't have a level
+            Level le1L = ObjectBinary.From<Level>(le1File.FindExport("TheWorld.PersistentLevel"));
+            Level le3L = ObjectBinary.From<Level>(le3PL);
+
+            // NavList Chain start and end
+            //if (me1L.NavListEnd != 0 && le3File.FindExport(le1File.GetUExport(me1L.NavListEnd).InstancedFullPath) is { } matchingNavEnd)
+            //{
+            //    le1L.NavListEnd = matchingNavEnd.UIndex;
+
+            //    if (me1L.NavListStart != 0 && le3File.FindExport(le1File.GetUExport(me1L.NavListStart).InstancedFullPath) is { } matchingNavStart)
+            //    {
+            //        le1L.NavListStart = matchingNavStart.UIndex;
+            //        while (matchingNavStart != null)
+            //        {
+            //            int uindex = matchingNavStart.UIndex;
+            //            var props = matchingNavStart.GetProperties();
+            //            //props.AddOrReplaceProp(maxPathSize);
+            //            var next = props.GetProp<ObjectProperty>("nextNavigationPoint");
+            //            //matchingNavStart.WriteProperties(props);
+            //            matchingNavStart = next?.ResolveToEntry(le3File) as ExportEntry;
+            //            if (matchingNavStart == null && uindex != matchingNavEnd.UIndex)
+            //            {
+            //                Debugger.Break();
+            //            }
+            //        }
+            //    }
+            //}
+
+            // CoverList Chain start and end
+            if (le1L.CoverListEnd != 0 && le3File.FindExport(le1File.GetUExport(le1L.CoverListEnd).InstancedFullPath) is { } matchingCoverEnd)
+            {
+                le3L.CoverListEnd = matchingCoverEnd.UIndex;
+
+                if (le1L.CoverListStart != 0 && le3File.FindExport(le1File.GetUExport(le1L.CoverListStart).InstancedFullPath) is { } matchingCoverStart)
+                {
+                    le3L.CoverListStart = matchingCoverStart.UIndex;
+                    while (matchingCoverStart != null)
+                    {
+                        int uindex = matchingCoverStart.UIndex;
+                        var props = matchingCoverStart.GetProperties();
+                        //props.AddOrReplaceProp(maxPathSize);
+                        var next = props.GetProp<ObjectProperty>("NextCoverLink");
+                        //matchingNavStart.WriteProperties(props);
+                        matchingCoverStart = next?.ResolveToEntry(le3File) as ExportEntry;
+                        if (matchingCoverStart == null && uindex != matchingCoverEnd.UIndex)
+                        {
+                            Debugger.Break();
+                        }
+                    }
+                }
+            }
+
+            // Cross level actors
+            foreach (var exportIdx in le1L.CrossLevelActors)
+            {
+                var me1E = le1File.GetUExport(exportIdx);
+                if (le3File.FindExport(me1E.InstancedFullPath) is { } crossLevelActor)
+                {
+                    le3L.CrossLevelActors.Add(crossLevelActor.UIndex);
+                }
+            }
+
+            // Regenerate the 'End' struct cause it will have ported wrong
+            //CorrectReachSpecs(me1File, le1File);
+            //CorrectBioWaypointSet(me1File, le1File, vTestOptions); // Has NavReference -> ActorReference
+            le3PL.WriteBinary(le3L);
+        }
+
+        /// <summary>
+        /// This doesn't seem to do anything
+        /// </summary>
+        /// <param name="package"></param>
+        internal static void AddBioLedgeMeshClass(IMEPackage package)
+        {
+            if (package.FindExport("SFXGame.BioLedgeMeshActor") != null)
+                return; // Already in package
+
+            var parent = package.FindEntry("SFXGame");
+            if (parent == null)
+            {
+                parent = package.CreateImport("Package", "SFXGame");
+            }
+
+            var ledgeMeshActorUc = File.ReadAllText(Path.Combine(SharedECPipelines.ECPipelineRoot, "Redemption", "Assets", "Templates", "BioLedgeMeshActor.uc"));
+
+            var ledgeMeshActorClass = SharedECPipelines.CompileClass(package, ledgeMeshActorUc, "BioLedgeMeshActor", new PackageCache(), parent: parent);
+
+            var world = package.FindExport("TheWorld");
+            var worldBin = ObjectBinary.From<World>(world);
+            worldBin.ExtraReferencedObjects = worldBin.ExtraReferencedObjects.Append(ledgeMeshActorClass.UIndex).ToArray();
+            world.WriteBinary(worldBin);
+        }
+
         // FROM LEX
         internal static IEntry GetImportArchetype(IMEPackage package, string packageFile, string ifp)
         {
-            IEntry result = package.FindExport($"{packageFile}.{ifp}");
+            IEntry result = package.FindEntry($"{packageFile}.{ifp}");
             if (result != null)
                 return result;
 
@@ -679,7 +926,15 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             }
 
             // Create imports from top down.
-            var packageExport = (IEntry)ExportCreator.CreatePackageExport(package, packageFile);
+            IEntry packageExport = null;
+            if (packageFile == "Engine")
+            {
+                packageExport = (IEntry)ExportCreator.CreatePackageImport(package, packageFile);
+            }
+            else
+            {
+                packageExport = (IEntry)ExportCreator.CreatePackageExport(package, packageFile);
+            }
 
             // This doesn't work if the part of the parents already exist.
             var attachParent = packageExport;

@@ -23,7 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Redemption\Assets\" />
     <Folder Include="Redemption\TLK\" />
     <Folder Include="Rejects\Assets\Classes\SniperMP\" />
     <Folder Include="Rejects\Assets\MeshPackages\" />

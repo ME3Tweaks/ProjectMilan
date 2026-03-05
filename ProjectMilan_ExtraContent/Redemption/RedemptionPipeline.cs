@@ -26,7 +26,7 @@ namespace ProjectMilan_ExtraContent.Redemption
             RunPipeline();
             MilanShared.MoveTexturesToTFC("Textures", MilanShared.REDEMPTION_DLC_NAME, false, @"MILANEC-TFC");
             MilanShared.MoveTexturesToTFC("Lighting", MilanShared.REDEMPTION_DLC_NAME, true, @"MILANEC-TFC");
-            ExtraContentInit.CompactTFC(EExtraContent.Redemption); // Milan main will handle this when it pulls everything together
+            // ExtraContentInit.CompactTFC(EExtraContent.Redemption, false); // Milan main will handle this when it pulls everything together
             ExtraContentInit.CompactAFC(EExtraContent.Redemption); // Milan main will handle this when it pulls everything together
         }
 

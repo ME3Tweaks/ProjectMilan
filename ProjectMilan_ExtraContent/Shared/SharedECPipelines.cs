@@ -117,20 +117,29 @@ namespace ProjectMilan_ExtraContent.Shared
             var asset = Path.Combine(ECPipelineRoot, content.ToString(), "Assets", "Classes", subfolderName, $"{className}.uc");
             var classText = File.ReadAllText(asset);
 
-            var usop = new UnrealScriptOptionsPackage() { Cache = cache };
-            FileLib lib = new FileLib(targetObj.FileRef);
+            CompileClass(targetObj.FileRef, classText, className, cache, targetObj);
+        }
+
+        public static ExportEntry CompileClass(IMEPackage targetPackage, string classText, string className, PackageCache cache, ExportEntry targetObj = null, IEntry parent = null)
+        {
+            // Update once we are using LEC version that works
+            var usop = new UnrealScriptOptionsPackage() { Cache = cache, GamePathOverride = MEDirectories.GetDefaultGamePath(MEGame.LE3).Replace("ME3", "LMP") };
+            FileLib lib = new FileLib(targetPackage);
             if (!lib.Initialize(usop))
             {
                 MilanShared.LogFailedFileLibInit(lib);
-                return;
+                return null;
             }
 
-            MilanLog.Information($"Compiling class {className} in {targetObj.FileRef.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
-            var results = UnrealScriptCompiler.CompileClass(targetObj.FileRef, classText, lib, usop, targetObj);
+            MilanLog.Information($"Compiling class {className} in {targetPackage.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+            var results = UnrealScriptCompiler.CompileClass(targetPackage, classText, lib, usop, targetObj, parent);
             if (results.log.HasErrors)
             {
                 MilanLog.LogUSCErrors(results.log);
             }
+            var containingPackage = parent?.ObjectName.Instanced ?? targetPackage.FileNameNoExtension;
+            var ifp = $"{containingPackage}.{className}";
+            return targetPackage.FindExport(ifp, "Class");
         }
 
         public static string GetDLCFolderName(EExtraContent content) => content switch
