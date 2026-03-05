@@ -13,7 +13,9 @@ LIBRARY_API int CompileShader(const char* baseShaderName, const char* materialHl
 	MilanD3DInclude mIncludes;
 	mIncludes.BaseShaderName = baseShaderName;
 	mIncludes.MaterialHLSL = materialHlsl;
-	mIncludes.VertexFactoryFilename = vertexFactoryName;
+	if (vertexFactoryName != nullptr) {
+		mIncludes.VertexFactoryFilename = vertexFactoryName;
+	}
 	mIncludes.ShaderSourcePath = includesDirectory;
 
 	//cstd::cout << "----------------- MILAN SHADER COMPILER LIB -------------------------------\n";
@@ -38,6 +40,35 @@ LIBRARY_API int CompileShader(const char* baseShaderName, const char* materialHl
 	return InternalCompileShader(mIncludes, macros, entryPoint, shaderTypeStr, compileFlags, outShaderBytesSize, outShaderBytes, outErrorMsgSize, outErrorMsg);
 }
 
+/// Checks whether a sampler resource name corresponds to a texture resource name.
+/// UE3 SM5 shaders use the convention: Texture2D ParamName, SamplerState ParamNameSampler.
+/// Array brackets are stripped before comparison.
+static bool SamplerMatchesTexture(const char* samplerName, const char* textureName)
+{
+	std::string sampler(samplerName);
+	std::string texture(textureName);
+
+	auto bracketPos = sampler.find('[');
+	if (bracketPos != std::string::npos)
+		sampler = sampler.substr(0, bracketPos);
+
+	bracketPos = texture.find('[');
+	if (bracketPos != std::string::npos)
+		texture = texture.substr(0, bracketPos);
+
+	// Exact match
+	if (sampler == texture)
+		return true;
+
+	// UE3 SM5 convention: sampler is named "{TextureName}Sampler"
+	const std::string suffix = "Sampler";
+	if (sampler.length() > suffix.length() &&
+		sampler.compare(sampler.length() - suffix.length(), suffix.length(), suffix) == 0 &&
+		sampler.compare(0, sampler.length() - suffix.length(), texture) == 0)
+		return true;
+
+	return false;
+}
 
 LIBRARY_API void GetShaderInfo(int shaderBufferSize, void* shaderBuffer, int& outInstructionCount, int& outNumParameters, NamedParameterAllocation* allocationArray) {
 	// Currently only gets shader instruction count.
@@ -103,7 +134,7 @@ LIBRARY_API void GetShaderInfo(int shaderBufferSize, void* shaderBuffer, int& ou
 		// Texture Resource
 		else if (bindDesc.Type == D3D_SIT_TEXTURE)
 		{
-			// Find matching 
+			// Find matching sampler
 			BOOL hasSampler = FALSE;
 			for (UINT i = 0; i < d3dShaderInfo.BoundResources; i++)
 			{
@@ -111,9 +142,8 @@ LIBRARY_API void GetShaderInfo(int shaderBufferSize, void* shaderBuffer, int& ou
 				d3dReflector->GetResourceBindingDesc(i, &textureDesc);
 				if (textureDesc.Type == D3D_SIT_SAMPLER)
 				{
-					if (strcmp(textureDesc.Name, bindDesc.Name) == 0)
+					if (SamplerMatchesTexture(textureDesc.Name, bindDesc.Name))
 					{
-						// Found the texture that is for this binding
 						hasSampler = TRUE;
 						break;
 					}
@@ -185,27 +215,79 @@ LIBRARY_API void GetShaderInfo(int shaderBufferSize, void* shaderBuffer, int& ou
 			{
 				D3D11_SHADER_INPUT_BIND_DESC textureDesc;
 				d3dReflector->GetResourceBindingDesc(i, &textureDesc);
-				if (textureDesc.Type == D3D_SIT_TEXTURE)
+				if (textureDesc.Type != D3D_SIT_TEXTURE ||
+					!SamplerMatchesTexture(bindDesc.Name, textureDesc.Name))
 				{
-					if (!strcmp(textureDesc.Name, bindDesc.Name))
+					continue;
+				}
+
+				foundTexture = TRUE;
+
+				// Use the texture name as the parameter name
+				TCHAR name[1024];
+				UINT samplerBindingPoint = bindDesc.BindPoint;
+				UINT textureBindingPoint = textureDesc.BindPoint;
+				UINT actualNumBinds = 0;
+
+				wcscpy(name, s2ws(textureDesc.Name).c_str());
+
+				// Strip []
+				TCHAR* brackedLoc = wcschr(name, TEXT('['));
+				if (brackedLoc)
+				{
+					*brackedLoc = 0;
+				}
+
+				UINT resourceOffset = 0;
+				while (i + resourceOffset < d3dShaderInfo.BoundResources &&
+					   resourceIndex + resourceOffset < d3dShaderInfo.BoundResources)
+				{
+					//D3D11_SHADER_INPUT_BIND_DESC iterTextureDescription;
+					D3D11_SHADER_INPUT_BIND_DESC iterSampleDescription;
+					//d3dReflector->GetResourceBindingDesc(i + resourceOffset, &iterTextureDescription);
+					d3dReflector->GetResourceBindingDesc(resourceIndex + resourceOffset, &iterSampleDescription);
+
+					if (///iterTextureDescription.Type != D3D_SIT_TEXTURE ||
+						iterSampleDescription.Type != D3D_SIT_SAMPLER ||
+						//!SamplerMatchesTexture(iterSampleDescription.Name, iterTextureDescription.Name)
+						!SamplerMatchesTexture(iterSampleDescription.Name, textureDesc.Name)
+						)
 					{
-						ParameterMap.push_back(CreateNamedParameterAllocation(
-							bindDesc.Name,
-							0,
-							textureDesc.BindPoint,
-							textureDesc.BindCount,
-							bindDesc.BindPoint
-						));
 						break;
 					}
+
+					//textureBindingPoint = std::min<UINT>(textureBindingPoint, iterTextureDescription.BindPoint);
+					samplerBindingPoint = std::min<UINT>(samplerBindingPoint, iterSampleDescription.BindPoint);
+					actualNumBinds++;
+					resourceOffset++;
 				}
+
+				// Skip past the other samplers in this array
+				resourceIndex += actualNumBinds - 1;
+
+				ParameterMap.push_back(CreateNamedParameterAllocationW(
+					name,
+					0,
+					textureBindingPoint,
+					actualNumBinds,
+					samplerBindingPoint
+				));
+				break;
 			}
 
 			if (!foundTexture)
 			{
-				// Add a parameter for the sampler only, the texture index will be invalid
+				// Sampler only - derive parameter name by stripping "Sampler" suffix
+				std::string samplerOnlyName = bindDesc.Name;
+				const std::string suffix = "Sampler";
+				if (samplerOnlyName.length() > suffix.length() &&
+					samplerOnlyName.compare(samplerOnlyName.length() - suffix.length(), suffix.length(), suffix) == 0)
+				{
+					samplerOnlyName = samplerOnlyName.substr(0, samplerOnlyName.length() - suffix.length());
+				}
+
 				ParameterMap.push_back(CreateNamedParameterAllocation(
-					bindDesc.Name,
+					samplerOnlyName.c_str(),
 					0,
 					USHRT_MAX,
 					bindDesc.BindCount,
