@@ -28,8 +28,8 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Material HLSL:" VerticalAlignment="Center" Margin="0,0,4,4"/>
-                <TextBox Grid.Row="0" Grid.Column="1" x:Name="MaterialHlslPathBox" Margin="0,0,4,4"/>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Debug Package:" VerticalAlignment="Center" Margin="0,0,4,4"/>
+                <TextBox Grid.Row="0" Grid.Column="1" x:Name="MaterialHlslPathBox" IsReadOnly="True" Margin="0,0,4,4"/>
                 <Button Grid.Row="0" Grid.Column="2" Content="Browse..." Click="BrowseMaterialHlsl_Click" Padding="8,2" Margin="0,0,0,4"/>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Base Shader:" VerticalAlignment="Center" Margin="0,0,4,4"/>

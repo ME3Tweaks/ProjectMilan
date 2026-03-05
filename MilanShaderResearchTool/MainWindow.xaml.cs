@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -21,6 +22,7 @@ using D3D11Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 
 namespace MilanShaderResearchTool
 {
@@ -70,7 +72,7 @@ namespace MilanShaderResearchTool
                     IsEnabled = false;
                     break;
 
-                    // These are undef/defined based on other flags
+                // These are undef/defined based on other flags
                 case "NEEDS_LIGHTMAP_COORDINATE":
                 case "NEEDS_SHADOWMAP_COORDINATE":
                 case "NEEDS_VERTEX_LIGHTMAP":
@@ -178,6 +180,15 @@ namespace MilanShaderResearchTool
         private readonly Dictionary<int, (Texture2D Texture, ShaderResourceView SRV)> _textureSRVs = new();
 
         private byte[]? _compiledShaderBytes;
+        private bool _compiledShaderIsVertexShader;
+        private string? _materialHlslContent;
+
+        // VS preview resources
+        private PixelShader? _placeholderPS;
+        private VertexShader? _compiledVS;
+        private InputLayout? _compiledVSInputLayout;
+        private D3D11Buffer? _compiledVSVertexBuffer;
+        private int _compiledVSVertexStride;
 
         public MainWindow()
         {
@@ -328,16 +339,18 @@ VS_OUT main(float3 p : POSITION, float2 uv : TEXCOORD0) {
                 _previewBitmap = new WriteableBitmap(PreviewSize, PreviewSize, 96, 96, PixelFormats.Bgra32, null);
                 PreviewImage.Source = _previewBitmap;
 
-                // Compile a placeholder pixel shader so we can verify the preview pipeline on startup.
-                var placeholderSource = @"
+                // Compile a placeholder pixel shader so we can verify the preview pipeline on startup
+                // and use it when previewing a compiled vertex shader.
+                var placeholderPSSource = @"
 float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
     float2 grid  = floor(uv * 8.0);
     float checker = fmod(grid.x + grid.y, 2.0) * 0.15 + 0.85;
     return float4(uv.x * checker, uv.y * checker, 0.3 * checker, 1.0);
 }";
-                var psPlaceholder = SharpDX.D3DCompiler.ShaderBytecode.Compile(placeholderSource, "main", "ps_5_0");
+                var psPlaceholder = SharpDX.D3DCompiler.ShaderBytecode.Compile(placeholderPSSource, "main", "ps_5_0");
                 if (!psPlaceholder.HasErrors)
                 {
+                    _placeholderPS = new PixelShader(_device, psPlaceholder.Bytecode);
                     _compiledShaderBytes = psPlaceholder.Bytecode.Data;
                     UpdatePreview();
                 }
@@ -358,19 +371,58 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
 
             try
             {
-                _compiledPS?.Dispose();
-                _compiledPS = new PixelShader(_device, _compiledShaderBytes);
+                VertexShader vsToUse;
+                PixelShader psToUse;
+                InputLayout layoutToUse;
+                int vertexStride;
+                D3D11Buffer vbToUse;
+
+                if (_compiledShaderIsVertexShader)
+                {
+                    if (_placeholderPS is null)
+                        return;
+
+                    _compiledVS?.Dispose();
+                    _compiledVS = new VertexShader(_device, _compiledShaderBytes);
+                    BuildVertexResourcesForVS(_compiledShaderBytes);
+
+                    if (_compiledVSInputLayout is null || _compiledVSVertexBuffer is null)
+                    {
+                        AppendConsole("Could not build input layout for compiled VS.");
+                        return;
+                    }
+
+                    vsToUse = _compiledVS;
+                    psToUse = _placeholderPS;
+                    layoutToUse = _compiledVSInputLayout;
+                    vertexStride = _compiledVSVertexStride;
+                    vbToUse = _compiledVSVertexBuffer;
+                }
+                else
+                {
+                    if (_previewVS is null || _inputLayout is null || _vertexBuffer is null)
+                        return;
+
+                    _compiledPS?.Dispose();
+                    _compiledPS = new PixelShader(_device, _compiledShaderBytes);
+
+                    vsToUse = _previewVS;
+                    psToUse = _compiledPS;
+                    layoutToUse = _inputLayout;
+                    vertexStride = 20;
+                    vbToUse = _vertexBuffer;
+                }
 
                 var ctx = _device.ImmediateContext;
                 ctx.ClearRenderTargetView(_renderTargetView,
                     new SharpDX.Mathematics.Interop.RawColor4(0.1f, 0.1f, 0.1f, 1.0f));
                 ctx.OutputMerger.SetRenderTargets(_renderTargetView);
                 ctx.Rasterizer.SetViewport(new SharpDX.Viewport(0, 0, PreviewSize, PreviewSize));
-                ctx.InputAssembler.InputLayout = _inputLayout;
+                ctx.InputAssembler.InputLayout = layoutToUse;
                 ctx.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-                ctx.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(_vertexBuffer, 20, 0));
-                ctx.VertexShader.Set(_previewVS);
-                ctx.PixelShader.Set(_compiledPS);
+                ctx.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vbToUse, vertexStride, 0));
+                ctx.VertexShader.Set(vsToUse);
+                ctx.PixelShader.Set(psToUse);
 
                 // Bind user-loaded textures
                 foreach (var kvp in _textureSRVs)
@@ -413,27 +465,226 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             }
         }
 
+        private void BuildVertexResourcesForVS(byte[] vsBytecode)
+        {
+            _compiledVSInputLayout?.Dispose();
+            _compiledVSInputLayout = null;
+            _compiledVSVertexBuffer?.Dispose();
+            _compiledVSVertexBuffer = null;
+            _compiledVSVertexStride = 0;
+
+            using var reflection = new SharpDX.D3DCompiler.ShaderReflection(vsBytecode);
+            var desc = reflection.Description;
+
+            var elements = new List<InputElement>();
+            int offset = 0;
+
+            for (int i = 0; i < desc.InputParameters; i++)
+            {
+                var param = reflection.GetInputParameterDescription(i);
+                int componentCount = 0;
+                for (int bit = 0; bit < 4; bit++)
+                    if (((int)param.UsageMask & (1 << bit)) != 0) componentCount++;
+                if (componentCount == 0) componentCount = 4;
+
+                Format fmt = componentCount switch
+                {
+                    1 => Format.R32_Float,
+                    2 => Format.R32G32_Float,
+                    3 => Format.R32G32B32_Float,
+                    _ => Format.R32G32B32A32_Float,
+                };
+
+                elements.Add(new InputElement(param.SemanticName, (int)param.SemanticIndex, fmt, offset, 0));
+                offset += componentCount * 4;
+            }
+
+            int stride = offset;
+            if (stride == 0) return;
+
+            _compiledVSInputLayout = new InputLayout(_device, vsBytecode, elements.ToArray());
+            _compiledVSVertexStride = stride;
+
+            // Build a 6-vertex full-screen quad with reasonable defaults per semantic
+            int floatsPerVertex = stride / 4;
+            var vertexData = new float[6 * floatsPerVertex];
+
+            float[][] positions =
+            [
+                [-1, -1, 0, 1], [-1,  1, 0, 1], [ 1,  1, 0, 1],
+                [-1, -1, 0, 1], [ 1,  1, 0, 1], [ 1, -1, 0, 1],
+            ];
+            float[][] uvs =
+            [
+                [0, 1], [0, 0], [1, 0],
+                [0, 1], [1, 0], [1, 1],
+            ];
+
+            for (int v = 0; v < 6; v++)
+            {
+                int floatIdx = v * floatsPerVertex;
+                int elemOffset = 0;
+                for (int ei = 0; ei < elements.Count; ei++)
+                {
+                    var elem = elements[ei];
+                    int cc = (elem.Format) switch
+                    {
+                        Format.R32_Float => 1,
+                        Format.R32G32_Float => 2,
+                        Format.R32G32B32_Float => 3,
+                        _ => 4,
+                    };
+
+                    if (string.Equals(elem.SemanticName, "POSITION", StringComparison.OrdinalIgnoreCase))
+                    {
+                        for (int c = 0; c < cc && c < 4; c++)
+                            vertexData[floatIdx + elemOffset + c] = positions[v][c];
+                    }
+                    else if (string.Equals(elem.SemanticName, "TEXCOORD", StringComparison.OrdinalIgnoreCase) && elem.SemanticIndex == 0)
+                    {
+                        for (int c = 0; c < cc && c < 2; c++)
+                            vertexData[floatIdx + elemOffset + c] = uvs[v][c];
+                    }
+                    else if (string.Equals(elem.SemanticName, "NORMAL", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (cc >= 3) vertexData[floatIdx + elemOffset + 2] = 1.0f; // +Z
+                    }
+                    else if (string.Equals(elem.SemanticName, "TANGENT", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (cc >= 1) vertexData[floatIdx + elemOffset] = 1.0f; // +X
+                        if (cc >= 4) vertexData[floatIdx + elemOffset + 3] = 1.0f; // handedness
+                    }
+                    // Other semantics remain zero-filled
+
+                    elemOffset += cc;
+                }
+            }
+
+            var handle = GCHandle.Alloc(vertexData, GCHandleType.Pinned);
+            try
+            {
+                _compiledVSVertexBuffer = new D3D11Buffer(_device, handle.AddrOfPinnedObject(),
+                    new BufferDescription
+                    {
+                        SizeInBytes = vertexData.Length * sizeof(float),
+                        BindFlags = BindFlags.VertexBuffer,
+                        Usage = ResourceUsage.Default,
+                    });
+            }
+            finally
+            {
+                handle.Free();
+            }
+        }
+
         private void GetTextureResources()
         {
-            var filename = Path.GetFileName(MaterialHlslPathBox.Text.Trim());
-            if (filename == "")
+            if (string.IsNullOrWhiteSpace(MaterialHlslPathBox.Text))
             {
-                return; // Do nothing
-            }
-            var packageBasename = filename.Substring(0, filename.IndexOf('.'));
-            var ifp = Path.GetFileNameWithoutExtension(MaterialHlslPathBox.Text.Trim());
-
-            var packagePath = Path.Combine(@"E:\Decooked\LE3", $"{packageBasename}.pcc");
-            using var package = MEPackageHandler.OpenMEPackage(packagePath);
-            var material = package.FindExport(ifp);
-            var matbin = ObjectBinary.From<Material>(material);
-
-            var textures = matbin.SM3MaterialResource.UniformExpressionTextures;
-            foreach(var texUIndex in textures)
-            {
-
+                return;
             }
 
+            // This needs fixed it is not correct right now. Stored as forced export so we need to
+            // include package name
+            var matFolder = Directory.GetParent(MaterialHlslPathBox.Text.Trim()).Parent.Parent;
+            var materialName = Directory.GetParent(MaterialHlslPathBox.Text.Trim()).Parent.Name;
+
+            var packageFolder = matFolder.Parent;
+            var packageName = matFolder.Name;
+
+            var packagePath = Path.Combine(@"E:\CompiledShaderPackages", $"{matFolder.Name}.pcc");
+            if (File.Exists(packagePath))
+            {
+                using var package = MEPackageHandler.OpenMEPackage(packagePath);
+                var material = package.Exports.FirstOrDefault(x => x.IsA("Material") && x.ObjectName.Instanced == materialName);
+                if (material != null)
+                {
+                    var matbin = ObjectBinary.From<Material>(material);
+
+                    var textures = matbin.SM3MaterialResource.UniformExpressionTextures;
+                    int slot = 0;
+                    foreach (var texUIndex in textures)
+                    {
+                        if (texUIndex == 0)
+                        {
+                            // It's a null value... how do we pass a null texture?
+                        }
+                        else
+                        {
+                            var tex = package.GetEntry(texUIndex);
+                            if (tex is ImportEntry imp)
+                            {
+
+                            }
+                            else if (tex is ExportEntry exp)
+                            {
+                                var t2d = new LegendaryExplorerCore.Unreal.Classes.Texture2D(exp);
+                                var png = t2d.GetPNG(t2d.GetTopMip());
+                                LoadTextureForSlot(slot, png);
+                            }
+                        }
+                        slot++;
+                    }
+                }
+            }
+        }
+
+        private void LoadTextureForSlot(int slot, byte[] pngBytes)
+        {
+            if (_device is null || pngBytes is null || pngBytes.Length == 0) return;
+
+            try
+            {
+                if (_textureSRVs.TryGetValue(slot, out var old))
+                {
+                    old.SRV.Dispose();
+                    old.Texture.Dispose();
+                    _textureSRVs.Remove(slot);
+                }
+
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.StreamSource = new MemoryStream(pngBytes);
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.EndInit();
+
+                var converted = new FormatConvertedBitmap(bmp, PixelFormats.Bgra32, null, 0);
+                int w = converted.PixelWidth;
+                int h = converted.PixelHeight;
+                int stride = w * 4;
+                var pixels = new byte[stride * h];
+                converted.CopyPixels(pixels, stride, 0);
+
+                var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+                try
+                {
+                    var texDesc = new Texture2DDescription
+                    {
+                        Width = w,
+                        Height = h,
+                        MipLevels = 1,
+                        ArraySize = 1,
+                        Format = Format.B8G8R8A8_UNorm,
+                        SampleDescription = new SampleDescription(1, 0),
+                        Usage = ResourceUsage.Default,
+                        BindFlags = BindFlags.ShaderResource,
+                    };
+                    var dataBox = new SharpDX.DataBox(handle.AddrOfPinnedObject(), stride, 0);
+                    var tex = new Texture2D(_device, texDesc, new[] { dataBox });
+                    var srv = new ShaderResourceView(_device, tex);
+                    _textureSRVs[slot] = (tex, srv);
+                }
+                finally
+                {
+                    handle.Free();
+                }
+
+                AppendConsole($"Loaded texture for slot {slot} from PNG bytes ({pngBytes.Length} bytes).");
+            }
+            catch (Exception ex)
+            {
+                AppendConsole($"Failed to load texture for slot {slot}: {ex.Message}");
+            }
         }
 
         private void LoadTextureForSlot(int slot, string filePath)
@@ -506,6 +757,10 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             _textureSRVs.Clear();
 
             _compiledPS?.Dispose();
+            _compiledVS?.Dispose();
+            _compiledVSInputLayout?.Dispose();
+            _compiledVSVertexBuffer?.Dispose();
+            _placeholderPS?.Dispose();
             _samplerState?.Dispose();
             _vertexBuffer?.Dispose();
             _inputLayout?.Dispose();
@@ -676,15 +931,69 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
 
         #region UI Event Handlers
 
-        private void BrowseMaterialHlsl_Click(object sender, RoutedEventArgs e)
+        private async void BrowseMaterialHlsl_Click(object sender, RoutedEventArgs e)
         {
             var dlg = new OpenFileDialog
             {
-                Filter = "HLSL Files (*.hlsl;*.usf;*.fx)|*.hlsl;*.usf;*.fx|All Files|*.*",
-                Title = "Select Material HLSL File"
+                Filter = "Shader Debug Package (*.json)|*.json|All Files|*.*",
+                Title = "Select Shader Debug Package"
             };
             if (dlg.ShowDialog() == true)
-                MaterialHlslPathBox.Text = dlg.FileName;
+                await LoadDebugPackage(dlg.FileName);
+        }
+
+        private async Task LoadDebugPackage(string jsonPath)
+        {
+            MaterialHlslPathBox.Text = jsonPath;
+
+            MilanShaderHost.ShaderClientDebugPackage package;
+            try
+            {
+                var json = await Task.Run(() => File.ReadAllText(jsonPath));
+                package = JsonSerializer.Deserialize<MilanShaderHost.ShaderClientDebugPackage>(
+                    json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
+            }
+            catch (Exception ex)
+            {
+                AppendConsole($"ERROR loading debug package: {ex.Message}");
+                return;
+            }
+
+            _materialHlslContent = package.materialHlsl;
+
+            BaseShaderNameBox.Text = package.sourceFilename ?? "";
+            if (package.vertexFactoryType != null && package.vertexFactoryType.StartsWith("F"))
+            {
+                // Game sends us name like FLocalVertexFactory, but we just want LocalVertexFactory
+                VertexFactoryBox.Text = package.vertexFactoryType.Substring(1);
+            }
+            else
+            {
+                VertexFactoryBox.Text = "";
+            }
+            EntryPointBox.Text = package.functionName ?? "";
+
+            if (!string.IsNullOrEmpty(package.profile))
+            {
+                foreach (ComboBoxItem item in ShaderTypeCombo.Items)
+                {
+                    if (item.Content?.ToString() == package.profile)
+                    {
+                        ShaderTypeCombo.SelectedItem = item;
+                        break;
+                    }
+                }
+            }
+
+            _macros.Clear();
+            if (package.macros != null)
+            {
+                foreach (var macro in package.macros)
+                    _macros.Add(new MacroEntry { Name = macro.name ?? "", Value = macro.definition ?? "" });
+            }
+
+            AppendConsole($"Loaded debug package: {Path.GetFileName(jsonPath)}");
+            Compile_Click(this, new RoutedEventArgs());
         }
 
         private void BrowseIncludeDir_Click(object sender, RoutedEventArgs e)
@@ -699,16 +1008,15 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
 
         private async void Compile_Click(object sender, RoutedEventArgs e)
         {
-            var materialPath = MaterialHlslPathBox.Text.Trim();
             var baseShader = BaseShaderNameBox.Text.Trim();
             var vertexFactory = VertexFactoryBox.Text.Trim();
             var entryPoint = EntryPointBox.Text.Trim();
             var shaderType = ((ComboBoxItem)ShaderTypeCombo.SelectedItem).Content.ToString()!;
             var includeDir = IncludeDirectoryBox.Text.Trim();
 
-            if (string.IsNullOrEmpty(materialPath) || !File.Exists(materialPath))
+            if (string.IsNullOrEmpty(_materialHlslContent))
             {
-                AppendConsole("ERROR: Material HLSL file not found.");
+                AppendConsole("ERROR: No debug package loaded. Please select a shader debug package JSON.");
                 return;
             }
             if (string.IsNullOrEmpty(baseShader))
@@ -730,7 +1038,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             int flags = GetCompileFlags();
             AppendConsole($"--- Compiling: {baseShader} | Entry: {entryPoint} | Type: {shaderType} | Flags: 0x{flags:X} ---");
 
-            string materialHlsl = await Task.Run(() => File.ReadAllText(materialPath));
+            string materialHlsl = _materialHlslContent;
             var macros = _macros.Where(m => m.IsEnabled).Select(m => (m.Name, m.Value)).ToArray();
 
             try
@@ -752,6 +1060,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
 
                 AppendConsole($"SUCCESS — Bytecode: {shaderBytes.Length} bytes");
                 _compiledShaderBytes = shaderBytes;
+                _compiledShaderIsVertexShader = shaderType == "vs";
 
                 // Retrieve reflection / resource bindings
                 var bindings = DoGetShaderInfo(shaderBytes, out int instructionCount);
