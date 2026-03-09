@@ -1,4 +1,6 @@
-﻿PROJECT MILAN SHADERS
+﻿Outdated as of 03/09/2026 - We no longer need donors
+
+PROJECT MILAN SHADERS
 ================================================
 Source: Folders matching material names that contain shader hlsl files that will replace policies for that shader map. 
    NOTE: Shader disassembly must be from the donor material! Or at least have the same inputs. Otherwise D3D will reject the shader and the game will probably die.
