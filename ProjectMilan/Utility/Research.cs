@@ -1,4 +1,5 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
@@ -106,7 +107,7 @@ namespace ProjectMilan.Utility
             filesToKeepShadersFor.Add(@"BIOG_HMM_HED_Alignment.pcc");
             filesToKeepShadersFor.Add(@"SFXGameEffects.pcc");
             filesToKeepShadersFor.Add(@"SFXWeapon_Pistol_Predator.pcc");
-
+            filesToKeepShadersFor.Add(@"Startup.pcc");
             filesToKeepShadersFor.Add(@"SFXGUI_Fonts.pcc");
             filesToKeepShadersFor.Add(@"SFXGUI_A_LegalLogos.pcc");
             filesToKeepShadersFor.Add(@"AreaMap_NumIcon.pcc");
@@ -289,8 +290,8 @@ namespace ProjectMilan.Utility
             string[] levels = [
                 "BioP_MPGeth",
                 "BioP_MPMoon",
-                "BioP_MPThes",
-                "BioP_MPJngl"
+                //"BioP_MPThes",
+                //"BioP_MPJngl"
                 //"BioP_MPOcean",
                 //"BioP_MPRoad"
             ];
@@ -385,67 +386,169 @@ namespace ProjectMilan.Utility
             }
         }
 
+        internal static void CopyPreview()
+        {
+            using var p = MEPackageHandler.OpenMEPackage(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole\shaderpreview.pcc");
+            var inputf = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical";
+            foreach (var file in Directory.GetFiles(inputf, "*.pcc"))
+            {
+                var psf = MEPackageHandler.OpenMEPackage(file);
+
+                foreach (var mat in p.Exports.Where(x => x.IsA("Material")))
+                {
+                    var matInDest = psf.FindExport(mat.InstancedFullPath, mat.ClassName);
+                    if (matInDest != null)
+                    {
+                        Console.WriteLine($"Copying {mat.InstancedFullPath} to {file}");
+                        EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, mat, psf, matInDest, true, new RelinkerOptionsPackage() { Cache = new PackageCache() }, out var _);
+                    }
+                }
+
+                var shaderCacheInSource = p.FindExport("SeekFreeShaderCache");
+                var shaderCacheInDest = psf.FindExport("SeekFreeShaderCache");
+
+                if (shaderCacheInSource != null && shaderCacheInDest != null)
+                {
+                    Console.WriteLine($"Merging shader cache to {file}");
+                    var shaderCacheSourceBin = ObjectBinary.From<ShaderCache>(shaderCacheInSource);
+                    var shaderCacheDestBin = ObjectBinary.From<ShaderCache>(shaderCacheInDest);
+                    shaderCacheSourceBin.MergeInto(shaderCacheDestBin);
+                    shaderCacheInDest.WriteBinary(shaderCacheDestBin);
+                }
+                ShaderCacheManipulator.CompactSeekFreeShaderCaches(psf);
+
+                if (psf.IsModified)
+                {
+                    psf.Save();
+                }
+            }
+        }
+
+        internal static void CopyPreview2()
+        {
+            using var p = MEPackageHandler.OpenMEPackage(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole\shaderpreview.pcc");
+            var inputf = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical\BioP_MPPS.pcc";
+            var psf = MEPackageHandler.OpenMEPackage(inputf);
+
+            foreach (var mat in p.Exports.Where(x => x.IsA("StaticMeshActor")))
+            {
+                Console.WriteLine($"Copying {mat.InstancedFullPath} to {psf.FileNameNoExtension}");
+                EntryExporter.ExportExportToPackage(mat, psf, out var ported);
+            }
+
+            LevelTools.RebuildPersistentLevelChildren(psf.GetLevel());
+
+            var shaderCacheInSource = ShaderCacheManipulator.CreateShaderCache(p);
+            var shaderCacheInDest = ShaderCacheManipulator.CreateShaderCache(psf);
+
+            if (shaderCacheInSource != null && shaderCacheInDest != null)
+            {
+                Console.WriteLine($"Merging shader cache");
+                var shaderCacheSourceBin = ObjectBinary.From<ShaderCache>(shaderCacheInSource);
+                var shaderCacheDestBin = ObjectBinary.From<ShaderCache>(shaderCacheInDest);
+                shaderCacheSourceBin.MergeInto(shaderCacheDestBin);
+                shaderCacheInDest.WriteBinary(shaderCacheDestBin);
+            }
+            ShaderCacheManipulator.CompactSeekFreeShaderCaches(psf);
+
+            if (psf.IsModified)
+            {
+                psf.Save();
+            }
+        }
+
+
         /// <summary>
         /// Scans the output directory for broken materials. Attempts to merge shader caches from our custom compiled versions and link them up.
         /// </summary>
         internal static void InstallCompiledShaders()
         {
-            var compiledShaderPath = @"E:\CompiledShaderPackages";
-            var compiledShaderPackages = Directory.GetFiles(compiledShaderPath, "*.pcc");
-            CaseInsensitiveDictionary<string> packageMap = new();
-            var cache = new PackageCache();
-            // var packages = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
-            var packages = Directory.GetFiles(@"E:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Levels\BioP_MPOcean");
-            foreach (var p in compiledShaderPackages)
-            {
-                packageMap[Path.GetFileNameWithoutExtension(p)] = p;
-            }
+            var path = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
+
+            var packages = Directory.GetFiles(path, "*.pcc", SearchOption.AllDirectories);
 
             foreach (var gamePackagePath in packages)
             {
                 var gamePackage = MEPackageHandler.OpenMEPackage(gamePackagePath);
+                MilanShaders.InstallCompiledShadersToPackage(gamePackage, "MilanResearch");
 
                 var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(gamePackage);
                 foreach (var brokenMat in brokenMaterials)
                 {
-                    var linker = brokenMat.GetLinker();
-                    if (packageMap.TryGetValue(linker, out var cmp))
+                    if (brokenMat.IsA("MaterialInstance") && brokenMat.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true)
                     {
-                        var compiledPackage = cache.GetCachedPackage(cmp);
-                        var csc = compiledPackage.FindExport("SeekFreeShaderCache");
-                        if (csc == null)
-                            // dunno what happened here.
-                            continue;
-
-                        var matchingMat = compiledPackage.FindExport(brokenMat.MemoryFullPath, brokenMat.ClassName) ?? compiledPackage.FindExport(brokenMat.InstancedFullPath, brokenMat.ClassName);
-                        if (matchingMat == null)
-                        {
-                            // couldn't find the mat
-                            MilanLog.Information($"No compiled shaders for {brokenMat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
-                        }
-                        else
-                        {
-                            MilanLog.Information($"Update shadercache for {brokenMat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
-                            var shaderCache = ObjectBinary.From<ShaderCache>(csc);
-                            ShaderCacheManipulator.AddShadersToFile(gamePackage, shaderCache);
-                            // update the id of the material to match the compiled version
-                            var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
-                            ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
-                        }
+                        brokenMat.RemoveProperty("bHasStaticPermutationResource");
+                        brokenMat.WriteBinary([]);
                     }
                 }
-
-                //ShaderCacheManipulator.CompactSeekFreeShaderCaches(gamePackage);
                 if (gamePackage.IsModified)
                 {
                     gamePackage.Save();
                 }
-                brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(gamePackage);
-                foreach (var mat in brokenMaterials)
-                {
-                    MilanLog.Error($@"  Shader still broken for {mat.InstancedFullPath}");
-                }
             }
+            //var decookedPath = @"E:\CompiledShaderPackages";
+            //var compiledShaderPath = @"E:\CompiledShaderPackages";
+            //var compiledShaderPackages = Directory.GetFiles(compiledShaderPath, "*.pcc");
+            //CaseInsensitiveDictionary<string> packageMap = new();
+            //var cache = new PackageCache();
+            //// var packages = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
+            //var packages = Directory.GetFiles(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
+            //foreach (var p in compiledShaderPackages)
+            //{
+            //    packageMap[Path.GetFileNameWithoutExtension(p)] = p;
+            //}
+
+            //foreach (var gamePackagePath in packages)
+            //{
+            //    if (!gamePackagePath.RepresentsPackageFilePath())
+            //    {
+            //        continue;
+            //    }
+            //    var gamePackage = MEPackageHandler.OpenMEPackage(gamePackagePath);
+
+            //    var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(gamePackage);
+            //    foreach (var brokenMat in brokenMaterials)
+            //    {
+            //        var linker = brokenMat.GetLinker();
+            //        if (packageMap.TryGetValue(linker, out var cmp))
+            //        {
+            //            var compiledPackage = cache.GetCachedPackage(cmp);
+            //            var csc = compiledPackage.FindExport("SeekFreeShaderCache");
+            //            if (csc == null)
+            //                // dunno what happened here.
+            //                continue;
+
+            //            var matchingMat = compiledPackage.FindExport(brokenMat.MemoryFullPath, brokenMat.ClassName) ?? compiledPackage.FindExport(brokenMat.InstancedFullPath, brokenMat.ClassName);
+            //            if (matchingMat == null)
+            //            {
+            //                // couldn't find the mat
+            //                MilanLog.Information($"No compiled shaders for {brokenMat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
+            //            }
+            //            else
+            //            {
+            //                MilanLog.Information($"Update shadercache for {brokenMat.InstancedFullPath} in {gamePackage.FileNameNoExtension}");
+            //                var shaderCache = ObjectBinary.From<ShaderCache>(csc);
+            //                ShaderCacheManipulator.AddShadersToFile(gamePackage, shaderCache);
+            //                // update the id of the material to match the compiled version
+            //                var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
+            //                ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
+            //                brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+            //                brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
+            //            }
+            //        }
+            //    }
+
+            //    ShaderCacheManipulator.CompactSeekFreeShaderCaches(gamePackage);
+            //    if (gamePackage.IsModified)
+            //    {
+            //        gamePackage.Save();
+            //    }
+            //    brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(gamePackage);
+            //    foreach (var mat in brokenMaterials)
+            //    {
+            //        MilanLog.Error($@"  Shader still broken for {mat.InstancedFullPath}");
+            //    }
+            //}
         }
 
         internal static void ImportStaticLightingForLevel()
