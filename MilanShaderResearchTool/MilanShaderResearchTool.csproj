@@ -37,6 +37,7 @@
   <ItemGroup>
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
     <ProjectReference Include="..\MilanShaderCompilerLib\MilanShaderCompilerLib.vcxproj" />
+    <ProjectReference Include="..\ProjectMilanCore\ProjectMilanCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

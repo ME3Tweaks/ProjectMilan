@@ -1,28 +1,33 @@
-﻿using Microsoft.Win32;
+﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Shaders;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
+using Microsoft.Win32;
+using MilanShaderHost;
+using SharpDX.Direct3D;
+using SharpDX.Direct3D11;
+using SharpDX.DXGI;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.IO.Pipes;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.Marshalling;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using LegendaryExplorerCore.GameFilesystem;
-using LegendaryExplorerCore.Shaders;
-using SharpDX.Direct3D;
-using SharpDX.Direct3D11;
-using SharpDX.DXGI;
 using D3D11Buffer = SharpDX.Direct3D11.Buffer;
 using D3D11Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
-using LegendaryExplorerCore.Packages;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.Unreal.ObjectInfo;
 
 namespace MilanShaderResearchTool
 {
@@ -32,6 +37,9 @@ namespace MilanShaderResearchTool
         private string _name = "";
         private string _value = "";
 
+        /// <summary>
+        /// Macro is checked or not
+        /// </summary>
         public bool IsEnabled
         {
             get => _isEnabled;
@@ -39,24 +47,38 @@ namespace MilanShaderResearchTool
         }
 
         private bool _show = true;
+        /// <summary>
+        /// Hidden, useless macros
+        /// </summary>
         public bool Show
         {
             get => _show;
             set { _show = value; OnPropertyChanged(); }
         }
 
+        /// <summary>
+        /// Name of the macro
+        /// </summary>
         public string Name
         {
             get => _name;
             set { _name = value; OnPropertyChanged(); }
         }
 
+        /// <summary>
+        /// String value of the Macro, typically 1
+        /// </summary>
         public string Value
         {
             get => _value;
             set { _value = value; OnPropertyChanged(); }
         }
 
+        /// <summary>
+        /// Disables and possibly hides this macro - never enables.
+        /// </summary>
+        /// <param name="entryName"></param>
+        /// <param name="vertexFactoryName"></param>
         public void UpdateDefaultSelection(string entryName, string vertexFactoryName)
         {
             switch (Name)
@@ -119,6 +141,39 @@ namespace MilanShaderResearchTool
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
+    public class MacroProbeResult
+    {
+        public string MacroName { get; init; } = "";
+        public string MacroValue { get; init; } = "";
+        public bool Compiled { get; init; }
+        public bool CompiledPreferFlow { get; init; }
+        public bool Matched { get; init; }
+        public bool MatchedPreferFlow { get; init; }
+        public string ComputedMd5 { get; init; } = "";
+        public string ComputedMd5Prefer { get; init; } = "";
+        // True if this result came from a removal test (we removed this macro from the base set)
+        public bool IsRemoval { get; init; }
+        public string Status => Matched || MatchedPreferFlow ? "✓ Match" : (Compiled || CompiledPreferFlow) ? "No Match" : "Compile Failed";
+
+        // Which compilation produced the match: "Normal", "PreferFlow", "Both", or "None"
+        public string MatchedBy
+        {
+            get
+            {
+                string which;
+                if (Matched && MatchedPreferFlow) which = "Both";
+                else if (Matched) which = "Normal";
+                else if (MatchedPreferFlow) which = "PreferFlow";
+                else which = "None";
+
+                if (IsRemoval && which != "None")
+                    return $"Removed:{which}";
+
+                return which;
+            }
+        }
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     struct FParameterAllocation
     {
@@ -143,6 +198,8 @@ namespace MilanShaderResearchTool
     /// </summary>
     public partial class MainWindow : Window
     {
+        private CancellationTokenSource? _pipeCts;
+
         #region P/Invoke
 
         [DllImport("MilanShaderCompilerLib.dll", EntryPoint = "CompileShader", ExactSpelling = true)]
@@ -158,6 +215,79 @@ namespace MilanShaderResearchTool
             int shaderBufferSize, byte[] shaderBuffer,
             ref int outInstructionCount, ref int outNumParameters,
             IntPtr allocationArray);
+
+        #endregion
+
+        #region Named Pipe Listener
+
+        private void StartNamedPipeListener(CancellationToken token)
+        {
+            _ = Task.Run(async () =>
+            {
+                const string pipeName = "shaderresearchtool";
+                _ = Dispatcher.InvokeAsync(() => AppendConsole($"Named pipe listener starting on '{pipeName}'..."));
+                while (!token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        using var pipe = new NamedPipeServerStream(pipeName, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+                        await pipe.WaitForConnectionAsync(token).ConfigureAwait(false);
+                        _ = Dispatcher.InvokeAsync(() => AppendConsole("Client connected to named pipe."));
+
+                        using var sr = new StreamReader(pipe, Encoding.UTF8);
+                        var text = await sr.ReadToEndAsync().ConfigureAwait(false);
+                        if (!string.IsNullOrWhiteSpace(text))
+                        {
+                            var pipeCommand = text.Trim();
+                            _ = Dispatcher.InvokeAsync(() => AppendConsole($"Received pipe message: {pipeCommand}"));
+                            HandlePipeCommand(pipeCommand);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _ = Dispatcher.InvokeAsync(() => AppendConsole($"Pipe listener error: {ex.Message}"));
+                        try { await Task.Delay(1000, token).ConfigureAwait(false); } catch { }
+                    }
+                }
+
+                _ = Dispatcher.InvokeAsync(() => AppendConsole("Named pipe listener stopped."));
+            }, token);
+        }
+
+        private void HandlePipeCommand(string pipeCommand)
+        {
+            var parts = pipeCommand.Split("|");
+
+            var command = parts[0];
+            switch (command)
+            {
+                case "DEBUGPACKAGE":
+                    {
+                        var expectedHash = parts[1];
+                        var realPath = Path.Combine(@"E:\Decooked\DebugPackages\LE3", parts[2], parts[3], parts[4], parts[5] + ".json");
+                        if (File.Exists(realPath))
+                        {
+                            // Load debug package on UI thread
+                            _ = Dispatcher.InvokeAsync(async () =>
+                            {
+                                await LoadDebugPackage(realPath);
+                                ProbeHashBox.Text = expectedHash;
+                                this.Activate();
+                            });
+                        }
+                        else
+                        {
+                            _ = Dispatcher.InvokeAsync(() => AppendConsole($"File not found: {realPath}"));
+                        }
+                    }
+                    break;
+            }
+
+        }
 
         #endregion
 
@@ -194,6 +324,10 @@ namespace MilanShaderResearchTool
         {
             InitializeComponent();
 
+            // Start named pipe listener for external open requests
+            _pipeCts = new CancellationTokenSource();
+            StartNamedPipeListener(_pipeCts.Token);
+
             MacrosGrid.ItemsSource = _macros;
             ResourceBindingsGrid.ItemsSource = _resourceBindings;
             TextureInputsGrid.ItemsSource = _textureInputs;
@@ -224,6 +358,14 @@ namespace MilanShaderResearchTool
 
         protected override void OnClosed(EventArgs e)
         {
+            // Stop pipe listener
+            try
+            {
+                _pipeCts?.Cancel();
+                _pipeCts?.Dispose();
+            }
+            catch { }
+
             CleanupD3D();
             base.OnClosed(e);
         }
@@ -616,7 +758,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
                             {
 
                             }
-                            else if (tex is ExportEntry exp)
+                            else if (tex is ExportEntry exp && exp.IsA("Texture2D"))
                             {
                                 var t2d = new LegendaryExplorerCore.Unreal.Classes.Texture2D(exp);
                                 var png = t2d.GetPNG(t2d.GetTopMip());
@@ -946,11 +1088,11 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
         {
             MaterialHlslPathBox.Text = jsonPath;
 
-            MilanShaderHost.ShaderClientDebugPackage package;
+            ShaderClientDebugPackage package;
             try
             {
                 var json = await Task.Run(() => File.ReadAllText(jsonPath));
-                package = JsonSerializer.Deserialize<MilanShaderHost.ShaderClientDebugPackage>(
+                package = JsonSerializer.Deserialize<ShaderClientDebugPackage>(
                     json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })!;
             }
             catch (Exception ex)
@@ -990,6 +1132,33 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             {
                 foreach (var macro in package.macros)
                     _macros.Add(new MacroEntry { Name = macro.name ?? "", Value = macro.definition ?? "" });
+            }
+
+            if (package.possibleMacros != null)
+            {
+                foreach (var macro in package.possibleMacros.OrderBy(x => x))
+                {
+                    if (!_macros.Any(m => m.Name == macro))
+                    {
+                        var entry = new MacroEntry { Name = macro, Value = "1", IsEnabled = false };
+                        entry.UpdateDefaultSelection(BaseShaderNameBox.Text, VertexFactoryBox.Text);
+                        if (entry.Show)
+                        {
+                            _macros.Add(entry);
+                        }
+                    }
+                }
+            }
+
+            // Ensure there are no duplicate macro names (keep first occurrence)
+            int beforeCount = _macros.Count;
+            var deduped = _macros.GroupBy(m => m.Name).Select(g => g.First()).ToList();
+            if (deduped.Count != beforeCount)
+            {
+                _macros.Clear();
+                foreach (var m in deduped)
+                    _macros.Add(m);
+                AppendConsole($"Removed {beforeCount - deduped.Count} duplicate macros.");
             }
 
             AppendConsole($"Loaded debug package: {Path.GetFileName(jsonPath)}");
@@ -1195,6 +1364,222 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             }
         }
 
+        private async void ProbeHash_Click(object sender, RoutedEventArgs e)
+        {
+            var hash = ProbeHashBox.Text.Trim();
+            if (string.IsNullOrEmpty(hash))
+            {
+                AppendConsole("ERROR: Enter an MD5 hash in the probe hash box.");
+                return;
+            }
+            await ProbeHashMatch(hash);
+        }
+
+        private async Task ProbeHashMatch(string targetMd5)
+        {
+            var baseShader = BaseShaderNameBox.Text.Trim();
+            var vertexFactory = VertexFactoryBox.Text.Trim();
+            var entryPoint = EntryPointBox.Text.Trim();
+            var shaderType = ((ComboBoxItem)ShaderTypeCombo.SelectedItem).Content.ToString()!;
+            var includeDir = IncludeDirectoryBox.Text.Trim();
+            var materialHlsl = _materialHlslContent;
+
+            if (string.IsNullOrEmpty(materialHlsl))
+            {
+                AppendConsole("ERROR: No debug package loaded.");
+                return;
+            }
+            if (string.IsNullOrEmpty(baseShader) || string.IsNullOrEmpty(entryPoint) ||
+                string.IsNullOrEmpty(includeDir) || !Directory.Exists(includeDir))
+            {
+                AppendConsole("ERROR: Shader configuration is incomplete.");
+                return;
+            }
+
+            var flags = GetCompileFlags();
+            var baseMacros = _macros.Where(m => m.IsEnabled).Select(m => (m.Name, m.Value)).ToArray();
+            var probeMacros = _macros.Where(m => m.Show && !m.IsEnabled).ToList();
+
+            if (probeMacros.Count == 0)
+            {
+                AppendConsole("No visible unchecked macros to probe.");
+                return;
+            }
+
+            AppendConsole($"Probing {probeMacros.Count} unchecked macros against MD5 {targetMd5}...");
+
+            var results = new ConcurrentBag<MacroProbeResult>();
+            int maxConc = Math.Max(1, Environment.ProcessorCount / 2);
+            var semaphore = new SemaphoreSlim(maxConc);
+            int completed = 0;
+
+            var tasks = probeMacros.Select(async macro =>
+            {
+                await semaphore.WaitAsync().ConfigureAwait(false);
+                try
+                {
+                    var testMacros = baseMacros.Append((macro.Name, macro.Value)).ToArray();
+
+                    bool compiled = false;
+                    bool matched = false;
+                    string md5Result = "";
+                    bool compiledPrefer = false;
+                    bool matchedPrefer = false;
+                    string md5ResultPrefer = "";
+
+                    try
+                    {
+                        var (result, shaderBytes, _) = DoCompileShader(
+                            baseShader, materialHlsl, vertexFactory, includeDir,
+                            testMacros, entryPoint, shaderType, flags);
+
+                        compiled = result == 0 && shaderBytes.Length > 0;
+                        if (compiled)
+                        {
+                            md5Result = ComputeShaderBytecodeMd5(shaderBytes);
+                            matched = string.Equals(md5Result, targetMd5, StringComparison.OrdinalIgnoreCase);
+                        }
+
+                        // Also try with Prefer Flow Control forced on
+                        int preferFlag = (1 << 10);
+                        var preferFlags = flags | preferFlag;
+                        var (result2, shaderBytes2, _) = DoCompileShader(
+                            baseShader, materialHlsl, vertexFactory, includeDir,
+                            testMacros, entryPoint, shaderType, preferFlags);
+
+                        compiledPrefer = result2 == 0 && shaderBytes2.Length > 0;
+                        if (compiledPrefer)
+                        {
+                            md5ResultPrefer = ComputeShaderBytecodeMd5(shaderBytes2);
+                            matchedPrefer = string.Equals(md5ResultPrefer, targetMd5, StringComparison.OrdinalIgnoreCase);
+                        }
+                    }
+                    catch { /* compile failure recorded via compiled flags */ }
+
+                    results.Add(new MacroProbeResult
+                    {
+                        MacroName = macro.Name,
+                        MacroValue = macro.Value,
+                        Compiled = compiled,
+                        CompiledPreferFlow = compiledPrefer,
+                        Matched = matched,
+                        MatchedPreferFlow = matchedPrefer,
+                        ComputedMd5 = md5Result,
+                        ComputedMd5Prefer = md5ResultPrefer,
+                    });
+
+                    int done = Interlocked.Increment(ref completed);
+                    if (done % 10 == 0 || done == probeMacros.Count)
+                        _ = Dispatcher.InvokeAsync(() => AppendConsole($"  [{done}/{probeMacros.Count}] probed..."));
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            });
+
+            await Task.WhenAll(tasks);
+
+            var sorted = results.OrderByDescending(r => (r.Matched || r.MatchedPreferFlow)).ThenBy(r => r.MacroName).ToList();
+            int matchCount = sorted.Count(r => r.Matched || r.MatchedPreferFlow);
+            AppendConsole($"Hash probe complete: {matchCount}/{sorted.Count} macros matched.");
+
+            var window = new MacroProbeResultsWindow(targetMd5, sorted) { Owner = this };
+            window.Show();
+
+            // If nothing matched when adding a single macro (including prefer-flow),
+            // try the inverse: remove a single base macro and see if that produces a match.
+            if (matchCount == 0)
+            {
+                var enabledMacros = _macros.Where(m => m.IsEnabled).ToList();
+                if (enabledMacros.Count > 0)
+                {
+                    AppendConsole($"No matches found. Probing by removing one of {enabledMacros.Count} base macros...");
+
+                    var removalResults = new ConcurrentBag<MacroProbeResult>();
+                    var remSemaphore = new SemaphoreSlim(Math.Max(1, Environment.ProcessorCount / 2));
+                    int remCompleted = 0;
+
+                    var remTasks = enabledMacros.Select(async remMacro =>
+                    {
+                        await remSemaphore.WaitAsync().ConfigureAwait(false);
+                        try
+                        {
+                            // Build macros without this one
+                            var testMacros = baseMacros.Where(b => b.Name != remMacro.Name).ToArray();
+
+                            bool compiled = false;
+                            bool matched = false;
+                            string md5Result = "";
+                            bool compiledPrefer = false;
+                            bool matchedPrefer = false;
+                            string md5ResultPrefer = "";
+
+                            try
+                            {
+                                var (result, shaderBytes, _) = DoCompileShader(
+                                    baseShader, materialHlsl, vertexFactory, includeDir,
+                                    testMacros, entryPoint, shaderType, flags);
+
+                                compiled = result == 0 && shaderBytes.Length > 0;
+                                if (compiled)
+                                {
+                                    md5Result = ComputeShaderBytecodeMd5(shaderBytes);
+                                    matched = string.Equals(md5Result, targetMd5, StringComparison.OrdinalIgnoreCase);
+                                }
+
+                                // Also try with Prefer Flow Control forced on
+                                int preferFlag = (1 << 10);
+                                var preferFlags = flags | preferFlag;
+                                var (result2, shaderBytes2, _) = DoCompileShader(
+                                    baseShader, materialHlsl, vertexFactory, includeDir,
+                                    testMacros, entryPoint, shaderType, preferFlags);
+
+                                compiledPrefer = result2 == 0 && shaderBytes2.Length > 0;
+                                if (compiledPrefer)
+                                {
+                                    md5ResultPrefer = ComputeShaderBytecodeMd5(shaderBytes2);
+                                    matchedPrefer = string.Equals(md5ResultPrefer, targetMd5, StringComparison.OrdinalIgnoreCase);
+                                }
+                            }
+                            catch { }
+
+                            removalResults.Add(new MacroProbeResult
+                            {
+                                MacroName = remMacro.Name,
+                                MacroValue = remMacro.Value,
+                                Compiled = compiled,
+                                CompiledPreferFlow = compiledPrefer,
+                                Matched = matched,
+                                MatchedPreferFlow = matchedPrefer,
+                                ComputedMd5 = md5Result,
+                                ComputedMd5Prefer = md5ResultPrefer,
+                                IsRemoval = true,
+                            });
+
+                            int done = Interlocked.Increment(ref remCompleted);
+                            if (done % 10 == 0 || done == enabledMacros.Count)
+                                _ = Dispatcher.InvokeAsync(() => AppendConsole($"  [removal {done}/{enabledMacros.Count}] probed..."));
+                        }
+                        finally
+                        {
+                            remSemaphore.Release();
+                        }
+                    });
+
+                    await Task.WhenAll(remTasks);
+
+                    var remSorted = removalResults.OrderByDescending(r => (r.Matched || r.MatchedPreferFlow)).ThenBy(r => r.MacroName).ToList();
+                    int remMatches = remSorted.Count(r => r.Matched || r.MatchedPreferFlow);
+                    AppendConsole($"Removal probe complete: {remMatches}/{remSorted.Count} macros matched when removed.");
+
+                    var remWindow = new MacroProbeResultsWindow(targetMd5, remSorted) { Owner = this };
+                    remWindow.Title = "Macro Removal Probe Results";
+                    remWindow.Show();
+                }
+            }
+        }
+
         #endregion
 
         private void BaseShaderNameBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1265,6 +1650,12 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
 
             BaseShaderNameBox.Text = previousBase;
             VertexFactoryBox.Text = previousVF;
+        }
+
+        private static string ComputeShaderBytecodeMd5(byte[] bytecode)
+        {
+            var hash = MD5.HashData(bytecode);
+            return Convert.ToHexString(hash).ToLowerInvariant();
         }
 
         private void AppendConsole(string text)

@@ -1,0 +1,54 @@
+<Window x:Class="MilanShaderResearchTool.MacroProbeResultsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Macro Hash Probe Results" Height="520" Width="760"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="8">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,8">
+            <TextBlock x:Name="TargetHashText" FontWeight="Bold" FontSize="13"/>
+            <TextBlock x:Name="SummaryText" Margin="0,2,0,0"/>
+        </StackPanel>
+
+        <DataGrid Grid.Row="1" x:Name="ResultsGrid"
+                  AutoGenerateColumns="False" IsReadOnly="True"
+                  CanUserAddRows="False" HeadersVisibility="Column"
+                  FontFamily="Consolas" FontSize="12">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="120"/>
+                <DataGridTextColumn Header="Macro Name" Binding="{Binding MacroName}" Width="*"/>
+                <DataGridTextColumn Header="Value" Binding="{Binding MacroValue}" Width="50"/>
+                <DataGridTextColumn Header="Computed MD5" Binding="{Binding ComputedMd5}" Width="*"/>
+                <DataGridTextColumn Header="Matched By" Binding="{Binding MatchedBy}" Width="120"/>
+                <DataGridTextColumn Header="Matched (PrefFlow)" Binding="{Binding MatchedPreferFlow}" Width="120"/>
+                <DataGridTextColumn Header="MD5 (PrefFlow)" Binding="{Binding ComputedMd5Prefer}" Width="*"/>
+            </DataGrid.Columns>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Matched}" Value="True">
+                            <Setter Property="Background" Value="#FF1E4D1E"/>
+                            <Setter Property="Foreground" Value="#FF90EE90"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding MatchedPreferFlow}" Value="True">
+                            <Setter Property="Background" Value="#FF1E4D1E"/>
+                            <Setter Property="Foreground" Value="#FF90EE90"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Compiled}" Value="False">
+                            <Setter Property="Background" Value="#FF4D1E1E"/>
+                            <Setter Property="Foreground" Value="#FFFF9999"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding CompiledPreferFlow}" Value="False">
+                            <Setter Property="Background" Value="#FF4D1E1E"/>
+                            <Setter Property="Foreground" Value="#FFFF9999"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </DataGrid.RowStyle>
+        </DataGrid>
+    </Grid>
+</Window>

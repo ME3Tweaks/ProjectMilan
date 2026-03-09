@@ -73,10 +73,17 @@
 
                     <GroupBox Grid.Row="0" Header="D3D Macros">
                         <DockPanel>
-                            <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
-                                        HorizontalAlignment="Right" Margin="0,4,0,0">
-                                <Button Content="Add" Click="AddMacro_Click" Padding="12,2" Margin="0,0,4,0"/>
-                                <Button Content="Remove" Click="RemoveMacro_Click" Padding="12,2"/>
+                            <StackPanel DockPanel.Dock="Bottom" Margin="0,4,0,0">
+                                <DockPanel Margin="0,0,0,4">
+                                    <Button DockPanel.Dock="Right" Content="Probe Hash" Click="ProbeHash_Click"
+                                            Padding="8,2"/>
+                                    <TextBox x:Name="ProbeHashBox" Margin="0,0,4,0" VerticalContentAlignment="Center"
+                                             ToolTip="Enter target MD5 hash to probe each unchecked macro"/>
+                                </DockPanel>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="Add" Click="AddMacro_Click" Padding="12,2" Margin="0,0,4,0"/>
+                                    <Button Content="Remove" Click="RemoveMacro_Click" Padding="12,2"/>
+                                </StackPanel>
                             </StackPanel>
                             <DataGrid x:Name="MacrosGrid" AutoGenerateColumns="False"
                                       CanUserAddRows="False" HeadersVisibility="Column">
@@ -84,7 +91,7 @@
                                     <DataGridCheckBoxColumn Header="" Binding="{Binding IsEnabled, UpdateSourceTrigger=PropertyChanged}" Width="30"/>
                                     <DataGridTextColumn Header="Name"
                                         Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                                    <DataGridTextColumn Header="Value"
+                                    <DataGridTextColumn Header="Value" MaxWidth="50"
                                         Binding="{Binding Value, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
                                 </DataGrid.Columns>
                             </DataGrid>
@@ -112,9 +119,9 @@
             <!-- Right: Preview + Texture Inputs + Resource Bindings -->
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="200"/>
                     <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="180"/>
+                    <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
 
                 <GroupBox Grid.Row="0" Header="Shader Preview (Flat Mesh)">
@@ -124,7 +131,7 @@
                     </Border>
                 </GroupBox>
 
-                <GroupBox Grid.Row="1" Header="Texture Inputs" MaxHeight="160" Margin="0,4,0,0">
+                <GroupBox Grid.Row="1" Header="Texture Inputs" MaxHeight="260" Margin="0,4,0,0">
                     <DockPanel>
                         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal"
                                     HorizontalAlignment="Right" Margin="0,4,0,0">
