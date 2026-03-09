@@ -279,7 +279,9 @@ namespace ProjectMilanCore
             var biopMPCommon = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole", MP_STARTUP_FILENAME);
             if (!File.Exists(biopMPCommon))
             {
-                var files = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
+                var lmpPath = MEDirectories.GetDefaultGamePath(MEGame.LE3);
+                lmpPath = Path.Combine(Directory.GetParent(lmpPath).FullName, "LMP");
+                var files = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, gameRootOverride: lmpPath);
                 if (!files.TryGetValue(MP_STARTUP_FILENAME, out foundPath))
                 {
                     MilanLog.Error($"{MP_STARTUP_FILENAME} was not found - content pipelines cannot run, they depend on BIOP_MP_COMMON. Install Project Milan or build the MP startup pipeline if this is the Project Milan project.");
@@ -1283,24 +1285,33 @@ namespace ProjectMilanCore
         }
 
         /// <summary>
+        /// If a texture should be externalized
+        /// </summary>
+        /// <param name="rootTexture"></param>
+        /// <param name="idxLink"></param>
+        /// <returns></returns>
+        private static bool ShouldExternalize(bool rootTexture, int idxLink)
+        {
+            // Exetrnalize if rootTexture is true with no link, otherwise only if it has one.
+            return rootTexture ? idxLink == 0 : idxLink != 0;
+        }
+
+        /// <summary>
         /// Moves textures that can be TFC stored out of a package and into a TFC for performance. This creates a new TFC file, it will wipe out existing!!
         /// </summary>
         /// <param name="tfcType">TFC name prefix, e.g. Textures, Lighting</param>
         /// <param name="dlcName">Name of the DLC for TFC naming.</param>
-        /// <param name="rootTextures">if we should external root textures (lighting) only or non-root textures (everything else)</param>
+        /// <param name="rootTextures">if we should externalize root textures (lighting) only or non-root textures (everything else)</param>
         /// <param name="logCategoryBase"></param>
         public static void MoveTexturesToTFC(string tfcType, string dlcName, bool rootTextures, string logCategoryBase)
         {
-            bool ShouldExternalize(bool rootTexture, int idxLink)
-            {
-                return rootTexture ? idxLink == 0 : idxLink != 0;
-            }
-
             string category = logCategoryBase + "-" + tfcType;
             var inputFolder = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole");
+            const long MaxTFCSize = 2L * 1024 * 1024 * 1024; // 2 GiB
+            int tfcIndex = 1; // Increments every 2GiB
             var tfcName = $"{tfcType}_{dlcName}";
             var tfcPath = Path.Combine(inputFolder, $"{tfcName}.tfc");
-            using var tfcStream = File.Open(tfcPath, FileMode.CreateNew, FileAccess.ReadWrite);
+            var tfcStream = File.Open(tfcPath, FileMode.CreateNew, FileAccess.ReadWrite);
             var guid = Guid.NewGuid();
             tfcStream.WriteGuid(guid);
 
@@ -1330,11 +1341,24 @@ namespace ProjectMilanCore
                         var mip = bin.Mips[i];
                         if (mip.StorageType == StorageTypes.pccUnc)
                         {
+                            var compressed = TextureCompression.CompressTexture(mip.Mip, StorageTypes.extOodle);
+
+                            if (!startedMovingTexture && tfcStream.Position + compressed.Length > MaxTFCSize)
+                            {
+                                tfcStream.Dispose();
+                                tfcIndex++;
+                                tfcName = tfcIndex >= 2 ? $"{tfcType}_{dlcName}{tfcIndex}" : $"{tfcType}_{dlcName}";
+                                tfcPath = Path.Combine(inputFolder, $"{tfcName}.tfc");
+                                tfcStream = File.Open(tfcPath, FileMode.CreateNew, FileAccess.ReadWrite);
+                                guid = Guid.NewGuid();
+                                tfcStream.WriteGuid(guid);
+                                MilanLog.Information($"TFC size limit reached, switching to {tfcName}.tfc", customPrefix: category);
+                            }
+
                             MilanLog.Information($"  Moving texture to external TFC: {tex.InstancedFullPath}",
                                 !startedMovingTexture, customPrefix: category);
                             startedMovingTexture = true;
 
-                            var compressed = TextureCompression.CompressTexture(mip.Mip, StorageTypes.extOodle);
                             var offset = tfcStream.Position;
                             tfcStream.Write(compressed);
                             mip.StorageType = StorageTypes.extOodle;
@@ -1376,6 +1400,8 @@ namespace ProjectMilanCore
                     MilanShared.RefreshMilanFiles = true;
                 }
             }
+
+            tfcStream.Dispose();
         }
 
         /// <summary>
