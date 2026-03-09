@@ -300,6 +300,9 @@ namespace ProjectMilan.Pipelines.Levels
             // Calculate a very basic texture to instances map
             LevelTools.CalculateTextureToInstancesMap(destPackage, levelPipeline.Cache);
 
+            // Install shaders we have compiled
+            MilanShaders.InstallCompiledShadersToPackage(destPackage, levelPipeline.LogCategory);
+
             MilanLog.Information($"  Saving ported package {packageBaseName}.pcc", customPrefix: levelPipeline.LogCategory);
             destPackage.Save();
             MilanShared.RefreshMilanFiles = true;
