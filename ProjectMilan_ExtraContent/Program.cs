@@ -114,7 +114,10 @@ namespace ProjectMilan_ExtraContent
                 BaseBuildSettings.OutputModPath = ""; // Set blank so next call works
             }
 
-            MilanShared.EnsureMPCommonInGame(out var mpCommonPath);
+            if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath))
+            {
+                return;
+            }
 
             // if statements are here because we don't want to change output paths unless necessary.
             if (Settings.RunRejectionPipeline)

@@ -518,7 +518,7 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
 
             // Apply ShaderCache
             RevertLE1SpecificMaterialChanges(destPackage, info);
-            InstallCompiledShadersToPackage(destPackage, info);
+            MilanShaders.InstallCompiledShadersToPackage(destPackage, info.LogCategory);
 
             // Test only - strip lightmaps
             if (false)
@@ -555,73 +555,6 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             //}
 
             return destPackage;
-        }
-
-        /// <summary>
-        /// Installs shaders to the package for materials that are marked as broken. If a material isn't broken,
-        /// this won't update their shaders!
-        /// </summary>
-        /// <param name="target"></param>
-        public static void InstallCompiledShadersToPackage(IMEPackage package, ECLevelInfo info)
-        {
-            var decookedPath = @"E:\CompiledShaderPackages";
-            var compiledShaderPath = @"E:\CompiledShaderPackages";
-            var compiledShaderPackages = Directory.GetFiles(compiledShaderPath, "*.pcc");
-            CaseInsensitiveDictionary<string> packageMap = new();
-            var cache = new PackageCache();
-            foreach (var p in compiledShaderPackages)
-            {
-                packageMap[Path.GetFileNameWithoutExtension(p)] = p;
-            }
-
-            var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
-            foreach (var brokenMat in brokenMaterials)
-            {
-                var linker = brokenMat.GetLinker();
-                if (packageMap.TryGetValue(linker, out var cmp))
-                {
-                    var compiledPackage = cache.GetCachedPackage(cmp);
-                    var csc = compiledPackage.FindExport("SeekFreeShaderCache");
-                    if (csc == null)
-                        // dunno what happened here.
-                        continue;
-
-                    var matchingMat = compiledPackage.FindExport(brokenMat.MemoryFullPath, brokenMat.ClassName) ?? compiledPackage.FindExport(brokenMat.InstancedFullPath, brokenMat.ClassName);
-                    if (matchingMat == null)
-                    {
-                        // couldn't find the mat
-                        MilanLog.Warning($"No compiled shaders for {brokenMat.InstancedFullPath} in {package.FileNameNoExtension}", customPrefix: info.LogCategory);
-                    }
-                    else
-                    {
-                        MilanLog.Information($"Updating shadercache for {brokenMat.InstancedFullPath}", customPrefix: info.LogCategory);
-                        var shaderCache = ObjectBinary.From<ShaderCache>(csc);
-                        ShaderCacheManipulator.AddShadersToFile(package, shaderCache);
-                        // update the id of the material to match the compiled version
-                        var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
-                        ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
-
-                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
-                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
-                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
-                    }
-                }
-            }
-
-            MilanLog.Information($"Compacting ShaderCache", customPrefix: info.LogCategory);
-            ShaderCacheManipulator.CompactSeekFreeShaderCaches(package);
-#if DEBUG
-            // Disabled for now, we know a bunch will be broken
-            if (false)
-            {
-                brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
-                foreach (var mat in brokenMaterials)
-                {
-                    MilanLog.Error($@"  Shader still broken for {mat.InstancedFullPath}");
-                }
-            }
-
-#endif
         }
 
         /// <summary>
@@ -815,28 +748,28 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             Level le3L = ObjectBinary.From<Level>(le3PL);
 
             // NavList Chain start and end
-            //if (me1L.NavListEnd != 0 && le3File.FindExport(le1File.GetUExport(me1L.NavListEnd).InstancedFullPath) is { } matchingNavEnd)
-            //{
-            //    le1L.NavListEnd = matchingNavEnd.UIndex;
+            if (le1L.NavListEnd != 0 && le3File.FindExport(le1File.GetUExport(le1L.NavListEnd).InstancedFullPath) is { } matchingNavEnd)
+            {
+                le1L.NavListEnd = matchingNavEnd.UIndex;
 
-            //    if (me1L.NavListStart != 0 && le3File.FindExport(le1File.GetUExport(me1L.NavListStart).InstancedFullPath) is { } matchingNavStart)
-            //    {
-            //        le1L.NavListStart = matchingNavStart.UIndex;
-            //        while (matchingNavStart != null)
-            //        {
-            //            int uindex = matchingNavStart.UIndex;
-            //            var props = matchingNavStart.GetProperties();
-            //            //props.AddOrReplaceProp(maxPathSize);
-            //            var next = props.GetProp<ObjectProperty>("nextNavigationPoint");
-            //            //matchingNavStart.WriteProperties(props);
-            //            matchingNavStart = next?.ResolveToEntry(le3File) as ExportEntry;
-            //            if (matchingNavStart == null && uindex != matchingNavEnd.UIndex)
-            //            {
-            //                Debugger.Break();
-            //            }
-            //        }
-            //    }
-            //}
+                if (le1L.NavListStart != 0 && le3File.FindExport(le1File.GetUExport(le1L.NavListStart).InstancedFullPath) is { } matchingNavStart)
+                {
+                    le1L.NavListStart = matchingNavStart.UIndex;
+                    while (matchingNavStart != null)
+                    {
+                        int uindex = matchingNavStart.UIndex;
+                        var props = matchingNavStart.GetProperties();
+                        //props.AddOrReplaceProp(maxPathSize);
+                        var next = props.GetProp<ObjectProperty>("nextNavigationPoint");
+                        //matchingNavStart.WriteProperties(props);
+                        matchingNavStart = next?.ResolveToEntry(le3File) as ExportEntry;
+                        if (matchingNavStart == null && uindex != matchingNavEnd.UIndex)
+                        {
+                            Debugger.Break();
+                        }
+                    }
+                }
+            }
 
             // CoverList Chain start and end
             if (le1L.CoverListEnd != 0 && le3File.FindExport(le1File.GetUExport(le1L.CoverListEnd).InstancedFullPath) is { } matchingCoverEnd)

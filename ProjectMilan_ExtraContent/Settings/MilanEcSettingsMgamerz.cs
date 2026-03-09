@@ -13,7 +13,7 @@ namespace ProjectMilan_ExtraContent.Settings
             {
                 if (_outputModPathREJ != null)
                     return _outputModPathREJ;
-                var networkedPath = $@"Z:\ModLibrary\LE3\Project Milan R2\{MilanShared.REJECTS_DLC_NAME}";
+                var networkedPath = $@"Z:\ModLibrary\LMP\Project Milan R2\{MilanShared.REJECTS_DLC_NAME}";
                 if (Directory.Exists(networkedPath))
                 {
                     _outputModPathREJ = networkedPath;
@@ -37,14 +37,14 @@ namespace ProjectMilan_ExtraContent.Settings
             {
                 if (_outputModPathRED != null)
                     return _outputModPathRED;
-                var networkedPath = $@"Z:\ModLibrary\LE3\Project Milan R3\{MilanShared.REDEMPTION_DLC_NAME}";
+                var networkedPath = $@"Z:\ModLibrary\LMP\Project Milan R3\{MilanShared.REDEMPTION_DLC_NAME}";
                 if (Directory.Exists(networkedPath))
                 {
                     _outputModPathRED = networkedPath;
                     return _outputModPathRED;
                 }
 
-                _outputModPathRED = $@"E:\LocalModLibrary\LE3\Project Milan R3\{MilanShared.REDEMPTION_DLC_NAME}";
+                _outputModPathRED = $@"E:\LocalModLibrary\LMP\Project Milan R3\{MilanShared.REDEMPTION_DLC_NAME}";
                 return _outputModPathRED;
             }
             set
@@ -53,8 +53,8 @@ namespace ProjectMilan_ExtraContent.Settings
             }
         }
 
-        public bool RunRejectionPipeline { get; set; } = true;
-        public bool RunRedemptionPipeline { get; set; } = false;
+        public bool RunRejectionPipeline { get; set; } = false;
+        public bool RunRedemptionPipeline { get; set; } = true;
 
 
         public bool RunAudioPipeline { get; set; } = false;

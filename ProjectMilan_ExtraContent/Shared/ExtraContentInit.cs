@@ -134,11 +134,14 @@ namespace ProjectMilan_ExtraContent.Shared
         /// Since we are pulling in content from SP DLC we must compact the TFC or the texture data will not be valid.
         /// </summary>
         /// <param name="content"></param>
-        public static void CompactTFC(EExtraContent content)
+        public static void CompactTFC(EExtraContent content, bool rootTextures)
         {
             // Step 2: TFC Compactor
             var inputFolder = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole");
             var staging = Directory.CreateDirectory(Path.Combine(inputFolder, "Staging")).FullName;
+
+            // This needs updated to split lighting and textures
+            // right now it just packs everything into single Textures TFC.
             TFCCompactorInfoPackage info = new TFCCompactorInfoPackage()
             {
                 Game = MEGame.LE3,
@@ -158,7 +161,7 @@ namespace ProjectMilan_ExtraContent.Shared
                 },
                 UseIndexing = false,
                 StagingPath = staging,
-                TFCType = "Textures",
+                TFCType = rootTextures ? "Lighting" : "Textures",
             };
 
             MilanLog.Information("Compacting TFC", customPrefix: LOG_CATEGORY);
