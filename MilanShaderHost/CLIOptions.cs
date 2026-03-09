@@ -17,6 +17,9 @@ namespace MilanShaderHost
         [Option('d', "dumphlsl", HelpText = "Dumps HLSL for shaders. Requires special setup in the ShaderClient ASI.")]
         public bool DumpHLSL { get; set; }
 
+        [Option('b', "builddebugpackages", HelpText = "Builds debug shader packages for each shader compiled.")]
+        public bool BuildDebugPackages { get; set; }
+
         [Option('s', "slashshadercache", HelpText = "Slashes the RefShaderCache down to only what's in the compiler level to improve game boot speed.")]
         public bool SlashRefShaderCache { get; set; }
 

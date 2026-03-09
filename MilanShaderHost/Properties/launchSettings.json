@@ -7,7 +7,7 @@
     },
     "MilanShaderHost - Compile Only": {
       "commandName": "Project",
-      "commandLineArgs": "--compile",
+      "commandLineArgs": "--compile --builddebugpackages",
       "nativeDebugging": false
     }
   }

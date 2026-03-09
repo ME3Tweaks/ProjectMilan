@@ -50,6 +50,111 @@ namespace MilanShaderHost
             }
         }
 
+
+        /// <summary>
+        /// Generates the list of packages to compile shaders in.
+        /// </summary>
+        private static void SetupFileList()
+        {
+            string[] files = [
+                
+                // Existing: For test comparison
+                //"BioS_CitApt_Alt.pcc",
+                //"BioS_CitCasino.pcc",
+                //"BioS_CitCouncil.pcc",
+                //"BioS_CitRestaurant.pcc",
+                //"BioS_CitSim.pcc",
+                //"BioS_CitSim_Alt.pcc",
+                //"BioS_CitStreets.pcc",
+                //"BioS_CitWards.pcc",
+                //"BioS_Cit_lev004.pcc"
+                //"BioT_Arctic",
+                //"biot_ancientcity.pcc",
+
+                // Tropical:
+                //"BIOA_NOR10_T.pcc",
+                //"BIOA_STA60_T.pcc",
+                //"BIOA_STA60_02_T.pcc",
+                ////"BIOA_PRC2_MatFX.pcc",
+                //"BIOA_STA30_T.pcc",
+                //"BIOA_JUG40_T.pcc",
+                //"BIOA_Jug20_T.pcc",
+                //"BIOA_JUG80_T.pcc",
+                //"BIOA_JUG00_T.pcc",
+                ////"BIOG_APL_PHY_Crate_XLarge_01_L.pcc",
+                //"BIOG__SKIES__.pcc",
+                ////"BIOA_FRE10_T.pcc",
+                ////"BIOA_LOS40_APL_DOR_FFDoor_L.pcc",
+                //"BIOG_V_Env_Jug_WaveCrash_Z.pcc",
+                ////"VFX_zz_ME1_Global_METR.pcc",
+                ////"BIOG_V_Env_Hologram_Z.pcc",
+                ////"BIOA_LAV20_T.pcc"
+
+                //Multiplayer levels
+                // Hydra:
+                "BioT_GthMP",
+                "BioVFX_DLC_Env_MPGeth",
+
+                // Condor:
+                "BioT_MPMoon",
+                "BioVFX_DLC_Env_MPMoon",
+
+                // Jade:
+                "BioS_MPJungle",
+                "BioS_MPJungle_Trash",
+                "BioT_MPJungle",
+                "BioT_Tropical",
+                "BioVFX_DLC_Env_MPJngl",
+                
+                // Thessia:
+                "BioT_MPThes",
+                "BioApl_Lvl_Foliage",
+
+                //"Biot_Normandy_Int.pcc",
+                //"BioApl_Lvl_Foliage.pcc",
+                //"BioS_MPJungle.pcc",
+                //"BioS_MPLondon.pcc",
+                //"BIOG_PhotoModeFilters.pcc",
+                //"biot_humanslumACID.pcc",
+                //"BioT_MPCer2.pcc",
+                //"BioT_MPHosp.pcc",
+                //"BioT_MPOcean.pcc",
+                //"BioT_MPThes.pcc",
+                //"BioT_MPThes_Milan.pcc",
+                //"BioT_SolMP.pcc",
+                //"BioVFX_DLC_MP1_BatMelee.pcc",
+                //"BioVFX_DLC_MP1_Geth.pcc",
+                //"BioVFX_MP3_MPHosp.pcc",
+                //"BioVFX_MP3_MPOcean.pcc",
+                //"BioVFX_MP5_Gear.pcc"
+            ];
+
+            foreach (var f in files)
+            {
+                var realf = f;
+                if (!realf.EndsWith(".pcc"))
+                {
+                    realf += ".pcc";
+                }
+
+                bool found = false;
+                foreach (var path in MilanShaderPackageBuilder.SourceFolders)
+                {
+                    var testPath = Path.Combine(path, realf);
+                    if (File.Exists(testPath))
+                    {
+                        found = true;
+                        PackageFilesToProcess.Add(testPath);
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    Console.Error.WriteLine($"Could not find source package {realf} in any of the source folders.");
+                }
+            }
+        }
+
         /// <summary>
         /// Starts the game start/stop loop for the shader host.
         /// </summary>
@@ -57,7 +162,7 @@ namespace MilanShaderHost
         {
             Game = MEGame.LE3;
             var path = Path.Combine(DecookedPackagesPath, Game.ToString());
-            MilanShaderPackageBuilder.SourceFolders.Add(Path.Combine(DecookedPackagesPath, "LE1"));
+            // MilanShaderPackageBuilder.SourceFolders.Add(Path.Combine(DecookedPackagesPath, "LE1"));
             MilanShaderPackageBuilder.SourceFolders.Add(path);
 
             // Dump HLSL for package
@@ -180,7 +285,7 @@ namespace MilanShaderHost
 
 
             Console.WriteLine($"Shader compiling complete.");
-
+            Environment.Exit(0);
         }
 
 #if OLD
@@ -307,73 +412,6 @@ namespace MilanShaderHost
             Console.WriteLine($"Merged {cr.MaterialName} into result package");
         }
 
-        private static void SetupFileList()
-        {
-            string[] files = [
-                //"BioT_Arctic",
-                //"biot_ancientcity.pcc",
-                "BIOA_NOR10_T.pcc",
-                "BIOA_STA60_T.pcc",
-                "BIOA_STA60_02_T.pcc",
-                //"BIOA_PRC2_MatFX.pcc",
-                "BIOA_STA30_T.pcc",
-                "BIOA_JUG40_T.pcc",
-                "BIOA_Jug20_T.pcc",
-                "BIOA_JUG80_T.pcc",
-                "BIOA_JUG00_T.pcc",
-                //"BIOG_APL_PHY_Crate_XLarge_01_L.pcc",
-                "BIOG__SKIES__.pcc",
-                //"BIOA_FRE10_T.pcc",
-                //"BIOA_LOS40_APL_DOR_FFDoor_L.pcc",
-                "BIOG_V_Env_Jug_WaveCrash_Z.pcc",
-                //"VFX_zz_ME1_Global_METR.pcc",
-                //"BIOG_V_Env_Hologram_Z.pcc",
-                //"BIOA_LAV20_T.pcc"
-
-                //"Biot_Normandy_Int.pcc",
-                //"BioApl_Lvl_Foliage.pcc",
-                //"BioS_MPJungle.pcc",
-                //"BioS_MPLondon.pcc",
-                //"BIOG_PhotoModeFilters.pcc",
-                //"biot_humanslumACID.pcc",
-                //"BioT_MPCer2.pcc",
-                //"BioT_MPHosp.pcc",
-                //"BioT_MPOcean.pcc",
-                //"BioT_MPThes.pcc",
-                //"BioT_MPThes_Milan.pcc",
-                //"BioT_SolMP.pcc",
-                //"BioVFX_DLC_MP1_BatMelee.pcc",
-                //"BioVFX_DLC_MP1_Geth.pcc",
-                //"BioVFX_MP3_MPHosp.pcc",
-                //"BioVFX_MP3_MPOcean.pcc",
-                //"BioVFX_MP5_Gear.pcc"
-            ];
-
-            foreach (var f in files)
-            {
-                var realf = f;
-                if (!realf.EndsWith(".pcc"))
-                {
-                    realf += ".pcc";
-                }
-
-                bool found = false;
-                foreach (var path in MilanShaderPackageBuilder.SourceFolders)
-                {
-                    var testPath = Path.Combine(path, realf);
-                    if (File.Exists(testPath))
-                    {
-                        found = true;
-                        PackageFilesToProcess.Add(testPath);
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    Console.Error.WriteLine($"Could not find source package {realf} in any of the source folders.");
-                }
-            }
-        }
 
         private static void BuildShaders(string inputFile)
         {
@@ -429,6 +467,11 @@ namespace MilanShaderHost
                 EShaderLevelMode.Compile => "-ShaderCompile -NoSplash -ResX=640 -ResY=360",
                 _ => throw new Exception("Unhandled build mode: " + buildMode)
             };
+
+            if (buildMode == EShaderLevelMode.Compile && Program.ParsedOptions.BuildDebugPackages)
+            {
+                bootArg += " -SendDebugPackages";
+            }
 
             var process = Process.Start(MEDirectories.GetExecutablePath(Game), $"{bootArg} -NOHOMEDIR");
             process.WaitForExit();

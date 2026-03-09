@@ -11,6 +11,7 @@ using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using MilanShaderHost.LEX;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace MilanShaderHost
 {
@@ -182,6 +183,22 @@ namespace MilanShaderHost
                     var pMat = PortSourceToCooked(mat, transientPackage);
                 }
 
+                // This is the lazy way: Find all missing<X> objects and deduplicate them
+                //string[] names = ["MissingTexture", "MissingTextureCube"];
+                //foreach (var name in names)
+                //{
+                //    var matchingExports = transientPackage.Exports.Where(x => x.ObjectName == name && x.idxLink != 0).ToList();
+                //    var target = transientPackage.FindExport(name);
+                //    var dict = new ListenableDictionary<IEntry, IEntry>();
+                //    foreach (var match in matchingExports)
+                //    {
+                //        dict[match] = target;
+                //    }
+
+                //    Relinker.RelinkSamePackage(transientPackage, dict);
+                //}
+
+
                 // Also port materials into the compiler level. This should be faster to port... I hope
                 foreach (var mat in transientPackage.Exports.Where(x => x.IsA("Material")))
                 {
@@ -192,6 +209,7 @@ namespace MilanShaderHost
                         portedMats.Add(pMat);
                     }
                 }
+                transientPackage.Save("C:\\users\\public\\transient.pcc");
             }
             else
             {
@@ -293,11 +311,6 @@ namespace MilanShaderHost
             }
         }
 
-        public static void BootShaderMap()
-        {
-
-        }
-
         /// <summary>
         /// Ports an object from a source-style package to a cooked package, pulling in references.
         /// </summary>
@@ -340,68 +353,34 @@ namespace MilanShaderHost
                             uIndex = portedSourceObj.UIndex;
                             return true;
                         }
+                    }
 
-                        // Could not find import!
-                        if (sourceObj.ClassName == "Texture2D")
-                        {
-                            Console.WriteLine($"Using missing texture for {imp.InstancedFullPath} ({imp.ClassName})");
-                            var missingtex = GetMissingTexture(imp);
-                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
-                            uIndex = portedSourceObj.UIndex;
-                            return true;
-                        }
-                        else if (sourceObj.ClassName == "TextureCube")
-                        {
-                            Console.WriteLine($"Using missing texture cube for {imp.InstancedFullPath} ({imp.ClassName})");
-                            var missingtex = GetMissingTextureCube(imp);
-                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
-                            uIndex = portedSourceObj.UIndex;
-                            return true;
-                        }
-                        else if (sourceObj.ClassName == "TextureRenderTarget2D")
-                        {
-                            Console.WriteLine($"Using missing texture render target 2D for {imp.InstancedFullPath} ({imp.ClassName})");
-                            var missingtex = GetMissingTextureRenderTarget2D(imp);
-                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
-                            uIndex = portedSourceObj.UIndex;
-                            return true;
-                        }
-                        else if (sourceObj.ClassName == "TextureRenderTargetCube")
-                        {
-                            Console.WriteLine($"Using missing texture render target cube for {imp.InstancedFullPath} ({imp.ClassName})");
-                            var missingtex = GetMissingTextureRenderTargetCube(imp);
-                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
-                            uIndex = portedSourceObj.UIndex;
-                            return true;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Unknown source class {imp.InstancedFullPath} ({imp.ClassName})");
-                        }
+                    // Could not find import!
+                    if (sourceObj.ClassName == "Texture2D")
+                    {
+                        return RelinkMissingTexture2D(imp, relinkingExport, out uIndex, rop);
+                    }
+                    else if (sourceObj.ClassName == "TextureCube")
+                    {
+                        return RelinkMissingTextureCube(imp, relinkingExport, out uIndex, rop);
+                    }
+                    else if (sourceObj.ClassName == "TextureRenderTarget2D")
+                    {
+                        return RelinkMissingTextureRenderTarget2D(imp, relinkingExport, out uIndex, rop);
+                    }
+                    else if (sourceObj.ClassName == "TextureFlipBook")
+                    {
+                        return RelinkMissingTextureFlipbook(imp, relinkingExport, out uIndex, rop);
+                    }
+                    else if (sourceObj.ClassName == "TextureRenderTargetCube")
+                    {
+                        return RelinkMissingTextureRenderTargetCube(imp, relinkingExport, out uIndex, rop);
                     }
                     else
                     {
-                        if (sourceObj.ClassName == "Texture2D")
-                        {
-                            Console.WriteLine($"Using missing texture for {imp.InstancedFullPath} ({imp.ClassName})");
-                            var missingtex = GetMissingTexture(imp);
-                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
-                            uIndex = portedSourceObj.UIndex;
-                            return true;
-                        }
-                        else if (sourceObj.ClassName == "TextureFlipBook")
-                        {
-                            Console.WriteLine($"Using missing texture flipbook for {imp.InstancedFullPath} ({imp.ClassName})");
-                            var missingtex = GetMissingTextureFlipbook(imp);
-                            EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
-                            uIndex = portedSourceObj.UIndex;
-                            return true;
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Not porting as export: {imp.InstancedFullPath} ({imp.ClassName})");
-                        }
+                        Console.WriteLine($"Unknown source class {imp.InstancedFullPath} ({imp.ClassName})");
                     }
+
                 }
             }
 
@@ -409,34 +388,134 @@ namespace MilanShaderHost
             return false;
         }
 
+        private static bool RelinkMissingTextureRenderTarget2D(ImportEntry imp, ExportEntry relinkingExport, out int uIndex, RelinkerOptionsPackage rop)
+        {
+            Console.WriteLine($"Using missing texture render target 2D for {imp.InstancedFullPath} ({imp.ClassName})");
+            var missingtex = GetMissingTextureRenderTarget2D(imp, relinkingExport.FileRef);
+            if (missingtex.FileRef == relinkingExport.FileRef)
+            {
+                // Already in package
+                uIndex = missingtex.UIndex;
+            }
+            else
+            {
+                EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                uIndex = portedSourceObj.UIndex;
+            }
+            return true;
+        }
+
+        private static bool RelinkMissingTextureRenderTargetCube(ImportEntry imp, ExportEntry relinkingExport, out int uIndex, RelinkerOptionsPackage rop)
+        {
+            Console.WriteLine($"Using missing texture render target cube for {imp.InstancedFullPath} ({imp.ClassName})");
+            var missingtex = GetMissingTextureRenderTargetCube(imp, relinkingExport.FileRef);
+            if (missingtex.FileRef == relinkingExport.FileRef)
+            {
+                // Already in package
+                uIndex = missingtex.UIndex;
+            }
+            else
+            {
+                EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                uIndex = portedSourceObj.UIndex;
+            }
+            return true;
+        }
+
+        private static bool RelinkMissingTextureCube(ImportEntry imp, ExportEntry relinkingExport, out int uIndex, RelinkerOptionsPackage rop)
+        {
+            Console.WriteLine($"Using missing texture cube for {imp.InstancedFullPath} ({imp.ClassName})");
+            var missingtex = GetMissingTextureCube(imp, relinkingExport.FileRef);
+            if (missingtex.FileRef == relinkingExport.FileRef)
+            {
+                // Already in package
+                uIndex = missingtex.UIndex;
+            }
+            else
+            {
+                EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                uIndex = portedSourceObj.UIndex;
+            }
+            return true;
+        }
+
+        private static bool RelinkMissingTexture2D(ImportEntry imp, ExportEntry relinkingExport, out int uIndex, RelinkerOptionsPackage rop)
+        {
+            Console.WriteLine($"Using missing texture for {imp.InstancedFullPath} ({imp.ClassName})");
+            var missingtex = GetMissingTexture(imp, relinkingExport.FileRef);
+            if (missingtex.FileRef == relinkingExport.FileRef)
+            {
+                // Already in package
+                uIndex = missingtex.UIndex;
+            }
+            else
+            {
+                EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                uIndex = portedSourceObj.UIndex;
+            }
+            return true;
+        }
+
+        private static bool RelinkMissingTextureFlipbook(ImportEntry imp, ExportEntry relinkingExport, out int uIndex, RelinkerOptionsPackage rop)
+        {
+            Console.WriteLine($"Using missing texture flipbook for {imp.InstancedFullPath} ({imp.ClassName})");
+            var missingtex = GetMissingTextureFlipbook(imp, relinkingExport.FileRef);
+            if (missingtex.FileRef == relinkingExport.FileRef)
+            {
+                // Already in package
+                uIndex = missingtex.UIndex;
+            }
+            else
+            {
+                EntryExporter.ExportExportToPackage(missingtex, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                uIndex = portedSourceObj.UIndex;
+            }
+            return true;
+        }
 
         private static ExportEntry missingTexturesExport;
-        private static ExportEntry GetMissingTexture(ImportEntry imp)
+        private static ExportEntry GetMissingTexture(ImportEntry imp, IMEPackage targetPackage)
         {
+            // Check the fileref on return
+            var existingMissingTex = targetPackage.FindExport("MissingTexture", "Texture2D");
+            if (existingMissingTex != null)
+            {
+                return existingMissingTex;
+            }
+
             if (missingTexturesExport == null)
             {
                 var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
 
                 missingTexturesExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", 512, 512, PixelFormat.DXT1, true, null);
+                missingTexturesExport.SetForcedExportFlag(false);
                 var t2d = new Texture2D(missingTexturesExport);
                 var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
                 t2d.Replace(im, missingTexturesExport.GetProperties(), isPackageStored: true);
                 missingTexturesExport.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
             }
 
-            var parent = CreateParents(missingTexturesExport.FileRef, imp.InstancedFullPath);
-            missingTexturesExport.Parent = parent;
+            //var parent = CreateParents(missingTexturesExport.FileRef, imp.InstancedFullPath);
+            //missingTexturesExport.Parent = parent;
             return missingTexturesExport;
         }
 
         private static ExportEntry missingTexturesFlipbookExport;
-        private static ExportEntry GetMissingTextureFlipbook(ImportEntry imp)
+        private static ExportEntry GetMissingTextureFlipbook(ImportEntry imp, IMEPackage targetPackage)
         {
+            // Check the fileref on return
+            var existingMissingTex = targetPackage.FindExport("MissingTextureFlipbook", "TextureFlipbook");
+            if (existingMissingTex != null)
+            {
+                return existingMissingTex;
+            }
             if (missingTexturesFlipbookExport == null)
             {
                 var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
 
                 missingTexturesFlipbookExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", 512, 512, PixelFormat.DXT1, true, null);
+                missingTexturesFlipbookExport.SetForcedExportFlag(false);
+
                 var t2d = new Texture2D(missingTexturesFlipbookExport);
                 var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
                 t2d.Replace(im, missingTexturesFlipbookExport.GetProperties(), isPackageStored: true);
@@ -450,51 +529,68 @@ namespace MilanShaderHost
                 missingTexturesFlipbookExport.WriteProperty(new FloatProperty(0.0500000007f, "FrameTime"));
             }
 
-            var parent = CreateParents(missingTexturesFlipbookExport.FileRef, imp.InstancedFullPath);
-            missingTexturesFlipbookExport.Parent = parent;
             return missingTexturesFlipbookExport;
         }
 
         private static ExportEntry missingTextureRenderTarget2DExport;
-        private static ExportEntry GetMissingTextureRenderTarget2D(ImportEntry imp)
+        private static ExportEntry GetMissingTextureRenderTarget2D(ImportEntry imp, IMEPackage targetPackage)
         {
+            // Check the fileref on return
+            var existingMissingTex = targetPackage.FindExport("MissingTextureRenderTarget2D", "TextureRenderTarget2D");
+            if (existingMissingTex != null)
+            {
+                return existingMissingTex;
+            }
+
             if (missingTextureRenderTarget2DExport == null)
             {
                 var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
 
                 missingTextureRenderTarget2DExport = ExportCreator.CreateExport(missingTexturesPackage, "MissingTextureRenderTarget2D", "TextureRenderTarget2D");
+                missingTextureRenderTarget2DExport.SetForcedExportFlag(false);
                 missingTextureRenderTarget2DExport.WriteProperty(new IntProperty(1024, "SizeX"));
                 missingTextureRenderTarget2DExport.WriteProperty(new IntProperty(1024, "SizeY"));
                 missingTextureRenderTarget2DExport.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
             }
 
-            var parent = CreateParents(missingTextureRenderTarget2DExport.FileRef, imp.InstancedFullPath);
-            missingTextureRenderTarget2DExport.Parent = parent;
             return missingTextureRenderTarget2DExport;
         }
 
         private static ExportEntry missingTextureRenderTargetCube;
-        private static ExportEntry GetMissingTextureRenderTargetCube(ImportEntry imp)
+        private static ExportEntry GetMissingTextureRenderTargetCube(ImportEntry imp, IMEPackage targetPackage)
         {
+            // Check the fileref on return
+            var existingMissingTex = targetPackage.FindExport("MissingTextureRenderTargetCube", "TextureRenderTargetCube");
+            if (existingMissingTex != null)
+            {
+                return existingMissingTex;
+            }
+
             if (missingTextureRenderTargetCube == null)
             {
                 var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
 
                 missingTextureRenderTargetCube = ExportCreator.CreateExport(missingTexturesPackage, "MissingTextureRenderTargetCube", "TextureRenderTargetCube");
+                missingTextureRenderTargetCube.SetForcedExportFlag(false);
                 missingTextureRenderTargetCube.WriteProperty(new IntProperty(256, "SizeX"));
                 missingTextureRenderTargetCube.WriteProperty(new EnumProperty("TEXTUREGROUP_Environment_512", "TextureGroup", Program.Game, "LODGroup"));
                 missingTextureRenderTargetCube.WriteBinary(new UTextureRenderTarget2D());
                 missingTextureRenderTargetCube.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
             }
 
-            var parent = CreateParents(missingTextureRenderTargetCube.FileRef, imp.InstancedFullPath);
-            missingTextureRenderTargetCube.Parent = parent;
             return missingTextureRenderTargetCube;
         }
 
         private static ExportEntry missingTextureCubeExport;
-        private static ExportEntry GetMissingTextureCube(ImportEntry imp)
+        private static ExportEntry GetMissingTextureCube(ImportEntry imp, IMEPackage targetPackage)
         {
+            // Check the fileref on return
+            var existingMissingTex = targetPackage.FindExport("MissingTextureCube", "TextureCube");
+            if (existingMissingTex != null)
+            {
+                return existingMissingTex;
+            }
+
             if (missingTextureCubeExport == null)
             {
                 var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
@@ -529,9 +625,6 @@ namespace MilanShaderHost
                 missingTextureCubeExport.WriteBinary(new UTextureCube());
             }
 
-            // Parent to match import so it ports across at same path
-            var parent = CreateParents(missingTextureCubeExport.FileRef, imp.InstancedFullPath);
-            missingTextureCubeExport.Parent = parent;
             return missingTextureCubeExport;
         }
 

@@ -1,8 +1,10 @@
-﻿using LegendaryExplorerCore.Helpers;
+﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using MilanShaderHost.Old;
+using MilanShaderResearchTool;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO;
@@ -209,22 +211,47 @@ namespace MilanShaderHost
                     var json = Encoding.ASCII.GetString(jsonData);
 
                     var materialOutPath = Path.Combine(MilanShaderBuilderFlow.DecookedPackagesPath, "DebugPackages", MilanShaderBuilderFlow.Game.ToString(), packageName);
-                    
+
                     var obj = JsonConvert.DeserializeObject<ShaderClientDebugPackage>(json);
 
                     var vertexFactory = obj.vertexFactoryType;
-                    var shaderName = obj.shaderType.Replace("<", "[").Replace(">","]");
+                    var shaderName = obj.shaderType.Replace("<", "[").Replace(">", "]");
 
-                    var shaderOutPath = Path.Combine(materialOutPath, localIFP, vertexFactory);
+                    // Run through our preprocessor to find all possible used conditionals
+                    var possibleMacros = HlslPreprocessor.FindConditionalMacros(obj.sourceFilename, obj.functionName, Path.Combine(MEDirectories.GetDefaultGamePath(Program.Game), "Engine", "Shaders"), obj.materialHlsl, obj.vertexFactoryType);
+                    obj.possibleMacros = possibleMacros.Except(KnownIgnoredMacros).ToArray();
+
+                    var shaderOutPath = Path.Combine(materialOutPath, localIFP, vertexFactory ?? "None");
                     Directory.CreateDirectory(shaderOutPath);
 
+                    var formattedJson = JsonConvert.SerializeObject(obj, Formatting.Indented);
                     var jsonPath = Path.Combine(shaderOutPath, shaderName + ".json");
-                    File.WriteAllText(jsonPath, json);
+                    File.WriteAllText(jsonPath, formattedJson);
 
                     CurrentReadMode = EReadMode.None;
                 }
             }
         }
+
+        private static string[] KnownIgnoredMacros = [
+            "ORBIS",
+            "__ORBIS__",
+            "SM5_PROFILE",
+            "PS3",
+            "SM2_PROFILE",
+            "VERTEXSHADER",
+            "PIXELSHADER",
+            "COMPUTESHADER",
+            "XBOX",
+            "XBOXINSTANCING",
+            //"COMPILER_SUPPORTS_EMPTY_STRUCTS",
+            "COMPILER_CG",
+            "COMPILER_HLSL",
+            // "COMPILER_SUPPORTS_ATTRIBUTES",
+            "SM3_PROFILE",
+            "USING_SM5_TESSELLATION",
+            "DINGO"
+        ];
 
         private void WriteCacheToFile(ShaderCache cache)
         {
