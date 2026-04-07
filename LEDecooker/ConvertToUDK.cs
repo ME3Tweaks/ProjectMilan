@@ -238,34 +238,46 @@ namespace LEDecooker
                                 if (resolved == null)
                                 {
                                     // About to die
-                                    Debugger.Break();
+                                    // Debugger.Break();
+                                    DecookerLog.Error($"\t\tCould not resolve parent {imp.InstancedFullPath}");
                                 }
-                                if (resolved.ClassName != imp.ClassName)
+                                else
                                 {
-                                    // We resolved... something...
-                                    if (resolved.ClassName == "Package")
+                                    if (resolved.ClassName != imp.ClassName)
                                     {
-                                        // We don't know what this is!
-                                        // How can we figure it out...?
+                                        // We resolved... something...
+                                        if (resolved.ClassName == "Package")
+                                        {
+                                            // We don't know what this is!
+                                            // How can we figure it out...?
 
+                                        }
+                                        Debugger.Break();
                                     }
-                                    Debugger.Break();
+                                    rvr = resolved; // This is from another package! The UIndex will be for that package!
                                 }
-                                rvr = resolved; // This is from another package! The UIndex will be for that package!
                             }
 
-                            var baseMatObj = rvr.GetProperty<ObjectProperty>("m_pBaseMaterial");
-                            var baseMatRef = baseMatObj.ResolveToExport(rvr.FileRef, pc, localFileResolver);
-                            if (baseMatRef.FileRef == exp.FileRef || baseMatRef.FileRef.FilePath.Equals(exp.FileRef.FilePath, StringComparison.OrdinalIgnoreCase))
+                            if (rvr != null)
                             {
-                                // Update the parent to skip Rvr
-                                parent.Value = baseMatRef.UIndex;
-                            }
-                            else
+                                var baseMatObj = rvr.GetProperty<ObjectProperty>("m_pBaseMaterial");
+                                var baseMatRef = baseMatObj.ResolveToExport(rvr.FileRef, pc, localFileResolver);
+                                if (baseMatRef.FileRef == exp.FileRef || baseMatRef.FileRef.FilePath.Equals(exp.FileRef.FilePath, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // Update the parent to skip Rvr
+                                    parent.Value = baseMatRef.UIndex;
+                                }
+                                else
+                                {
+                                    // This is an import
+                                    var pentry = CreateParentImports(exp.FileRef, baseMatRef.MemoryFullPath);
+                                    parent.Value = exp.FileRef.CreateImport("Material", baseMatRef.ObjectName, pentry).UIndex;
+                                }
+                            } else
                             {
-                                // This is an import
-                                var pentry = CreateParentImports(exp.FileRef, baseMatRef.MemoryFullPath);
-                                parent.Value = exp.FileRef.CreateImport("Material", baseMatRef.ObjectName, pentry).UIndex;
+                                // We couldn't figure out the parent. We may not have access to it
+                                var engineMaterials = exp.FileRef.CreateImport("Package", "EngineMaterials");
+                                parent.Value = exp.FileRef.CreateImport("Material", "DefaultMaterial", engineMaterials).UIndex;
                             }
 
                             exp.WriteProperty(parent);
