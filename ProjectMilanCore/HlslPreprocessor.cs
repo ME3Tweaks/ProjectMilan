@@ -115,7 +115,7 @@ public partial class HlslPreprocessor
         string entryPointMethodName,
         string includeDirectory,
         string materialUsfContent,
-        string vertexFactoryName)
+        string vertexFactoryUsfFileName)
     {
         var entryPointFile = Path.Combine(includeDirectory, $"{entryPointFileName}.usf");
 
@@ -123,9 +123,9 @@ public partial class HlslPreprocessor
         // Read the vertex factory file
         var vertexFactoryUsfContent = "";
 
-        if (vertexFactoryName != null)
+        if (vertexFactoryUsfFileName != null)
         {
-            var vertexFactoryPath = Path.Combine(includeDirectory, $"{vertexFactoryName.Substring(1)}.usf");
+            var vertexFactoryPath = Path.Combine(includeDirectory, $"{vertexFactoryUsfFileName.Substring(1)}.usf");
             if (File.Exists(vertexFactoryPath))
             {
                 vertexFactoryUsfContent = File.ReadAllText(vertexFactoryPath);
