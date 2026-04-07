@@ -1,7 +1,11 @@
-﻿using LegendaryExplorerCore.GameFilesystem;
+﻿using ICSharpCode.AvalonEdit.Highlighting;
+using ICSharpCode.AvalonEdit.Highlighting.Xshd;
+using ICSharpCode.AvalonEdit.Rendering;
+using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.BinaryConverters.Shaders;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Microsoft.Win32;
 using MilanShaderHost;
@@ -25,6 +29,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Xml;
 using D3D11Buffer = SharpDX.Direct3D11.Buffer;
 using D3D11Device = SharpDX.Direct3D11.Device;
 using MapFlags = SharpDX.Direct3D11.MapFlags;
@@ -293,8 +298,6 @@ namespace MilanShaderResearchTool
 
         private const int PreviewSize = 512;
         private readonly ObservableCollection<MacroEntry> _macros = new();
-        private readonly ObservableCollection<ResourceBindingEntry> _resourceBindings = new();
-        private readonly ObservableCollection<TextureInputEntry> _textureInputs = new();
 
         // SharpDX objects
         private D3D11Device? _device;
@@ -320,6 +323,14 @@ namespace MilanShaderResearchTool
         private D3D11Buffer? _compiledVSVertexBuffer;
         private int _compiledVSVertexStride;
 
+        // Editor / diff state
+        private double _savedExpectedWidth = 500;
+        private DiffLineRenderer? _decompDiffRenderer;
+        private DiffLineRenderer? _expectedDiffRenderer;
+        private static IHighlightingDefinition? _hlslHighlighting;
+        private string? _cachedDecompText;
+        private string? _cachedExpectedText;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -329,8 +340,6 @@ namespace MilanShaderResearchTool
             StartNamedPipeListener(_pipeCts.Token);
 
             MacrosGrid.ItemsSource = _macros;
-            ResourceBindingsGrid.ItemsSource = _resourceBindings;
-            TextureInputsGrid.ItemsSource = _textureInputs;
 
             // Default macros for UE3 D3D11 compilation
             _macros.Add(new MacroEntry { Name = "COMPILER_HLSL", Value = "1" });
@@ -353,7 +362,7 @@ namespace MilanShaderResearchTool
             }
             catch { /* LE3 path not configured */ }
 
-            Loaded += (_, _) => InitializeD3D();
+            Loaded += (_, _) => { InitializeD3D(); SetupEditors(); };
         }
 
         protected override void OnClosed(EventArgs e)
@@ -479,7 +488,6 @@ VS_OUT main(float3 p : POSITION, float2 uv : TEXCOORD0) {
                 });
 
                 _previewBitmap = new WriteableBitmap(PreviewSize, PreviewSize, 96, 96, PixelFormats.Bgra32, null);
-                PreviewImage.Source = _previewBitmap;
 
                 // Compile a placeholder pixel shader so we can verify the preview pipeline on startup
                 // and use it when previewing a compiled vertex shader.
@@ -1104,10 +1112,10 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             _materialHlslContent = package.materialHlsl;
 
             BaseShaderNameBox.Text = package.sourceFilename ?? "";
-            if (package.vertexFactoryType != null && package.vertexFactoryType.StartsWith("F"))
+            if (package.vertexFactoryShaderFilename != null)
             {
                 // Game sends us name like FLocalVertexFactory, but we just want LocalVertexFactory
-                VertexFactoryBox.Text = package.vertexFactoryType.Substring(1);
+                VertexFactoryBox.Text = package.vertexFactoryShaderFilename;
             }
             else
             {
@@ -1222,8 +1230,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
                     if (!string.IsNullOrEmpty(errorMessage))
                         AppendConsole(errorMessage);
                     _compiledShaderBytes = null;
-                    _resourceBindings.Clear();
-                    DecompiledShaderBox.Text = string.Empty;
+                    DecompiledShaderEditor.Text = string.Empty;
                     return;
                 }
 
@@ -1231,16 +1238,8 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
                 _compiledShaderBytes = shaderBytes;
                 _compiledShaderIsVertexShader = shaderType == "vs";
 
-                // Retrieve reflection / resource bindings
-                var bindings = DoGetShaderInfo(shaderBytes, out int instructionCount);
-                AppendConsole($"Instructions: {instructionCount} | Bindings: {bindings.Count}");
-
-                _resourceBindings.Clear();
-                foreach (var b in bindings)
-                    _resourceBindings.Add(b);
-
                 var decompiledText = await Task.Run(() => HLSLDecompiler.DecompileShader(shaderBytes, false));
-                DecompiledShaderBox.Text = decompiledText;
+                DecompiledShaderEditor.Text = decompiledText ?? string.Empty;
 
                 UpdatePreview();
             }
@@ -1323,45 +1322,6 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
         {
             if (MacrosGrid.SelectedItem is MacroEntry selected)
                 _macros.Remove(selected);
-        }
-
-        private void AddTextureSlot_Click(object sender, RoutedEventArgs e)
-        {
-            int nextSlot = _textureInputs.Count > 0 ? _textureInputs.Max(t => t.Slot) + 1 : 0;
-            _textureInputs.Add(new TextureInputEntry { Slot = nextSlot });
-        }
-
-        private void RemoveTextureSlot_Click(object sender, RoutedEventArgs e)
-        {
-            if (TextureInputsGrid.SelectedItem is TextureInputEntry selected)
-            {
-                if (_textureSRVs.TryGetValue(selected.Slot, out var tex))
-                {
-                    tex.SRV.Dispose();
-                    tex.Texture.Dispose();
-                    _textureSRVs.Remove(selected.Slot);
-                }
-                _textureInputs.Remove(selected);
-            }
-        }
-
-        private void BrowseTexture_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button btn && btn.DataContext is TextureInputEntry entry)
-            {
-                var dlg = new OpenFileDialog
-                {
-                    Filter = "Image Files (*.png;*.jpg;*.bmp;*.tga)|*.png;*.jpg;*.bmp;*.tga|All Files|*.*",
-                    Title = "Select Texture Image"
-                };
-                if (dlg.ShowDialog() == true)
-                {
-                    entry.FilePath = dlg.FileName;
-                    LoadTextureForSlot(entry.Slot, entry.FilePath);
-                    if (_compiledShaderBytes != null)
-                        UpdatePreview();
-                }
-            }
         }
 
         private async void ProbeHash_Click(object sender, RoutedEventArgs e)
@@ -1663,5 +1623,177 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             ConsoleOutput.AppendText(text + Environment.NewLine);
             ConsoleOutput.ScrollToEnd();
         }
+
+        private void Autosearch_Click(object sender, RoutedEventArgs e)
+        {
+            var sourceF = @"B:\UserProfile\Desktop\SourceMat.pcc";
+            var package = MEPackageHandler.OpenMEPackage(sourceF);
+            var sc = ObjectBinary.From<ShaderCache>(package.FindExport("SeekFreeShaderCache"));
+            var guid = (StaticParameterSet)Guid.Parse("ce14d5f1-3e6b-466e-b983-c94733391b63");
+            var materialMap = sc.MaterialShaderMaps[guid];
+
+            var window = new MacroSetFinderWindow(
+                compileShader: DoCompileShader,          // your existing compile method
+                includesDirectory: Path.Combine(MEDirectories.GetDefaultGamePath(MEGame.LE3), "Engine", "Shaders"),           // shader includes path
+                getReferenceBytecode: (shaderType, vf) => // your delegate returning byte[]
+                {
+                    Shader shaderRef = null;
+                    if (vf == null)
+                    {
+                        // It'll be in shaders on the material shader maps
+                        var shaderGuid = materialMap.Shaders[shaderType].Id;
+                        shaderRef = sc.Shaders[shaderGuid];
+                    }
+                    else
+                    {
+                        var msm = materialMap.MeshShaderMaps.FirstOrDefault(x => x.VertexFactoryType.Name == vf); // Gets you list of shaders
+                        var testName = shaderType.Replace("[", "<").Replace("]", ">"); // Filename restrictions made us change these.
+                        var shaderGuid = msm.Shaders[testName].Id;
+                        shaderRef = sc.Shaders[shaderGuid];
+
+                    }
+
+                    return shaderRef.ShaderByteCode;
+                }
+            );
+            window.Owner = this;
+            window.Show();
+        }
+
+        /// <summary>
+        /// Opens a debug package and optionally shows expected decompilation in the side panel.
+        /// </summary>
+        public async Task OpenDebugPackageWithExpected(string jsonPath, string? expectedDecompilation, string? probeHash = null)
+        {
+            await LoadDebugPackage(jsonPath);
+
+            if (!string.IsNullOrEmpty(expectedDecompilation))
+            {
+                ExpectedDecompiledEditor.Text = expectedDecompilation;
+                ShowExpectedPanel();
+            }
+
+            if (!string.IsNullOrEmpty(probeHash))
+                ProbeHashBox.Text = probeHash;
+
+            Activate();
+        }
+
+        #region Editor setup, HLSL highlighting, and diff
+
+        private void SetupEditors()
+        {
+            _hlslHighlighting ??= LoadHlslHighlighting();
+            DecompiledShaderEditor.SyntaxHighlighting = _hlslHighlighting;
+            ExpectedDecompiledEditor.SyntaxHighlighting = _hlslHighlighting;
+
+            _decompDiffRenderer = new DiffLineRenderer();
+            _expectedDiffRenderer = new DiffLineRenderer();
+            DecompiledShaderEditor.TextArea.TextView.BackgroundRenderers.Add(_decompDiffRenderer);
+            ExpectedDecompiledEditor.TextArea.TextView.BackgroundRenderers.Add(_expectedDiffRenderer);
+
+            DecompiledShaderEditor.TextChanged += (_, _) => UpdateDiff();
+            ExpectedDecompiledEditor.TextChanged += (_, _) => UpdateDiff();
+        }
+
+        private static IHighlightingDefinition? LoadHlslHighlighting()
+        {
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream("MilanShaderResearchTool.Syntax.Hlsl.xshd");
+            if (stream is null) return null;
+            using var reader = XmlReader.Create(stream);
+            return HighlightingLoader.Load(reader, HighlightingManager.Instance);
+        }
+
+        private void UpdateDiff()
+        {
+            if (_decompDiffRenderer is null || _expectedDiffRenderer is null) return;
+
+            var decompText = DecompiledShaderEditor.Text;
+            var expectedText = ExpectedDecompiledEditor.Text;
+
+            if (decompText == _cachedDecompText && expectedText == _cachedExpectedText) return;
+            _cachedDecompText = decompText;
+            _cachedExpectedText = expectedText;
+
+            if (string.IsNullOrEmpty(decompText) || string.IsNullOrEmpty(expectedText))
+            {
+                _decompDiffRenderer.SetDiffLines([]);
+                _expectedDiffRenderer.SetDiffLines([]);
+            }
+            else
+            {
+                var decompLines = decompText.Split('\n');
+                var expectedLines = expectedText.Split('\n');
+                int maxLen = Math.Max(decompLines.Length, expectedLines.Length);
+                var diffLines = new List<int>(maxLen);
+                for (int i = 0; i < maxLen; i++)
+                {
+                    var dl = i < decompLines.Length ? decompLines[i].TrimEnd('\r') : null;
+                    var el = i < expectedLines.Length ? expectedLines[i].TrimEnd('\r') : null;
+                    if (dl != el) diffLines.Add(i + 1);
+                }
+                _decompDiffRenderer.SetDiffLines(diffLines);
+                _expectedDiffRenderer.SetDiffLines(diffLines);
+            }
+
+            DecompiledShaderEditor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+            ExpectedDecompiledEditor.TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+        }
+
+        private void ShowExpectedPanel()
+        {
+            ExpectedPanel.Visibility = Visibility.Visible;
+            CompareSplitter.Visibility = Visibility.Visible;
+            SplitterColumn.Width = new GridLength(5);
+            ExpectedColumn.Width = new GridLength(_savedExpectedWidth);
+        }
+
+        private void HideExpectedPanel()
+        {
+            var w = ExpectedColumn.ActualWidth;
+            if (w > 0) _savedExpectedWidth = w;
+            ExpectedPanel.Visibility = Visibility.Collapsed;
+            CompareSplitter.Visibility = Visibility.Collapsed;
+            SplitterColumn.Width = new GridLength(0);
+            ExpectedColumn.Width = new GridLength(0);
+        }
+
+        private void CloseExpected_Click(object sender, RoutedEventArgs e) => HideExpectedPanel();
+
+        private sealed class DiffLineRenderer : IBackgroundRenderer
+        {
+            private SortedSet<int> _diffLines = new();
+            private static readonly Brush DiffBrush;
+
+            static DiffLineRenderer()
+            {
+                DiffBrush = new SolidColorBrush(Color.FromArgb(70, 220, 60, 60));
+                DiffBrush.Freeze();
+            }
+
+            public KnownLayer Layer => KnownLayer.Background;
+
+            public void SetDiffLines(IEnumerable<int> lines)
+            {
+                _diffLines = new SortedSet<int>(lines);
+            }
+
+            public void Draw(TextView textView, DrawingContext drawingContext)
+            {
+                if (_diffLines.Count == 0 || textView.Document is null) return;
+                var visualLines = textView.VisualLines;
+                if (visualLines.Count == 0) return;
+                double scrollY = textView.ScrollOffset.Y;
+                foreach (var vl in visualLines)
+                {
+                    if (_diffLines.Contains(vl.FirstDocumentLine.LineNumber))
+                        drawingContext.DrawRectangle(DiffBrush, null,
+                            new Rect(0, vl.VisualTop - scrollY, textView.ActualWidth, vl.Height));
+                }
+            }
+        }
+
+        #endregion
     }
 }
