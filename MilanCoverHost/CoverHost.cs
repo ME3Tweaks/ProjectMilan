@@ -1,17 +1,18 @@
 ﻿using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Gammtek.Extensions;
-using MilanCoverHost;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
+using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.GameFilesystem;
 using MilanCoverHost.Classes;
 
-namespace MilanShaderHost
+namespace MilanCoverHost
 {
     /// <summary>
     /// Listens for cover and pathfinding network from CoverClient ASI.
@@ -19,6 +20,11 @@ namespace MilanShaderHost
     internal class CoverHost
     {
         private const string pipeName = @"milancoverhost";
+
+        /// <summary>
+        /// List of all nodes brought in from the last pathfinding list serialization
+        /// </summary>
+        public static List<NavigationPoint> nodeNetwork = null;
 
         enum EReadMode
         {
@@ -35,8 +41,6 @@ namespace MilanShaderHost
 
         EReadMode CurrentReadMode = EReadMode.None;
 
-        IMEPackage pathfindingPackage = null;
-
         internal void StartListening()
         {
             // Used to pass to the flow to compile a package
@@ -45,6 +49,11 @@ namespace MilanShaderHost
             using var server = new NamedPipeServerStream(pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte);
             var reader = new BinaryReader(server, Encoding.Unicode);
             var writer = new StreamWriter(server);
+            nodeNetwork = new List<NavigationPoint>();
+
+            // Serialization data
+            LevelSerializer levelSerializer = null;
+
             Console.WriteLine($"Listening for cover and pathfinding data on named pipe '{pipeName}'...");
 
             while (true)
@@ -85,85 +94,95 @@ namespace MilanShaderHost
                 }
                 else if (CurrentReadMode == EReadMode.PathfindingNodeList)
                 {
-                    if (pathfindingPackage == null)
+                    if (levelSerializer == null)
                     {
                         Console.WriteLine($"Error: Received pathfinding node list command but no level name has been set. Ignoring...");
                         CurrentReadMode = EReadMode.None; // Reset
                         continue;
                     }
                     var numNodes = reader.ReadInt32();
+                    if (numNodes == 0)
+                    {
+                        // Nothing to do.
+                        Console.WriteLine($"CoverClient sent no nodes to us, skipping command...");
+                        CurrentReadMode = EReadMode.None;
+                        continue;
+                    }
+                    nodeNetwork = new List<NavigationPoint>(numNodes);
 
-                    var pathnodeClass = EntryImporter.EnsureClassIsInFile(pathfindingPackage, "PathNode", new RelinkerOptionsPackage());
-                    var reachspecClass = EntryImporter.EnsureClassIsInFile(pathfindingPackage, "ReachSpec", new RelinkerOptionsPackage());
+                    var pathnodeClass = EntryImporter.EnsureClassIsInFile(levelSerializer.package, "PathNode", new RelinkerOptionsPackage());
+                    var reachspecClass = EntryImporter.EnsureClassIsInFile(levelSerializer.package, "ReachSpec", new RelinkerOptionsPackage());
 
-                    var level = pathfindingPackage.GetLevel();
                     Console.WriteLine($"Expecting {numNodes} pathfinding nodes...");
-                    List<PathfindingNode> generatedNodes = new List<PathfindingNode>();
                     var networkId = 441; // Change to something random I guess?
                     for (int i = 0; i < numNodes; i++)
                     {
-                        var node = new PathfindingNode();
-                        generatedNodes.Add(node);
-                        // Read Coordinate of the node.
-                        node.X = reader.ReadSingle();
-                        node.Y = reader.ReadSingle();
-                        node.Z = reader.ReadSingle();
-
-                        // Generate the pathnode in the package.
-                        // Technically we also need the collision cylinder but for now we will not care
-                        var nodeExport = ExportCreator.CreateExport(pathfindingPackage, $"PathNode", "PathNode", parent: level, indexed: true, createWithStack: true);
-                        nodeExport.ObjectFlags |= UnrealFlags.EObjectFlags.Transactional;
-                        node.Export = nodeExport;
-
-                        var approximateLineOfFire = reader.ReadInt32();
-
-                        var cylinderComponent = node.CreateCylinderComponent();
-                        var pathNodeRadius = reader.ReadSingle();
-                        var pathNodeHeight = reader.ReadSingle();
-                        if (pathNodeRadius == 0 || pathNodeHeight == 0)
+                        NavigationPoint node = null;
+                        var nodeType = reader.BaseStream.ReadUnrealString();
+                        switch (nodeType)
                         {
-                            Debug.WriteLine("Wrong size.");
+                            case "PathNode":
+                                node = new PathNode();
+                                break;
+                            case "CoverSlotMarker":
+                                node = new CoverSlotMarker();
+                                break;
+                            case "CoverLink":
+                                node = new CoverLink();
+                                break;
+                            default:
+                                throw new Exception($"Unsupported pathnode type: {nodeType}");
                         }
-                        var props = new PropertyCollection();
-                        props.Add(CommonStructs.GuidProp(Guid.NewGuid(), "NavGuid"));
-                        props.Add(CommonStructs.CylinderProp(pathNodeRadius, pathNodeHeight, "MaxPathSize"));
-                        props.Add(new IntProperty(10000000, "VisitedWeight"));
-                        props.Add(new IntProperty(networkId, "NetworkID"));
-                        props.Add(CommonStructs.Vector3Prop(node.X, node.Y, node.Z, "Location"));
-                        props.Add(new NameProperty("PathNode", "Tag"));
-                        props.Add(new ObjectProperty(cylinderComponent, "CollisionComponent"));
-                        props.Add(new ObjectProperty(cylinderComponent, "CylinderComponent"));
-                        props.Add(new IntProperty(approximateLineOfFire, "ApproximateLineOfFire"));
-                        nodeExport.WriteProperties(props);
 
-                        // Read connecting nodes count.
-                        var numReachableNodes = reader.ReadInt32();
-                        for (int j = 0; j < numReachableNodes; j++)
-                        {
-                            var reachSpecInfo = new ReachSpecInfo()
-                            {
-                                TargetNodeIndex = reader.ReadInt32(),
-                                Radius = (int) reader.ReadSingle(),
-                                Height = (int) reader.ReadSingle(),
-                            };
-                            node.ReachableNearbyNodes.Add(reachSpecInfo);
-                        }
-                        // Console.WriteLine($"Received pathfinding node: ({node.X}, {node.Y}, {node.Z}), Reachable nodes: {string.Join(", ", node.ReachableNearbyNodes)}");
+                        Console.WriteLine($"Reading {nodeType}");
+
+                        nodeNetwork.Add(node);
+                        node.Serialize(reader, levelSerializer);
                     }
 
                     Console.WriteLine($"Done reading pathfinding list.");
 
                     // Generate reachspecs
                     Console.WriteLine($"Generating reachspecs...");
-                    for (int i = 0; i < generatedNodes.Count; i++)
+                    for (int i = 0; i < nodeNetwork.Count; i++)
                     {
-                        var node = generatedNodes[i];
+                        var node = nodeNetwork[i];
                         var specs = new List<ExportEntry>();
                         foreach (var reachSpecInfo in node.ReachableNearbyNodes)
                         {
-                            var reachableNode = generatedNodes[reachSpecInfo.TargetNodeIndex];
+                            var reachableNode = nodeNetwork[reachSpecInfo.TargetNodeIndex];
                             var spec = node.CreateReachSpec(reachableNode.Export, reachSpecInfo.Radius, reachSpecInfo.Height);
                             specs.Add(spec);
+                        }
+
+                        if (node is CoverLink cl)
+                        {
+                            // Resolve FireLinks now that all nodes in the network have been loaded
+                            cl.ResolveFireLinks(levelSerializer);
+
+                            // Generate the SlotToSlotReachSpecs on the cover slot markers
+                            // Note: This is NOT the current export! These are like the children
+                            for(int csi = 0; csi < cl.CoverSlots.Count - 1; csi++)
+                            {
+                                // Generate the left to right spec
+                                var left = cl.CoverSlots[csi];
+                                var right = cl.CoverSlots[csi + 1];
+                                var ltrSpec = left.CreateReachSpec(right.Export, 40, 95, "SlotToSlotReachSpec"); // Lets start with 40/95
+                                ltrSpec.WriteProperty(new ByteProperty(2, "SpecDirection")); // 1 = Left 2 = Right
+
+                                var pathList = left.Export.GetProperty<ArrayProperty<ObjectProperty>>("PathList") ?? new ArrayProperty<ObjectProperty>("PathList");
+                                pathList.Add(ltrSpec);
+                                left.Export.WriteProperty(pathList);
+
+
+                                // Generate the right to left spec
+                                var rtlSpec = right.CreateReachSpec(left.Export, 40, 95, "SlotToSlotReachSpec"); // Lets start with 40/95
+                                rtlSpec.WriteProperty(new ByteProperty(1, "SpecDirection")); // 1 = Left 2 = Right
+
+                                pathList = right.Export.GetProperty<ArrayProperty<ObjectProperty>>("PathList") ?? new ArrayProperty<ObjectProperty>("PathList");
+                                pathList.Add(rtlSpec);
+                                right.Export.WriteProperty(pathList);
+                            }
                         }
 
                         if (specs.Count > 0)
@@ -172,9 +191,8 @@ namespace MilanShaderHost
                         }
                     }
 
-                    var levelBin = pathfindingPackage.GetLevelBinary();
-                    var allPathNodes = pathfindingPackage.Exports.Where(e => e.ClassName == "PathNode").ToList();
-                    levelBin.Actors.AddRange(allPathNodes.Select(e => e.UIndex));
+                    var allPathNodes = levelSerializer.package.Exports.Where(e => e.IsA("NavigationPoint")).ToList();
+                    levelSerializer.levelBin.Actors.AddRange(allPathNodes.Select(e => e.UIndex));
                     // Build pathfinding chain
                     for (int i = 0; i < allPathNodes.Count - 1; i++)
                     {
@@ -183,20 +201,51 @@ namespace MilanShaderHost
                         node.WriteProperty(new ObjectProperty(nextNode, "nextNavigationPoint"));
                     }
 
-                    levelBin.NavListStart = allPathNodes.First().UIndex;
-                    levelBin.NavListEnd = allPathNodes.Last().UIndex;
-                    level.WriteBinary(levelBin);
+                    if (allPathNodes.Count > 0)
+                    {
+                        levelSerializer.levelBin.NavListStart = allPathNodes.First().UIndex;
+                        levelSerializer.levelBin.NavListEnd = allPathNodes.Last().UIndex;
+                    }
+                    else
+                    { 
+                        Console.WriteLine("  No NavigationPoints.");
+                    }
+                    // Build CoverLink chain
+                    var allCoverLinks = levelSerializer.package.Exports.Where(e => e.ClassName == "CoverLink").ToList();
+                    for (int i = 0; i < allCoverLinks.Count - 1; i++)
+                    {
+                        var nextNode = allCoverLinks[i + 1];
+                        var node = allCoverLinks[i];
+                        node.WriteProperty(new ObjectProperty(nextNode, "NextCoverLink"));
+                    }
+
+                    if (allCoverLinks.Count > 0)
+                    {
+                        levelSerializer.levelBin.CoverListStart = allCoverLinks.First().UIndex;
+                        levelSerializer.levelBin.CoverListEnd = allCoverLinks.Last().UIndex;
+                    } else
+                    {
+                        Console.WriteLine("  No CoverLinks.");
+                    }
+
+                    // NavRefs, all sorts of other things still need done...
+                    levelSerializer.package.GetLevel().WriteBinary(levelSerializer.levelBin);
 
                     // Add test spawn tags
                     allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("BansheeSpawn", "Tag"));
                     allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("AtlasSpawn", "Tag"));
                     allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("BruteSpawn", "Tag"));
                     allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("DragoonSpawn", "Tag"));
+                    allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("RavagerSpawn", "Tag"));
+                    allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("ScionSpawn", "Tag"));
+                    allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("CenturionSpawn", "Tag"));
+                    allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("TrooperSpawn", "Tag"));
+                    allPathNodes[new Random().Next(allPathNodes.Count)].WriteProperty(new NameProperty("GethPrimeSpawn", "Tag"));
 
-                    var outPath = Path.Combine(MEDirectories.GetCookedPath(MEGame.LE3), $"{pathfindingPackage.FileNameNoExtension}.pcc");
-                    pathfindingPackage.Save(outPath);
+                    var outPath = Path.Combine(MEDirectories.GetCookedPath(levelSerializer.package.Game), $"{levelSerializer.package.FileNameNoExtension}.pcc");
+                    levelSerializer.package.Save(outPath);
                     Console.WriteLine($"Pathfinding generation complete.");
-                    pathfindingPackage = null;
+                    levelSerializer = null;
                     CurrentReadMode = EReadMode.None; // Reset
                     continue;
                 }
@@ -207,44 +256,17 @@ namespace MilanShaderHost
                     Console.WriteLine($"Received level name: {levelName}");
 
                     var pathfindingPackageName = $"{levelName}_Pathfinding.pcc";
-                    pathfindingPackage = MEPackageHandler.CreateMemoryEmptyLevel(pathfindingPackageName, MEGame.LE3);
+                    levelSerializer = new LevelSerializer
+                    {
+                        package = MEPackageHandler.CreateMemoryEmptyLevel(pathfindingPackageName, MEGame.LE3),
+                        networkId = new Random().Next(1000000), // Just generate a random network ID for now, we can change this later if needed.
+                    };
+                    levelSerializer.Init();
                     CurrentReadMode = EReadMode.None; // Reset
                     continue;
                 }
             }
         }
-
-        private void WriteCacheToFile(ShaderCache cache)
-        {
-            //// Switch to package-based serialization.
-            //cache.Packageless = false;
-
-            //IMEPackage package = null;
-            //if (File.Exists(shaderCacheFile))
-            //{
-            //    package = MEPackageHandler.OpenMEPackage(shaderCacheFile);
-            //    var existingCacheExport = package.FindExport("SeekFreeShaderCache");
-            //    if (existingCacheExport != null)
-            //    {
-            //        var existingCache = ObjectBinary.From<ShaderCache>(existingCacheExport);
-            //        cache.MergeInto(existingCache);
-            //        existingCacheExport.WriteBinary(cache);
-            //    }
-            //    else
-            //    {
-            //        Debugger.Break();
-            //    }
-            //}
-            //else
-            //{
-            //    package = MEPackageHandler.CreateAndOpenPackage(shaderCacheFile, MEGame.LE3);
-            //    var sfsc = ExportCreator.CreateExport(package, "SeekFreeShaderCache", "ShaderCache", indexed: false, prePropBinary: [0x0, 0x0, 0x0, 0x0]);
-            //    sfsc.WriteBinary(cache);
-            //}
-
-            //package.Save();
-        }
-
 
         public static byte[] ExtractResource(string filename)
         {

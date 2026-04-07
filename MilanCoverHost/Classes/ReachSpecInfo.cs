@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MilanCoverHost.Classes
 {
-    internal class ReachSpecInfo
+    public class ReachSpecInfo
     {
         public int TargetNodeIndex { get; set; }
         public int Radius { get; set; }
