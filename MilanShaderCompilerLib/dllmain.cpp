@@ -622,9 +622,11 @@ int InternalCompileShader(MilanD3DInclude& includer, D3D_SHADER_MACRO* pDefines,
 			auto error = (char*)OutErrorBlob->GetBufferPointer();
 			outErrorMsgLen = strlen(error);
 			memcpy(&outErrorMsg, error, outErrorMsgLen);
+			std::cout << error << std::endl;
 		}
 
 		auto def = pDefines;
+
 		std::cout << "ShaderFilename: " << includer.BaseShaderName.c_str() << ", Entrypoint: " << entryPoint.c_str() << ", Macros:\n";
 		D3D_SHADER_MACRO macro;
 		do {
