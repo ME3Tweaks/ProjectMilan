@@ -4,14 +4,9 @@ using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
-using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using LegendaryExplorerCore.UnrealScript;
-using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
-using Newtonsoft.Json;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
@@ -23,6 +18,14 @@ namespace LEDecooker
     /// </summary>
     public static class DecookerShared
     {
+        // Cache for ME3Tweaks backup paths so we don't repeatedly call into IO for the same game
+        private static readonly ConcurrentDictionary<MEGame, string> GameBackupPathCache = new();
+        public static string GetCachedGameBackupPath(MEGame game)
+        {
+            return GameBackupPathCache.GetOrAdd(game, g => ME3TweaksBackups.GetGameBackupPath(g));
+        }
+
+
         /// <summary>
         /// Target LE Game's Object DB
         /// </summary>
@@ -210,10 +213,7 @@ namespace LEDecooker
 
         public static IMEPackage OpenPackage(string path, MEGame sourceGame)
         {
-            if (path.StartsWith("/") && path.Contains("/DLC/"))
-            {
-                path = ME3TweaksBackups.GetGameBackupPath(sourceGame) + path;
-            }
+            path = Path.Combine(DecookerShared.GetCachedGameBackupPath(sourceGame), path.TrimStart('\\', '/'));
             return new SFARPackageCache().GetCachedPackage(path);
         }
 
