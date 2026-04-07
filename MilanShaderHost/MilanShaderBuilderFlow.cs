@@ -21,8 +21,6 @@ namespace MilanShaderHost
     /// </summary>
     internal class MilanShaderBuilderFlow
     {
-        private static List<string> PackageFilesToProcess = new List<string>();
-
         public static string DecookedPackagesPath = @"E:\Decooked";
 
         public static MEGame Game;
@@ -51,109 +49,6 @@ namespace MilanShaderHost
         }
 
 
-        /// <summary>
-        /// Generates the list of packages to compile shaders in.
-        /// </summary>
-        private static void SetupFileList()
-        {
-            string[] files = [
-                
-                // Existing: For test comparison
-                //"BioS_CitApt_Alt.pcc",
-                //"BioS_CitCasino.pcc",
-                //"BioS_CitCouncil.pcc",
-                //"BioS_CitRestaurant.pcc",
-                //"BioS_CitSim.pcc",
-                //"BioS_CitSim_Alt.pcc",
-                //"BioS_CitStreets.pcc",
-                //"BioS_CitWards.pcc",
-                //"BioS_Cit_lev004.pcc"
-                //"BioT_Arctic",
-                //"biot_ancientcity.pcc",
-
-                // Tropical:
-                //"BIOA_NOR10_T.pcc",
-                //"BIOA_STA60_T.pcc",
-                //"BIOA_STA60_02_T.pcc",
-                ////"BIOA_PRC2_MatFX.pcc",
-                //"BIOA_STA30_T.pcc",
-                //"BIOA_JUG40_T.pcc",
-                //"BIOA_Jug20_T.pcc",
-                //"BIOA_JUG80_T.pcc",
-                //"BIOA_JUG00_T.pcc",
-                ////"BIOG_APL_PHY_Crate_XLarge_01_L.pcc",
-                //"BIOG__SKIES__.pcc",
-                ////"BIOA_FRE10_T.pcc",
-                ////"BIOA_LOS40_APL_DOR_FFDoor_L.pcc",
-                //"BIOG_V_Env_Jug_WaveCrash_Z.pcc",
-                ////"VFX_zz_ME1_Global_METR.pcc",
-                ////"BIOG_V_Env_Hologram_Z.pcc",
-                ////"BIOA_LAV20_T.pcc"
-
-                //Multiplayer levels
-                // Hydra:
-                "BioT_GthMP",
-                "BioVFX_DLC_Env_MPGeth",
-
-                // Condor:
-                "BioT_MPMoon",
-                "BioVFX_DLC_Env_MPMoon",
-
-                // Jade:
-                "BioS_MPJungle",
-                "BioS_MPJungle_Trash",
-                "BioT_MPJungle",
-                "BioT_Tropical",
-                "BioVFX_DLC_Env_MPJngl",
-                
-                // Thessia:
-                "BioT_MPThes",
-                "BioApl_Lvl_Foliage",
-
-                //"Biot_Normandy_Int.pcc",
-                //"BioApl_Lvl_Foliage.pcc",
-                //"BioS_MPJungle.pcc",
-                //"BioS_MPLondon.pcc",
-                //"BIOG_PhotoModeFilters.pcc",
-                //"biot_humanslumACID.pcc",
-                //"BioT_MPCer2.pcc",
-                //"BioT_MPHosp.pcc",
-                //"BioT_MPOcean.pcc",
-                //"BioT_MPThes.pcc",
-                //"BioT_MPThes_Milan.pcc",
-                //"BioT_SolMP.pcc",
-                //"BioVFX_DLC_MP1_BatMelee.pcc",
-                //"BioVFX_DLC_MP1_Geth.pcc",
-                //"BioVFX_MP3_MPHosp.pcc",
-                //"BioVFX_MP3_MPOcean.pcc",
-                //"BioVFX_MP5_Gear.pcc"
-            ];
-
-            foreach (var f in files)
-            {
-                var realf = f;
-                if (!realf.EndsWith(".pcc"))
-                {
-                    realf += ".pcc";
-                }
-
-                bool found = false;
-                foreach (var path in MilanShaderPackageBuilder.SourceFolders)
-                {
-                    var testPath = Path.Combine(path, realf);
-                    if (File.Exists(testPath))
-                    {
-                        found = true;
-                        PackageFilesToProcess.Add(testPath);
-                        break;
-                    }
-                }
-                if (!found)
-                {
-                    Console.Error.WriteLine($"Could not find source package {realf} in any of the source folders.");
-                }
-            }
-        }
 
         /// <summary>
         /// Starts the game start/stop loop for the shader host.
@@ -220,7 +115,59 @@ namespace MilanShaderHost
             }
         }
 
-        private static IMEPackage nextLevelPackage;
+        /// <summary>
+        /// Holds an in-memory prepared level ready to be saved for the next game run.
+        /// </summary>
+        private sealed class PreparedLevel
+        {
+            public required IMEPackage TransientPackage { get; init; }
+            public required IMEPackage MapPackage { get; init; }
+        }
+
+        /// <summary>
+        /// Builds the shader level package entirely in memory without saving to disk or touching
+        /// any instance fields, so it can safely run on a background thread while the game is running.
+        /// Returns null if the source package contains no materials.
+        /// </summary>
+        private static PreparedLevel? BuildShaderLevelInMemory(string sourcePath, EShaderLevelMode buildMode)
+        {
+            if (buildMode != EShaderLevelMode.SlashLevel)
+            {
+                using var sp = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
+                // Once we get normal materials working we can work on making this accept MaterialInstances.
+                // Then we can pre-bake the bHasStaticPermutation version.
+                if (sp.Exports.Count(x => x.IsA("Material")) == 0)
+                {
+                    // No materials to compile
+                    return null;
+                }
+            }
+
+            var mapName = GetMapName(buildMode) + ".pcc";
+
+            var localTransient = MEPackageHandler.CreateMemoryEmptyPackage("Transient.pcc", Program.Game);
+            var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, localTransient, buildMode);
+            if (buildMode == EShaderLevelMode.Preview)
+            {
+                // Copy SeekFreeShaderCache
+                using var tPackage = MEPackageHandler.OpenMEPackage(sourcePath);
+                var cache = tPackage.FindExport("SeekFreeShaderCache");
+                EntryExporter.ExportExportToPackage(cache, package, out var cacheExport);
+            }
+            else if (buildMode == EShaderLevelMode.Compile)
+            {
+                // Install auto exit sequence
+                var flowPackagePath = $"EntryMenu/entry_{Program.Game}.pcc"; // copied to output path by compile step.
+                var flowPackage = MEPackageHandler.OpenMEPackage(flowPackagePath);
+                var seq = flowPackage.FindExport("ShaderCompilerSequence");
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, seq, package, package.GetLevel(), true, new RelinkerOptionsPackage(), out var portedSeq);
+                var level = package.GetLevelBinary();
+                level.GameSequences = [portedSeq.UIndex];
+                package.GetLevel().WriteBinary(level);
+            }
+
+            return new PreparedLevel { TransientPackage = localTransient, MapPackage = package };
+        }
 
         static void SetupShaderCompileFlow()
         {
@@ -228,7 +175,7 @@ namespace MilanShaderHost
             Directory.CreateDirectory(outDir);
 
             KillGame();
-            SetupFileList();
+            ShaderCompileList.SetupFileList();
             ShaderHost.NewShaderCacheGenerated += OnMaterialCompiled;
 
             if (Program.ParsedOptions.SlashRefShaderCache && !ShaderCacheTools.IsCacheSlashed(Program.Game))
@@ -241,8 +188,12 @@ namespace MilanShaderHost
                 ShaderCacheTools.SlashShaderCache(Program.Game);
             }
 
-            foreach (var file in PackageFilesToProcess)
+            var files = ShaderCompileList.PackageFilesToProcess;
+            Task<PreparedLevel?>? nextLevelTask = null;
+
+            for (int i = 0; i < files.Count; i++)
             {
+                var file = files[i];
                 var baseName = Path.GetFileNameWithoutExtension(file);
                 /*if (!baseName.Equals("BIOG_PhotoModeFilters", StringComparison.OrdinalIgnoreCase))
                 {
@@ -251,13 +202,36 @@ namespace MilanShaderHost
                 var outPath = Path.Combine(outDir, baseName + ".pcc");
                 if (Program.ParsedOptions.CompileShaders) // Shader compile
                 {
-                    Console.WriteLine($"Building shaders for: {Path.GetFileNameWithoutExtension(file)}");
+                    Console.WriteLine($"Building shaders for: {baseName}");
 
                     scPackage = MEPackageHandler.CreateMemoryEmptyPackage(Path.GetFileName(file), Program.Game);
                     scPackage.CreateShaderCache();
 
-                    // Builds materials into the map
-                    SetupShaderLevel(file, EShaderLevelMode.Compile);
+                    // Use the pre-prepared level from the previous iteration if available, otherwise build now
+                    PreparedLevel? current = nextLevelTask != null
+                        ? nextLevelTask.GetAwaiter().GetResult()
+                        : BuildShaderLevelInMemory(file, EShaderLevelMode.Compile);
+                    nextLevelTask = null;
+
+                    if (current == null)
+                    {
+                        Console.WriteLine($"Skipping {baseName}: no materials to compile.");
+                        continue;
+                    }
+
+                    // Apply the prepared level: set instance state and save to disk
+                    transientPackage = current.TransientPackage;
+                    Console.WriteLine("Saving...");
+                    var outGameDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
+                    current.MapPackage.Save(Path.Combine(outGameDir, GetMapName(EShaderLevelMode.Compile) + ".pcc"));
+
+                    // While the game runs, prepare the next file in the background
+                    if (i + 1 < files.Count)
+                    {
+                        var nextFile = files[i + 1];
+                        Console.WriteLine($"Pre-preparing level for: {Path.GetFileNameWithoutExtension(nextFile)}");
+                        nextLevelTask = Task.Run(() => BuildShaderLevelInMemory(nextFile, EShaderLevelMode.Compile));
+                    }
 
                     // Runs game, which builds shaders and feeds them back to us.
                     StartGameAndWaitForExit(EShaderLevelMode.Compile);
@@ -324,45 +298,16 @@ namespace MilanShaderHost
 #endif
         private static string SetupShaderLevel(string sourcePath, EShaderLevelMode buildMode)
         {
-            if (buildMode != EShaderLevelMode.SlashLevel)
-            {
-                using var sp = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
-                // Once we get normal materials working we can work on making this accept MaterialInstances.
-                // Then we can pre-bake the bHasStaticPermutation version.
-                if (sp.Exports.Count(x => x.IsA("Material")) == 0)
-                {
-                    // No materials to compile
-                    return null;
-                }
-            }
+            var prepared = BuildShaderLevelInMemory(sourcePath, buildMode);
+            if (prepared == null)
+                return null;
 
-            var mapName = GetMapName(buildMode) + ".pcc";
-
-            transientPackage = MEPackageHandler.CreateMemoryEmptyPackage("Transient.pcc", Program.Game);
-            var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, transientPackage, buildMode);
-            if (buildMode == EShaderLevelMode.Preview)
-            {
-                // Copy SeekFreeShaderCache
-                using var tPackage = MEPackageHandler.OpenMEPackage(sourcePath);
-                var cache = tPackage.FindExport("SeekFreeShaderCache");
-                EntryExporter.ExportExportToPackage(cache, package, out var cacheExport);
-            }
-            else if (buildMode == EShaderLevelMode.Compile)
-            {
-                // Install auto exit sequence
-                var flowPackagePath = $"EntryMenu/entry_{Program.Game}.pcc"; // copied to output path by compile step.
-                var flowPackage = MEPackageHandler.OpenMEPackage(flowPackagePath);
-                var seq = flowPackage.FindExport("ShaderCompilerSequence");
-                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, seq, package, package.GetLevel(), true, new RelinkerOptionsPackage(), out var portedSeq);
-                var level = package.GetLevelBinary();
-                level.GameSequences = [portedSeq.UIndex];
-                package.GetLevel().WriteBinary(level);
-            }
-
+            transientPackage = prepared.TransientPackage;
             Console.WriteLine("Saving...");
             var outDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
+            var mapName = GetMapName(buildMode) + ".pcc";
             var finalOut = Path.Combine(outDir, mapName);
-            package.Save(finalOut);
+            prepared.MapPackage.Save(finalOut);
             return finalOut;
         }
 

@@ -218,7 +218,7 @@ namespace MilanShaderHost
                     var shaderName = obj.shaderType.Replace("<", "[").Replace(">", "]");
 
                     // Run through our preprocessor to find all possible used conditionals
-                    var possibleMacros = HlslPreprocessor.FindConditionalMacros(obj.sourceFilename, obj.functionName, Path.Combine(MEDirectories.GetDefaultGamePath(Program.Game), "Engine", "Shaders"), obj.materialHlsl, obj.vertexFactoryType);
+                    var possibleMacros = HlslPreprocessor.FindConditionalMacros(obj.sourceFilename, obj.functionName, Path.Combine(MEDirectories.GetDefaultGamePath(Program.Game), "Engine", "Shaders"), obj.materialHlsl, obj.vertexFactoryShaderFilename);
                     obj.possibleMacros = possibleMacros.Except(KnownIgnoredMacros).ToArray();
 
                     var shaderOutPath = Path.Combine(materialOutPath, localIFP, vertexFactory ?? "None");
