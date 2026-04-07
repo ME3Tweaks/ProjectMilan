@@ -31,12 +31,7 @@ namespace LEDecooker
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> RvrEffectsMaterialUserLookupDB;
         private static CaseInsensitiveConcurrentDictionary<string> PortingItems = new();
-        // Cache for ME3Tweaks backup paths so we don't repeatedly call into IO for the same game
-        private static readonly ConcurrentDictionary<MEGame, string> GameBackupPathCache = new();
-        private static string GetCachedGameBackupPath(MEGame game)
-        {
-            return GameBackupPathCache.GetOrAdd(game, g => ME3TweaksBackups.GetGameBackupPath(g));
-        }
+
         /// <summary>
         /// Compiles the T3D files for the specified game, generating packages with material expression data. It also generates the 
         /// source style packages for supporting assets that are needed for other things such as StaticMeshes, Material Instance Constants,
@@ -204,11 +199,11 @@ namespace LEDecooker
         /// Generates decooked packages that will later be converted to UPKs
         /// </summary>
         /// <param name="outputFolder"></param>
-        public static void CompileGameAssets(string outputFolder, MEGame sourceGame, MEGame targetGame)
+        public static void CompileGameAssets(string outputFolder, MEGame sourceGame, MEGame targetGame, bool clearOutput)
         {
             DecookerShared.TargetObjectDB = DecookerShared.LoadObjectDB(sourceGame);
 
-            if (false)
+            if (clearOutput)
             {
                 DecookerLog.Information("Clearing Stage 1 T3D packages");
                 foreach (var file in Directory.GetFiles(outputFolder))
@@ -494,12 +489,8 @@ namespace LEDecooker
 
                     // We know it exists
                     DecookerLog.Information($"\t\tPorting asset in: {memoryifp}");
-                    var path = asset.Value.packagefile;
-                    if (path.StartsWith("/") && path.Contains("/DLC/"))
-                    {
-                        path = GetCachedGameBackupPath(sourceGame) + path;
-                    }
-                    using var sourcePackage = cache.GetCachedPackage(path);
+                    var path = Path.Combine(DecookerShared.GetCachedGameBackupPath(sourceGame), asset.Value.packagefile.TrimStart('\\', '/'));
+                    using var sourcePackage = cache.GetCachedPackage(path, openIfNotInCache: true);
                     PortingItems[asset.Key] = path;
 
                     var sourceAsset = sourcePackage.FindExport(memoryifp) ?? sourcePackage.FindExport(ifp);
@@ -559,12 +550,8 @@ namespace LEDecooker
                     // We know it exists
 
                     DecookerLog.Information($"\t\tPorting asset in: {asset.Key}");
-                    var path = asset.Value;
-                    if (path.StartsWith("/") && path.Contains("/DLC/"))
-                    {
-                        path = GetCachedGameBackupPath(sourceGame) + path;
-                    }
-                    using var sourcePackage = cache.GetCachedPackage(path);
+                    var path = Path.Combine(DecookerShared.GetCachedGameBackupPath(sourceGame), asset.Value.TrimStart('\\', '/'));
+                    using var sourcePackage = cache.GetCachedPackage(path, openIfNotInCache: true);
                     var sourceAsset = sourcePackage.FindExport(asset.Key) ?? sourcePackage.FindExport(asset.Key.Substring(asset.Key.IndexOf('.') + 1));
 
                     PortingItems[asset.Key] = path;
@@ -606,12 +593,8 @@ namespace LEDecooker
                     }
                     // We know it exists
                     DecookerLog.Information($"\t\tCopying properties for asset in: {asset.Key}");
-                    var path = asset.Value;
-                    if (path.StartsWith("/") && path.Contains("/DLC/"))
-                    {
-                        path = GetCachedGameBackupPath(sourceGame) + path;
-                    }
-                    using var sourcePackage = cache.GetCachedPackage(path);
+                    var path = Path.Combine(DecookerShared.GetCachedGameBackupPath(sourceGame), asset.Value.TrimStart('\\', '/'));
+                    using var sourcePackage = cache.GetCachedPackage(path, openIfNotInCache: true);
                     var sourceAsset = sourcePackage.FindExport(asset.Key) ?? sourcePackage.FindExport(asset.Key.Substring(asset.Key.IndexOf('.') + 1));
 
                     PortingItems[asset.Key] = path;
@@ -630,7 +613,7 @@ namespace LEDecooker
                     };
 
 
-                    var classX = EntryImporter.EnsureClassIsInFile(package, classType, rop, ME3TweaksBackups.GetGameBackupPath(sourceGame));
+                    var classX = EntryImporter.EnsureClassIsInFile(package, classType, rop, DecookerShared.GetCachedGameBackupPath(sourceGame));
                     targetAsset.Class = classX;
                     EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceAsset, package, targetAsset, true, rop, out var _);
                     
@@ -668,9 +651,22 @@ namespace LEDecooker
             return true;
         }
 
+        /// <summary>
+        /// Compiles material assets from a package using data from a source game and a provided archive, updating the
+        /// package with the compiled materials and handling any necessary nesting or property alignment.
+        /// </summary>
+        /// <remarks>This method prepares the package for use with UDK by aligning material properties and
+        /// compiling materials from the provided archive. Any errors encountered during compilation are logged.
+        /// Material nesting is performed based on the provided mapping to ensure correct package structure.</remarks>
+        /// <param name="package">The package to which compiled material assets will be added or updated.</param>
+        /// <param name="sourceGame">The source game from which material data and context are derived.</param>
+        /// <param name="archive">The archive containing material definitions to be compiled into the package.</param>
+        /// <param name="matIfpDb">A mapping of package and material names to their intended nesting paths, used to determine if materials
+        /// should be nested within the package structure.</param>
         private static void CompilePackageMaterials(IMEPackage package, MEGame sourceGame, ZipArchive archive, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> matIfpDb)
         {
-            using var cache = new PackageCache();
+            using SFARPackageCache cache = new SFARPackageCache();
+
             var usop = new UnrealScriptOptionsPackage
             {
                 MissingObjectResolver = MissingObjectResolver,
@@ -688,6 +684,51 @@ namespace LEDecooker
                 foreach (var msg in result.AllErrors.Select(msg => msg.ToString()))
                 {
                     DecookerLog.Error(msg);
+                }
+            }
+
+
+            // 03/22/2026
+            // Update the bUsedWith properties to match the original object so we compile the correct shader set.
+            foreach (var mat in package.Exports.Where(x => x.IsA("Material")))
+            {
+                var candidates = DecookerShared.TargetObjectDB.GetFilesContainingObject(mat.InstancedFullPath);
+                bool writtenProps = false;
+
+                if (candidates != null)
+                {
+                    foreach (var c in candidates)
+                    {
+                        // Todo: Need to support this also doing other generation of game.
+                        var fullPath = Path.Combine(MEDirectories.GetDefaultGamePath(sourceGame), c.TrimStart('\\', '/'));
+                        //if (File.Exists(fullPath))
+                        {
+                            var sPackage = cache.GetCachedPackage(fullPath, openIfNotInCache: true);
+                            if (sPackage != null)
+                            {
+                                var exp = sPackage.FindExport(mat.InstancedFullPath);
+                                if (exp.IsA("Material"))
+                                {
+                                    // Copy over bUsedWith properties
+                                    var props = exp.GetProperties();
+                                    foreach (var p in props.Where(x => x is BoolProperty && x.Name.Name.StartsWith("bUsed")))
+                                    {
+                                        mat.WriteProperty(p);
+                                    }
+                                    writtenProps = true;
+                                    break;
+                                }
+                            } else
+                            {
+                                Debug.WriteLine($"Package not found: {fullPath}");
+                            }
+                        }
+                    }
+                }
+
+                if (!writtenProps)
+                {
+                    DecookerLog.Error($"Did not set bUsedWith properties on {mat.MemoryFullPath}");
                 }
             }
 
@@ -908,7 +949,7 @@ namespace LEDecooker
             // var compiledFile = MEPackageHandler.OpenMEPackage(@"S:\Milan\UDK\LE3_Mats.pcc", forceLoadFromDisk: true);
 
 
-            var backupPath = GetCachedGameBackupPath(MEGame.LE3);
+            var backupPath = DecookerShared.GetCachedGameBackupPath(MEGame.LE3);
             var files = Directory.GetFiles(backupPath, "*.pcc", SearchOption.AllDirectories);
             var set = new SortedSet<string>();
 
