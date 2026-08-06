@@ -89,11 +89,9 @@ namespace MilanShaderHost.LEX
                 }
             }
 
-            smBin.Bounds.SphereRadius = xOffset / 2;
-
             // KDOP tree
             smBin.kDOPTreeME3UDKLE = new kDOPTreeCompact();
-            smBin.kDOPTreeME3UDKLE.RootBound = new kDOP(); // Not sure how to compute this.
+            smBin.kDOPTreeME3UDKLE.RootBound = new kDOP();
             smBin.kDOPTreeME3UDKLE.Nodes = [new kDOPCompact()];
             smBin.kDOPTreeME3UDKLE.Triangles = tris.ToArray();
 
@@ -173,6 +171,27 @@ namespace MilanShaderHost.LEX
 
             // MISC =====================================
             smrd.NumVertices = (uint)vertices.Count;
+
+
+            // Now that we have computed data, fix the other data
+            // Compute local-space AABB from the vertex data
+            var min = new Vector3(vertices.Min(v => v.X), vertices.Min(v => v.Y), vertices.Min(v => v.Z));
+            var max = new Vector3(vertices.Max(v => v.X), vertices.Max(v => v.Y), vertices.Max(v => v.Z));
+
+            // BOUNDS - used by the renderer for frustum/distance culling and shadow setup
+            var origin = (min + max) * 0.5f;
+            var extent = (max - min) * 0.5f;
+            smBin.Bounds.Origin = origin;
+            smBin.Bounds.BoxExtent = extent;
+            smBin.Bounds.SphereRadius = extent.Length();
+
+            // kDOPTree ROOT BOUND - used by the collision tree (line traces / picking)
+            smBin.kDOPTreeME3UDKLE.RootBound.Min[0] = min.X;
+            smBin.kDOPTreeME3UDKLE.RootBound.Min[1] = min.Y;
+            smBin.kDOPTreeME3UDKLE.RootBound.Min[2] = min.Z;
+            smBin.kDOPTreeME3UDKLE.RootBound.Max[0] = max.X;
+            smBin.kDOPTreeME3UDKLE.RootBound.Max[1] = max.Y;
+            smBin.kDOPTreeME3UDKLE.RootBound.Max[2] = max.Z;
 
             // COMPOSE THE BINARY
             smrd.Elements = [smrd_element];
@@ -262,8 +281,18 @@ namespace MilanShaderHost.LEX
             { 'e', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.6899414f, UV1Y = 0.7817383f, UV2X = 0.85546875f, UV2Y = 0.9970703f }
             },
 
+            // f, g, h - gemini
+            { 'f', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.6899414f, UV1Y = 0f, UV2X = 0.7783203f, UV2Y = 0.21472168f } },
+            { 'g', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.35351562f, UV1Y = 0.39135742f, UV2X = 0.5239258f, UV2Y = 0.60595703f } },
+            { 'h', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0f, UV1Y = 0.21472168f, UV2X = 0.17370605f, UV2Y = 0.4296875f } },
+
             { 'i', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.8598633f, UV1Y = 0f, UV2X = 0.92285156f, UV2Y = 0.21472168f }
             },
+
+            // j, k - gemini
+            { 'j', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.34057617f, UV1Y = 0f, UV2X = 0.43139648f, UV2Y = 0.21472168f } },
+            { 'k', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.45703125f, UV1Y = 0.21472168f, UV2X = 0.61865234f, UV2Y = 0.4296875f } },
+
             { 'l', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.7919922f, UV1Y = 0f, UV2X = 0.8466797f, UV2Y = 0.21472168f }
             },
 
@@ -274,12 +303,28 @@ namespace MilanShaderHost.LEX
             { 'o', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.3786621f, UV1Y = 0.7817383f, UV2X = 0.55322266f, UV2Y = 0.9970703f }
             },
 
+            // p, q - gemini
+            { 'p', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0f, UV1Y = 0.39135742f, UV2X = 0.17675781f, UV2Y = 0.60595703f } },
+            { 'q', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.17675781f, UV1Y = 0.39135742f, UV2X = 0.35351562f, UV2Y = 0.60595703f } },
+
+
             { 'r', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.17370605f, UV1Y = 0.21472168f, UV2X = 0.28979492f, UV2Y = 0.4296875f }
             },
-            { 'u', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.6899414f, UV1Y = 0.7817383f, UV2X = 0.85546875f, UV2Y = 0.9970703f }
-            },
+            // s, t, u - gemini
+            { 's', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.28979492f, UV1Y = 0.21472168f, UV2X = 0.45703125f, UV2Y = 0.4296875f } },
+            { 't', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.60595703f, UV1Y = 0f, UV2X = 0.6899414f, UV2Y = 0.21472168f } },
+            { 'u', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0f, UV1Y = 0.7817383f, UV2X = 0.17382812f, UV2Y = 0.9970703f } },
+
+            // v, w, x - gemini
+            { 'v', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.17382812f, UV1Y = 0.7817383f, UV2X = 0.3786621f, UV2Y = 0.9970703f } },
+            { 'w', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0f, UV1Y = 0.60595703f, UV2X = 0.27441406f, UV2Y = 0.82128906f } },
+            { 'x', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.27441406f, UV1Y = 0.60595703f, UV2X = 0.5f, UV2Y = 0.82128906f } },
+
             { 'y', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.6772461f, UV1Y = 0.39135742f, UV2X = 0.8520508f, UV2Y = 0.60595703f }
             },
+            // z - gemini
+            { 'z', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.6743164f, UV1Y = 0.60595703f, UV2X = 0.84277344f, UV2Y = 0.82128906f } },
+
 
 
             // NUMBERS 
@@ -306,8 +351,26 @@ namespace MilanShaderHost.LEX
             },
 
             // SYMBOLS
-            { '-', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Green, UV1X = 0.7895508f, UV1Y = 0.66796875f, UV2X = 0.86083984f, UV2Y = 0.8198242f }
+            { '-', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.7895508f, UV1Y = 0.66796875f, UV2X = 0.86083984f, UV2Y = 0.8198242f }
             },
+            // Generated by Gemini
+            { '.', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.94140625f, UV1Y = 0.58984375f, UV2X = 0.98535156f, UV2Y = 0.6279297f } },
+            { '!', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.16503906f, UV1Y = 0.6748047f, UV2X = 0.22460938f, UV2Y = 0.8144531f } },
+            { '@', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.22460938f, UV1Y = 0.6689453f, UV2X = 0.38085938f, UV2Y = 0.8125f } },
+            { '$', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.38085938f, UV1Y = 0.6699219f, UV2X = 0.5283203f, UV2Y = 0.8125f } },
+            { '%', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.5341797f, UV1Y = 0.6689453f, UV2X = 0.6904297f, UV2Y = 0.8125f } },
+            { '*', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.69921875f, UV1Y = 0.6748047f, UV2X = 0.78125f, UV2Y = 0.7607422f } },
+            { '+', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.86083984f, UV1Y = 0.68652344f, UV2X = 0.97265625f, UV2Y = 0.79296875f } },
+            { '=', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.17089844f, UV1Y = 0.87109375f, UV2X = 0.2705078f, UV2Y = 0.9423828f } },
+            { '<', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.28515625f, UV1Y = 0.8623047f, UV2X = 0.36035156f, UV2Y = 0.95214844f } },
+            { '/', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.3798828f, UV1Y = 0.8408203f, UV2X = 0.49023438f, UV2Y = 0.99804688f } },
+            { '?', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.50585938f, UV1Y = 0.8359375f, UV2X = 0.6279297f, UV2Y = 0.9824219f } },
+            { ';', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.6484375f, UV1Y = 0.8486328f, UV2X = 0.7001953f, UV2Y = 1.0f } },
+            { ':', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.6904297f, UV1Y = 0.8486328f, UV2X = 0.75f, UV2Y = 0.9824219f } },
+            { '\'', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.75585938f, UV1Y = 0.8486328f, UV2X = 0.7939453f, UV2Y = 0.91601562f } },
+            { '[', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.80664062f, UV1Y = 0.82421875f, UV2X = 0.85253906f, UV2Y = 0.99804688f } },
+            { '|', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.859375f, UV1Y = 0.82421875f, UV2X = 0.8876953f, UV2Y = 0.99804688f } },
+            { '(', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.890625f, UV1Y = 0.82421875f, UV2X = 0.94140625f, UV2Y = 0.99804688f } }
 
         };
 
@@ -375,7 +438,7 @@ namespace MilanShaderHost.LEX
                 if (LayerIndex == EGUIMasterLayer.Red)
                     return new Vector2(0.97558594f, 0.515625f); // R
                 if (LayerIndex == EGUIMasterLayer.Green)
-                    return new Vector2(); // G
+                    return new Vector2(0.97558594f, 0.557f); // G - Y is a guess here.
 
                 // Blue
                 return new Vector2(0.97558594f, 0.608867f); // B
