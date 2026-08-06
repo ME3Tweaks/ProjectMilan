@@ -258,8 +258,10 @@ namespace MilanShaderHost
 
                     if (buildMode == EShaderLevelMode.Preview)
                     {
+                        var tmPos = new Point3D(startPos);
+                        tmPos.X = tmPos.X + 160; // Offset it further cause some materials draw in front weirdly.
                         var textMesh = LevelBuildTools.CreateTextMesh(pMat.FileRef, pMat.ObjectName.Instanced);
-                        var textMA = AddStaticMeshActorForMaterial(pMat, startPos, buildMode == EShaderLevelMode.Preview, textMesh, "Text_", false);
+                        var textMA = AddStaticMeshActorForMaterial(pMat, tmPos, buildMode == EShaderLevelMode.Preview, textMesh, "Text_", false);
                         // Adjust mesh actor positioning once we figure out what we want...
                     }
 
