@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<CoalesceAsset id="BioQA" name="bioqa.ini" source="..\..\biogame\config\bioqa.ini">
+	<Sections>
+		<Section name="iniversion">
+			<Property name="0" type="2">3331523838.000000</Property>
+		</Section>
+		<Section name="sfxqa.bioseqact_isautomated">
+			<Property name="bqaautomation" type="2">0</Property>
+		</Section>
+		<Section name="sfxqa.bioseqact_isperformance">
+			<Property name="bperformance" type="2">0</Property>
+		</Section>
+		<Section name="sfxqa.bioseqact_isqa">
+			<Property name="bqamachine" type="2">0</Property>
+		</Section>
+		<Section name="sfxqa.bioseqact_issplinepilot">
+			<Property name="bsplinepilot" type="2">0</Property>
+		</Section>
+		<Section name="sfxqa.bioseqact_readsplinepilotconsolecommand">
+			<Property name="sconsolecommand" type="2">
+			</Property>
+		</Section>
+	</Sections>
+</CoalesceAsset>
