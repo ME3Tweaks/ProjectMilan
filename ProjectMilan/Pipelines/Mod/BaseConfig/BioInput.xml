@@ -199,15 +199,15 @@
 				<Value type="2">( Name="XboxTypeS_LeftY", Command="Console_Movement" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
-				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Console_Aim" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_Shoot" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_Aim" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_Shoot" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Console_WeaponWheelAndQuickPower1" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Console_PowerWheelAndQuickPower2" )</Value>
-				<Value type="2">( Name="XboxTypeS_A", Command="Console_Action" )</Value>
-				<Value type="2">( Name="XboxTypeS_B", Command="Console_Melee" )</Value>
+				<Value type="2">( Name="XboxTypeS_A", Command="Shared_Action" )</Value>
+				<Value type="2">( Name="XboxTypeS_B", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="XboxTypeS_X", Command="Console_Weapon" )</Value>
-				<Value type="2">( Name="XboxTypeS_Y", Command="Console_ExitAtlas" )</Value>
+				<Value type="2">( Name="XboxTypeS_Y", Command="Shared_ExitAtlas" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Up", Command="Console_SquadAttackAndPower4" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Down", Command="Console_SquadFollowAndPower6" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Left", Command="Console_SquadMove1AndPower7" )</Value>
@@ -216,10 +216,10 @@
 				<Value type="2">( Name="XboxTypeS_RightThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="LeftMouseButton", Command="PC_Shoot" )</Value>
-				<Value type="2">( Name="RightMouseButton", Command="PC_Aim" )</Value>
-				<Value type="2">( Name="SpaceBar",Command="PC_Action")</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
+				<Value type="2">( Name="LeftMouseButton", Command="Shared_Shoot" )</Value>
+				<Value type="2">( Name="RightMouseButton", Command="Shared_Aim" )</Value>
+				<Value type="2">( Name="SpaceBar",Command="Shared_Action")</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="LeftShift", Command="PC_EnterCommandMenu" )</Value>
 			</Property>
 		</Section>
@@ -229,9 +229,9 @@
 				<Value type="2">( Name="D", Command="PC_StrafeRight" )</Value>
 				<Value type="2">( Name="W", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
-				<Value type="2">( Name="F", Command="PC_Melee" )</Value>
+				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="X", Command="PC_ExitAtlas" )</Value>
+				<Value type="2">( Name="X", Command="Shared_ExitAtlas" )</Value>
 				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
 				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
@@ -246,9 +246,9 @@
 				<Value type="2">( Name="D", Command="PC_StrafeRight" )</Value>
 				<Value type="2">( Name="W", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
-				<Value type="2">( Name="F", Command="PC_Melee" )</Value>
+				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="X", Command="PC_ExitAtlas" )</Value>
+				<Value type="2">( Name="X", Command="Shared_ExitAtlas" )</Value>
 				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
 				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
@@ -263,9 +263,9 @@
 				<Value type="2">( Name="D", Command="PC_StrafeRight" )</Value>
 				<Value type="2">( Name="Z", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
-				<Value type="2">( Name="F", Command="PC_Melee" )</Value>
+				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="X", Command="PC_ExitAtlas" )</Value>
+				<Value type="2">( Name="X", Command="Shared_ExitAtlas" )</Value>
 				<Value type="2">( Name="A", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
 				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
@@ -282,12 +282,12 @@
 				<Value type="2">( Name="Console_Strafe", Command="Axis aStrafe Speed=1.0 DeadZone=0.2" )</Value>
 				<Value type="2">( Name="Console_Movement", Command="Axis aBaseY Speed=1.0 DeadZone=0.2" )</Value>
 				<Value type="2">( Name="Console_Movement_Invert", Command="Axis aBaseY Speed=-1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Console_Shoot", Command="SwapWeaponIfEmpty | FireWeapon | OnRelease StopFiringWeapon" )</Value>
-				<Value type="2">( Name="Console_Aim", Command="SwapWeaponIfEmpty | TightAim | OnRelease StopTightAim" )</Value>
+				<Value type="2">( Name="Shared_Shoot", Command="SwapWeaponIfEmpty | FireWeapon | OnRelease StopFiringWeapon" )</Value>
+				<Value type="2">( Name="Shared_Aim", Command="SwapWeaponIfEmpty | TightAim | OnRelease StopTightAim" )</Value>
 				<Value type="2">( Name="Console_WeaponWheelAndQuickPower1", Command="OnTap 0.3 TryUsePower 0 | OnHold 0.3 EnterWeaponWheel" )</Value>
 				<Value type="2">( Name="Console_PowerWheelAndQuickPower2", Command="OnTap 0.3 TryUsePower 1 | OnHold 0.3 EnterPowerWheel" )</Value>
-				<Value type="2">( Name="Console_Action", Command="Exclusive TryStandingJump | Exclusive Used | OnRelease StormOff | OnHold 0.2 StormOn | Exclusive PressAction | OnTap 0.3 TapAction | OnHold 0.3 HoldAction")</Value>
-				<Value type="2">( Name="Console_Melee", Command="OnTap 0.3 TryMelee | LeaveWorld | OnHold 0.3 TryHeavyMelee" )</Value>
+				<Value type="2">( Name="Shared_Action", Command="Exclusive TryStandingJump | Exclusive Used | OnRelease StormOff | OnHold 0.2 StormOn | Exclusive PressAction | OnTap 0.3 TapAction | OnHold 0.3 HoldAction")</Value>
+				<Value type="2">( Name="Shared_Melee", Command="OnTap 0.3 TryMelee | LeaveWorld | OnHold 0.3 TryHeavyMelee" )</Value>
 				<Value type="2">( Name="Console_Weapon", Command="OnTap 0.3 SwapWeaponIfEmpty | OnTap 0.3 TryReload | OnHold 0.3 TrySwapWeapon" )</Value>
 				<Value type="2">( Name="Console_ExitPowerWheel", Command="OnRelease ExitPowerWheel" )</Value>
 				<Value type="2">( Name="Console_ExitWeaponWheel", Command="OnRelease ExitWeaponWheel" )</Value>
@@ -295,36 +295,36 @@
 				<Value type="2">( Name="Console_SquadMove2AndPower5", Command="TryUsePower 4 | SquadCommand_Move2" )</Value>
 				<Value type="2">( Name="Console_SquadFollowAndPower6", Command="TryUsePower 5 | SquadCommand_Follow" )</Value>
 				<Value type="2">( Name="Console_SquadMove1AndPower7", Command="TryUsePower 6 | SquadCommand_Move1" )</Value>
-				<Value type="2">( Name="Console_Menu", Command="ShowMenu" )</Value>
-				<Value type="2">( Name="Console_ConvSelect", Command="SelectResponse" )</Value>
-				<Value type="2">( Name="Console_ConvSkip", Command="SkipConversation" )</Value>
-				<Value type="2">( Name="Console_ConvIntRenegade", Command="InterruptRenegade" )</Value>
-				<Value type="2">( Name="Console_ConvIntParagon", Command="InterruptParagon" )</Value>
-				<Value type="2">( Name="Console_CineSkip", Command="SkipCinematic" )</Value>
-				<Value type="2">( Name="Console_MovieSkip", Command="SkipMovie" )</Value>
+				<Value type="2">( Name="Shared_Menu", Command="ShowMenu" )</Value>
+				<Value type="2">( Name="Shared_ConvSelect", Command="SelectResponse" )</Value>
+				<Value type="2">( Name="Shared_ConvSkip", Command="SkipConversation" )</Value>
+				<Value type="2">( Name="Shared_ConvIntRenegade", Command="InterruptRenegade" )</Value>
+				<Value type="2">( Name="Shared_ConvIntParagon", Command="InterruptParagon" )</Value>
+				<Value type="2">( Name="Shared_CineSkip", Command="SkipCinematic" )</Value>
+				<Value type="2">( Name="Shared_MovieSkip", Command="SkipMovie" )</Value>
 				<Value type="2">( Name="Console_GalaxyToggle", Command="ToggleReticleMode" )</Value>
 				<Value type="2">( Name="Console_BuyFuel", Command="StartFuel|Repeat BuyFuel 0.2|OnRelease StopFuel" )</Value>
-				<Value type="2">( Name="Console_GalaxyScan", Command="StartScanning | OnRelease StopScanning" )</Value>
-				<Value type="2">( Name="Console_GalaxySystemScan", Command="ScanSystem" )</Value>
-				<Value type="2">( Name="Console_GalaxyProbe", Command="LaunchProbe" )</Value>
+				<Value type="2">( Name="Shared_GalaxyScan", Command="StartScanning | OnRelease StopScanning" )</Value>
+				<Value type="2">( Name="Shared_GalaxySystemScan", Command="ScanSystem" )</Value>
+				<Value type="2">( Name="Shared_GalaxyProbe", Command="LaunchProbe" )</Value>
 				<Value type="2">( Name="Console_GalaxyTabRight", Command="TabRight" )</Value>
 				<Value type="2">( Name="Console_GalaxyTabLeft", Command="TabLeft" )</Value>
-				<Value type="2">( Name="Console_ExitAtlas", Command="ExitAtlas" )</Value>
-				<Value type="2">( Name="Console_ExitMountedGun", Command="ExitVehicle" )</Value>
-				<Value type="2">( Name="Console_AdvanceSlideshowForward", Command="SlideshowAdvance true")</Value>
-				<Value type="2">( Name="Console_AdvanceSlideshowBackward", Command="SlideshowAdvance false")</Value>
-				<Value type="2">( Name="Console_ExitSlideshow", Command="SlideshowExit")</Value>
-				<Value type="2">( Name="Console_QuickSave", Command="QuickSave" )</Value>
-				<Value type="2">( Name="Console_MapAndPhotoMode", Command="HideAreaMap" )</Value>
-				<Value type="2">( Name="Console_MPToggleReady", Command="MPToggleReady" )</Value>
-				<Value type="2">( Name="Console_ViewPrevPlayer", Command="viewprevplayer true")</Value>
-				<Value type="2">( Name="Console_ViewNextPlayer", Command="viewnextplayer true")</Value>
+				<Value type="2">( Name="Shared_ExitAtlas", Command="ExitAtlas" )</Value>
+				<Value type="2">( Name="Shared_ExitMountedGun", Command="ExitVehicle" )</Value>
+				<Value type="2">( Name="Shared_AdvanceSlideshowForward", Command="SlideshowAdvance true")</Value>
+				<Value type="2">( Name="Shared_AdvanceSlideshowBackward", Command="SlideshowAdvance false")</Value>
+				<Value type="2">( Name="Shared_ExitSlideshow", Command="SlideshowExit")</Value>
+				<Value type="2">( Name="Shared_QuickSave", Command="QuickSave" )</Value>
+				<Value type="2">( Name="Shared_HideMap", Command="HideAreaMap" )</Value>
+				<Value type="2">( Name="Shared_MPToggleReady", Command="MPToggleReady" )</Value>
+				<Value type="2">( Name="Shared_ViewPrevPlayer", Command="viewprevplayer true")</Value>
+				<Value type="2">( Name="Shared_ViewNextPlayer", Command="viewnextplayer true")</Value>
 				<Value type="2">( Name="Console_UsePower3", Command="OnRelease TryUsePower 2" )</Value>
-				<Value type="2">( Name="Console_NavAssistanceOrCoverTurn", Command="Exclusive TryCoverTurn | Exclusive ActivatePOI | OnRelease DeactivatePOI | ShowAreaMap ")</Value>
-				<Value type="2">( Name="Console_TogglePhotoOptions", Command="ToggleOptions")</Value>
-				<Value type="2">( Name="Console_MoveUp", Command="Axis aUp Speed=1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Console_MoveDown", Command="Axis aUp Speed=-1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Console_Screenshot", Command="TakePhoto" )</Value>
+				<Value type="2">( Name="Console_NavAssistanceOrCoverTurn", Command="Exclusive TryCoverTurn | Exclusive ActivatePOI | OnRelease DeactivatePOI | ShowAreaMap " )</Value>
+				<Value type="2">( Name="Shared_TogglePhotoOptions", Command="ToggleOptions")</Value>
+				<Value type="2">( Name="Shared_MoveUp", Command="Axis aUp Speed=1.0 DeadZone=0.2" )</Value>
+				<Value type="2">( Name="Shared_MoveDown", Command="Axis aUp Speed=-1.0 DeadZone=0.2" )</Value>
+				<Value type="2">( Name="Shared_Screenshot", Command="TakePhoto" )</Value>
 				<Value type="2">( Name="Console_PhotoStrafe", Command="Axis aStrafe Speed=1.0 DeadZone=0.1" )</Value>
 				<Value type="2">( Name="Console_PhotoMovement", Command="Axis aBaseY Speed=1.0 DeadZone=0.1" )</Value>
 				<Value type="2">( Name="PC_LookX", Command="Count bXAxis | Axis aMouseX" )</Value>
@@ -333,10 +333,6 @@
 				<Value type="2">( Name="PC_StrafeRight", Command="Axis aStrafe Speed=+1.0" )</Value>
 				<Value type="2">( Name="PC_MoveForward", Command="Axis aBaseY Speed=1.0" )</Value>
 				<Value type="2">( Name="PC_MoveBackward", Command="Axis aBaseY Speed=-1.0" )</Value>
-				<Value type="2">( Name="PC_Shoot", Command="SwapWeaponIfEmpty | FireWeapon | OnRelease StopFiringWeapon")</Value>
-				<Value type="2">( Name="PC_Aim", Command="SwapWeaponIfEmpty | TightAim | OnRelease StopTightAim" )</Value>
-				<Value type="2">( Name="PC_Action", Command="Exclusive TryStandingJump | Exclusive Used | OnRelease StormOff | OnHold 0.2 StormOn | Exclusive PressAction | OnTap 0.3 TapAction | OnHold 0.3 HoldAction")</Value>
-				<Value type="2">( Name="PC_Melee", Command="OnTap 0.3 TryMelee | LeaveWorld | OnHold 0.3 TryHeavyMelee" )</Value>
 				<Value type="2">( Name="PC_SwapWeapon", Command="TrySwapWeapon" )</Value>
 				<Value type="2">( Name="PC_Reload", Command="SwapWeaponIfEmpty | TryReload" )</Value>
 				<Value type="2">( Name="PC_EnterCommandMenu", Command="EnterCommandMenu" )</Value>
@@ -346,29 +342,12 @@
 				<Value type="2">( Name="PC_SquadFollow", Command="SquadCommand_Follow" )</Value>
 				<Value type="2">( Name="PC_SquadMove1", Command="SquadCommand_Move1" )</Value>
 				<Value type="2">( Name="PC_SquadMove2", Command="SquadCommand_Move2" )</Value>
-				<Value type="2">( Name="PC_Menu", Command="ShowMenu" )</Value>
-				<Value type="2">( Name="PC_ConvSelect", Command="SelectResponse" )</Value>
-				<Value type="2">( Name="PC_ConvSkip", Command="SkipConversation" )</Value>
 				<Value type="2">( Name="PC_ConvHilight", Command="HighlightDefaultResponse" )</Value>
-				<Value type="2">( Name="PC_ConvIntRenegade", Command="InterruptRenegade" )</Value>
-				<Value type="2">( Name="PC_ConvIntParagon", Command="InterruptParagon" )</Value>
-				<Value type="2">( Name="PC_CineSkip", Command="SkipCinematic" )</Value>
-				<Value type="2">( Name="PC_MovieSkip", Command="SkipMovie" )</Value>
 				<Value type="2">( Name="PC_GalaxyMouseStrafe", Command="Axis aMouseX BIOGUI_EVENT_AXIS_MOUSE_X" )</Value>
 				<Value type="2">( Name="PC_GalaxyMouseMovement", Command="Axis aMouseY BIOGUI_EVENT_AXIS_MOUSE_Y" )</Value>
 				<Value type="2">( Name="PC_GalaxyKeyRotateLeft", Command="Repeat PlanetLeftRight 0.5" )</Value>
 				<Value type="2">( Name="PC_GalaxyKeyRotateRight", Command="Repeat PlanetLeftRight -0.5" )</Value>
-				<Value type="2">( Name="PC_GalaxyScan", Command="StartScanning | OnRelease StopScanning" )</Value>
-				<Value type="2">( Name="PC_GalaxySystemScan", Command="ScanSystem" )</Value>
-				<Value type="2">( Name="PC_GalaxyProbe", Command="LaunchProbe" )</Value>
-				<Value type="2">( Name="PC_ExitAtlas", Command="ExitAtlas" )</Value>
-				<Value type="2">( Name="PC_ExitMountedGun", Command="ExitVehicle" )</Value>
-				<Value type="2">( Name="PC_AdvanceSlideshowForward", Command="SlideshowAdvance true")</Value>
-				<Value type="2">( Name="PC_AdvanceSlideshowBackward", Command="SlideshowAdvance false")</Value>
-				<Value type="2">( Name="PC_ExitSlideshow", Command="SlideshowExit")</Value>
-				<Value type="2">( Name="PC_QuickSave", Command="QuickSave" )</Value>
 				<Value type="2">( Name="PC_QuickLoad", Command="QuickLoad" )</Value>
-				<Value type="2">( Name="PC_MPToggleReady", Command="MPToggleReady" )</Value>
 				<Value type="2">( Name="PC_NextWeapon", Command="NextWeapon" )</Value>
 				<Value type="2">( Name="PC_PrevWeapon", Command="PrevWeapon" )</Value>
 				<Value type="2">( Name="PC_HotKey1", Command="UseAbility 0" )</Value>
@@ -379,18 +358,11 @@
 				<Value type="2">( Name="PC_HotKey6", Command="UseAbility 5" )</Value>
 				<Value type="2">( Name="PC_HotKey7", Command="UseAbility 6" )</Value>
 				<Value type="2">( Name="PC_HotKey8", Command="UseAbility 7" )</Value>
-				<Value type="2">( Name="PC_ShowMap", Command="Exclusive ActivatePOI | OnRelease DeactivatePOI | OnTap 0.2 ShowAreaMap | OnHold 0.2 HoldObjectiveDisplay | OnRelease StopObjectiveDisplay ")</Value>
-				<Value type="2">( Name="PC_HideMap", Command="HideAreaMap" )</Value>
+				<Value type="2">( Name="PC_ShowMap", Command="Exclusive ActivatePOI | OnRelease DeactivatePOI | OnTap 0.2 ShowAreaMap | OnHold 0.2 HoldObjectiveDisplay | OnRelease StopObjectiveDisplay " )</Value>
 				<Value type="2">( Name="PC_CoverTurn", Command="TryCoverTurn" )</Value>
 				<Value type="2">( Name="Walking", Command="EnableWalking | OnRelease DisableWalking" )</Value>
 				<Value type="2">( Name="PC_PushToTalk", Command="VoicePushToTalkStart | OnRelease VoicePushToTalkEnd" )</Value>
-				<Value type="2">( Name="PC_ViewPrevPlayer", Command="viewprevplayer true")</Value>
-				<Value type="2">( Name="PC_ViewNextPlayer", Command="viewnextplayer true")</Value>
 				<Value type="2">( Name="PC_TogglePhotoCamera", Command="EnableCamera | OnRelease DisableCamera" )</Value>
-				<Value type="2">( Name="PC_TogglePhotoOptions", Command="ToggleOptions")</Value>
-				<Value type="2">( Name="PC_MoveUp", Command="Axis aUp Speed=1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="PC_MoveDown", Command="Axis aUp Speed=-1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="PC_Screenshot", Command="TakePhoto" )</Value>
 				<Value type="2">( Name="PC_GUIControlUp", Command="Repeat GuiKey BIOGUI_EVENT_CONTROL_UP | OnRelease GuiKey BIOGUI_EVENT_CONTROL_UP_RELEASE")</Value>
 				<Value type="2">( Name="PC_GUIControlDown", Command="Repeat GuiKey BIOGUI_EVENT_CONTROL_DOWN | OnRelease GuiKey BIOGUI_EVENT_CONTROL_DOWN_RELEASE")</Value>
 				<Value type="2">( Name="PC_GUIControlLeft", Command="Repeat GuiKey BIOGUI_EVENT_CONTROL_LEFT | OnRelease GuiKey BIOGUI_EVENT_CONTROL_LEFT_RELEASE")</Value>
@@ -414,16 +386,16 @@
 		</Section>
 		<Section name="sfxgame.sfxgamemodecinematic">
 			<Property name="bindings">
-				<Value type="2">( Name="XboxTypeS_X", Command="Console_CineSkip" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="PC_CineSkip" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_CineSkip" )</Value>
+				<Value type="2">( Name="XboxTypeS_X", Command="Shared_CineSkip" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_CineSkip" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_CineSkip" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodecommand">
 			<Property name="bindings">
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="RightMouseButton", Command="PC_CommandToggleCam" )</Value>
 				<Value type="2">( Name="LeftShift", Command="PC_ExitCommandMenu" )</Value>
 			</Property>
@@ -454,13 +426,13 @@
 		</Section>
 		<Section name="sfxgame.sfxgamemodeconversation">
 			<Property name="bindings">
-				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Console_ConvIntParagon" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_ConvIntRenegade" )</Value>
-				<Value type="2">( Name="XboxTypeS_A", Command="Console_ConvSelect" )</Value>
-				<Value type="2">( Name="XboxTypeS_X", Command="Console_ConvSkip" )</Value>
-				<Value type="2">( Name="LeftMouseButton",Command="PC_ConvSelect | PC_ConvIntRenegade")</Value>
-				<Value type="2">( Name="RightMouseButton",Command="PC_ConvHilight | PC_ConvIntParagon")</Value>
-				<Value type="2">( Name="SpaceBar",Command="PC_ConvSkip")</Value>
+				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_ConvIntParagon" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_ConvIntRenegade" )</Value>
+				<Value type="2">( Name="XboxTypeS_A", Command="Shared_ConvSelect" )</Value>
+				<Value type="2">( Name="XboxTypeS_X", Command="Shared_ConvSkip" )</Value>
+				<Value type="2">( Name="LeftMouseButton",Command="Shared_ConvSelect | Shared_ConvIntRenegade")</Value>
+				<Value type="2">( Name="RightMouseButton",Command="PC_ConvHilight | Shared_ConvIntParagon")</Value>
+				<Value type="2">( Name="SpaceBar",Command="Shared_ConvSkip")</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodedefault">
@@ -469,14 +441,14 @@
 				<Value type="2">( Name="XboxTypeS_LeftY", Command="Console_Movement" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Console_Aim" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_Shoot" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_Aim" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_Shoot" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Console_WeaponWheelAndQuickPower1" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Console_PowerWheelAndQuickPower2" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
-				<Value type="2">( Name="XboxTypeS_Back", Command="Console_QuickSave" )</Value>
-				<Value type="2">( Name="XboxTypeS_A", Command="Console_Action" )</Value>
-				<Value type="2">( Name="XboxTypeS_B", Command="Console_Melee" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_Back", Command="Shared_QuickSave" )</Value>
+				<Value type="2">( Name="XboxTypeS_A", Command="Shared_Action" )</Value>
+				<Value type="2">( Name="XboxTypeS_B", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="XboxTypeS_X", Command="Console_Weapon" )</Value>
 				<Value type="2">( Name="XboxTypeS_Y", Command="Console_UsePower3" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Up", Command="Console_SquadAttackAndPower4" )</Value>
@@ -486,14 +458,14 @@
 				<Value type="2">( Name="XboxTypeS_LeftThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
 				<Value type="2">( Name="LeftControl", Command="Walking" )</Value>
-				<Value type="2">( Name="LeftMouseButton", Command="PC_Shoot" )</Value>
-				<Value type="2">( Name="RightMouseButton", Command="PC_Aim" )</Value>
+				<Value type="2">( Name="LeftMouseButton", Command="Shared_Shoot" )</Value>
+				<Value type="2">( Name="RightMouseButton", Command="Shared_Aim" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="PC_Action" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_Action" )</Value>
 				<Value type="2">( Name="MouseScrollUp", Command="PC_PrevWeapon" )</Value>
 				<Value type="2">( Name="MouseScrollDown",\tCommand="PC_NextWeapon" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="One", Command="PC_HotKey1" )</Value>
 				<Value type="2">( Name="Two", Command="PC_HotKey2" )</Value>
 				<Value type="2">( Name="Three", Command="PC_HotKey3" )</Value>
@@ -502,7 +474,7 @@
 				<Value type="2">( Name="Six", Command="PC_HotKey6" )</Value>
 				<Value type="2">( Name="Seven", Command="PC_HotKey7" )</Value>
 				<Value type="2">( Name="Eight", Command="PC_HotKey8" )</Value>
-				<Value type="2">( Name="F5", Command="PC_QuickSave" )</Value>
+				<Value type="2">( Name="F5", Command="Shared_QuickSave" )</Value>
 				<Value type="2">( Name="F9", Command="PC_QuickLoad" )</Value>
 				<Value type="2">( Name="LeftShift", Command="PC_EnterCommandMenu" )</Value>
 				<Value type="2">( Name="MiddleMouseButton", Command="PC_CoverTurn" )</Value>
@@ -518,7 +490,7 @@
 				<Value type="2">( Name="W", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="F", Command="PC_Melee" )</Value>
+				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="X", Command="PC_SwapWeapon" )</Value>
 				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
@@ -537,7 +509,7 @@
 				<Value type="2">( Name="W", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="F", Command="PC_Melee" )</Value>
+				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="X", Command="PC_SwapWeapon" )</Value>
 				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
@@ -556,7 +528,7 @@
 				<Value type="2">( Name="Z", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="F", Command="PC_Melee" )</Value>
+				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="X", Command="PC_SwapWeapon" )</Value>
 				<Value type="2">( Name="A", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
@@ -574,10 +546,10 @@
 				<Value type="2">( Name="XboxTypeS_LeftY", Command="Console_Movement" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodedreamsequence_00000407">
@@ -608,12 +580,12 @@
 			<Property name="bindings">
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="XboxTypeS_A", Command="ProlongLife" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Down", Command="UseRevivePower" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="SpaceBar", Command="ProlongLife" )</Value>
 				<Value type="2">( Name="Seven", Command="UseRevivePower" )</Value>
 				<Value type="2">( Name="Tab", Command="PC_PushToTalk" )</Value>
@@ -646,13 +618,13 @@
 				<Value type="2">( Name="XboxTypeS_LeftY", Command="Console_Movement" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Console_ViewPrevPlayer" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Console_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="PC_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="MouseScrollUp", Command="PC_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="MouseScrollDown", Command="PC_ViewPrevPlayer" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Shared_ViewPrevPlayer" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="MouseScrollUp", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="MouseScrollDown", Command="Shared_ViewPrevPlayer" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
 				<Value type="2">( Name="A", Command="PC_StrafeLeft" )</Value>
@@ -666,24 +638,24 @@
 				<Value type="2">( Name="XboxTypeS_A", Command="Console_BuyFuel" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Console_GalaxyTabLeft")</Value>
 				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Console_GalaxyTabRight")</Value>
-				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Console_GalaxySystemScan" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_GalaxySystemScan" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_GalaxyMouseStrafe" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_GalaxyMouseMovement" )</Value>
-				<Value type="2">( Name="RightMouseButton", Command="PC_GalaxySystemScan" )</Value>
+				<Value type="2">( Name="RightMouseButton", Command="Shared_GalaxySystemScan" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodegui">
 			<Property name="bindings">
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_MPToggleReady" )</Value>
-				<Value type="2">( Name="XboxTypeS_B", Command="Console_ExitSlideshow" )</Value>
-				<Value type="2">( Name="XboxTypeS_Y", Command="Console_MapAndPhotoMode" )</Value>
-				<Value type="2">( Name="XboxTypeS_DPad_Left", Command="Console_AdvanceSlideshowBackward" )</Value>
-				<Value type="2">( Name="XboxTypeS_DPad_Right", Command="Console_AdvanceSlideshowForward" )</Value>
-				<Value type="2">( Name="Left", Command="PC_AdvanceSlideshowBackward" )</Value>
-				<Value type="2">( Name="Right", Command="PC_AdvanceSlideshowForward" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_ExitSlideshow" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_MPToggleReady" )</Value>
+				<Value type="2">( Name="XboxTypeS_B", Command="Shared_ExitSlideshow" )</Value>
+				<Value type="2">( Name="XboxTypeS_Y", Command="Shared_HideMap" )</Value>
+				<Value type="2">( Name="XboxTypeS_DPad_Left", Command="Shared_AdvanceSlideshowBackward" )</Value>
+				<Value type="2">( Name="XboxTypeS_DPad_Right", Command="Shared_AdvanceSlideshowForward" )</Value>
+				<Value type="2">( Name="Left", Command="Shared_AdvanceSlideshowBackward" )</Value>
+				<Value type="2">( Name="Right", Command="Shared_AdvanceSlideshowForward" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_ExitSlideshow" )</Value>
 				<Value type="2">( Name="Tab", Command="PC_PushToTalk" )</Value>
-				<Value type="2">( Name="Spacebar", Command="PC_MPToggleReady" )</Value>
+				<Value type="2">( Name="Spacebar", Command="Shared_MPToggleReady" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodegui_00000407">
@@ -700,8 +672,8 @@
 		</Section>
 		<Section name="sfxgame.sfxgamemodegui_00000409">
 			<Property name="localizedbindings">
-				<Value type="2">( Name="V", Command="PC_HideMap" )</Value>
-				<Value type="2">( Name="M", Command="PC_HideMap" )</Value>
+				<Value type="2">( Name="V", Command="Shared_HideMap" )</Value>
+				<Value type="2">( Name="M", Command="Shared_HideMap" )</Value>
 				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
 				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 				<Value type="2">( Name="A", Command="PC_GUIControlLeft" )</Value>
@@ -716,8 +688,8 @@
 				<Value type="2">( Name="D", Command="PC_GUIControlRight" )</Value>
 				<Value type="2">( Name="Z", Command="PC_GUIControlUp" )</Value>
 				<Value type="2">( Name="S", Command="PC_GUIControlDown" )</Value>
-				<Value type="2">( Name="V", Command="PC_HideMap" )</Value>
-				<Value type="2">( Name="M", Command="PC_HideMap" )</Value>
+				<Value type="2">( Name="V", Command="Shared_HideMap" )</Value>
+				<Value type="2">( Name="M", Command="Shared_HideMap" )</Value>
 				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
 				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 			</Property>
@@ -726,12 +698,12 @@
 			<Property name="bindings">
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX | Repeat UpdateInput" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_Shoot" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_Shoot" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX | Repeat UpdateInput" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="LeftMouseButton", Command="PC_Shoot" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
+				<Value type="2">( Name="LeftMouseButton", Command="Shared_Shoot" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodeinjuredshepard">
@@ -740,21 +712,21 @@
 				<Value type="2">( Name="XboxTypeS_LeftY", Command="Console_Movement" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Console_Aim" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_Shoot" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
-				<Value type="2">( Name="XboxTypeS_Back", Command="Console_QuickSave" )</Value>
-				<Value type="2">( Name="XboxTypeS_A", Command="Console_Action" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_Aim" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_Shoot" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_Back", Command="Shared_QuickSave" )</Value>
+				<Value type="2">( Name="XboxTypeS_A", Command="Shared_Action" )</Value>
 				<Value type="2">( Name="XboxTypeS_X", Command="Console_Weapon" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="LeftMouseButton", Command="PC_Shoot" )</Value>
-				<Value type="2">( Name="RightMouseButton", Command="PC_Aim" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="PC_Action" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
-				<Value type="2">( Name="F5", Command="PC_QuickSave" )</Value>
+				<Value type="2">( Name="LeftMouseButton", Command="Shared_Shoot" )</Value>
+				<Value type="2">( Name="RightMouseButton", Command="Shared_Aim" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_Action" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="F5", Command="Shared_QuickSave" )</Value>
 				<Value type="2">( Name="F9", Command="PC_QuickLoad" )</Value>
 			</Property>
 			<Property name="inputdelaytightaimexit" type="2">0.1</Property>
@@ -794,9 +766,9 @@
 		</Section>
 		<Section name="sfxgame.sfxgamemodelobby">
 			<Property name="bindings">
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_MPToggleReady" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_MPToggleReady" )</Value>
 				<Value type="2">( Name="Tab", Command="PC_PushToTalk" )</Value>
-				<Value type="2">( Name="Spacebar", Command="PC_MPToggleReady" )</Value>
+				<Value type="2">( Name="Spacebar", Command="Shared_MPToggleReady" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodelobby_00000407">
@@ -819,9 +791,9 @@
 		</Section>
 		<Section name="sfxgame.sfxgamemodemovie">
 			<Property name="bindings">
-				<Value type="2">( Name="XboxTypeS_X", Command="Console_MovieSkip" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="PC_MovieSkip" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_MovieSkip" )</Value>
+				<Value type="2">( Name="XboxTypeS_X", Command="Shared_MovieSkip" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_MovieSkip" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_MovieSkip" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodemultiland">
@@ -835,13 +807,13 @@
 		</Section>
 		<Section name="sfxgame.sfxgamemodeorbital">
 			<Property name="bindings">
-				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Console_GalaxyScan" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_GalaxyProbe" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_GalaxyScan" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_GalaxyProbe" )</Value>
 				<Value type="2">( Name="XboxTypeS_Back", Command="Console_GalaxyToggle" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_GalaxyMouseStrafe" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_GalaxyMouseMovement" )</Value>
-				<Value type="2">( Name="RightMouseButton", Command="PC_GalaxyScan" )</Value>
-				<Value type="2">( Name="LeftMouseButton", Command="PC_GalaxyProbe" )</Value>
+				<Value type="2">( Name="RightMouseButton", Command="Shared_GalaxyScan" )</Value>
+				<Value type="2">( Name="LeftMouseButton", Command="Shared_GalaxyProbe" )</Value>
 			</Property>
 			<Property name="controllerinputattenuation" type="2">0.50</Property>
 			<Property name="inputattenuation" type="2">0.05</Property>
@@ -878,18 +850,18 @@
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftX", Command="Console_PhotoStrafe" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftY", Command="Console_PhotoMovement" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_MoveUp" )</Value>
-				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Console_MoveDown" )</Value>
-				<Value type="2">( Name="XboxTypeS_X", Command="Console_Screenshot" )</Value>
-				<Value type="2">( Name="XboxTypeS_B", Command="Console_TogglePhotoOptions" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_MoveUp" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_MoveDown" )</Value>
+				<Value type="2">( Name="XboxTypeS_X", Command="Shared_Screenshot" )</Value>
+				<Value type="2">( Name="XboxTypeS_B", Command="Shared_TogglePhotoOptions" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
 				<Value type="2">( Name="RightMouseButton", Command="PC_TogglePhotoCamera" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="PC_Screenshot" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
-				<Value type="2">( Name="Tab", Command="PC_TogglePhotoOptions" )</Value>
-				<Value type="2">( Name="LeftShift", Command="PC_TogglePhotoOptions" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_Screenshot" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="Tab", Command="Shared_TogglePhotoOptions" )</Value>
+				<Value type="2">( Name="LeftShift", Command="Shared_TogglePhotoOptions" )</Value>
 			</Property>
 			<Property name="buttoncooldowncurve" type="2">(Points=( (InVal=0.0,OutVal=0.35),(InVal=0.35,OutVal=0.1),(InVal=1.0,OutVal=0.1),(InVal=4.0,OutVal=0.012) ))</Property>
 			<Property name="charactermeshfilter">
@@ -965,8 +937,8 @@
 				<Value type="2">( Name="D", Command="PC_StrafeRight" )</Value>
 				<Value type="2">( Name="W", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
-				<Value type="2">( Name="Q", Command="PC_MoveDown" )</Value>
-				<Value type="2">( Name="E", Command="PC_MoveUp" )</Value>
+				<Value type="2">( Name="Q", Command="Shared_MoveDown" )</Value>
+				<Value type="2">( Name="E", Command="Shared_MoveUp" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodephoto_00000409">
@@ -975,8 +947,8 @@
 				<Value type="2">( Name="D", Command="PC_StrafeRight" )</Value>
 				<Value type="2">( Name="W", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
-				<Value type="2">( Name="Q", Command="PC_MoveDown" )</Value>
-				<Value type="2">( Name="E", Command="PC_MoveUp" )</Value>
+				<Value type="2">( Name="Q", Command="Shared_MoveDown" )</Value>
+				<Value type="2">( Name="E", Command="Shared_MoveUp" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodephoto_0000040c">
@@ -985,8 +957,8 @@
 				<Value type="2">( Name="D", Command="PC_StrafeRight" )</Value>
 				<Value type="2">( Name="Z", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
-				<Value type="2">( Name="A", Command="PC_MoveDown" )</Value>
-				<Value type="2">( Name="E", Command="PC_MoveUp" )</Value>
+				<Value type="2">( Name="A", Command="Shared_MoveDown" )</Value>
+				<Value type="2">( Name="E", Command="Shared_MoveUp" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodepowerwheel">
@@ -994,7 +966,7 @@
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Console_ExitPowerWheel" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Up", Command="Console_SquadAttackAndPower4" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Down", Command="Console_SquadFollowAndPower6" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Left", Command="Console_SquadMove1AndPower7" )</Value>
@@ -1042,13 +1014,13 @@
 			<Property name="bindings">
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Console_ViewPrevPlayer" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Console_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="PC_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="MouseScrollUp", Command="PC_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="MouseScrollDown", Command="PC_ViewPrevPlayer" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Shared_ViewPrevPlayer" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="MouseScrollUp", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="MouseScrollDown", Command="Shared_ViewPrevPlayer" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
 				<Value type="2">( Name="Tab", Command="PC_PushToTalk" )</Value>
@@ -1078,24 +1050,24 @@
 				<Value type="2">( Name="XboxTypeS_LeftY", Command="Console_Movement" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Console_Aim" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Console_Shoot" )</Value>
+				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_Aim" )</Value>
+				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_Shoot" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Console_WeaponWheelAndQuickPower1" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Console_PowerWheelAndQuickPower2" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="XboxTypeS_X", Command="Console_Weapon" )</Value>
-				<Value type="2">( Name="XboxTypeS_Y", Command="Console_ExitMountedGun" )</Value>
+				<Value type="2">( Name="XboxTypeS_Y", Command="Shared_ExitMountedGun" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Up", Command="Console_SquadAttackAndPower4" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Down", Command="Console_SquadFollowAndPower6" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Left", Command="Console_SquadMove1AndPower7" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Right", Command="Console_SquadMove2AndPower5" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
-				<Value type="2">( Name="LeftMouseButton", Command="PC_Shoot" )</Value>
-				<Value type="2">( Name="RightMouseButton", Command="PC_Aim" )</Value>
+				<Value type="2">( Name="LeftMouseButton", Command="Shared_Shoot" )</Value>
+				<Value type="2">( Name="RightMouseButton", Command="Shared_Aim" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="Escape", Command="PC_Menu" )</Value>
+				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodevehicle_00000407">
@@ -1105,7 +1077,7 @@
 				<Value type="2">( Name="W", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="X", Command="PC_ExitMountedGun" )</Value>
+				<Value type="2">( Name="X", Command="Shared_ExitMountedGun" )</Value>
 				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
 				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
@@ -1121,7 +1093,7 @@
 				<Value type="2">( Name="W", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="X", Command="PC_ExitMountedGun" )</Value>
+				<Value type="2">( Name="X", Command="Shared_ExitMountedGun" )</Value>
 				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
 				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
@@ -1137,7 +1109,7 @@
 				<Value type="2">( Name="Z", Command="PC_MoveForward" )</Value>
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
-				<Value type="2">( Name="X", Command="PC_ExitMountedGun" )</Value>
+				<Value type="2">( Name="X", Command="Shared_ExitMountedGun" )</Value>
 				<Value type="2">( Name="A", Command="PC_SquadMove1" )</Value>
 				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
 				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
@@ -1151,7 +1123,7 @@
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Console_ExitWeaponWheel" )</Value>
-				<Value type="2">( Name="XboxTypeS_Start", Command="Console_Menu" )</Value>
+				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Up", Command="Console_SquadAttackAndPower4" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Down", Command="Console_SquadFollowAndPower6" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Left", Command="Console_SquadMove1AndPower7" )</Value>
