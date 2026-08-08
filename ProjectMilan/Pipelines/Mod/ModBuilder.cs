@@ -52,7 +52,12 @@ namespace ProjectMilan.Pipelines.Mod
                 huff.SaveToFile(Path.Combine(outDir, Path.GetFileNameWithoutExtension(tlkXml) + ".tlk"));
             }
 
-            // Compile Coalesced file
+            // Compile Coalesced file - goes into BASEGAME folder of mod manager mod
+            var baseOutDir = Directory.CreateDirectory(Path.Combine(Program.Settings.OutputModPath, @"..", @"BASEGAME", @"CookedPCConsole")).FullName;
+            var manifest = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"BaseConfig", $@"Coalesced.xml");
+            var dest = Path.Combine(baseOutDir, $@"Coalesced.bin");
+            MilanLog.Information($"Compiling Coalesced.bin", customPrefix: LOG_CATEGORY);
+            CoalescedConverter.ConvertToBin(manifest, dest);
 
             // Some notes on multiplayer config files from ME3.
             // Config files mounted in specific order:
