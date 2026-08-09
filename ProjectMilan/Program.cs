@@ -13,7 +13,6 @@ using ProjectMilan.Pipelines.Finalize;
 using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
-using ProjectMilan.Pipelines.Materials;
 using ProjectMilan.Pipelines.Mod;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
@@ -63,7 +62,7 @@ namespace ProjectMilan
         {
 #if DEBUG
             // Change to true to run the research() method, for quick research tasks. Like LEX experiments.
-            bool researchMode = true;
+            bool researchMode = obj.ResearchMode;
 #else
             // DO NOT CHANGE.
             bool researchMode = false;
@@ -210,16 +209,12 @@ namespace ProjectMilan
 
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
-            RunPipeline(Settings.RunDonorBuildPipeline, DonorBuilderPipeline.RunPipeline, "DonorBuild");
-            DonorBuilderPipeline.InventoryDonorPackages(); // This is outside of the RunPipeline because if you skip this pipeline, this will make it so it properly ports donors 
 
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
             RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
 
         postMpCommon:
             // Content build pipelines
-            // This should not be required anymore
-            DonorBuilderPipeline.InventoryDonorPackages(); // This is outside of the RunPipeline because if you skip this pipeline, this will make it so it properly ports donors 
 
             if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath)) // These require BIOP_MP_COMMON
                 return;
@@ -342,17 +337,20 @@ namespace ProjectMilan
         {
 #if TRUE || DEBUG
             // Put your method in Research class and call it here.
+            //Research.CopyPreview2();
+            //return;
 
-            Research.InstallCompiledShaders();
+            Research.InstallCompiledShaders();// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
             return;
 
-            Research.GetMissingShaderPackages(@"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels\BioP_MPOcean");
-            return;
-            Research.SlashShaderCache(MEGame.LE3);
-            return;
-            Research.TestSFARTextureDecompression();
-            return;
-            Research.GenerateLightingForLevel();
+            //Research.GetMissingShaderPackages(@"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels");
+            //return;
+            //Research.SlashShaderCache(MEGame.LE3);
+            //return;
+            //Research.TestSFARTextureDecompression();
+            //return;
+            //Research.GenerateLightingForLevel();
+            //return;
             // Research.ImportStaticLightingForLevel();
             return;
             // Research.TestTextureToInstancesMap();
