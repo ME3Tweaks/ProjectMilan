@@ -75,6 +75,9 @@ namespace MilanShaderHost
 
         static void SetupHLSLDumpFlow()
         {
+            // Check that the ShaderClient is installed
+            // If it isn't installed the game simply crashes out on startup.
+
             foreach (var folder in MilanShaderPackageBuilder.SourceFolders)
             {
                 var files = Directory.GetFiles(folder);
@@ -164,6 +167,23 @@ namespace MilanShaderHost
                 var level = package.GetLevelBinary();
                 level.GameSequences = [portedSeq.UIndex];
                 package.GetLevel().WriteBinary(level);
+            }
+
+            // Remove unused mips
+            if (true)
+            {
+                foreach (var tex in package.Exports.Where(x => x.IsTexture()))
+                {
+                    var t2d = (UTexture2D)ObjectBinary.From(tex);
+                    t2d.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty); // Remove empty mips
+                    tex.WriteBinary(t2d);
+                    
+                    /*if (numRemoved > 0)
+                    {
+                        Console.WriteLine($"Removed {numRemoved} empty mips from {tex.InstancedFullPath}");
+                        tex.WriteBinary(bin);
+                    }*/
+                }
             }
 
             return new PreparedLevel { TransientPackage = localTransient, MapPackage = package };
@@ -418,8 +438,10 @@ namespace MilanShaderHost
                 bootArg += " -SendDebugPackages";
             }
 
-            var process = Process.Start(MEDirectories.GetExecutablePath(Game), $"{bootArg} -NOHOMEDIR");
+            var processPath = MEDirectories.GetExecutablePath(Game);
+            var process = Process.Start(processPath, $"{bootArg} -NOHOMEDIR");
             process.WaitForExit();
+            Console.WriteLine($"Game exited with code {process.ExitCode}");
         }
 
         private static string GetMapName(EShaderLevelMode buildMode)
