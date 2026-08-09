@@ -74,9 +74,8 @@ namespace ProjectMilan.Pipelines.Kits
 
             // Before we port object referencer, we port loose classes found in the package from our catalog of classes
             // This way we can pre-apply fixes in source rather than in post which makes for a cleaner build
-            MilanShared.PrePortClasses(kitSourcePackage, kitSourcePackage, kitPipeline.Cache, kitPipeline.LogCategory, DonorBuilderPipeline.MaterialDonorImporter);
-
-            MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory, DonorBuilderPipeline.MaterialDonorImporter);
+            MilanShared.PrePortClasses(kitSourcePackage, kitSourcePackage, kitPipeline.Cache, kitPipeline.LogCategory);
+            MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory);
             MilanShared.PortLocalizations(kitPipeline.PackageName, outputPath, kitPipeline.Cache, kitPipeline.LogCategory);
 
             kitPipeline.Cache.Dispose();

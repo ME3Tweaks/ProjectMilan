@@ -10,7 +10,6 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPGeth
 {
     internal class MPGethSpecific
     {
-        // Condor ammo boxes don't have the correct respawn time set which makes it SUCK to get ammo
         public static void PreCorrect(LevelSpecificPipeline pipeline)
         {
             // Fix Dread walkway 04 not having a rigid body by porting one from identical mesh in SP.

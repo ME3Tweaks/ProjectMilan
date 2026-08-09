@@ -21,6 +21,7 @@
     <Folder Include="Pipelines\Levels\BioP_MPHosp\" />
     <Folder Include="Pipelines\Levels\BioP_MPThes\Donors\" />
     <Folder Include="Pipelines\Mod\Live\" />
+    <Folder Include="Pipelines\Mod\BaseConfig\" />
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
@@ -59,12 +60,4 @@
     <ProjectReference Include="..\ProjectMilan_ExtraContent\ProjectMilan_ExtraContent.csproj" />
     <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
   </ItemGroup>
-
-	<ItemGroup>
-		<!-- HLSL compiler-->
-		<ContentWithTargetPath Include="Pipelines\Materials\Shaders\RenderDocTool\d3dcompiler_47.dll">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-			<TargetPath>d3dcompiler_47.dll</TargetPath>
-		</ContentWithTargetPath>
-	</ItemGroup>
 </Project>

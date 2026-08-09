@@ -5,7 +5,6 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using Newtonsoft.Json;
-using ProjectMilan.Pipelines.Materials;
 using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Utility;
 using ProjectMilanCore;

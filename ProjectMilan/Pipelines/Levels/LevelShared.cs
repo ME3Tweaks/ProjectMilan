@@ -8,7 +8,6 @@ using LegendaryExplorerCore.UDK;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
-using ProjectMilan.Pipelines.Materials;
 using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Levels
@@ -87,7 +86,6 @@ namespace ProjectMilan.Pipelines.Levels
                             PortImportsMemorySafe = true,
                             DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                             SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
-                            CustomDonorImporter = DonorBuilderPipeline.MaterialDonorImporter,
                         }, out var _);
                     if (badLinks.Any())
                     {
