@@ -88,7 +88,7 @@ namespace ProjectMilan.Pipelines.Weapons
             UnrealScriptCompiler.LooseClassPackage lp = new UnrealScriptCompiler.LooseClassPackage(package,
                 new List<UnrealScriptCompiler.LooseClass>()
                 {
-                    new UnrealScriptCompiler.LooseClass(weaponPipeline.WeaponClassName,sourceclassText)
+                    new UnrealScriptCompiler.LooseClass(weaponPipeline.WeaponClassName, sourceclassText)
                 });
             looseClassPackages.Add(lp);
 
@@ -114,6 +114,9 @@ namespace ProjectMilan.Pipelines.Weapons
             var me3SourcePackage = MilanShared.GetME3Package($"{weaponPipeline.PackageName}.pcc");
             weaponPipeline.BaseObjectPaths.AddRange(me3SourcePackage.Exports.Where(x => x.ClassName == "Package" && x.idxLink == 0 && !weaponPipeline.BaseObjectPaths.Contains(x.InstancedFullPath))
                 .Select(x => x.InstancedFullPath));
+
+            // Should see if we can have it check if inputs (donors) are the same again and if so and it fails it breaks.
+            // Otherwise this is an infinite loop.
             while (!CompileWeapon(finalPackagePath, looseClassPackages, weaponPipeline))
             {
 
@@ -164,7 +167,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
 
 
-            MilanLog.Information(@"Compiling LE3 class package", customPrefix: LOG_CATEGORY);
+            MilanLog.Information($@"Compiling LE3 class package {weaponDestPackage.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
             MessageLog log = UnrealScriptCompiler.CompileLooseClasses(weaponDestPackage, classes, usop);
 
             if (log.HasErrors)
@@ -289,6 +292,10 @@ namespace ProjectMilan.Pipelines.Weapons
             }
 
             (_, string functionText) = UnrealScriptCompiler.DecompileExport(classExp, fileLib, usop);
+
+            // 08/09/2026 TEMP FIX: 
+            // Strip out ERROR: log messages as these are being recompiled
+            functionText = MilanShared.CleanErrorComments(functionText);
 
             return functionText;
             // FUNCTION PATCHES
@@ -512,7 +519,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Krogan",
                 PackageName = "SFXWeapon_AssaultRifles_KroganDLC",
                 LE3PackageName = "SFXWeapon_AssaultRifle_Krogan_GUN02",
-                Enabled  = false
+                Enabled  = true
             },
 
             // MP2
