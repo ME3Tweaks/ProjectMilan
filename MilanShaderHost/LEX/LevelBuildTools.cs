@@ -370,8 +370,11 @@ namespace MilanShaderHost.LEX
             { '\'', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.75585938f, UV1Y = 0.8486328f, UV2X = 0.7939453f, UV2Y = 0.91601562f } },
             { '[', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.80664062f, UV1Y = 0.82421875f, UV2X = 0.85253906f, UV2Y = 0.99804688f } },
             { '|', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.859375f, UV1Y = 0.82421875f, UV2X = 0.8876953f, UV2Y = 0.99804688f } },
-            { '(', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.890625f, UV1Y = 0.82421875f, UV2X = 0.94140625f, UV2Y = 0.99804688f } }
+            { '(', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Blue, UV1X = 0.890625f, UV1Y = 0.82421875f, UV2X = 0.94140625f, UV2Y = 0.99804688f } },
 
+            // CUSTOM FOR TOOLING
+            // Part of T
+            { '_', new TextTextureLetter() { LayerIndex = TextTextureLetter.EGUIMasterLayer.Red, UV1X = 0.7285156f, UV1Y = 0.5019531f, UV2X = 0.94140625f, UV2Y = 0.5488281f } }
         };
 
         class TextTextureLetter
