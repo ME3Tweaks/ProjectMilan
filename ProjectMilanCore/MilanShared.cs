@@ -74,7 +74,7 @@ namespace ProjectMilanCore
         /// Fetches an ME3 package - from disk or SFAR
         /// </summary>
         /// <param name="sourceFileName"></param>
-        public static IMEPackage GetME3Package(string sourceFileName, Func<ExportEntry, bool> unsafePredicate = null)
+        public static IMEPackage GetME3Package(string sourceFileName, Func<ExportEntry, bool> unsafePredicate = null, bool logIfNotFound = true)
         {
             bool forceUseDLC = sourceFileName == "MPLobby.pcc"; // Do not use basegame version.
 
@@ -115,7 +115,10 @@ namespace ProjectMilanCore
                         return MEPackageHandler.OpenMEPackage(filePath2);
                     }
 
-                    MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
+                    if (logIfNotFound)
+                    {
+                        MilanLog.Warning($"Could not locate ME3 package file: {sourceFileName}");
+                    }
                 }
 
                 // Donors will have full path
@@ -441,14 +444,24 @@ namespace ProjectMilanCore
         public static void PortLocalizations(string basePackageName, string outputFolder, PackageCache cache, string logCategory)
         {
             MilanLog.Information($"Porting localized files for {basePackageName}", customPrefix: logCategory);
+            bool foundInt = false;
             foreach (var lang in BaseBuildSettings.SupportedVOLanguages)
             {
                 var packageName = $"{basePackageName}_LOC_{lang}.pcc";
-                var me3Package = MilanShared.GetME3Package(packageName);
+                var me3Package = MilanShared.GetME3Package(packageName, logIfNotFound: foundInt);
                 if (me3Package == null)
                 {
-                    MilanLog.Warning($"Could not find localized package {packageName}", customPrefix: logCategory);
+                    if (foundInt)
+                    {
+                        // If Int hasn't been found (it's first in list) we can skip logging as there shouldn't be other localizations
+                        MilanLog.Warning($"Could not find localized package {packageName}", customPrefix: logCategory);
+                    }
                     continue;
+                }
+
+                if (lang == MELocalization.INT)
+                {
+                    foundInt = true;
                 }
 
                 var finalPackagePath = Path.Combine(outputFolder, packageName);
@@ -514,7 +527,7 @@ namespace ProjectMilanCore
         /// <param name="destPackage"></param>
         /// <param name="cache"></param>
         /// <param name="logCategory"></param>
-        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, IEntry> customDonorImporter)
+        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, IEntry> customDonorImporter = null)
         {
             var objReferencer = sourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
@@ -621,6 +634,7 @@ namespace ProjectMilanCore
                                     // Use decomp
                                     MilanLog.Information($"  Recompiling {className}", customPrefix: logCategory);
                                     (_, text) = UnrealScriptCompiler.DecompileExport(cc.classExp, lib, usop);
+                                    Debug.WriteLine(text);
                                 }
                             }
                             UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
@@ -1417,7 +1431,7 @@ namespace ProjectMilanCore
         /// <param name="cache"></param>
         /// <param name="logCategory"></param>
         /// <param name="materialDonorImporter"></param>
-        public static bool PrePortClasses(IMEPackage me3Package, IMEPackage le3Package, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, IEntry> materialDonorImporter)
+        public static bool PrePortClasses(IMEPackage me3Package, IMEPackage le3Package, PackageCache cache, string logCategory)
         {
             // Load classes from the class library
 

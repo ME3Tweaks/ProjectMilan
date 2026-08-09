@@ -268,6 +268,10 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 var overridePath = MilanShared.GetClassOverride(Path.GetFileNameWithoutExtension(ucFilePath));
                 string source = File.ReadAllText(overridePath ?? ucFilePath);
+
+                // 03/22/2026 - Strip out var delegate usages from old decomp as it breaks new recomp
+                source = source.Replace("var delegate<", "//var delegate<");
+
                 //files must be named Classname.uc
                 classes.Add(new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(ucFilePath), source, ucFilePath)); // Always use ucFilePath as it will be in the proper package folder, even if it goes unused.
             }
