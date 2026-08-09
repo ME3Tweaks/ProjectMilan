@@ -1467,5 +1467,17 @@ namespace ProjectMilanCore
             return true;
             */
         }
+
+        /// <summary>
+        /// Strips error comments for function recompilation. Only use if you're going to be compiling
+        /// </summary>
+        /// <param name="originalString"></param>
+        /// <returns></returns>
+        public static string CleanErrorComments(string originalString)
+        {
+            return string.Join(Environment.NewLine, originalString
+    .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
+    .Where(line => !line.Contains("Recompilation of this function is required")));
+        }
     }
 }
