@@ -1,5 +1,4 @@
 ﻿using LegendaryExplorerCore.Packages;
-using ProjectMilan.Pipelines.Materials;
 using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Startups
@@ -212,7 +211,7 @@ namespace ProjectMilan.Pipelines.Startups
                     le3File.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint common package
                     le3File.LECLTagData.IsPostLoadFile = false;
 
-                    MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY, customDonorImporter: DonorBuilderPipeline.MaterialDonorImporter);
+                    MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY, null);
                     MilanShared.PortLocalizations(packageBaseName, vars.OutputPath, cache, LOG_CATEGORY);
                 });
         }
