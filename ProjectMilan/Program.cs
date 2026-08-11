@@ -17,6 +17,7 @@ using ProjectMilan.Pipelines.Mod;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Pipelines.Verify;
+using ProjectMilan.Pipelines.VTables;
 using ProjectMilan.Pipelines.Weapons;
 using ProjectMilan.Settings;
 using ProjectMilan.Utility;
@@ -193,19 +194,11 @@ namespace ProjectMilan
             MilanInit.Init(); // Initialize shared pipeline data
 
             // You can uncomment these (along with DontDeleteModFolder) to skip to a specific step.
-            // goto postMpCommon;
-
-
-            // Uncomment to run DonorDB build
-            //DonorTooling.BuildDonorDB();
-            //return;
+            //goto vtables;
 
             // TD conversation - do not commit
             //RunPipeline(true, MaterialExpressionPipeline.RunPipeline, "MaterialExpression");
             //return;
-
-            // Requirements
-            // MPCommon.HackPatchParents(); // Should no longer be necessary
 
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
@@ -262,9 +255,16 @@ namespace ProjectMilan
             // Package resynthesis
             RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
 
+            // Fix up vtables.
+        vtables:
+            RunPipeline(true, VTablePipeline.RunPipeline, "VTables");
+
             // Conformance
-            if (false)
+        conformance:
+            if (Settings.RunConformancePipeline)
+            {
                 RunPipeline(true, Conformance.RunPipeline, "Conformance");
+            }
 
 
             // Verification
@@ -339,11 +339,12 @@ namespace ProjectMilan
             // Put your method in Research class and call it here.
             //Research.CopyPreview2();
             //return;
+            //Research.GetMissingShaderPackages(@"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Kits");
+            //return;
 
             Research.InstallCompiledShaders();// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
             return;
 
-            //Research.GetMissingShaderPackages(@"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels");
             //return;
             //Research.SlashShaderCache(MEGame.LE3);
             //return;

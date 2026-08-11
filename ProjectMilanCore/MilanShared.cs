@@ -1113,7 +1113,7 @@ namespace ProjectMilanCore
 
         public static void LogCompilerMessages(MessageLog log, string firstMessage = "Compilation errors occurred", string logCategory = "Milan-Shared")
         {
-            MilanLog.Error("COMPILATION OF ENEMY PAWN FAILED: ", customPrefix: logCategory);
+            MilanLog.Error(firstMessage);
             foreach (var error in log.AllErrors)
             {
                 MilanLog.Error($"  {error}", customPrefix: logCategory);
@@ -1473,11 +1473,17 @@ namespace ProjectMilanCore
         /// </summary>
         /// <param name="originalString"></param>
         /// <returns></returns>
-        public static string CleanErrorComments(string originalString)
+        public static string CleanErrorComments(string originalString, out bool hadErrors)
         {
-            return string.Join(Environment.NewLine, originalString
-    .Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None)
-    .Where(line => !line.Contains("Recompilation of this function is required")));
+            var lines = originalString.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            var cleanedLines = lines
+                .Where(line => !line.Contains("Recompilation of this function is required"))
+                .ToArray();
+
+            hadErrors = cleanedLines.Length != lines.Length;
+
+            var cleanedStr = string.Join(Environment.NewLine, cleanedLines);
+            return cleanedStr;
         }
     }
 }

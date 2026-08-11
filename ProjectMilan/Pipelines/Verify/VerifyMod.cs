@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+﻿using CsvHelper.Configuration;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
@@ -7,8 +7,11 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan.Pipelines.Finalize;
 using ProjectMilanCore;
+using CoreVTables = ProjectMilanCore.VTables;
+using System.Diagnostics;
 
 namespace ProjectMilan.Pipelines.Verify
 {
@@ -35,7 +38,8 @@ namespace ProjectMilan.Pipelines.Verify
                     var package = MEPackageHandler.OpenMEPackage(f);
                     VerifyVTables(package);
                     RunEntryChecks(package);
-                    NetIndexCheck(package, netIndexes);
+                    if (Program.Settings.RunConformancePipeline) // If we didn't run conformance this is pointless to check
+                        NetIndexCheck(package, netIndexes);
                     CollectAFCFileNames(package, afcFilesReferenced);
                 }
             }
@@ -123,9 +127,49 @@ namespace ProjectMilan.Pipelines.Verify
         private static void VerifyVTables(IMEPackage package)
         {
             var tpc = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
-            foreach (var f in package.Exports.Where(x => x.IsClass))
+
+            // This should:
+            // Check vtable matching
+            // Ensure all class virtual function calls are indexed properly by decompiling each class and ensuring there are no errors.
+            FileLib fileLib = null;
+            foreach (var f in package.Exports.Where(x => x.IsClass).ToList())
             {
-                VTables.VerifyVTable(f, tpc, true);
+                // Verify the decomp
+                UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+                {
+                    Cache = tpc,
+                };
+
+                // Initialize filelib if it wasn't.
+
+                if (fileLib == null || !fileLib.IsInitialized)
+                {
+                    try
+                    {
+                        fileLib = new FileLib(package);
+                        if (!fileLib.Initialize(usop))
+                        {
+                            MilanShared.LogFailedFileLibInit(fileLib);
+                        }
+                    }
+                    catch
+                    {
+                        //we're not checking if it failed to initialize because we don't really care, since decompilation doesn't actually need an initialized filelib,
+                        //it just makes the output a bit nicer (at the time of this writing all it does is resolve some integer literals into enum values)
+                        MilanLog.Error($"Unable to initialize filelib for {package.FileNameNoExtension}");
+                    }
+                }
+
+                if (fileLib.IsInitialized && fileLib.HadInitializationError)
+                {
+                    (_, string functionText) = UnrealScriptCompiler.DecompileExport(f, fileLib, usop);
+                    if (functionText.Contains("Recompilation of this function is required"))
+                    {
+                        MilanLog.Error($"Bad VTable references for virtual calls in {f.InstancedFullPath}");
+                    }
+                }
+
+                CoreVTables.VerifyVTable(f, tpc, true);
             }
         }
     }
