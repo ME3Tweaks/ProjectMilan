@@ -21,6 +21,11 @@ namespace ProjectMilanCore
         {
             var decookedPath = @"E:\CompiledShaderPackages";
             var compiledShaderPath = @"E:\CompiledShaderPackages";
+            if (Directory.Exists(compiledShaderPath) == false)
+            {
+                MilanLog.Error($"Compiled shader path not found: {compiledShaderPath} - skipping shader install", customPrefix: logCategory);
+                return;
+            }
             var compiledShaderPackages = Directory.GetFiles(compiledShaderPath, "*.pcc");
             CaseInsensitiveDictionary<string> packageMap = new();
             var cache = new PackageCache();
@@ -44,8 +49,22 @@ namespace ProjectMilanCore
                     var matchingMat = compiledPackage.FindExport(brokenMat.MemoryFullPath, brokenMat.ClassName) ?? compiledPackage.FindExport(brokenMat.InstancedFullPath, brokenMat.ClassName);
                     if (matchingMat == null)
                     {
+                        // Try just finding it by name...
+                        var matchingPossibilities = compiledPackage.Exports.Where(x => x.ClassName == "Material" && x.ObjectName.Instanced == brokenMat.ObjectName).ToList();
+                        if (matchingPossibilities.Count == 1)
+                        {
+                            MilanLog.Warning($"Found material using name-match only. Decooker needs nesting fixes most likely.");
+                            matchingMat = matchingPossibilities[0];
+                        } else if (matchingPossibilities.Count > 0)
+                        {
+                            MilanLog.Error($"Multiple same-name materials in decooked package for {brokenMat.InstancedFullPath} in {package.FileNameNoExtension}; unable to safely choose, decooker needs fixed", customPrefix: logCategory);
+                        }
+                    }
+
+                    if (matchingMat == null)
+                    {
                         // couldn't find the mat
-                        MilanLog.Warning($"No compiled shaders for {brokenMat.InstancedFullPath} in {package.FileNameNoExtension}", customPrefix: logCategory);
+                        MilanLog.Error($"No compiled shaders for {brokenMat.InstancedFullPath} ({brokenMat.ClassName}) in {package.FileNameNoExtension}", customPrefix: logCategory);
                     }
                     else
                     {
@@ -63,7 +82,7 @@ namespace ProjectMilanCore
                 }
             }
 
-            MilanLog.Information($"Compacting ShaderCache", customPrefix: logCategory);
+            MilanLog.Information($"Compacting ShaderCache ({package.FileNameNoExtension})", customPrefix: logCategory);
             ShaderCacheManipulator.CompactSeekFreeShaderCaches(package);
 #if DEBUG
             // Disabled for now, we know a bunch will be broken
