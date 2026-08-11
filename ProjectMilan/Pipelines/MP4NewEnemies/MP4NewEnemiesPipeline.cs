@@ -222,56 +222,6 @@ namespace ProjectMilan.Pipelines.Weapons
             MilanShared.PortObjectReferencer(otFile, enemyPackage, pipeline.Cache, pipeline.LogCategory);
             enemyPackage.Save();
             return true;
-
-            // Old stuff
-            MilanLog.Information(@"Compiling LE3 class package", customPrefix: LOG_CATEGORY);
-            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(enemyPackage, classes, usop);
-
-            if (log.HasErrors)
-            {
-                if (AttemptToFindMissingClasses(log, pipeline, out var containingPackage, out var lClass))
-                {
-                    AddClassToCompilation(classes, containingPackage, lClass);
-                    return false; // False - forces recomp
-                }
-                MilanLog.Error("COMPILATION OF ENEMY PAWN FAILED: ", customPrefix: LOG_CATEGORY);
-                foreach (var error in log.AllErrors)
-                {
-                    MilanLog.Error($"  {error}", customPrefix: LOG_CATEGORY);
-                }
-
-                return false;
-            }
-
-            FileLib lib = null;
-            foreach (var clsIFP in MilanShared.ClassesToDoubleRecompile)
-            {
-                var classX = enemyPackage.FindExport(clsIFP);
-                if (classX == null)
-                    continue;
-
-                if (lib == null)
-                {
-                    lib = new FileLib(enemyPackage);
-                    lib.Initialize(usop);
-                }
-                MilanLog.Information($"  Double recompiling {classX.ObjectName}", customPrefix: LOG_CATEGORY);
-                (_, string text) = UnrealScriptCompiler.DecompileExport(classX, lib, usop);
-                UnrealScriptCompiler.CompileClass(enemyPackage, text, lib, usop, classX);
-            }
-
-            MilanLog.Information(@"Loose class compilation succeeded!", customPrefix: LOG_CATEGORY);
-
-            MilanLog.Information(@"Creating object referencer", customPrefix: LOG_CATEGORY);
-            PackageTools.CreateObjectReferencer(enemyPackage, false);
-            foreach (var classExp in enemyPackage.Exports.Where(x => x.IsClass))
-            {
-                // Yeah this is inefficient. 
-                PackageTools.AddToObjectReferencer(classExp);
-            }
-
-            enemyPackage.Save();
-            return true;
         }
 
         private static string GetPackageName(string sourceFilePath)
