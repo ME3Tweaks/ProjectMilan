@@ -295,7 +295,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
             // 08/09/2026 TEMP FIX: 
             // Strip out ERROR: log messages as these are being recompiled
-            functionText = MilanShared.CleanErrorComments(functionText);
+            functionText = MilanShared.CleanErrorComments(functionText, out var _);
 
             return functionText;
             // FUNCTION PATCHES
