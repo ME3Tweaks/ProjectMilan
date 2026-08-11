@@ -68,6 +68,12 @@
         bool RunRedemptionPipeline { get; set; }
 
         /// <summary>
+        /// If the Conformance pipeline should be run. This doesn't matter that much in local play; but is mandatory for network play
+        /// </summary>
+        bool RunConformancePipeline { get; }
+
+
+        /// <summary>
         /// If this build is for producing static lighting in UDK, not for normal gameplay - don't import lightmaps, etc.
         /// </summary>
         bool IsStaticLightingBuild { get; set; }

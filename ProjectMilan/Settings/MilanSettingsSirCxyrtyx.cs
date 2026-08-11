@@ -16,6 +16,7 @@ namespace ProjectMilan.Settings
         public bool RunWeaponsPipeline { get; set; } = false;
         public bool RunRejectionPipeline { get; set; } = false;
         public bool RunRedemptionPipeline { get; set; } = false;
+        public bool RunConformancePipeline { get; set; } = false;
         public bool IsStaticLightingBuild { get; set; }
         public string MilanUDKPath { get; set; } // NEEDS TO BE SET!
         public bool RunLevelsPipeline { get; set; } = false;

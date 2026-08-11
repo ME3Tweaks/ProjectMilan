@@ -60,6 +60,7 @@ namespace ProjectMilan.Settings
         public bool RunMP4EnemiesPipeline { get; set; } = true;
         public bool RunKitsPipeline { get; set; } = true;
         public bool RunWeaponsPipeline { get; set; } = true;
+        public bool RunConformancePipeline { get; set; } = false;
         public bool RunRejectionPipeline { get; set; }
         public bool RunRedemptionPipeline { get; set; }
         public bool IsStaticLightingBuild { get; set; } = false;
@@ -89,13 +90,13 @@ namespace ProjectMilan.Settings
         public bool RunLevelsPipeline { get; set; } = true;
         public bool RunAudioPipeline { get; set; } = false;
         public bool RunTexturePipeline { get; set; } = true;
-        public bool RunResynthesis { get; set; } = false;
+        public bool RunResynthesis { get; set; } = true;
 
 
         // Defined in my launch profiles
         public int MaxThreads { get; set; } = int.Parse(Environment.GetEnvironmentVariable("MAXTHREADS"));
 
         // Set when you want to work on the mod folder without it deleting it every time
-        public bool DontDeleteModFolder { get; set; } = false;
+        public bool DontDeleteModFolder { get; set; } = true;
     }
 }
