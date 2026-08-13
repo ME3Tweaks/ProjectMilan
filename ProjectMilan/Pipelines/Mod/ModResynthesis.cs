@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Pipelines.Mod
@@ -38,7 +39,15 @@ namespace ProjectMilan.Pipelines.Mod
                         }
 
                         var newPackage = PackageResynthesizer.ResynthesizePackage(package, cache.ChainNewCache());
-                        newPackage.Save();
+                        if (package == newPackage)
+                        {
+                            // Resynthesizing did not occur
+                            MilanLog.Error($"Package did not resynthesize: {package.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+                        }
+                        else
+                        {
+                            newPackage.Save();
+                        }
 
                         // Save as different package for analysis
                         //var outP = Path.Combine(Directory.GetParent(package.FilePath).FullName, $"{package.FileNameNoExtension}_RESYNTH.pcc");
