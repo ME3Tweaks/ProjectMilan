@@ -463,8 +463,12 @@ namespace ProjectMilan.Utility
         /// </summary>
         internal static void InstallCompiledShaders()
         {
-            var path = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
-
+            var path = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Kits";
+            if (Directory.Exists(path) == false)
+            {
+                MilanLog.Error($"Shader install target path not found: {path}");
+                return;
+            }
             var packages = Directory.GetFiles(path, "*.pcc", SearchOption.AllDirectories);
 
             foreach (var gamePackagePath in packages)
