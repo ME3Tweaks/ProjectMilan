@@ -65,8 +65,11 @@ namespace ProjectMilan.Pipelines.Mod
                             if (nExp.SuperClassName != exp.SuperClassName)
                                 MilanLog.Error($"SuperClass changed of export : {nExp.InstancedFullPath} to {nExp.SuperClassName} from {exp.SuperClassName}", customPrefix: LOG_CATEGORY);
 
-                            if (nExp.ObjectFlags != exp.ObjectFlags)
+                            // If 'Public' is dropped we don't really care. It has no bearing on us. And recompile will se tthis
+                            if ((nExp.ObjectFlags & ~UnrealFlags.EObjectFlags.Public) != (exp.ObjectFlags & ~UnrealFlags.EObjectFlags.Public))
+                            {
                                 MilanLog.Error($"ObjectFlags changed of export : {nExp.InstancedFullPath} to {nExp.ObjectFlags} from {exp.ObjectFlags}", customPrefix: LOG_CATEGORY);
+                            }
 
                             if (nExp.SuperClassName != exp.SuperClassName)
                                 MilanLog.Error($"SuperClass changed of export : {nExp.InstancedFullPath} to {nExp.SuperClassName} from {exp.SuperClassName}", customPrefix: LOG_CATEGORY);
