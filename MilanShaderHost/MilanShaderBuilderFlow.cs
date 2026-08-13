@@ -108,7 +108,7 @@ namespace MilanShaderHost
                     Console.WriteLine($"Dumping HLSL for package {Path.GetFileNameWithoutExtension(file)}");
 
                     // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit(EShaderLevelMode.Compile);
+                    StartGameAndWaitForExit(EShaderLevelMode.Compile, Path.GetFileNameWithoutExtension(file));
 
                     // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
                     Console.WriteLine($"  Finished dumping HLSL for {Path.GetFileNameWithoutExtension(file)}");
@@ -254,7 +254,7 @@ namespace MilanShaderHost
                     }
 
                     // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit(EShaderLevelMode.Compile);
+                    StartGameAndWaitForExit(EShaderLevelMode.Compile, baseName);
 
                     scPackage.Save(outPath);
                 }
@@ -273,7 +273,7 @@ namespace MilanShaderHost
                         Console.WriteLine($"Saving preview level to {savePath}");
                         File.Copy(shaderPreviewLevelPath, savePath, true);
                     }
-                    StartGameAndWaitForExit(EShaderLevelMode.Preview);
+                    StartGameAndWaitForExit(EShaderLevelMode.Preview, baseName);
                 }
             }
 
@@ -417,9 +417,9 @@ namespace MilanShaderHost
             // Game is now ready.
         }
 
-        private static void StartGameAndWaitForExit(EShaderLevelMode buildMode)
+        private static void StartGameAndWaitForExit(EShaderLevelMode buildMode, string builtFor)
         {
-            Console.WriteLine("Starting game");
+            Console.WriteLine($"Starting game for {(buildMode == EShaderLevelMode.Compile ? "compilation" : "preview")} of {builtFor}");
             TOCCreator.CreateTOCForGame(Game);
             if (buildMode == EShaderLevelMode.SlashLevel)
             {
