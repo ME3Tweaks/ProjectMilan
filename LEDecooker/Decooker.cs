@@ -388,6 +388,8 @@ namespace LEDecooker
             using var ms = new MemoryStream(DecookerShared.ExtractResource($@"LEDecooker.supportfiles.supportdbs.zip"));
             using var zip = new ZipArchive(ms);
 
+            var oppositeGame = game.ToOppositeGeneration();
+
             // T3D doesnt contain in-package pathing. This DB is used to try to fix that
             var supportData = DecookerShared.ReadSupportFileString(zip, $"materialifps_{game}.json");
             MaterialIFPDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
@@ -395,6 +397,9 @@ namespace LEDecooker
             // List of all textures. We use this to make sure we just pull in all game textures
             supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{game}.json");
             TextureLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
+
+            supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{oppositeGame}.json");
+            OppositeTextureLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
 
             // Static meshes are used during lighting and udk export, so we pull them in
             supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{game}.json");
@@ -817,6 +822,12 @@ namespace LEDecooker
                 }
 
                 var portedItem = TryPortTexture(package, sourcepackage, sourceGame, lookupName, classname, TextureLookupDB);
+                if (portedItem == null && OppositeTextureLookupDB != null)
+                {
+                    var oppositeGame = sourceGame.ToOppositeGeneration();
+                    portedItem = TryPortTexture(package, sourcepackage, oppositeGame, lookupName, classname, OppositeTextureLookupDB);
+                }
+
                 if (portedItem == null)
                 {
                     Debug.WriteLine($"Texture not found: {instancedfullpath}");
