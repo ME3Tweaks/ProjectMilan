@@ -37,6 +37,10 @@ namespace ProjectMilanCore
             var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
             foreach (var brokenMat in brokenMaterials)
             {
+                if (brokenMat.ClassName != "Material")
+                {
+                    continue;
+                }
                 var linker = brokenMat.GetLinker();
                 if (packageMap.TryGetValue(linker, out var cmp))
                 {
