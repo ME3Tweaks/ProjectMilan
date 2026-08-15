@@ -316,8 +316,6 @@ namespace ProjectMilan.Pipelines.Shared
 
                 if (!keepAttempting)
                 {
-
-
                     var package = new ReferenceCheckPackage();
                     EntryChecker.CheckReferences(package, destDonorPackage, LECLocalizationShim.NonLocalizedStringConverter);
                     if (package.GetInfoWarnings().Any())

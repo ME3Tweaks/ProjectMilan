@@ -98,8 +98,8 @@ namespace ProjectMilan.Pipelines.Levels
             // from the HLSL builder
             if (!Program.Settings.IsStaticLightingBuild)
             {
-            // Register our custom made donors generated from the donor build pipeline
-            SharedMaterialDonor.RegisterLocalDonors(Path.Combine(MilanShared.PipelineRoot, "Materials", "Build"));
+                // Register our custom made donors generated from the donor build pipeline
+                SharedMaterialDonor.RegisterLocalDonors(Path.Combine(MilanShared.PipelineRoot, "Materials", "Build"));
             }
 
             foreach (var level in levelVars.LevelPipelines)
@@ -119,7 +119,7 @@ namespace ProjectMilan.Pipelines.Levels
                 {
                     BeginPortingGeneric(level, parent);
                 }
-
+                
                 // Static lighting does not save the source package, so we are now free to modify it now that the final save has occurred
                 if (Program.Settings.IsStaticLightingBuild)
                 {

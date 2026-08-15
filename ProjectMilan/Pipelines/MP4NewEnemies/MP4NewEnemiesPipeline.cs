@@ -244,21 +244,6 @@ namespace ProjectMilan.Pipelines.Weapons
                 }
             }
 
-
-            //var baseOutputPath = toShared ? MilanShared.GetAutoDonorClassesPath() : GetMPClassesFolder();
-            //var packageOutputPath = Path.Combine(baseOutputPath, classExp.HasParent ? classExp.ParentName : classExp.FileRef.FileNameNoExtension);
-            //Directory.CreateDirectory(packageOutputPath);
-            //var ucOutPath = Path.Combine(packageOutputPath, $"{classExp.ObjectName}.uc");
-
-            // Check if override exists
-            //var overridePath = MilanShared.GetClassOverride(classExp.ObjectName);
-            //if (overridePath != null)
-            //{
-            //    MilanLog.Information($"Using Milan class override for {classExp.ObjectName}", customPrefix: LOG_CATEGORY);
-            //    File.Copy(overridePath, ucOutPath, true);
-            //    return;
-            //}
-
             MilanLog.Information($"Decompiling {classExp.FileRef.Game} {classExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
             if (usingTestPatch)
             {

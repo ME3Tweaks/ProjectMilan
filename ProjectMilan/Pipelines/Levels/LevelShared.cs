@@ -94,7 +94,6 @@ namespace ProjectMilan.Pipelines.Levels
                 }
             }
 
-            // Sequencing needs ported over eventually. This controls the shuttle flying away. Requires MP classes though.
             foreach (var export in destPackage.Exports)
             {
                 var ifp = export.InstancedFullPath;
@@ -116,11 +115,6 @@ namespace ProjectMilan.Pipelines.Levels
                 if (cachedDataVer != null && cachedDataVer == 34079634) // OT version
                 {
                     MilanLog.Information($"  Fixing collision data for {ifp}", customPrefix: levelPipeline.LogCategory);
-
-                    // Get rid of it
-                    // This doesn't fix anything
-                    //export.RemoveProperty(cachedDataVer.Name);
-                    //export.WriteBinary(levelPipeline.donorBrush);
 
                     // Change version
                     // This partially fixes collision
@@ -147,8 +141,6 @@ namespace ProjectMilan.Pipelines.Levels
                     // export.WriteProperty(new BoolProperty(true, "BlockNonZeroExtent"));
                     // export.WriteProperty(new BoolProperty(true, "BlockActors"));
                 }
-
-
             }
 
             // Map the stuff in PersistentLevel
