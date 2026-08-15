@@ -419,6 +419,12 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 string className = null;
 
+                if (m.Message.Contains("but the function at that index in class"))
+                {
+                    // We don't care about VTable issues.
+                    continue;
+                }
+
                 // Pull missing class name out of error message
                 if (m.Message.StartsWith("No class named '"))
                 {
@@ -730,7 +736,8 @@ namespace ProjectMilan.Pipelines.Startups
             newFunction.Insert(0, $"// Source: {classExp.FileRef.Game}, {classExp.FileRef.FileNameNoExtension}");
             newFunction.Insert(1, $"// Decompiled {DateTime.Now}");
 
-            File.WriteAllLines(ucOutPath, newFunction);
+            var cleaned = MilanShared.CleanErrorComments(string.Join("\n", newFunction), out _);
+            File.WriteAllText(ucOutPath, cleaned);
         }
 
         /// <summary>
@@ -784,6 +791,7 @@ namespace ProjectMilan.Pipelines.Startups
                 //}
 
                 // FIX LATER ============================================
+                // That's why it's warnings
                 if (line is "GAWAssetHandler.Cleanup();" or "GAWAssetHandler.RequestGAWRatings(OnGAWRequestFinished);")
                 {
                     MilanLog.Warning($"  Patching out GAWAssetHandler reference {line}", customPrefix: LOG_CATEGORY);
