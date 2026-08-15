@@ -1,0 +1,31 @@
+﻿using ProjectMilanCore;
+
+namespace ProjectMilan.Settings
+{
+    internal class IMilanSettingsStumpy : IMilanSettings
+    {
+        private const string MilanHome = @"Y:\WIP\Milan";
+        private const bool FullBuild = false;
+
+        public string OutputModPath { get; set; } = $@"{MilanHome}\ModLib\LMP\Project Milan\{MilanShared.DLC_NAME}";
+        public string InputSyncPath { get; set; } = $@"{MilanHome}\Sync";
+        public bool RunMPCommonPipeline { get; set; } = true;
+        public bool RunNonStartupPipeline { get; set; } = FullBuild;
+        public bool RunDonorBuildPipeline { get; set; } = FullBuild;
+        public bool RunMP4EnemiesPipeline { get; set; } = FullBuild;
+        public bool RunKitsPipeline { get; set; } = FullBuild;
+        public bool RunWeaponsPipeline { get; set; } = FullBuild;
+        public bool RunRejectionPipeline { get; set; } = false;
+        public bool RunRedemptionPipeline { get; set; } = false;
+        public bool RunConformancePipeline { get; set; } = false;
+        public bool IsStaticLightingBuild { get; set; } = false;
+        public string MilanUDKPath { get; set; } = $@"{MilanHome}\MilanUDK";
+        public bool RunLevelsPipeline { get; set; } = FullBuild;
+        public bool RunAudioPipeline { get; set; } = false;
+        public bool RunTexturePipeline { get; set; } = FullBuild;
+        public bool RunResynthesis { get; set; } = FullBuild;
+
+        public int MaxThreads { get; set; } = int.Parse(Environment.GetEnvironmentVariable("MAXTHREADS"));
+        public bool DontDeleteModFolder { get; set; } = !FullBuild;
+    }
+}

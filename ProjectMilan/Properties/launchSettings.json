@@ -37,6 +37,13 @@
       "environmentVariables": {
         "MAXTHREADS": "18"
       }
+    },
+    "ProjectMilan - Stumpy": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Stumpy",
+      "environmentVariables": {
+        "MAXTHREADS": "8"
+      }
     }
   }
 }
