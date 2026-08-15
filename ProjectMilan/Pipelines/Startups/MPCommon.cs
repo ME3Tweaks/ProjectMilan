@@ -460,12 +460,89 @@ namespace ProjectMilan.Pipelines.Startups
                 if (decompiledClasses.Contains(className))
                     continue; // Already pending recompile
 
-                }
 
+                // We need to find it and decompile it
+                foreach (var cbp in commonBasePackages)
+                {
+                    string ifp;
+                    if (cbp == null)
+                    {
+                        ifp = className;
+                    }
+                    else
+                    {
+                        ifp = $"{cbp}.{className}";
+                    }
+
+                    // Look in LE3 for donor
+                    bool keepSearching = true;
+                    var foundObjs = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp);
+                    if (foundObjs != null)
+                    {
+                        foreach (var foundObj in foundObjs)
+                        {
+                            if (!keepSearching)
+                                break;
+                            var sourceFileName = Path.GetFileName(foundObj);
+                            var package = MilanShared.GetLE3Package(sourceFileName);
+
+                            // DLC system Milan uses doesn't look in SP files
+                            // So if obj database has SP stuff this will fail
+                            // Just keep going.
+                            if (package != null)
+                            {
+                                MilanLog.Information($@"Found missing class '{className}' in LE3: {foundObj}", customPrefix: LOG_CATEGORY);
+                                var export = package.FindExport(ifp);
+                                if (export != null)
+                                {
+                                    DecompileClass(export, null, true, cache);
+                                    decompiledClasses.Add(export.ObjectName);
+                                    keepSearching = false;
+                                    continue;
+                                }
+
+                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
+
+                            }
+                        }
+                    }
+
+                    // Looking ME3 for crossgen
+                    if (!keepSearching)
+                        continue; // Go to next error
+                    foundObjs = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp);
+                    if (foundObjs != null)
+                    {
+                        foreach (var foundObj in foundObjs)
+                        {
+                            if (!keepSearching)
+                                break;
+                            var sourceFileName = Path.GetFileName(foundObj);
+                            var package = MilanShared.GetME3Package(sourceFileName);
+
+                            // DLC system Milan uses doesn't look in SP files
+                            // So if obj database has SP stuff this will fail
+                            // Just keep going.
+                            if (package != null)
+                            {
+                                MilanLog.Information($@"Found missing class '{className}' in ME3: {foundObj}", customPrefix: LOG_CATEGORY);
+                                var export = package.FindExport(ifp);
+                                if (export != null)
+                                {
+                                    DecompileClass(export, null, true, cache);
+                                    decompiledClasses.Add(export.ObjectName);
+                                    keepSearching = false;
+                                    continue;
+                                }
+
+                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
+                            }
+                        }
+                    }
+                }
+            }
             return decompiledClasses.Any();
         }
-
-        // Add method that 
 
         /// <summary>
         /// Prepares classes for porting by reading their data out of ME3
@@ -473,12 +550,10 @@ namespace ProjectMilan.Pipelines.Startups
         private static bool CompileMPCommon(MPCommonPipelineVars vars)
         {
             var cache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3, false, true).ChainNewCache(false);
-            var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(),
-                "Default.sfar");
+            var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(), "Default.sfar");
             if (!File.Exists(dlcInFile))
             {
-                throw new Exception(
-                    "MP5 is not installed in ME3 (Reckoning DLC). Please install it. It does not need to be unpacked.");
+                throw new Exception("MP5 is not installed in ME3 (Reckoning DLC). Please install it. It does not need to be unpacked.");
             }
 
             // Go in from latest DLC to earlier
@@ -572,23 +647,6 @@ namespace ProjectMilan.Pipelines.Startups
             if (!File.Exists(outPackage) || new FileInfo(outPackage).Length < 4096)
                 return false;
             return true;
-        }
-
-        private static void EnsureDecompiledClasses()
-        {
-            // This method improves initial MPCommon build speed by decompiling loose/autodonor classes we know need decompiled.
-            // If this is not run it is done iteratively which will work but is much slower.
-            // This pre-decompiles what that process will decompile
-
-            string[] looseClasses = [
-
-                ];
-
-            foreach(var lc in looseClasses)
-            {
-
-            }
-
         }
 
         private static bool ClassNeedsDecompiled(ExportEntry classExp)
@@ -878,7 +936,7 @@ namespace ProjectMilan.Pipelines.Startups
         internal static void Clean()
         {
             var files = GetCleanableMPCommonClassFiles();
-            foreach(var f in files)
+            foreach (var f in files)
             {
                 MilanLog.Information($"Clean() on {f}", customPrefix: LOG_CATEGORY);
                 File.Delete(f);
