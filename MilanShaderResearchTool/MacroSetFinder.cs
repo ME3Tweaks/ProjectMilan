@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace MilanShaderResearchTool;
 
@@ -20,11 +21,19 @@ public class ShaderMacroSearchResult
     public string Status { get; set; } = "";
     public string SearchPhase { get; set; } = "";
     public double ElapsedSeconds { get; set; }
+    public bool HasReferenceBytecode { get; set; } = true;
 
     /// <summary>
     /// Path to the debug package JSON file this result was produced from.
     /// </summary>
     public string JsonPath { get; set; } = "";
+
+    /// <summary>
+    /// Material name derived from the JsonPath structure: .../<MATERIALNAME>/<VF>/<ShaderType>.json
+    /// </summary>
+    public string MaterialName => string.IsNullOrEmpty(JsonPath)
+        ? ""
+        : Path.GetFileName(Path.GetDirectoryName(Path.GetDirectoryName(JsonPath))) ?? "";
 
     /// <summary>
     /// Decompiled HLSL of the reference bytecode (the expected output).
@@ -65,9 +74,10 @@ public class MacroSetFinder
 {
     /// <summary>
     /// Delegate that returns reference bytecode for a given shader type and vertex factory.
+    /// jsonPath is the path to the debug package JSON being tested.
     /// vertexFactoryName is null if there is no vertex factory.
     /// </summary>
-    public delegate byte[]? GetReferenceBytecodeDelegate(string shaderTypeName, string? vertexFactoryName);
+    public delegate byte[]? GetReferenceBytecodeDelegate(string jsonPath, string shaderTypeName, string? vertexFactoryName);
 
     /// <summary>
     /// Delegate that compiles a shader and returns (hresult, bytecodeOrEmpty, errorMessage).
@@ -80,6 +90,10 @@ public class MacroSetFinder
     private readonly CompileShaderDelegate _compileShader;
     private readonly string _includesDirectory;
     private static readonly TimeSpan PerShaderTimeout = TimeSpan.FromMinutes(1);
+
+    private ExternalMacrosJson? _externalMacros;
+    private bool _externalMacrosLoaded;
+    private readonly object _externalMacrosLock = new();
 
     // Compilation flags: backwards compat (1<<12) + opt level 3 (1<<15)
     private const int BaseCompileFlags = (1 << 12) | (1 << 15);
@@ -191,15 +205,34 @@ public class MacroSetFinder
         return packages;
     }
 
+    /// <summary>
+    /// Searches for the macro set for a single shader with a custom timeout and greedy iteration limit.
+    /// </summary>
+    public async Task<ShaderMacroSearchResult> FindMacroSetForSingleShaderAsync(
+        string jsonPath, string vertexFactoryName, string shaderTypeName,
+        GetReferenceBytecodeDelegate getReferenceBytecode,
+        IProgress<MacroSetFinderProgress> progress,
+        CancellationToken cancellationToken,
+        TimeSpan timeout,
+        int maxGreedyIterations = int.MaxValue)
+    {
+        return await Task.Run(() =>
+            FindMacroSetForShader(vertexFactoryName, shaderTypeName, jsonPath,
+                getReferenceBytecode, progress, 1, 0, cancellationToken, timeout, maxGreedyIterations),
+            cancellationToken);
+    }
+
     private ShaderMacroSearchResult FindMacroSetForShader(
         string vertexFactoryName, string shaderTypeName, string jsonPath,
         GetReferenceBytecodeDelegate getReferenceBytecode,
         IProgress<MacroSetFinderProgress> progress,
         int totalShaders, int completedSoFar,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        TimeSpan? timeout = null,
+        int maxGreedyIterations = 50)
     {
         var sw = System.Diagnostics.Stopwatch.StartNew();
-        using var timeoutCts = new CancellationTokenSource(PerShaderTimeout);
+        using var timeoutCts = new CancellationTokenSource(timeout ?? PerShaderTimeout);
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
         var token = linkedCts.Token;
 
@@ -219,10 +252,11 @@ public class MacroSetFinder
 
             // Get reference bytecode and decompile
             var vfForDelegate = vertexFactoryName == "None" ? null : vertexFactoryName;
-            var referenceBytecode = getReferenceBytecode(shaderTypeName, vfForDelegate);
+            var referenceBytecode = getReferenceBytecode(jsonPath, shaderTypeName, vfForDelegate);
             if (referenceBytecode == null || referenceBytecode.Length == 0)
             {
                 result.Status = "No reference bytecode available";
+                result.HasReferenceBytecode = false;
                 result.ElapsedSeconds = sw.Elapsed.TotalSeconds;
                 return result;
             }
@@ -266,6 +300,15 @@ public class MacroSetFinder
                 }
             }
 
+            // Expand candidates using the transitive include graph and external_macros.json
+            var expandedCandidates = BuildExpandedCandidateMacros(baseShaderName, baseNames);
+            var candidateNameSet = new HashSet<string>(candidateMacros.Select(m => m.Name), StringComparer.Ordinal);
+            foreach (var m in expandedCandidates)
+            {
+                if (candidateNameSet.Add(m.Name))
+                    candidateMacros.Add(m);
+            }
+
             void ReportPhase(string phase, string message)
             {
                 progress.Report(new MacroSetFinderProgress
@@ -304,7 +347,9 @@ public class MacroSetFinder
             if (addResult != null)
             {
                 result.Found = true;
-                result.Status = $"Matched by adding macro '{addResult.ChangedMacro}'";
+                result.Status = addResult.ChangedMacros.Count == 1
+                    ? $"Matched by adding macro '{addResult.ChangedMacros[0]}'"
+                    : $"Matched by adding any of: {string.Join(", ", addResult.ChangedMacros)}";
                 result.SearchPhase = "Phase 1 (Add Single)";
                 result.Macros = addResult.FinalMacros.Select(m => new ShaderMacroSearchResult.MacroResult
                     { Name = m.Name, Definition = m.Definition }).ToList();
@@ -322,7 +367,9 @@ public class MacroSetFinder
             if (valueChangeResult != null)
             {
                 result.Found = true;
-                result.Status = $"Matched by changing value of '{valueChangeResult.ChangedMacro}'";
+                result.Status = valueChangeResult.ChangedMacros.Count == 1
+                    ? $"Matched by changing value of '{valueChangeResult.ChangedMacros[0]}'"
+                    : $"Matched by changing value of any of: {string.Join(", ", valueChangeResult.ChangedMacros)}";
                 result.SearchPhase = "Phase 1.5 (Value Change)";
                 result.Macros = valueChangeResult.FinalMacros.Select(m => new ShaderMacroSearchResult.MacroResult
                     { Name = m.Name, Definition = m.Definition }).ToList();
@@ -340,7 +387,9 @@ public class MacroSetFinder
             if (removeResult != null)
             {
                 result.Found = true;
-                result.Status = $"Matched by removing macro '{removeResult.ChangedMacro}'";
+                result.Status = removeResult.ChangedMacros.Count == 1
+                    ? $"Matched by removing macro '{removeResult.ChangedMacros[0]}'"
+                    : $"Matched by removing any of: {string.Join(", ", removeResult.ChangedMacros)}";
                 result.SearchPhase = "Phase 2 (Remove Single)";
                 result.Macros = removeResult.FinalMacros.Select(m => new ShaderMacroSearchResult.MacroResult
                     { Name = m.Name, Definition = m.Definition }).ToList();
@@ -354,15 +403,33 @@ public class MacroSetFinder
             ReportPhase("Phase 3", "Greedy search...");
             var greedyResult = GreedySearch(baseMacros, candidateMacros,
                 baseShaderName, materialHlsl, vfName, entryPoint, shaderProfile, referenceLines,
-                progress, vertexFactoryName, shaderTypeName, totalShaders, completedSoFar, token);
+                progress, vertexFactoryName, shaderTypeName, totalShaders, completedSoFar, token, maxGreedyIterations);
 
             if (greedyResult != null)
             {
                 result.Found = true;
-                result.Status = $"Matched via greedy search ({greedyResult.Value.Iterations} iterations)";
                 result.SearchPhase = "Phase 3 (Greedy)";
                 result.Macros = greedyResult.Value.FinalMacros.Select(m => new ShaderMacroSearchResult.MacroResult
                     { Name = m.Name, Definition = m.Definition }).ToList();
+
+                // Allow duplicate macro names; build dictionaries by overwriting earlier entries
+                // so the last occurrence wins instead of throwing an exception.
+                var baseDict = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (var m in baseMacros)
+                    baseDict[m.Name] = m.Definition;
+
+                var finalDict = new Dictionary<string, string>(StringComparer.Ordinal);
+                foreach (var m in greedyResult.Value.FinalMacros)
+                    finalDict[m.Name] = m.Definition;
+                var added = finalDict.Where(kv => !baseDict.ContainsKey(kv.Key)).Select(kv => $"+{kv.Key}={kv.Value}");
+                var removed = baseDict.Where(kv => !finalDict.ContainsKey(kv.Key)).Select(kv => $"-{kv.Key}");
+                var changed = baseDict
+                    .Where(kv => finalDict.TryGetValue(kv.Key, out var newDef) && newDef != kv.Value)
+                    .Select(kv => $"~{kv.Key}: {kv.Value}\u2192{finalDict[kv.Key]}");
+                var changes = string.Join(", ", added.Concat(removed).Concat(changed));
+                result.Status = $"Matched via greedy search ({greedyResult.Value.Iterations} iterations)"
+                    + (string.IsNullOrEmpty(changes) ? "" : $"\n{changes}");
+
                 result.ElapsedSeconds = sw.Elapsed.TotalSeconds;
                 return result;
             }
@@ -396,13 +463,17 @@ public class MacroSetFinder
 
     private class OneOffResult
     {
-        public string ChangedMacro = "";
+        /// <summary>All macro names that independently produced a match in this one-off probe.</summary>
+        public List<string> ChangedMacros = [];
+        /// <summary>The final macro set from the first match (representative; all alternatives compile to the same result).</summary>
         public (string Name, string Definition)[] FinalMacros = [];
     }
 
     /// <summary>
     /// Probes macros one at a time, either adding to or removing from the base set.
     /// Uses multithreading to test candidates in parallel.
+    /// All candidates that independently produce a match are collected so the caller
+    /// can report every equivalent alternative (not just the first one found).
     /// </summary>
     private OneOffResult? ProbeOneOff(
         List<(string Name, string Definition)> baseMacros,
@@ -412,17 +483,15 @@ public class MacroSetFinder
         string entryPoint, string shaderProfile, string[] referenceLines,
         CancellationToken token)
     {
-        OneOffResult? found = null;
+        var allMatches = new ConcurrentBag<(string MacroName, (string Name, string Definition)[] FinalMacros)>();
         int maxConc = Math.Max(1, Environment.ProcessorCount / 2);
         var semaphore = new SemaphoreSlim(maxConc);
 
         var tasks = candidates.Select(async candidate =>
         {
-            if (found != null) return; // Early exit if already found
             await semaphore.WaitAsync(token).ConfigureAwait(false);
             try
             {
-                if (found != null) return;
                 token.ThrowIfCancellationRequested();
 
                 (string Name, string Definition)[] testMacros;
@@ -445,11 +514,7 @@ public class MacroSetFinder
                 }
 
                 if (matchResult.IsMatch)
-                {
-                    Interlocked.CompareExchange(ref found,
-                        new OneOffResult { ChangedMacro = candidate.Name, FinalMacros = testMacros },
-                        null);
-                }
+                    allMatches.Add((candidate.Name, testMacros));
             }
             finally
             {
@@ -458,13 +523,23 @@ public class MacroSetFinder
         });
 
         Task.WhenAll(tasks).GetAwaiter().GetResult();
-        return found;
+
+        if (allMatches.IsEmpty)
+            return null;
+
+        var matchList = allMatches.ToList();
+        return new OneOffResult
+        {
+            ChangedMacros = matchList.ConvertAll(m => m.MacroName),
+            FinalMacros = matchList[0].FinalMacros
+        };
     }
 
     /// <summary>
     /// For each NUM_* macro already in <paramref name="baseMacros"/>, tries replacing its
     /// current value with each of 1–4 (skipping the current value). Macros are probed in
-    /// parallel; values for each macro are tried in order, stopping on the first exact match.
+    /// parallel; all macros whose value change produces an exact match are collected so the
+    /// caller can report every equivalent alternative.
     /// </summary>
     private OneOffResult? ProbeOneOffValueChange(
         List<(string Name, string Definition)> baseMacros,
@@ -476,17 +551,15 @@ public class MacroSetFinder
         if (numericalMacros.Count == 0)
             return null;
 
-        OneOffResult? found = null;
+        var allMatches = new ConcurrentBag<(string MacroName, (string Name, string Definition)[] FinalMacros)>();
         int maxConc = Math.Max(1, Environment.ProcessorCount / 2);
         var semaphore = new SemaphoreSlim(maxConc);
 
         var tasks = numericalMacros.Select(async macro =>
         {
-            if (found != null) return;
             await semaphore.WaitAsync(token).ConfigureAwait(false);
             try
             {
-                if (found != null) return;
                 token.ThrowIfCancellationRequested();
 
                 int currentVal = int.TryParse(macro.Definition, out int cv) ? cv : 0;
@@ -496,15 +569,13 @@ public class MacroSetFinder
                 for (int v = 1; v <= 4; v++)
                 {
                     if (v == currentVal) continue;
-                    if (found != null) break;
                     (string Name, string Definition)[] testMacros = [.. baseWithout, (macro.Name, v.ToString())];
                     var r = TryCompileAndMatch(baseShaderName, materialHlsl, vfName,
                         testMacros, entryPoint, shaderProfile, referenceLines);
                     if (r.IsMatch)
                     {
-                        Interlocked.CompareExchange(ref found,
-                            new OneOffResult { ChangedMacro = macro.Name, FinalMacros = testMacros },
-                            null);
+                        allMatches.Add((macro.Name, testMacros));
+                        break; // One winning value per macro is enough
                     }
                 }
             }
@@ -515,7 +586,16 @@ public class MacroSetFinder
         });
 
         Task.WhenAll(tasks).GetAwaiter().GetResult();
-        return found;
+
+        if (allMatches.IsEmpty)
+            return null;
+
+        var matchList = allMatches.ToList();
+        return new OneOffResult
+        {
+            ChangedMacros = matchList.ConvertAll(m => m.MacroName),
+            FinalMacros = matchList[0].FinalMacros
+        };
     }
 
     private struct GreedyResult
@@ -536,7 +616,8 @@ public class MacroSetFinder
         IProgress<MacroSetFinderProgress> progress,
         string vertexFactoryName, string shaderTypeName,
         int totalShaders, int completedSoFar,
-        CancellationToken token)
+        CancellationToken token,
+        int maxIterations = 50)
     {
         var currentMacros = new List<(string Name, string Definition)>(baseMacros);
         var currentNames = new HashSet<string>(currentMacros.Select(m => m.Name));
@@ -548,7 +629,6 @@ public class MacroSetFinder
         double bestSimilarity = baselineMatch.Similarity;
 
         int iteration = 0;
-        const int maxIterations = 50;
 
         while (iteration < maxIterations)
         {
@@ -858,6 +938,133 @@ public class MacroSetFinder
     }
 
     /// <summary>
+    /// Loads and caches the <c>external_macros.json</c> file. Searches the application base
+    /// directory and directories relative to the includes path. Returns <see langword="null"/> if
+    /// the file cannot be found or parsed.
+    /// </summary>
+    private ExternalMacrosJson? GetExternalMacros()
+    {
+        if (_externalMacrosLoaded) return _externalMacros;
+        lock (_externalMacrosLock)
+        {
+            if (_externalMacrosLoaded) return _externalMacros;
+
+            string[] searchPaths =
+            [
+                Path.Combine(AppContext.BaseDirectory, "external_macros.json"),
+                Path.Combine(_includesDirectory, "external_macros.json"),
+                Path.Combine(Path.GetDirectoryName(_includesDirectory) ?? string.Empty, "external_macros.json"),
+            ];
+
+            foreach (var path in searchPaths)
+            {
+                if (!File.Exists(path)) continue;
+                try
+                {
+                    var json = File.ReadAllText(path);
+                    var loaded = JsonSerializer.Deserialize<ExternalMacrosJson>(json);
+                    if (loaded != null)
+                    {
+                        // Re-wrap PerFile with a case-insensitive comparer for reliable lookups
+                        _externalMacros = new ExternalMacrosJson
+                        {
+                            PerFile = new Dictionary<string, List<string>>(
+                                loaded.PerFile, StringComparer.OrdinalIgnoreCase)
+                        };
+                        break;
+                    }
+                }
+                catch { }
+            }
+
+            _externalMacrosLoaded = true;
+            return _externalMacros;
+        }
+    }
+
+    /// <summary>
+    /// Performs a static scan of USF files starting from <paramref name="baseShaderFileName"/>,
+    /// following <c>#include</c> directives recursively. Returns the set of all reachable base
+    /// filenames — the same files the D3D compiler would read during a single test compile.
+    /// </summary>
+    private HashSet<string> ScanUsfIncludes(string baseShaderFileName)
+    {
+        // Ensure extension.
+        baseShaderFileName = Path.ChangeExtension(baseShaderFileName, ".usf");
+        var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var queue = new Queue<string>();
+        queue.Enqueue(Path.GetFileName(baseShaderFileName));
+
+        while (queue.Count > 0)
+        {
+            var filename = queue.Dequeue();
+            if (!visited.Add(filename))
+                continue;
+
+            var fullPath = Path.Combine(_includesDirectory, filename);
+            if (!File.Exists(fullPath))
+                continue;
+
+            try
+            {
+                foreach (var line in File.ReadLines(fullPath))
+                {
+                    var trimmed = line.TrimStart();
+                    if (!trimmed.StartsWith("#include", StringComparison.Ordinal))
+                        continue;
+
+                    int start = trimmed.IndexOfAny(['"', '<']);
+                    if (start < 0) continue;
+                    char terminator = trimmed[start] == '"' ? '"' : '>';
+                    int end = trimmed.IndexOf(terminator, start + 1);
+                    if (end < 0) continue;
+
+                    var includedFilename = Path.GetFileName(trimmed.Substring(start + 1, end - start - 1));
+                    if (!string.IsNullOrEmpty(includedFilename))
+                        queue.Enqueue(includedFilename);
+                }
+            }
+            catch { /* Skip unreadable files */ }
+        }
+
+        return visited;
+    }
+
+    /// <summary>
+    /// Builds an expanded set of candidate macros for a shader by scanning its transitive
+    /// USF include tree (via a single test compile worth of file reads) and collecting all
+    /// macros associated with those files from <c>external_macros.json</c>. This provides a
+    /// comprehensive candidate set for the search phases, beyond what the debug package's
+    /// <c>possibleMacros</c> list alone contains.
+    /// </summary>
+    /// <param name="baseShaderFileName">The base .usf filename (e.g. "BasePassPixelShader.usf").</param>
+    /// <param name="baseNames">Macro names already active in the current set; excluded from the result.</param>
+    /// <returns>Expanded candidate macros with default definition "1".</returns>
+    private List<(string Name, string Definition)> BuildExpandedCandidateMacros(
+        string baseShaderFileName,
+        HashSet<string> baseNames)
+    {
+        var externalMacros = GetExternalMacros();
+        if (externalMacros == null) return [];
+
+        var includedFiles = ScanUsfIncludes(baseShaderFileName);
+
+        var macroNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var file in includedFiles)
+        {
+            if (externalMacros.PerFile.TryGetValue(file, out var fileMacros))
+            {
+                foreach (var macro in fileMacros)
+                    macroNames.Add(macro);
+            }
+        }
+
+        return [.. macroNames
+            .Where(m => !baseNames.Contains(m) && !IsExcludedMacro(m))
+            .Select(m => (m, "1"))];
+    }
+
+    /// <summary>
     /// Saves results to a JSON file.
     /// </summary>
     public static void SaveResultsToJson(List<ShaderMacroSearchResult> results, string outputPath)
@@ -869,5 +1076,11 @@ public class MacroSetFinder
         };
         var json = JsonSerializer.Serialize(results, options);
         File.WriteAllText(outputPath, json);
+    }
+
+    private sealed class ExternalMacrosJson
+    {
+        [JsonPropertyName("per_file")]
+        public Dictionary<string, List<string>> PerFile { get; set; } = [];
     }
 }

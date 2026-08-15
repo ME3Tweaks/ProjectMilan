@@ -3,7 +3,9 @@ using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 using ICSharpCode.AvalonEdit.Rendering;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Shaders;
+using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.BinaryConverters.Shaders;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
@@ -299,6 +301,41 @@ namespace MilanShaderResearchTool
         private const int PreviewSize = 512;
         private readonly ObservableCollection<MacroEntry> _macros = new();
 
+        private static readonly string SettingsPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "MilanShaderResearchTool", "settings.json");
+
+        private class ToolSettings
+        {
+            public string? LastDebugPackagePath { get; set; }
+        }
+
+        private ToolSettings LoadSettings()
+        {
+            try
+            {
+                if (File.Exists(SettingsPath))
+                {
+                    var json = File.ReadAllText(SettingsPath);
+                    return JsonSerializer.Deserialize<ToolSettings>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new ToolSettings();
+                }
+            }
+            catch { }
+            return new ToolSettings();
+        }
+
+        private void SaveSettings(ToolSettings settings)
+        {
+            try
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
+                File.WriteAllText(SettingsPath, JsonSerializer.Serialize(settings,
+                    new JsonSerializerOptions { WriteIndented = true }));
+            }
+            catch { }
+        }
+
         // SharpDX objects
         private D3D11Device? _device;
         private Texture2D? _renderTarget;
@@ -330,10 +367,16 @@ namespace MilanShaderResearchTool
         private static IHighlightingDefinition? _hlslHighlighting;
         private string? _cachedDecompText;
         private string? _cachedExpectedText;
+        private ObjectInstanceDB gameObjectDb;
 
         public MainWindow()
         {
             InitializeComponent();
+
+            // Restore last debug package path (populate only, do not load)
+            var savedSettings = LoadSettings();
+            if (!string.IsNullOrEmpty(savedSettings.LastDebugPackagePath))
+                MaterialHlslPathBox.Text = savedSettings.LastDebugPackagePath;
 
             // Start named pipe listener for external open requests
             _pipeCts = new CancellationTokenSource();
@@ -362,7 +405,7 @@ namespace MilanShaderResearchTool
             }
             catch { /* LE3 path not configured */ }
 
-            Loaded += (_, _) => { InitializeD3D(); SetupEditors(); };
+            Loaded += (_, _) => { SetupEditors(); };
         }
 
         protected override void OnClosed(EventArgs e)
@@ -375,553 +418,9 @@ namespace MilanShaderResearchTool
             }
             catch { }
 
-            CleanupD3D();
             base.OnClosed(e);
         }
 
-        #region D3D11 Preview
-
-        private void InitializeD3D()
-        {
-            try
-            {
-                _device = new D3D11Device(DriverType.Hardware, DeviceCreationFlags.None);
-
-                _renderTarget = new Texture2D(_device, new Texture2DDescription
-                {
-                    Width = PreviewSize,
-                    Height = PreviewSize,
-                    MipLevels = 1,
-                    ArraySize = 1,
-                    Format = Format.B8G8R8A8_UNorm,
-                    SampleDescription = new SampleDescription(1, 0),
-                    Usage = ResourceUsage.Default,
-                    BindFlags = BindFlags.RenderTarget,
-                });
-                _renderTargetView = new RenderTargetView(_device, _renderTarget);
-
-                _stagingTexture = new Texture2D(_device, new Texture2DDescription
-                {
-                    Width = PreviewSize,
-                    Height = PreviewSize,
-                    MipLevels = 1,
-                    ArraySize = 1,
-                    Format = Format.B8G8R8A8_UNorm,
-                    SampleDescription = new SampleDescription(1, 0),
-                    Usage = ResourceUsage.Staging,
-                    BindFlags = BindFlags.None,
-                    CpuAccessFlags = CpuAccessFlags.Read,
-                });
-
-                // Preview vertex shader provides SV_POSITION, UV, and extra TEXCOORD slots
-                // so UE3 pixel shaders that read common interpolants get reasonable defaults.
-                var vsSource = @"
-struct VS_OUT {
-    float4 pos : SV_POSITION;
-    float2 uv  : TEXCOORD0;
-    float4 tc1 : TEXCOORD1;
-    float4 tc2 : TEXCOORD2;
-    float4 tc3 : TEXCOORD3;
-    float4 tc4 : TEXCOORD4;
-    float4 tc5 : TEXCOORD5;
-    float4 tc6 : TEXCOORD6;
-    float4 tc7 : TEXCOORD7;
-};
-VS_OUT main(float3 p : POSITION, float2 uv : TEXCOORD0) {
-    VS_OUT o = (VS_OUT)0;
-    o.pos = float4(p, 1.0);
-    o.uv  = uv;
-    o.tc1 = float4(uv, 0, 1);
-    return o;
-}";
-                var vsCompileResult = SharpDX.D3DCompiler.ShaderBytecode.Compile(vsSource, "main", "vs_5_0");
-                if (vsCompileResult.HasErrors)
-                {
-                    AppendConsole($"Preview VS compile error: {vsCompileResult.Message}");
-                    vsCompileResult.Dispose();
-                    return;
-                }
-
-                _previewVS = new VertexShader(_device, vsCompileResult.Bytecode);
-                _inputLayout = new InputLayout(_device, vsCompileResult.Bytecode, new[]
-                {
-                    new InputElement("POSITION", 0, Format.R32G32B32_Float, 0, 0),
-                    new InputElement("TEXCOORD", 0, Format.R32G32_Float, 12, 0),
-                });
-                vsCompileResult.Dispose();
-
-                // Full-screen quad: 2 triangles, 20 bytes/vertex (float3 pos + float2 uv)
-                var vertices = new float[]
-                {
-                    -1, -1, 0,  0, 1,
-                    -1,  1, 0,  0, 0,
-                     1,  1, 0,  1, 0,
-                    -1, -1, 0,  0, 1,
-                     1,  1, 0,  1, 0,
-                     1, -1, 0,  1, 1,
-                };
-                var vertexHandle = GCHandle.Alloc(vertices, GCHandleType.Pinned);
-                try
-                {
-                    _vertexBuffer = new D3D11Buffer(_device, vertexHandle.AddrOfPinnedObject(),
-                        new BufferDescription
-                        {
-                            SizeInBytes = vertices.Length * sizeof(float),
-                            BindFlags = BindFlags.VertexBuffer,
-                            Usage = ResourceUsage.Default,
-                        });
-                }
-                finally
-                {
-                    vertexHandle.Free();
-                }
-
-                _samplerState = new SamplerState(_device, new SamplerStateDescription
-                {
-                    Filter = Filter.MinMagMipLinear,
-                    AddressU = TextureAddressMode.Wrap,
-                    AddressV = TextureAddressMode.Wrap,
-                    AddressW = TextureAddressMode.Wrap,
-                    MaximumAnisotropy = 1,
-                    ComparisonFunction = Comparison.Never,
-                    MaximumLod = float.MaxValue,
-                });
-
-                _previewBitmap = new WriteableBitmap(PreviewSize, PreviewSize, 96, 96, PixelFormats.Bgra32, null);
-
-                // Compile a placeholder pixel shader so we can verify the preview pipeline on startup
-                // and use it when previewing a compiled vertex shader.
-                var placeholderPSSource = @"
-float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
-    float2 grid  = floor(uv * 8.0);
-    float checker = fmod(grid.x + grid.y, 2.0) * 0.15 + 0.85;
-    return float4(uv.x * checker, uv.y * checker, 0.3 * checker, 1.0);
-}";
-                var psPlaceholder = SharpDX.D3DCompiler.ShaderBytecode.Compile(placeholderPSSource, "main", "ps_5_0");
-                if (!psPlaceholder.HasErrors)
-                {
-                    _placeholderPS = new PixelShader(_device, psPlaceholder.Bytecode);
-                    _compiledShaderBytes = psPlaceholder.Bytecode.Data;
-                    UpdatePreview();
-                }
-                psPlaceholder.Dispose();
-
-                AppendConsole("D3D11 preview initialized.");
-            }
-            catch (Exception ex)
-            {
-                AppendConsole($"Failed to initialize D3D11 preview: {ex.Message}");
-            }
-        }
-
-        private void UpdatePreview()
-        {
-            if (_compiledShaderBytes is null || _device is null || _previewBitmap is null)
-                return;
-
-            try
-            {
-                VertexShader vsToUse;
-                PixelShader psToUse;
-                InputLayout layoutToUse;
-                int vertexStride;
-                D3D11Buffer vbToUse;
-
-                if (_compiledShaderIsVertexShader)
-                {
-                    if (_placeholderPS is null)
-                        return;
-
-                    _compiledVS?.Dispose();
-                    _compiledVS = new VertexShader(_device, _compiledShaderBytes);
-                    BuildVertexResourcesForVS(_compiledShaderBytes);
-
-                    if (_compiledVSInputLayout is null || _compiledVSVertexBuffer is null)
-                    {
-                        AppendConsole("Could not build input layout for compiled VS.");
-                        return;
-                    }
-
-                    vsToUse = _compiledVS;
-                    psToUse = _placeholderPS;
-                    layoutToUse = _compiledVSInputLayout;
-                    vertexStride = _compiledVSVertexStride;
-                    vbToUse = _compiledVSVertexBuffer;
-                }
-                else
-                {
-                    if (_previewVS is null || _inputLayout is null || _vertexBuffer is null)
-                        return;
-
-                    _compiledPS?.Dispose();
-                    _compiledPS = new PixelShader(_device, _compiledShaderBytes);
-
-                    vsToUse = _previewVS;
-                    psToUse = _compiledPS;
-                    layoutToUse = _inputLayout;
-                    vertexStride = 20;
-                    vbToUse = _vertexBuffer;
-                }
-
-                var ctx = _device.ImmediateContext;
-                ctx.ClearRenderTargetView(_renderTargetView,
-                    new SharpDX.Mathematics.Interop.RawColor4(0.1f, 0.1f, 0.1f, 1.0f));
-                ctx.OutputMerger.SetRenderTargets(_renderTargetView);
-                ctx.Rasterizer.SetViewport(new SharpDX.Viewport(0, 0, PreviewSize, PreviewSize));
-                ctx.InputAssembler.InputLayout = layoutToUse;
-                ctx.InputAssembler.PrimitiveTopology = PrimitiveTopology.TriangleList;
-                ctx.InputAssembler.SetVertexBuffers(0, new VertexBufferBinding(vbToUse, vertexStride, 0));
-                ctx.VertexShader.Set(vsToUse);
-                ctx.PixelShader.Set(psToUse);
-
-                // Bind user-loaded textures
-                foreach (var kvp in _textureSRVs)
-                    ctx.PixelShader.SetShaderResource(kvp.Key, kvp.Value.SRV);
-
-                // Set sampler on all slots
-                for (int i = 0; i < 16; i++)
-                    ctx.PixelShader.SetSampler(i, _samplerState);
-
-                ctx.Draw(6, 0);
-
-                // Read back to WriteableBitmap
-                ctx.CopyResource(_renderTarget, _stagingTexture);
-                var dataBox = ctx.MapSubresource(_stagingTexture, 0, MapMode.Read, MapFlags.None);
-
-                _previewBitmap.Lock();
-                try
-                {
-                    for (int row = 0; row < PreviewSize; row++)
-                    {
-                        IntPtr src = dataBox.DataPointer + row * dataBox.RowPitch;
-                        IntPtr dst = _previewBitmap.BackBuffer + row * _previewBitmap.BackBufferStride;
-                        SharpDX.Utilities.CopyMemory(dst, src, PreviewSize * 4);
-                    }
-                    _previewBitmap.AddDirtyRect(new Int32Rect(0, 0, PreviewSize, PreviewSize));
-                }
-                finally
-                {
-                    _previewBitmap.Unlock();
-                }
-
-                ctx.UnmapSubresource(_stagingTexture, 0);
-
-                GetTextureResources();
-                AppendConsole("Preview updated.");
-            }
-            catch (Exception ex)
-            {
-                AppendConsole($"Preview render error: {ex.Message}");
-            }
-        }
-
-        private void BuildVertexResourcesForVS(byte[] vsBytecode)
-        {
-            _compiledVSInputLayout?.Dispose();
-            _compiledVSInputLayout = null;
-            _compiledVSVertexBuffer?.Dispose();
-            _compiledVSVertexBuffer = null;
-            _compiledVSVertexStride = 0;
-
-            using var reflection = new SharpDX.D3DCompiler.ShaderReflection(vsBytecode);
-            var desc = reflection.Description;
-
-            var elements = new List<InputElement>();
-            int offset = 0;
-
-            for (int i = 0; i < desc.InputParameters; i++)
-            {
-                var param = reflection.GetInputParameterDescription(i);
-                int componentCount = 0;
-                for (int bit = 0; bit < 4; bit++)
-                    if (((int)param.UsageMask & (1 << bit)) != 0) componentCount++;
-                if (componentCount == 0) componentCount = 4;
-
-                Format fmt = componentCount switch
-                {
-                    1 => Format.R32_Float,
-                    2 => Format.R32G32_Float,
-                    3 => Format.R32G32B32_Float,
-                    _ => Format.R32G32B32A32_Float,
-                };
-
-                elements.Add(new InputElement(param.SemanticName, (int)param.SemanticIndex, fmt, offset, 0));
-                offset += componentCount * 4;
-            }
-
-            int stride = offset;
-            if (stride == 0) return;
-
-            _compiledVSInputLayout = new InputLayout(_device, vsBytecode, elements.ToArray());
-            _compiledVSVertexStride = stride;
-
-            // Build a 6-vertex full-screen quad with reasonable defaults per semantic
-            int floatsPerVertex = stride / 4;
-            var vertexData = new float[6 * floatsPerVertex];
-
-            float[][] positions =
-            [
-                [-1, -1, 0, 1], [-1,  1, 0, 1], [ 1,  1, 0, 1],
-                [-1, -1, 0, 1], [ 1,  1, 0, 1], [ 1, -1, 0, 1],
-            ];
-            float[][] uvs =
-            [
-                [0, 1], [0, 0], [1, 0],
-                [0, 1], [1, 0], [1, 1],
-            ];
-
-            for (int v = 0; v < 6; v++)
-            {
-                int floatIdx = v * floatsPerVertex;
-                int elemOffset = 0;
-                for (int ei = 0; ei < elements.Count; ei++)
-                {
-                    var elem = elements[ei];
-                    int cc = (elem.Format) switch
-                    {
-                        Format.R32_Float => 1,
-                        Format.R32G32_Float => 2,
-                        Format.R32G32B32_Float => 3,
-                        _ => 4,
-                    };
-
-                    if (string.Equals(elem.SemanticName, "POSITION", StringComparison.OrdinalIgnoreCase))
-                    {
-                        for (int c = 0; c < cc && c < 4; c++)
-                            vertexData[floatIdx + elemOffset + c] = positions[v][c];
-                    }
-                    else if (string.Equals(elem.SemanticName, "TEXCOORD", StringComparison.OrdinalIgnoreCase) && elem.SemanticIndex == 0)
-                    {
-                        for (int c = 0; c < cc && c < 2; c++)
-                            vertexData[floatIdx + elemOffset + c] = uvs[v][c];
-                    }
-                    else if (string.Equals(elem.SemanticName, "NORMAL", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (cc >= 3) vertexData[floatIdx + elemOffset + 2] = 1.0f; // +Z
-                    }
-                    else if (string.Equals(elem.SemanticName, "TANGENT", StringComparison.OrdinalIgnoreCase))
-                    {
-                        if (cc >= 1) vertexData[floatIdx + elemOffset] = 1.0f; // +X
-                        if (cc >= 4) vertexData[floatIdx + elemOffset + 3] = 1.0f; // handedness
-                    }
-                    // Other semantics remain zero-filled
-
-                    elemOffset += cc;
-                }
-            }
-
-            var handle = GCHandle.Alloc(vertexData, GCHandleType.Pinned);
-            try
-            {
-                _compiledVSVertexBuffer = new D3D11Buffer(_device, handle.AddrOfPinnedObject(),
-                    new BufferDescription
-                    {
-                        SizeInBytes = vertexData.Length * sizeof(float),
-                        BindFlags = BindFlags.VertexBuffer,
-                        Usage = ResourceUsage.Default,
-                    });
-            }
-            finally
-            {
-                handle.Free();
-            }
-        }
-
-        private void GetTextureResources()
-        {
-            if (string.IsNullOrWhiteSpace(MaterialHlslPathBox.Text))
-            {
-                return;
-            }
-
-            // This needs fixed it is not correct right now. Stored as forced export so we need to
-            // include package name
-            var matFolder = Directory.GetParent(MaterialHlslPathBox.Text.Trim()).Parent.Parent;
-            var materialName = Directory.GetParent(MaterialHlslPathBox.Text.Trim()).Parent.Name;
-
-            var packageFolder = matFolder.Parent;
-            var packageName = matFolder.Name;
-
-            var packagePath = Path.Combine(@"E:\CompiledShaderPackages", $"{matFolder.Name}.pcc");
-            if (File.Exists(packagePath))
-            {
-                using var package = MEPackageHandler.OpenMEPackage(packagePath);
-                var material = package.Exports.FirstOrDefault(x => x.IsA("Material") && x.ObjectName.Instanced == materialName);
-                if (material != null)
-                {
-                    var matbin = ObjectBinary.From<Material>(material);
-
-                    var textures = matbin.SM3MaterialResource.UniformExpressionTextures;
-                    int slot = 0;
-                    foreach (var texUIndex in textures)
-                    {
-                        if (texUIndex == 0)
-                        {
-                            // It's a null value... how do we pass a null texture?
-                        }
-                        else
-                        {
-                            var tex = package.GetEntry(texUIndex);
-                            if (tex is ImportEntry imp)
-                            {
-
-                            }
-                            else if (tex is ExportEntry exp && exp.IsA("Texture2D"))
-                            {
-                                var t2d = new LegendaryExplorerCore.Unreal.Classes.Texture2D(exp);
-                                var png = t2d.GetPNG(t2d.GetTopMip());
-                                LoadTextureForSlot(slot, png);
-                            }
-                        }
-                        slot++;
-                    }
-                }
-            }
-        }
-
-        private void LoadTextureForSlot(int slot, byte[] pngBytes)
-        {
-            if (_device is null || pngBytes is null || pngBytes.Length == 0) return;
-
-            try
-            {
-                if (_textureSRVs.TryGetValue(slot, out var old))
-                {
-                    old.SRV.Dispose();
-                    old.Texture.Dispose();
-                    _textureSRVs.Remove(slot);
-                }
-
-                var bmp = new BitmapImage();
-                bmp.BeginInit();
-                bmp.StreamSource = new MemoryStream(pngBytes);
-                bmp.CacheOption = BitmapCacheOption.OnLoad;
-                bmp.EndInit();
-
-                var converted = new FormatConvertedBitmap(bmp, PixelFormats.Bgra32, null, 0);
-                int w = converted.PixelWidth;
-                int h = converted.PixelHeight;
-                int stride = w * 4;
-                var pixels = new byte[stride * h];
-                converted.CopyPixels(pixels, stride, 0);
-
-                var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
-                try
-                {
-                    var texDesc = new Texture2DDescription
-                    {
-                        Width = w,
-                        Height = h,
-                        MipLevels = 1,
-                        ArraySize = 1,
-                        Format = Format.B8G8R8A8_UNorm,
-                        SampleDescription = new SampleDescription(1, 0),
-                        Usage = ResourceUsage.Default,
-                        BindFlags = BindFlags.ShaderResource,
-                    };
-                    var dataBox = new SharpDX.DataBox(handle.AddrOfPinnedObject(), stride, 0);
-                    var tex = new Texture2D(_device, texDesc, new[] { dataBox });
-                    var srv = new ShaderResourceView(_device, tex);
-                    _textureSRVs[slot] = (tex, srv);
-                }
-                finally
-                {
-                    handle.Free();
-                }
-
-                AppendConsole($"Loaded texture for slot {slot} from PNG bytes ({pngBytes.Length} bytes).");
-            }
-            catch (Exception ex)
-            {
-                AppendConsole($"Failed to load texture for slot {slot}: {ex.Message}");
-            }
-        }
-
-        private void LoadTextureForSlot(int slot, string filePath)
-        {
-            if (_device is null || !File.Exists(filePath)) return;
-
-            try
-            {
-                // Dispose previous texture for this slot
-                if (_textureSRVs.TryGetValue(slot, out var old))
-                {
-                    old.SRV.Dispose();
-                    old.Texture.Dispose();
-                    _textureSRVs.Remove(slot);
-                }
-
-                // Load via WPF imaging, convert to BGRA32
-                var bmp = new BitmapImage();
-                bmp.BeginInit();
-                bmp.UriSource = new Uri(filePath, UriKind.Absolute);
-                bmp.CacheOption = BitmapCacheOption.OnLoad;
-                bmp.EndInit();
-
-                var converted = new FormatConvertedBitmap(bmp, PixelFormats.Bgra32, null, 0);
-                int w = converted.PixelWidth;
-                int h = converted.PixelHeight;
-                int stride = w * 4;
-                var pixels = new byte[stride * h];
-                converted.CopyPixels(pixels, stride, 0);
-
-                var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
-                try
-                {
-                    var texDesc = new Texture2DDescription
-                    {
-                        Width = w,
-                        Height = h,
-                        MipLevels = 1,
-                        ArraySize = 1,
-                        Format = Format.B8G8R8A8_UNorm,
-                        SampleDescription = new SampleDescription(1, 0),
-                        Usage = ResourceUsage.Default,
-                        BindFlags = BindFlags.ShaderResource,
-                    };
-                    var dataBox = new SharpDX.DataBox(handle.AddrOfPinnedObject(), stride, 0);
-                    var tex = new Texture2D(_device, texDesc, new[] { dataBox });
-                    var srv = new ShaderResourceView(_device, tex);
-                    _textureSRVs[slot] = (tex, srv);
-                }
-                finally
-                {
-                    handle.Free();
-                }
-
-                AppendConsole($"Loaded texture for slot {slot}: {Path.GetFileName(filePath)}");
-            }
-            catch (Exception ex)
-            {
-                AppendConsole($"Failed to load texture for slot {slot}: {ex.Message}");
-            }
-        }
-
-        private void CleanupD3D()
-        {
-            foreach (var kvp in _textureSRVs)
-            {
-                kvp.Value.SRV?.Dispose();
-                kvp.Value.Texture?.Dispose();
-            }
-            _textureSRVs.Clear();
-
-            _compiledPS?.Dispose();
-            _compiledVS?.Dispose();
-            _compiledVSInputLayout?.Dispose();
-            _compiledVSVertexBuffer?.Dispose();
-            _placeholderPS?.Dispose();
-            _samplerState?.Dispose();
-            _vertexBuffer?.Dispose();
-            _inputLayout?.Dispose();
-            _previewVS?.Dispose();
-            _stagingTexture?.Dispose();
-            _renderTargetView?.Dispose();
-            _renderTarget?.Dispose();
-            _device?.Dispose();
-        }
-
-        #endregion
 
         #region Compilation
 
@@ -1092,9 +591,21 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
                 await LoadDebugPackage(dlg.FileName);
         }
 
+        private async void ReloadDebugPackage_Click(object sender, RoutedEventArgs e)
+        {
+            var path = MaterialHlslPathBox.Text.Trim();
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                AppendConsole("ERROR: No debug package path set or file not found.");
+                return;
+            }
+            await LoadDebugPackage(path);
+        }
+
         private async Task LoadDebugPackage(string jsonPath)
         {
             MaterialHlslPathBox.Text = jsonPath;
+            SaveSettings(new ToolSettings { LastDebugPackagePath = jsonPath });
 
             ShaderClientDebugPackage package;
             try
@@ -1110,6 +621,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             }
 
             _materialHlslContent = package.materialHlsl;
+            MaterialHlslEditor.Text = _materialHlslContent ?? string.Empty;
 
             BaseShaderNameBox.Text = package.sourceFilename ?? "";
             if (package.vertexFactoryShaderFilename != null)
@@ -1240,8 +752,6 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
 
                 var decompiledText = await Task.Run(() => HLSLDecompiler.DecompileShader(shaderBytes, false));
                 DecompiledShaderEditor.Text = decompiledText ?? string.Empty;
-
-                UpdatePreview();
             }
             catch (Exception ex)
             {
@@ -1313,6 +823,106 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             {
                 AppendConsole($"ERROR probing defines: {ex.Message}");
             }
+        }
+
+        private async void OpenGameVersion_Click(object sender, RoutedEventArgs e)
+        {
+            var jsonPath = MaterialHlslPathBox.Text.Trim();
+            if (string.IsNullOrEmpty(jsonPath) || !File.Exists(jsonPath))
+            {
+                AppendConsole("ERROR: No debug package loaded.");
+                return;
+            }
+
+            var shaderTypeName = Path.GetFileNameWithoutExtension(jsonPath);
+            var vf = Path.GetFileName(Path.GetDirectoryName(jsonPath)!);
+
+            AppendConsole($"Looking up game version for {shaderTypeName}...");
+
+            byte[]? referenceBytecode;
+            try
+            {
+                referenceBytecode = await Task.Run(() => GetReferenceBytecode(jsonPath, shaderTypeName, vf));
+            }
+            catch (Exception ex)
+            {
+                AppendConsole($"ERROR looking up game version: {ex.Message}");
+                return;
+            }
+
+            if (referenceBytecode == null || referenceBytecode.Length == 0)
+            {
+                AppendConsole("ERROR: Could not find reference bytecode in game files.");
+                return;
+            }
+
+            var decompiled = await Task.Run(() => HLSLDecompiler.DecompileShader(referenceBytecode, false));
+            if (string.IsNullOrEmpty(decompiled))
+            {
+                AppendConsole("ERROR: Failed to decompile game shader bytecode.");
+                return;
+            }
+
+            ExpectedDecompiledEditor.Text = decompiled;
+            ProbeHashBox.Text = ComputeShaderBytecodeMd5(referenceBytecode);
+            ShowExpectedPanel();
+            UpdateMaterialInfoPanel();
+            AppendConsole("Game version loaded in expected panel.");
+        }
+
+        private void OpenBaseShaderUsf_Click(object sender, RoutedEventArgs e)
+        {
+            var game = MEGame.LE3;
+            var baseShader = BaseShaderNameBox.Text.Trim();
+            if (string.IsNullOrEmpty(baseShader))
+            {
+                AppendConsole("ERROR: No base shader name specified.");
+                return;
+            }
+
+            var shadersDir = Path.Combine(MEDirectories.GetDefaultGamePath(game), "Engine", "Shaders");
+            var usfPath = Path.Combine(shadersDir, baseShader + ".usf");
+            if (!File.Exists(usfPath))
+            {
+                AppendConsole($"ERROR: File not found: {usfPath}");
+                return;
+            }
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(usfPath) { UseShellExecute = true });
+        }
+
+        private void OpenVertexFactoryUsf_Click(object sender, RoutedEventArgs e)
+        {
+            var game = MEGame.LE3;
+            var vertexFactory = VertexFactoryBox.Text.Trim();
+            if (string.IsNullOrEmpty(vertexFactory))
+            {
+                AppendConsole("ERROR: No vertex factory name specified.");
+                return;
+            }
+
+            var shadersDir = Path.Combine(MEDirectories.GetDefaultGamePath(game), "Engine", "Shaders");
+            var usfPath = Path.Combine(shadersDir, vertexFactory + ".usf");
+            if (!File.Exists(usfPath))
+            {
+                AppendConsole($"ERROR: File not found: {usfPath}");
+                return;
+            }
+
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(usfPath) { UseShellExecute = true });
+        }
+
+        private void OpenMaterialUsf_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_materialHlslContent))
+            {
+                AppendConsole("ERROR: No material HLSL loaded.");
+                return;
+            }
+
+            var tempPath = Path.Combine(Path.GetTempPath(), "MaterialTemplate.usf");
+            File.WriteAllText(tempPath, _materialHlslContent, Encoding.UTF8);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(tempPath) { UseShellExecute = true });
         }
 
         private void AddMacro_Click(object sender, RoutedEventArgs e) =>
@@ -1624,36 +1234,194 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             ConsoleOutput.ScrollToEnd();
         }
 
+        /// <summary>
+        /// The material that is the entrypoint for finding the shader. We also get other properties off it
+        /// </summary>
+        private ExportEntry ReferenceMaterialExport;
+
+        private void UpdateMaterialInfoPanel()
+        {
+            MaterialInfoOutput.Text = GetReferenceMaterialInformation();
+        }
+
+        private string GetReferenceMaterialInformation()
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if (ReferenceMaterialExport != null)
+            {
+                sb.AppendLine(ReferenceMaterialExport.MemoryFullPath);
+                sb.AppendLine(ReferenceMaterialExport.FileRef.FileNameNoExtension + ".pcc");
+
+                var props = ReferenceMaterialExport.GetProperties();
+                foreach(var prop in props)
+                {
+                    if (prop is BoolProperty bp)
+                    {
+                        sb.AppendLine($"{bp.Name}:\t{bp.Value}");
+                    }
+                }
+
+                var blendMode = props.GetProp<EnumProperty>("BlendMode");
+                if (blendMode != null)
+                {
+                    sb.AppendLine($"{blendMode.Name}:\t{blendMode.Value}");
+                }
+
+                var lightingModel = props.GetProp<EnumProperty>("LightingModel");
+                if (lightingModel != null)
+                {
+                    sb.AppendLine($"{lightingModel.Name}:\t{lightingModel.Value}");
+                }
+
+                var nNumWounds = props.GetProp<IntProperty>("nNumWounds");
+                if (nNumWounds != null)
+                {
+                    sb.AppendLine($"{nNumWounds.Name}:\t{nNumWounds.Value}");
+                }
+
+            }
+            else
+            {
+                sb.Append("No reference material loaded");
+            }
+
+            return sb.ToString();
+        }
+
+        private byte[]? GetReferenceBytecode(string jsonPath, string shaderType, string? vf)
+        {
+            const MEGame game = MEGame.LE3;
+
+            ReferenceMaterialExport = null;
+            if (gameObjectDb == null)
+            {
+                var dbPath = $@"B:\UserProfile\source\repos\ME3Tweaks\ProjectMilan\LEDecooker\supportfiles\{game}.bin";
+                using var fs = File.OpenRead(dbPath);
+                gameObjectDb = ObjectInstanceDB.Deserialize(game, fs);
+            }
+
+            // Parse: .../<PACKAGENAME>/<MATERIALNAME>/<VERTEXFACTORY>/<SHADERTYPE>.json
+            var matDir = Directory.GetParent(Directory.GetParent(jsonPath)!.FullName)!;
+            var ifp = $"{matDir.Parent!.Name}.{matDir.Name}";
+
+            var containingPackages = gameObjectDb.GetFilesContainingObject(ifp);
+            if (containingPackages == null || containingPackages.Count == 0)
+                return null;
+
+            var packagePath = Path.Combine(MEDirectories.GetDefaultGamePath(game), containingPackages[0]);
+            using var pkg = MEPackageHandler.OpenMEPackage(packagePath);
+            var material = pkg.FindExport(ifp);
+            if (material == null || !material.IsA("Material"))
+                return null;
+            ReferenceMaterialExport = material;
+
+            var matBin = ObjectBinary.From<Material>(material);
+            var sps = (StaticParameterSet)matBin.SM3MaterialResource.ID;
+
+            var sc = ShaderCacheManipulator.GetAllShadersForMaterials([material]);
+            if (sc == null)
+                return null;
+
+            if (!sc.MaterialShaderMaps.TryGetValue(sps, out var materialMap))
+                return null;
+
+            // JSON filenames use [ ] in place of < > due to filesystem restrictions.
+            var testName = shaderType.Replace("[", "<").Replace("]", ">");
+            if (vf == null)
+            {
+                if (materialMap.Shaders.TryGetValue(testName, out var shaderRef) &&
+                    sc.Shaders.TryGetValue(shaderRef.Id, out var shader))
+                    return shader.ShaderByteCode;
+            }
+            else
+            {
+                var msm = materialMap.MeshShaderMaps.FirstOrDefault(x => x.VertexFactoryType.Name == vf);
+                if (msm != null && msm.Shaders.TryGetValue(testName, out var shaderRef) &&
+                    sc.Shaders.TryGetValue(shaderRef.Id, out var shader))
+                    return shader.ShaderByteCode;
+            }
+
+            return null;
+        }
+
         private void Autosearch_Click(object sender, RoutedEventArgs e)
         {
-            var sourceF = @"B:\UserProfile\Desktop\SourceMat.pcc";
-            var package = MEPackageHandler.OpenMEPackage(sourceF);
-            var sc = ObjectBinary.From<ShaderCache>(package.FindExport("SeekFreeShaderCache"));
-            var guid = (StaticParameterSet)Guid.Parse("ce14d5f1-3e6b-466e-b983-c94733391b63");
-            var materialMap = sc.MaterialShaderMaps[guid];
+            // Extract data by parsing enum of path:
+            // .../<GAME>/<PACKAGENAME>/<MATERIALNAME>/<VERTEXFACTORY>/<SHADERTYPE>.json
+            // Build IFP from PACKAGENAME.MATERIALNAME
+
+            var game = MEGame.LE3;
+
+            if (gameObjectDb == null)
+            {
+                var path = $@"B:\UserProfile\source\repos\ME3Tweaks\ProjectMilan\LEDecooker\supportfiles\{game}.bin";
+                using var fs = File.OpenRead(path);
+                gameObjectDb = ObjectInstanceDB.Deserialize(game, fs);
+            }
+
+            // Shader cache state, cached per material IFP to avoid reloading the package for every shader.
+            ShaderCache? cachedSc = null;
+            MaterialShaderMap? cachedMaterialMap = null;
+            string? cachedIFP = null;
 
             var window = new MacroSetFinderWindow(
-                compileShader: DoCompileShader,          // your existing compile method
-                includesDirectory: Path.Combine(MEDirectories.GetDefaultGamePath(MEGame.LE3), "Engine", "Shaders"),           // shader includes path
-                getReferenceBytecode: (shaderType, vf) => // your delegate returning byte[]
+                compileShader: DoCompileShader,
+                includesDirectory: Path.Combine(MEDirectories.GetDefaultGamePath(game), "Engine", "Shaders"),
+                getReferenceBytecode: (jsonPath, shaderType, vf) =>
                 {
-                    Shader shaderRef = null;
+                    // Parse: .../<PACKAGENAME>/<MATERIALNAME>/<VERTEXFACTORY>/<SHADERTYPE>.json
+                    var matDir = Directory.GetParent(Directory.GetParent(jsonPath)!.FullName)!;
+                    var ifp = $"{matDir.Parent!.Name}.{matDir.Name}";
+
+                    if (ifp != cachedIFP)
+                    {
+                        cachedSc = null;
+                        cachedMaterialMap = null;
+
+                        var containingPackages = gameObjectDb.GetFilesContainingObject(ifp);
+                        if (containingPackages == null || containingPackages.Count == 0)
+                            return null;
+
+                        var packagePath = Path.Combine(MEDirectories.GetDefaultGamePath(game), containingPackages[0]);
+                        using var pkg = MEPackageHandler.OpenMEPackage(packagePath);
+                        var material = pkg.FindExport(ifp);
+                        if (material == null || !material.IsA("Material"))
+                            return null;
+
+                        var matBin = ObjectBinary.From<Material>(material);
+                        var sps = (StaticParameterSet)matBin.SM3MaterialResource.ID;
+
+                        cachedSc = ShaderCacheManipulator.GetAllShadersForMaterials([material]);
+                        if (cachedSc == null)
+                            return null;
+
+                        if (!cachedSc.MaterialShaderMaps.TryGetValue(sps, out cachedMaterialMap))
+                            return null;
+
+                        cachedIFP = ifp;
+                    }
+
+                    if (cachedSc == null || cachedMaterialMap == null)
+                        return null;
+
+                    // JSON filenames use [ ] in place of < > due to filesystem restrictions.
+                    var testName = shaderType.Replace("[", "<").Replace("]", ">");
                     if (vf == null)
                     {
-                        // It'll be in shaders on the material shader maps
-                        var shaderGuid = materialMap.Shaders[shaderType].Id;
-                        shaderRef = sc.Shaders[shaderGuid];
+                        if (cachedMaterialMap.Shaders.TryGetValue(testName, out var shaderRef) &&
+                            cachedSc.Shaders.TryGetValue(shaderRef.Id, out var shader))
+                            return shader.ShaderByteCode;
                     }
                     else
                     {
-                        var msm = materialMap.MeshShaderMaps.FirstOrDefault(x => x.VertexFactoryType.Name == vf); // Gets you list of shaders
-                        var testName = shaderType.Replace("[", "<").Replace("]", ">"); // Filename restrictions made us change these.
-                        var shaderGuid = msm.Shaders[testName].Id;
-                        shaderRef = sc.Shaders[shaderGuid];
-
+                        var msm = cachedMaterialMap.MeshShaderMaps.FirstOrDefault(x => x.VertexFactoryType.Name == vf);
+                        if (msm != null && msm.Shaders.TryGetValue(testName, out var shaderRef) &&
+                            cachedSc.Shaders.TryGetValue(shaderRef.Id, out var shader))
+                            return shader.ShaderByteCode;
                     }
 
-                    return shaderRef.ShaderByteCode;
+                    return null;
                 }
             );
             window.Owner = this;
@@ -1686,6 +1454,7 @@ float4 main(float4 pos : SV_POSITION, float2 uv : TEXCOORD0) : SV_TARGET {
             _hlslHighlighting ??= LoadHlslHighlighting();
             DecompiledShaderEditor.SyntaxHighlighting = _hlslHighlighting;
             ExpectedDecompiledEditor.SyntaxHighlighting = _hlslHighlighting;
+            MaterialHlslEditor.SyntaxHighlighting = _hlslHighlighting;
 
             _decompDiffRenderer = new DiffLineRenderer();
             _expectedDiffRenderer = new DiffLineRenderer();

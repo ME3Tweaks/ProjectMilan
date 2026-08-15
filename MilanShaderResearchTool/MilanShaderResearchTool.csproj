@@ -49,4 +49,10 @@
     <Folder Include="Libraries\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="external_macros.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

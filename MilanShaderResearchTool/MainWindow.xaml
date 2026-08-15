@@ -7,6 +7,9 @@
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         mc:Ignorable="d"
         Title="Milan Shader Research Tool" Height="900" Width="1400">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
     <Grid Margin="4">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -31,7 +34,10 @@
 
                 <TextBlock Grid.Row="0" Grid.Column="0" Text="Debug Package:" VerticalAlignment="Center" Margin="0,0,4,4"/>
                 <TextBox Grid.Row="0" Grid.Column="1" x:Name="MaterialHlslPathBox" IsReadOnly="True" Margin="0,0,4,4"/>
-                <Button Grid.Row="0" Grid.Column="2" Content="Browse..." Click="BrowseMaterialHlsl_Click" Padding="8,2" Margin="0,0,0,4"/>
+                <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Margin="0,0,0,4">
+                    <Button Content="Browse..." Click="BrowseMaterialHlsl_Click" Padding="8,2" Margin="0,0,4,0"/>
+                    <Button Content="Reload" Click="ReloadDebugPackage_Click" Padding="8,2"/>
+                </StackPanel>
 
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="Base Shader:" VerticalAlignment="Center" Margin="0,0,4,4"/>
                 <WrapPanel Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Margin="0,0,0,4">
@@ -45,7 +51,11 @@
                         <ComboBoxItem Content="ps"/>
                         <ComboBoxItem Content="vs"/>
                     </ComboBox>
-                    <Button Content="Probe Defines" Click="ProbeDefines_Click" Padding="8,2" Margin="8,0,0,0"/>
+                    <!--<Button Content="Probe Defines" Click="ProbeDefines_Click" Padding="8,2" Margin="8,0,0,0"/>-->
+                    <Button Content="Open game version" Click="OpenGameVersion_Click" Padding="8,2" Margin="4,0,0,0"/>
+                    <Button Content="Open Base Shader USF" Click="OpenBaseShaderUsf_Click" Padding="8,2" Margin="4,0,0,0"/>
+                    <Button Content="Open Vertex Factory USF" Click="OpenVertexFactoryUsf_Click" Padding="8,2" Margin="4,0,0,0"/>
+                    <Button Content="Open Mateiral USF" Click="OpenMaterialUsf_Click" Padding="8,2" Margin="4,0,0,0"/>
                 </WrapPanel>
 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Include Dir:" VerticalAlignment="Center" Margin="0,0,4,0"/>
@@ -121,23 +131,42 @@
             <!-- Right: Decompiled Shader + Expected Decompilation -->
             <GroupBox Grid.Column="2" Header="Decompiled Shader">
                 <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="5"/>
+                        <RowDefinition Height="Auto" x:Name="MaterialHlslRow"/>
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" MinWidth="100"/>
                         <ColumnDefinition x:Name="SplitterColumn" Width="0"/>
                         <ColumnDefinition x:Name="ExpectedColumn" Width="0" MinWidth="0"/>
                     </Grid.ColumnDefinitions>
 
-                    <avalonEdit:TextEditor Grid.Column="0" x:Name="DecompiledShaderEditor"
+                    <avalonEdit:TextEditor Grid.Row="0" Grid.Column="0" x:Name="DecompiledShaderEditor"
                         ShowLineNumbers="True" WordWrap="False"
                         FontFamily="Consolas" FontSize="12"
                         Background="#FF1E1E1E" Foreground="#FFDCDCDC" BorderThickness="0"
                         HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
 
-                    <GridSplitter Grid.Column="1" x:Name="CompareSplitter"
+                    <Expander Grid.Row="2" Grid.Column="0"
+                              x:Name="MaterialHlslExpander"
+                              Header="Material HLSL" ExpandDirection="Up"
+                              Background="#FF2D2D2D" Foreground="#FFDCDCDC"
+                              BorderThickness="0,1,0,0" BorderBrush="#FF3F3F3F">
+                        <avalonEdit:TextEditor x:Name="MaterialHlslEditor"
+                            IsReadOnly="True"
+                            ShowLineNumbers="True" WordWrap="False"
+                            FontFamily="Consolas" FontSize="12"
+                            Background="#FF1E1E1E" Foreground="#FFDCDCDC" BorderThickness="0"
+                            HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                            Height="Auto" MinHeight="100" MaxHeight="800"/>
+                    </Expander>
+
+                    <GridSplitter Grid.Row="0" Grid.Column="1" x:Name="CompareSplitter" Grid.RowSpan="3"
                         Width="5" HorizontalAlignment="Stretch" Visibility="Collapsed"
                         ResizeBehavior="PreviousAndNext" ResizeDirection="Columns"/>
 
-                    <Grid Grid.Column="2" x:Name="ExpectedPanel" Visibility="Collapsed">
+                    <Grid Grid.Row="0" Grid.Column="2" Grid.RowSpan="3" x:Name="ExpectedPanel" Visibility="Collapsed">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
@@ -155,6 +184,14 @@
                             Background="#FF1E1E1E" Foreground="#FFDCDC90" BorderThickness="0"
                             HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"/>
                     </Grid>
+
+                    <GridSplitter Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                        Height="5" HorizontalAlignment="Stretch" 
+                        Background="Transparent"
+                        ShowsPreview="True" ResizeBehavior="PreviousAndNext" ResizeDirection="Rows"
+                        Visibility="{Binding IsExpanded, ElementName=MaterialHlslExpander, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+
                 </Grid>
             </GroupBox>
         </Grid>
@@ -163,10 +200,27 @@
 
         <!-- Console -->
         <GroupBox Grid.Row="3" Header="Console" Margin="0,4,0,0">
-            <TextBox x:Name="ConsoleOutput" IsReadOnly="True" TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
-                     FontFamily="Consolas" FontSize="12"
-                     Background="#FF1E1E1E" Foreground="#FFDCDCDC" BorderThickness="0"/>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="3*"/>
+                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition Width="*" MinWidth="100"/>
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0" x:Name="ConsoleOutput" IsReadOnly="True" TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
+                         FontFamily="Consolas" FontSize="12"
+                         Background="#FF1E1E1E" Foreground="#FFDCDCDC" BorderThickness="0"/>
+                <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch"/>
+                <DockPanel Grid.Column="2">
+                    <TextBlock DockPanel.Dock="Top" Text="Material Info"
+                               Background="#FF2D2D2D" Foreground="#FFDCDCDC"
+                               FontFamily="Consolas" FontSize="11" Padding="4,2"/>
+                    <TextBox x:Name="MaterialInfoOutput" IsReadOnly="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
+                             FontFamily="Consolas" FontSize="11"
+                             Background="#FF1E1E1E" Foreground="#FFDCDCDC" BorderThickness="0"/>
+                </DockPanel>
+            </Grid>
         </GroupBox>
     </Grid>
 </Window>

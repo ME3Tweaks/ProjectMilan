@@ -59,26 +59,41 @@
         </StackPanel>
 
         <!-- Action buttons -->
-        <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,0,0,4">
-            <Button x:Name="StartButton" Content="Start Search" Click="Start_Click" Padding="12,6" FontWeight="Bold" Margin="0,0,8,0"/>
-            <Button x:Name="CancelButton" Content="Cancel" Click="Cancel_Click" Padding="12,6" IsEnabled="False"/>
-        </StackPanel>
+        <DockPanel Grid.Row="3" Margin="0,0,0,4" LastChildFill="False">
+            <Button DockPanel.Dock="Left" x:Name="StartButton" Content="Start Search" Click="Start_Click" Padding="12,6" FontWeight="Bold" Margin="0,0,8,0"/>
+            <Button DockPanel.Dock="Left" x:Name="StartPackageButton" Content="Start Search (Package)" Click="StartSearchPackage_Click" Padding="12,6" FontWeight="Bold" Margin="0,0,8,0"/>
+            <Button DockPanel.Dock="Left" x:Name="CancelButton" Content="Cancel" Click="Cancel_Click" Padding="12,6" IsEnabled="False"/>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                <Button x:Name="ToggleFilterNoActionsButton" Content="Toggle Filter NoActions" Click="ToggleFilterNoActions_Click" Padding="8,6"/>
+            </StackPanel>
+        </DockPanel>
 
         <!-- Results grid -->
         <DataGrid Grid.Row="4" x:Name="ResultsGrid"
                   AutoGenerateColumns="False" IsReadOnly="True"
+                  PreviewMouseRightButtonDown="ResultsGrid_PreviewMouseRightButtonDown"
                   CanUserAddRows="False" HeadersVisibility="Column"
                   FontFamily="Consolas" FontSize="12"
                   MouseDoubleClick="ResultsGrid_MouseDoubleClick">
             <DataGrid.ContextMenu>
-                <ContextMenu>
+                <ContextMenu Opened="ContextMenu_Opened">
+                    <MenuItem Header="Copy" Click="CopyCell_Click"/>
                     <MenuItem Header="Open in Research Tool" Click="OpenInResearchTool_Click"/>
+                    <Separator/>
+                    <MenuItem Header="Perform Extensive Search" Click="PerformExtensiveSearch_Click"/>
                 </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.Columns>
+                <DataGridTextColumn Header="Material" Binding="{Binding MaterialName}" Width="160"/>
                 <DataGridTextColumn Header="Vertex Factory" Binding="{Binding VertexFactoryName}" Width="160"/>
                 <DataGridTextColumn Header="Shader Type" Binding="{Binding ShaderTypeName}" Width="*"/>
-                <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="*"/>
+                <DataGridTemplateColumn Header="Status" Width="*">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Padding="2"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Phase" Binding="{Binding SearchPhase}" Width="140"/>
                 <DataGridTextColumn Header="Macros" Binding="{Binding Macros.Count}" Width="60"/>
                 <DataGridTextColumn Header="Time (s)" Binding="{Binding ElapsedSeconds, StringFormat=F1}" Width="70"/>
