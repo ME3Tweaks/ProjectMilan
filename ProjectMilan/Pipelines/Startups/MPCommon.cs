@@ -225,12 +225,6 @@ namespace ProjectMilan.Pipelines.Startups
                 PropertyType = "IntProperty",
                 PropertyValue = "31"
             });
-            props.Add(new PropertyUpdate1()
-            {
-                PropertyName = "AATInstallBool",
-                PropertyType = "IntProperty",
-                PropertyValue = "145011"
-            });
             files.Add(new MergeFileChange1
             {
                 EntryName = "Default__SFXModule_AimAssist",

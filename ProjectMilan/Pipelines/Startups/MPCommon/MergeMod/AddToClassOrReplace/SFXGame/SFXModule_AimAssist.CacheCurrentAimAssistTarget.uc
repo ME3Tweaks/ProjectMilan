@@ -14,23 +14,14 @@ public final function CacheCurrentAimAssistTarget()
         CamRot = SFXPlayerCamera(Outer.PlayerCamera).CurrentCameraMode.m_pov.Rotation;
     }
     SW = SFXWeapon(Outer.Pawn.Weapon);
-    // Check install bool
-    if (BioWorldInfo(Class'Engine'.static.GetCurrentWorldInfo()).GetGlobalVariables().GetBool(AATInstallBool))
-    {
-        oEngine = SFXEngine(Class'SFXEngine'.static.GetEngine());
-        oEngine.GetProfileSettings().GetProfileSettingValueInt(aimAssistProfileSettingID, AARawSettingValue);
-        // As this is a signed int, grabbing the first bit before removing the highest bit
-        AAProfileZoomSnapEnabled = bool(AARawSettingValue >> 31);
-        AARawSettingValue = AARawSettingValue << 1 >> 1;
-        AAProfileAdhesionValue = float(((AARawSettingValue >> 6) % 64)) / 10.0;
-        AAProfileFrictionValue = float(((AARawSettingValue >> 12) % 64)) / 10.0;
-    }
-    else
-    {
-        AAProfileZoomSnapEnabled = TRUE;
-        AAProfileAdhesionValue = 1.0;
-        AAProfileFrictionValue = 1.0;
-    }
+    oEngine = SFXEngine(Class'SFXEngine'.static.GetEngine());
+    oEngine.GetProfileSettings().GetProfileSettingValueInt(aimAssistProfileSettingID, AARawSettingValue);
+    // As this is a signed int, grabbing the first bit before removing it
+    AAProfileZoomSnapEnabled = bool(AARawSettingValue >> 31);
+    AARawSettingValue = AARawSettingValue << 1 >> 1;
+    AAProfileAdhesionValue = float(AARawSettingValue << 20 >> 26) / 10.0;
+    AAProfileFrictionValue = float(AARawSettingValue << 14 >> 26) / 10.0;
+
     CurrentAimAssistSoftMargin = 0.0;
     CurrentAimAssistBoneLocation = vect(0.0, 0.0, 0.0);
     CurrentAimAssistTarget = Outer.GetAimAssistTarget(SW.MaxAdhesionDistance, CamLoc, CamRot, CurrentAimAssistBoneLocation, CurrentAimAssistSoftMargin);
