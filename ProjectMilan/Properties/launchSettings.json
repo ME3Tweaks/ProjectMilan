@@ -39,6 +39,13 @@
         "MAXTHREADS": "18"
       }
     },
+    "ProjectMilan - Stumpy": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Stumpy",
+      "environmentVariables": {
+        "MAXTHREADS": "8"
+      }
+    },
     "ProjectMilan - Mgamerz Desktop - Research Mode": {
       "commandName": "Project",
       "commandLineArgs": "--config Mgamerz --researchmode",

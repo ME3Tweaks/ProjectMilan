@@ -186,6 +186,7 @@ namespace ProjectMilan
             "d00t" => new MilanSettingsd00t(),
             "dropthesquid" => new MilanSettingsDropTheSquid(),
             "beccatoria" => new MilanSettingsbeccatoria(),
+            "stumpy" => new IMilanSettingsStumpy(),
             _ => throw new Exception($"Undefined configuration: {cliOptions.Config}")
         };
 
@@ -335,7 +336,7 @@ namespace ProjectMilan
 
         private static void RunResearch()
         {
-#if TRUE || DEBUG
+#if  DEBUG
             // Put your method in Research class and call it here.
             //Research.CopyPreview2();
             //return;

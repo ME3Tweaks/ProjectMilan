@@ -8,6 +8,19 @@
 			<Property name="srfriendbeatbyme" type="4">718193</Property>
 			<Property name="srfriendbeatme" type="4">718192</Property>
 		</Section>
+		<!-- MILAN CHANGE Stumpy 2026/08/16 -->
+		<!-- Remove nesting and extra menu entries, add multiplayer button -->
+		<Section name="sfxgame.sfxgui_mainmenu_rtt">
+			<Property name="listentries">
+				<Value type="1">null</Value>
+				<Value type="2">(ListID="RootList",Label=506692,FncOnSelect="StartMultiplayerFlow", FncActiveConditional="")</Value>
+				<Value type="2">(ListID="RootList",Label=126265,FncOnSelect="ShowOptions")</Value>
+				<Value type="2">(ListID="RootList",Label=134503,FncOnSelect="ShowCredits")</Value>
+				<Value type="2">(ListID="RootList",Label=817895,FncOnSelect="ExitGame", FncActiveConditional="CanShowExitGame")</Value>
+			</Property>
+		</Section>
+		<!-- END MILAN -->
+		
 		<Section name="sfxgame.biosfhandler_options">
 			<!-- We need to figure out which ones of these we want to use -->
 			<Property name="mpoptionpages">

@@ -138,6 +138,7 @@ namespace ProjectMilan.Pipelines.Verify
                 UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
                 {
                     Cache = tpc,
+                    CustomFileResolver = MilanShared.LE3PackageResolver,
                 };
 
                 // Initialize filelib if it wasn't.
