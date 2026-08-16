@@ -29,7 +29,8 @@
       "commandLineArgs": "--config Mgamerz",
       "environmentVariables": {
         "MAXTHREADS": "18"
-      }
+      },
+      "nativeDebugging": false
     },
     "ProjectMilan - DropTheSquid": {
       "commandName": "Project",
@@ -37,6 +38,14 @@
       "environmentVariables": {
         "MAXTHREADS": "18"
       }
+    },
+    "ProjectMilan - Mgamerz Desktop - Research Mode": {
+      "commandName": "Project",
+      "commandLineArgs": "--config Mgamerz --researchmode",
+      "environmentVariables": {
+        "MAXTHREADS": "18"
+      },
+      "nativeDebugging": false
     }
   }
 }
