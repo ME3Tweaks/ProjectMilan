@@ -10,4 +10,51 @@
     <!--Female entries section begin-->
     <String id="49875625">Female</String>
     <!--Female entries section end-->
+    <!--AAT entries begin -->
+    <String id="49875626">Zoom Snap</String>
+    <String id="49875627">Snaps your crosshairs onto an enemy when you start aiming.</String>
+    <String id="49875628">Zoom Snap: Enabled</String>
+    <String id="49875629">Zoom Snap: Disabled</String>
+    <String id="49875630">Adhesion</String>
+    <String id="49875631">Also known as rotational aim assist, adhesion helps with tracking a target by moving the reticle so it remains on the target's center of mass.</String>
+    <String id="49875632">Dampening</String>
+    <String id="49875633">Also known as friction, responsible for slowing your camera when the reticle goes near an enemy.</String>
+    <String id="49875634">0% (Disabled)</String>
+    <String id="49875635">10%</String>
+    <String id="49875636">20%</String>
+    <String id="49875637">30%</String>
+    <String id="49875638">40%</String>
+    <String id="49875639">50%</String>
+    <String id="49875640">60%</String>
+    <String id="49875641">70%</String>
+    <String id="49875642">80%</String>
+    <String id="49875643">90%</String>
+    <String id="49875644">100%</String>
+    <String id="49875645">110%</String>
+    <String id="49875646">120%</String>
+    <String id="49875647">130%</String>
+    <String id="49875648">140%</String>
+    <String id="49875649">150%</String>
+    <String id="49875650">160%</String>
+    <String id="49875651">170%</String>
+    <String id="49875652">180%</String>
+    <String id="49875653">190%</String>
+    <String id="49875654">200%</String>
+    <String id="49875655">210%</String>
+    <String id="49875656">220%</String>
+    <String id="49875657">230%</String>
+    <String id="49875658">240%</String>
+    <String id="49875659">250%</String>
+    <String id="49875660">260%</String>
+    <String id="49875661">270%</String>
+    <String id="49875662">280%</String>
+    <String id="49875663">290%</String>
+    <String id="49875664">300%</String>
+    <!--AAT entries end-->
+    <!-- New Settings TLKs begin -->
+    <String id="49875680">Controller</String>
+    <String id="49875681">Adjust controller input options</String>
+    <String id="49875682">Mouse</String>
+    <String id="49875683">Adjust mouse input options</String>
+    <!-- New Settings TLKs --> 
 </tlkFile>

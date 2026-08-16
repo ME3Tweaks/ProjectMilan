@@ -25,12 +25,25 @@
 			<!-- We need to figure out which ones of these we want to use -->
 			<Property name="mpoptionpages">
 				<Value type="1">null</Value>
+				<Value type="3">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_MonitorSelection, OPTION_DynShadows, OPTION_MotionBlur, OPTION_VerticalSync, OPTION_CappedFramerate, OPTION_FilmGrain, OPTION_AntiAliasing, OPTION_AmbientOcclusion) )</Value>
+				<Value type="3">(label=817923, story=817949, options=(OPTION_Gamma, OPTION_HDREnabled, OPTION_HDRContrast, OPTION_HDRBrightness) )</Value>
 				<Value type="3">(label=163117, story=163118, options=(OPTION_MPAutoLvlUp, OPTION_Subtitles, OPTION_Hints, OPTION_ActionUIHints, OPTION_CONTENT_1))</Value>
-				<Value type="3">(label=282879, story=282880, options=(OPTION_ControlBindings))</Value>
-				<Value type="3">(label=338302, story=338303, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
-				<Value type="3">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_Gamma, OPTION_AntiAliasing, OPTION_DynShadows) )</Value>
-				<Value type="3">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice) )</Value>
-				<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>
+				<!-- 250-252 are Aim Assist settings -->
+				<!-- OPTION_InvertYAxis and OPTION_MouseInvert do the same thing (likely also have the same BioSFHandler) --> 
+				<Value type="3">(label=49875680, story=49875681, options=(OPTION_InvertYAxis, OPTION_ControllerSensitivity, OPTION_StickConfig, OPTION_TriggerConfig, 250, 251, 252) )</Value>
+				<Value type="3">(label=49875682, story=49875683, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
+				<Value type="3">(label=282879, story=282880, options=(OPTION_ControlBindings) )</Value>
+
+				<!-- Disabled VOIP related settings -->
+				<Value type="3">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange<!--, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice)--> )</Value>
+
+				<!-- Do we want to include online telemetry? Uncomment if yes -->
+ 				<!--<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>-->
+			</Property>
+			<Property name="radiogroupoptions" type="3">(id=250, label=49875626, story=49875627, defaultVal=0, UClass="SFXGame.AATGUI_Option_ZoomSnap")</Property>
+			<Property name="textslideroptions">
+				<Value type="3">(id=251, label=49875630, story=49875631, defaultVal=10, UClass="SFXGame.AATGUI_Option_Adhesion")</Value>
+				<Value type="3">(id=252, label=49875632, story=49875633, defaultVal=10, UClass="SFXGame.AATGUI_Option_Friction")</Value>
 			</Property>
 			<!-- <Property name="optionpages">
 				<Value type="1">null</Value>
@@ -43,6 +56,7 @@
 				<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>
 			</Property> -->
 			<!-- I think this was a mistake by bioware -->
+			<!-- Labels: AlienFX™ Lights, "Dynamic", "Lighting on AlienFX™ hardware will dynamically change during gameplay", Off, "Lighting on AlienFX™ hardware will be disabled during gameplay" -->
 			<!--<Property name="textslideroptions" type="3">(id=OPTION_CONTENT_1, label=767420, story=0, TelemetryKey="alfx", defaultVal=0, values=((label=767421,story=767422),(label=767423,story=767424),(label=767425,story=767426)))</Property>-->
 		</Section>
 		<Section name="sfxgame.biosfhandler_pcoptions">

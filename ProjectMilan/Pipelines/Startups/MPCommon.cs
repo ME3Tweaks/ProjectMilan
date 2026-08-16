@@ -14,7 +14,7 @@ using System.Diagnostics;
 namespace ProjectMilan.Pipelines.Startups
 {
     /// <summary>
-    /// Pass-throughable settings for MPCommon pipelne
+    /// Pass-throughable settings for MPCommon pipeline
     /// </summary>
     class MPCommonPipelineVars
     {
@@ -94,14 +94,54 @@ namespace ProjectMilan.Pipelines.Startups
                 Environment.Exit(1);
             }
 
-            BuildMergeMod();
+            BuildMergeMods();
         }
 
-        private static void BuildMergeMod()
+        private static void BuildMergeMods()
         {
             var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
             var stagingPath = Path.Combine(compilingPath, "Staging");
+            List<string> mergeModNames = new List<string>();
             Utilities.DeleteFilesAndFoldersRecursively(stagingPath, deleteDirectoryItself: false);
+            CopyAssetUpdateMergeMods(compilingPath, stagingPath);
+
+            var mergeModsPath = Path.Combine(Directory.GetParent(Program.Settings.OutputModPath).FullName, "MergeMods");
+            Directory.CreateDirectory(mergeModsPath);
+            
+            BuildMPMergeMod(compilingPath, stagingPath, mergeModsPath);
+            
+            foreach (var manifest in Directory.GetFiles(stagingPath, "*.json", SearchOption.TopDirectoryOnly))
+            {
+                var name = Path.GetFileName(manifest);
+                if (manifest == "mprequiredchanges.json") {
+                    continue;
+                }
+                MilanLog.Information($"Adding AssetUpdate merge mod: {name}", customPrefix: LOG_CATEGORY);
+                var m3mName = $@"{Path.GetFileNameWithoutExtension(name)}.m3m";
+                var m3mPath = Path.Combine(mergeModsPath, m3mName);
+                var json = File.ReadAllText(manifest);
+                using var fs = File.Open(m3mPath, FileMode.Create, FileAccess.ReadWrite);
+                MergeModLoader.SerializeManifest(fs, json, stagingPath);
+                mergeModNames.Add(m3mName);
+            }
+            MilanLog.Information($"Updating ModDesc with new merge mods", customPrefix: LOG_CATEGORY);
+            // Add in any new mergemods
+            string[] moddesc = File.ReadAllLines(Path.Combine(Program.Settings.OutputModPath, "..", "moddesc.ini"));
+            for(int idx = 0; idx <= moddesc.Length; idx++)
+            {
+                if (moddesc[idx].StartsWith("mergemods = "))
+                {
+                    moddesc[idx] = $"mergemods = {string.Join(";", mergeModNames)}";
+                    break;
+                }
+            }
+            File.WriteAllLines(Path.Combine(Program.Settings.OutputModPath, "..", "moddesc.ini"), moddesc);
+
+
+        }
+
+        private static void BuildMPMergeMod(string compilingPath, string stagingPath, string mergeModsPath)
+        {
             var manifest = Path.Combine(stagingPath, "mprequiredchanges.json");
 
             MergeMod1 mm1 = new MergeMod1();
@@ -123,8 +163,6 @@ namespace ProjectMilan.Pipelines.Startups
             };
 
             // Output
-            var mergeModsPath = Path.Combine(Directory.GetParent(Program.Settings.OutputModPath).FullName, "MergeMods");
-            Directory.CreateDirectory(mergeModsPath);
             var m3mPath = Path.Combine(mergeModsPath, "mprequiredchanges.m3m");
             using var fs = File.Open(m3mPath, FileMode.Create, FileAccess.ReadWrite);
             var json = JsonConvert.SerializeObject(mm1, Formatting.Indented, new JsonSerializerSettings
@@ -134,6 +172,19 @@ namespace ProjectMilan.Pipelines.Startups
             File.WriteAllText(manifest, json);
             MergeModLoader.SerializeManifest(fs, json, stagingPath);
 
+        }
+
+        // ASSETUPDATE
+        // TODO: asset update system
+        // TODO: move out into an "extras" pipeline or similar
+        private static void CopyAssetUpdateMergeMods(string compilingPath, string stagingPath)
+        {
+            var assetUpdatePath = Path.Combine(compilingPath, "AssetUpdate");
+            var assets = Directory.GetFiles(assetUpdatePath, "*", SearchOption.AllDirectories);
+            foreach (var file in assets)
+            {
+                File.Copy(file, Path.Combine(stagingPath, Path.GetFileName(file)), true);
+            }
         }
 
         /// <summary>
@@ -165,7 +216,27 @@ namespace ProjectMilan.Pipelines.Startups
                 files.Add(AddMergeAddToClassOrReplaceChanges(Path.GetFileName(classGrouping.Key), classGrouping.ToList(), stagingPath));
             }
 
-
+            // PROPERTYUPDATE
+            // TODO: move properties to their own json(?) files
+            var props = new List<PropertyUpdate1>();
+            props.Add(new PropertyUpdate1()
+            {
+                PropertyName = "aimAssistProfileSettingID",
+                PropertyType = "IntProperty",
+                PropertyValue = "31"
+            });
+            props.Add(new PropertyUpdate1()
+            {
+                PropertyName = "AATInstallBool",
+                PropertyType = "IntProperty",
+                PropertyValue = "145011"
+            });
+            files.Add(new MergeFileChange1
+            {
+                EntryName = "Default__SFXModule_AimAssist",
+                PropertyUpdates = props
+            });
+            
             return files;
         }
 
@@ -197,6 +268,7 @@ namespace ProjectMilan.Pipelines.Startups
         {
             // Copy the individual files to the compiling dir
             Directory.CreateDirectory(stagingPath);
+            sourceFiles.Sort();
             foreach (var sourceFile in sourceFiles)
             {
                 var ucName = Path.GetFileName(sourceFile);
