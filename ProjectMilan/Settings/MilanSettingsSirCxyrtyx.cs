@@ -28,5 +28,9 @@ namespace ProjectMilan.Settings
         public int MaxThreads { get; set; } = 4;
 
         public bool DontDeleteModFolder { get; set; } = false;
+        public bool UseCheckpointSystem { get; set; } = false;
+        public string CheckpointFolder { get; set; } = @"C:\Users\natal\Documents\ME3TweaksModManager\mods\LE3\Project Milan\Checkpoint";
+        public EModInstallPreference ModInstallPreference { get; set; } = EModInstallPreference.NoInstall;
+
     }
 }

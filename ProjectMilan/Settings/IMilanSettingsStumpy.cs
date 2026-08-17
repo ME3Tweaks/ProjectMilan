@@ -27,5 +27,9 @@ namespace ProjectMilan.Settings
 
         public int MaxThreads { get; set; } = int.Parse(Environment.GetEnvironmentVariable("MAXTHREADS"));
         public bool DontDeleteModFolder { get; set; } = !FullBuild;
+        public bool UseCheckpointSystem { get; set; } = false;
+        public string CheckpointFolder { get; set; } = $@"{MilanHome}\Checkpoint";
+        public EModInstallPreference ModInstallPreference { get; set; } = EModInstallPreference.NoInstall;
+
     }
 }

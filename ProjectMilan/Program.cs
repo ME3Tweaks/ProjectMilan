@@ -55,6 +55,9 @@ namespace ProjectMilan
         /// </summary>
         private static Dictionary<string, long> pipelineTimes = new();
 
+        private static bool CreateCheckpointForThisRun;
+        private static bool RestoreCheckpointForThisRun;
+
         /// <summary>
         /// Initialize Project Milan
         /// </summary>
@@ -77,12 +80,44 @@ namespace ProjectMilan
             if (!researchMode)
             {
                 Console.WriteLine("-------------------------------");
-                Console.WriteLine("Install mod when compiling completes [Y/N]? (5 second timeout)");
-                var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
-                if ("Y".CaseInsensitiveEquals(input))
+                if (Program.Settings.ModInstallPreference == EModInstallPreference.Prompt)
                 {
-                    InstallModOnCompletion = true;
-                    MilanLog.Information("Installing mod on completion of compile");
+
+                    Console.WriteLine("Install mod when compiling completes [Y/N]? (5 second timeout)");
+                    var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                    if ("Y".CaseInsensitiveEquals(input))
+                    {
+                        InstallModOnCompletion = true;
+                        MilanLog.Information("Installing mod on completion of compile");
+                    }
+                }
+                else
+                {
+                    InstallModOnCompletion = Program.Settings.ModInstallPreference == EModInstallPreference.Install;
+                }
+
+
+                if (Settings.UseCheckpointSystem)
+                {
+                    Console.WriteLine("-------------------------------");
+                    Console.WriteLine("Use existing checkpoint and skip pre-NonStartup pipelines [Y/N]? (5 second timeout)");
+                    var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                    if ("Y".CaseInsensitiveEquals(input))
+                    {
+                        RestoreCheckpointForThisRun = true;
+                        MilanLog.Information("Using checkpoint for this run");
+                    }
+                    else
+                    {
+                        Console.WriteLine("-------------------------------");
+                        Console.WriteLine("Create checkpoint after NonStartup [Y/N]? (5 second timeout)");
+                        input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                        if ("Y".CaseInsensitiveEquals(input))
+                        {
+                            CreateCheckpointForThisRun = true;
+                            MilanLog.Information("Checkpoint creation enabled for this run");
+                        }
+                    }
                 }
             }
 
@@ -201,11 +236,27 @@ namespace ProjectMilan
             //RunPipeline(true, MaterialExpressionPipeline.RunPipeline, "MaterialExpression");
             //return;
 
+            if (RestoreCheckpointForThisRun)
+            {
+                if (Checkpoint.RestoreCheckpoint())
+                {
+                    // HATE goto statements
+                    // But it makes it less ugly here...
+                    goto postMpCommon;
+                }
+
+                MilanLog.Error("Could not use checkpoint; continuing with full pipeline run.");
+            }
+
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
 
             RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
             RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
+            if (CreateCheckpointForThisRun && Settings.RunNonStartupPipeline)
+            {
+                Checkpoint.CreateCheckpoint();
+            }
 
         postMpCommon:
             // Content build pipelines

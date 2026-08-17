@@ -4,6 +4,22 @@
     // settings class. If it was a base class, you could easily not see some variables.
     // As items are added please add them to all implementers with a default of false.
 
+    public enum EModInstallPreference
+    {
+        /// <summary>
+        /// Always ask with a 5 second timeout, defaulting to No
+        /// </summary>
+        Prompt,
+        /// <summary>
+        /// Always install, do not prompt
+        /// </summary>
+        Install,
+        /// <summary>
+        /// Don't install the mod, do not prompt
+        /// </summary>
+        NoInstall
+    }
+
     /// <summary>
     /// Describes settings for running Project Milan
     /// </summary>
@@ -113,6 +129,17 @@
         bool DontDeleteModFolder { get; set; }
 
 
+        /// <summary>
+        /// Makes a copy of the compiled game files after the NonStartup pipeline has finished; when building, if you restore a checkpoint, it will copy them and skip the first few pipelines.
+        /// </summary>
+        bool UseCheckpointSystem { get; set; }
+
+        /// <summary>
+        /// The folder to copy the checkpoint to.
+        /// </summary>
+        string CheckpointFolder { get; set; }
+
+        EModInstallPreference ModInstallPreference { get; set; }
 
         #endregion
     }

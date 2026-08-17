@@ -26,5 +26,9 @@ namespace ProjectMilan.Settings
         public bool RunResynthesis { get; set; } = false;
 
         public bool DontDeleteModFolder { get; set; } = true;
+        public bool UseCheckpointSystem { get; set; } = false;
+        public string CheckpointFolder { get; set; } = @"D:\MEModding\ME3TweaksModManager\mods\LE3\Project Milan\Checkpoint";    
+        public EModInstallPreference ModInstallPreference { get; set; } = EModInstallPreference.NoInstall;
+
     }
 }

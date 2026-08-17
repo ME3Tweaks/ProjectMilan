@@ -23,5 +23,9 @@
         public bool DontDeleteModFolder { get; set; } = !fullBuild;
         public bool RunNonStartupPipeline { get; set; } = fullBuild;
         public bool RunResynthesis { get; set; } = fullBuild;
+        public bool UseCheckpointSystem { get; set; } = false;
+        public string CheckpointFolder { get; set; } = @"H:\MELE_Mods\mods in development\LE3\Project Milan\Checkpoint";    
+        public EModInstallPreference ModInstallPreference { get; set; } = EModInstallPreference.NoInstall;
+
     }
 }

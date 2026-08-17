@@ -88,7 +88,7 @@ namespace ProjectMilan.Settings
         }
 
         public bool RunLevelsPipeline { get; set; } = true;
-        public bool RunAudioPipeline { get; set; } = false;
+        public bool RunAudioPipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = true;
         public bool RunResynthesis { get; set; } = true;
 
@@ -97,6 +97,32 @@ namespace ProjectMilan.Settings
         public int MaxThreads { get; set; } = int.Parse(Environment.GetEnvironmentVariable("MAXTHREADS"));
 
         // Set when you want to work on the mod folder without it deleting it every time
-        public bool DontDeleteModFolder { get; set; } = true;
+        public bool DontDeleteModFolder { get; set; } = false;
+        public bool UseCheckpointSystem { get; set; } = true;
+
+        private string _checkPointFolder = null;
+
+        public string CheckpointFolder
+        {
+            get
+            {
+                if (_checkPointFolder != null)
+                    return _checkPointFolder;
+                var desktopPath = @"S:\Milan\Checkpoint";
+                if (Directory.Exists(desktopPath))
+                {
+                    _checkPointFolder = desktopPath;
+                    return _checkPointFolder;
+                }
+
+
+                // Laptop
+                _checkPointFolder = @"E:\Milan\Checkpoint";
+                return _checkPointFolder;
+            }
+            set { _checkPointFolder = value; }
+        }
+
+        public EModInstallPreference ModInstallPreference { get; set; } = EModInstallPreference.NoInstall;
     }
 }
