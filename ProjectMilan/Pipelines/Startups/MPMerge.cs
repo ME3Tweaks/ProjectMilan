@@ -27,7 +27,6 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void BuildMergeModsGeneric()
         {
-            // var mergeMods = new List<MergeMod1>();
             var mergeModNames = new List<string>();
             var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
             var stagingPath = Path.Combine(compilingPath, "Staging");
@@ -43,7 +42,7 @@ namespace ProjectMilan.Pipelines.Startups
             
             foreach (var modDir in mergeModsDirs)
             {
-                if (modDir == stagingPath) { continue; }
+                if (modDir == stagingPath) continue;
                 var modName = Directory.CreateDirectory(modDir).Name;
                 var manifest = Path.Combine(stagingPath, $"{modName}.json");
                 var m3mPath = Path.Combine(mergeModsPath, $"{modName}.m3m");
@@ -66,7 +65,7 @@ namespace ProjectMilan.Pipelines.Startups
                 foreach (var package in Directory.GetDirectories(modDir))
                 {
                     var atcorPath = Path.Combine(package, "AddToClassOrReplace");
-                    // var auPath = Path.Combine(package, "AssetUpdate");
+                    var auPath = Path.Combine(package, "AssetUpdate");
                     var suPath = Path.Combine(package, "ScriptUpdate");
                     var puPath = Path.Combine(package, "PropertyUpdate");
                     var mergeFile = new MergeFile1()
@@ -80,10 +79,10 @@ namespace ProjectMilan.Pipelines.Startups
                         HandleAddToClassOrReplace(mergeFile, atcorPath);
                     }
 
-                    // if (Directory.Exists(auPath))
-                    // {
-                    //     HandleAssetUpdate(mergeFile, auPath);
-                    // }
+                    if (Directory.Exists(auPath))
+                    {
+                        HandleAssetUpdate(mergeFile, auPath);
+                    }
 
                     if (Directory.Exists(suPath))
                     {
@@ -172,14 +171,23 @@ namespace ProjectMilan.Pipelines.Startups
             return mergeChanges;
         }
 
-        // TODO: HandleAssetUpdate
         private static void HandleAssetUpdate(MergeFile1 mergeFile, string path)
         {
             var modName = Directory.CreateDirectory(path).Parent!.Name;
             Console.WriteLine($"--- {modName} AU ---");
             foreach (var manifest in Directory.GetFiles(path, "*.json", SearchOption.AllDirectories))
             {
-                var json = File.ReadAllText(manifest);
+                var json = JsonConvert.DeserializeObject<MergeMod1>(File.ReadAllText(manifest));
+                if (json == null) continue;
+                foreach (var m3MergeFile in json.FilesToMergeInto)
+                {
+                    // Only join changes for the same merge file
+                    if (m3MergeFile.FileName == mergeFile.FileName)
+                    {
+                        mergeFile.MergeChanges = mergeFile.MergeChanges.Concat(m3MergeFile.MergeChanges).ToList();
+                        return;
+                    } 
+                }
             }
         }
         private static void HandlePropertyUpdate(MergeFile1 mergeFile, string path)
