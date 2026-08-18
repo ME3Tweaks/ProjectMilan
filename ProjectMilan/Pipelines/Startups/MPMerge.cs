@@ -22,10 +22,13 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void InternalRunPipeline()
         {
-            BuildMergeModsGeneric();
+            BuildMergeMods();
         }
 
-        private static void BuildMergeModsGeneric()
+        /// <summary>
+        /// Creates merge mods for each subdirectory within MergeMod
+        /// </summary>
+        private static void BuildMergeMods()
         {
             var mergeModNames = new List<string>();
             var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
@@ -120,15 +123,25 @@ namespace ProjectMilan.Pipelines.Startups
             File.WriteAllLines(Path.Combine(Program.Settings.OutputModPath, "..", "moddesc.ini"), moddesc);
         }
 
-        private static void HandleAddToClassOrReplace(MergeFile1 mergeFile, string path)
+        /// <summary>
+        /// Adds an "AddToClassOrReplace1" merge item to the passed mergeFile. Used to add things to a class or update them if they already exist
+        /// </summary>
+        /// <param name="mergeFile">MergeFile which to add the changes to</param>
+        /// <param name="atcorPath">Path to the ATCOR directory</param>
+        private static void HandleAddToClassOrReplace(MergeFile1 mergeFile, string atcorPath)
         {
-            mergeFile.MergeChanges = mergeFile.MergeChanges.Concat(GetMergeChangesAtcor(path)).ToList();
+            mergeFile.MergeChanges = mergeFile.MergeChanges.Concat(GetAddToClassOrReplaceChanges(atcorPath)).ToList();
         }
 
-        private static List<MergeFileChange1> GetMergeChangesAtcor(string packagePath)
+        /// <summary>
+        /// Creates a MergeFileChange1 list with AddToClassOrReplace objects
+        /// </summary>
+        /// <param name="atcorDir">Path to the ATCOR directory</param>
+        /// <returns></returns>
+        private static List<MergeFileChange1> GetAddToClassOrReplaceChanges(string atcorDir)
         {
             var mergeChanges = new List<MergeFileChange1>();
-            var packageFiles = Directory.GetFiles(packagePath, "*.uc", SearchOption.AllDirectories);
+            var packageFiles = Directory.GetFiles(atcorDir, "*.uc", SearchOption.AllDirectories);
             packageFiles.Sort(); // Have dependencies like new properties be merged first
             var packageFilesGrouped = packageFiles.GroupBy(x => x.Substring(0, x.IndexOf('.')));
             foreach (var className in packageFilesGrouped)
@@ -142,19 +155,28 @@ namespace ProjectMilan.Pipelines.Startups
                     }
                 });
             }
-
             return mergeChanges;
         }
-
-        private static void HandleScriptUpdate(MergeFile1 mergeFile, string path)
+        
+        /// <summary>
+        /// Adds a "ScriptUpdate1" merge item to the passed mergeFile. Used to replace whole scripts.
+        /// </summary>
+        /// <param name="mergeFile">MergeFile which to add the changes to</param>
+        /// <param name="scriptUpdateDir">Path to the ScriptUpdate directory</param>
+        private static void HandleScriptUpdate(MergeFile1 mergeFile, string scriptUpdateDir)
         {
-            mergeFile.MergeChanges = mergeFile.MergeChanges.Concat(GetMergeChangeSu(path)).ToList();
+            mergeFile.MergeChanges = mergeFile.MergeChanges.Concat(GetScriptUpdateChanges(scriptUpdateDir)).ToList();
         }
 
-        private static List<MergeFileChange1> GetMergeChangeSu(string packagePath)
+        /// <summary>
+        /// Creates a MergeFileChange1 list with ScriptUpdate objects
+        /// </summary>
+        /// <param name="scriptUpdateDir">Path to the ScriptUpdate directory</param>
+        /// <returns></returns>
+        private static List<MergeFileChange1> GetScriptUpdateChanges(string scriptUpdateDir)
         {
             var mergeChanges = new List<MergeFileChange1>();
-            var scriptFiles = Directory.GetFiles(packagePath, "*.uc", SearchOption.AllDirectories);
+            var scriptFiles = Directory.GetFiles(scriptUpdateDir, "*.uc", SearchOption.AllDirectories);
             foreach (var scriptFile in scriptFiles)
             {
                 mergeChanges.Add(new MergeFileChange1()
@@ -170,9 +192,14 @@ namespace ProjectMilan.Pipelines.Startups
             return mergeChanges;
         }
 
-        private static void HandleAssetUpdate(MergeFile1 mergeFile, string path)
+        /// <summary>
+        /// Used for full asset replacements (or additionas) from a package file. Requires valid mergemod manifests for each affected package file!
+        /// </summary>
+        /// <param name="mergeFile">MergeFile which to add the changes to</param>
+        /// <param name="assetUpdateDir">Path to the AssetUpdate directory</param>
+        private static void HandleAssetUpdate(MergeFile1 mergeFile, string assetUpdateDir)
         {
-            foreach (var manifest in Directory.GetFiles(path, "*.json", SearchOption.AllDirectories))
+            foreach (var manifest in Directory.GetFiles(assetUpdateDir, "*.json", SearchOption.AllDirectories))
             {
                 var json = JsonConvert.DeserializeObject<MergeMod1>(File.ReadAllText(manifest));
                 if (json == null) continue;
@@ -187,15 +214,27 @@ namespace ProjectMilan.Pipelines.Startups
                 }
             }
         }
-        private static void HandlePropertyUpdate(MergeFile1 mergeFile, string path)
+        
+        /// <summary>
+        /// Updates a default property for a specific class.<br/>
+        /// ArrayProperties are not currently supported.
+        /// </summary>
+        /// <param name="mergeFile">MergeFile which to add the changes to</param>
+        /// <param name="propertyUpdateDir">Path to the PropertyUpdate directory</param>
+        private static void HandlePropertyUpdate(MergeFile1 mergeFile, string propertyUpdateDir)
         {
-            mergeFile.MergeChanges = mergeFile.MergeChanges.Concat(GetMergeChangePu(path)).ToList();
+            mergeFile.MergeChanges = mergeFile.MergeChanges.Concat(GetPropertyUpdateChanges(propertyUpdateDir)).ToList();
         }
 
-        private static List<MergeFileChange1> GetMergeChangePu(string path)
+        /// <summary>
+        /// Creates a MergeFileChange1 list with PropertyUpdate objects
+        /// </summary>
+        /// <param name="propertyUpdateDir"></param>
+        /// <returns></returns>
+        private static List<MergeFileChange1> GetPropertyUpdateChanges(string propertyUpdateDir)
         {
             var mmChanges = new List<MergeFileChange1>();
-            foreach (var file in Directory.GetFiles(path, "*.uc", SearchOption.TopDirectoryOnly))
+            foreach (var file in Directory.GetFiles(propertyUpdateDir, "*.uc", SearchOption.TopDirectoryOnly))
             {
                 var mmChange = new MergeFileChange1
                 {
