@@ -34,7 +34,6 @@
     <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Meshes\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
-    <Folder Include="Pipelines\Startups\MPCommon\MergeMod\AddToClassOrReplace\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
     <Folder Include="Pipelines\Weapons\LooseClasses\" />
   </ItemGroup>

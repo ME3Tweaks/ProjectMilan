@@ -34,8 +34,6 @@ namespace ProjectMilan.Pipelines.Startups
 
             Utilities.DeleteFilesAndFoldersRecursively(stagingPath, deleteDirectoryItself: false);
             Directory.CreateDirectory(stagingPath);
-            
-            
 
             var mergeModsPath = Path.Combine(Directory.GetParent(Program.Settings.OutputModPath)!.FullName, "MergeMods");
             Directory.CreateDirectory(mergeModsPath);
@@ -46,6 +44,7 @@ namespace ProjectMilan.Pipelines.Startups
                 var modName = Directory.CreateDirectory(modDir).Name;
                 var manifest = Path.Combine(stagingPath, $"{modName}.json");
                 var m3mPath = Path.Combine(mergeModsPath, $"{modName}.m3m");
+                MilanLog.Information($"Creating merge mod for {modName}", true, LOG_CATEGORY);
 
                 var mm1 = new MergeMod1()
                 {
@@ -107,7 +106,7 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 mergeModNames.Add(Path.GetFileName(mergeModPath));
             }
-            MilanLog.Information($"Updating ModDesc with new merge mods", customPrefix: LOG_CATEGORY);
+            MilanLog.Information($"Updating ModDesc with new merge mods: {string.Join(", ", mergeModNames)}", customPrefix: LOG_CATEGORY);
             // Add all merge mods to moddesc.ini
             string[] moddesc = File.ReadAllLines(Path.Combine(Program.Settings.OutputModPath, "..", "moddesc.ini"));
             for(int idx = 0; idx <= moddesc.Length; idx++)
@@ -173,8 +172,6 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void HandleAssetUpdate(MergeFile1 mergeFile, string path)
         {
-            var modName = Directory.CreateDirectory(path).Parent!.Name;
-            Console.WriteLine($"--- {modName} AU ---");
             foreach (var manifest in Directory.GetFiles(path, "*.json", SearchOption.AllDirectories))
             {
                 var json = JsonConvert.DeserializeObject<MergeMod1>(File.ReadAllText(manifest));
@@ -192,8 +189,6 @@ namespace ProjectMilan.Pipelines.Startups
         }
         private static void HandlePropertyUpdate(MergeFile1 mergeFile, string path)
         {
-            var modName = Directory.CreateDirectory(path).Parent!.Name;
-            Console.WriteLine($"--- {modName} PU ---");
             mergeFile.MergeChanges = mergeFile.MergeChanges.Concat(GetMergeChangePu(path)).ToList();
         }
 
