@@ -93,8 +93,8 @@ namespace ProjectMilan.Pipelines.Startups
                 MilanLog.Fatal($"Failed to compile {MilanShared.MP_STARTUP_NAME}", customPrefix: LOG_CATEGORY);
                 Environment.Exit(1);
             }
-
-            BuildMergeMods();
+            MPMerge.RunPipeline();
+            // BuildMergeMods(); // older pipeline
         }
 
         private static void BuildMergeMods()
