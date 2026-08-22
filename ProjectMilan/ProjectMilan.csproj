@@ -11,8 +11,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Pipelines\Audio\ConversionReview\**" />
+    <Compile Remove="Pipelines\Audio\ConvertedCache\**" />
     <Compile Remove="Pipelines\Material\**" />
+    <EmbeddedResource Remove="Pipelines\Audio\ConversionReview\**" />
+    <EmbeddedResource Remove="Pipelines\Audio\ConvertedCache\**" />
     <EmbeddedResource Remove="Pipelines\Material\**" />
+    <None Remove="Pipelines\Audio\ConversionReview\**" />
+    <None Remove="Pipelines\Audio\ConvertedCache\**" />
     <None Remove="Pipelines\Material\**" />
   </ItemGroup>
 
@@ -24,12 +30,8 @@
     <Folder Include="Pipelines\Mod\BaseConfig\" />
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
-    <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
-    <Folder Include="Pipelines\Shared\Compiling\AutoDonor\SFXGameContent\" />
-    <Folder Include="Pipelines\Shared\Compiling\AutoDonor\SFXGame\" />
     <Folder Include="Pipelines\Shared\Compiling\FunctionOverride\SFXGameInfoMP_Lobby\" />
     <Folder Include="Pipelines\Shared\Compiling\Functions\" />
-    <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Meshes\" />
@@ -53,6 +55,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\BankConverter\BankConverter.csproj" />
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\submodules\Wwiser.NET\BinarySerializer\BinarySerializer\BinarySerializer.csproj" />
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\submodules\Wwiser.NET\ME3Tweaks.Wwiser\ME3Tweaks.Wwiser.csproj" />
