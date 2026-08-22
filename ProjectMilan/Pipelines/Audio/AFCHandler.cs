@@ -10,6 +10,7 @@ using ProjectMilanCore;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 
@@ -126,9 +127,28 @@ namespace ProjectMilan.Pipelines.Audio
         private static WemReencodeOptions? _reencodeOptions;
         private static WemReencodeOptions ReencodeOptions => _reencodeOptions ??= new WemReencodeOptions
         {
-            WwiseProjectPath = Program.Settings.WwiseConversionProjectPath,
+            WwiseProjectPath = ExtractWwiseConversionTemplateProject(),
             DecodeParallelism = Program.Settings.MaxThreads
         };
+
+        /// <summary>
+        /// Extracts the Wwise project bundled at Pipelines/Audio/Template/TemplateProject.zip (which defines the
+        /// "Milan Max Quality" Conversion Settings preset used to re-encode ME3-era v56 WEM audio to LE3-era v134)
+        /// to a fresh folder in %TEMP%, deleting any copy left over from a previous run first.
+        /// </summary>
+        private static string ExtractWwiseConversionTemplateProject()
+        {
+            var templateZip = Path.Combine(MilanShared.PipelineRoot, "Audio", "Template", "TemplateProject.zip");
+            var extractFolder = Path.Combine(Path.GetTempPath(), "MilanWwiseConversionTemplateProject");
+
+            if (Directory.Exists(extractFolder))
+            {
+                Directory.Delete(extractFolder, true);
+            }
+            ZipFile.ExtractToDirectory(templateZip, extractFolder);
+
+            return Path.Combine(extractFolder, "LE3TemplateProject.wproj");
+        }
 
         /// <summary>
         /// On-disk cache of converted (v134) WEM bytes, keyed by ID, surviving across pipeline runs. Re-running the
