@@ -45,22 +45,7 @@ internal class MilanBankConvertInfo
 
         ObjectBinary = LE3BankExport.GetBinaryData<LECWwiseBank>();
         if (ObjectBinary.BnkFile.Length == 0) return;
-
-        // Hmm........
-        // Used to be B;nkParser here but it became static
     }
-
-    public string GetDecompiledFolderName()
-    {
-        var outDir = Path.Combine(DeprecatedAudioPipeline.GetDecompiledBanksFolder(), LE3BankExport.ObjectName);
-        if (LocalizedInfo.Localization != MELocalization.None)
-        {
-            outDir += $"_{LocalizedInfo.Localization}";
-        }
-
-        return outDir;
-    }
-
 
     public List<ExportEntry> GetStreams()
     {
