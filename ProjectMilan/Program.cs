@@ -322,9 +322,10 @@ namespace ProjectMilan
             // Verification
             RunPipeline(true, VerifyMod.RunPipeline, "Verify");
 
+        licensee:
             // Licensee conversion
             // Don't enable until we get stuff working in LEX
-            //RunPipeline(true, LMPLicensee.RunPipeline, "Licensee");
+            RunPipeline(true, LicenseePipeline.RunPipeline, "Licensee");
 
             // Patch for multi instance
             MultiInstance.PatchForMultiInstance();
