@@ -134,6 +134,63 @@ namespace ProjectMilanCore
             return null;
         }
 
+        /// <summary>
+        /// Fetches an ME3 file stream - from disk or SFAR. Callers will need to close the returned stream.
+        /// </summary>
+        public static Stream GetME3File(string sourceFileName, bool logIfNotFound = true)
+        {
+            bool forceUseDLC = sourceFileName == "MPLobby.pcc"; // Do not use basegame version.
+
+            lock (syncObj)
+            {
+                if (!forceUseDLC &&
+                    MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath))
+                {
+                    return new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                }
+
+                // May be in SFAR
+                if (ME3DLCFileMap == null)
+                    LoadME3DLCTOCs();
+
+                if (ME3DLCFileMap.TryGetValue(sourceFileName, out var dlcPackage))
+                {
+                    var decompressed = dlcPackage.DecompressEntry(dlcPackage.FindFileEntry(sourceFileName));
+                    if (decompressed is MemoryStream memoryStream)
+                    {
+                        memoryStream.Position = 0;
+                        return memoryStream;
+                    }
+
+                    var copy = new MemoryStream();
+                    decompressed.CopyTo(copy);
+                    decompressed.Dispose();
+                    copy.Position = 0;
+                    return copy;
+                }
+
+                if (MELoadedFiles.TryGetHighestMountedFile(MEGame.ME3, sourceFileName, out var filePath2) &&
+                    filePath2.Contains("\\DLC_"))
+                {
+                    // Unpacked DLC
+                    return new FileStream(filePath2, FileMode.Open, FileAccess.Read, FileShare.Read);
+                }
+
+                // Donors will have full path
+                if (File.Exists(sourceFileName))
+                {
+                    return new FileStream(sourceFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                }
+
+                if (logIfNotFound)
+                {
+                    MilanLog.Warning($"Could not locate ME3 file: {sourceFileName}");
+                }
+            }
+
+            return null;
+        }
+
         public static void LoadME3DLCTOCs()
         {
             if (ME3DLCFileMap != null)
@@ -374,10 +431,9 @@ namespace ProjectMilanCore
             };
 
             // We have to fake a dlc dir for AFC's  'get files loaded in game'
-            var fakePath = Directory.CreateDirectory(Path.Combine(ME3Directory.DLCPath, "DLC_Milan")).FullName;
-            var fakeCooked = Directory.CreateDirectory(Path.Combine(fakePath, "CookedPCConsole")).FullName;
+            var fakeCooked = GetME3DirectAccessCache();
             MountFile mf = new MountFile() { Game = MEGame.LE3, MountPriority = 50000, MountFlags = new MountFlag(EME3MountFileFlag.LoadsInMultiplayer) };
-            mf.WriteMountFile(Path.Combine(fakeCooked, "mount.dlc"));
+            mf.WriteMountFile(Path.Combine(fakeCooked, "mount.dlc"));       
 
             // List of all suffixes to ensure
             var audioSuffixes = BaseBuildSettings.SupportedVOLanguages.Select(x => x.ToString()).Concat(new[] { "SFX" });
@@ -388,41 +444,31 @@ namespace ProjectMilanCore
                 foreach (var loc in audioSuffixes)
                 {
                     var locF = $"{afcN}_{loc}.afc";
-                    var milanLocPath = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole", locF);
-
-                    if (loadedFiles.TryGetValue(locF, out var locOnDisk))
-                    {
-                        MilanLog.Information($"{locF} already exists in game - skipping extraction");
-                        if (!File.Exists(milanLocPath))
-                        {
-                            MilanLog.Information($"Copying {locF} to Milan.");
-                            File.Copy(locOnDisk, milanLocPath);
-                        }
-                        continue; // Already exists
-                    }
-
                     var data = GetME3SFARFile(locF);
                     if (data == null)
                         continue; // On disk already
 
-                    MilanLog.Information($"{locF} is being copied to the direct access cache");
 
                     if (loadedFiles.ContainsKey(locF))
                     {
-                        MilanLog.Information($"{locF} already exists in game - skipping extraction");
+                        MilanLog.Information($"{locF} already accessible directly - skipping extraction");
                         continue; // Already exists
                     }
+                    MilanLog.Information($"{locF} is being copied to the direct access cache");
                     using var outF = File.OpenWrite(Path.Combine(fakeCooked, locF));
                     data.CopyTo(outF);
-
-                    if (!File.Exists(milanLocPath))
-                    {
-                        MilanLog.Information($"Extracting {locF} to Milan.");
-                        using var outLe = File.OpenWrite(milanLocPath);
-                        data.CopyTo(outLe);
-                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets fodler where some file are cached to help make less complicated lookup in ME3
+        /// </summary>
+        /// <returns></returns>
+        public static string GetME3DirectAccessCache()
+        {
+            var fakePath = Directory.CreateDirectory(Path.Combine(ME3Directory.DLCPath, "DLC_Milan")).FullName;
+            return Directory.CreateDirectory(Path.Combine(fakePath, "CookedPCConsole")).FullName;
         }
 
         //public static void EnsureVGMStreamAvailable()
@@ -435,7 +481,7 @@ namespace ProjectMilanCore
         //}
 
         /// <summary>
-        /// Ports localized files 
+        /// Ports localized versions of the given basePackageName 
         /// </summary>
         /// <param name="basePackageName"></param>
         /// <param name="outputFolder"></param>
@@ -670,7 +716,7 @@ namespace ProjectMilanCore
                     continue;
                 }
                 var outFolder = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, "Shared", "ClassLibrary", "LooseClasses", cls.GetLinker())).FullName;
-                var existingUC = Path.Combine(outFolder, cls.ObjectName+".uc");
+                var existingUC = Path.Combine(outFolder, cls.ObjectName + ".uc");
                 lock (globalDumpObj)
                 {
                     if (!File.Exists(existingUC))
