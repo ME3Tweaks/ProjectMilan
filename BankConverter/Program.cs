@@ -3,6 +3,9 @@ using BankConverter.Bnk.Chunks;
 
 namespace BankConverter
 {
+    // This project (BankConverter) was written by Claude using a mix of binary analysis of ME3, LE3, source code from Wwiser and Wwiser.NET, analysis
+    // of the Wwise SDK, as well as in-game tracing for audio-related issues.
+    // It is used solely for the purpose of converting v56 Banks to v134 and should not be used for any other purpose.
     internal class Program
     {
         static void Main(string[] args)
