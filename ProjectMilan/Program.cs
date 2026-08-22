@@ -100,7 +100,7 @@ namespace ProjectMilan
                 if (Settings.UseCheckpointSystem)
                 {
                     Console.WriteLine("-------------------------------");
-                    Console.WriteLine("Use existing checkpoint and skip pre-NonStartup pipelines [Y/N]? (5 second timeout)");
+                    Console.WriteLine("Use existing checkpoint and skip pre-NonStartup pipelines [y/N]? (5 second timeout)");
                     var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
                     if ("Y".CaseInsensitiveEquals(input))
                     {
@@ -110,7 +110,7 @@ namespace ProjectMilan
                     else
                     {
                         Console.WriteLine("-------------------------------");
-                        Console.WriteLine("Create checkpoint after NonStartup [Y/N]? (5 second timeout)");
+                        Console.WriteLine("Create checkpoint after NonStartup [y/N]? (5 second timeout)");
                         input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
                         if ("Y".CaseInsensitiveEquals(input))
                         {
@@ -141,6 +141,7 @@ namespace ProjectMilan
                 // CleanupMilan();
             }
 
+        lec:
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.ME3, MEGame.LE3]);
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
@@ -176,6 +177,7 @@ namespace ProjectMilan
         public static void CleanupMilan()
         {
             MPCommon.Clean();
+            AudioPipeline.Clean();
         }
 
         public static bool InstallModOnCompletion { get; set; }
@@ -230,7 +232,7 @@ namespace ProjectMilan
             MilanInit.Init(); // Initialize shared pipeline data
 
             // You can uncomment these (along with DontDeleteModFolder) to skip to a specific step.
-            //goto vtables;
+            //goto licensee;
 
             // TD conversation - do not commit
             //RunPipeline(true, MaterialExpressionPipeline.RunPipeline, "MaterialExpression");
@@ -268,7 +270,10 @@ namespace ProjectMilan
             // Content pipelines will use the milan ME3 cache
             MilanShared.EnsureTFCsAvailable();
             MilanShared.EnsureAFCsAvailable();
-            AudioPipeline.EnsureWwise7110();
+            if (Settings.RunAudioPipeline)
+            {
+                AudioPipeline.EnsureWwise7110();
+            }
 
         kitsBuild:
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
@@ -297,9 +302,12 @@ namespace ProjectMilan
 
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
-#if WITH_WWISE
+
+        audio:
             RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
-#endif
+
+
+
             // Drop all extra packages from database. Conformance depends on vanilla DB.
             MilanShared.UnregisterObjectDBPackages();
 
@@ -389,6 +397,11 @@ namespace ProjectMilan
         private static void RunResearch()
         {
 #if  DEBUG
+            Research.TestSilent();
+            return;
+
+            Research.InstallSoundBanks();
+            return;
             // Put your method in Research class and call it here.
             //Research.CopyPreview2();
             //return;
