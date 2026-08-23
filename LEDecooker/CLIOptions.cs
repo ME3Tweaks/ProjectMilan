@@ -26,5 +26,14 @@ namespace LEDecooker
         [Option('g', "game", HelpText = "Game to run the operation on.", Required = true)]
         public MEGame Game { get; set; }
 
+        [Option("genobjectdb", HelpText = "Regenerates supportfiles/<game>.bin, the ObjectInstanceDB. For ME3 this includes DLC SFAR content. Runs on ME games as well as LE ones.")]
+        public bool GenerateObjectDB { get; set; }
+
+        [Option("gensupportfiles", HelpText = "Regenerates every support database for the game (textures, object type lookups, material IFPs and the ObjectInstanceDB) in a single pass over its packages. Runs on ME games as well as LE ones.")]
+        public bool GenerateSupportFiles { get; set; }
+
+        [Option("zipsupportfiles", HelpText = "Rebuilds supportfiles/supportdbs.zip from the loose support files. LEDecooker must be recompiled afterwards, as the zip is an embedded resource.")]
+        public bool ZipSupportFiles { get; set; }
+
     }
 }

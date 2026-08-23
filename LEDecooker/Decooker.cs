@@ -1,22 +1,16 @@
 ﻿using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
-using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
-using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
-using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using Newtonsoft.Json;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
-using static LegendaryExplorerCore.Unreal.TOCBinFile;
 
 namespace LEDecooker
 {
@@ -39,6 +33,9 @@ namespace LEDecooker
         /// texture without its package, so resolving one needs the reverse lookup.
         /// </summary>
         private static CaseInsensitiveDictionary<List<string>> ObjectPathsByName;
+
+        /// <summary>Class name per object path, for databases with no class table.</summary>
+        private static readonly CaseInsensitiveDictionary<string> CandidateClassCache = new();
 
         /// <summary>
         /// Compiles the T3D files for the specified game, generating packages with material expression data. It also generates the 
@@ -278,11 +275,11 @@ namespace LEDecooker
                 //   BIOG_WPN_SNP_M_CON_MP4 FIXED per import
                 //   BioS_MPJungle 
                 //   BioVFX_Env_Hologram
-                //if (!packageName.CaseInsensitiveEquals("BioVFX_DLC_OmniBlade")
-                    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
-                    //&& !bypass // debug filter. uncomment to make it continue after this single one.
-                    //)
-                    //continue;
+                //if (!packageName.CaseInsensitiveEquals("BioG_VfxMaterials")
+                //// && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
+                ////&& !bypass // debug filter. uncomment to make it continue after this single one.
+                //)
+                //continue;
 
                 bypass = true;
 
@@ -842,7 +839,7 @@ namespace LEDecooker
                 // Z, a three channel one (DXT1/BC7) does not, so the bytecode stops matching what the
                 // game shipped. The shipping material always bound the copy in its own package, so
                 // look there first and only fall back to the by-name DB when it has none.
-                var ownPackageMatch = TryResolveTextureInOwnPackage(sourcepackage, lookupName, classname);
+                var ownPackageMatch = TryResolveTextureInOwnPackage(sourcepackage, lookupName, classname, sourceGame);
                 var portedItem = ownPackageMatch != null
                     ? PortTextureFromLocation(package, sourcepackage, sourceGame, ownPackageMatch, classname)
                     : null;
@@ -885,7 +882,7 @@ namespace LEDecooker
         /// preferring it over any same-named texture elsewhere in the game. Returns null when this
         /// package owns no such object, which is the common case.
         /// </summary>
-        private static ObjectLocation TryResolveTextureInOwnPackage(IMEPackage sourcepackage, string lookupName, string classname)
+        private static ObjectLocation TryResolveTextureInOwnPackage(IMEPackage sourcepackage, string lookupName, string classname, MEGame sourceGame)
         {
             if (DecookerShared.TargetObjectDB == null)
                 return null;
@@ -917,6 +914,13 @@ namespace LEDecooker
                          .Where(x => x.StartsWith(ownPackagePrefix, StringComparison.OrdinalIgnoreCase))
                          .OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
             {
+                // The name index covers every object, not just textures, so a Material can share a
+                // name with the texture being resolved -- BioG_VfxMaterials has a material and a
+                // texture both called RealFire_GroundFire_Wide. Without this check the material wins
+                // and a texture reference is silently bound to a material.
+                if (!CandidateIsClass(candidate, classname, sourceGame))
+                    continue;
+
                 var files = DecookerShared.TargetObjectDB.GetFilesContainingObject(candidate);
                 if (files == null || files.Count == 0)
                     continue;
@@ -930,6 +934,43 @@ namespace LEDecooker
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Whether an indexed object is actually of the wanted class.
+        ///
+        /// Uses the ObjectInstanceDB's class table when present. Databases serialized before
+        /// version 3 have none, so this falls back to reading the class out of the package once per
+        /// object and caching it -- correct with existing databases, just slower on first touch.
+        /// </summary>
+        private static bool CandidateIsClass(string candidate, string classname, MEGame sourceGame)
+        {
+            var known = DecookerShared.TargetObjectDB.GetClassName(candidate);
+            if (known != null)
+                return known.CaseInsensitiveEquals(classname);
+
+            if (!CandidateClassCache.TryGetValue(candidate, out var cached))
+            {
+                cached = "";
+                var files = DecookerShared.TargetObjectDB.GetFilesContainingObject(candidate);
+                if (files != null && files.Count > 0)
+                {
+                    try
+                    {
+                        using var candidatePackage = DecookerShared.OpenPackage(files[0], sourceGame);
+                        cached = candidatePackage.FindExport(candidate)?.ClassName ?? "";
+                    }
+                    catch
+                    {
+                        // Unreadable package; treat the class as unknown so the caller falls through
+                        // to the by-name DB rather than binding something wrong.
+                        cached = "";
+                    }
+                }
+                CandidateClassCache[candidate] = cached;
+            }
+
+            return cached.CaseInsensitiveEquals(classname);
         }
 
         private static IEntry PortTextureFromLocation(IMEPackage package, IMEPackage sourcepackage, MEGame sourceGame, ObjectLocation info, string classname)

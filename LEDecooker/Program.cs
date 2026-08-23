@@ -27,9 +27,13 @@ namespace LEDecooker
             Console.Write(" Done.\n");
 
 #if DEBUG
-            // Uncomment to run support generation
-            //RunSupportGenerators();
-            //return;
+            // Uncomment to run support generation. Only when launched with no arguments, so that the
+            // CLI (including --gensupportfiles for a single game) still works from a debug build.
+            if (args.Length == 0)
+            {
+                RunSupportGenerators();
+                return;
+            }
 #endif
 
             Parser.Default.ParseArguments<CLIOptions>(args).WithParsed(RunDecook);
@@ -38,6 +42,42 @@ namespace LEDecooker
         private static void RunDecook(CLIOptions options)
         {
             CLIOptions.ParsedOptions = options;
+
+            // Database generation runs before the LE check: the ME3 database is what supplies the
+            // original-generation objects, so this operation is valid for the OT games too.
+            if (options.ZipSupportFiles)
+            {
+#if DEBUG
+                SupportGenerators.ZipSupportFiles();
+#else
+                DecookerLog.Fatal("--zipsupportfiles is only available in DEBUG builds.");
+                Environment.Exit(1);
+#endif
+                return;
+            }
+
+            if (options.GenerateObjectDB)
+            {
+#if DEBUG
+                SupportGenerators.GenerateObjectInstanceDB(options.Game);
+#else
+                DecookerLog.Fatal("--genobjectdb is only available in DEBUG builds.");
+                Environment.Exit(1);
+#endif
+                return;
+            }
+
+            if (options.GenerateSupportFiles)
+            {
+#if DEBUG
+                SupportGenerators.GenerateSupportFiles(options.Game);
+#else
+                DecookerLog.Fatal("--gensupportfiles is only available in DEBUG builds.");
+                Environment.Exit(1);
+#endif
+                return;
+            }
+
             if (!options.Game.IsLEGame())
             {
                 DecookerLog.Fatal($"{options.Game} is not a game supported by the decooker.");
@@ -48,7 +88,7 @@ namespace LEDecooker
             if (options.CompileAssets)
             {
                 didSomething = true;
-                Decooker.CompileT3Ds();
+               Decooker.CompileT3Ds();
             }
 
             if (options.ConvertAssetsToUDK)
@@ -71,20 +111,14 @@ namespace LEDecooker
 
             foreach (var g in games)
             {
-                // Textures
-                SupportGenerators.GenerateTextureDB(g); // ME1 has some extra content in it due to it shipping uncooked files.
-
-                // Material Instance Constant
-                SupportGenerators.GenUObjDB(g, "MaterialInstanceConstant", false);
-
-                // Static Meshes
-                SupportGenerators.GenUObjDB(g, "StaticMesh", false);
-
-                // RVR
-                SupportGenerators.GenUObjDB(g, "RvrEffectsMaterialUser", false);
-
-                // Material IFP Database
-                SupportGenerators.GeneratePerPackageNesting(g);
+                //if (g != MEGame.LE1)
+                //{
+                //    continue;
+                //}
+                // One walk over the game builds all of them: textures, MaterialInstanceConstant,
+                // StaticMesh, RvrEffectsMaterialUser, the material IFP database and the
+                // ObjectInstanceDB. ME1 has some extra content in it due to it shipping uncooked files.
+                SupportGenerators.GenerateSupportFiles(g);
             }
 
             
