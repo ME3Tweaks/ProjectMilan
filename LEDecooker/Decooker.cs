@@ -27,10 +27,18 @@ namespace LEDecooker
     {
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialIFPDB;
         private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupDB;
+        private static CaseInsensitiveDictionary<ObjectLocation> OppositeTextureLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> StaticMeshLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> RvrEffectsMaterialUserLookupDB;
         private static CaseInsensitiveConcurrentDictionary<string> PortingItems = new();
+
+        /// <summary>
+        /// Every object path in the target game, grouped by its leaf object name. Built once from the
+        /// ObjectInstanceDB, which indexes by instanced full path only; T3D material data names a
+        /// texture without its package, so resolving one needs the reverse lookup.
+        /// </summary>
+        private static CaseInsensitiveDictionary<List<string>> ObjectPathsByName;
 
         /// <summary>
         /// Compiles the T3D files for the specified game, generating packages with material expression data. It also generates the 
@@ -44,9 +52,14 @@ namespace LEDecooker
             Directory.CreateDirectory(compiledOutputFolder);
 
             // Compile LE
-            CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game, CLIOptions.ParsedOptions.Game);
+            CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game, CLIOptions.ParsedOptions.Game, false);
             // Compile OT -> LE
-            CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game.ToOppositeGeneration(), CLIOptions.ParsedOptions.Game);
+            /*if (CLIOptions.ParsedOptions.Game != MEGame.LE2)
+            {
+                // Do ME1/ME3
+                CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game.ToOppositeGeneration(), CLIOptions.ParsedOptions.Game, false);
+            }*/
+
             FixImports(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game);
         }
 
@@ -265,15 +278,15 @@ namespace LEDecooker
                 //   BIOG_WPN_SNP_M_CON_MP4 FIXED per import
                 //   BioS_MPJungle 
                 //   BioVFX_Env_Hologram
-                //if (!packageName.CaseInsensitiveEquals("TestOneOfEveryResource")
-                //    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
-                //    && !bypass // debug filter. uncomment to make it continue after this single one.
-                //    )
-                //    continue;
+                //if (!packageName.CaseInsensitiveEquals("BioVFX_DLC_OmniBlade")
+                    // && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
+                    //&& !bypass // debug filter. uncomment to make it continue after this single one.
+                    //)
+                    //continue;
 
-                //bypass = true;
+                bypass = true;
 
-                if (packageName.StartsWith("Engine", StringComparison.OrdinalIgnoreCase))
+                if (packageName.StartsWith("Engine", StringComparison.OrdinalIgnoreCase) && !packageName.Contains("EngineDebugMaterials", StringComparison.OrdinalIgnoreCase))
                     continue;
                 if (packageName.StartsWith("Editor", StringComparison.OrdinalIgnoreCase))
                     continue;
@@ -286,8 +299,8 @@ namespace LEDecooker
                 if (packageName.StartsWith("TestOneOfEveryResource", StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                if (!packageName.StartsWith("BIOG_HMM_HED_PROMorph", StringComparison.OrdinalIgnoreCase))
-                    continue;
+                //if (!packageName.StartsWith("BioApl_Veh_OculonA", StringComparison.OrdinalIgnoreCase))
+                //    continue;
 
                 var packagePath = Path.Combine(outputFolder, $"{packageName}.pcc");
 
@@ -297,14 +310,15 @@ namespace LEDecooker
                 // END TEMP
 
                 IMEPackage package;
-                if (File.Exists(packagePath))
+                /*if (File.Exists(packagePath))
                 {
+                    continue; // Do nothing
                     package = MEPackageHandler.OpenMEPackage(packagePath);
                 }
                 else
-                {
+                {*/
                     package = MEPackageHandler.CreateAndOpenPackage(packagePath, targetGame);
-                }
+                // }
 
                 DecookerLog.Information($"Compiling package {package.FileNameNoExtension} [{done}/{total}]");
                 CompilePackageMaterials(package, sourceGame, t3dZip, MaterialIFPDB);
@@ -337,7 +351,7 @@ namespace LEDecooker
                         {
                             DecookerLog.Error($"Duplicate object found in {package.FileNameNoExtension}: {dup.Entry.InstancedFullPath}");
                         }
-                        //package.Save();
+                        package.Save();
                         Debugger.Break();
                     }
 
@@ -621,7 +635,7 @@ namespace LEDecooker
                     var classX = EntryImporter.EnsureClassIsInFile(package, classType, rop, DecookerShared.GetCachedGameBackupPath(sourceGame));
                     targetAsset.Class = classX;
                     EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceAsset, package, targetAsset, true, rop, out var _);
-                    
+
                 }
             }
         }
@@ -821,7 +835,19 @@ namespace LEDecooker
                     lookupName = instancedfullpath.Substring(instancedfullpath.LastIndexOf('.') + 1);
                 }
 
-                var portedItem = TryPortTexture(package, sourcepackage, sourceGame, lookupName, classname, TextureLookupDB);
+                // The texture DB is keyed by bare object name, and several packages can own a texture
+                // with the same name -- often the same art at a different compression. Whichever copy
+                // that DB happens to hold then decides the pixel format, and format changes the
+                // generated shader: a two channel normal map (BC5/V8U8) makes the material reconstruct
+                // Z, a three channel one (DXT1/BC7) does not, so the bytecode stops matching what the
+                // game shipped. The shipping material always bound the copy in its own package, so
+                // look there first and only fall back to the by-name DB when it has none.
+                var ownPackageMatch = TryResolveTextureInOwnPackage(sourcepackage, lookupName, classname);
+                var portedItem = ownPackageMatch != null
+                    ? PortTextureFromLocation(package, sourcepackage, sourceGame, ownPackageMatch, classname)
+                    : null;
+
+                portedItem ??= TryPortTexture(package, sourcepackage, sourceGame, lookupName, classname, TextureLookupDB);
                 if (portedItem == null && OppositeTextureLookupDB != null)
                 {
                     var oppositeGame = sourceGame.ToOppositeGeneration();
@@ -848,54 +874,110 @@ namespace LEDecooker
         {
             if (db.TryGetValue(lookupName, out var info))
             {
-                // Does this already exist in the package?
-                if (package.FindEntry(info.memoryfullpath, info.classname) != null)
-                {
-                    return package.FindEntry(info.memoryfullpath, info.classname);
-                }
-
-                // Is this outside of our package?
-                if (!info.memoryfullpath.StartsWith(sourcepackage.FileNameNoExtension + ".", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Debug.WriteLine($"Generating import for {info.memoryfullpath}");
-                    return GenerateTextureImport(package, info.classname, info.memoryfullpath);
-                }
-
-                // We know it exists
-                using var sourcePackage = DecookerShared.OpenPackage(info.packagefile, sourceGame);
-                //   sourcePackage = MEPackageHandler.UnsafePartialLoad(path, x => x.ClassName is "Package" or "TextureCube" || x.IsTexture());
-                var sourceTex = sourcePackage.Exports.First(x => x.MemoryFullPath.CaseInsensitiveEquals(info.memoryfullpath) && x.ClassName.CaseInsensitiveEquals(classname));
-                if (!sourceTex.IsDataLoaded())
-                {
-                    Debugger.Break();
-                }
-
-                if (sourceTex.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
-                {
-                    // Fully load
-                    // sourcePackage = MEPackageHandler.OpenMEPackage(info.packagefile);
-                    sourceTex = sourcePackage.FindExport(sourceTex.InstancedFullPath);
-                }
-
-                RelinkerOptionsPackage rop = new RelinkerOptionsPackage()
-                {
-                    // Cache?
-                    CustomRelinkUIndex = DecookerShared.ImportOutsideOfPackageRelink,
-                    CustomImportDependency = ImportDependencyOutsideOfPackage
-                };
-
-                if (!sourceTex.IsForcedExport)
-                {
-                    // Move to forced export to reduce number of name collisions
-                    EntryExporter.PrepareGlobalFileForPorting(sourceTex.FileRef, sourceTex.FileRef.FileNameNoExtension);
-                }
-
-
-                EntryExporter.ExportExportToPackage(sourceTex, package, out var ported, customROP: rop);
-                return ported;
+                return PortTextureFromLocation(package, sourcepackage, sourceGame, info, classname);
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Finds a texture of the given object name that lives in the package currently being decooked,
+        /// preferring it over any same-named texture elsewhere in the game. Returns null when this
+        /// package owns no such object, which is the common case.
+        /// </summary>
+        private static ObjectLocation TryResolveTextureInOwnPackage(IMEPackage sourcepackage, string lookupName, string classname)
+        {
+            if (DecookerShared.TargetObjectDB == null)
+                return null;
+
+            if (ObjectPathsByName == null)
+            {
+                var map = new CaseInsensitiveDictionary<List<string>>();
+                foreach (var objectPath in DecookerShared.TargetObjectDB.GetAllObjectPaths(false))
+                {
+                    var dotIndex = objectPath.LastIndexOf('.');
+                    var leaf = dotIndex < 0 ? objectPath : objectPath.Substring(dotIndex + 1);
+                    if (!map.TryGetValue(leaf, out var bucket))
+                    {
+                        map[leaf] = bucket = new List<string>();
+                    }
+                    bucket.Add(objectPath);
+                }
+                ObjectPathsByName = map;
+            }
+
+            if (!ObjectPathsByName.TryGetValue(lookupName, out var candidates))
+                return null;
+
+            var ownPackagePrefix = sourcepackage.FileNameNoExtension + ".";
+
+            // Ordered so that an ambiguous name inside one package still resolves the same way on
+            // every run; the DB build itself races, which is what made bad picks look arbitrary.
+            foreach (var candidate in candidates
+                         .Where(x => x.StartsWith(ownPackagePrefix, StringComparison.OrdinalIgnoreCase))
+                         .OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+            {
+                var files = DecookerShared.TargetObjectDB.GetFilesContainingObject(candidate);
+                if (files == null || files.Count == 0)
+                    continue;
+
+                return new ObjectLocation
+                {
+                    packagefile = files[0],
+                    memoryfullpath = candidate,
+                    classname = classname
+                };
+            }
+
+            return null;
+        }
+
+        private static IEntry PortTextureFromLocation(IMEPackage package, IMEPackage sourcepackage, MEGame sourceGame, ObjectLocation info, string classname)
+        {
+            // Does this already exist in the package?
+            if (package.FindEntry(info.memoryfullpath, info.classname) != null)
+            {
+                return package.FindEntry(info.memoryfullpath, info.classname);
+            }
+
+            // Is this outside of our package?
+            if (!info.memoryfullpath.StartsWith(sourcepackage.FileNameNoExtension + ".", StringComparison.OrdinalIgnoreCase))
+            {
+                // Debug.WriteLine($"Generating import for {info.memoryfullpath}");
+                return GenerateTextureImport(package, info.classname, info.memoryfullpath);
+            }
+
+            // We know it exists
+            using var sourcePackage = DecookerShared.OpenPackage(info.packagefile, sourceGame);
+            var sourceTex = sourcePackage.Exports.First(x => x.MemoryFullPath.CaseInsensitiveEquals(info.memoryfullpath) && x.ClassName.CaseInsensitiveEquals(classname));
+            if (!sourceTex.IsDataLoaded())
+            {
+                Debugger.Break();
+            }
+
+            if (sourceTex.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
+            {
+                // Fully load
+                // sourcePackage = MEPackageHandler.OpenMEPackage(info.packagefile);
+                sourceTex = sourcePackage.FindExport(sourceTex.InstancedFullPath);
+            }
+
+            RelinkerOptionsPackage rop = new RelinkerOptionsPackage()
+            {
+                // Cache?
+                CustomRelinkUIndex = DecookerShared.ImportOutsideOfPackageRelink,
+                CustomImportDependency = ImportDependencyOutsideOfPackage
+            };
+
+            if (!sourceTex.IsForcedExport)
+            {
+                // Move to forced export to reduce number of name collisions
+                EntryExporter.PrepareGlobalFileForPorting(sourceTex.FileRef, sourceTex.FileRef.FileNameNoExtension);
+            }
+
+
+            EntryExporter.ExportExportToPackage(sourceTex, package, out var ported, customROP: rop);
+            return ported;
         }
 
         private static IEntry GenerateTextureImport(IMEPackage package, string className, string instancedfullpath)

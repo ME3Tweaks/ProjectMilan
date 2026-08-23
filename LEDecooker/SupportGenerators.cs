@@ -42,9 +42,21 @@ namespace LEDecooker
                         continue; // Do not care.
                     set.Add(tex.ClassName);
                     var instancedName = tex.ObjectName.Instanced;
-                    if (!TextureToPackageName.TryGetValue(instancedName, out _))
+                    var candidate = new TexInfo() { packagefile = package.FilePath, memoryfullpath = tex.MemoryFullPath, classname = tex.ClassName };
+
+                    // Several packages can own a texture with the same object name. Keeping whichever
+                    // arrived first made the winner depend on thread scheduling, so the same inputs
+                    // could produce a different DB -- and a different pixel format, which changes the
+                    // compiled shader -- from one run to the next. Break the tie on the path instead so
+                    // the result is reproducible. Which copy a material should actually use is decided
+                    // at resolve time, where the material's own package is known and preferred.
+                    lock (TextureToPackageName)
                     {
-                        TextureToPackageName[instancedName] = new TexInfo() { packagefile = package.FilePath, memoryfullpath = tex.MemoryFullPath, classname = tex.ClassName };
+                        if (!TextureToPackageName.TryGetValue(instancedName, out var existing)
+                            || string.Compare(candidate.memoryfullpath, existing.memoryfullpath, StringComparison.OrdinalIgnoreCase) < 0)
+                        {
+                            TextureToPackageName[instancedName] = candidate;
+                        }
                     }
                 }
                 Interlocked.Increment(ref done);
