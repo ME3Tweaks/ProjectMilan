@@ -20,6 +20,15 @@ namespace MilanShaderHost
         [Option('b', "builddebugpackages", HelpText = "Builds debug shader packages for each shader compiled.")]
         public bool BuildDebugPackages { get; set; }
 
+        [Option("captureonly", HelpText = "Captures debug packages without compiling any shaders. Builds the offline calibration files in one pass; implies --builddebugpackages.")]
+        public bool CaptureOnly { get; set; }
+
+        [Option("packagelist", HelpText = "Reads the packages to process from this file (one name per line, # for comments) instead of the hardcoded list in ShaderCompileList.")]
+        public string PackageListFile { get; set; }
+
+        [Option("gamepath", HelpText = "Game root (the folder containing BioGame). Overrides the registry lookup, which is only compiled into WinDebug/WinRelease builds.")]
+        public string GamePath { get; set; }
+
         [Option('s', "slashshadercache", HelpText = "Slashes the RefShaderCache down to only what's in the compiler level to improve game boot speed.")]
         public bool SlashRefShaderCache { get; set; }
 

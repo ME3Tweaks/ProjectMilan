@@ -1,6 +1,7 @@
 ﻿using CliWrap;
 using CommandLine;
 using LegendaryExplorerCore;
+using LegendaryExplorerCore.Compression;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
@@ -53,7 +54,21 @@ namespace MilanShaderHost
             LegendaryExplorerCoreLib.InitLib(null, x => { });
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use the shared cache.
 
-            Task.Run(MilanShaderBuilderFlow.StartFlow);
+            // LE packages are Oodle compressed. Without this, every OpenMEPackage throws
+            // DllNotFoundException for oo2core_8_win64.dll unless the dll happens to sit next to
+            // the exe, which makes the tool depend on which output folder it was launched from.
+            if (!OodleHelper.EnsureOodleDll(MEDirectories.GetDefaultGamePath(Game)))
+            {
+                Console.Error.WriteLine("Could not load oodle dll from the game directory; package loading will fail.");
+            }
+
+            // Faults here used to be swallowed: the task's exception went unobserved and the host
+            // sat listening on the pipe forever, which is indistinguishable from a hang.
+            Task.Run(MilanShaderBuilderFlow.StartFlow).ContinueWith(t =>
+            {
+                Console.Error.WriteLine("Shader builder flow failed:");
+                Console.Error.WriteLine(t.Exception?.ToString());
+            }, TaskContinuationOptions.OnlyOnFaulted);
 
             // Start the pipe server.
             ShaderHost sh = new ShaderHost();
