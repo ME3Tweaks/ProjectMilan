@@ -36,8 +36,8 @@ namespace ProjectMilan.Pipelines.Startups
             var stagingPath = Path.Combine(compilingPath, "Staging");
             var mergeModsDirs = Directory.GetDirectories(compilingPath, "*", SearchOption.TopDirectoryOnly);
 
-            Utilities.DeleteFilesAndFoldersRecursively(stagingPath, deleteDirectoryItself: false);
             Directory.CreateDirectory(stagingPath);
+            Utilities.DeleteFilesAndFoldersRecursively(stagingPath, deleteDirectoryItself: false);
 
             var mergeModsPath = Path.Combine(Directory.GetParent(Program.Settings.OutputModPath)!.FullName, "MergeMods");
             Directory.CreateDirectory(mergeModsPath);
@@ -45,10 +45,10 @@ namespace ProjectMilan.Pipelines.Startups
             foreach (var modDir in mergeModsDirs)
             {
                 if (modDir == stagingPath) continue;
-                var modName = Directory.CreateDirectory(modDir).Name;
-                var manifest = Path.Combine(stagingPath, $"{modName}.json");
-                var m3mPath = Path.Combine(mergeModsPath, $"{modName}.m3m");
-                MilanLog.Information($"Creating merge mod for {modName}", true, LOG_CATEGORY);
+                var mergeModName = Directory.CreateDirectory(modDir).Name;
+                var manifest = Path.Combine(stagingPath, $"{mergeModName}.json");
+                var m3mPath = Path.Combine(mergeModsPath, $"{mergeModName}.m3m");
+                MilanLog.Information($"Creating merge mod for {mergeModName}", true, LOG_CATEGORY);
 
                 var mm1 = new MergeMod1()
                 {
