@@ -14,7 +14,7 @@ using System.Diagnostics;
 namespace ProjectMilan.Pipelines.Startups
 {
     /// <summary>
-    /// Pass-throughable settings for MPCommon pipelne
+    /// Pass-throughable settings for MPCommon pipeline
     /// </summary>
     class MPCommonPipelineVars
     {
@@ -93,128 +93,9 @@ namespace ProjectMilan.Pipelines.Startups
                 MilanLog.Fatal($"Failed to compile {MilanShared.MP_STARTUP_NAME}", customPrefix: LOG_CATEGORY);
                 Environment.Exit(1);
             }
-
-            BuildMergeMod();
+            MPMerge.RunPipeline();
         }
-
-        private static void BuildMergeMod()
-        {
-            var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
-            var stagingPath = Path.Combine(compilingPath, "Staging");
-            Utilities.DeleteFilesAndFoldersRecursively(stagingPath, deleteDirectoryItself: false);
-            var manifest = Path.Combine(stagingPath, "mprequiredchanges.json");
-
-            MergeMod1 mm1 = new MergeMod1();
-            mm1.Game = MEGame.LMP;
-            mm1.FilesToMergeInto = new List<MergeFile1>()
-            {
-                new MergeFile1()
-                {
-                    ApplyToAllLocalizations = false,
-                    FileName = "SFXGame.pcc",
-                    MergeChanges = new List<MergeFileChange1>(GetMergeChangesFor("SFXGame", stagingPath))
-                },
-                //new MergeFile1()
-                //{
-                //    ApplyToAllLocalizations = false,
-                //    FileName = "SFXOnlineFoundation.pcc",
-                //    MergeChanges = new List<MergeFileChange1>(GetMergeChangesFor("SFXOnlineFoundation", stagingPath))
-                //}
-            };
-
-            // Output
-            var mergeModsPath = Path.Combine(Directory.GetParent(Program.Settings.OutputModPath).FullName, "MergeMods");
-            Directory.CreateDirectory(mergeModsPath);
-            var m3mPath = Path.Combine(mergeModsPath, "mprequiredchanges.m3m");
-            using var fs = File.Open(m3mPath, FileMode.Create, FileAccess.ReadWrite);
-            var json = JsonConvert.SerializeObject(mm1, Formatting.Indented, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            });
-            File.WriteAllText(manifest, json);
-            MergeModLoader.SerializeManifest(fs, json, stagingPath);
-
-        }
-
-        /// <summary>
-        /// Gets the changes to put into the m3m merge file for Project Milan
-        /// </summary>
-        /// <param name="packageName">Package to merge into</param>
-        /// <param name="stagingPath">Where the contents to merge are stored</param>
-        /// <returns></returns>
-        private static IEnumerable<MergeFileChange1> GetMergeChangesFor(string packageName, string stagingPath)
-        {
-            var compilingPath = Path.Combine(MilanShared.PipelineRoot, "Startups", "MPCommon", "MergeMod");
-            List<MergeFileChange1> files = new List<MergeFileChange1>();
-
-
-            // FUNCTIONS
-            var functions = Directory.CreateDirectory(Path.Combine(compilingPath, "Functions", packageName)).FullName;
-            foreach (var f in Directory.GetFiles(functions, "*.uc", SearchOption.AllDirectories))
-            {
-                files.Add(AddMergeScriptFileChange(f, stagingPath));
-            }
-
-            // ADDTOCLASSORREPLACE
-            // Need to split up by class name
-            var atcor = Directory.CreateDirectory(Path.Combine(compilingPath, "AddToClassOrReplace", packageName)).FullName;
-            var atcorFiles = Directory.GetFiles(atcor, "*.uc", SearchOption.AllDirectories).ToList();
-            var atcorClasses = atcorFiles.GroupBy(x => x.Substring(0, x.IndexOf('.')));
-            foreach (var classGrouping in atcorClasses)
-            {
-                files.Add(AddMergeAddToClassOrReplaceChanges(Path.GetFileName(classGrouping.Key), classGrouping.ToList(), stagingPath));
-            }
-
-
-            return files;
-        }
-
-        private static MergeFileChange1 AddMergeScriptFileChange(string sourceFile, string stagingPath)
-        {
-            var ucName = Path.GetFileName(sourceFile);
-            Directory.CreateDirectory(stagingPath);
-            var destFile = Path.Combine(stagingPath, ucName);
-            MilanLog.Information($"Adding script to merge mod: {ucName}", customPrefix: LOG_CATEGORY);
-            File.Copy(sourceFile, destFile, true);
-            return new MergeFileChange1()
-            {
-                EntryName = Path.GetFileNameWithoutExtension(ucName),
-                ScriptUpdate = new ScriptUpdate1()
-                {
-                    ScriptFileName = ucName,
-                }
-            };
-        }
-
-        /// <summary>
-        /// Adds a 'addtoclassoreplace' merge item. Used to add things to a class or update them if they already exist
-        /// </summary>
-        /// <param name="className">Name of class to merge into</param>
-        /// <param name="sourceFiles">uc file sources that exist (full paths)</param>
-        /// <param name="stagingPath">Where to copy the files to for compilation</param>
-        /// <returns></returns>
-        private static MergeFileChange1 AddMergeAddToClassOrReplaceChanges(string className, List<string> sourceFiles, string stagingPath)
-        {
-            // Copy the individual files to the compiling dir
-            Directory.CreateDirectory(stagingPath);
-            foreach (var sourceFile in sourceFiles)
-            {
-                var ucName = Path.GetFileName(sourceFile);
-                var destFile = Path.Combine(stagingPath, ucName);
-                MilanLog.Information($"Adding 'addtoclassorreplace' to merge mod: {ucName}", customPrefix: LOG_CATEGORY);
-                File.Copy(sourceFile, destFile, true);
-            }
-
-            return new MergeFileChange1()
-            {
-                EntryName = className,
-                AddToClassOrReplace = new AddToClassOrReplace1()
-                {
-                    ScriptFileNames = sourceFiles.Select(x => Path.GetFileName(x)).ToArray()
-                }
-            };
-        }
-
+        
         /// <summary>
         /// This is required to make the build work. This will eventually need to go into a merge mod or be patched out.
         /// </summary>
