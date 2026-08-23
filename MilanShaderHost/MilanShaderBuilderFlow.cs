@@ -433,9 +433,14 @@ namespace MilanShaderHost
                 _ => throw new Exception("Unhandled build mode: " + buildMode)
             };
 
-            if (buildMode == EShaderLevelMode.Compile && Program.ParsedOptions.BuildDebugPackages)
+            if (buildMode == EShaderLevelMode.Compile && (Program.ParsedOptions.BuildDebugPackages || Program.ParsedOptions.CaptureOnly))
             {
                 bootArg += " -SendDebugPackages";
+            }
+
+            if (buildMode == EShaderLevelMode.Compile && Program.ParsedOptions.CaptureOnly)
+            {
+                bootArg += " -CaptureOnly";
             }
 
             var processPath = MEDirectories.GetExecutablePath(Game);

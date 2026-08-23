@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Platforms>x64</Platforms>
+    <!-- LegendaryExplorerCore only compiles its registry-based game lookup under these. -->
+    <Configurations>WinDebug;WinRelease</Configurations>
+    <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
+    <ProjectReference Include="..\ProjectMilanCore\ProjectMilanCore.csproj" />
+  </ItemGroup>
+
+  <!--
+    Copied rather than ProjectReference'd: MilanShaderCompilerLib.vcxproj has no WinDebug/WinRelease
+    configuration, and its Release config does not currently build. The pinned d3dcompiler is what
+    makes offline compiles bit-identical to the game's, so it must not fall back to the system one.
+  -->
+  <ItemGroup>
+    <ContentWithTargetPath Include="..\MilanShaderCompilerLib\x64\Debug\MilanShaderCompilerLib.dll"
+                           Condition="Exists('..\MilanShaderCompilerLib\x64\Debug\MilanShaderCompilerLib.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>MilanShaderCompilerLib.dll</TargetPath>
+    </ContentWithTargetPath>
+    <ContentWithTargetPath Include="..\MilanShaderResearchTool\Libraries\d3dcompiler_47.dll"
+                           Condition="Exists('..\MilanShaderResearchTool\Libraries\d3dcompiler_47.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>d3dcompiler_47.dll</TargetPath>
+    </ContentWithTargetPath>
+    <!-- 3DMigoto decompiler, used to turn bytecode diffs into readable HLSL for diagnosis. -->
+    <ContentWithTargetPath Include="..\MilanShaderResearchTool\Libraries\HLSLDecompiler2.dll"
+                           Condition="Exists('..\MilanShaderResearchTool\Libraries\HLSLDecompiler2.dll')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>HLSLDecompiler2.dll</TargetPath>
+    </ContentWithTargetPath>
+  </ItemGroup>
+
+</Project>
