@@ -1,4 +1,5 @@
-﻿using LegendaryExplorerCore.Packages;
+﻿using LegendaryExplorerCore.Misc;
+using LegendaryExplorerCore.Packages;
 using ME3TweaksModManager.modmanager.objects.mod.merge;
 using ME3TweaksModManager.modmanager.objects.mod.merge.v1;
 using Newtonsoft.Json;
@@ -111,16 +112,10 @@ namespace ProjectMilan.Pipelines.Startups
             }
             MilanLog.Information($"Updating ModDesc with new merge mods: {string.Join(", ", mergeModNames)}", customPrefix: LOG_CATEGORY);
             // Add all merge mods to moddesc.ini
-            string[] moddesc = File.ReadAllLines(Path.Combine(Program.Settings.OutputModPath, "..", "moddesc.ini"));
-            for(int idx = 0; idx <= moddesc.Length; idx++)
-            {
-                if (moddesc[idx].StartsWith("mergemods"))
-                {
-                    moddesc[idx] = $"mergemods = {string.Join(";", mergeModNames)}";
-                    break;
-                }
-            }
-            File.WriteAllLines(Path.Combine(Program.Settings.OutputModPath, "..", "moddesc.ini"), moddesc);
+            var moddescPath = Path.Combine(Program.Settings.OutputModPath, "..", "moddesc.ini");
+            var moddesc = DuplicatingIni.LoadIni(moddescPath);
+            moddesc["BASEGAME"]["mergemods"].Value = $"{string.Join(";", mergeModNames)}";
+            moddesc.WriteToFile(moddescPath);
         }
 
         /// <summary>
