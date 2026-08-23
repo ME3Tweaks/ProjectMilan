@@ -6,10 +6,6 @@
     <String id="49875623">DLC_MOD_ProjectMilan</String>
     <String id="49875624">en-us</String>
     <String id="49875625">Male</String>
-    <!--Male entries section end-->
-    <!--Female entries section begin-->
-    <String id="49875625">Female</String>
-    <!--Female entries section end-->
     <!--AAT entries begin -->
     <String id="49875626">Zoom Snap</String>
     <String id="49875627">Snaps your crosshairs onto an enemy when you start aiming.</String>
@@ -56,5 +52,9 @@
     <String id="49875681">Adjust controller input options</String>
     <String id="49875682">Mouse</String>
     <String id="49875683">Adjust mouse input options</String>
-    <!-- New Settings TLKs --> 
+    <!-- New Settings TLKs end -->
+    <!--Male entries section end-->
+    <!--Female entries section begin-->
+    <String id="49875625">Female</String>
+    <!--Female entries section end-->
 </tlkFile>
