@@ -58,6 +58,13 @@ namespace ProjectMilan
         private static bool CreateCheckpointForThisRun;
         private static bool RestoreCheckpointForThisRun;
 
+
+        /// <summary>
+        /// Bump this every time there are changes to MPCommon or NonStartup pipelines. It will invalidate stale checkpoints.
+        /// </summary>
+        public const int MIN_CHECKPOINT_VERSION = 1;
+
+
         /// <summary>
         /// Initialize Project Milan
         /// </summary>
@@ -99,19 +106,53 @@ namespace ProjectMilan
 
                 if (Settings.UseCheckpointSystem)
                 {
+                    // Only ask to restore if the checkpoint folder actually exists
+                    var checkpointFolder = Program.Settings.CheckpointFolder;
+                    var checkpointExists = !string.IsNullOrWhiteSpace(checkpointFolder) && Directory.Exists(checkpointFolder);
+
+                    if (checkpointExists)
+                    {
+                        // Read metadata version (missing or unreadable metadata = version 0)
+                        var cpVersion = Checkpoint.ReadCheckpointVersion();
+                        if (cpVersion < MIN_CHECKPOINT_VERSION)
+                        {
                     Console.WriteLine("-------------------------------");
-                    Console.WriteLine("Use existing checkpoint and skip pre-NonStartup pipelines [y/N]? (5 second timeout)");
+                            Console.WriteLine($"Existing checkpoint is outdated (version {cpVersion}, required {MIN_CHECKPOINT_VERSION}).\nUpdate checkpoint now? [Y/n]");
+                            var input = Console.ReadLine();
+                            if ("Y".CaseInsensitiveEquals(input) || string.IsNullOrWhiteSpace(input))
+                            {
+                                CreateCheckpointForThisRun = true;
+                                MilanLog.Information("Checkpoint update requested; will create a new checkpoint during this run.");
+                            }
+                            else
+                            {
+                                MilanLog.Warning("User chose not to update the checkpoint.");
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("-------------------------------");
+                            Console.WriteLine("Use existing checkpoint and skip pre-NonStartup pipelines [Y/n]? (5 second timeout)");
                     var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
-                    if ("Y".CaseInsensitiveEquals(input))
+                            if ("N".CaseInsensitiveEquals(input))
+                            {
+                                RestoreCheckpointForThisRun = false;
+                                MilanLog.Information("Not using checkpoint for this run");
+                            }
+                            else
                     {
                         RestoreCheckpointForThisRun = true;
                         MilanLog.Information("Using checkpoint for this run");
                     }
-                    else
+                        }
+                    }
+
+                    // Always ask whether to create a checkpoint after NonStartup (unless user already chose to update/restore)
+                    if (!CreateCheckpointForThisRun && !RestoreCheckpointForThisRun)
                     {
                         Console.WriteLine("-------------------------------");
                         Console.WriteLine("Create checkpoint after NonStartup [y/N]? (5 second timeout)");
-                        input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                        var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
                         if ("Y".CaseInsensitiveEquals(input))
                         {
                             CreateCheckpointForThisRun = true;
