@@ -172,7 +172,7 @@ namespace ProjectMilan.MilanUDK
         /// <returns></returns>
         public static string GetMilanDecookedMaterialsDirectory()
         {
-            return Path.Combine(UDKDirectory.GetContentPath(Program.Settings.MilanUDKPath), "MilanAssets");
+            return Path.Combine(UDKDirectory.GetContentPath(Program.Settings.MilanUDKPath), "Shared", "Decooked", "LE3");
         }
 
         private static void addExtraFilesToLoadedFiles(CaseInsensitiveDictionary<string> loadedFiles)
