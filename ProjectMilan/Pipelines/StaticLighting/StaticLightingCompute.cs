@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using UDKInj;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Misc;
 
 namespace ProjectMilan.Pipelines.StaticLighting
 {
@@ -14,12 +15,26 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
         private static Injector injector;
         private static FileInfo module;
+
         /// <summary>
         /// Runs UDK and builds lighting, importing the results afterwards.
         /// </summary>
         /// <param name="mapName">The extensionless name of the map. Should already be in the UDK maps folder</param>
         internal static void ComputeLighting(string mapName)
         {
+            // Ensure the stale cache dialog doesn't show up by setting the value of the last content check here
+            var path = UDKDirectory.GetUDKGamePath();
+            var userSettingsPath = Path.Combine(path, "Config", "UDKEditorUserSettings.ini");
+            if (File.Exists(userSettingsPath))
+            {
+                var ini = DuplicatingIni.LoadIni(userSettingsPath);
+                var gad = ini.GetSection("GameAssetDatabase");
+                gad.SetSingleEntry("ForceJournalUpdate", "False");
+                gad.SetSingleEntry("JournalAlarmTime", "08/30/2050 6:00:00 PM");
+                File.WriteAllText(userSettingsPath, ini.ToString());
+            }
+
+
             // Boot UDK.
             var udkInfo = new ProcessStartInfo()
             {
