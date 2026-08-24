@@ -177,7 +177,7 @@ namespace MilanShaderHost
                     var t2d = (UTexture2D)ObjectBinary.From(tex);
                     t2d.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty); // Remove empty mips
                     tex.WriteBinary(t2d);
-                    
+
                     /*if (numRemoved > 0)
                     {
                         Console.WriteLine($"Removed {numRemoved} empty mips from {tex.InstancedFullPath}");
@@ -206,6 +206,26 @@ namespace MilanShaderHost
                 var slashPath = SetupShaderLevel(null, EShaderLevelMode.SlashLevel);
 
                 ShaderCacheTools.SlashShaderCache(Program.Game);
+            }
+
+            if (Program.Game == MEGame.LE3)
+            {
+                // Ensure SFXOnlineFoundation has Telemetry removed as it significantly slows down compile on game close.
+                var sfxOnlineFoundation = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, "SFXOnlineFoundation.pcc"));
+                var onlineSubsystem = sfxOnlineFoundation.FindExport("Default__SFXOnlineSubsystem");
+                var componentsList = onlineSubsystem.GetProperty<ArrayProperty<StructProperty>>("ComponentClassList");
+                var removed = componentsList.RemoveAll(x =>
+                {
+                    var className = x.GetProp<ObjectProperty>("ClassName");
+                    var resolved = sfxOnlineFoundation.GetEntry(className.Value);
+                    return resolved.ObjectName == "SFXOnlineCOmponentTelemetrySystem";
+                });
+                if (removed)
+                {
+                    onlineSubsystem.WriteProperty(componentsList);
+                    sfxOnlineFoundation.Save();
+                    Console.WriteLine("Patched out telemetry subsystem to improve shader compiling performance");
+                }
             }
 
             var files = ShaderCompileList.PackageFilesToProcess;
