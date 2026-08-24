@@ -16,7 +16,6 @@ using LegendaryExplorerCore.Localization;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
-using LegendaryExplorerCore.Gammtek.IO;
 
 namespace ProjectMilan.MilanUDK
 {
@@ -834,7 +833,7 @@ namespace ProjectMilan.MilanUDK
         }
 
         /// <summary>
-        /// Relinks as imports for things outside of the linker
+        /// Relinks as imports for things outside of the linker. If the package that the linker references doesn't exist, this doesn't do anything - unless it is a static mesh, it will probably kill UDK
         /// </summary>
         /// <param name="importingpcc"></param>
         /// <param name="relinkingexport"></param>
@@ -896,10 +895,37 @@ namespace ProjectMilan.MilanUDK
             var linker = sourceEntry.GetLinker();
             if (!linker.CaseInsensitiveEquals(relinkingexport.FileRef.FileNameNoExtension))
             {
-                // Outside of package!
-                // Generate imports for this object...
+                // Outside of package! Make sure it exists so we can add an import to it
+                if (relinkingexport.FileRef.Game == MEGame.UDK)
+                {
+                    var testPath = Path.Combine(UDKSetup.GetMilanDecookedMaterialsDirectory(), linker + ".upk");
+                    
+                    // Basegame UDK material packages - always make an import for them
+                    var trustAnyways = false;
+                    if (!trustAnyways && linker.CaseInsensitiveEquals("EngineMaterials")) trustAnyways = true;
+                    if (!trustAnyways && linker.CaseInsensitiveEquals("EngineDebugMaterials")) trustAnyways = true;
+                    if (!trustAnyways && linker.CaseInsensitiveEquals("EngineResources")) trustAnyways = true;
+                    if (trustAnyways || File.Exists(testPath))
+                    {
+                        // Generate imports for this object
+                        // We're going to trust that if the package exists this specific object will be in it
+                        uindex = GenerateImportForObject(sourceEntry, relinkingexport.FileRef).UIndex;
+                        return true;
+                    }
+
+                    if (!HasParentOfClassOrIs(sourceEntry, "StaticMesh"))
+                    {
+                        // You need to make a manual decooked package for this or find a way to register temporary upks for UDK
+                        throw new Exception($"Did not find a decooked package for linker {linker} for export {sourceEntry.InstancedFullPath} ({sourceEntry.ClassName}), and it is not static mesh (or child of) - UDK will probably die, this needs fixed");
+                    }
+                    return false;
+                }
+                else
+                {
+                    // Generate imports for this object
                 uindex = GenerateImportForObject(sourceEntry, relinkingexport.FileRef).UIndex;
                 return true;
+            }
             }
             else
             {
@@ -1031,7 +1057,8 @@ namespace ProjectMilan.MilanUDK
                                 EntryExporter.PrepareGlobalFileForPorting(tempPackage, tempPackage.FileNameNoExtension);
 
                             }
-                        } else
+                        }
+                        else
                         {
                             // Open without cache. This will be slow if it's a big file.
                             tempPackage = cache != null ? cache.GetCachedPackage(sPackagePath) : MEPackageHandler.OpenMEPackage(sPackagePath);
@@ -1064,6 +1091,26 @@ namespace ProjectMilan.MilanUDK
                 }
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Determines if an entry is, or a has, a parent with the specified class. Useful for things like determing if a RB_BodySetup sits under a static mesh so we know it will be ported over in UDKifyMeshes
+        /// </summary>
+        /// <param name="entry"></param>
+        /// <param name="classParent"></param>
+        /// <returns></returns>
+        private static bool HasParentOfClassOrIs(IEntry entry, string classParent)
+        {
+            if (entry == null)
+            {
+                return false;
+            }
+
+            if (entry.ClassName.CaseInsensitiveEquals(classParent))
+            {
+                return true;
+            }
+            return HasParentOfClassOrIs(entry.Parent, classParent);
         }
 
         private static ImportEntry GenerateImportForObject(IEntry sourceEntry, IMEPackage package)

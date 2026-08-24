@@ -113,6 +113,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // Static lighting does not save the source package, so we are now free to modify it now that the final save has occurred
                 if (Program.Settings.IsStaticLightingBuild && level.BuildLighting)
                 {
+                    // This significantly delay build time - it runs UDK and imports lighting after bake!
                     StaticLightingExport.ExportLevelToUDK(level.LE3BioP);
                     // This doesn't work reliably right now, unfortunately.
                     //StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension);

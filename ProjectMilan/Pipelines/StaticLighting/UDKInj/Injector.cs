@@ -56,6 +56,25 @@ public sealed class Injector : IDisposable
     /// </summary>
     public Allocation MakeAllocation(ulong size) => new (_processHandle, size);
 
+    /// <summary>
+    /// Wraps a named data export (a plain <c>__declspec(dllexport)</c> global, not a function) of
+    /// an already-injected library as a non-owning <see cref="Allocation"/>, resolved by parsing
+    /// the DLL's own export table on disk (see <see cref="PEExportReader"/>) rather than calling
+    /// <c>GetProcAddress</c> remotely. No allocation, no remote thread.
+    /// </summary>
+    public Allocation WrapRemoteExport(FileInfo dllFileInfo, string exportName, ulong size) =>
+        WrapRemoteExport(dllFileInfo, exportName, fieldOffset: 0, size: size);
+
+    /// <summary>As <see cref="WrapRemoteExport(FileInfo, string, ulong)"/>, but for a sub-field of the export.</summary>
+    public Allocation WrapRemoteExport(FileInfo dllFileInfo, string exportName, int fieldOffset, ulong size)
+    {
+        if (!_loadedLibraries.TryGetValue(dllFileInfo.FullName, out IntPtr moduleBase))
+            throw new InvalidOperationException($"library {dllFileInfo.FullName} is not loaded");
+
+        uint rva = PEExportReader.GetExportRva(dllFileInfo.FullName, exportName);
+        return Allocation.Wrap(_processHandle, moduleBase + (int)rva + fieldOffset, size);
+    }
+
 
     /// <summary>
     /// Injects a <c>.dll</c> library found on disk into the target process.

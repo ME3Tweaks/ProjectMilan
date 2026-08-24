@@ -272,6 +272,6 @@ public static class Windows
     /// </summary>
     public static void ThrowIf(bool condition, string? message)
     {
-        if (condition) throw new Win32Exception((int)GetLastError(), message);
+        if (condition)  throw new Win32Exception((int)GetLastError(), message);
     }
 }

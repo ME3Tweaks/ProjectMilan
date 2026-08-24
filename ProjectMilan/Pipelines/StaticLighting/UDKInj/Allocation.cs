@@ -12,6 +12,7 @@ public sealed class Allocation : IDisposable
     readonly IntPtr _allocation;
     readonly byte[] _debug;
     readonly ulong _size;
+    readonly bool _owned;
 
     /// <summary>
     /// Retrieves the internal remote pointer.
@@ -25,12 +26,30 @@ public sealed class Allocation : IDisposable
 
         _handle = handle;
         _size = size;
+        _owned = true;
 
         _allocation = _handle.Alloc(_size);
         _debug = new byte[_size];
 
         Array.Fill<byte>(_debug, 0xAB);
     }
+
+    Allocation(ProcessHandle handle, IntPtr address, ulong size)
+    {
+        _handle = handle;
+        _size = size;
+        _owned = false;
+        _allocation = address;
+        _debug = [];
+    }
+
+    /// <summary>
+    /// Wraps an already-existing remote address (e.g. a resolved export RVA) as an
+    /// <see cref="Allocation"/> without allocating or freeing anything - <see cref="Dispose"/>
+    /// on the result is a no-op, so it's safe to keep around and reuse for the life of the
+    /// injection rather than re-wrapping per read.
+    /// </summary>
+    public static Allocation Wrap(ProcessHandle handle, IntPtr address, ulong size) => new(handle, address, size);
 
     /// <summary>
     /// Fills the allocation with debug byte (<c>0xAB</c>).
@@ -82,7 +101,7 @@ public sealed class Allocation : IDisposable
                 // TODO: dispose managed state (managed objects)
             }
 
-            _handle.Free(_allocation);
+            if (_owned) _handle.Free(_allocation);
             _disposed = true;
         }
     }
@@ -118,6 +137,22 @@ public static class AllocationReadWriteExtensions
         Span<byte> buffer = stackalloc byte[4];
         alloc.Read(offset, buffer);
         return BitConverter.ToInt32(buffer);
+    }
+
+    /// <summary>
+    /// Reads a fixed-size NUL-terminated UTF-16 field (e.g. a wchar_t[N] struct member) and
+    /// trims it at the first NUL, or at maxChars if the agent didn't NUL-terminate it.
+    /// </summary>
+    public static string ReadStringUTF16(this Allocation alloc, ulong offset, int maxChars)
+    {
+        byte[] buffer = new byte[maxChars * 2];
+        alloc.Read(offset, buffer);
+
+        int charCount = 0;
+        while (charCount < maxChars && !(buffer[charCount * 2] == 0 && buffer[charCount * 2 + 1] == 0))
+            charCount++;
+
+        return Encoding.Unicode.GetString(buffer, 0, charCount * 2);
     }
 
     #endregion
