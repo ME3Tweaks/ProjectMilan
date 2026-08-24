@@ -83,6 +83,11 @@ namespace ProjectMilan.Pipelines.Levels
         public bool StripShadowMaps { get; set; }
 
         /// <summary>
+        /// If this map supports lighting build. Vanilla SP maps don't use this
+        /// </summary>
+        public bool BuildLighting { get; set; } = true;
+
+        /// <summary>
         /// Gets the path that holds donors specific for this level
         /// </summary>
         /// <param name="pipeline"></param>

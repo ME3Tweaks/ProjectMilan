@@ -30,12 +30,12 @@ namespace ProjectMilan.Pipelines.Levels
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
                 // Vanilla - Some must be enabled again via editing.
-                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Glacier
-                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Reactor
-                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // White
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Ghost
-                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
-                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled= false, SpecialPortingDelegate = BasegameMapPorting}, // Dagger
+                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Glacier
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Reactor
+                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // White
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Ghost
+                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
+                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Dagger
 
 
 
@@ -92,16 +92,6 @@ namespace ProjectMilan.Pipelines.Levels
         private static void InternalRunPipeline(MPLevelsVars levelVars)
         {
             TieredPackageCache parent = MilanShared.GetMPCommonTieredPackageCache();
-
-            // 04/30/2025 - If we are not doing static lighting, we can use our 
-            // donors, at least until we figure out how to compile shaders for LE
-            // from the HLSL builder
-            if (!Program.Settings.IsStaticLightingBuild)
-            {
-                // Register our custom made donors generated from the donor build pipeline
-                SharedMaterialDonor.RegisterLocalDonors(Path.Combine(MilanShared.PipelineRoot, "Materials", "Build"));
-            }
-
             foreach (var level in levelVars.LevelPipelines)
             {
                 if (!level.Enabled)
@@ -121,7 +111,7 @@ namespace ProjectMilan.Pipelines.Levels
                 }
                 
                 // Static lighting does not save the source package, so we are now free to modify it now that the final save has occurred
-                if (Program.Settings.IsStaticLightingBuild)
+                if (Program.Settings.IsStaticLightingBuild && level.BuildLighting)
                 {
                     StaticLightingExport.ExportLevelToUDK(level.LE3BioP);
                     // This doesn't work reliably right now, unfortunately.
