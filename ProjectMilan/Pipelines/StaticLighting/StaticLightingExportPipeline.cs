@@ -195,9 +195,9 @@ namespace ProjectMilan.Pipelines.StaticLighting
                             // Rebuild the import's outer chain locally to match where the object actually lives in the target package,
                             // since T3D conversion can guess the wrong outer for an otherwise correctly-named/classed import.
                             imp.Parent = misplacedExport.HasParent
-                                ? package.GetEntryOrAddImport(misplacedExport.ParentInstancedFullPath, misplacedExport.Parent.ClassName, targetPackage.FileNameNoExtension)
+                                ? package.GetEntryOrAddImport(misplacedExport.Parent.MemoryFullPath, misplacedExport.Parent.ClassName, targetPackage.FileNameNoExtension)
                                 : null;
-                            MilanLog.Warning($"UDKPackage: Import {imp.InstancedFullPath} ({imp.ClassName}) in package {package.FileNameNoExtension} did not resolve at its expected path; adjusted import to match {misplacedExport.InstancedFullPath} found in {targetPackage.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+                            MilanLog.Warning($"UDKPackage: Import {imp.InstancedFullPath} ({imp.ClassName}) in package {package.FileNameNoExtension} did not resolve at its expected path; adjusted import to match {misplacedExport.MemoryFullPath}", customPrefix: LOG_CATEGORY);
                         }
                         else
                         {
