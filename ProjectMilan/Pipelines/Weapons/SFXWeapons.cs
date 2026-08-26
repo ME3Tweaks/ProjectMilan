@@ -216,7 +216,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 PackageTools.AddToObjectReferencer(classExp);
             }
 
-            weaponDestPackage.Save();
+            weaponDestPackage.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
 
             // Register as donor-able
             MilanShared.AddDonorPackage(weaponDestPackage.FilePath, pipeline.Cache);

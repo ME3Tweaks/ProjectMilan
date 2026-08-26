@@ -96,7 +96,7 @@ namespace ProjectMilan.Pipelines.Weapons
             // Different forced export packages
             var otFile = MilanShared.GetME3Package($"{enemyPipeline.PackageName}.pcc");
             MilanShared.PortObjectReferencer(otFile, enemyPackage, enemyPipeline.Cache, enemyPipeline.LogCategory);
-            enemyPackage.Save();
+            enemyPackage.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
 
 
             return;
@@ -220,7 +220,7 @@ namespace ProjectMilan.Pipelines.Weapons
             // Different forced export packages
             var otFile = MilanShared.GetME3Package($"{pipeline.PackageName}.pcc");
             MilanShared.PortObjectReferencer(otFile, enemyPackage, pipeline.Cache, pipeline.LogCategory);
-            enemyPackage.Save();
+            enemyPackage.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             return true;
         }
 

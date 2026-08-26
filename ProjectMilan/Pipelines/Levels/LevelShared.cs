@@ -313,7 +313,7 @@ namespace ProjectMilan.Pipelines.Levels
             MilanShaders.InstallCompiledShadersToPackage(destPackage, levelPipeline.LogCategory);
 
             MilanLog.Information($"  Saving ported package {packageBaseName}.pcc", customPrefix: levelPipeline.LogCategory);
-            destPackage.Save();
+            destPackage.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
 
             // Detect remaining shaders

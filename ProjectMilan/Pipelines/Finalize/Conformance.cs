@@ -117,7 +117,7 @@ namespace ProjectMilan.Pipelines.Finalize
 
                 if (package.IsModified)
                 {
-                    package.Save();
+                    package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
                 }
             }
             #endregion
@@ -197,7 +197,7 @@ namespace ProjectMilan.Pipelines.Finalize
 
                 if (package.IsModified)
                 {
-                    package.Save();
+                    package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
                 }
             }
             #endregion
@@ -304,7 +304,7 @@ namespace ProjectMilan.Pipelines.Finalize
             };
             var exp = ExportCreator.CreateExport(guidCache, "GuidCache", "GuidCache", indexed: false);
             exp.WriteBinary(gc);
-            guidCache.Save();
+            guidCache.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
 
         }
 
@@ -429,7 +429,7 @@ namespace ProjectMilan.Pipelines.Finalize
                 if (package.IsModified)
                 {
                     MilanLog.Information($"Saving conformed package {package.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
-                    package.Save();
+                    package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
                     MilanShared.RefreshMilanFiles = true;
                 }
             }
@@ -506,7 +506,7 @@ namespace ProjectMilan.Pipelines.Finalize
             gc.PackageGuidMap = map;
 
             guidCache.WriteBinary(gc);
-            guidCacheP.Save();
+            guidCacheP.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
         }
     }

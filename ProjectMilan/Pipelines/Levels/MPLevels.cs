@@ -170,7 +170,7 @@ namespace ProjectMilan.Pipelines.Levels
 
 
             // Save BioP into folder
-            levelPipeline.LE3BioP.Save(Path.Combine(outputPath, Path.GetFileName(levelPipeline.LE3BioP.FilePath)));
+            levelPipeline.LE3BioP.Save(Path.Combine(outputPath, Path.GetFileName(levelPipeline.LE3BioP.FilePath)), diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
         }
 
@@ -217,7 +217,7 @@ namespace ProjectMilan.Pipelines.Levels
             ConfigureBioP(levelPipeline);
 
             // Save BioP
-            levelPipeline.LE3BioP.Save();
+            levelPipeline.LE3BioP.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
 
             // Unregister donors

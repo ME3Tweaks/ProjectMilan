@@ -76,7 +76,7 @@ namespace ProjectMilan.Pipelines.VTables
 
                     if (fileModified)
                     {
-                        package.Save();
+                        package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
                         anyChangeThisPass = true;
                         MilanLog.Information($"  Saved {Path.GetFileName(filePath)} after VTable order fixes", customPrefix: LOG_CATEGORY);
                     }

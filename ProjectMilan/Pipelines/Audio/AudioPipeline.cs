@@ -3,6 +3,7 @@ using BankConverter.Bnk.Chunks;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ME3Tweaks.Wwiser;
+using ProjectMilanCore;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 
@@ -141,7 +142,7 @@ internal static class AudioPipeline
             if (modified)
             {
                 MilanLog.Information($"Patched WwiseBank exports in {package.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
-                package.Save();
+                package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             }
         });
     }
@@ -185,7 +186,7 @@ internal static class AudioPipeline
 
             if (modified)
             {
-                package.Save();
+                package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             }
         });
 

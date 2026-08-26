@@ -123,7 +123,7 @@ namespace ProjectMilan.Pipelines.Texture
                 if (p.IsModified)
                 {
                     MilanLog.Information($"  Saving package", customPrefix: LOG_CATEGORY);
-                    p.Save();
+                    p.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
                     MilanShared.RefreshMilanFiles = true;
                 }
             }

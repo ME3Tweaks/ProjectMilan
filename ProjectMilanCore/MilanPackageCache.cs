@@ -46,7 +46,7 @@ namespace ProjectMilan.Utility
                     if (File.Exists(packagePath))
                     {
                         Debug.WriteLine($@"MilanPackageCache {guid} load: {packagePath}");
-                        package = openPackageMethod?.Invoke(packagePath) ?? MEPackageHandler.OpenMEPackage(packagePath, forceLoadFromDisk: AlwaysOpenFromDisk);
+                        package = openPackageMethod?.Invoke(packagePath) ?? MEPackageHandler.OpenMEPackage(packagePath, forceLoadFromDisk: AlwaysOpenFromDisk, diskIOSyncLock: DiskIOSyncLock);
                         InsertIntoCache(package);
                         return package;
                     }

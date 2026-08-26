@@ -9,6 +9,7 @@ using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan;
 using System.Diagnostics;
+using System.Threading;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Pathing;
@@ -35,6 +36,18 @@ namespace ProjectMilanCore
         private const string ROOT_FOLDER_NAME = @"ProjectMilan";
         public static ObjectInstanceDB LE3ObjectDB { get; set; }
         public static ObjectInstanceDB ME3ObjectDB { get; set; }
+
+        /// <summary>
+        /// Shared lock used to synchronize package disk I/O across the whole app. Pipelines build many packages in parallel (e.g. one thread per kit); a package being saved on one thread can be
+        /// concurrently opened for reading on another (e.g. as an import donor), which throws "file in use by another process". Every package cache defaults to this lock via
+        /// <see cref="PackageCache.DefaultDiskIOSyncLock"/>, and every <c>Save()</c> call in the pipelines should pass it as well.
+        /// </summary>
+        public static readonly Lock DiskIOSyncLock = new();
+
+        static MilanShared()
+        {
+            PackageCache.DefaultDiskIOSyncLock = DiskIOSyncLock;
+        }
 
         private static string _pipelineRoot;
 
@@ -235,13 +248,13 @@ namespace ProjectMilanCore
 
             if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, packageFileName, out var filePath))
             {
-                return MEPackageHandler.OpenMEPackage(filePath);
+                return MEPackageHandler.OpenMEPackage(filePath, diskIOSyncLock: DiskIOSyncLock);
             }
 
             // Donors will have full path
             if (File.Exists(packageFileName))
             {
-                return MEPackageHandler.OpenMEPackage(packageFileName);
+                return MEPackageHandler.OpenMEPackage(packageFileName, diskIOSyncLock: DiskIOSyncLock);
             }
 
             return null;
@@ -365,7 +378,7 @@ namespace ProjectMilanCore
         {
             MilanLog.Information($"Inventorying classes in {Path.GetFileName(packagePath)}");
             cache ??= new PackageCache();
-            var package = MEPackageHandler.OpenMEPackage(packagePath);
+            var package = MEPackageHandler.OpenMEPackage(packagePath, diskIOSyncLock: DiskIOSyncLock);
             foreach (var exp in package.Exports.Where(x => x.IsClass))
             {
                 MilanLog.Information($"  Inventorying {exp.InstancedFullPath}");
@@ -728,7 +741,7 @@ namespace ProjectMilanCore
 #endif
 
             MilanLog.Information("Saving package", customPrefix: logCategory);
-            destPackage.Save();
+            destPackage.Save(diskIOSyncLock: DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
         }
 
@@ -869,7 +882,7 @@ namespace ProjectMilanCore
                         return cache.GetCachedPackage(matching, openPackageMethod: GetLE3Package);
                     }
 
-                    var package = MEPackageHandler.OpenMEPackage(matching);
+                    var package = MEPackageHandler.OpenMEPackage(matching, diskIOSyncLock: DiskIOSyncLock);
                     return package;
                 }
             }
@@ -1334,7 +1347,7 @@ namespace ProjectMilanCore
                 return;
             InstalledMPCommonInfo = true;
             MilanLog.Information($"Inventorying BIOP_MP_COMMON package");
-            var p = MEPackageHandler.OpenMEPackage(mpCommonPath);
+            var p = MEPackageHandler.OpenMEPackage(mpCommonPath, diskIOSyncLock: DiskIOSyncLock);
             foreach (var ex in p.Exports.Where(x => x.IsClass))
             {
                 var classInfo = GlobalUnrealObjectInfo.generateClassInfo(ex);
@@ -1384,7 +1397,7 @@ namespace ProjectMilanCore
             {
                 MilanLog.Information($"Checking package {Path.GetFileName(package)}", customPrefix: category);
                 //var me3File = MilanShared.GetME3Package(Path.GetFileName(package));
-                var le3File = MEPackageHandler.OpenMEPackage(package);
+                var le3File = MEPackageHandler.OpenMEPackage(package, diskIOSyncLock: DiskIOSyncLock);
 
                 foreach (var tex in le3File.Exports.Where(x => x.IsTexture() && ShouldExternalize(rootTextures, x.idxLink)))
                 {
@@ -1461,7 +1474,7 @@ namespace ProjectMilanCore
                 if (le3File.IsModified)
                 {
                     MilanLog.Information("  Saving package", customPrefix: category);
-                    le3File.Save();
+                    le3File.Save(diskIOSyncLock: DiskIOSyncLock);
                     MilanShared.RefreshMilanFiles = true;
                 }
             }

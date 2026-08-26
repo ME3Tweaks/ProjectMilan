@@ -333,7 +333,7 @@ namespace ProjectMilan.Pipelines.Shared
                     }
 
                     MilanLog.Information($"  Made an autodonor", customPrefix: LOG_CATEGORY);
-                    destDonorPackage.Save();
+                    destDonorPackage.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
                 }
             }
         }

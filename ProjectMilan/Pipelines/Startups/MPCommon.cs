@@ -121,7 +121,7 @@ namespace ProjectMilan.Pipelines.Startups
                     var lib = new FileLib(sfxgame);
                     lib.Initialize(usop);
                     var messages = UnrealScriptCompiler.CompileClass(sfxgame, classOverride, lib, usop, sfxgame.FindExport("SFXTelemetryGameSession"));
-                    sfxgame.Save();
+                    sfxgame.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
                 }
             }
         }
@@ -252,7 +252,7 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             MilanLog.Information($@"Saving {pcc.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
-            pcc.Save();
+            pcc.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.AddGlobalCachedPackage(pcc);
             MilanShared.RefreshMilanFiles = true;
             return false;

@@ -2,6 +2,7 @@
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Mod
 {
@@ -23,7 +24,7 @@ namespace ProjectMilan.Pipelines.Mod
                 file =>
                 {
                     MilanLog.Information($"Reconstructing {Path.GetFileName(file)}", customPrefix: LOG_CATEGORY);
-                    var package = MEPackageHandler.OpenMEPackage(file);
+                    var package = MEPackageHandler.OpenMEPackage(file, diskIOSyncLock: MilanShared.DiskIOSyncLock);
                     try
                     {
                         // Custom fix for loose class comp
@@ -46,7 +47,7 @@ namespace ProjectMilan.Pipelines.Mod
                         }
                         else
                         {
-                            newPackage.Save();
+                            newPackage.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
                         }
 
                         // Save as different package for analysis

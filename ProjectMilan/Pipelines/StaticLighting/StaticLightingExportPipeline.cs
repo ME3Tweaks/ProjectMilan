@@ -7,6 +7,7 @@ using ProjectMilan.MilanUDK;
 using ProjectMilan.Utility;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using ProjectMilan.Pipelines.Levels;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.StaticLighting
 {
