@@ -119,7 +119,11 @@ namespace ProjectMilan.Pipelines.VTables
                 using var package = MEPackageHandler.OpenMEPackage(filePath);
                 try
                 {
-                    CoreVTables.RecompileAllClasses(package, cache);
+                    if (package.Exports.Any(x => x.ClassName == "Class"))
+                    {
+                        // Only have to fix files that have classes. Asset packages don't have classes so no point doing that.
+                        CoreVTables.RecompileAllClasses(package, cache);
+                    }
                 }
                 catch (Exception ex)
                 {
