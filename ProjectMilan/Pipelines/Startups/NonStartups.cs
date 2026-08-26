@@ -192,6 +192,9 @@ namespace ProjectMilan.Pipelines.Startups
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
             var globalCache = MilanShared.GetMPCommonTieredPackageCache();
+
+            MilanShared.LogDonorMessages = false; // Turn off spammy messaging.
+
             // We use .Distinct() cause list might have duplicates due to duplicates in DLC folders
             Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
@@ -214,6 +217,16 @@ namespace ProjectMilan.Pipelines.Startups
                     MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY, null);
                     MilanShared.PortLocalizations(packageBaseName, vars.OutputPath, cache, LOG_CATEGORY);
                 });
+            MilanShared.LogDonorMessages = true; // Turn off spammy messaging.
+        }
+
+        /// <summary>
+        /// NonStartup has no on-disk cache of its own today - it ports packages directly from ME3 to the LE3
+        /// output with no intermediate decompile/donor step like MPCommon has. Stubbed here for symmetry with
+        /// MPCommon.Clean() in case that changes in the future.
+        /// </summary>
+        internal static void Clean()
+        {
         }
     }
 }

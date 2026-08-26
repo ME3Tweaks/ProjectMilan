@@ -63,7 +63,7 @@ namespace ProjectMilan
         /// <summary>
         /// Bump this every time there are changes to MPCommon or NonStartup pipelines. It will invalidate stale checkpoints.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 1;
+        public const int MIN_CHECKPOINT_VERSION = 2;
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -122,13 +122,19 @@ namespace ProjectMilan
                         var cpVersion = Checkpoint.ReadCheckpointVersion();
                         if (cpVersion < MIN_CHECKPOINT_VERSION)
                         {
-                    Console.WriteLine("-------------------------------");
+                            Console.WriteLine("-------------------------------");
                             Console.WriteLine($"Existing checkpoint is outdated (version {cpVersion}, required {MIN_CHECKPOINT_VERSION}).\nUpdate checkpoint now? [Y/n]");
                             var input = Console.ReadLine();
                             if ("Y".CaseInsensitiveEquals(input) || string.IsNullOrWhiteSpace(input))
                             {
                                 CreateCheckpointForThisRun = true;
                                 MilanLog.Information("Checkpoint update requested; will create a new checkpoint during this run.");
+
+                                // The checkpoint is stale because MPCommon/NonStartup code changed (that's what bumps
+                                // MIN_CHECKPOINT_VERSION), so dump their on-disk caches to force a fully clean
+                                // regeneration instead of reusing decompiled classes from before the change.
+                                MPCommon.Clean();
+                                NonStartupPipeline.Clean();
                             }
                             else
                             {
@@ -139,17 +145,17 @@ namespace ProjectMilan
                         {
                             Console.WriteLine("-------------------------------");
                             Console.WriteLine("Use existing checkpoint and skip pre-NonStartup pipelines [Y/n]? (5 second timeout)");
-                    var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                            var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
                             if ("N".CaseInsensitiveEquals(input))
                             {
                                 RestoreCheckpointForThisRun = false;
                                 MilanLog.Information("Not using checkpoint for this run");
                             }
                             else
-                    {
-                        RestoreCheckpointForThisRun = true;
-                        MilanLog.Information("Using checkpoint for this run");
-                    }
+                            {
+                                RestoreCheckpointForThisRun = true;
+                                MilanLog.Information("Using checkpoint for this run");
+                            }
                         }
                     }
 
@@ -459,7 +465,7 @@ namespace ProjectMilan
             //Research.GetMissingShaderPackages(@"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Kits");
             //return;
 
-            Research.InstallCompiledShaders();// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
+            Research.InstallCompiledShaders(force: true);// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
             return;
 
             //return;

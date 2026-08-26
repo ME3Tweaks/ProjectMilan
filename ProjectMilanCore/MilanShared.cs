@@ -224,7 +224,7 @@ namespace ProjectMilanCore
 
         public static string GetInjectedFunctionsPath(string className)
         {
-            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"LooseFunctions", className);
+            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"InjectedFunctions", className);
         }
 
         public static IMEPackage GetLE3Package(string packageFileName)
@@ -991,6 +991,11 @@ namespace ProjectMilanCore
         }
 
 
+        /// <summary>
+        /// Set to false to reduce text spam.
+        /// </summary>
+        public static bool LogDonorMessages = true;
+
         private static IEntry MissingObjectResolver(IMEPackage package, string ifp, bool portExportsAsImports)
         {
             // Redirect base GUI assets to DLC assets so we don't port unused GUI assets
@@ -1036,7 +1041,7 @@ namespace ProjectMilanCore
                         var donorEntry = donorP.FindEntry(ifp);
                         if (donorEntry != null)
                         {
-                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY_MOR);
+                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}", shouldLog: LogDonorMessages, customPrefix: LOG_CATEGORY_MOR);
                             return PortDonorIntoPackage(ME3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR, true);
                         }
                     }
@@ -1057,7 +1062,7 @@ namespace ProjectMilanCore
                     var donorEntry = donorP.FindEntry(ifp);
                     if (donorEntry != null)
                     {
-                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}", customPrefix: LOG_CATEGORY_MOR);
+                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}", shouldLog: LogDonorMessages, customPrefix: LOG_CATEGORY_MOR);
                         return PortDonorIntoPackage(LE3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR, portExportsAsImports);
                     }
                     else
@@ -1092,7 +1097,7 @@ namespace ProjectMilanCore
                     }
 
                     // Create parents
-                    MilanLog.Information($"    Porting as import", customPrefix: logCategory);
+                    MilanLog.Information($"    Porting as import", shouldLog: LogDonorMessages, customPrefix: logCategory);
                     var parent = EntryExporter.PortParents(donorEntry, package, true);
                     ImportEntry imp = new ImportEntry(donorExport, parent.UIndex, package);
                     package.AddImport(imp);
@@ -1100,7 +1105,7 @@ namespace ProjectMilanCore
                 }
                 if (donorExport.FileRef.FileNameNoExtension == "SFXGame")
                     Debugger.Break();
-                MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", customPrefix: logCategory);
+                MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", shouldLog: LogDonorMessages, customPrefix: logCategory);
                 var rop = new RelinkerOptionsPackage()
                 {
                     Cache = globalCache,
