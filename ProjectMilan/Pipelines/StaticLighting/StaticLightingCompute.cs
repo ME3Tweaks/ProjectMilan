@@ -3,9 +3,25 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using UDKInj;
 using LegendaryExplorerCore.GameFilesystem;
+using ProjectMilanCore;
+using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines.StaticLighting
 {
+    /// <summary>
+    /// Lightmass build quality, matching UDK's own Lighting Build Quality dropdown. Each step up
+    /// scales shadow ray counts, hemisphere samples, and photon counts (see the
+    /// DevOptions.StaticLighting*Quality sections in UDKLightmass.ini) - Production is dramatically
+    /// slower than Medium, so reserve it for final builds.
+    /// </summary>
+    public enum LightmassBuildQuality
+    {
+        Preview = 0,
+        Medium = 1,
+        High = 2,
+        Production = 3,
+    }
+
     /// <summary>
     /// Builds static lighting in UDK in an automated fashion. This process is VERY slow, should only really ever be used on final builds.
     /// </summary>
@@ -54,6 +70,26 @@ namespace ProjectMilan.Pipelines.StaticLighting
             public string Desc { get; init; }
         }
 
+        /// <summary>
+        /// Mirror of LightmassProgressStatus in UDKAgent/CommonHooks.hpp. Keep the two in sync.
+        /// </summary>
+        private readonly struct LightmassProgressStatus
+        {
+            public const int SizeBytes = 256 * 2 + 4 + 4 + 4;
+
+            /// <summary>Empty when no slow task (map load, package save, lighting build, ...) is running.</summary>
+            public string StatusText { get; init; }
+
+            /// <summary>0/0 outside of a StatusUpdatef call (e.g. "Encoding light-maps (N of M)") - not
+            /// every status message carries real progress.</summary>
+            public int Numerator { get; init; }
+            public int Denominator { get; init; }
+
+            /// <summary>EngineTickCount snapshot at the last update - lets a poller tell "still the
+            /// same message" apart from "stopped updating".</summary>
+            public int UpdateTick { get; init; }
+        }
+
         /// <summary>Mirrors MailboxActionType in UDKAgent/CommonHooks.hpp. Keep the two in sync.</summary>
         private enum MailboxActionType
         {
@@ -74,6 +110,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
         private static Allocation agentStatusView;
         private static Allocation actionMailboxHeaderView; // ActionMailbox.State/ActionType
         private static Allocation actionMailboxPayloadView; // ActionMailbox.Payload, zero-based
+        private static Allocation lightmassProgressView;
 
         /// <summary>Package names (no extension) of every .udk under the content root - i.e.
         /// every package SaveMapFiles could possibly write. Built lazily since it walks the
@@ -84,10 +121,17 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// Runs UDK and builds lighting, importing the results afterwards.
         /// </summary>
         /// <param name="mapName">The extensionless name of the map. Should already be in the UDK maps folder</param>
-        internal static void ComputeLighting(string mapName)
+        /// <param name="allowLightmapCompression">Overrides DevOptions.StaticLighting.bAllowLightmapCompression
+        /// in UDKLightmass.ini for just this build. Null leaves the file's existing setting alone.</param>
+        /// <param name="defaultStaticMeshLightingRes">Overrides DevOptions.StaticLighting.DefaultStaticMeshLightingRes
+        /// in UDKLightmass.ini for just this build (e.g. a one-off 256 test bake). Null leaves the
+        /// file's existing setting alone.</param>
+        /// <param name="qualityLevel">Lightmass build quality. See <see cref="LightmassBuildQuality"/>.</param>
+        internal static void ComputeLighting(string mapName, bool? allowLightmapCompression = null, int? defaultStaticMeshLightingRes = null, LightmassBuildQuality qualityLevel = LightmassBuildQuality.Medium)
         {
             var path = UDKDirectory.GetUDKGamePath();
             var userSettingsPath = Path.Combine(path, "Config", "UDKEditorUserSettings.ini");
+            var lightmassIniPath = Path.Combine(path, "Config", "UDKLightmass.ini");
 
             // Kill any UDK left over from a previous run before touching its config or starting a
             // new one. A stray process holds the ini's config-on-exit rewrite hostage until it
@@ -109,11 +153,26 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
             using var configOverride = new EditorConfigOverride(userSettingsPath, EditorConfigOverride.AutomationProfile);
 
+            // Same whole-file restore-on-exit pattern as configOverride above, just against
+            // UDKLightmass.ini and only for the two keys the caller actually asked to override -
+            // everything else in the file (photon counts, shadow rays, ...) is left exactly as the
+            // user tuned it.
+            var lightmassOverrides = new List<(string Section, string Key, string Value)>();
+            if (allowLightmapCompression is { } compression)
+                lightmassOverrides.Add(("DevOptions.StaticLighting", "bAllowLightmapCompression", compression ? "True" : "False"));
+            if (defaultStaticMeshLightingRes is { } res)
+                lightmassOverrides.Add(("DevOptions.StaticLighting", "DefaultStaticMeshLightingRes", res.ToString()));
+
+            using var lightmassOverride = lightmassOverrides.Count > 0
+                ? new EditorConfigOverride(lightmassIniPath, lightmassOverrides)
+                : null;
+
             // Boot UDK.
             var udkInfo = new ProcessStartInfo()
             {
                 FileName = UDKDirectory.GetExecutablePath(Program.Settings.MilanUDKPath),
-                Arguments = $"editor {mapName}.udk -log",
+                Arguments = $"editor -log",
+                // Arguments = $"editor {mapName}.udk -log", // commented out; we control map load now.
             };
 
             MilanLog.Information("Starting UDK for lighting build", customPrefix: LOG_CATEGORY);
@@ -137,7 +196,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 var mapPath = StaticLightingExport.GetMapOutputPath(mapName);
                 var masterMap = Path.Combine(mapPath, $"{mapName}.udk");
 
-                BakeLighting(masterMap, 1);
+                BakeLighting(masterMap, qualityLevel);
 
                 MilanLog.Information("UDK lighting build is complete", customPrefix: LOG_CATEGORY);
             }
@@ -172,6 +231,36 @@ namespace ProjectMilan.Pipelines.StaticLighting
                         live.Kill();
                         live.WaitForExit(15_000);
                     }
+
+                    MilanLog.Information($"MilanUDK has exited", customPrefix: LOG_CATEGORY);
+
+                    // Wait for other processes that UDK spawns
+                    // Would be good to just have a way to test what is holding onto a file. But this hopefully is enough.
+                    Thread.Sleep(1000);
+
+                    MilanLog.Information($"Copying computed lighting assets to Milan Pipelines", customPrefix: LOG_CATEGORY);
+
+
+                    // Copy back the .udk files to the static lighting folder
+                    var staticLightingFolder = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", mapName);
+                    Utilities.DeleteFilesAndFoldersRecursively(staticLightingFolder, deleteDirectoryItself: false);
+                    Directory.CreateDirectory(staticLightingFolder);
+
+                    var udkOutputFolder = StaticLightingExport.GetMapOutputPath(mapName);
+                    if (Directory.Exists(udkOutputFolder))
+                    {
+                        var files = Directory.GetFiles(udkOutputFolder, "*.udk");
+                        foreach (var file in files)
+                        {
+                            MilanLog.Information($"Copying computed lighting for {Path.GetFileNameWithoutExtension(file)}", customPrefix: LOG_CATEGORY);
+                            var dest = Path.Combine(staticLightingFolder, Path.GetFileName(file));
+                            CopyWithLockRetry(file, dest);
+                        }
+                    }
+                    else
+                    {
+                        MilanLog.Warning($"UDK output folder not found: {staticLightingFolder}");
+                    }
                 }
                 catch (ArgumentException) { /* already gone */ }
                 catch (InvalidOperationException) { /* already gone */ }
@@ -179,7 +268,34 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 {
                     MilanLog.Warning($"Could not stop UDK: {ex.Message}", customPrefix: LOG_CATEGORY);
                 }
-                // configOverride.Restore() runs via the `using` above, after UDK has exited.
+            }
+        }
+
+        private static readonly TimeSpan LockRetryInterval = TimeSpan.FromSeconds(2);
+        private static readonly TimeSpan LockRetryTimeout = TimeSpan.FromMinutes(2);
+
+        /// <summary>
+        /// Copies a file, retrying while it's locked by another process. UDK can take a moment to
+        /// fully release its output files after exit (or a spawned child process may still be
+        /// holding one), so on an IOException we identify who's holding the lock via Restart
+        /// Manager and keep retrying until it clears or we time out.
+        /// </summary>
+        private static void CopyWithLockRetry(string source, string destination)
+        {
+            var start = DateTime.UtcNow;
+            while (true)
+            {
+                try
+                {
+                    File.Copy(source, destination, true);
+                    return;
+                }
+                catch (IOException) when (DateTime.UtcNow - start < LockRetryTimeout)
+                {
+                    var lockedBy = FileLockUtils.DescribeLockingProcesses(source);
+                    MilanLog.Warning($"Waiting for {lockedBy} to release {Path.GetFileName(source)}...", customPrefix: LOG_CATEGORY);
+                    Thread.Sleep(LockRetryInterval);
+                }
             }
         }
 
@@ -195,7 +311,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// suppressed at the hook level instead (UDKAgent's CBDisplayLoadErrors_Hook), and the
         /// journal/browser-pane popups are suppressed via ini in EditorConfigOverride.
         /// </summary>
-        private static void BakeLighting(string masterMapPath, int qualityLevel)
+        private static void BakeLighting(string masterMapPath, LightmassBuildQuality qualityLevel)
         {
             var loadErrorsBefore = GetLoadErrorCount();
 
@@ -258,8 +374,81 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 }
             }
 
-            RunLightmass(qualityLevel);
+            using (new LightmassProgressReporter())
+                RunLightmass(qualityLevel);
+
             SaveMapFiles();
+        }
+
+        /// <summary>
+        /// Polls g_LightmassProgress and logs the Lightmass build-progress dialog's own status
+        /// text ("Running Lightmass...", "Encoding light-maps (N of M)", ...) - see
+        /// EnsureLightmassProgressHooksInstalled in UDKAgent/CommonHooks.cpp for how that text
+        /// gets there; nothing else ever surfaces it anywhere (not even Launch.log).
+        ///
+        /// g_LightmassProgress is refreshed by every slow task in the editor, not just Lightmass
+        /// (BeginSlowTask/StatusUpdatef/EndSlowTask are shared machinery), so this is deliberately
+        /// scoped to just the RunLightmass call rather than left running for the whole bake -
+        /// logging a stale map-load status while a save is happening would be more confusing than
+        /// useful.
+        ///
+        /// Logs on every change immediately, and otherwise on a fixed heartbeat so a long
+        /// "Running Lightmass..." stretch (no progress ratio - Lightmass reports back to GWarn
+        /// through Swarm in bursts, not continuously) doesn't look hung in the Milan log.
+        /// </summary>
+        private sealed class LightmassProgressReporter : IDisposable
+        {
+            private static readonly TimeSpan HeartbeatInterval = TimeSpan.FromSeconds(5);
+            private static readonly Regex StatusRatioRegex = new(@"\(\d+\s+of\s+\d+\)\s*$", RegexOptions.Compiled);
+
+            private readonly Thread _thread;
+            private volatile bool _stop;
+
+            public LightmassProgressReporter()
+            {
+                _thread = new Thread(Pump) { IsBackground = true, Name = "Lightmass progress" };
+                _thread.Start();
+            }
+
+            private void Pump()
+            {
+                string lastText = null;
+                DateTime lastLog = DateTime.MinValue;
+
+                while (!_stop)
+                {
+                    var status = GetLightmassProgress();
+
+                    if (!string.IsNullOrEmpty(status.StatusText))
+                    {
+                        bool changed = status.StatusText != lastText;
+                        if (changed || DateTime.UtcNow - lastLog > HeartbeatInterval)
+                        {
+                            // Some StatusUpdatef callers bake "(%d of %d)" into the format string
+                            // itself (e.g. "Encoding light-maps (8 of 105)"); others reuse a
+                            // static message ("Running Lightmass...") and rely on Numerator/
+                            // Denominator alone for the ratio. Appending unconditionally double-
+                            // prints the former, so only append when the text doesn't already end
+                            // in one.
+                            var alreadyHasRatio = StatusRatioRegex.IsMatch(status.StatusText);
+                            var progress = (!alreadyHasRatio && status.Denominator > 0)
+                                ? $" ({status.Numerator} of {status.Denominator})"
+                                : "";
+                            MilanLog.Information($"  [Lightmass] {status.StatusText}{progress}", customPrefix: LOG_CATEGORY);
+                            lastText = status.StatusText;
+                            lastLog = DateTime.UtcNow;
+                        }
+                    }
+
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                }
+            }
+
+            public void Dispose()
+            {
+                _stop = true;
+                _thread.Join(TimeSpan.FromSeconds(2));
+            }
         }
 
         // This UDK build's own error text already names the referencing package - e.g.
@@ -313,9 +502,11 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 timeout: TimeSpan.FromMinutes(15),
                 label: $"LoadMap({Path.GetFileName(persistentPackagePath)})");
 
-        private static void RunLightmass(int qualityLevel) =>
+        // Quality levels:
+        // 1 = ?
+        private static void RunLightmass(LightmassBuildQuality qualityLevel) =>
             RunAction(MailboxActionType.BuildLighting,
-                input => input.WriteInt32(0, qualityLevel),
+                input => input.WriteInt32(0, (int)qualityLevel),
                 // Production bakes on a big level can run for hours.
                 timeout: TimeSpan.FromHours(12),
                 label: $"BuildLighting(quality={qualityLevel})");
@@ -451,7 +642,19 @@ namespace ProjectMilan.Pipelines.StaticLighting
             agentStatusView = injector.WrapRemoteExport(module, "g_AgentStatus", AgentStatus.SizeBytes);
             actionMailboxHeaderView = injector.WrapRemoteExport(module, "g_ActionMailbox", fieldOffset: 0, size: 8);
             actionMailboxPayloadView = injector.WrapRemoteExport(module, "g_ActionMailbox", fieldOffset: 8, size: 1024);
+            lightmassProgressView = injector.WrapRemoteExport(module, "g_LightmassProgress", LightmassProgressStatus.SizeBytes);
         }
+
+        /// <summary>Reads g_LightmassProgress directly - only meaningful while
+        /// EnsureLightmassProgressHooksInstalled (UDKAgent/CommonHooks.cpp, called lazily right
+        /// before the first BuildLighting) has actually run, so don't rely on this before that.</summary>
+        private static LightmassProgressStatus GetLightmassProgress() => new()
+        {
+            StatusText = lightmassProgressView.ReadStringUTF16(0, 256),
+            Numerator = lightmassProgressView.ReadInt32(512),
+            Denominator = lightmassProgressView.ReadInt32(516),
+            UpdateTick = lightmassProgressView.ReadInt32(520),
+        };
 
         private static bool IsUDKReady()
         {
