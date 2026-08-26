@@ -1,0 +1,163 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Release" />
+    <BuildType Name="WinAzureRelease" />
+    <BuildType Name="WinAzureTest" />
+    <BuildType Name="WinDebug" />
+    <BuildType Name="WinRelease" />
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="BankConverter/BankConverter.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="LEDecooker/LEDecooker.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Solution="Debug|x64" Project="x64" />
+  </Project>
+  <Project Path="LegendaryExplorer/LegendaryExplorer/LegendaryExplorerCore/LegendaryExplorerCore.csproj">
+    <BuildType Solution="Debug|*" Project="WinDebug" />
+    <BuildType Solution="Release|Any CPU" Project="WinAzureRelease" />
+    <BuildType Solution="Release|x64" Project="WinRelease" />
+    <BuildType Solution="Release|x86" Project="WinRelease" />
+    <Platform Project="x64" />
+  </Project>
+  <Project Path="LegendaryExplorer/LegendaryExplorer/submodules/Wwiser.NET/BinarySerializer/BinarySerializer/BinarySerializer.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|Any CPU" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x64" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x86" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="LegendaryExplorer/LegendaryExplorer/submodules/Wwiser.NET/ME3Tweaks.Wwiser/ME3Tweaks.Wwiser.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|Any CPU" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x64" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x86" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="MilanCoverHost/MilanCoverHost.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="MilanShaderCompilerLib/MilanShaderCompilerLib.vcxproj" Id="b682c2a0-585b-4985-b0b3-e91727e22dd9">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="MilanShaderHost.Test/MilanShaderHost.Test.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="MilanShaderHost/MilanShaderHost.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Build Solution="*|Any CPU" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|x64" Project="false" />
+    <Build Solution="WinAzureRelease|x64" Project="false" />
+    <Build Solution="WinAzureTest|x64" Project="false" />
+    <Build Solution="WinDebug|x64" Project="false" />
+    <Build Solution="WinRelease|x64" Project="false" />
+  </Project>
+  <Project Path="MilanShaderResearchTool/MilanShaderResearchTool.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Solution="*|x64" Project="x64" />
+    <Build Solution="*|Any CPU" Project="false" />
+    <Build Solution="*|x86" Project="false" />
+    <Build Solution="Release|x64" Project="false" />
+    <Build Solution="WinAzureRelease|x64" Project="false" />
+    <Build Solution="WinAzureTest|x64" Project="false" />
+    <Build Solution="WinDebug|x64" Project="false" />
+    <Build Solution="WinRelease|x64" Project="false" />
+  </Project>
+  <Project Path="MultiInstancePatcher/MultiInstancePatcher.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
+    <BuildType Solution="WinAzureTest|x64" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x86" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="ProjectMilan/ProjectMilan.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
+    <BuildType Solution="WinAzureTest|x64" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x86" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Project="x64" />
+    <Build Solution="WinAzureRelease|x64" Project="false" />
+    <Build Solution="WinAzureTest|x64" Project="false" />
+    <Build Solution="WinDebug|x64" Project="false" />
+    <Build Solution="WinRelease|x64" Project="false" />
+  </Project>
+  <Project Path="ProjectMilanCore/ProjectMilanCore.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
+    <BuildType Solution="WinAzureTest|x64" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x86" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Project="x64" />
+    <Build Solution="WinAzureRelease|x64" Project="false" />
+    <Build Solution="WinAzureTest|x64" Project="false" />
+    <Build Solution="WinDebug|x64" Project="false" />
+    <Build Solution="WinRelease|x64" Project="false" />
+  </Project>
+  <Project Path="ProjectMilan_ExtraContent/ProjectMilan_ExtraContent.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
+    <BuildType Solution="WinAzureTest|x64" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x86" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Project="x64" />
+    <Build Solution="WinAzureRelease|x64" Project="false" />
+    <Build Solution="WinAzureTest|x64" Project="false" />
+    <Build Solution="WinDebug|x64" Project="false" />
+    <Build Solution="WinRelease|x64" Project="false" />
+  </Project>
+  <Project Path="ShaderCompare/ShaderCompare.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="ShaderResearchTool/ShaderResearchTool.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="WwiseTools/WwiseTools_DotNet6/WwiseTools_DotNet6.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
+    <BuildType Solution="WinAzureTest|x64" Project="Debug" />
+    <BuildType Solution="WinAzureTest|x86" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Project="x64" />
+  </Project>
+</Solution>
