@@ -17,6 +17,8 @@
 			</Property>
 		</Section>
 		<!-- This kit is going to need extensive changes. It is horrible. Talon Mercenary from MP5-->
+		<!-- Note: The suffixes here are built in native by appending _<localecode> fetched from Windows API for keyboard layout. 409 is en-us and if the section
+		      doesn't exist, falls back to _409. -->
 		<Section name="sfxgame.sfxgamemodedefault_merc_00000409">
 			<Property name="localizedbindings">
 				<Value type="2">( Name="A", Command="PC_StrafeLeft" )</Value>
