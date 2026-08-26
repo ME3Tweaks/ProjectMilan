@@ -18,5 +18,22 @@ namespace ProjectMilanCore
                 : string.Empty;
             return result;
         }
+
+        /// <summary>
+        /// Sets the console window title to "{prefix} - {status}", e.g. for showing the current
+        /// pipeline at a glance. Swallows failures, as the title cannot be set when there is no
+        /// console window (e.g. output is redirected) or on non-Windows platforms.
+        /// </summary>
+        public static void SetConsoleTitle(string prefix, string status)
+        {
+            try
+            {
+                Console.Title = string.IsNullOrEmpty(status) ? prefix : $"{prefix} - {status}";
+            }
+            catch
+            {
+                // No console window attached; nothing to do.
+            }
+        }
     }
 }

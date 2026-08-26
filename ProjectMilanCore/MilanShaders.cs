@@ -6,6 +6,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ProjectMilan;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace ProjectMilanCore
@@ -14,10 +15,15 @@ namespace ProjectMilanCore
     {
         /// <summary>
         /// Installs shaders to the package for materials that are marked as broken. If a material isn't broken,
-        /// this won't update their shaders!
+        /// this won't update their shaders, unless <paramref name="force"/> is set.
         /// </summary>
         /// <param name="target"></param>
-        public static void InstallCompiledShadersToPackage(IMEPackage package, string logCategory)
+        /// <param name="force">If true, reinstalls every material that has a matching compiled package, regardless of
+        /// whether it's currently considered "broken". A material is only "broken" when its shader ID is entirely
+        /// absent from the local/ref shader cache, so once a material has been installed once, normal (non-force)
+        /// installs will never touch it again even if a newer compile is available. Force bypasses that check and
+        /// also overwrites (rather than skips) any existing shader map/shader entries for that material.</param>
+        public static void InstallCompiledShadersToPackage(IMEPackage package, string logCategory, bool force = false)
         {
             var decookedPath = @"E:\CompiledShaderPackages";
             var compiledShaderPath = @"E:\CompiledShaderPackages";
@@ -34,8 +40,10 @@ namespace ProjectMilanCore
                 packageMap[Path.GetFileNameWithoutExtension(p)] = p;
             }
 
-            var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
-            foreach (var brokenMat in brokenMaterials)
+            var materialsToProcess = force
+                ? package.Exports.Where(x => x.ClassName == "Material").ToList()
+                : ShaderCacheManipulator.GetBrokenMaterials(package);
+            foreach (var brokenMat in materialsToProcess)
             {
                 if (brokenMat.ClassName != "Material")
                 {
@@ -74,7 +82,7 @@ namespace ProjectMilanCore
                     {
                         MilanLog.Information($"Updating shadercache for {brokenMat.InstancedFullPath}", customPrefix: logCategory);
                         var shaderCache = ObjectBinary.From<ShaderCache>(csc);
-                        ShaderCacheManipulator.AddShadersToFile(package, shaderCache);
+                        ShaderCacheManipulator.AddShadersToFile(package, shaderCache, overwrite: force);
                         // update the id of the material to match the compiled version
                         var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
                         ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
@@ -92,7 +100,7 @@ namespace ProjectMilanCore
             // Disabled for now, we know a bunch will be broken
             if (false)
             {
-                brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
+                var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(package);
                 foreach (var mat in brokenMaterials)
                 {
                     MilanLog.Error($@"  Shader still broken for {mat.InstancedFullPath}");

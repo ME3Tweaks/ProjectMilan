@@ -24,6 +24,7 @@ using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Redemption;
 using ProjectMilan_ExtraContent.Rejects;
 using ProjectMilanCore;
+using static ProjectMilanCore.ConsoleHelpers;
 using Serilog;
 using Timer = System.Timers.Timer;
 
@@ -64,6 +65,10 @@ namespace ProjectMilan
         /// </summary>
         public const int MIN_CHECKPOINT_VERSION = 1;
 
+        /// <summary>
+        /// Prefix used for the console window title, so the current status is visible at a glance.
+        /// </summary>
+        private const string ConsoleTitlePrefix = "Project Milan";
 
         /// <summary>
         /// Initialize Project Milan
@@ -79,6 +84,7 @@ namespace ProjectMilan
             bool researchMode = false;
 #endif
 
+            SetConsoleTitle(ConsoleTitlePrefix, "Starting");
             MilanLog.CreateLogger();
             MilanLog.Information("Welcome to Project Milan");
             Settings = LoadSettingsConfig(obj);
@@ -281,6 +287,7 @@ namespace ProjectMilan
 
             if (RestoreCheckpointForThisRun)
             {
+                SetConsoleTitle(ConsoleTitlePrefix, "Restoring checkpoint");
                 if (Checkpoint.RestoreCheckpoint())
                 {
                     // HATE goto statements
@@ -383,6 +390,8 @@ namespace ProjectMilan
 
             if (InstallModOnCompletion)
                 ModManagerIntegration.RequestModInstallation(Path.Combine(Settings.OutputModPath, "..", "moddesc.ini"));
+
+            SetConsoleTitle(ConsoleTitlePrefix, "Build complete");
         }
 
         private static void PrintSummaryInformation()
@@ -423,6 +432,7 @@ namespace ProjectMilan
             if (shouldRunPipeline)
             {
                 MilanLog.Information($"Running pipeline: {pipelineName}");
+                SetConsoleTitle(ConsoleTitlePrefix, $"Running {pipelineName}");
                 Stopwatch sw = Stopwatch.StartNew();
                 runPipeline();
                 sw.Stop();
