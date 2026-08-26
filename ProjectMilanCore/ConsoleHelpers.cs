@@ -24,11 +24,11 @@ namespace ProjectMilanCore
         /// pipeline at a glance. Swallows failures, as the title cannot be set when there is no
         /// console window (e.g. output is redirected) or on non-Windows platforms.
         /// </summary>
-        public static void SetConsoleTitle(string prefix, string status)
+        public static void SetConsoleTitle(string postfix, string status)
         {
             try
             {
-                Console.Title = string.IsNullOrEmpty(status) ? prefix : $"{prefix} - {status}";
+                Console.Title = string.IsNullOrEmpty(status) ? postfix : $"{status} - {postfix}";
             }
             catch
             {

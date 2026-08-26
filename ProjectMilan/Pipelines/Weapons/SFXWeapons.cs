@@ -589,7 +589,8 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_SMG_Collector",
                 PackageName = "SFXWeapon_SMG_Collector",
                 LE3PackageName = "BioD_CitSim_CllctrB", // There is no direct LE3 version of this package. It uses a _Shared version
-                Enabled  = true
+                // MUST BE BUILT OR COLLECTOR TROOPER CAN'T BUILD (or at least that's how it used to be)
+                Enabled = true
             },
             new WeaponSpecificPipeline()
             {
