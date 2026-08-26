@@ -679,14 +679,6 @@ namespace ProjectMilan.MilanUDK
             UDKMaterialPort.PortMaterialsIntoUDK(MEGame.LE3, stagingPath, "MilanMaterials", Program.Settings.MilanUDKPath, IsDecookAsset);
         }
 
-        public static void TestConvertToUDK()
-        {
-            // var biop = @"Z:\ModLibrary\LE3\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels\BioP_MPMoon\BioP_MPMoon.pcc";
-            var biop = @"S:\Milan\Scottina\BioP_UDKLighting_CitHub_Temple.pcc";
-            var package = MEPackageHandler.OpenMEPackage(biop);
-            StaticLightingExport.ExportLevelToUDK(package);
-        }
-
         public static void TestFixingUDKCrash()
         {
             var stagingPath = GetMilanDecookedMaterialsStagingDirectory();
