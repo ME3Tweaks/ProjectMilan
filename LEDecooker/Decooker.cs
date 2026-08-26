@@ -51,11 +51,11 @@ namespace LEDecooker
             // Compile LE
             CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game, CLIOptions.ParsedOptions.Game, false);
             // Compile OT -> LE
-            /*if (CLIOptions.ParsedOptions.Game != MEGame.LE2)
+            if (CLIOptions.ParsedOptions.Game != MEGame.LE2)
             {
-                // Do ME1/ME3
+                // Port in the content from the opposite generation as well.
                 CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game.ToOppositeGeneration(), CLIOptions.ParsedOptions.Game, false);
-            }*/
+            }
 
             FixImports(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game);
         }
@@ -307,15 +307,23 @@ namespace LEDecooker
                 // END TEMP
 
                 IMEPackage package;
-                /*if (File.Exists(packagePath))
+                if (clearOutput)
                 {
-                    continue; // Do nothing
-                    package = MEPackageHandler.OpenMEPackage(packagePath);
+                    package = MEPackageHandler.CreateAndOpenPackage(packagePath, targetGame);
                 }
                 else
-                {*/
-                    package = MEPackageHandler.CreateAndOpenPackage(packagePath, targetGame);
-                // }
+                {
+                    if (File.Exists(packagePath))
+                    {
+                        // Open the existing package
+                        package = MEPackageHandler.OpenMEPackage(packagePath);
+                    }
+                    else
+                    {
+                        // Make new one
+                        package = MEPackageHandler.CreateAndOpenPackage(packagePath, targetGame);
+                    }
+                }
 
                 DecookerLog.Information($"Compiling package {package.FileNameNoExtension} [{done}/{total}]");
                 CompilePackageMaterials(package, sourceGame, t3dZip, MaterialIFPDB);
@@ -734,7 +742,8 @@ namespace LEDecooker
                                     writtenProps = true;
                                     break;
                                 }
-                            } else
+                            }
+                            else
                             {
                                 Debug.WriteLine($"Package not found: {fullPath}");
                             }
