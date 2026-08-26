@@ -174,11 +174,25 @@ namespace ProjectMilan.Pipelines.Audio
         private static byte[]? TryGetDiskCachedWem(uint id)
         {
             var path = GetWemDiskCachePath(id);
-            return File.Exists(path) ? File.ReadAllBytes(path) : null;
+            if (!File.Exists(path)) return null;
+
+            var bytes = File.ReadAllBytes(path);
+            if (bytes.Length == 0)
+            {
+                // Poisoned entry from a past run where WemReencoder silently produced an empty output for
+                // this id (e.g. a source clip too short to re-encode) and it got cached as a "success" -
+                // never trust it, and clear it out so it doesn't fail forever instead of retrying.
+                MilanLog.Warning($"Discarding 0-byte disk-cached WEM for id {id} - will re-attempt conversion", customPrefix: LOG_CATEGORY);
+                try { File.Delete(path); } catch { /* best-effort */ }
+                return null;
+            }
+
+            return bytes;
         }
 
         private static void WriteDiskCachedWem(uint id, byte[] convertedBytes)
         {
+            if (convertedBytes.Length == 0) return; // never poison the cache with an empty "conversion" - see TryGetDiskCachedWem
             try
             {
                 File.WriteAllBytes(GetWemDiskCachePath(id), convertedBytes);
@@ -505,7 +519,7 @@ namespace ProjectMilan.Pipelines.Audio
                     if (streamedWemCache.ContainsKey(id) || pendingStreamedSources.ContainsKey(id)) continue;
 
                     var diskCached = TryGetDiskCachedWem(id);
-                    if (diskCached != null)
+                    if (diskCached != null && diskCached.Length > 0)
                     {
                         FinalizeStreamedWem(id, loc, diskCached);
                         continue;
@@ -595,7 +609,20 @@ namespace ProjectMilan.Pipelines.Audio
                     var id = (uint)streamBin.Id;
                     if (!streamedWemCache.TryGetValue(id, out var info))
                     {
-                        MilanLog.Error($"Skipping WwiseStream {streamExport.InstancedFullPath} - no converted WEM available for id {id}", customPrefix: LOG_CATEGORY);
+                        // No converted replacement exists (re-encoding failed - e.g. a source clip too short
+                        // to re-encode, see WemReencoder.ReencodeBatch). Leaving the stale v56 Filename/
+                        // DataOffset/DataSize in place would have the v134 runtime feed v56-codec Vorbis bytes
+                        // into the v134 decoder - a malformed-bitstream crash, not just wrong audio (see
+                        // BankFile.ConvertToV134's "no re-encoded replacement exists" case, which hits the same
+                        // codec mismatch for embedded sources and deliberately zeroes them out instead of
+                        // passing v56 bytes through). DataSize=0 is already a normal, pre-existing state for
+                        // WwiseStream exports (see the check above this loop) - mirror it here for a clean
+                        // "no media" report instead of a landmine.
+                        MilanLog.Error($"No converted WEM available for id {id} ({streamExport.InstancedFullPath}) - marking as no-media instead of leaving stale v56 audio", customPrefix: LOG_CATEGORY);
+                        streamBin.DataOffset = 0;
+                        streamBin.DataSize = 0;
+                        streamExport.WriteBinary(streamBin);
+                        modified = true;
                         continue;
                     }
 

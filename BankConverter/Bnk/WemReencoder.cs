@@ -201,9 +201,21 @@ public static class WemReencoder
         foreach (var id in decodedIds)
         {
             var newWemPath = Path.Combine(effectiveOutDir, $"{id}.wem");
-            if (File.Exists(newWemPath))
+            var producedBytes = File.Exists(newWemPath) ? File.ReadAllBytes(newWemPath) : null;
+            if (producedBytes is { Length: > 0 })
             {
-                result.Converted[id] = File.ReadAllBytes(newWemPath);
+                result.Converted[id] = producedBytes;
+            }
+            else if (producedBytes != null)
+            {
+                // WwiseCLI exited cleanly and produced the output file, but it's empty - seen for very
+                // short source clips (confirmed against a real ~278-byte source WEM, well under 200ms of
+                // audio) where the batch's overall exit code stays 0 even though this one item silently
+                // failed to encode (this CLI version has no per-file success/failure signal - see the
+                // onItemConverted doc comment above). Must NOT be treated as a successful conversion:
+                // callers cache Converted results to disk keyed by id, and an empty "success" poisons that
+                // cache forever (nothing ever re-attempts a disk-cache hit).
+                result.Failed[id] = $"WwiseCLI produced a 0-byte output (exit {wwiseResult.ExitCode}) - likely a source clip too short to re-encode";
             }
             else
             {
