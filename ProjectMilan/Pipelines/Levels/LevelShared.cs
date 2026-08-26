@@ -28,19 +28,20 @@ namespace ProjectMilan.Pipelines.Levels
         /// <summary>
         /// Imports static lighting for a BioP and its sublevels
         /// </summary>
-        public static void ImportStaticLighting(string levelName, IMEPackage biopPackage, bool includeSublevels = false)
+        public static void ImportStaticLighting(LevelSpecificPipeline level, bool includeSublevels = false)
         {
-            var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", levelName, $"{biopPackage.FileNameNoExtension}.udk");
+            var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", level.BioP, $"{level.BioP}.udk");
             if (File.Exists(staticLightingPath))
             {
                 // Import static lighting
                 LightingImportSetup setup = new LightingImportSetup()
                 {
                     IncludeSubLevels = includeSublevels,
-                    UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName
+                    UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName,
+                    IgnoredSublevelNames = level.IgnoredLightingLevels
                 };
 
-                StaticLightingImporter.ImportStaticLighting(biopPackage, setup);
+                StaticLightingImporter.ImportStaticLighting(level.LE3BioP, setup);
             }
         }
 
@@ -299,7 +300,8 @@ namespace ProjectMilan.Pipelines.Levels
                     LightingImportSetup setup = new LightingImportSetup()
                     {
                         IncludeSubLevels = false,
-                        UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName
+                        UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName,
+                        IgnoredSublevelNames = levelPipeline.IgnoredLightingLevels
                     };
 
                     StaticLightingImporter.ImportStaticLighting(destPackage, setup);

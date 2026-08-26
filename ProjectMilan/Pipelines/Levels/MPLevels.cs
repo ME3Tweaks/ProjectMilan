@@ -116,9 +116,15 @@ namespace ProjectMilan.Pipelines.Levels
                 if (Program.Settings.IsStaticLightingBuild && level.BuildLighting)
                 {
                     // This significantly delay build time - it runs UDK and imports lighting after bake!
-                    StaticLightingExport.ExportLevelToUDK(level);
+                    if (StaticLightingExport.ExportLevelToUDK(level))
+                    {
                     StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension, allowLightmapCompression: false, defaultStaticMeshLightingRes: 128); // BioWare default is 32 
-                    LevelShared.ImportStaticLighting(level.BioP, level.LE3BioP, true);
+                        LevelShared.ImportStaticLighting(level, true);
+                    }
+                    else
+                    {
+                        MilanLog.Error($"Skipping static lighting build and import for {level.LE3BioP.FileNameNoExtension} due to unresolved UDK imports.", customPrefix: LOG_CATEGORY);
+                    }
                 }
 
                 level.ClearReferences();
