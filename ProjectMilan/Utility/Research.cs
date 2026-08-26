@@ -309,8 +309,8 @@ namespace ProjectMilan.Utility
                     continue;
                 }
                 MilanLog.Information($"Generating static lighting for {level}");
-                using var levelP = MEPackageHandler.OpenMEPackage(level);
-                StaticLightingExport.ExportLevelToUDK(levelP);
+                // using var levelP = MEPackageHandler.OpenMEPackage(level);
+                //StaticLightingExport.ExportLevelToUDK(level);
             }
         }
 
@@ -465,7 +465,10 @@ namespace ProjectMilan.Utility
         /// <summary>
         /// Scans the output directory for broken materials. Attempts to merge shader caches from our custom compiled versions and link them up.
         /// </summary>
-        internal static void InstallCompiledShaders()
+        /// <param name="force">If true, reinstalls every material with a matching compiled package and overwrites its
+        /// existing shader data, rather than only touching materials with no shader data at all. Use this after
+        /// recompiling shaders you already had a (working or not) install for previously.</param>
+        internal static void InstallCompiledShaders(bool force = false)
         {
             var path = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Kits";
             if (Directory.Exists(path) == false)
@@ -478,7 +481,7 @@ namespace ProjectMilan.Utility
             foreach (var gamePackagePath in packages)
             {
                 var gamePackage = MEPackageHandler.OpenMEPackage(gamePackagePath);
-                MilanShaders.InstallCompiledShadersToPackage(gamePackage, "MilanResearch");
+                MilanShaders.InstallCompiledShadersToPackage(gamePackage, "MilanResearch", force);
 
                 var brokenMaterials = ShaderCacheManipulator.GetBrokenMaterials(gamePackage);
                 foreach (var brokenMat in brokenMaterials)
