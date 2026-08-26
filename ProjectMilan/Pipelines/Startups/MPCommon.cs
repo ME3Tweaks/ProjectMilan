@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace ProjectMilan.Pipelines.Startups
 {
@@ -141,7 +142,7 @@ namespace ProjectMilan.Pipelines.Startups
         /// <param name="packagePath"></param>
         /// <param name="packageCache"></param>
         /// <returns></returns>
-        private static bool CompileMPCommonPackage(string packagePath, PackageCache cache)
+        private static bool CompileMPCommonPackage(string packagePath, PackageCache cache, HashSet<string> discoveredAutoDonorClasses)
         {
             MilanLog.Information("Compiling loose classes", customPrefix: LOG_CATEGORY);
             var classes = new List<UnrealScriptCompiler.LooseClass>();
@@ -191,7 +192,7 @@ namespace ProjectMilan.Pipelines.Startups
 
             if (log.HasErrors)
             {
-                if (AttemptToFindMissingClasses(log, cache))
+                if (AttemptToFindMissingClasses(log, cache, discoveredAutoDonorClasses))
                     return true;
                 MilanLog.Error("COMPILATION OF CUSTOM CLASSES FAILED: ", customPrefix: LOG_CATEGORY);
                 foreach (var error in log.AllErrors)
@@ -291,16 +292,22 @@ namespace ProjectMilan.Pipelines.Startups
                 Directory.EnumerateFiles(MilanShared.GetAutoDonorClassesPath(), "*.uc", SearchOption.AllDirectories));
         }
 
-        private static bool AttemptToFindMissingClasses(MessageLog log, PackageCache cache)
+        /// <summary>
+        /// Package name prefixes tried, in order, when resolving a bare class name to a fully-qualified
+        /// instanced full path. Shared between the reactive (compile-error-driven) and proactive
+        /// (manifest-driven) resolution paths.
+        /// </summary>
+        private static readonly string[] CommonBasePackages =
+        {
+            null,
+            "SFXGame",
+            "SFXGameContent",
+            "SFXGameMPContent",
+        };
+
+        private static bool AttemptToFindMissingClasses(MessageLog log, PackageCache cache, HashSet<string> discoveredAutoDonorClasses)
         {
             List<string> decompiledClasses = new List<string>();
-            var commonBasePackages = new[]
-            {
-                null,
-                "SFXGame",
-                "SFXGameContent",
-                "SFXGameMPContent",
-            };
             // Code: Find class
             foreach (var m in log.AllErrors)
             {
@@ -353,88 +360,380 @@ namespace ProjectMilan.Pipelines.Startups
                 if (decompiledClasses.Contains(className))
                     continue; // Already pending recompile
 
-
                 // We need to find it and decompile it
-                foreach (var cbp in commonBasePackages)
+                if (TryResolveAndDecompileClassByName(className, cache, "missing class"))
                 {
-                    string ifp;
-                    if (cbp == null)
-                    {
-                        ifp = className;
-                    }
-                    else
-                    {
-                        ifp = $"{cbp}.{className}";
-                    }
+                    decompiledClasses.Add(className);
+                    discoveredAutoDonorClasses.Add(className);
+                }
+            }
+            return decompiledClasses.Any();
+        }
 
-                    // Look in LE3 for donor
-                    bool keepSearching = true;
-                    var foundObjs = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp);
-                    if (foundObjs != null)
+        /// <summary>
+        /// Resolves a bare class name to a fully-qualified instanced full path by searching LE3 first, then
+        /// falling back to ME3 for crossgen, across <see cref="CommonBasePackages"/>, and decompiles it into
+        /// the autodonor folder (<see cref="MilanShared.GetAutoDonorClassesPath"/>) if found. Returns true if
+        /// the class was located and decompiled.
+        /// </summary>
+        private static bool TryResolveAndDecompileClassByName(string className, PackageCache cache, string logContext)
+        {
+            foreach (var cbp in CommonBasePackages)
+            {
+                var ifp = cbp == null ? className : $"{cbp}.{className}";
+
+                // Look in LE3 for donor
+                var foundObjs = MilanShared.LE3ObjectDB.GetFilesContainingObject(ifp);
+                if (foundObjs != null)
+                {
+                    foreach (var foundObj in foundObjs)
                     {
-                        foreach (var foundObj in foundObjs)
+                        var sourceFileName = Path.GetFileName(foundObj);
+                        var package = MilanShared.GetLE3Package(sourceFileName);
+
+                        // DLC system Milan uses doesn't look in SP files
+                        // So if obj database has SP stuff this will fail
+                        // Just keep going.
+                        if (package != null)
                         {
-                            if (!keepSearching)
-                                break;
-                            var sourceFileName = Path.GetFileName(foundObj);
-                            var package = MilanShared.GetLE3Package(sourceFileName);
-
-                            // DLC system Milan uses doesn't look in SP files
-                            // So if obj database has SP stuff this will fail
-                            // Just keep going.
-                            if (package != null)
+                            var export = package.FindExport(ifp);
+                            if (export != null)
                             {
-                                MilanLog.Information($@"Found missing class '{className}' in LE3: {foundObj}", customPrefix: LOG_CATEGORY);
-                                var export = package.FindExport(ifp);
-                                if (export != null)
-                                {
-                                    DecompileClass(export, null, true, cache);
-                                    decompiledClasses.Add(export.ObjectName);
-                                    keepSearching = false;
-                                    continue;
-                                }
-
-                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
-
+                                MilanLog.Information($@"Found {logContext} '{className}' in LE3: {foundObj}", customPrefix: LOG_CATEGORY);
+                                DecompileClass(export, null, true, cache);
+                                return true;
                             }
+
+                            MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
                         }
                     }
+                }
 
-                    // Looking ME3 for crossgen
-                    if (!keepSearching)
-                        continue; // Go to next error
-                    foundObjs = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp);
-                    if (foundObjs != null)
+                // Looking ME3 for crossgen
+                foundObjs = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp);
+                if (foundObjs != null)
+                {
+                    foreach (var foundObj in foundObjs)
                     {
-                        foreach (var foundObj in foundObjs)
+                        var sourceFileName = Path.GetFileName(foundObj);
+                        var package = MilanShared.GetME3Package(sourceFileName);
+
+                        // DLC system Milan uses doesn't look in SP files
+                        // So if obj database has SP stuff this will fail
+                        // Just keep going.
+                        if (package != null)
                         {
-                            if (!keepSearching)
-                                break;
-                            var sourceFileName = Path.GetFileName(foundObj);
-                            var package = MilanShared.GetME3Package(sourceFileName);
-
-                            // DLC system Milan uses doesn't look in SP files
-                            // So if obj database has SP stuff this will fail
-                            // Just keep going.
-                            if (package != null)
+                            var export = package.FindExport(ifp);
+                            if (export != null)
                             {
-                                MilanLog.Information($@"Found missing class '{className}' in ME3: {foundObj}", customPrefix: LOG_CATEGORY);
-                                var export = package.FindExport(ifp);
-                                if (export != null)
-                                {
-                                    DecompileClass(export, null, true, cache);
-                                    decompiledClasses.Add(export.ObjectName);
-                                    keepSearching = false;
-                                    continue;
-                                }
-
-                                MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
+                                MilanLog.Information($@"Found {logContext} '{className}' in ME3: {foundObj}", customPrefix: LOG_CATEGORY);
+                                DecompileClass(export, null, true, cache);
+                                return true;
                             }
+
+                            MilanLog.Warning($"Export did not reside in package, perhaps the wrong one was found? Could be overridden by DLC", customPrefix: LOG_CATEGORY);
                         }
                     }
                 }
             }
-            return decompiledClasses.Any();
+
+            return false;
+        }
+
+        /// <summary>
+        /// Additional classes to hoist out of specific ME3 files and fold into BIOP_MP_COMMON, keyed by the
+        /// ME3 source filename they should be pulled from. Use this for classes that are duplicated across
+        /// many files (e.g. objective classes that every kit carries a copy of) but are otherwise identical -
+        /// hoisting them here means they get decompiled/compiled once instead of once per file that has them.
+        ///
+        /// Only list classes here that are safe to share across every consumer (kit-local classes like
+        /// character-specific animations/abilities should NOT be hoisted).
+        /// </summary>
+        private static readonly Dictionary<string, string[]> AdditionalHoistedClasses = new()
+        {
+            ["Asari_Adept_MP.pcc"] = new[]
+            {
+                // Objective classes are duplicated into every single kit's package.
+                "SFXGameMPContent.SFXObjective_Disarm_Base",
+                "SFXGameMPContent.SFXObjective_Retrieve_DropOffLocation",
+                "SFXGameMPContent.SFXObjective_Retrieve_PickupObject",
+
+                // Generic player mechanics (cover, melee reactions, evade, ladders, mantling, etc.) - identical
+                // in every one of the 26 basegame kit files.
+                "SFXGameContent.SFXCharacterClass_Content",
+                "SFXGameContent.SFXCustomAction_ActivateWeaponFlashlight",
+                "SFXGameContent.SFXCustomAction_CoverMeleeLeft",
+                "SFXGameContent.SFXCustomAction_CoverMeleeRight",
+                "SFXGameContent.SFXCustomAction_CoverSlipLookAt",
+                "SFXGameContent.SFXCustomAction_FlinchBase",
+                "SFXGameContent.SFXCustomAction_FlinchHeavy",
+                "SFXGameContent.SFXCustomAction_FlinchLight",
+                "SFXGameContent.SFXCustomAction_GapJump",
+                "SFXGameContent.SFXCustomAction_HvyCoverMeleeLeft",
+                "SFXGameContent.SFXCustomAction_HvyCoverMeleeRight",
+                "SFXGameContent.SFXCustomAction_HvyStdCoverMeleeLeft",
+                "SFXGameContent.SFXCustomAction_HvyStdCoverMeleeRight",
+                "SFXGameContent.SFXCustomAction_JumpDown",
+                "SFXGameContent.SFXCustomAction_KnockbackImpact",
+                "SFXGameContent.SFXCustomAction_KnockbackImpactForward",
+                "SFXGameContent.SFXCustomAction_KnockbackImpactLeft",
+                "SFXGameContent.SFXCustomAction_KnockbackImpactRight",
+                "SFXGameContent.SFXCustomAction_MantleLookAt",
+                "SFXGameContent.SFXCustomAction_MantleMelee",
+                "SFXGameContent.SFXCustomAction_Meleed",
+                "SFXGameContent.SFXCustomAction_MeleedForward",
+                "SFXGameContent.SFXCustomAction_MeleedLeft",
+                "SFXGameContent.SFXCustomAction_MeleedRight",
+                "SFXGameContent.SFXCustomAction_PistolMeleeOne",
+                "SFXGameContent.SFXCustomAction_PistolMeleeThree",
+                "SFXGameContent.SFXCustomAction_PistolMeleeTwo",
+                "SFXGameContent.SFXCustomAction_PlayerCoverSlipLeft",
+                "SFXGameContent.SFXCustomAction_PlayerCoverSlipLeftStanding",
+                "SFXGameContent.SFXCustomAction_PlayerCoverSlipRight",
+                "SFXGameContent.SFXCustomAction_PlayerCoverSlipRightStanding",
+                "SFXGameContent.SFXCustomAction_PlayerEvadeBackwards",
+                "SFXGameContent.SFXCustomAction_PlayerEvadeForward",
+                "SFXGameContent.SFXCustomAction_PlayerEvadeLeft",
+                "SFXGameContent.SFXCustomAction_PlayerEvadeRight",
+                "SFXGameContent.SFXCustomAction_PlayerKnockbackImpact",
+                "SFXGameContent.SFXCustomAction_PlayerLadderClimbDown",
+                "SFXGameContent.SFXCustomAction_PlayerLadderClimbUp",
+                "SFXGameContent.SFXCustomAction_PlayerMantleOverCover",
+                "SFXGameContent.SFXCustomAction_PlayerMantleUp",
+                "SFXGameContent.SFXCustomAction_PlayerMeleed",
+                "SFXGameContent.SFXCustomAction_PlayerOnFire",
+                "SFXGameContent.SFXCustomAction_PlayerStaggerImpact",
+                "SFXGameContent.SFXCustomAction_PlayerStandardImpact",
+                "SFXGameContent.SFXCustomAction_PlayerStandardImpactForward",
+                "SFXGameContent.SFXCustomAction_PlayerStandardImpactLeft",
+                "SFXGameContent.SFXCustomAction_PlayerStandardImpactRight",
+                "SFXGameContent.SFXCustomAction_Reload",
+                "SFXGameContent.SFXCustomAction_Revive",
+                "SFXGameContent.SFXCustomAction_RifleMeleeOne",
+                "SFXGameContent.SFXCustomAction_RifleMeleeThree",
+                "SFXGameContent.SFXCustomAction_RifleMeleeTwo",
+                "SFXGameContent.SFXCustomAction_SimpleMoveBase",
+                "SFXGameContent.SFXCustomAction_StandingGapJump",
+                "SFXGameContent.SFXCustomAction_StdCoverMeleeLeft",
+                "SFXGameContent.SFXCustomAction_StdCoverMeleeRight",
+                "SFXGameContent.SFXCustomAction_StdCoverSlipLookAt",
+                "SFXGameContent.SFXCustomAction_StdSwatTurnLookAt",
+                "SFXGameContent.SFXCustomAction_SwatTurnLookAt",
+                "SFXGameContent.SFXCustomAction_SyncCoverGrab",
+                "SFXGameContent.SFXCustomAction_SyncCoverMelee",
+                "SFXGameContent.SFXGameEffect_DisableAI",
+                "SFXGameContent.SFXGameEffect_PartBasedDamageBonus",
+                "SFXGameContent.SFXGameEffect_WeaponWeightModifier",
+                "SFXGameContent.SFXGameEffect_WeightCapacity",
+                "SFXGameContent.SFXSeqEvt_PerformedMeleeOverCover",
+
+                // MP-specific generic mechanics - also identical in every kit file.
+                "SFXGameMPContent.SFXCharacterClass_ContentMP",
+                "SFXGameMPContent.SFXCustomAction_DisarmObject",
+                "SFXGameMPContent.SFXCustomAction_PickupRetrieveObject",
+                "SFXGameMPContent.SFXCustomAction_PlayerStaggerMP",
+                "SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower",
+                "SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo",
+                "SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor",
+                "SFXGameMPContent.SFXPowerCustomActionMP_ConsumableAmmoPower",
+                "SFXGameMPContent.SFXPowerCustomActionMP_MeleePassiveBase",
+                "SFXGameMPContent.SFXPowerCustomActionMP_PassiveBase",
+
+                // Near-universal (present in all but a couple of kit files) - still worth hoisting out to avoid duplication.
+                "SFXGameContent.SFXRumble_Power_HeavyImpact",
+                "SFXGameContent.SFXShake_Power_HeavyImpact",
+                "SFXGameContent.SFXProjectile_PowerCustomAction_SuperSeeking",
+                "SFXGameContent.SFXWeapon_AssaultRifle_Avenger",
+            },
+
+            // SFXShield_Energy_Player is in another kit because asari have barriers not shields
+            ["HumanFemale_Engineer_MP.pcc"] = new[]
+            {
+                "SFXGameContent.SFXShield_Energy_Player",
+            },
+        };
+
+        /// <summary>
+        /// Decompiles a class export, preferring an already-ported LE3 donor version of the class if one can
+        /// be found (so we inherit any prior LE3 fixups), falling back to decompiling straight from the
+        /// source (ME3) export otherwise.
+        /// </summary>
+        private static void DecompileClassPreferringLE3(ExportEntry classExp, PackageCache cache)
+        {
+            var foundObjs = MilanShared.LE3ObjectDB.GetFilesContainingObject(classExp.InstancedFullPath);
+            if (foundObjs != null)
+            {
+                foreach (var foundObj in foundObjs)
+                {
+                    var sourceFileName = Path.GetFileName(foundObj);
+                    var le3package = MilanShared.GetLE3Package(sourceFileName);
+
+                    // DLC system Milan uses doesn't look in SP files
+                    // So if obj database has SP stuff this will fail
+                    // Just keep going.
+                    if (le3package != null)
+                    {
+                        var export = le3package.FindExport(classExp.InstancedFullPath);
+                        if (export != null)
+                        {
+                            DecompileClass(export, null, false, cache);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            DecompileClass(classExp, null, false, cache);
+        }
+
+        /// <summary>
+        /// Decompiles the classes listed in <see cref="AdditionalHoistedClasses"/> out of their source ME3
+        /// files and into the MPCommon loose class folder, so they get folded into BIOP_MP_COMMON instead of
+        /// being duplicated in every file that otherwise carries them.
+        /// </summary>
+        private static void HoistAdditionalClasses(PackageCache cache)
+        {
+            foreach (var (fileName, classIfps) in AdditionalHoistedClasses)
+            {
+                MilanLog.Information($"Hoisting classes out of {fileName} --------------------", customPrefix: LOG_CATEGORY);
+                var parsingPackage = MilanShared.GetME3Package(fileName);
+                if (parsingPackage == null)
+                {
+                    MilanLog.Error($"Could not open {fileName} to hoist classes out of it", customPrefix: LOG_CATEGORY);
+                    continue;
+                }
+
+                foreach (var ifp in classIfps)
+                {
+                    var classExp = parsingPackage.FindExport(ifp);
+                    if (classExp == null)
+                    {
+                        MilanLog.Error($"Hoisted class not found in {fileName}: {ifp}", customPrefix: LOG_CATEGORY);
+                        continue;
+                    }
+
+                    if (!ClassNeedsDecompiled(classExp))
+                        continue;
+
+                    DecompileClassPreferringLE3(classExp, cache);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Checked-in list of class names previously discovered by <see cref="AttemptToFindMissingClasses"/>
+        /// and known to need decompiling into the autodonor folder. One class name per line.
+        /// </summary>
+        private static string GetAutoDonorManifestPath()
+        {
+            return Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"LooseClasses", @"MPCommonAutoDonorManifest.txt");
+        }
+
+        private static HashSet<string> LoadAutoDonorManifest()
+        {
+            var path = GetAutoDonorManifestPath();
+            if (!File.Exists(path))
+                return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            return File.ReadAllLines(path)
+                .Select(l => l.Trim())
+                .Where(l => l.Length > 0 && !l.StartsWith("//"))
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
+
+        private static void SaveAutoDonorManifest(IEnumerable<string> classNames)
+        {
+            var path = GetAutoDonorManifestPath();
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            var sorted = classNames.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(x => x, StringComparer.OrdinalIgnoreCase);
+            File.WriteAllLines(path, sorted);
+        }
+
+        /// <summary>
+        /// Returns true if a class by this name already has a decompiled .uc file somewhere under the
+        /// autodonor folder (regardless of which package folder it landed in).
+        /// </summary>
+        private static bool AutoDonorClassAlreadyDecompiled(string className)
+        {
+            return Directory.EnumerateFiles(MilanShared.GetAutoDonorClassesPath(), $"{className}.uc", SearchOption.AllDirectories).Any();
+        }
+
+        /// <summary>
+        /// Pre-decompiles every class listed in the autodonor manifest directly into the autodonor folder,
+        /// before the first compile attempt. This is what lets a fresh/clean build skip the slow
+        /// discover-one-class-per-recompile loop in <see cref="AttemptToFindMissingClasses"/>: on a clean
+        /// checkout the manifest already lists (almost) everything that loop would otherwise have to
+        /// rediscover one class at a time, each rediscovery costing a full recompile of the growing loose
+        /// class set. The reactive loop still runs afterwards as a safety net for anything the manifest
+        /// doesn't yet know about (e.g. a new class introduced by a game update).
+        /// </summary>
+        private static void DecompileManifestedAutoDonorClasses(PackageCache cache)
+        {
+            var manifest = LoadAutoDonorManifest();
+            if (manifest.Count == 0)
+                return;
+
+            MilanLog.Information($"Pre-decompiling {manifest.Count} known autodonor dependencies from manifest", customPrefix: LOG_CATEGORY);
+            foreach (var className in manifest)
+            {
+                if (AutoDonorClassAlreadyDecompiled(className))
+                    continue;
+
+                if (!TryResolveAndDecompileClassByName(className, cache, "manifested class"))
+                {
+                    MilanLog.Warning($"  Manifested autodonor class '{className}' could not be resolved in LE3 or ME3 - it may have been renamed or removed upstream, dropping it from the manifest", customPrefix: LOG_CATEGORY);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Merges any classes discovered by the reactive loop this run into the autodonor manifest, then
+        /// prunes entries that no longer appear to be referenced by anything else being compiled (a class
+        /// that stopped being needed after a code change). Pruning is a heuristic textual reference scan,
+        /// not a real dependency analysis - if it's ever wrong and drops something still needed, the
+        /// reactive loop in <see cref="AttemptToFindMissingClasses"/> will simply rediscover and re-add it
+        /// on the next run, at the cost of one extra recompile iteration. Classes pruned from the manifest
+        /// are left on disk in the autodonor folder (only <see cref="Clean"/> removes them) so re-adding
+        /// them later doesn't require decompiling again.
+        /// </summary>
+        private static void UpdateAutoDonorManifest(HashSet<string> discoveredThisRun)
+        {
+            var manifest = LoadAutoDonorManifest();
+            var before = manifest.Count;
+            manifest.UnionWith(discoveredThisRun);
+
+            if (manifest.Count == 0)
+                return;
+
+            // Heuristic staleness scan: does any OTHER currently-compiled class still mention this class
+            // name anywhere in its source? If not, nothing requires it to be part of the compile anymore.
+            var allSources = GetMPCommonClassFiles()
+                .Select(f => (FileName: Path.GetFileNameWithoutExtension(f), Text: File.ReadAllText(f)))
+                .ToList();
+
+            var pruned = new List<string>();
+            foreach (var className in manifest.ToList())
+            {
+                var stillReferenced = allSources.Any(s =>
+                    !s.FileName.Equals(className, StringComparison.OrdinalIgnoreCase) &&
+                    Regex.IsMatch(s.Text, $@"\b{Regex.Escape(className)}\b"));
+
+                if (!stillReferenced)
+                {
+                    manifest.Remove(className);
+                    pruned.Add(className);
+                }
+            }
+
+            if (pruned.Count > 0)
+            {
+                MilanLog.Information($"Pruning {pruned.Count} no-longer-referenced class(es) from autodonor manifest: {string.Join(", ", pruned)}", customPrefix: LOG_CATEGORY);
+            }
+
+            if (manifest.Count != before || pruned.Count > 0)
+            {
+                SaveAutoDonorManifest(manifest);
+            }
         }
 
         /// <summary>
@@ -461,6 +760,7 @@ namespace ProjectMilan.Pipelines.Startups
 
             cache.InsertIntoCache(MilanShared.GetME3Package("Startup.pcc")); // This significantly improves performance by preventing opening it a ton
 
+            MilanShared.LogDonorMessages = false; // Suppress spammy messages
             foreach (var package in me3Packages)
             {
                 MilanLog.Information($"Decompiling MP classes in {package} --------------------");
@@ -496,49 +796,28 @@ namespace ProjectMilan.Pipelines.Startups
                              x.IsClass && x.Parent != null && packagesToPort.Contains(x.Parent) &&
                              ClassNeedsDecompiled(x)))
                 {
-                    bool decompiled = false;
-                    // Find LE3 version
-                    var foundObjs = MilanShared.LE3ObjectDB.GetFilesContainingObject(classExp.InstancedFullPath);
-                    if (foundObjs != null)
-                    {
-                        foreach (var foundObj in foundObjs)
-                        {
-                            var sourceFileName = Path.GetFileName(foundObj);
-                            var le3package = MilanShared.GetLE3Package(sourceFileName);
-
-                            // DLC system Milan uses doesn't look in SP files
-                            // So if obj database has SP stuff this will fail
-                            // Just keep going.
-                            if (le3package != null)
-                            {
-                                var export = le3package.FindExport(classExp.InstancedFullPath);
-                                if (export != null)
-                                {
-                                    DecompileClass(export, null, false, cache);
-                                    decompiled = true;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (!decompiled)
-                    {
-                        DecompileClass(classExp, null, false, cache);
-                    }
+                    DecompileClassPreferringLE3(classExp, cache);
                 }
             }
+
+            HoistAdditionalClasses(cache);
+            DecompileManifestedAutoDonorClasses(cache);
 
             // Attempt compile
             var outPackage = Path.Combine(Program.Settings.OutputModPath, Path.Combine(vars.OutputPath, @"CookedPCConsole", MilanShared.MP_STARTUP_FILENAME));
 
-            while (CompileMPCommonPackage(outPackage, cache))
+            var discoveredAutoDonorClasses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            while (CompileMPCommonPackage(outPackage, cache, discoveredAutoDonorClasses))
             {
                 MilanLog.Information("Attempting recompile with new class data----------------------", customPrefix: LOG_CATEGORY);
             }
 
+            MilanShared.LogDonorMessages = false; // Turn on donor messaging.
+
             if (!File.Exists(outPackage) || new FileInfo(outPackage).Length < 4096)
                 return false;
+
+            UpdateAutoDonorManifest(discoveredAutoDonorClasses);
             return true;
         }
 
@@ -828,14 +1107,27 @@ namespace ProjectMilan.Pipelines.Startups
             return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"LooseClasses", @"MPCommon")).FullName;
         }
 
+        /// <summary>
+        /// Path to the merge mod staging cache used by <see cref="MPMerge"/>. Self-cleared at the start of every
+        /// MPMerge run, but included here too so Clean() remains the single source of truth for every
+        /// MPCommon-owned on-disk cache.
+        /// </summary>
+        private static string GetMergeModStagingFolder()
+        {
+            return Path.Combine(MilanShared.PipelineRoot, @"Startups", @"MPCommon", @"MergeMod", @"Staging");
+        }
+
+        /// <summary>
+        /// Deletes every on-disk cache owned by the MPCommon pipeline: decompiled MPCommon classes, decompiled
+        /// autodonor dependency classes, and the merge mod staging cache. Does NOT touch hand-authored content
+        /// such as MPCommonAdditionalClasses, FunctionOverride, MPCommonAddins, or InjectedFunctions.
+        /// </summary>
         internal static void Clean()
         {
-            var files = GetCleanableMPCommonClassFiles();
-            foreach (var f in files)
-            {
-                MilanLog.Information($"Clean() on {f}", customPrefix: LOG_CATEGORY);
-                File.Delete(f);
-            }
+            MilanLog.Information("Cleaning MPCommon caches", customPrefix: LOG_CATEGORY);
+            Utilities.DeleteFilesAndFoldersRecursively(GetMPClassesFolder(), deleteDirectoryItself: false);
+            Utilities.DeleteFilesAndFoldersRecursively(MilanShared.GetAutoDonorClassesPath(), deleteDirectoryItself: false);
+            Utilities.DeleteFilesAndFoldersRecursively(GetMergeModStagingFolder(), deleteDirectoryItself: false);
         }
     }
 }
