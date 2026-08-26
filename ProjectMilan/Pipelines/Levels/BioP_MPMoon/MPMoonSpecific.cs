@@ -6,6 +6,13 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 {
     internal class MPMoonSpecific
     {
+        // Map has some extra levels we don't want to include in the lighting bake.
+        public static string[] IgnoredLightingLevels => [
+            "BioA_MPMoon_Bas1",
+            "BioA_MPMoon_bsp",
+        ];
+
+
         // Condor ammo boxes don't have the correct respawn time set which makes it SUCK to get ammo
         public static void PreCorrect(LevelSpecificPipeline pipeline)
         {
