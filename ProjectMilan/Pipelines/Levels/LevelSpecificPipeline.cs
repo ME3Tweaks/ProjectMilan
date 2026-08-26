@@ -86,6 +86,11 @@ namespace ProjectMilan.Pipelines.Levels
         /// If this map supports lighting build. Vanilla SP maps don't use this
         /// </summary>
         public bool BuildLighting { get; set; } = true;
+        
+        /// <summary>
+        /// List of level names to not include in a lighting bake. Some levels have unused sublevels that we include but don't want to corrupt our lighting with.
+        /// </summary>
+        public string[] IgnoredLightingLevels { get; set; }
 
         /// <summary>
         /// Gets the path that holds donors specific for this level

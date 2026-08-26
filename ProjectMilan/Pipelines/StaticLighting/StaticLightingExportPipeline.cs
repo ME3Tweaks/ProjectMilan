@@ -6,6 +6,7 @@ using LegendaryExplorerCore;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Utility;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
+using ProjectMilan.Pipelines.Levels;
 
 namespace ProjectMilan.Pipelines.StaticLighting
 {
@@ -16,6 +17,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
     {
         private const string LOG_CATEGORY = @"MILAN-StaticLightingExport";
 
+
+        /// <summary>
+        /// Gets the path where UDK will output its map files that have lighting baked into them
+        /// </summary>
+        /// <param name="mapName"></param>
+        /// <returns></returns>
         public static string GetMapOutputPath(string mapName)
         {
             return Directory.CreateDirectory(Path.Combine(UDKDirectory.MapsPath, mapName)).FullName;
@@ -26,8 +33,10 @@ namespace ProjectMilan.Pipelines.StaticLighting
             return Directory.CreateDirectory(Path.Combine(UDKDirectory.SharedPath, "Assets", mapName)).FullName;
         }
 
-        public static void ExportLevelToUDK(IMEPackage levelMaster)
+        public static void ExportLevelToUDK(LevelSpecificPipeline level)
         {
+            var levelMaster = level.LE3BioP;
+
             // Set UDK paths so we don't have to change LEC code. This doesn't persist.
             UDKDirectory.DefaultGamePath = Program.Settings.MilanUDKPath;
             LegendaryExplorerCoreLibSettings.Instance.UDKCustomDirectory = Program.Settings.MilanUDKPath;
@@ -54,6 +63,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(levelMaster.Game);
                 foreach (string additionalPackage in mePackage.AdditionalPackagesToCook)
                 {
+                    if (level.IgnoredLightingLevels != null && level.IgnoredLightingLevels.Contains(additionalPackage, StringComparer.OrdinalIgnoreCase))
+                    {
+                        MilanLog.Information($"Ignoring sublevel {additionalPackage} for UDK conversion", customPrefix: LOG_CATEGORY);
+                        continue;
+                    }
+
                     if (loadedFiles.TryGetValue($"{additionalPackage}.pcc", out string filePath))
                     {
                         MilanLog.Information($"Converting sublevel {additionalPackage} to UDK", customPrefix: LOG_CATEGORY);

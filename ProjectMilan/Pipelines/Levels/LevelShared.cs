@@ -25,6 +25,25 @@ namespace ProjectMilan.Pipelines.Levels
             return null;
         }
 
+        /// <summary>
+        /// Imports static lighting for a BioP and its sublevels
+        /// </summary>
+        public static void ImportStaticLighting(string levelName, IMEPackage biopPackage, bool includeSublevels = false)
+        {
+            var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", levelName, $"{biopPackage.FileNameNoExtension}.udk");
+            if (File.Exists(staticLightingPath))
+            {
+                // Import static lighting
+                LightingImportSetup setup = new LightingImportSetup()
+                {
+                    IncludeSubLevels = includeSublevels,
+                    UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName
+                };
+
+                StaticLightingImporter.ImportStaticLighting(biopPackage, setup);
+            }
+        }
+
         public static IMEPackage PortLevel(LevelSpecificPipeline levelPipeline, IMEPackage sourcePackage)
         {
             var packageBaseName = Path.GetFileNameWithoutExtension(sourcePackage.FileNameNoExtension);

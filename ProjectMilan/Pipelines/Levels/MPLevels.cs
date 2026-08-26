@@ -6,7 +6,9 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Unreal;
 using ProjectMilan.Pipelines.Levels.BioP_MPGeth;
+using ProjectMilan.Pipelines.Levels.BioP_MPHosp;
 using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
+using ProjectMilan.Pipelines.Levels.BioP_MPOcean;
 using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.StaticLighting;
@@ -30,38 +32,38 @@ namespace ProjectMilan.Pipelines.Levels
             public readonly List<LevelSpecificPipeline> LevelPipelines = new()
             {
                 // Vanilla - Some must be enabled again via editing.
-                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Glacier
-                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Reactor
-                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // White
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Ghost
-                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
-                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Dagger
+                new LevelSpecificPipeline() { BioP="BioP_MPCer", Enabled = false, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Glacier
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr", Enabled = false, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Reactor
+                new LevelSpecificPipeline() { BioP="BioP_MPNov", Enabled = false, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // White
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum", Enabled = false, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Ghost
+                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled = false, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Giant - This has some kinda buggy spawns. We don't want to use this map.
+                new LevelSpecificPipeline() { BioP="BioP_MPDish", Enabled = false, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Dagger
 
 
 
                 // MP1 Resurgence
-                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled= true, SpecialPrePortingDelegate = MPMoonSpecific.PreCorrect}, // Condor
-                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPrePortingDelegate = MPGethSpecific.PreCorrect}, // Hydra
+                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled = true, SpecialPrePortingDelegate = MPMoonSpecific.PreCorrect, IgnoredLightingLevels = MPMoonSpecific.IgnoredLightingLevels}, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPrePortingDelegate = MPGethSpecific.PreCorrect, IgnoredLightingLevels = MPGethSpecific.IgnoredLightingLevels}, // Hydra
 
                 // MP2 Rebellion
-                new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled= false, SpecialPortingDelegate = null}, // Jade
-                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled= false, SpecialPortingDelegate = null}, // Goddess
+                new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled = true, SpecialPortingDelegate = null}, // Jade
+                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled = true, SpecialPortingDelegate = null, IgnoredLightingLevels = MPThesSpecific.IgnoredLightingLevels}, // Goddess
 
                 // MP3 Earth
-                new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled=false, SpecialPortingDelegate = null}, // Rio
-                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled=false, SpecialPortingDelegate = null}, // Vancouver
-                new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled=false, SpecialPortingDelegate = null}, // London
+                new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled = true, SpecialPortingDelegate = null, IgnoredLightingLevels = MPOceanSpecific.IgnoredLightingLevels}, // Rio
+                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled = true, SpecialPortingDelegate = null, IgnoredLightingLevels = MPHospSpecific.IgnoredLightingLevels}, // Vancouver
+                new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled = true, SpecialPortingDelegate = null}, // London
 
                 // MP4 Retaliation
-                new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled=false, SpecialPortingDelegate = null}, // Glacier - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPCer3", Enabled=false, SpecialPortingDelegate = null}, // Glacier - Rework (replaces MPCer in ME3)
-                new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled=false, SpecialPortingDelegate = null}, // Dagger - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPNov2", Enabled=false, SpecialPortingDelegate = null}, // White - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPNov3", Enabled=false, SpecialPortingDelegate = null}, // White - Rework (replaces MPNov in ME3)
-                new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled=false, SpecialPortingDelegate = null}, // Reactor - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled=false, SpecialPortingDelegate = null}, // Ghost - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled=false, SpecialPortingDelegate = null}, // Giant - Hazard
-                new LevelSpecificPipeline() { BioP="BioP_MPTowr3", Enabled=false, SpecialPortingDelegate = null}, // Giant - Rework (replaces MPTowr in ME3) - this is a spawn bugfix. MPTowr will be broken in vanilla, we should only use this version.
+                new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled = false, SpecialPortingDelegate = null}, // Glacier - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPCer3", Enabled = false, SpecialPortingDelegate = null}, // Glacier - Rework (replaces MPCer in ME3)
+                new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled = false, SpecialPortingDelegate = null}, // Dagger - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPNov2", Enabled = false, SpecialPortingDelegate = null}, // White - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPNov3", Enabled = false, SpecialPortingDelegate = null}, // White - Rework (replaces MPNov in ME3)
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled = false, SpecialPortingDelegate = null}, // Reactor - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled = false, SpecialPortingDelegate = null}, // Ghost - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled = false, SpecialPortingDelegate = null}, // Giant - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPTowr3", Enabled = false, SpecialPortingDelegate = null}, // Giant - Rework (replaces MPTowr in ME3) - this is a spawn bugfix. MPTowr will be broken in vanilla, we should only use this version.
 
                 // MP5 Reckoning
                 // No maps
@@ -71,13 +73,13 @@ namespace ProjectMilan.Pipelines.Levels
                 // Prototype and unused maps
                 // These are named that were assigned to the maps for ModMaker
                 // There are technically 2 additional variations of MPSub if you swap to a different unused BioD
-                new LevelSpecificPipeline() { BioP="BioP_MPThes2", Enabled=false, SpecialPortingDelegate = null}, // Athena (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPBrdg", Enabled=false, SpecialPortingDelegate = null}, // Gauntlet (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPFoun", Enabled=false, SpecialPortingDelegate = null}, // Dragon (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPPump", Enabled=false, SpecialPortingDelegate = null}, // Forge (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPRays", Enabled=false, SpecialPortingDelegate = null}, // Maelstrom (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPSub", Enabled=false, SpecialPortingDelegate = null}, // Neptune (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPTest", Enabled=false, SpecialPortingDelegate = null}, // Scorpion (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPThes2", Enabled =false, SpecialPortingDelegate = null}, // Athena (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPBrdg", Enabled =false, SpecialPortingDelegate = null}, // Gauntlet (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPFoun", Enabled =false, SpecialPortingDelegate = null}, // Dragon (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPPump", Enabled = false, SpecialPortingDelegate = null}, // Forge (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPRays", Enabled =false, SpecialPortingDelegate = null}, // Maelstrom (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPSub", Enabled = false, SpecialPortingDelegate = null}, // Neptune (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPTest", Enabled = false, SpecialPortingDelegate = null}, // Scorpion (prototype)
             };
 
 
@@ -114,9 +116,9 @@ namespace ProjectMilan.Pipelines.Levels
                 if (Program.Settings.IsStaticLightingBuild && level.BuildLighting)
                 {
                     // This significantly delay build time - it runs UDK and imports lighting after bake!
-                    StaticLightingExport.ExportLevelToUDK(level.LE3BioP);
-                    // This doesn't work reliably right now, unfortunately.
-                    //StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension);
+                    StaticLightingExport.ExportLevelToUDK(level);
+                    StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension, allowLightmapCompression: false, defaultStaticMeshLightingRes: 128); // BioWare default is 32 
+                    LevelShared.ImportStaticLighting(level.BioP, level.LE3BioP, true);
                 }
 
                 level.ClearReferences();
