@@ -151,7 +151,13 @@ namespace ProjectMilan.Pipelines.Startups
                 string source = File.ReadAllText(overridePath ?? ucFilePath);
 
                 // 03/22/2026 - Strip out var delegate usages from old decomp as it breaks new recomp
+                var preLen = source.Length;
                 source = source.Replace("var delegate<", "//var delegate<");
+                var postLen = source.Length;
+                if (preLen != postLen)
+                {
+                    MilanLog.Information($"  Stripped out delegate(s) from decompiled class {Path.GetFileName(ucFilePath)}", customPrefix: LOG_CATEGORY);
+                }
 
                 //files must be named Classname.uc
                 classes.Add(new UnrealScriptCompiler.LooseClass(Path.GetFileNameWithoutExtension(ucFilePath), source, ucFilePath)); // Always use ucFilePath as it will be in the proper package folder, even if it goes unused.
