@@ -42,6 +42,13 @@ namespace ProjectMilan.Pipelines.Weapons
             //DotTrace.Attach();
             // foreach (var kit in vars.KitPipelines)
 
+            MilanShared.LogDonorMessages = false; // Suppress spam
+
+            // Chained to the long-lived MPCommon tier so files hit repeatedly within this pipeline (but not
+            // globally hot enough to be in MPCommon) get promoted here instead of reopened per-weapon. Disposed
+            // once every weapon is done, so nothing here outlives the Weapons pipeline.
+            using var pipelineCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true);
+
             Parallel.ForEach(vars.WeaponPipelines.OrderBy(x => x.Enabled).AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, weapon =>
             {
                 // Uncomment this to port everything
@@ -52,19 +59,21 @@ namespace ProjectMilan.Pipelines.Weapons
                     return;
                 }
 
-                BeginPorting(weapon);
+                BeginPorting(weapon, pipelineCache);
             });
             // }
+
+            MilanShared.LogDonorMessages = true; // Restore spam
         }
 
         private static object _weaponSyncObj = new object();
 
-        private static void BeginPorting(WeaponSpecificPipeline weaponPipeline)
+        private static void BeginPorting(WeaponSpecificPipeline weaponPipeline, TieredPackageCache pipelineCache)
         {
             weaponPipeline.LogCategory = $"{LOG_CATEGORY}-{weaponPipeline.PackageName}";
 
             // Initialize cache
-            weaponPipeline.Cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache();
+            weaponPipeline.Cache = pipelineCache.ChainNewCache();
             weaponPipeline.Cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"DLCWeapons");

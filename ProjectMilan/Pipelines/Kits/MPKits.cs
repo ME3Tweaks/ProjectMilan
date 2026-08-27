@@ -39,6 +39,11 @@ namespace ProjectMilan.Pipelines.Kits
             //DotTrace.Attach();
             // foreach (var kit in vars.KitPipelines)
 
+            // Chained to the long-lived MPCommon tier so files hit repeatedly within this pipeline (but not
+            // globally hot enough to be in MPCommon) get promoted here instead of reopened per-kit. Disposed
+            // once every kit is done, so nothing here outlives the Kits pipeline.
+            using var pipelineCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true);
+
             var kits = vars.KitPipelines.OrderBy(x => x.Enabled); // Frontload enabled ones for multithread
             Parallel.ForEach(kits.AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, kit =>
             {
@@ -50,17 +55,18 @@ namespace ProjectMilan.Pipelines.Kits
                     return;
                 }
 
-                BeginPorting(kit);
+                BeginPorting(kit, pipelineCache);
             });
             // }
         }
 
-        private static void BeginPorting(KitSpecificPipeline kitPipeline)
+
+        private static void BeginPorting(KitSpecificPipeline kitPipeline, TieredPackageCache pipelineCache)
         {
             kitPipeline.LogCategory = $"{LOG_CATEGORY}-{kitPipeline.PackageName}";
 
             // Initialize cache
-            kitPipeline.Cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache();
+            kitPipeline.Cache = pipelineCache.ChainNewCache();
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Kits");
             Directory.CreateDirectory(outputPath);

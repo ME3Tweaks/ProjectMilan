@@ -44,7 +44,9 @@ namespace ProjectMilan.Pipelines.Weapons
             //DotTrace.Attach();
             // foreach (var kit in vars.KitPipelines)
 
-            using TieredPackageCache parentCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache();
+            // canPromoteInto lets per-enemy caches promote repeatedly-hit files up here instead of reopening them
+            // per-enemy; disposed with this pipeline so nothing outlives it.
+            using TieredPackageCache parentCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true);
 
             foreach (var v in commonlyOpenedPackages)
             {
@@ -90,13 +92,15 @@ namespace ProjectMilan.Pipelines.Weapons
             {
                 Cache = enemyPipeline.Cache,
                 MissingObjectResolver = MilanShared.MissingObjectResolverExportsAsImports,
-                GetVTableFromDonor = MilanShared.GetVTableFromDonor
+                GetVTableFromDonor = MilanShared.GetVTableFromDonor,
+                CustomFileResolver = MilanShared.LE3PackageResolver,
             };
 
             // Different forced export packages
             var otFile = MilanShared.GetME3Package($"{enemyPipeline.PackageName}.pcc");
             MilanShared.PortObjectReferencer(otFile, enemyPackage, enemyPipeline.Cache, enemyPipeline.LogCategory);
             enemyPackage.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+            enemyPipeline.Cache.Dispose();
 
 
             return;
@@ -214,7 +218,8 @@ namespace ProjectMilan.Pipelines.Weapons
             {
                 Cache = pipeline.Cache,
                 MissingObjectResolver = MilanShared.MissingObjectResolverExportsAsImports,
-                GetVTableFromDonor = MilanShared.GetVTableFromDonor
+                GetVTableFromDonor = MilanShared.GetVTableFromDonor,
+                CustomFileResolver = MilanShared.LE3PackageResolver,
             };
 
             // Different forced export packages

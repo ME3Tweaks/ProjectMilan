@@ -126,7 +126,7 @@ namespace ProjectMilan.Pipelines.Verify
 
         private static void VerifyVTables(IMEPackage package)
         {
-            var tpc = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+            var tpc = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache();
 
             // This should:
             // Check vtable matching

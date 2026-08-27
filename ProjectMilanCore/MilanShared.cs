@@ -979,10 +979,14 @@ namespace ProjectMilanCore
                 cache.InsertIntoCache(GetME3Package("Startup_DLC_CON_MP2_INT.pcc")); // Add DLC startups
                 cache.InsertIntoCache(GetME3Package("Startup_DLC_CON_MP3_INT.pcc"));
                 cache.InsertIntoCache(GetME3Package("Startup_DLC_CON_MP4_INT.pcc"));
+                cache.InsertIntoCache(GetME3Package(MP_STARTUP_FILENAME)); // Used as a cross-game relink source constantly; keep it cached so it isn't reopened from disk on every port.
+                cache.InsertIntoCache(GetME3Package("BIO_COMMON.pcc")); // Postload base file for nearly everything; ME3PackageResolver only checks this cache, not the warm TieredPackageCache, so it needs to be here too.
             }
             else
             {
                 cache.InsertIntoCache(MEPackageHandler.OpenMEPackages(EntryImporter.FilesSafeToImportFrom(MEGame.LE3).Select(x => Path.Combine(MEDirectories.GetCookedPath(MEGame.LE3), x))));
+                var le3LoadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
+                cache.InsertIntoCache(MEPackageHandler.OpenMEPackage(le3LoadedFiles["BIO_COMMON.pcc"])); // Postload base file for nearly everything; LE3PackageResolver only checks this cache, not the warm TieredPackageCache, so it needs to be here too.
             }
 
             return cache;
@@ -1272,45 +1276,122 @@ namespace ProjectMilanCore
         }
 
         private static object commonCacheSyncObj = new object();
-        private static TieredPackageCache mpCommonCache;
 
         /// <summary>
-        /// Returns a tiered package cache that contains BIOP_MP_COMMON and other hot tiered files in it.
+        /// Root tier: global safe-to-import files (Core, Engine, etc). Shared by every other Milan cache tier below.
+        /// </summary>
+        private static TieredPackageCache globalCache;
+
+        /// <summary>
+        /// Holds only BIOP_MP_COMMON, chained to <see cref="globalCache"/>. Stays null until <see cref="PromoteMPCommonIntoCacheChain"/>
+        /// is called - the file doesn't exist until the MPCommon pipeline has actually built it. Once created, it is
+        /// needed by every pipeline that runs after MPCommon - including ones that run after Levels - so this tier
+        /// is never dropped mid-run.
+        /// </summary>
+        private static TieredPackageCache mpCommonPackageCache;
+
+        /// <summary>
+        /// Holds other files that are hot across many pipelines. Chained to <see cref="mpCommonPackageCache"/> once
+        /// that tier exists, or directly to <see cref="globalCache"/> before then (e.g. while the MPCommon pipeline
+        /// itself is still building BIOP_MP_COMMON and wants the benefit of this tier too). Dropped once Levels (the
+        /// last content-porting pipeline) completes, leaving the chain as Global -&gt; MPCommon for the rest of the run.
+        /// </summary>
+        private static TieredPackageCache warmCache;
+
+        /// <summary>
+        /// Returns the tiered cache chain content pipelines should chain their own cache onto: global safe-to-import
+        /// -&gt; BIOP_MP_COMMON (once built; persistent for the rest of the run) -&gt; warm cache of other hot files
+        /// (dropped after Levels).
         /// </summary>
         /// <returns></returns>
         public static TieredPackageCache GetMPCommonTieredPackageCache()
         {
             lock (commonCacheSyncObj)
             {
-                if (mpCommonCache == null)
+                globalCache ??= TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
+
+                if (warmCache == null)
                 {
-                    MilanLog.Information("Loading Milan MPCommonTieredPackageCache");
-                    mpCommonCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
-                    mpCommonCache.GetCachedPackage(Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", "BIOP_MP_COMMON.pcc")); // Cache MPCommon as it will be used. A lot.
+                    MilanLog.Information("Loading Milan warm TieredPackageCache");
+                    // Chain onto MPCommon if it's already been built; otherwise onto global directly - PromoteMPCommonIntoCacheChain
+                    // will splice MPCommon in above us later if it wasn't ready yet.
+                    warmCache = (mpCommonPackageCache ?? globalCache).ChainNewCache();
 
                     var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
                     // According to TieredPackageCache heatmap these are hot files - loading more than 10 times in MilanMain
-                    mpCommonCache.GetCachedPackage(loadedFiles["BIO_COMMON.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["BioP_Char.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["BioD_Cat002.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["BioP_Cat002.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["BioP_ProEar.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["BioD_CitHub_Prothean.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["BioP_Gth002.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["BioD_MPCer_100SP.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["BioA_ProEar_100.pcc"]);
-                    mpCommonCache.GetCachedPackage(loadedFiles["SFXCharacterClass_Adept.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BIO_COMMON.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioP_Char.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_Cat002.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioP_Cat002.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioP_ProEar.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_CitHub_Prothean.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioP_Gth002.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_MPCer_100SP.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioA_ProEar_100.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["SFXCharacterClass_Adept.pcc"]);
 
-                    MilanLog.Information("Loaded Milan MPCommonTieredPackageCache");
+                    // Per the TieredPackageCache call-stack heatmap (TieredCacheHeatMapCallStacks.json), these were loading more than 20 times in a single MilanMain run.
+                    warmCache.GetCachedPackage(loadedFiles["BioD_ProEar_200.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_Gth001_300GARDIAN.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_MPRctr_050SPEntry.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioA_Kro002_000LevelTrans_LOC_DEU.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_ProEar.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioP_Kro002.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioA_Kro002.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_Cat003_780FinalConvos_LOC_DEU.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_Cat002_100Intro.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioH_Ashley_00.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_Kro001_90OpeningConvo_LOC_DEU.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_ProEar_300.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_KroGar_100Landing.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_Cat003_000LevelTrans.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_Cat002_600KLFight.pcc"]);
+                    warmCache.GetCachedPackage(loadedFiles["BioD_Gth002.pcc"]);
+
+                    MilanLog.Information("Loaded Milan warm TieredPackageCache");
                 }
             }
 
-            return mpCommonCache;
+            return warmCache;
         }
 
-        public static void DropMPCommonTieredPackageCache()
+        /// <summary>
+        /// Splices a tier holding just BIOP_MP_COMMON in between the global tier and the warm cache. Call this once
+        /// the MPCommon pipeline has finished building BIOP_MP_COMMON.pcc - before that, the file doesn't exist, so
+        /// this tier can't be populated. If the warm cache was already built (e.g. the MPCommon pipeline itself used
+        /// <see cref="GetMPCommonTieredPackageCache"/> while it was running), it is re-parented onto the new MPCommon
+        /// tier here; otherwise <see cref="GetMPCommonTieredPackageCache"/> will chain onto it directly the first
+        /// time the warm cache is built.
+        /// </summary>
+        public static void PromoteMPCommonIntoCacheChain()
         {
-            mpCommonCache = null;
+            lock (commonCacheSyncObj)
+            {
+                globalCache ??= TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
+
+                mpCommonPackageCache = globalCache.ChainNewCache();
+                mpCommonPackageCache.GetCachedPackage(Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", "BIOP_MP_COMMON.pcc")); // Cache MPCommon as it will be used by every later pipeline.
+
+                if (warmCache != null)
+                {
+                    // Warm cache already exists - re-parent it onto the newly-built MPCommon tier instead of global.
+                    warmCache.ParentCache = mpCommonPackageCache;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Drops the warm cache tier (see <see cref="warmCache"/>) once porting is done - call this after Levels,
+        /// the last content-porting pipeline. Does not touch the BIOP_MP_COMMON tier, which stays alive for the
+        /// rest of the run since later stages (Verify, Conformance, etc.) still need to resolve against it.
+        /// </summary>
+        public static void DropWarmTieredPackageCache()
+        {
+            lock (commonCacheSyncObj)
+            {
+                warmCache?.Dispose();
+                warmCache = null;
+            }
         }
 
         public static ExportEntry CreateSPStartLocation(IMEPackage package, Point3D startLocation)

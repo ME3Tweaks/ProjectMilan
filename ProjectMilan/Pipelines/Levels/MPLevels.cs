@@ -93,7 +93,10 @@ namespace ProjectMilan.Pipelines.Levels
 
         private static void InternalRunPipeline(MPLevelsVars levelVars)
         {
-            TieredPackageCache parent = MilanShared.GetMPCommonTieredPackageCache();
+            // Chained to the long-lived MPCommon tier so files hit repeatedly across levels (but not globally
+            // hot enough to be in MPCommon) get promoted here instead of reopened per-level. Disposed once
+            // every level is done, so nothing here outlives the Levels pipeline (which runs last).
+            using var parent = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true);
             foreach (var level in levelVars.LevelPipelines)
             {
                 if (!level.Enabled)

@@ -191,7 +191,10 @@ namespace ProjectMilan.Pipelines.Startups
 
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
-            var globalCache = MilanShared.GetMPCommonTieredPackageCache();
+            // Chained to the long-lived MPCommon tier so files hit repeatedly within this pipeline (but not
+            // globally hot enough to be in MPCommon) get promoted here instead of reopened per-file. Disposed
+            // once every file is done, so nothing here outlives the NonStartup pipeline.
+            using var pipelineCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true);
 
             MilanShared.LogDonorMessages = false; // Turn off spammy messaging.
 
@@ -201,7 +204,7 @@ namespace ProjectMilan.Pipelines.Startups
                 {
                     //if (packageBaseName is not "SFXMobileAnnex")
                     //    return;
-                    var cache = globalCache.ChainNewCache();
+                    using var cache = pipelineCache.ChainNewCache();
                     //cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
                     MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
                     var packageName = $"{packageBaseName}.pcc";

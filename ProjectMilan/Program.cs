@@ -320,6 +320,7 @@ namespace ProjectMilan
             if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath)) // These require BIOP_MP_COMMON
                 return;
             MilanShared.InstallMPCommonClassInfo(mpCommonPath);
+            MilanShared.PromoteMPCommonIntoCacheChain(); // BIOP_MP_COMMON now exists on disk - splice it into the shared cache chain (Global -> MPCommon -> Warm) before content pipelines run
 
             // Content pipelines will use the milan ME3 cache
             MilanShared.EnsureTFCsAvailable();
@@ -347,7 +348,7 @@ namespace ProjectMilan
         levelBuild:
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
-            MilanShared.DropMPCommonTieredPackageCache(); // Release lots of memory
+            MilanShared.DropWarmTieredPackageCache(); // Release the warm-file cache; BIOP_MP_COMMON itself stays cached for the rest of the run
         rejectionBuild:
             RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
         redemptionBuild:
