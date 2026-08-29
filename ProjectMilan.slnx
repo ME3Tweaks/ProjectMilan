@@ -16,6 +16,24 @@
     <BuildType Solution="WinDebug|*" Project="Release" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
+  <Project Path="CreditsEditor/CreditsEditor.csproj" Id="7ca85869-4c76-4501-ae77-22eea80c5cf7">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
+  <Project Path="JDiffCS.Test/JDiffCS.Test.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Debug" />
+    <BuildType Solution="WinAzureTest|*" Project="Debug" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Debug" />
+  </Project>
+  <Project Path="JDiffCS/JDiffCS.csproj" Id="6b6abeee-320c-4ea6-9c6b-001a8b39e0b3">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
   <Project Path="LEDecooker/LEDecooker.csproj">
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />

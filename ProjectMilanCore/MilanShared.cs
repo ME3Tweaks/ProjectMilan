@@ -904,7 +904,6 @@ namespace ProjectMilanCore
         private static IMEPackage GetLE3GlobalCachedPackage(string filename)
         {
             // If build is being done on NAS looking for local files will be slow
-            // We should 
             if (le3GlobalCache == null)
             {
                 le3GlobalCache = InitGlobalPackages(MEGame.LE3);
@@ -970,6 +969,9 @@ namespace ProjectMilanCore
 
         private static MilanPackageCache InitGlobalPackages(MEGame game)
         {
+            // Todo: Make these use backup paths instead of live paths if available.
+            // This will make it more consistent
+            // Todo: Use ProjectMilan's patched versions or these will be wrong!
             MilanPackageCache cache = new MilanPackageCache();
             if (game == MEGame.ME3)
             {

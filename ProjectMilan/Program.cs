@@ -6,6 +6,7 @@ using LegendaryExplorerCore.DebugTools;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
+using Newtonsoft.Json;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
@@ -330,6 +331,9 @@ namespace ProjectMilan
                 AudioPipeline.EnsureWwise7110();
             }
 
+        // skip to pipeline you want
+        //goto levelBuild;
+
         kitsBuild:
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
         weaponsBuild:
@@ -424,8 +428,48 @@ namespace ProjectMilan
                 MilanLog.Information($"\t{heatIndex.Key.PadRight(padWidth)}{heatIndex.Value} loads");
 
             }
+
+            DumpHeatMapCallStacks();
 #endif
         }
+
+#if DEBUG
+        /// <summary>
+        /// Writes out the call stacks that caused each repeated TieredPackageCache disk load, so a hot file can be traced back to what keeps opening it.
+        /// </summary>
+        private static void DumpHeatMapCallStacks()
+        {
+            var result = new Dictionary<string, Dictionary<string, object>>();
+            foreach (var (game, fileMap) in TieredPackageCache.StaticTieredHeatMapCallStacks)
+            {
+                var gameResult = new Dictionary<string, object>();
+                foreach (var (fname, traceCounts) in fileMap)
+                {
+                    var totalLoads = traceCounts.Values.Sum();
+                    if (totalLoads <= 1)
+                        continue; // Only loaded once - not useful for tracking down repeat loads.
+
+                    gameResult[fname] = new
+                    {
+                        totalLoads,
+                        callStacks = traceCounts.OrderByDescending(x => x.Value)
+                            .Select(x => new { count = x.Value, stackTrace = x.Key })
+                            .ToList()
+                    };
+                }
+
+                if (gameResult.Count > 0)
+                    result[game.ToString()] = gameResult;
+            }
+
+            if (result.Count == 0)
+                return;
+
+            var outPath = Path.Combine(Settings.OutputModPath, "TieredCacheHeatMapCallStacks.json");
+            File.WriteAllText(outPath, JsonConvert.SerializeObject(result, Formatting.Indented));
+            MilanLog.Information($"Wrote TieredPackageCache call stack heatmap to {outPath}");
+        }
+#endif
 
         /// <summary>
         /// Runs a single pipeline
@@ -455,11 +499,7 @@ namespace ProjectMilan
         private static void RunResearch()
         {
 #if  DEBUG
-            Research.TestSilent();
-            return;
-
-            Research.InstallSoundBanks();
-            return;
+         
             // Put your method in Research class and call it here.
             //Research.CopyPreview2();
             //return;

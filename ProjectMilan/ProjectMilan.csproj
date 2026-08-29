@@ -39,7 +39,6 @@
     <Folder Include="Pipelines\Shared\Compiling\MPCommonAddins\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Meshes\" />
-    <Folder Include="Pipelines\Shared\GlobalDonors\WwiseBank\INT\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
     <Folder Include="Pipelines\Weapons\LooseClasses\" />
   </ItemGroup>
@@ -59,6 +58,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BankConverter\BankConverter.csproj" />
+    <ProjectReference Include="..\JDiffCS\JDiffCS.csproj" />
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\LegendaryExplorerCore\LegendaryExplorerCore.csproj" />
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\submodules\Wwiser.NET\BinarySerializer\BinarySerializer\BinarySerializer.csproj" />
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\submodules\Wwiser.NET\ME3Tweaks.Wwiser\ME3Tweaks.Wwiser.csproj" />
