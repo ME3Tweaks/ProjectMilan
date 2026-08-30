@@ -19,7 +19,7 @@ namespace ProjectMilan.Pipelines.Mod
         private static void InternalRunPipeline()
         {
             var files = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories);
-            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3); // Do not use the MPCommon cache as we will be modifying that package.
+            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "ModResynthesis global LE3 root"); // Do not use the MPCommon cache as we will be modifying that package.
             Parallel.ForEach(files, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads },
                 file =>
                 {
@@ -39,7 +39,7 @@ namespace ProjectMilan.Pipelines.Mod
                             EntryPruner.TrashEntryAndDescendants(sfxIPackage); // Get rid of this pre-porting.
                         }
 
-                        var newPackage = PackageResynthesizer.ResynthesizePackage(package, cache.ChainNewCache());
+                        var newPackage = PackageResynthesizer.ResynthesizePackage(package, cache.ChainNewCache(debugName: $"ModResynthesis file cache (NEVER DISPOSED) ({package.FileNameNoExtension})"));
                         if (package == newPackage)
                         {
                             // Resynthesizing did not occur

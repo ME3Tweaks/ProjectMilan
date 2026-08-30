@@ -15,6 +15,7 @@ using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.Mod;
+using ProjectMilan.Pipelines.Mod.BaseDelta;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Pipelines.Verify;
@@ -64,7 +65,7 @@ namespace ProjectMilan
         /// <summary>
         /// Bump this every time there are changes to MPCommon or NonStartup pipelines. It will invalidate stale checkpoints.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 2;
+        public const int MIN_CHECKPOINT_VERSION = 3;
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -189,6 +190,14 @@ namespace ProjectMilan
                     {
                         Directory.CreateDirectory(Settings.OutputModPath);
                     }
+
+                    // Also clean out MilanDelta so a fresh build doesn't ship a stale patch/manifest
+                    // (e.g. from a renamed or removed target) alongside the new ones.
+                    if (Directory.Exists(BaseDeltaHandler.MilanDeltaFolder))
+                    {
+                        Utilities.DeleteFilesAndFoldersRecursively(BaseDeltaHandler.MilanDeltaFolder,
+                            deleteDirectoryItself: false);
+                    }
                 }
 
                 // Comment this out when we don't want to clean
@@ -297,6 +306,19 @@ namespace ProjectMilan
                 SetConsoleTitle(ConsoleTitlePostFix, "Restoring checkpoint");
                 if (Checkpoint.RestoreCheckpoint())
                 {
+                    BaseDeltaHandler.PrepareForCheckpointRestore();
+
+                    // MPCommon.RunPipeline is skipped on this path (its output was already captured
+                    // into the checkpoint), so nothing has loaded BIOP_MP_COMMON.pcc into memory or
+                    // built the shared MPCommon FileLib tier yet - do that now instead.
+                    var restoredMpCommonPath = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", MilanShared.MP_STARTUP_FILENAME);
+                    if (File.Exists(restoredMpCommonPath))
+                    {
+                        var restoredMpCommonPkg = MEPackageHandler.OpenMEPackage(restoredMpCommonPath);
+                        MilanShared.AddGlobalCachedPackage(restoredMpCommonPkg);
+                        LE3FileLibCache.InitializeMPCommonFileLib(restoredMpCommonPkg);
+                    }
+
                     // HATE goto statements
                     // But it makes it less ugly here...
                     goto postMpCommon;
@@ -304,6 +326,9 @@ namespace ProjectMilan
 
                 MilanLog.Error("Could not use checkpoint; continuing with full pipeline run.");
             }
+
+            // Build/cache patch targets (e.g. SFXGame) before anything that might import from them.
+            BaseDeltaHandler.PrepareForFreshBuild(CreateCheckpointForThisRun);
 
             // Pre-build pipelines
             RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
@@ -314,6 +339,7 @@ namespace ProjectMilan
             {
                 Checkpoint.CreateCheckpoint();
             }
+            // goto end;
 
         postMpCommon:
             // Content build pipelines
@@ -331,8 +357,8 @@ namespace ProjectMilan
                 AudioPipeline.EnsureWwise7110();
             }
 
-        // skip to pipeline you want
-        //goto levelBuild;
+            // skip to pipeline you want
+            //goto levelBuild;
 
         kitsBuild:
             RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
@@ -352,11 +378,15 @@ namespace ProjectMilan
         levelBuild:
             RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
-            MilanShared.DropWarmTieredPackageCache(); // Release the warm-file cache; BIOP_MP_COMMON itself stays cached for the rest of the run
         rejectionBuild:
             RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
         redemptionBuild:
             RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipeline, "Redemption"); // Builds Redemption Maps
+
+
+            // MIDWAY POINT - We should no longer be porting content, so we can
+            // drop some caches to release memory.
+            MilanShared.DropPortingCaches();
 
 
             // Post-build pipelines
@@ -397,6 +427,10 @@ namespace ProjectMilan
             // Patch for multi instance
             MultiInstance.PatchForMultiInstance();
 
+        end:
+            // The build succeeded end-to-end - safe to publish the BaseDelta patches + manifest now.
+            BaseDeltaHandler.WriteMilanDeltaOutput();
+
             PrintSummaryInformation();
 
             if (InstallModOnCompletion)
@@ -431,6 +465,43 @@ namespace ProjectMilan
 
             DumpHeatMapCallStacks();
 #endif
+
+            DumpAliveCacheReport();
+        }
+
+        /// <summary>
+        /// Logs every <see cref="PackageCache"/> (including <see cref="TieredPackageCache"/>) that is still reachable
+        /// (i.e. not yet garbage collected) at this point in the run, along with whether it was ever Dispose()'d and
+        /// how many packages it's currently holding onto. Caches that are NOT disposed and still hold packages are
+        /// the ones worth investigating for memory leaks - use their debug name to trace back to the code that
+        /// created them. A full dump (including every cached package path) is written to a JSON file alongside the
+        /// summary log line for detailed inspection.
+        /// </summary>
+        private static void DumpAliveCacheReport()
+        {
+            // Force a full collection first so anything that's merely pending finalization (properly disposed and
+            // fully dereferenced) doesn't show up as noise - what's left after this is either still rooted
+            // somewhere, or legitimately still alive.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
+            var report = PackageCache.GetTrackedCacheReport();
+            if (report.Count == 0)
+                return;
+
+            MilanLog.Information($"PackageCache alive/disposed report ({report.Count} caches still reachable):");
+            foreach (var info in report.OrderByDescending(x => x.PackageCount))
+            {
+                if (info.PackageCount == 0 && info.IsDisposed)
+                    continue; // Nothing interesting to report - cleanly disposed and empty.
+
+                MilanLog.Information($"\t[{(info.IsDisposed ? "DISPOSED" : "ALIVE")}] {info.DebugName} ({info.TypeName}, {info.Guid}) - {info.PackageCount} packages cached");
+            }
+
+            var outPath = Path.Combine(Settings.OutputModPath, "AliveCacheReport.json");
+            File.WriteAllText(outPath, JsonConvert.SerializeObject(report, Formatting.Indented));
+            MilanLog.Information($"Wrote full PackageCache alive/disposed report to {outPath}");
         }
 
 #if DEBUG
@@ -486,6 +557,7 @@ namespace ProjectMilan
                 SetConsoleTitle(ConsoleTitlePostFix, $"Running {pipelineName}");
                 Stopwatch sw = Stopwatch.StartNew();
                 runPipeline();
+                MilanShared.DropMissingObjectCaches(); // Unbounded for the whole process otherwise - flush between pipelines so they don't accumulate all run.
                 sw.Stop();
                 MilanLog.Information($"Pipeline finished: {pipelineName} took {sw.ElapsedMilliseconds}ms");
                 pipelineTimes[pipelineName] = sw.ElapsedMilliseconds;
@@ -498,8 +570,8 @@ namespace ProjectMilan
 
         private static void RunResearch()
         {
-#if  DEBUG
-         
+#if DEBUG
+
             // Put your method in Research class and call it here.
             //Research.CopyPreview2();
             //return;

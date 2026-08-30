@@ -46,7 +46,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
             // canPromoteInto lets per-enemy caches promote repeatedly-hit files up here instead of reopening them
             // per-enemy; disposed with this pipeline so nothing outlives it.
-            using TieredPackageCache parentCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true);
+            using TieredPackageCache parentCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "MP4NewEnemies pipeline cache");
 
             foreach (var v in commonlyOpenedPackages)
             {
@@ -77,7 +77,7 @@ namespace ProjectMilan.Pipelines.Weapons
             enemyPipeline.LogCategory = $"{LOG_CATEGORY}-{enemyPipeline.PackageName}";
             MilanLog.Information($"Porting MP4Enemy {enemyPipeline.PackageName}", customPrefix: enemyPipeline.LogCategory);
             // Initialize cache
-            enemyPipeline.Cache = parentCache.ChainNewCache();
+            enemyPipeline.Cache = parentCache.ChainNewCache(debugName: $"MP4NewEnemies enemy cache ({enemyPipeline.PackageName})");
             enemyPipeline.Cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"MP4Enemies");
@@ -94,6 +94,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 MissingObjectResolver = MilanShared.MissingObjectResolverExportsAsImports,
                 GetVTableFromDonor = MilanShared.GetVTableFromDonor,
                 CustomFileResolver = MilanShared.LE3PackageResolver,
+                BaseFilesFileLib = LE3FileLibCache.GetBaseFilesFileLibFor(enemyPackage),
             };
 
             // Different forced export packages
@@ -220,6 +221,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 MissingObjectResolver = MilanShared.MissingObjectResolverExportsAsImports,
                 GetVTableFromDonor = MilanShared.GetVTableFromDonor,
                 CustomFileResolver = MilanShared.LE3PackageResolver,
+                BaseFilesFileLib = LE3FileLibCache.GetBaseFilesFileLibFor(enemyPackage),
             };
 
             // Different forced export packages
