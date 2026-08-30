@@ -26,13 +26,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Logs\" />
     <Folder Include="Pipelines\Levels\NewFolder\" />
     <Folder Include="Pipelines\Mod\Live\" />
     <Folder Include="Pipelines\Mod\BaseConfig\" />
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
-    <Folder Include="Pipelines\Shared\Compiling\ClassOverride\PostPorting\" />
     <Folder Include="Pipelines\Shared\Compiling\FunctionOverride\SFXGameInfoMP_Lobby\" />
     <Folder Include="Pipelines\Shared\Compiling\Functions\" />
     <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />
@@ -51,7 +51,7 @@
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
     <PackageReference Include="JetBrains.Profiler.SelfApi" Version="2.5.0" />
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.Debug" Version="3.0.0" />
     <PackageReference Include="SharpDX.D3DCompiler" Version="4.2.0" />
   </ItemGroup>
