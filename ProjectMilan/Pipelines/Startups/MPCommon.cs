@@ -96,35 +96,6 @@ namespace ProjectMilan.Pipelines.Startups
             }
             MPMerge.RunPipeline();
         }
-        
-        /// <summary>
-        /// This is required to make the build work. This will eventually need to go into a merge mod or be patched out.
-        /// </summary>
-        public static void HackPatchParents_Old()
-        {
-            return;
-            // No longer needed
-
-            if (MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, "SFXGame.pcc", out var sfxGameF))
-            {
-                var sfxgame = MEPackageHandler.OpenMEPackage(sfxGameF);
-                if (sfxgame.FindExport("SFXTelemetryGameSession.SetMPMatchSettings") == null)
-                {
-                    // Patch class
-                    MilanLog.Information("Patching in SFXGame.pcc 'SFXTelemetryGameSession' method stubs", customPrefix: LOG_CATEGORY);
-                    var classOverride = File.ReadAllText(MilanShared.GetClassOverride("SFXTelemetryGameSession"));
-                    UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
-                    {
-                        MissingObjectResolver = MilanShared.MissingObjectResolver,
-                        GetVTableFromDonor = MilanShared.GetVTableFromDonor
-                    };
-                    var lib = new FileLib(sfxgame);
-                    lib.Initialize(usop);
-                    var messages = UnrealScriptCompiler.CompileClass(sfxgame, classOverride, lib, usop, sfxgame.FindExport("SFXTelemetryGameSession"));
-                    sfxgame.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
-                }
-            }
-        }
 
 
         private static string GetPackageName(string sourceFilePath)
@@ -171,7 +142,12 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 Cache = cache,
                 MissingObjectResolver = MilanShared.MissingObjectResolver,
-                GetVTableFromDonor = MilanShared.GetVTableFromDonor
+                GetVTableFromDonor = MilanShared.GetVTableFromDonor,
+                // Without this, FileLib's base-file resolution (Core/Engine/SFXGame/etc, needed to
+                // resolve types referenced by the loose classes) loads straight from the live mounted
+                // game path via usop.Cache, bypassing BaseDeltaHandler's patched packages entirely.
+                // LE3PackageResolver checks MilanShared's patched global cache first.
+                CustomFileResolver = MilanShared.LE3PackageResolver
             };
             // Different forced export packages
             var looseClassPackages = new List<UnrealScriptCompiler.LooseClassPackage>();
@@ -220,25 +196,13 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 MilanShared.LogFailedFileLibInit(fl, "Failed to initialize MPCommon FileLib for function overrides!", LOG_CATEGORY);
             }
-            foreach (var file in Directory.GetFiles(GetMPCommonFunctionOverrideFolder(), "*.uc", SearchOption.AllDirectories))
+            foreach (var file in MilanShared.GetAllFunctionOverrides())
             {
-                var funcName = Path.GetFileNameWithoutExtension(file);
                 var className = Directory.GetParent(file).Name;
                 var classToUpdate = pcc.Exports.FirstOrDefault(x => x.ObjectName == className && x.IsClass);
-                MilanLog.Information($"Overriding function {funcName} in class {className} with override", customPrefix: LOG_CATEGORY);
-                var ucText = File.ReadAllText(file);
-                var periodCount = funcName.Split('.').Length;
-
-                if (periodCount > 1)
+                if (classToUpdate != null)
                 {
-                    // It's a sub function like a in a state
-                    var function = pcc.FindExport($"{classToUpdate.InstancedFullPath}.{funcName}");
-                    UnrealScriptCompiler.CompileFunction(function, ucText, fl, usop);
-                }
-                else
-                {
-                    // Add or replace to class
-                    UnrealScriptCompiler.AddOrReplaceInClass(classToUpdate, ucText, fl, usop);
+                    MilanShared.CompileFunctionOverride(pcc, classToUpdate, file, fl, usop, LOG_CATEGORY);
                 }
             }
 
@@ -254,14 +218,9 @@ namespace ProjectMilan.Pipelines.Startups
             MilanLog.Information($@"Saving {pcc.FileNameNoExtension}.pcc", customPrefix: LOG_CATEGORY);
             pcc.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.AddGlobalCachedPackage(pcc);
+            LE3FileLibCache.InitializeMPCommonFileLib(pcc);
             MilanShared.RefreshMilanFiles = true;
             return false;
-        }
-
-
-        private static string GetMPCommonFunctionOverrideFolder()
-        {
-            return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"FunctionOverride")).FullName;
         }
 
 
@@ -667,23 +626,24 @@ namespace ProjectMilan.Pipelines.Startups
         /// class set. The reactive loop still runs afterwards as a safety net for anything the manifest
         /// doesn't yet know about (e.g. a new class introduced by a game update).
         /// </summary>
-        private static void DecompileManifestedAutoDonorClasses(PackageCache cache)
+        private static void DecompileManifestedAutoDonorClasses(TieredPackageCache cache)
         {
             var manifest = LoadAutoDonorManifest();
             if (manifest.Count == 0)
                 return;
 
             MilanLog.Information($"Pre-decompiling {manifest.Count} known autodonor dependencies from manifest", customPrefix: LOG_CATEGORY);
-            foreach (var className in manifest)
+            Parallel.ForEach(manifest, new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, className =>
             {
                 if (AutoDonorClassAlreadyDecompiled(className))
-                    continue;
+                    return;
 
-                if (!TryResolveAndDecompileClassByName(className, cache, "manifested class"))
+                using var threadCache = cache.ChainNewCache(debugName: $"MPCommon manifested autodonor thread cache ({className})");
+                if (!TryResolveAndDecompileClassByName(className, threadCache, "manifested class"))
                 {
                     MilanLog.Warning($"  Manifested autodonor class '{className}' could not be resolved in LE3 or ME3 - it may have been renamed or removed upstream, dropping it from the manifest", customPrefix: LOG_CATEGORY);
                 }
-            }
+            });
         }
 
         /// <summary>
@@ -741,7 +701,8 @@ namespace ProjectMilan.Pipelines.Startups
         /// </summary>
         private static bool CompileMPCommon(MPCommonPipelineVars vars)
         {
-            var cache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3, false, true).ChainNewCache(false);
+            // NOTE: This cache is never explicitly Dispose()'d anywhere in this method - see memory investigation.
+            var cache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3, false, true, debugName: "MPCommon global ME3 root").ChainNewCache(false, debugName: "MPCommon CompileMPCommon cache (NEVER DISPOSED)");
             var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(), "Default.sfar");
             if (!File.Exists(dlcInFile))
             {
@@ -760,7 +721,7 @@ namespace ProjectMilan.Pipelines.Startups
 
             cache.InsertIntoCache(MilanShared.GetME3Package("Startup.pcc")); // This significantly improves performance by preventing opening it a ton
 
-            MilanShared.LogDonorMessages = false; // Suppress spammy messages
+            MilanLog.LogDonorMessages = false; // Suppress spammy messages
             foreach (var package in me3Packages)
             {
                 MilanLog.Information($"Decompiling MP classes in {package} --------------------");
@@ -812,7 +773,7 @@ namespace ProjectMilan.Pipelines.Startups
                 MilanLog.Information("Attempting recompile with new class data----------------------", customPrefix: LOG_CATEGORY);
             }
 
-            MilanShared.LogDonorMessages = false; // Turn on donor messaging.
+            MilanLog.LogDonorMessages = false; // Turn on donor messaging.
 
             if (!File.Exists(outPackage) || new FileInfo(outPackage).Length < 4096)
                 return false;
@@ -877,6 +838,7 @@ namespace ProjectMilan.Pipelines.Startups
             {
                 Cache = cache,
                 CustomFileResolver = classExp.Game == MEGame.LE3 ? MilanShared.LE3PackageResolver : MilanShared.ME3PackageResolver,
+                BaseFilesFileLib = classExp.Game == MEGame.LE3 ? LE3FileLibCache.GetBaseFilesFileLibFor(classExp.FileRef) : null,
             };
 
             fileLib ??= new FileLib(classExp.FileRef);
