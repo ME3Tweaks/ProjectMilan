@@ -262,37 +262,41 @@ namespace ProjectMilanCore
 
 
         private static CaseInsensitiveDictionary<IMEPackage> TestPatchPackageMap;
+        private static readonly object testPatchPackageMapSyncObj = new();
 
         public static ExportEntry GetTestPatchClass(ExportEntry classExp)
         {
-            if (TestPatchPackageMap == null)
+            lock (testPatchPackageMapSyncObj)
             {
-                MilanLog.Information(@"Reading ME3 DLC_TestPatch");
-                var sfarPath = Path.Combine(ME3Directory.BioGamePath, @"Patches", @"PCConsole", @"Patch_001.sfar");
-                var sfar = new DLCPackage(sfarPath);
-                TestPatchPackageMap = new(sfar.Files.Count);
-
-                foreach (var fe in sfar.Files)
+                if (TestPatchPackageMap == null)
                 {
-                    if (fe.isActualFile && fe.FileName.RepresentsPackageFilePath())
+                    MilanLog.Information(@"Reading ME3 DLC_TestPatch");
+                    var sfarPath = Path.Combine(ME3Directory.BioGamePath, @"Patches", @"PCConsole", @"Patch_001.sfar");
+                    var sfar = new DLCPackage(sfarPath);
+                    TestPatchPackageMap = new(sfar.Files.Count);
+
+                    foreach (var fe in sfar.Files)
                     {
-                        var package = MEPackageHandler.OpenMEPackageFromStream(sfar.DecompressEntry(fe), fe.FileName);
-                        var inventoryClass = package.Exports.FirstOrDefault(x => x.IsClass);
-                        if (inventoryClass != null)
+                        if (fe.isActualFile && fe.FileName.RepresentsPackageFilePath())
                         {
-                            // Some TP things are not classes like GuidCache.
-                            TestPatchPackageMap[inventoryClass.ObjectName] = package;
+                            var package = MEPackageHandler.OpenMEPackageFromStream(sfar.DecompressEntry(fe), fe.FileName);
+                            var inventoryClass = package.Exports.FirstOrDefault(x => x.IsClass);
+                            if (inventoryClass != null)
+                            {
+                                // Some TP things are not classes like GuidCache.
+                                TestPatchPackageMap[inventoryClass.ObjectName] = package;
+                            }
                         }
                     }
                 }
-            }
 
-            if (TestPatchPackageMap.TryGetValue(classExp.ObjectName, out var tpClass))
-            {
-                return tpClass.Exports.FirstOrDefault(x => x.IsClass && x.ObjectName == classExp.ObjectName);
-            }
+                if (TestPatchPackageMap.TryGetValue(classExp.ObjectName, out var tpClass))
+                {
+                    return tpClass.Exports.FirstOrDefault(x => x.IsClass && x.ObjectName == classExp.ObjectName);
+                }
 
-            return null;
+                return null;
+            }
         }
 
         public static string GetClassOverride(string className)
@@ -301,6 +305,115 @@ namespace ProjectMilanCore
             if (File.Exists(path))
                 return path;
             return null;
+        }
+
+        public static string GetFunctionOverrideFolder()
+        {
+            return Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, @"Shared", @"Compiling", @"FunctionOverride")).FullName;
+        }
+
+        private static Dictionary<string, List<string>> _functionOverrideIndex;
+        private static readonly object FunctionOverrideIndexLock = new();
+        private static readonly List<string> EmptyFunctionOverrideList = new();
+
+        /// <summary>
+        /// Table-of-contents index of function override files (className -> override files), built once on first
+        /// access by scanning the FunctionOverride folder, and reused afterward. This lookup is checked once per
+        /// ported function during cross-game porting, so re-scanning the folder from disk on every call would be
+        /// very costly across the thousands of functions a typical port touches.
+        /// </summary>
+        private static Dictionary<string, List<string>> GetFunctionOverrideIndex()
+        {
+            if (_functionOverrideIndex != null)
+                return _functionOverrideIndex;
+
+            lock (FunctionOverrideIndexLock)
+            {
+                if (_functionOverrideIndex == null)
+                {
+                    var index = new Dictionary<string, List<string>>();
+                    foreach (var file in Directory.GetFiles(GetFunctionOverrideFolder(), "*.uc", SearchOption.AllDirectories))
+                    {
+                        var className = Directory.GetParent(file).Name;
+                        if (!index.TryGetValue(className, out var files))
+                        {
+                            files = new List<string>();
+                            index[className] = files;
+                        }
+                        files.Add(file);
+                    }
+                    _functionOverrideIndex = index;
+                }
+            }
+
+            return _functionOverrideIndex;
+        }
+
+        /// <summary>
+        /// Finds function override .uc files for the given class, matched by immediate parent folder name.
+        /// Backed by an in-memory index built once from disk - see <see cref="GetFunctionOverrideIndex"/>.
+        /// </summary>
+        public static List<string> GetFunctionOverridesForClass(string className)
+        {
+            return GetFunctionOverrideIndex().TryGetValue(className, out var files) ? files : EmptyFunctionOverrideList;
+        }
+
+        /// <summary>
+        /// All function override .uc files, across all classes. Backed by the same in-memory index as
+        /// <see cref="GetFunctionOverridesForClass"/>, so this doesn't re-scan disk either.
+        /// </summary>
+        public static IEnumerable<string> GetAllFunctionOverrides()
+        {
+            return GetFunctionOverrideIndex().Values.SelectMany(x => x);
+        }
+
+        /// <summary>
+        /// Compiles a single function override file into the given class export. Dotted filenames
+        /// (e.g. State.Function.uc) target a sub-function inside a state.
+        /// </summary>
+        public static void CompileFunctionOverride(IMEPackage pcc, ExportEntry classExport, string overrideFile, FileLib fl, UnrealScriptOptionsPackage usop, string logCategory)
+        {
+            var funcName = Path.GetFileNameWithoutExtension(overrideFile);
+            MilanLog.Information($"Overriding function {funcName} in class {classExport.ObjectName} with override", customPrefix: logCategory);
+            var ucText = File.ReadAllText(overrideFile);
+
+            if (funcName.Contains('.'))
+            {
+                // It's a sub function like a in a state
+                var function = pcc.FindExport($"{classExport.InstancedFullPath}.{funcName}");
+                UnrealScriptCompiler.CompileFunction(function, ucText, fl, usop);
+            }
+            else
+            {
+                // Add or replace to class
+                UnrealScriptCompiler.AddOrReplaceInClass(classExport, ucText, fl, usop);
+            }
+        }
+
+        /// <summary>
+        /// Looks up a function override for the given (source-game) function export, deriving its owning class name
+        /// and function name (dotted with the state name for a sub-function inside a state) from its parent chain.
+        /// Returns the override text, or null if no override exists for this function.
+        /// </summary>
+        public static string GetFunctionOverrideText(ExportEntry sourceFunc, out string className, out string funcName)
+        {
+            if (sourceFunc.Parent is ExportEntry stateExp && stateExp.ClassName == "State")
+            {
+                className = (stateExp.Parent as ExportEntry)?.ObjectName;
+                funcName = $"{stateExp.ObjectName}.{sourceFunc.ObjectName}";
+            }
+            else
+            {
+                className = (sourceFunc.Parent as ExportEntry)?.ObjectName;
+                funcName = sourceFunc.ObjectName;
+            }
+
+            if (className == null)
+                return null;
+
+            var targetFuncName = funcName;
+            var overrideFile = GetFunctionOverridesForClass(className).FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == targetFuncName);
+            return overrideFile != null ? File.ReadAllText(overrideFile) : null;
         }
 
         public static MemoryStream GetME3SFARFile(string sourceFileName, bool returnOnDisk = false)
@@ -446,7 +559,7 @@ namespace ProjectMilanCore
             // We have to fake a dlc dir for AFC's  'get files loaded in game'
             var fakeCooked = GetME3DirectAccessCache();
             MountFile mf = new MountFile() { Game = MEGame.LE3, MountPriority = 50000, MountFlags = new MountFlag(EME3MountFileFlag.LoadsInMultiplayer) };
-            mf.WriteMountFile(Path.Combine(fakeCooked, "mount.dlc"));       
+            mf.WriteMountFile(Path.Combine(fakeCooked, "mount.dlc"));
 
             // List of all suffixes to ensure
             var audioSuffixes = BaseBuildSettings.SupportedVOLanguages.Select(x => x.ToString()).Concat(new[] { "SFX" });
@@ -602,8 +715,20 @@ namespace ProjectMilanCore
                 GenerateImportsForGlobalFiles = true,
                 DestinationCustomImportFileResolver = LE3PackageResolver,
                 SourceCustomImportFileResolver = ME3PackageResolver,
-                CustomDonorImporter = customDonorImporter
+                CustomDonorImporter = customDonorImporter,
+                CrossGameFunctionSourceOverride = (sourceFunc, decompiledText) =>
+                {
+                    var overrideText = GetFunctionOverrideText(sourceFunc, out var overrideClassName, out var overrideFuncName);
+                    if (overrideText != null)
+                    {
+                        MilanLog.Information($"Overriding function {overrideFuncName} in class {overrideClassName} with override during cross-game port", customPrefix: logCategory);
+                        return overrideText;
+                    }
+                    return decompiledText;
+                }
             };
+            try
+            {
             var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
                 destPackage, null, true,
                 rop,
@@ -624,7 +749,8 @@ namespace ProjectMilanCore
             {
                 Cache = cache,
                 CustomFileResolver = MilanShared.LE3PackageResolver,
-                MissingObjectResolver = MilanShared.MissingObjectResolver
+                MissingObjectResolver = MilanShared.MissingObjectResolver,
+                BaseFilesFileLib = LE3FileLibCache.GetBaseFilesFileLibFor(destPackage),
             };
             FileLib lib = new FileLib(destPackage);
             if (!lib.Initialize(usop))
@@ -743,6 +869,11 @@ namespace ProjectMilanCore
             MilanLog.Information("Saving package", customPrefix: logCategory);
             destPackage.Save(diskIOSyncLock: DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
+            }
+            finally
+            {
+                rop.Dispose();
+            }
         }
 
         /// <summary>
@@ -775,6 +906,7 @@ namespace ProjectMilanCore
             UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
             {
                 Cache = cache,
+                BaseFilesFileLib = classExp.Game == MEGame.LE3 ? LE3FileLibCache.GetBaseFilesFileLibFor(classExp.FileRef) : null,
             };
 
             if (fileLib == null)
@@ -830,16 +962,26 @@ namespace ProjectMilanCore
         /// </summary>
         private static MilanPackageCache me3GlobalCache;
 
+        /// <summary>
+        /// Optional hook so a higher layer (BaseDeltaHandler) can supply a patched replacement for a
+        /// vanilla LE3 file while the global package cache is being built. Consulted once per filename
+        /// as <see cref="InitGlobalPackages"/> loads the "safe to import from" list, so a patched file
+        /// lands in the cache in the correct build order (and any donor lookups a patch target makes
+        /// while it's being built can already see earlier patched files) instead of being inserted
+        /// after the fact. Return null to fall back to loading vanilla for that file.
+        /// </summary>
+        public static Func<string, IMEPackage> LE3PatchedPackageProvider;
+
         public static void AddGlobalCachedPackage(IMEPackage package)
         {
             if (package.Game == MEGame.LE3)
             {
-                if (le3GlobalCache == null) InitGlobalPackages(MEGame.LE3);
+                if (le3GlobalCache == null) le3GlobalCache = InitGlobalPackages(MEGame.LE3);
                 le3GlobalCache.InsertIntoCache(package);
             }
             else
             {
-                if (me3GlobalCache == null) InitGlobalPackages(MEGame.ME3);
+                if (me3GlobalCache == null) me3GlobalCache = InitGlobalPackages(MEGame.ME3);
                 me3GlobalCache.InsertIntoCache(package);
             }
         }
@@ -969,10 +1111,21 @@ namespace ProjectMilanCore
 
         private static MilanPackageCache InitGlobalPackages(MEGame game)
         {
+            MilanLog.Information($"Loading {game} global cache...");
+
             // Todo: Make these use backup paths instead of live paths if available.
             // This will make it more consistent
-            // Todo: Use ProjectMilan's patched versions or these will be wrong!
-            MilanPackageCache cache = new MilanPackageCache();
+            MilanPackageCache cache = new MilanPackageCache { DebugName = $"{game} global cache (process lifetime)" };
+
+            // Assign the static field to this (still-empty) cache before populating it, rather than
+            // after this method returns. A patch target built via LE3PatchedPackageProvider below may
+            // itself trigger a donor lookup back through GetLE3GlobalCachedPackage/LE3PackageResolver
+            // while this method is still running; assigning early means that re-entrant lookup sees the
+            // cache as it's being built instead of null (which would otherwise start a second, overlapping
+            // initialization).
+            if (game == MEGame.ME3) me3GlobalCache = cache;
+            else le3GlobalCache = cache;
+
             if (game == MEGame.ME3)
             {
                 cache.InsertIntoCache(MEPackageHandler.OpenMEPackages(EntryImporter
@@ -986,18 +1139,47 @@ namespace ProjectMilanCore
             }
             else
             {
-                cache.InsertIntoCache(MEPackageHandler.OpenMEPackages(EntryImporter.FilesSafeToImportFrom(MEGame.LE3).Select(x => Path.Combine(MEDirectories.GetCookedPath(MEGame.LE3), x))));
+                // Loaded one file at a time (rather than one bulk OpenMEPackages call) so
+                // LE3PatchedPackageProvider gets a chance to substitute a patched version - e.g.
+                // BaseDeltaHandler supplying a compiled SFXGame.pcc - in the correct build order.
+                foreach (var file in EntryImporter.FilesSafeToImportFrom(MEGame.LE3))
+                {
+                    var package = LE3PatchedPackageProvider?.Invoke(file)
+                        ?? MEPackageHandler.OpenMEPackage(Path.Combine(MEDirectories.GetCookedPath(MEGame.LE3), file));
+                    cache.InsertIntoCache(package);
+                }
+
+                // SFXGame is the last file in FileLib.BaseFileNames(LE3) - build the shared base FileLib
+                // other LE3 FileLib construction can tier off of, now that it's cached (and, if patched,
+                // patched) above.
+                LE3FileLibCache.InitializeLE3BaseFileLib(cache.GetCachedPackage("SFXGame.pcc", false));
+
+                // Extra loaded common packages
                 var le3LoadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
                 cache.InsertIntoCache(MEPackageHandler.OpenMEPackage(le3LoadedFiles["BIO_COMMON.pcc"])); // Postload base file for nearly everything; LE3PackageResolver only checks this cache, not the warm TieredPackageCache, so it needs to be here too.
             }
 
+            MilanLog.Information($"{game} global cache loaded ({cache.GetPackages().Count()} packages)");
             return cache;
         }
 
         private const string LOG_CATEGORY_MOR = @"MILAN-MissingObjectResolver";
 
-        public static PackageCache LE3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
-        public static PackageCache ME3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3).ChainNewCache();
+        public static PackageCache LE3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "LE3 missing-object resolver root").ChainNewCache(debugName: "LE3 missing-object resolver cache (cleared after each pipeline)");
+        public static PackageCache ME3MissingObjectCache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3, debugName: "ME3 missing-object resolver root").ChainNewCache(debugName: "ME3 missing-object resolver cache (cleared after each pipeline)");
+
+        /// <summary>
+        /// Releases the packages held by <see cref="LE3MissingObjectCache"/> and <see cref="ME3MissingObjectCache"/>.
+        /// These have no size cap, so left alone they grow for the entire process lifetime as every donor lookup
+        /// across the whole build adds to them, which can meaningfully add up over a full run. Call this between
+        /// pipelines to keep them from accumulating unboundedly - the cache objects themselves are unaffected and
+        /// will simply reopen packages from disk on the next lookup that needs them.
+        /// </summary>
+        public static void DropMissingObjectCaches()
+        {
+            LE3MissingObjectCache.ReleasePackages();
+            ME3MissingObjectCache.ReleasePackages();
+        }
 
         public static IEntry MissingObjectResolverExportsAsImports(IMEPackage package, string ifp, string classname)
         {
@@ -1008,12 +1190,6 @@ namespace ProjectMilanCore
         {
             return MissingObjectResolver(package, ifp, false);
         }
-
-
-        /// <summary>
-        /// Set to false to reduce text spam.
-        /// </summary>
-        public static bool LogDonorMessages = true;
 
         private static IEntry MissingObjectResolver(IMEPackage package, string ifp, bool portExportsAsImports)
         {
@@ -1060,7 +1236,7 @@ namespace ProjectMilanCore
                         var donorEntry = donorP.FindEntry(ifp);
                         if (donorEntry != null)
                         {
-                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}", shouldLog: LogDonorMessages, customPrefix: LOG_CATEGORY_MOR);
+                            MilanLog.Warning($"  Using ME3 donor object {ifp} from {possibleDonor}", shouldLog: MilanLog.LogDonorMessages, customPrefix: LOG_CATEGORY_MOR);
                             return PortDonorIntoPackage(ME3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR, true);
                         }
                     }
@@ -1081,7 +1257,7 @@ namespace ProjectMilanCore
                     var donorEntry = donorP.FindEntry(ifp);
                     if (donorEntry != null)
                     {
-                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}", shouldLog: LogDonorMessages, customPrefix: LOG_CATEGORY_MOR);
+                        MilanLog.Information($"  Using donor object {ifp} from {possibleDonor}", shouldLog: MilanLog.LogDonorMessages, customPrefix: LOG_CATEGORY_MOR);
                         return PortDonorIntoPackage(LE3MissingObjectCache, donorEntry, package, LOG_CATEGORY_MOR, portExportsAsImports);
                     }
                     else
@@ -1116,7 +1292,7 @@ namespace ProjectMilanCore
                     }
 
                     // Create parents
-                    MilanLog.Information($"    Porting as import", shouldLog: LogDonorMessages, customPrefix: logCategory);
+                    MilanLog.Information($"    Porting as import", shouldLog: MilanLog.LogDonorMessages, customPrefix: logCategory);
                     var parent = EntryExporter.PortParents(donorEntry, package, true);
                     ImportEntry imp = new ImportEntry(donorExport, parent.UIndex, package);
                     package.AddImport(imp);
@@ -1124,7 +1300,7 @@ namespace ProjectMilanCore
                 }
                 if (donorExport.FileRef.FileNameNoExtension == "SFXGame")
                     Debugger.Break();
-                MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", shouldLog: LogDonorMessages, customPrefix: logCategory);
+                MilanLog.Information($"    Porting from {donorExport.FileRef.FileNameNoExtension}", shouldLog: MilanLog.LogDonorMessages, customPrefix: logCategory);
                 var rop = new RelinkerOptionsPackage()
                 {
                     Cache = globalCache,
@@ -1133,8 +1309,15 @@ namespace ProjectMilanCore
                     PortImportsMemorySafe = true, // MPCommon might try to reference BIO_COMMON which we do not want.
                     PortExportsAsImportsWhenPossible = portExportsAsImports
                 };
-                var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, globalCache, customROP: rop);
-                return newExp;
+                try
+                {
+                    var errors = EntryExporter.ExportExportToPackage(donorExport, package, out var newExp, globalCache, customROP: rop);
+                    return newExp;
+                }
+                finally
+                {
+                    rop.Dispose();
+                }
             }
 
             return null;
@@ -1310,14 +1493,14 @@ namespace ProjectMilanCore
         {
             lock (commonCacheSyncObj)
             {
-                globalCache ??= TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
+                globalCache ??= TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Global LE3 safe-to-import cache (process lifetime)");
 
                 if (warmCache == null)
                 {
                     MilanLog.Information("Loading Milan warm TieredPackageCache");
                     // Chain onto MPCommon if it's already been built; otherwise onto global directly - PromoteMPCommonIntoCacheChain
                     // will splice MPCommon in above us later if it wasn't ready yet.
-                    warmCache = (mpCommonPackageCache ?? globalCache).ChainNewCache();
+                    warmCache = (mpCommonPackageCache ?? globalCache).ChainNewCache(debugName: "MPCommon warm cache (dropped after Levels)");
 
                     var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
                     // According to TieredPackageCache heatmap these are hot files - loading more than 10 times in MilanMain
@@ -1358,6 +1541,22 @@ namespace ProjectMilanCore
         }
 
         /// <summary>
+        /// Returns the base tiered cache chain (global safe-to-import -&gt; BIOP_MP_COMMON once built) WITHOUT the
+        /// warm tier of extra hot files. Use this instead of <see cref="GetMPCommonTieredPackageCache"/> for
+        /// callers that only need the core global/MPCommon files (e.g. verification passes) and shouldn't pull in
+        /// - or trigger creation of - the warm cache. Any additional packages such a caller happens to need (e.g.
+        /// direct parents of what it's checking) will simply be opened into its own chained cache as normal.
+        /// </summary>
+        public static TieredPackageCache GetMPCommonBaseTieredPackageCache()
+        {
+            lock (commonCacheSyncObj)
+            {
+                globalCache ??= TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Global LE3 safe-to-import cache (process lifetime)");
+                return mpCommonPackageCache ?? globalCache;
+            }
+        }
+
+        /// <summary>
         /// Splices a tier holding just BIOP_MP_COMMON in between the global tier and the warm cache. Call this once
         /// the MPCommon pipeline has finished building BIOP_MP_COMMON.pcc - before that, the file doesn't exist, so
         /// this tier can't be populated. If the warm cache was already built (e.g. the MPCommon pipeline itself used
@@ -1369,10 +1568,17 @@ namespace ProjectMilanCore
         {
             lock (commonCacheSyncObj)
             {
-                globalCache ??= TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
+                globalCache ??= TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Global LE3 safe-to-import cache (process lifetime)");
 
-                mpCommonPackageCache = globalCache.ChainNewCache();
-                mpCommonPackageCache.GetCachedPackage(Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", "BIOP_MP_COMMON.pcc")); // Cache MPCommon as it will be used by every later pipeline.
+                mpCommonPackageCache = globalCache.ChainNewCache(debugName: "MPCommon BIOP_MP_COMMON cache (process lifetime)");
+                var mpCommonPkg = mpCommonPackageCache.GetCachedPackage(Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", "BIOP_MP_COMMON.pcc")); // Cache MPCommon as it will be used by every later pipeline.
+
+                // Safety net: MPCommon.CompileMPCommonPackage and the checkpoint-restore path in
+                // Program.cs both already do this earlier (so NonStartupPipeline, which runs before
+                // this method on the fresh-build path, can benefit too) - this is a no-op then. It only
+                // does real work if neither of those ran (e.g. RunMPCommonPipeline is false and no
+                // checkpoint was used, because BIOP_MP_COMMON already existed from a prior run).
+                LE3FileLibCache.InitializeMPCommonFileLib(mpCommonPkg);
 
                 if (warmCache != null)
                 {
@@ -1480,7 +1686,7 @@ namespace ProjectMilanCore
             {
                 MilanLog.Information($"Checking package {Path.GetFileName(package)}", customPrefix: category);
                 //var me3File = MilanShared.GetME3Package(Path.GetFileName(package));
-                var le3File = MEPackageHandler.OpenMEPackage(package, diskIOSyncLock: DiskIOSyncLock);
+                using var le3File = MEPackageHandler.OpenMEPackage(package, diskIOSyncLock: DiskIOSyncLock);
 
                 foreach (var tex in le3File.Exports.Where(x => x.IsTexture() && ShouldExternalize(rootTextures, x.idxLink)))
                 {
@@ -1592,27 +1798,26 @@ namespace ProjectMilanCore
 
             MilanLog.Information(@"Compiling LE3 class package", customPrefix: logCategory);
             return true;
-            /*
-            MessageLog log = UnrealScriptCompiler.CompileLooseClasses(le3Package, classes, usop);
 
-            if (log.HasErrors)
-            {
-                //if (AttemptToFindMissingClasses(log, pipeline, out var containingPackage, out var lClass))
-                //{
-                //    AddClassToCompilation(classes, containingPackage, lClass);
-                //    return false; // False - forces recomp
-                //}
-                MilanLog.Error($"PRE-PORTING OF CLASSES FAILED IN PACKAGE {le3Package.FileNameNoExtension}", customPrefix: logCategory);
-                foreach (var error in log.AllErrors)
-                {
-                    MilanLog.Error($"  {error}", customPrefix: logCategory);
-                }
+            //MessageLog log = UnrealScriptCompiler.CompileLooseClasses(le3Package, classes, usop);
 
-                return false;
-            }
+            //if (log.HasErrors)
+            //{
+            //    //if (AttemptToFindMissingClasses(log, pipeline, out var containingPackage, out var lClass))
+            //    //{
+            //    //    AddClassToCompilation(classes, containingPackage, lClass);
+            //    //    return false; // False - forces recomp
+            //    //}
+            //    MilanLog.Error($"PRE-PORTING OF CLASSES FAILED IN PACKAGE {le3Package.FileNameNoExtension}", customPrefix: logCategory);
+            //    foreach (var error in log.AllErrors)
+            //    {
+            //        MilanLog.Error($"  {error}", customPrefix: logCategory);
+            //    }
 
-            return true;
-            */
+            //    return false;
+            //}
+
+            //return true;
         }
 
         /// <summary>
@@ -1631,6 +1836,19 @@ namespace ProjectMilanCore
 
             var cleanedStr = string.Join(Environment.NewLine, cleanedLines);
             return cleanedStr;
+        }
+
+        /// <summary>
+        /// Drops loaded objects that are for ME3->LE3 porting
+        /// </summary>
+        public static void DropPortingCaches()
+        {
+            MilanLog.Information("Dropping porting cache objects");
+            DropWarmTieredPackageCache(); // Release the warm-file cache; BIOP_MP_COMMON itself stays cached for the rest of the run
+            ME3ObjectDB = null;
+            ME3DLCFileMap = null;
+            me3GlobalCache?.Dispose();
+            me3GlobalCache = null;
         }
     }
 }

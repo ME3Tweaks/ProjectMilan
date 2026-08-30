@@ -1,5 +1,6 @@
 ﻿using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
+using ProjectMilanCore;
 using Serilog;
 
 // Ported from ME3TweaksCore
@@ -14,6 +15,11 @@ namespace ProjectMilan
         /// Logging prefix for Project Milan logs.
         /// </summary>
         private const string InternalLoggingPrefix = @"MILAN";
+
+        /// <summary>
+        /// Set to false to reduce text spam during content porting
+        /// </summary>
+        public static bool LogDonorMessages = true;
 
         /// <summary>
         /// Denotes a new session in the log
@@ -142,20 +148,15 @@ namespace ProjectMilan
 
         public static void CreateLogger()
         {
+            var sessionId = DateTime.Now.ToString("yyyyMMdd_HHmmss");
             Log.Logger = new LoggerConfiguration()
                 // Write to the console
                 .WriteTo.Console()
 
-                // Write to disk file
-#if FILELOGGING
+                // Write to disk file (for reviewing)
                 // File based logging
-                //.WriteTo
-                //.File(Path.Combine(MCoreFilesystem.GetLogDir(), $@"{Prefix}-.txt"),
-                //    rollingInterval: RollingInterval.Day,
-                //    fileSizeLimitBytes: FileSize.MebiByte * 10, // 10 MB
-                //                                                // shared: true, // Allow us to read log without closing it // doesn't work in shared mode
-                //    hooks: new CaptureFilePathHook()) // Allow us to capture current log path 
-#endif
+                .WriteTo
+                .File(Path.Combine(MilanShared.PipelineRoot, "..", "Logs", $@"ProjectMilan_{sessionId}.txt"), retainedFileCountLimit: 3, shared: true)
 
 #if DEBUG
                 // Write to Visual Studio debug console
