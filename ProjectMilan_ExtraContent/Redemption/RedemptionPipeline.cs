@@ -74,7 +74,7 @@ namespace ProjectMilan_ExtraContent.Redemption
             // Causes failure if it doesn't exist.
             var test = CrossGenVShared.SourceFilesFolder;
 
-            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3);
+            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Redemption BuildCrossgenLevel global LE3 root");
             foreach (var level in CrossGenVShared.CrossgenLevels.Where(x => x.Enabled))
             {
                 CrossGenVShared.BuildLevel(level, cache);

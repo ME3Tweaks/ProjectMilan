@@ -142,7 +142,7 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
         {
             // 1. Make BioP
             MilanLog.Information($@"Beginning crossgen level port: {info.MapName}", customPrefix: info.LogCategory);
-            info.Cache = parent.ChainNewCache();
+            info.Cache = parent.ChainNewCache(debugName: $"CrossGenV level cache (NEVER DISPOSED) ({info.MapName})");
 
             info.OutputPath = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole", @"Levels", info.MapName);
             Directory.CreateDirectory(info.OutputPath);

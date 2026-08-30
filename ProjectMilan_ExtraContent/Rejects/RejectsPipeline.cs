@@ -33,7 +33,7 @@ namespace ProjectMilan_ExtraContent.Rejects
         public class RejectVars
         {
             // Cannot use the MPCommon cache here as it may not be in the destination folder.
-            public PackageCache Cache { get; set; } = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+            public PackageCache Cache { get; set; } = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Rejects global LE3 root").ChainNewCache(debugName: "RejectVars.Cache (NEVER DISPOSED)");
 
             public readonly CaseInsensitiveDictionary<string> LoadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3);
 
