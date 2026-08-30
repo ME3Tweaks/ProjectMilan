@@ -133,6 +133,7 @@ namespace ProjectMilanCore
                     {
                         Cache = cache,
                         CustomFileResolver = MilanShared.LE3PackageResolver,
+                        BaseFilesFileLib = LE3FileLibCache.GetBaseFilesFileLibFor(classExport.FileRef),
                     };
                     MilanLog.Information($"  Fixing VTable {classExport.InstancedFullPath} ({classExport.FileRef.FileNameNoExtension}) via class recompile", customPrefix: LOG_CATEGORY);
                     if (lib == null)
@@ -178,6 +179,7 @@ namespace ProjectMilanCore
             {
                 Cache = cache,
                 CustomFileResolver = MilanShared.LE3PackageResolver,
+                BaseFilesFileLib = LE3FileLibCache.GetBaseFilesFileLibFor(package),
             };
             var lib = new FileLib(package);
             if (!lib.Initialize(usop))
