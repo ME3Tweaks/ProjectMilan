@@ -126,7 +126,10 @@ namespace ProjectMilan.Pipelines.Verify
 
         private static void VerifyVTables(IMEPackage package)
         {
-            var tpc = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache();
+            // Chains onto the base Global -> MPCommon tier, not the warm cache - verification doesn't hit the warm
+            // tier's hot files enough to be worth pulling them in; anything it does need beyond SFXGame/Engine/MPCommon
+            // (e.g. direct parents of what's being checked) is opened into this chained cache as normal.
+            using var tpc = MilanShared.GetMPCommonBaseTieredPackageCache().ChainNewCache(debugName: $"VerifyMod VerifyVTables cache ({package.FileNameNoExtension})");
 
             // This should:
             // Check vtable matching
@@ -139,6 +142,7 @@ namespace ProjectMilan.Pipelines.Verify
                 {
                     Cache = tpc,
                     CustomFileResolver = MilanShared.LE3PackageResolver,
+                    BaseFilesFileLib = LE3FileLibCache.GetBaseFilesFileLibFor(package),
                 };
 
                 // Initialize filelib if it wasn't.

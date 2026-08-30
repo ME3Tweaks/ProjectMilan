@@ -66,7 +66,7 @@ namespace ProjectMilan.Pipelines.Texture
             // Convert them all to BC7
 
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
-            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3).ChainNewCache();
+            using TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "TFCBuild global LE3 root").ChainNewCache(debugName: "TFCBuild UpdateTextures cache");
             foreach (var pf in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Checking package {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);

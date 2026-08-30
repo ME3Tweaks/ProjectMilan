@@ -126,7 +126,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             MELoadedFiles.InvalidateCaches();
             var packages = Directory.GetFiles(mapOutputPath, "*.udk", SearchOption.TopDirectoryOnly).Concat(Directory.GetFiles(assetOutputPath, "*.udk", SearchOption.TopDirectoryOnly));
 
-            var packageCache = level.Cache.ChainNewCache();
+            using var packageCache = level.Cache.ChainNewCache(debugName: $"StaticLightingExport UDK import-resolve cache ({level.BioP})");
             var gameFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.UDK);
             bool allImportsResolved = true;
 

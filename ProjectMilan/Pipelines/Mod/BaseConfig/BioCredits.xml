@@ -9,7 +9,22 @@
 			<Property name="columnpadding" type="2">30</Property>
 			<Property name="confirmexitmessage" type="2">343062</Property>
 			<Property name="credits">
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=342757, Names=342910, StartTime=1.5\t)</Value>
+				<!-- MILAN CHANGE -->
+				<!-- We do this here because DLC_MOD_ProjectMilan does not mount until loading into MP mode,
+				     plus it would be horrible to do this in an override config. -->
+
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30000, Names=30001, StartTime=1.5\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30002, Names=30016, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30003, Names=30016, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30004, Names=30005, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30006, Names=30007, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30008, Names=30009, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30010, Names=30011, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30012, Names=30013, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30014, Names=30015, DelayTime=1.0\t)</Value>
+
+				<!-- END MILAN CHANGE -->
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=342757, Names=342910, DelayTime=1.5\t)</Value>
 				<Value type="2">(Type=CREDIT_Flashing,\tTitle=342758, Names=342911, DelayTime=.35\t)</Value>
 				<Value type="2">(Type=CREDIT_Flashing,\tTitle=723655, Names=391353, DelayTime=.35\t)</Value>
 				<Value type="2">(Type=CREDIT_Flashing,\tTitle=342760, Names=342913, DelayTime=.35\t)</Value>

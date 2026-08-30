@@ -96,9 +96,14 @@ namespace ProjectMilan.Pipelines.Levels
             // Chained to the long-lived MPCommon tier so files hit repeatedly across levels (but not globally
             // hot enough to be in MPCommon) get promoted here instead of reopened per-level. Disposed once
             // every level is done, so nothing here outlives the Levels pipeline (which runs last).
-            using var parent = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true);
+            using var parent = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "MPLevels pipeline cache");
             foreach (var level in levelVars.LevelPipelines)
             {
+                //if (/*level.BioP != "BioP_MPHosp" &&*/ level.BioP != "BioP_MPJngl")
+                //{
+                //    continue;
+                //}
+
                 if (!level.Enabled)
                 {
                     // This level is not marked for porting currently.
@@ -145,7 +150,7 @@ namespace ProjectMilan.Pipelines.Levels
             MilanLog.Information($@"Beginning generic level port: {levelPipeline.BioP}", customPrefix: levelPipeline.LogCategory);
 
             // Initialize cache
-            levelPipeline.Cache = parent.ChainNewCache();
+            levelPipeline.Cache = parent.ChainNewCache(debugName: $"MPLevels basegame level cache ({levelPipeline.BioP})");
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Levels", levelPipeline.BioP);
             Directory.CreateDirectory(outputPath);
@@ -189,7 +194,7 @@ namespace ProjectMilan.Pipelines.Levels
             MilanLog.Information($@"Beginning generic level port: {levelPipeline.BioP}", customPrefix: levelPipeline.LogCategory);
 
             // Initialize cache
-            levelPipeline.Cache = parent.ChainNewCache();
+            levelPipeline.Cache = parent.ChainNewCache(debugName: $"MPLevels level cache ({levelPipeline.BioP})");
 
             var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"Levels", levelPipeline.BioP);
             Directory.CreateDirectory(outputPath);

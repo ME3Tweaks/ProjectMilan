@@ -202,9 +202,7 @@ namespace ProjectMilan.Pipelines.Startups
             Parallel.ForEach(vars.PackageFiles.Distinct(),
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
                 {
-                    //if (packageBaseName is not "SFXMobileAnnex")
-                    //    return;
-                    using var cache = pipelineCache.ChainNewCache();
+                    using var cache = pipelineCache.ChainNewCache(debugName: $"NonStartups file cache ({packageBaseName})");
                     //cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
                     MilanLog.Information($"Porting file {packageBaseName}", customPrefix: LOG_CATEGORY);
                     var packageName = $"{packageBaseName}.pcc";

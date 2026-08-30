@@ -701,8 +701,7 @@ namespace ProjectMilan.Pipelines.Startups
         /// </summary>
         private static bool CompileMPCommon(MPCommonPipelineVars vars)
         {
-            // NOTE: This cache is never explicitly Dispose()'d anywhere in this method - see memory investigation.
-            var cache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3, false, true, debugName: "MPCommon global ME3 root").ChainNewCache(false, debugName: "MPCommon CompileMPCommon cache (NEVER DISPOSED)");
+            using var cache = TieredPackageCache.GetGlobalPackageCache(MEGame.ME3, false, true, debugName: "MPCommon global ME3 root").ChainNewCache(false, debugName: "MPCommon CompileMPCommon cache");
             var dlcInFile = Path.Combine(ME3Directory.DLCPath, "DLC_CON_MP5", MEGame.ME3.CookedDirName(), "Default.sfar");
             if (!File.Exists(dlcInFile))
             {
