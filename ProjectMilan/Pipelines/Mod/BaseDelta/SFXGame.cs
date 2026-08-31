@@ -79,7 +79,8 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 throw;
             }
 
-            foreach (var cls in Directory.GetFiles(baseDeltaFolder, "*.uc"))
+            var classFolder = Path.Combine(baseDeltaFolder, "Classes");
+            foreach (var cls in Directory.GetFiles(classFolder, "*.uc"))
             {
                 var className = Path.GetFileNameWithoutExtension(cls);
                 var classExport = sfxGamePackage.FindExport(className);
@@ -87,6 +88,18 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 MilanLog.Information($"Compiling class {className}", customPrefix: LOG_CATEGORY);
                 var classSource = File.ReadAllText(cls);
                 UnrealScriptCompiler.CompileClass(sfxGamePackage, classSource, fileLib, usop, export: classExport);
+            }
+
+            var functionFolder = Path.Combine(baseDeltaFolder, "Functions");
+            foreach (var func in Directory.GetFiles(functionFolder, "*.uc", SearchOption.AllDirectories))
+            {
+                var className = Directory.GetParent(func).Name;
+                var functionIFP = $"{className}.{Path.GetFileNameWithoutExtension(func)}";
+                var function = sfxGamePackage.FindExport(functionIFP);
+
+                MilanLog.Information($"Compiling function {functionIFP}", customPrefix: LOG_CATEGORY);
+                var functionSource = File.ReadAllText(func);
+                UnrealScriptCompiler.CompileFunction(function, functionSource, fileLib, usop);
             }
 
             return sfxGamePackage.SaveToStream(BaseDeltaHandler.UseCompressedPackages).ToArray();
