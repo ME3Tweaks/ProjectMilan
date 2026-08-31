@@ -29,6 +29,7 @@
     <BuildType Solution="WinRelease|*" Project="Debug" />
   </Project>
   <Project Path="JDiffCS/JDiffCS.csproj" Id="6b6abeee-320c-4ea6-9c6b-001a8b39e0b3">
+    <BuildType Solution="Debug|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
@@ -156,6 +157,12 @@
     <Build Solution="WinAzureTest|x64" Project="false" />
     <Build Solution="WinDebug|x64" Project="false" />
     <Build Solution="WinRelease|x64" Project="false" />
+  </Project>
+  <Project Path="RedemptionMapTool/RedemptionMapTool.csproj" Id="2fae0277-39f4-482d-8167-6da191f38d11">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="ShaderCompare/ShaderCompare.csproj">
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
