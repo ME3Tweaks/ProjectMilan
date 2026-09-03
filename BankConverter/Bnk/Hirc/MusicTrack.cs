@@ -72,7 +72,7 @@ public sealed class MusicTrack
         return t;
     }
 
-    public byte[] WriteV134(Func<uint, uint> remapBusId, Func<uint, uint?>? sourceSizeOverride = null, Func<uint, bool>? isFullyEmbedded = null)
+    public byte[] WriteV134(Func<uint, uint> remapBusId, Func<uint, uint?>? sourceSizeOverride = null, Func<uint, bool>? isFullyEmbedded = null, Func<uint, bool>? isFxSupported = null)
     {
         var w = new BankWriter();
         w.U32(Id);
@@ -124,7 +124,7 @@ public sealed class MusicTrack
             NodeBase.ExtraRanges ??= new PropBundle();
             NodeBase.ExtraRanges.SetRangeInt(PropIdV134.Loop, LoopModMin, LoopModMax);
         }
-        NodeBase.WriteV134(w, remapBusId);
+        NodeBase.WriteV134(w, remapBusId, isFxSupported);
 
         w.U8((byte)RanSeqType); // eTrackType: numeric passthrough, always non-switch (type 3 needs no extra data here)
         w.S32(LookAheadTime);

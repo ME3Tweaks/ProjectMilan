@@ -16,11 +16,11 @@ public sealed class ActorMixer
         return a;
     }
 
-    public byte[] WriteV134(Func<uint, uint> remapBusId)
+    public byte[] WriteV134(Func<uint, uint> remapBusId, Func<uint, bool>? isFxSupported = null)
     {
         var w = new BankWriter();
         w.U32(Id);
-        NodeBase.WriteV134(w, remapBusId);
+        NodeBase.WriteV134(w, remapBusId, isFxSupported);
         w.U32((uint)ChildIds.Count);
         foreach (var id in ChildIds) w.U32(id);
         return w.ToArray();

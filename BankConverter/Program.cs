@@ -1,5 +1,6 @@
 using BankConverter.Bnk;
 using BankConverter.Bnk.Chunks;
+using BankConverter.Bnk.Hirc;
 
 namespace BankConverter
 {
@@ -37,6 +38,12 @@ namespace BankConverter
             if (args.Length > 2 && args[0] == "convert-afc")
             {
                 ConvertAfc(args[1], args[2], args[3], args.Length > 4 ? args[4] : null, args.Length > 5 ? args[5] : null);
+                return;
+            }
+
+            if (args.Length > 0 && args[0] == "map-events")
+            {
+                MapEvents(args[1]);
                 return;
             }
 
@@ -266,6 +273,223 @@ namespace BankConverter
                     Console.WriteLine($"  {id}: {count}x");
                 }
                 Console.WriteLine("############################################################");
+            }
+        }
+
+        static void MapEvents(string bankFilePath)
+        {
+            var bytes = File.ReadAllBytes(bankFilePath);
+            var bank = BankFile.ReadV56(bytes);
+            if (bank.HircRaw == null)
+            {
+                Console.WriteLine("No HIRC chunk in this bank.");
+                return;
+            }
+
+            var r = new BankReader(bank.HircRaw);
+            var count = r.U32();
+
+            var events = new Dictionary<uint, Event>();
+            var actions = new Dictionary<uint, AkAction>();
+            var containerChildren = new Dictionary<uint, List<uint>>(); // RandomSequenceContainer/SwitchContainer/ActorMixer
+            var containerTypes = new Dictionary<uint, string>();
+            var switchContainers = new Dictionary<uint, SwitchContainer>();
+            var layerContainers = new Dictionary<uint, LayerContainer>();
+            var sounds = new Dictionary<uint, Sound>();
+            var typeCounts = new Dictionary<byte, int>();
+            var fxObjects = new Dictionary<uint, FxBase>();
+            var nodeFxRefs = new List<(uint nodeId, string nodeType, FxChunkEntry fx)>();
+            var directParents = new Dictionary<uint, uint>();
+
+            for (var i = 0; i < count; i++)
+            {
+                var type = r.U8();
+                var sectionSize = r.U32();
+                var bodyStart = r.Position;
+                var bodyEnd = bodyStart + (int)sectionSize;
+                typeCounts[type] = typeCounts.GetValueOrDefault(type) + 1;
+
+                try
+                {
+                    switch (type)
+                    {
+                        case 0x02:
+                            var s = Sound.ReadV56(r);
+                            sounds[s.Id] = s;
+                            foreach (var fx in s.NodeBase.Fx.Fx) nodeFxRefs.Add((s.Id, "Sound", fx));
+                            directParents[s.Id] = s.NodeBase.DirectParentId;
+                            break;
+                        case 0x03:
+                            var a = AkAction.ReadV56(r);
+                            actions[a.Id] = a;
+                            break;
+                        case 0x04:
+                            var e = Event.ReadV56(r);
+                            events[e.Id] = e;
+                            break;
+                        case 0x05:
+                            var rsc = RandomSequenceContainer.ReadV56(r);
+                            containerChildren[rsc.Id] = rsc.ChildIds;
+                            containerTypes[rsc.Id] = $"RandomSequenceContainer(Mode={rsc.Mode}, RandomMode={rsc.RandomMode}, IsContinuous={rsc.IsContinuous})";
+                            foreach (var fx in rsc.NodeBase.Fx.Fx) nodeFxRefs.Add((rsc.Id, "RandomSequenceContainer", fx));
+                            directParents[rsc.Id] = rsc.NodeBase.DirectParentId;
+                            break;
+                        case 0x06:
+                            var sc = SwitchContainer.ReadV56(r);
+                            containerChildren[sc.Id] = sc.ChildIds;
+                            containerTypes[sc.Id] = "SwitchContainer";
+                            switchContainers[sc.Id] = sc;
+                            foreach (var fx in sc.NodeBase.Fx.Fx) nodeFxRefs.Add((sc.Id, "SwitchContainer", fx));
+                            directParents[sc.Id] = sc.NodeBase.DirectParentId;
+                            break;
+                        case 0x07:
+                            var am = ActorMixer.ReadV56(r);
+                            containerChildren[am.Id] = am.ChildIds;
+                            containerTypes[am.Id] = "ActorMixer";
+                            foreach (var fx in am.NodeBase.Fx.Fx) nodeFxRefs.Add((am.Id, "ActorMixer", fx));
+                            directParents[am.Id] = am.NodeBase.DirectParentId;
+                            break;
+                        case 0x09:
+                            var lc = LayerContainer.ReadV56(r);
+                            containerChildren[lc.Id] = lc.ChildIds;
+                            containerTypes[lc.Id] = "LayerContainer";
+                            layerContainers[lc.Id] = lc;
+                            foreach (var fx in lc.NodeBase.Fx.Fx) nodeFxRefs.Add((lc.Id, "LayerContainer", fx));
+                            directParents[lc.Id] = lc.NodeBase.DirectParentId;
+                            break;
+                        case 0x12:
+                        case 0x13:
+                            var fxb = FxBase.ReadV56(r);
+                            fxObjects[fxb.Id] = fxb;
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"  parse error type=0x{type:X2}: {ex.Message}");
+                }
+
+                r.Position = bodyEnd;
+            }
+
+            Console.WriteLine("Object type counts: " + string.Join(", ", typeCounts.OrderBy(kv => kv.Key).Select(kv => $"0x{kv.Key:X2}={kv.Value}")));
+            Console.WriteLine();
+
+            List<string> ResolveToSources(uint targetId, HashSet<uint> visited)
+            {
+                var found = new List<string>();
+                if (!visited.Add(targetId)) return found; // cycle guard
+                if (sounds.TryGetValue(targetId, out var snd))
+                {
+                    found.Add($"{snd.Source.SourceId} (StreamType={snd.Source.StreamType}, PluginId=0x{snd.Source.PluginId:X})");
+                }
+                else if (containerChildren.TryGetValue(targetId, out var children))
+                {
+                    foreach (var child in children) found.AddRange(ResolveToSources(child, visited));
+                }
+                else
+                {
+                    found.Add($"UNRESOLVED(target={targetId})");
+                }
+                return found;
+            }
+
+            foreach (var (id, evt) in events.OrderBy(kv => kv.Key))
+            {
+                Console.WriteLine($"Event {id}:");
+                foreach (var actionId in evt.ActionIds)
+                {
+                    if (!actions.TryGetValue(actionId, out var action))
+                    {
+                        Console.WriteLine($"  Action {actionId}: NOT FOUND");
+                        continue;
+                    }
+                    var targetType = containerTypes.GetValueOrDefault(action.TargetId, sounds.ContainsKey(action.TargetId) ? "Sound" : "UNKNOWN");
+                    Console.WriteLine($"  Action {actionId} (kind={action.Kind}) -> target {action.TargetId} [{targetType}]");
+                    var sourceIds = ResolveToSources(action.TargetId, new HashSet<uint>());
+                    foreach (var sid in sourceIds)
+                    {
+                        Console.WriteLine($"    -> SourceId (WEM id): {sid}");
+                    }
+                }
+            }
+
+            if (switchContainers.Count > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("=== SwitchContainer details ===");
+                foreach (var (id, sc) in switchContainers)
+                {
+                    Console.WriteLine($"SwitchContainer {id}: GroupType={sc.GroupType}, GroupId={sc.GroupId}, DefaultSwitch={sc.DefaultSwitch}, ChildIds=[{string.Join(",", sc.ChildIds)}]");
+                    foreach (var pkg in sc.SwitchList)
+                    {
+                        Console.WriteLine($"  SwitchValue {pkg.SwitchId} -> nodes [{string.Join(",", pkg.NodeIds)}]");
+                    }
+                    foreach (var p in sc.Params)
+                    {
+                        Console.WriteLine($"  NodeParams for {p.NodeId}: IsFirstOnly={p.IsFirstOnly}, ContinuePlayback={p.ContinuePlayback}, OnSwitchMode={p.OnSwitchMode}");
+                    }
+                }
+            }
+
+            if (fxObjects.Count > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("=== Fx objects ===");
+                foreach (var (id, fx) in fxObjects)
+                {
+                    Console.WriteLine($"Fx {id}: PluginId=0x{fx.PluginId:X}, ParamBlockLen={fx.ParamBlock?.Length ?? 0}");
+                }
+                Console.WriteLine();
+                Console.WriteLine("=== Node -> Fx references ===");
+                foreach (var (nodeId, nodeType, fxRef) in nodeFxRefs)
+                {
+                    Console.WriteLine($"{nodeType} {nodeId}: slot {fxRef.FxIndex} -> Fx {fxRef.FxId} (ShareSet={fxRef.IsShareSet})");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("=== Parent-chain check: does each event's play target inherit a broken Fx? ===");
+                var fxByNode = nodeFxRefs.ToLookup(x => x.nodeId);
+                foreach (var (id, evt) in events.OrderBy(kv => kv.Key))
+                {
+                    foreach (var actionId in evt.ActionIds)
+                    {
+                        if (!actions.TryGetValue(actionId, out var action) || action.Kind != ActionKind.Play) continue;
+                        Console.Write($"Event {id} action {actionId} target {action.TargetId}: chain =");
+                        var cur = action.TargetId;
+                        var seen = new HashSet<uint>();
+                        while (cur != 0 && seen.Add(cur))
+                        {
+                            var fxHere = fxByNode[cur].Select(x => x.fx.FxId).ToList();
+                            Console.Write($" {cur}{(fxHere.Count > 0 ? $"[Fx:{string.Join(",", fxHere)}]" : "")} ->");
+                            if (!directParents.TryGetValue(cur, out var parent)) break;
+                            cur = parent;
+                        }
+                        Console.WriteLine(" (root)");
+                    }
+                }
+            }
+
+            if (layerContainers.Count > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine("=== LayerContainer details ===");
+                foreach (var (id, lc) in layerContainers)
+                {
+                    Console.WriteLine($"LayerContainer {id}: ChildIds=[{string.Join(",", lc.ChildIds)}]");
+                    foreach (var layer in lc.Layers)
+                    {
+                        Console.WriteLine($"  Layer {layer.LayerId}: RtpcId={layer.RtpcId}, CrossfadingRtpcDefaultValue={layer.CrossfadingRtpcDefaultValue}, RtpcEntries={layer.Rtpc?.Entries?.Count ?? -1}");
+                        foreach (var entry in layer.Rtpc?.Entries ?? new List<RtpcEntry>())
+                        {
+                            Console.WriteLine($"    RtpcEntry: RtpcId={entry.RtpcId}, ParamId={entry.ParamId}, Points=[{string.Join(";", entry.Points.Select(p => $"{p.From}->{p.To}"))}]");
+                        }
+                        foreach (var assoc in layer.Assocs)
+                        {
+                            Console.WriteLine($"    Assoc childId={assoc.ChildId}, curvePoints={assoc.Curve.Count}");
+                        }
+                    }
+                }
             }
         }
 

@@ -63,11 +63,11 @@ public sealed class SwitchContainer
         return c;
     }
 
-    public byte[] WriteV134(Func<uint, uint> remapBusId)
+    public byte[] WriteV134(Func<uint, uint> remapBusId, Func<uint, bool>? isFxSupported = null)
     {
         var w = new BankWriter();
         w.U32(Id);
-        NodeBase.WriteV134(w, remapBusId);
+        NodeBase.WriteV134(w, remapBusId, isFxSupported);
 
         w.U8(GroupType);
         w.U32(GroupId);

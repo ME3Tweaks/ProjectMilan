@@ -57,11 +57,11 @@ public sealed class RandomSequenceContainer
         return c;
     }
 
-    public byte[] WriteV134(Func<uint, uint> remapBusId)
+    public byte[] WriteV134(Func<uint, uint> remapBusId, Func<uint, bool>? isFxSupported = null)
     {
         var w = new BankWriter();
         w.U32(Id);
-        NodeBase.WriteV134(w, remapBusId);
+        NodeBase.WriteV134(w, remapBusId, isFxSupported);
 
         w.U16(LoopCount);
         w.U16(LoopModMin);

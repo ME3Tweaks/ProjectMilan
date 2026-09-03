@@ -69,9 +69,9 @@ public sealed class NodeBaseParams
         return p;
     }
 
-    public void WriteV134(BankWriter w, Func<uint, uint> remapBusId)
+    public void WriteV134(BankWriter w, Func<uint, uint> remapBusId, Func<uint, bool>? isFxSupported = null)
     {
-        Fx.Write(w);
+        Fx.Write(w, isFxSupported);
         // bOverrideAttachmentParams (v134-only field, no v56 source data; default false)
         w.U8(0);
 

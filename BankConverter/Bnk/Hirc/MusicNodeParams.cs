@@ -56,10 +56,10 @@ public sealed class MusicNodeParams
         return p;
     }
 
-    public void WriteV134(BankWriter w, Func<uint, uint> remapBusId)
+    public void WriteV134(BankWriter w, Func<uint, uint> remapBusId, Func<uint, bool>? isFxSupported = null)
     {
         w.U8(0); // uFlags: no v56 source, default (no midi overrides)
-        NodeBase.WriteV134(w, remapBusId);
+        NodeBase.WriteV134(w, remapBusId, isFxSupported);
 
         w.U32((uint)ChildIds.Count);
         foreach (var id in ChildIds) w.U32(id);

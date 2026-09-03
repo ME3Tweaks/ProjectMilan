@@ -34,11 +34,11 @@ public sealed class MusicSegment
         return s;
     }
 
-    public byte[] WriteV134(Func<uint, uint> remapBusId)
+    public byte[] WriteV134(Func<uint, uint> remapBusId, Func<uint, bool>? isFxSupported = null)
     {
         var w = new BankWriter();
         w.U32(Id);
-        NodeParams.WriteV134(w, remapBusId);
+        NodeParams.WriteV134(w, remapBusId, isFxSupported);
         w.D64(Duration);
 
         w.U32((uint)Markers.Count);

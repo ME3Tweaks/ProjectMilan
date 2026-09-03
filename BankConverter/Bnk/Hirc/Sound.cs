@@ -21,7 +21,7 @@ public sealed class Sound
         return s;
     }
 
-    public byte[] WriteV134(Func<uint, uint> remapBusId, Func<uint, uint?>? sourceSizeOverride = null, Func<uint, bool>? isFullyEmbedded = null)
+    public byte[] WriteV134(Func<uint, uint> remapBusId, Func<uint, uint?>? sourceSizeOverride = null, Func<uint, bool>? isFullyEmbedded = null, Func<uint, bool>? isFxSupported = null)
     {
         var w = new BankWriter();
         w.U32(Id);
@@ -43,7 +43,7 @@ public sealed class Sound
             NodeBase.ExtraRanges.SetRangeInt(PropIdV134.Loop, LoopModMin, LoopModMax);
         }
 
-        NodeBase.WriteV134(w, remapBusId);
+        NodeBase.WriteV134(w, remapBusId, isFxSupported);
         return w.ToArray();
     }
 }

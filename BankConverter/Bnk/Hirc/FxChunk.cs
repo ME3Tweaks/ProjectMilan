@@ -38,14 +38,22 @@ public sealed class InitialFxParams
         return p;
     }
 
-    public void Write(BankWriter w)
+    /// <param name="isFxSupported">Optional filter (keyed by <see cref="FxChunkEntry.FxId"/>) - entries for
+    /// which this returns false are dropped instead of written. Used to strip references to third-party/
+    /// studio-proprietary Wwise plugins (see PluginSupport.IsThirdParty) that ME3 registered itself but LE3's
+    /// stock Wwise runtime has no equivalent for - leaving such a reference in would ask LE3 to instantiate a
+    /// plugin it doesn't have, which is a much worse failure mode (observed in practice as garbled/glitched
+    /// output on the entire mix passing through that effect slot) than simply not applying that effect.</param>
+    public void Write(BankWriter w, Func<uint, bool>? isFxSupported = null)
     {
+        var effectiveFx = isFxSupported == null ? Fx : Fx.Where(e => isFxSupported(e.FxId)).ToList();
+
         w.U8((byte)(IsOverrideParentFx ? 1 : 0));
-        w.U8((byte)Fx.Count);
-        if (Fx.Count > 0)
+        w.U8((byte)effectiveFx.Count);
+        if (effectiveFx.Count > 0)
         {
             w.U8(BitsFxBypassRaw);
-            foreach (var e in Fx)
+            foreach (var e in effectiveFx)
             {
                 w.U8(e.FxIndex);
                 w.U32(e.FxId);
