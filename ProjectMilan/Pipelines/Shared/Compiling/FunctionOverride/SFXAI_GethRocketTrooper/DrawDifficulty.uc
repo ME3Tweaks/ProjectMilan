@@ -1,4 +1,4 @@
-﻿public function DrawDifficulty(BioCheatManager CM)
+public function DrawDifficulty(BioCheatManager CM)
 {
     local SFXDifficultyHandler DH;
     local Name ParamName;
