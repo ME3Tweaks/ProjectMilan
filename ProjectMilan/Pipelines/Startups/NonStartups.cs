@@ -1,4 +1,5 @@
-﻿using LegendaryExplorerCore.Packages;
+﻿using LegendaryExplorerCore.Misc;
+using LegendaryExplorerCore.Packages;
 using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Startups
@@ -10,168 +11,63 @@ namespace ProjectMilan.Pipelines.Startups
     {
         public string OutputPath { get; set; }
 
-        /// <summary>
-        /// Extra packages to port
-        /// </summary>
-        public readonly string[] PackageFiles = new[]
-        {
-            "BioSimpleDlgContainer_Horde",
-            
-            // OBJECTIVES
-            "SFXEngagement_Annex_Hack",
-            "SFXEngagement_Annex_Upload",
-            "SFXEngagement_Assassination",
-            "SFXEngagement_Disarm_Disable",
-            "SFXEngagement_Disarm_Enable",
-            "SFXEngagement_Extraction",
-            // "SFXEngagement_Retrieve" // I don't think this is used - this is basegame version which is broken. May leave however if ModMaker somehow is ported to LE.
-            // "SFXEngagement_SupplyDrop" // This is a cut objective that has no implementation
-
-            // GUI IMAGES (Basegame)
-            
-             "SFXMPCardImages",
-            "SFXMPImagesCrates",
-            "SFXMPImagesMaps1",
-            "SFXMPImagesMaps2",
-            "SFXMPImagesMatchSettings",
-            "SFXMPImagesStore",
-            "SFXMPKitImagesAdept",
-            "SFXMPKitImagesEngineer",
-            "SFXMPKitImagesInfiltrator",
-            "SFXMPKitImagesOther1",
-            "SFXMPKitImagesOther2",
-            "SFXMPKitImagesSentinel",
-            "SFXMPKitImagesSoldier",
-            "SFXMPKitImagesVanguard",
-            "SFXMPMedalImages",
-            "SFXMPObjectives",
-            "SFXMPObjectives_Special",
-            "SFXMPSupplyCardImages",
-
-            // MP1
-            "MP1Images",
-            "MP1PowerIcons",
-            "SFXGE_MP1_MatchConsumables",
-            "SFXGUI_WeaponUIDataDLC_CON_MP1SF",
-            "SFXGUI_W_A_Krogan",
-            "SFXGUI_W_SMG_Geth",
-            "SFXGUI_W_S_Batarian",
-
-            // MP2
-            "MP2Images",
-            "MP2PowerIcons",
-            "SFXEngagement_RetrieveDLC",
-            "SFXGUI_WeaponUIDataDLC_CON_MP2SF",
-            "SFXGUI_W_A_Cerberus",
-            "SFXGUI_W_A_Prothean_MP",
-            "SFXGUI_W_SG_Quarian",
-            "SFXGUI_W_S_Turian",
-            "SFXMP2Gear1",
-            "SFXMP2Gear2",
-            "SFXMP2GearImages1",
-            "SFXMPObjectiveRetrieve",
-            "SFX_GUI_PR_Images_1",
-
-            // MP3
-            "MP3GearImages",
-            "MP3Images",
-            "MP3PowerIcons",
-            "SFXGUI_WeaponUIDataDLC_CON_MP3SF",
-            "SFXGUI_WeaponUIDataDLC_SharedSF",
-            "SFXGUI_WMod_AssaultRifleMelee",
-            "SFXGUI_WMod_AssaultRifleSuperPen",
-            "SFXGUI_WMod_AssaultRifleSuperScope",
-            "SFXGUI_WMod_PistolHeadShot",
-            "SFXGUI_WMod_PistolSuperDamage",
-            "SFXGUI_WMod_ShotgunDamageAndPen",
-            "SFXGUI_WMod_ShotgunSuperMelee",
-            "SFXGUI_WMod_SMGPenetration",
-            "SFXGUI_WMod_SniperRifleDamageAndPen",
-            "SFXGUI_WMod_SniperRifleSuperScope",
-            "SFXGUI_W_A_LMG",
-            "SFXGUI_W_P_Asari",
-            "SFXGUI_W_SG_Assault",
-            "SFXMobileAnnex",
-
-            // These were redone in MP4 as they don't work properly in MP3
-            //"SFXModsMP3_AssaultRifle",
-            //"SFXModsMP3_Pistol",
-            //"SFXModsMP3_Shotgun",
-            //"SFXModsMP3_SMG",
-            //"SFXModsMP3_SniperRifle",
-            "SFXMP3Gear",
-            "SFXSharedGear",
-            //"SFXSharedModGameEffects",
-            //"SFXSharedModImages",
-
-
-            // MP4
-            "GUI_CollectorHUDOverlay", // We should port this to SP
-            "GUI_MPChallengeImages",
-            "MP4GUIImages",
-            "MP4Images",
-            "MP_DLC_SFResources_Cooked",
-            "SFXGUI_WeaponUIDataDLC_CON_MP4SF",
-            "SFXGUI_W_SMG_Collector",
-            "SFXGUI_W_S_Collector",
-            "SFXHazardMapImages",
-            "SFXModsMP3_AssaultRifle", // These fix MP3 versions
-            "SFXModsMP3_Pistol",
-            "SFXModsMP3_Shotgun",
-            "SFXModsMP3_SMG",
-            "SFXModsMP3_SniperRifle",
-            "SFXMP4AmmoImages",
-            "SFXMP4AmmoPowers",
-            "SFXMP4CardImages",
-            "SFXMP4Gear",
-            "SFXMP4GearImages",
-            "SFXMP4KitImages",
-            "SFXPawn_Atlas2", // Faster, more armor pieces - enabled as default cerb depends on it
-            "SFXPawn_Banshee2", // I think changes to warp ball? - enabled as default Reaper depends on 
-            "SFXPawn_Cannibal2", // Can eat players - enabled as default Reaper depends on 
-            
-            // These MP4 enemies use exact same materials in SP, I think
-            "SFXPawn_GethBomber",
-            "SFXPawn_Phoenix",
-
-
-            // These are ported in the MP4NewEnemies pipeline
-            "SFXPawn_Abomination", // Collector faction, Geth, Cerb new enemy
-            "SFXPawn_CollectorCaptain",
-            // "SFXPawn_CollectorTrooper", // Requires fixes for weapon
-            "SFXPawn_Praetorian",
-            "SFXPawn_Scion",
-
-            "SFXPawn_GethPyro2", // Cannot be grabbed  - enabled as default Reaper depends on 
-            "SFXPawn_Marauder2", // Can stomp players  - enabled as default Reaper depends on 
-            "SFXSharedModGameEffects",
-            "SFXSharedModImages",
-            // "SFXWeapon_SniperRifle_Collector", // This is compiled in SFXWeapons pipeline
-
-            // MP5
-            "GUI_MPChallengeImages",
-            "MP_DLC_SFResources_Cooked",
-            "SFXGUI_WeaponUIDataDLC_CON_MP5SF",
-            "SFXGUI_WMod_PistolPowerDamage_MP5",
-            "SFXGUI_WMod_SMGPowerDamage_MP5",
-            "SFXGUI_W_A_Adas_MP",
-            "SFXGUI_W_A_Lancer_MP",
-            "SFXGUI_W_A_Spitfire",
-            "SFXGUI_W_P_Bloodpack_MP",
-            "SFXGUI_W_P_Silencer_MP",
-            "SFXGUI_W_SG_Salarian_MP",
-            "SFXGUI_W_SMG_Bloodpack_MP",
-            "SFXMP5Gear",
-            "SFXMP5GearImages",
-            "SFXMP5KitImages",
-            "SFXMP5ModImages",
-            "SFXMP5Mods",
-            "SFXMP5PowerImages",
-            "SFXMP5WeaponImages",
-            "SFXPawn_GethPrime2", // Changes to stagger, I think?
-        };
-
         // If other options are ever needed for pass through they will be defined here
+    }
+
+    /// <summary>
+    /// Category of a file from NonStartup
+    /// </summary>
+    enum NonStartupCategory
+    {
+        /// <summary>
+        /// Contains SWF GUIs
+        /// </summary>
+        GUI,
+
+        /// <summary>
+        /// Contains dialogue packages (VO)
+        /// </summary>
+        Dialogue,
+
+        /// <summary>
+        /// Contains assets used by GUIs
+        /// </summary>
+        Images,
+
+        /// <summary>
+        /// Objective packages
+        /// </summary>
+        Objectives,
+
+        /// <summary>
+        /// SFXGUI_W files for weapon bench preview
+        /// </summary>
+        WeaponPreviews,
+
+        /// <summary>
+        /// SFXGUI_WMod files for weapon bench preview
+        /// </summary>
+        WeaponModPreviews,
+
+        /// <summary>
+        /// Weapon mod classes
+        /// </summary>
+        WeaponMods,
+
+        /// <summary>
+        /// Gear files
+        /// </summary>
+        Gear,
+
+        /// <summary>
+        /// AmmoPowers
+        /// </summary>
+        Ammo,
+
+        /// <summary>
+        /// Enemy pawns
+        /// </summary>
+        Pawns,
     }
 
     /// <summary>
@@ -180,6 +76,150 @@ namespace ProjectMilan.Pipelines.Startups
     internal class NonStartupPipeline
     {
         private const string LOG_CATEGORY = @"MILAN-NonStartup";
+
+        /// <summary>
+        /// File mapping to their category, used for organizing.
+        /// </summary>
+        public static readonly CaseInsensitiveDictionary<NonStartupCategory> FileMap = new()
+        {
+            // --- VO -- 
+            { "BioSimpleDlgContainer_Horde", NonStartupCategory.Dialogue },
+
+            // --- GUI ---
+            { "GUI_CollectorHUDOverlay", NonStartupCategory.GUI },
+            { "MP_DLC_SFResources_Cooked", NonStartupCategory.GUI },
+            { "SFXGE_MP1_MatchConsumables", NonStartupCategory.GUI },
+            { "SFXGUI_WeaponUIDataDLC_CON_MP1SF", NonStartupCategory.GUI },
+            { "SFXGUI_WeaponUIDataDLC_CON_MP2SF", NonStartupCategory.GUI },
+            { "SFXGUI_WeaponUIDataDLC_CON_MP3SF", NonStartupCategory.GUI },
+            { "SFXGUI_WeaponUIDataDLC_CON_MP4SF", NonStartupCategory.GUI },
+            { "SFXGUI_WeaponUIDataDLC_CON_MP5SF", NonStartupCategory.GUI },
+            { "SFXGUI_WeaponUIDataDLC_SharedSF", NonStartupCategory.GUI },
+
+            // --- Images ---
+            { "GUI_MPChallengeImages", NonStartupCategory.Images },
+            { "MP1Images", NonStartupCategory.Images },
+            { "MP1PowerIcons", NonStartupCategory.Images },
+            { "MP2Images", NonStartupCategory.Images },
+            { "MP2PowerIcons", NonStartupCategory.Images },
+            { "MP3GearImages", NonStartupCategory.Images },
+            { "MP3Images", NonStartupCategory.Images },
+            { "MP3PowerIcons", NonStartupCategory.Images },
+            { "MP4GUIImages", NonStartupCategory.Images },
+            { "MP4Images", NonStartupCategory.Images },
+            { "SFXHazardMapImages", NonStartupCategory.Images },
+            { "SFXMP2GearImages1", NonStartupCategory.Images },
+            { "SFXMP4AmmoImages", NonStartupCategory.Images },
+            { "SFXMP4CardImages", NonStartupCategory.Images },
+            { "SFXMP4GearImages", NonStartupCategory.Images },
+            { "SFXMP4KitImages", NonStartupCategory.Images },
+            { "SFXMP5GearImages", NonStartupCategory.Images },
+            { "SFXMP5KitImages", NonStartupCategory.Images },
+            { "SFXMP5ModImages", NonStartupCategory.Images },
+            { "SFXMP5PowerImages", NonStartupCategory.Images },
+            { "SFXMP5WeaponImages", NonStartupCategory.Images },
+            { "SFXMPCardImages", NonStartupCategory.Images },
+            { "SFXMPImagesCrates", NonStartupCategory.Images },
+            { "SFXMPImagesMaps1", NonStartupCategory.Images },
+            { "SFXMPImagesMaps2", NonStartupCategory.Images },
+            { "SFXMPImagesMatchSettings", NonStartupCategory.Images },
+            { "SFXMPImagesStore", NonStartupCategory.Images },
+            { "SFXMPKitImagesAdept", NonStartupCategory.Images },
+            { "SFXMPKitImagesEngineer", NonStartupCategory.Images },
+            { "SFXMPKitImagesInfiltrator", NonStartupCategory.Images },
+            { "SFXMPKitImagesOther1", NonStartupCategory.Images },
+            { "SFXMPKitImagesOther2", NonStartupCategory.Images },
+            { "SFXMPKitImagesSentinel", NonStartupCategory.Images },
+            { "SFXMPKitImagesSoldier", NonStartupCategory.Images },
+            { "SFXMPKitImagesVanguard", NonStartupCategory.Images },
+            { "SFXMPMedalImages", NonStartupCategory.Images },
+            { "SFXMPSupplyCardImages", NonStartupCategory.Images },
+            { "SFXSharedModImages", NonStartupCategory.Images },
+            { "SFX_GUI_PR_Images_1", NonStartupCategory.Images },
+
+            // --- Objectives ---
+            { "SFXEngagement_Annex_Hack", NonStartupCategory.Objectives },
+            { "SFXEngagement_Annex_Upload", NonStartupCategory.Objectives },
+            { "SFXEngagement_Assassination", NonStartupCategory.Objectives },
+            { "SFXEngagement_Disarm_Disable", NonStartupCategory.Objectives },
+            { "SFXEngagement_Disarm_Enable", NonStartupCategory.Objectives },
+            { "SFXEngagement_Extraction", NonStartupCategory.Objectives },
+            { "SFXEngagement_RetrieveDLC", NonStartupCategory.Objectives },
+            { "SFXMobileAnnex", NonStartupCategory.Objectives },
+            { "SFXMPObjectiveRetrieve", NonStartupCategory.Objectives },
+            { "SFXMPObjectives", NonStartupCategory.Objectives },
+            { "SFXMPObjectives_Special", NonStartupCategory.Objectives },
+
+            // --- WeaponPreview ---
+            { "SFXGUI_W_A_Adas_MP", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_A_Cerberus", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_A_Krogan", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_A_Lancer_MP", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_A_LMG", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_A_Prothean_MP", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_A_Spitfire", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_P_Asari", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_P_Bloodpack_MP", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_P_Silencer_MP", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_SG_Assault", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_SG_Quarian", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_SG_Salarian_MP", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_SMG_Bloodpack_MP", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_SMG_Collector", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_SMG_Geth", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_S_Batarian", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_S_Collector", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_S_Turian", NonStartupCategory.WeaponPreviews },
+
+            // --- WeaponModPreview ---
+            { "SFXGUI_WMod_AssaultRifleMelee", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_AssaultRifleSuperPen", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_AssaultRifleSuperScope", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_PistolHeadShot", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_PistolPowerDamage_MP5", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_PistolSuperDamage", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_ShotgunDamageAndPen", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_ShotgunSuperMelee", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_SMGPenetration", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_SMGPowerDamage_MP5", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_SniperRifleDamageAndPen", NonStartupCategory.WeaponModPreviews },
+            { "SFXGUI_WMod_SniperRifleSuperScope", NonStartupCategory.WeaponModPreviews },
+
+            // --- WeaponMods ---
+            { "SFXModsMP3_AssaultRifle", NonStartupCategory.WeaponMods },
+            { "SFXModsMP3_Pistol", NonStartupCategory.WeaponMods },
+            { "SFXModsMP3_Shotgun", NonStartupCategory.WeaponMods },
+            { "SFXModsMP3_SMG", NonStartupCategory.WeaponMods },
+            { "SFXModsMP3_SniperRifle", NonStartupCategory.WeaponMods },
+            { "SFXMP5Mods", NonStartupCategory.WeaponMods },
+            { "SFXSharedModGameEffects", NonStartupCategory.WeaponMods },
+
+            // --- Gear ---
+            { "SFXMP2Gear1", NonStartupCategory.Gear },
+            { "SFXMP2Gear2", NonStartupCategory.Gear },
+            { "SFXMP3Gear", NonStartupCategory.Gear },
+            { "SFXMP4Gear", NonStartupCategory.Gear },
+            { "SFXMP5Gear", NonStartupCategory.Gear },
+            { "SFXSharedGear", NonStartupCategory.Gear },
+
+            // --- Ammo ---
+            { "SFXMP4AmmoPowers", NonStartupCategory.Ammo },
+
+            // --- Pawns ---
+            { "SFXPawn_Abomination", NonStartupCategory.Pawns },
+            { "SFXPawn_Atlas2", NonStartupCategory.Pawns },
+            { "SFXPawn_Banshee2", NonStartupCategory.Pawns },
+            { "SFXPawn_Cannibal2", NonStartupCategory.Pawns },
+            { "SFXPawn_CollectorCaptain", NonStartupCategory.Pawns },
+            { "SFXPawn_GethBomber", NonStartupCategory.Pawns },
+            { "SFXPawn_GethPrime2", NonStartupCategory.Pawns },
+            { "SFXPawn_GethPyro2", NonStartupCategory.Pawns },
+            { "SFXPawn_Marauder2", NonStartupCategory.Pawns },
+            { "SFXPawn_Phoenix", NonStartupCategory.Pawns },
+            { "SFXPawn_Praetorian", NonStartupCategory.Pawns },
+            { "SFXPawn_Scion", NonStartupCategory.Pawns }
+        };
+
         public static void RunPipeline()
         {
             var vars = new NonStartupPipelineVars()
@@ -189,17 +229,17 @@ namespace ProjectMilan.Pipelines.Startups
             InternalRunPipeline(vars);
         }
 
+
         private static void InternalRunPipeline(NonStartupPipelineVars vars)
         {
             // Chained to the long-lived MPCommon tier so files hit repeatedly within this pipeline (but not
             // globally hot enough to be in MPCommon) get promoted here instead of reopened per-file. Disposed
             // once every file is done, so nothing here outlives the NonStartup pipeline.
-            using var pipelineCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true);
+            using var pipelineCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "NonStartups pipeline cache");
 
-            MilanShared.LogDonorMessages = false; // Turn off spammy messaging.
+            MilanLog.LogDonorMessages = false; // Turn off spammy messaging.
 
-            // We use .Distinct() cause list might have duplicates due to duplicates in DLC folders
-            Parallel.ForEach(vars.PackageFiles.Distinct(),
+            Parallel.ForEach(FileMap.Keys,
                 new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, packageBaseName =>
                 {
                     using var cache = pipelineCache.ChainNewCache(debugName: $"NonStartups file cache ({packageBaseName})");
@@ -211,14 +251,31 @@ namespace ProjectMilan.Pipelines.Startups
                     me3File.LECLTagData.ImportHintFiles.Add("Startup_DLC_CON_MP3_INT.pcc");
                     me3File.LECLTagData.ImportHintFiles.Add("Startup_DLC_CON_MP4_INT.pcc");
 
-                    var le3File = MEPackageHandler.CreateAndOpenPackage(Path.Combine(vars.OutputPath, packageName), MEGame.LE3);
+                    var mapping = packageBaseName.StripUnrealLocalization();
+                    var category = FileMap[mapping];
+                    var outputFolder = Path.Combine(vars.OutputPath, category.ToString());
+                    lock (pipelineCache)
+                    {
+                        // Ensure we don't have duplicate creation issues
+                        Directory.CreateDirectory(outputFolder);
+                    }
+                    var le3File = MEPackageHandler.CreateAndOpenPackage(Path.Combine(outputFolder, packageName), MEGame.LE3);
                     le3File.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint common package
                     le3File.LECLTagData.IsPostLoadFile = false;
 
+
                     MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY, null);
-                    MilanShared.PortLocalizations(packageBaseName, vars.OutputPath, cache, LOG_CATEGORY);
+                    MilanShared.PortLocalizations(packageBaseName, outputFolder, cache, LOG_CATEGORY);
                 });
-            MilanShared.LogDonorMessages = true; // Turn off spammy messaging.
+            MilanLog.LogDonorMessages = true; // Turn off spammy messaging.
+        }
+
+        /// <summary>
+        /// Moves files in the NonStartup
+        /// </summary>
+        internal static void OrganizeFiles()
+        {
+
         }
 
         /// <summary>

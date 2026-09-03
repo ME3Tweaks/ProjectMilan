@@ -324,7 +324,7 @@ namespace ProjectMilan.Utility
             foreach (var pcc in Directory.GetFiles(dir))
             {
                 var package = MEPackageHandler.OpenMEPackage(pcc);
-                LevelTools.CalculateTextureToInstancesMap(package, TieredPackageCache.GetGlobalPackageCache(MEGame.LE3));
+                LevelTools.CalculateTextureToInstancesMap(package, TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Research.TestTextureToInstancesMap cache"));
                 //package.Save();
             }
         }
@@ -470,7 +470,7 @@ namespace ProjectMilan.Utility
         /// recompiling shaders you already had a (working or not) install for previously.</param>
         internal static void InstallCompiledShaders(bool force = false)
         {
-            var path = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Kits";
+            var path = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan";
             if (Directory.Exists(path) == false)
             {
                 MilanLog.Error($"Shader install target path not found: {path}");

@@ -274,7 +274,7 @@ namespace ProjectMilan
             }
 
             // Map settings into Core library.
-            BaseBuildSettings.OutputModPath = Settings.OutputModPath;
+            MilanPipelinesShared.OutputModPath = Settings.OutputModPath;
         }
 
         private static IMilanSettings LoadSettingsConfig(CLIOptions cliOptions) => cliOptions.Config.ToLower() switch
@@ -311,7 +311,7 @@ namespace ProjectMilan
                     // MPCommon.RunPipeline is skipped on this path (its output was already captured
                     // into the checkpoint), so nothing has loaded BIOP_MP_COMMON.pcc into memory or
                     // built the shared MPCommon FileLib tier yet - do that now instead.
-                    var restoredMpCommonPath = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", MilanShared.MP_STARTUP_FILENAME);
+                    var restoredMpCommonPath = Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", MilanShared.MP_STARTUP_FILENAME);
                     if (File.Exists(restoredMpCommonPath))
                     {
                         var restoredMpCommonPkg = MEPackageHandler.OpenMEPackage(restoredMpCommonPath);
@@ -561,6 +561,7 @@ namespace ProjectMilan
                 sw.Stop();
                 MilanLog.Information($"Pipeline finished: {pipelineName} took {sw.ElapsedMilliseconds}ms");
                 pipelineTimes[pipelineName] = sw.ElapsedMilliseconds;
+                GC.Collect();
             }
             else
             {
