@@ -1,5 +1,7 @@
 ﻿// 08/27/2026 - Mgamerz
 // AIEnergyShieldGatePct converted to ScaledFloat to allow game effects to apply to it
+// 08/31/2026 - Mgamerz
+// Fix shields not recharging at high FPS
 Class SFXShield_Base extends Inventory
     abstract
     config(Weapon);
@@ -481,6 +483,19 @@ public final function SetCurrentShields(float NewCurrentShields)
         ReplicateCurrentShields();
     }
 }
+
+public final function SetCurrentShields(float NewCurrentShields)
+{
+    if (Role == ENetRole.ROLE_Authority)
+    {
+        // MILAN CHANGE - 08/31/2026 - Mgamerz
+        // Use FMax instead of Max to do float comparison, not integer
+        // (Original find by Tajfun)
+        CurrentShields = FMax(NewCurrentShields, 0.0);
+        ReplicateCurrentShields();
+    }
+}
+
 public function SetMaxShields(ScaledFloat NewMaxShields)
 {
     MaxShields = NewMaxShields;
