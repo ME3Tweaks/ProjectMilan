@@ -197,6 +197,7 @@ namespace ProjectMilan.Pipelines.Texture
                 UseIndexing = false,
                 StagingPath = staging,
                 TFCType = "Textures",
+                RootTexturesOnly = false, // Name says non-lighting: root (lightmap) textures are handled separately below via plain MoveTexturesToTFC, not compacted here.
             };
 
             MilanLog.Information("Compacting TFC", customPrefix: LOG_CATEGORY);
