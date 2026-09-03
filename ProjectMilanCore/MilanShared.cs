@@ -462,7 +462,7 @@ namespace ProjectMilanCore
         public static bool EnsureMPCommonInGame(out string foundPath)
         {
             foundPath = null;
-            var biopMPCommon = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole", MP_STARTUP_FILENAME);
+            var biopMPCommon = Path.Combine(MilanPipelinesShared.OutputModPath, @"CookedPCConsole", MP_STARTUP_FILENAME);
             if (!File.Exists(biopMPCommon))
             {
                 var lmpPath = MEDirectories.GetDefaultGamePath(MEGame.LE3);
@@ -562,7 +562,7 @@ namespace ProjectMilanCore
             mf.WriteMountFile(Path.Combine(fakeCooked, "mount.dlc"));
 
             // List of all suffixes to ensure
-            var audioSuffixes = BaseBuildSettings.SupportedVOLanguages.Select(x => x.ToString()).Concat(new[] { "SFX" });
+            var audioSuffixes = MilanPipelinesShared.SupportedVOLanguages.Select(x => x.ToString()).Concat(new[] { "SFX" });
 
             var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.ME3, includeAFCs: true); // This will also force reload the list of files.
             foreach (var afcN in afcBaseNames)
@@ -617,7 +617,7 @@ namespace ProjectMilanCore
         {
             MilanLog.Information($"Porting localized files for {basePackageName}", customPrefix: logCategory);
             bool foundInt = false;
-            foreach (var lang in BaseBuildSettings.SupportedVOLanguages)
+            foreach (var lang in MilanPipelinesShared.SupportedVOLanguages)
             {
                 var packageName = $"{basePackageName}_LOC_{lang}.pcc";
                 var me3Package = MilanShared.GetME3Package(packageName, logIfNotFound: foundInt);
@@ -994,13 +994,13 @@ namespace ProjectMilanCore
         public static IMEPackage LE3PackageResolver(string filename, PackageCache cache)
         {
             string matching = null;
-            if (BaseBuildSettings.OutputModPath != null)
+            if (MilanPipelinesShared.OutputModPath != null)
             {
                 lock (_globalDirEnumerator)
                 {
                     if (RefreshMilanFiles)
                     {
-                        MilanFiles = Directory.GetFiles(BaseBuildSettings.OutputModPath, "*",
+                        MilanFiles = Directory.GetFiles(MilanPipelinesShared.OutputModPath, "*",
                             SearchOption.AllDirectories);
                         RefreshMilanFiles = false;
                     }
@@ -1566,12 +1566,91 @@ namespace ProjectMilanCore
         /// </summary>
         public static void PromoteMPCommonIntoCacheChain()
         {
+            LoadAndChainMPCommon(Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", MP_STARTUP_FILENAME));
+        }
+
+        /// <summary>
+        /// Standalone-runner equivalent of <see cref="PromoteMPCommonIntoCacheChain"/>: for callers that don't build
+        /// BIOP_MP_COMMON themselves (currently ProjectMilan_ExtraContent's standalone entry point). If BIOP_MP_COMMON
+        /// is already chained in - e.g. ProjectMilan already built and populated it earlier in this same process -
+        /// this is a no-op, since the goal is for callers running "combined" to simply inherit that already-built
+        /// state. Otherwise, sources a previously-built copy of BIOP_MP_COMMON.pcc from the ME3Tweaks Mod Manager
+        /// library (LMP\Project Milan\<see cref="DLC_NAME"/>\CookedPCConsole\BIOP_MP_COMMON.pcc), which has already
+        /// been through the Finalize/Licensee pipeline and so is stamped as MEGame.LMP rather than MEGame.LE3. That
+        /// stamp is patched back to LE3 (see <see cref="LoadAndChainMPCommon"/>) so its classes resolve as ordinary
+        /// same-game imports instead of needing cross-game donor resolution.
+        /// </summary>
+        /// <returns>True if BIOP_MP_COMMON is chained in (whether by this call or already), false if it could not be found.</returns>
+        public static bool EnsureMPCommonCacheChainFromLibrary()
+        {
+            lock (commonCacheSyncObj)
+            {
+                if (mpCommonPackageCache != null)
+                    return true; // Already populated - e.g. by ProjectMilan in this same process.
+
+                var libraryPath = Utilities.GetModManagerLibraryPath();
+                if (libraryPath == null)
+                {
+                    MilanLog.Error("Could not locate the ME3Tweaks Mod Manager library - cannot source a pre-built BIOP_MP_COMMON.pcc.");
+                    return false;
+                }
+
+                var mpCommonPath = Path.Combine(libraryPath, "LMP", "Project Milan", DLC_NAME, "CookedPCConsole", MP_STARTUP_FILENAME);
+                if (!File.Exists(mpCommonPath))
+                {
+                    MilanLog.Error($"Could not find a pre-built {MP_STARTUP_FILENAME} at {mpCommonPath}. Run Project Milan first to build it.");
+                    return false;
+                }
+
+                LoadAndChainMPCommon(mpCommonPath);
+                return true;
+            }
+        }
+
+        /// <summary>
+        /// The single BIOP_MP_COMMON package instance chained into the shared cache by <see cref="PromoteMPCommonIntoCacheChain"/>
+        /// or <see cref="EnsureMPCommonCacheChainFromLibrary"/>, or null if neither has run yet.
+        /// </summary>
+        public static IMEPackage GetMPCommonPackage()
+        {
+            lock (commonCacheSyncObj)
+            {
+                return mpCommonPackage;
+            }
+        }
+
+        private static IMEPackage mpCommonPackage;
+
+        /// <summary>
+        /// Core logic shared by <see cref="PromoteMPCommonIntoCacheChain"/> (ProjectMilan's own fresh build) and
+        /// <see cref="EnsureMPCommonCacheChainFromLibrary"/> (ProjectMilan_ExtraContent's standalone entry point):
+        /// reads BIOP_MP_COMMON from the given path, patches its licensee-version byte from LMP (206) back to LE3
+        /// (205) if it was stamped LMP by the Finalize/Licensee pipeline (a no-op for ProjectMilan's own fresh,
+        /// not-yet-relicensed output), then splices it into the cache chain between the global tier and the warm
+        /// cache, registers it as safe to import from, and inventories its classes into <see cref="GlobalUnrealObjectInfo"/>
+        /// so they resolve like any other same-game class. Must be called with <see cref="commonCacheSyncObj"/> held
+        /// or (as here) take the lock itself.
+        /// </summary>
+        private static void LoadAndChainMPCommon(string mpCommonPath)
+        {
             lock (commonCacheSyncObj)
             {
                 globalCache ??= TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Global LE3 safe-to-import cache (process lifetime)");
 
+                var bytes = File.ReadAllBytes(mpCommonPath);
+                if (bytes.Length > 0x6 && bytes[0x6] == (byte)MEPackage.LMPLicenseeVersion)
+                {
+                    bytes[0x6] = (byte)MEPackage.LE3LicenseeVersion; // Read as LE3 so its classes import same-game, not cross-game.
+                }
+
+                var mpCommonPkg = MEPackageHandler.OpenMEPackageFromStream(new MemoryStream(bytes), mpCommonPath);
+                mpCommonPackage = mpCommonPkg;
+
                 mpCommonPackageCache = globalCache.ChainNewCache(debugName: "MPCommon BIOP_MP_COMMON cache (process lifetime)");
-                var mpCommonPkg = mpCommonPackageCache.GetCachedPackage(Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", "BIOP_MP_COMMON.pcc")); // Cache MPCommon as it will be used by every later pipeline.
+                mpCommonPackageCache.InsertIntoCache(mpCommonPkg); // Cache MPCommon as it will be used by every later pipeline.
+
+                EntryImporter.AddUserSafeToImportFromFile(MEGame.LE3, MP_STARTUP_FILENAME);
+                InstallMPCommonClassInfo(mpCommonPkg);
 
                 // Safety net: MPCommon.CompileMPCommonPackage and the checkpoint-restore path in
                 // Program.cs both already do this earlier (so NonStartupPipeline, which runs before
@@ -1634,10 +1713,23 @@ namespace ProjectMilanCore
         {
             if (InstalledMPCommonInfo)
                 return;
+            var p = MEPackageHandler.OpenMEPackage(mpCommonPath, diskIOSyncLock: DiskIOSyncLock);
+            InstallMPCommonClassInfo(p);
+        }
+
+        /// <summary>
+        /// Same as <see cref="InstallMPCommonClassInfo(string)"/>, but for a BIOP_MP_COMMON package that's already
+        /// open (e.g. already read/patched/cached by <see cref="LoadAndChainMPCommon"/>) rather than re-opening it
+        /// from a path. Classes are installed under <c>ex.Game</c>, so the package must already be tagged with
+        /// whichever game its classes should resolve as.
+        /// </summary>
+        public static void InstallMPCommonClassInfo(IMEPackage mpCommonPackage)
+        {
+            if (InstalledMPCommonInfo)
+                return;
             InstalledMPCommonInfo = true;
             MilanLog.Information($"Inventorying BIOP_MP_COMMON package");
-            var p = MEPackageHandler.OpenMEPackage(mpCommonPath, diskIOSyncLock: DiskIOSyncLock);
-            foreach (var ex in p.Exports.Where(x => x.IsClass))
+            foreach (var ex in mpCommonPackage.Exports.Where(x => x.IsClass))
             {
                 var classInfo = GlobalUnrealObjectInfo.generateClassInfo(ex);
                 MilanLog.Information($@"  Inventorying class {ex.InstancedFullPath}");
@@ -1645,7 +1737,7 @@ namespace ProjectMilanCore
 
                 if (ex.InheritsFrom("SequenceObject"))
                 {
-                    var defaults = p.GetUExport(ObjectBinary.From<UClass>(ex).Defaults);
+                    var defaults = mpCommonPackage.GetUExport(ObjectBinary.From<UClass>(ex).Defaults);
                     GlobalUnrealObjectInfo.GenerateSequenceObjectInfoForClassDefaults(defaults);
                 }
             }
@@ -1673,7 +1765,7 @@ namespace ProjectMilanCore
         public static void MoveTexturesToTFC(string tfcType, string dlcName, bool rootTextures, string logCategoryBase)
         {
             string category = logCategoryBase + "-" + tfcType;
-            var inputFolder = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole");
+            var inputFolder = Path.Combine(MilanPipelinesShared.OutputModPath, @"CookedPCConsole");
             const long MaxTFCSize = 2L * 1024 * 1024 * 1024; // 2 GiB
             int tfcIndex = 1; // Increments every 2GiB
             var tfcName = $"{tfcType}_{dlcName}";

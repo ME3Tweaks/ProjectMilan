@@ -1,4 +1,6 @@
-﻿using Microsoft.Win32;
+﻿using LegendaryExplorerCore.Misc;
+using LegendaryExplorerCore.Misc.ME3Tweaks;
+using Microsoft.Win32;
 using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
@@ -321,6 +323,46 @@ namespace ProjectMilan.Utility
             {
                 algo.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Returns the path to the ME3Tweaks Mod Manager library, if it can be found. Returns null if not found.
+        /// </summary>
+        /// <returns></returns>
+        public static string GetModManagerLibraryPath()
+        {
+            // Useful place: ME3Tweaks Mod Manager library
+            var m3settingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "ME3TweaksModManager", "settings.ini");
+            if (File.Exists(m3settingsFile))
+            {
+                try
+                {
+                    DuplicatingIni ini = DuplicatingIni.LoadIni(m3settingsFile);
+                    var libraryPath = ini.GetValue("ModLibrary", "LibraryPath");
+                    if (libraryPath.HasValue && Directory.Exists(libraryPath.Value))
+                    {
+                        return libraryPath.Value;
+                    }
+                    else
+                    {
+                        // Read registry key for local lookup
+                        var executable = ModManagerIntegration.GetModManagerExecutableLocation();
+                        if (executable != null)
+                        {
+                            var path = Path.Combine(Directory.GetParent(executable).FullName, "mods");
+                            if (Directory.Exists(path))
+                            {
+                                return path;
+                            }
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    // Don't do anything
+                }
+            }
+            return null;
         }
     }
 }
