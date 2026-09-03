@@ -24,7 +24,7 @@ namespace ProjectMilan_ExtraContent.Rejects
     /// </summary>
     public static class RejectsPipeline
     {
-        private static string CookedPCFolder => Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole");
+        private static string CookedPCFolder => Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole");
         private static string MergedContentPath => Path.Combine(CookedPCFolder, "MergedContent.pcc");
 
         /// <summary>
@@ -76,11 +76,14 @@ namespace ProjectMilan_ExtraContent.Rejects
         /// </summary>
         internal static void RunPipelineEC()
         {
-            ExtraContentInit.PrepareContent(EExtraContent.Rejects);
+            ExtraContentStorage.PrepareContent(EExtraContent.Rejects);
             RunPipeline();
             MilanShared.MoveTexturesToTFC("Textures", MilanShared.REJECTS_DLC_NAME, false, @"MILANEC-TFC");
-            ExtraContentInit.CompactTFC(EExtraContent.Rejects, false); // Milan main will handle this when it pulls everything together
-            ExtraContentInit.CompactAFC(EExtraContent.Rejects); // Milan main will handle this when it pulls everything together
+            ExtraContentStorage.CompactTFC(EExtraContent.Rejects, false); // Milan main will handle this when it pulls everything together
+            ExtraContentStorage.CompactAFC(EExtraContent.Rejects); // Milan main will handle this when it pulls everything together
+
+            // Convert the licensee version on packages.
+            MilanLicensee.RunPipeline(MilanPipelinesShared.OutputModPath);
         }
 
         /// <summary>
@@ -110,7 +113,7 @@ namespace ProjectMilan_ExtraContent.Rejects
         private static void GenerateGUIPackage(RejectVars vars)
         {
             MilanLog.Information($"Generating GUI assets package", customPrefix: LOG_CATEGORY);
-            var pccP = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", "SFXGUIMPImages_Milan_Rejects.pcc");
+            var pccP = Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", "SFXGUIMPImages_Milan_Rejects.pcc");
             var pcc = MEPackageHandler.CreateAndOpenPackage(pccP, MEGame.LE3);
             var bannerExp = Texture2D.CreateTexture(pcc, "OptEmyRejects", 1024, 256, PixelFormat.BC7, false);
             var bannerTex = new Texture2D(bannerExp);
@@ -134,7 +137,7 @@ namespace ProjectMilan_ExtraContent.Rejects
 
             // Add localized packages.
             MilanPackageCache localizedCache = new MilanPackageCache();
-            foreach (var loc in BaseBuildSettings.SupportedVOLanguages)
+            foreach (var loc in MilanPipelinesShared.SupportedVOLanguages)
             {
                 var localizedPackage = MEPackageHandler.CreateAndOpenPackage(MergedContentPath.SetUnrealLocalization(MEGame.LE3, loc, true), MEGame.LE3);
                 localizedCache.InsertIntoCache(localizedPackage);
@@ -169,7 +172,7 @@ namespace ProjectMilan_ExtraContent.Rejects
                 {
                     // Calculate once outside of loop to improve performance.
                     var references = EntryImporter.GetAllReferencesOfExport(archetype).OfType<ImportEntry>().ToList();
-                    Parallel.ForEach(BaseBuildSettings.SupportedVOLanguages, loc =>
+                    Parallel.ForEach(MilanPipelinesShared.SupportedVOLanguages, loc =>
                     {
                         MilanLog.Information($"Porting localized content for {source.Name} into MergedContent_{loc}", customPrefix: LOG_CATEGORY);
                         SharedLoc.GenerateLocalizedContent(archetype, localizedCache.GetPackages().FirstOrDefault(x => x.Localization == loc), loc, vars.Cache, source.Name, references);
@@ -261,7 +264,7 @@ namespace ProjectMilan_ExtraContent.Rejects
             {
                 MilanLog.Information($"Splitting {ps.Name} to individual package", customPrefix: LOG_CATEGORY);
                 var splitPackage = MEPackageHandler.CreateAndOpenPackage(
-                    Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"SFXPawn_{ps.Name}.pcc"),
+                    Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", $"SFXPawn_{ps.Name}.pcc"),
                     MEGame.LE3);
                 EntryExporter.ExportExportToPackage(mergedContent.FindExport(ps.RemappedArchetypeIFP), splitPackage, out var archetype, vars.Cache);
                 PackageTools.AddToObjectReferencer(archetype);

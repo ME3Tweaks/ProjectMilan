@@ -17,44 +17,49 @@ namespace ProjectMilan_ExtraContent.Redemption
     internal class RedemptionShared
     {
         /// <summary>
-        /// The current mastermaplist id. This should be tuned so we know exactly where to start when building extra map content.
+        /// The current mastermaplist id. This should be tuned when we know exactly where to start when building extra map content.
         /// </summary>
-        private static int CurrentMapId = 30;
+        private static int? CurrentMapId = 30;
 
-        /*
-         *<Sections>
-           	<Section name="sfxgame.sfxengine">
-           		<Property name="dynamicloadmapping">
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapMars",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapCronos",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapGellix",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapTrinity",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapAxGlitch",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapAxJungle",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapAxBrimstone",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapAxPainTrain",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapAxWingman",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapAxBlasteroid",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapAxSpinZone",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapAxClassic",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapCitHubBPS1",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapProtoHydra1",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapProtoHydra2",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapNeptune2",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           			<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapFallOfVancouver",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-           		</Property>
-           	</Section>
-           </Sections>
-         */
+        /// <summary>
+        /// Base name of the package that stores the map images
+        /// </summary>
+        internal const string MAP_IMAGE_PACKAGE = "SFXMapImages_Redemption";
 
-        private static string BuildDLMForImage(string objectName, string sfPackageName = "SFXMPImagesMatchSettings_Milan")
+        private static string BuildDLMForImage(string objectName)
         {
-            return $"(ObjectName=\"{objectName}\", SeekFreePackageName =\"{sfPackageName}\"";
+            return $"(ObjectName=\"{objectName}\", SeekFreePackageName =\"{MAP_IMAGE_PACKAGE}\")";
         }
 
         public static string GetMapBaseName(string biopName)
         {
             return biopName.Substring("BioP_MP".Length);
+        }
+
+        private static IMEPackage _mapImagesPackage = null;
+        public static IMEPackage GetMapImagesPackage()
+        {
+            if (_mapImagesPackage == null)
+            {
+                _mapImagesPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(MilanPipelinesShared.OutputModPath, @"CookedPCConsole", $"{MAP_IMAGE_PACKAGE}.pcc"), MEGame.LE3); // Use LE3 or TFC compactor dies
+            }
+            return _mapImagesPackage;
+        }
+
+        /// <summary>
+        /// Saves and discards the IMEPackage for the map images package
+        /// </summary>
+        public static void SaveMapImagesPackage()
+        {
+            var package = GetMapImagesPackage();
+            if (package.Exports.Count > 0)
+            {
+                // Referencer is required so resynth doesn't wipe it all out
+                package.AddObjectsToReferencer(package.Exports.Where(x=>x.IsTexture()).ToList());
+                package.Save();
+            }
+
+            _mapImagesPackage = null;
         }
 
         /// <summary>
@@ -65,7 +70,7 @@ namespace ProjectMilan_ExtraContent.Redemption
         {
             #region ENGINE
             {
-                var engine = RedemptionPipeline.CurrentConfig.GetAsset("BioEngine");
+                var engine = MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine");
                 var sfxengine = engine.GetOrAddSection("sfxgame.sfxengine");
 
                 // Add level image for GUI
@@ -78,7 +83,7 @@ namespace ProjectMilan_ExtraContent.Redemption
             #region GAME
 
             {
-                var game = RedemptionPipeline.CurrentConfig.GetAsset("BioGame");
+                var game = MilanPipelinesShared.ConfigBundle.GetAsset("BioGame");
                 var onlinegamesettings = game.GetOrAddSection("sfxonlinefoundation.sfxonlinegamesettings");
 
                 // Add to availablemaps
@@ -102,11 +107,11 @@ namespace ProjectMilan_ExtraContent.Redemption
         {
             return $"(ID={CurrentMapId}, " +
                    $"PackageName=\"{info.MapName}\", " +
-                   $"PrettyName={AssignTLK(info.LevelNameString)}, " +
-                   $"Description={AssignTLK(info.LevelDescriptionString)}, " +
-                   $"Image=\"SFXMPImagesMatchSettings_Milan.OptMap{GetMapBaseName(info.MapName)}\", " +
+                   $"PrettyName={MilanPipelinesShared.AssignTLK(info.LevelNameString)}, " +
+                   $"Description={MilanPipelinesShared.AssignTLK(info.LevelDescriptionString)}, " +
+                   $"Image=\"OptMap{GetMapBaseName(info.MapName)}\", " +
                    $"GalaxyAtWarMapPosition=(X={info.GAWMapPosition.X},Y={info.GAWMapPosition.Y}), " +
-                   $"GalaxyAtWarMapSubtitle={AssignTLK(info.GAWMapSubtitle)}, " +
+                   $"GalaxyAtWarMapSubtitle={MilanPipelinesShared.AssignTLK(info.GAWMapSubtitle)}, " +
                    $"MusicEventName=\"{GetMusicEventName()}\")";
         }
 
@@ -130,49 +135,5 @@ namespace ProjectMilan_ExtraContent.Redemption
         {
             return MusicEvents[MusicEventNameIdx++ % MusicEvents.Length];
         }
-
-        #region TLK
-        private static int CurrentTLKId = 65462165; // Todo: Find base
-        private static Dictionary<MELocalization, ME2ME3TalkFile> Tlks;
-        private static string BaseTlkName;
-        private static int AssignTLK(Dictionary<MELocalization, string> localizationData)
-        {
-            if (Tlks == null)
-                LoadTlks();
-
-            foreach (var loc in localizationData)
-            {
-                Tlks[loc.Key].AddString(new TLKStringRef(CurrentTLKId,loc.Value));
-            }
-
-            return CurrentTLKId++;
-        }
-
-        private static void LoadTlks()
-        {
-            Tlks = new Dictionary<MELocalization, ME2ME3TalkFile>();
-            var outDir = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole");
-            var tlkFiles = Directory.GetFiles(outDir, "*.tlk", SearchOption.TopDirectoryOnly);
-            foreach (var tlk in tlkFiles)
-            {
-                BaseTlkName ??= Path.GetFileNameWithoutExtension(tlk).StripUnrealLocalization();
-                var loc = tlk.GetUnrealLocalization();
-                Tlks[loc] = new ME2ME3TalkFile(tlk);
-            }
-        }
-
-        public static void SaveTlks()
-        {
-            if (Tlks == null)
-                return; // No TLK data defined
-            var outDir = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole");
-            foreach (var tlk in Tlks)
-            {
-                var outPath = Path.Combine(outDir, BaseTlkName + "_" + tlk.Key + ".tlk");
-                HuffmanCompression.SaveToTlkFile(outPath, tlk.Value.StringRefs);
-            }
-        }
-
-        #endregion
     }
 }

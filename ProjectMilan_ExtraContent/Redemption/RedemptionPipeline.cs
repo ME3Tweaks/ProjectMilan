@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LegendaryExplorerCore.Coalesced.Config;
+﻿using LegendaryExplorerCore.Coalesced.Config;
 using LegendaryExplorerCore.Packages;
+using ProjectMilan;
+using ProjectMilan.Utility;
+using ProjectMilan_ExtraContent.Redemption.Levels;
 using ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV;
+using ProjectMilan_ExtraContent.Redemption.Levels.MapPack;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
 
@@ -13,8 +12,8 @@ namespace ProjectMilan_ExtraContent.Redemption
 {
     public static class RedemptionPipeline
     {
-        public static ConfigAssetBundle CurrentConfig { get; set; }
-        private static string CookedPCFolder => Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole");
+        private static string CookedPCFolder => Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole");
+        internal static string PipelineRoot => Path.Combine(SharedECPipelines.ECPipelineRoot, "Redemption");
 
 
         /// <summary>
@@ -22,16 +21,23 @@ namespace ProjectMilan_ExtraContent.Redemption
         /// </summary>
         public static void RunPipelineEC()
         {
-            ExtraContentInit.PrepareContent(EExtraContent.Redemption);
+            ExtraContentStorage.PrepareContent(EExtraContent.Redemption);
             RunPipeline();
+            // In EC we should move textures to TFC as well as compact them
             MilanShared.MoveTexturesToTFC("Textures", MilanShared.REDEMPTION_DLC_NAME, false, @"MILANEC-TFC");
             MilanShared.MoveTexturesToTFC("Lighting", MilanShared.REDEMPTION_DLC_NAME, true, @"MILANEC-TFC");
-            // ExtraContentInit.CompactTFC(EExtraContent.Redemption, false); // Milan main will handle this when it pulls everything together
-            ExtraContentInit.CompactAFC(EExtraContent.Redemption); // Milan main will handle this when it pulls everything together
+            ExtraContentStorage.CompactTFC(EExtraContent.Redemption, false); // Pull textures
+            ExtraContentStorage.CompactTFC(EExtraContent.Redemption, true); // Pull lighting
+            ExtraContentStorage.CompactAFC(EExtraContent.Redemption);
+
+            // Convert the licensee version on packages.
+            MilanLicensee.RunPipeline(MilanPipelinesShared.OutputModPath);
+  
+            ExtraContentStorage.SaveContent();
         }
 
         /// <summary>
-        /// Runs the pipeline, assuming folder is already prepared for mod use.
+        /// Runs the pipeline, assuming folder is already prepared for mod use. This is what is called by Project Milan's main project.
         /// </summary>
         public static void RunPipeline()
         {
@@ -42,48 +48,47 @@ namespace ProjectMilan_ExtraContent.Redemption
 
         private static void InternalRunPipeline(RedemptionVars vars)
         {
-            CurrentConfig = SharedECPipelines.MergeConfig(EExtraContent.Redemption);
-            SharedECPipelines.MergeTLK(EExtraContent.Redemption);
-
             BuildLevels(vars);
 
-            // Finalize
+            // Content saving is done in the EC wrapper for EC runs.
 
-            // Write config bundle.
-            var configDest = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"Default_{Path.GetFileName(BaseBuildSettings.OutputModPath)}.bin"); // Points to output directory .bin, could be milan or R2
-            CurrentConfig.CommitAssets(configDest, MELocalization.None);
-            
-            // Write TLK data.
-            RedemptionShared.SaveTlks();
+            // Save the redemption map images
+            RedemptionShared.SaveMapImagesPackage();
         }
 
         private static void BuildLevels(RedemptionVars vars)
         {
-            BuildArmaxLevels();
             BuildCrossgenLevel();
             BuildRedemptionLevels();
         }
 
         private static void BuildRedemptionLevels()
         {
+            if (!ECLevelBuild.RedemptionMaps)
+            {
+                MilanLog.Information("Redemption DLC mod levels are not enabled for build, skipping.");
+                return;
+            }
 
+            MPMapPackBuild.BuildLevels();
         }
 
         private static void BuildCrossgenLevel()
         {
             // Causes failure if it doesn't exist.
+            if (!ECLevelBuild.CrossGenVMaps)
+            {
+                MilanLog.Information("CrossGenV mod levels are not enabled for build, skipping.");
+                return;
+
+            }
             var test = CrossGenVShared.SourceFilesFolder;
 
-            TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Redemption BuildCrossgenLevel global LE3 root");
+            using TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Redemption BuildCrossgenLevel global LE3 root");
             foreach (var level in CrossGenVShared.CrossgenLevels.Where(x => x.Enabled))
             {
                 CrossGenVShared.BuildLevel(level, cache);
             }
-        }
-
-        private static void BuildArmaxLevels()
-        {
-
         }
     }
 

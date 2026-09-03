@@ -12,6 +12,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan;
+using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
 using System.Diagnostics;
@@ -124,8 +125,12 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             {
                 if (_sourceFilesFolder == null)
                 {
-                    var modLibrary = Directory.GetParent(BaseBuildSettings.OutputModPath).Parent.Parent;
-                    var psPath = Path.Combine(modLibrary.FullName, "LE1", "Pinnacle Station DLC");
+                    var modLibrary = Utilities.GetModManagerLibraryPath();
+                    if (modLibrary == null || !Directory.Exists(modLibrary))
+                    {
+                        throw new Exception("Unable to determine location of your Mod Manager library");
+                    }
+                    var psPath = Path.Combine(modLibrary, "LE1", "Pinnacle Station DLC");
                     if (!Directory.Exists(psPath))
                     {
                         throw new Exception("Pinnacle Station DLC must be imported into your Mod Manager library for build");
@@ -144,7 +149,7 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             MilanLog.Information($@"Beginning crossgen level port: {info.MapName}", customPrefix: info.LogCategory);
             info.Cache = parent.ChainNewCache(debugName: $"CrossGenV level cache (NEVER DISPOSED) ({info.MapName})");
 
-            info.OutputPath = Path.Combine(BaseBuildSettings.OutputModPath, @"CookedPCConsole", @"Levels", info.MapName);
+            info.OutputPath = Path.Combine(MilanPipelinesShared.OutputModPath, @"CookedPCConsole", @"Levels", info.MapName);
             Directory.CreateDirectory(info.OutputPath);
 
             // Create BioP

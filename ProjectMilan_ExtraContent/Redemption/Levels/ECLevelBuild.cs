@@ -14,17 +14,11 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels
         /// <summary>
         /// PINNACLE STATION TROPICAL
         /// </summary>
-        public static bool CrossgenTropical { get; set; } = true;
+        public static bool CrossGenVMaps { get; set; } = false;
 
-
-        // ARMAX
-
-        // REDEMPTION
         /// <summary>
-        /// LEV004 DESPOINA SURFACE
+        /// Builds redemption maps. Requires you have imported the MP Map Pack for Redemption into the Mod Manager library.
         /// </summary>
-        public static bool Shipwreck { get; set; } = true;
-
-
+        public static bool RedemptionMaps { get; internal set; } = true;
     }
 }

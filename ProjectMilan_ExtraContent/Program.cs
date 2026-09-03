@@ -1,17 +1,18 @@
-﻿using System.Diagnostics;
-using CommandLine;
-using LegendaryExplorerCore.Packages;
+﻿using CommandLine;
 using LegendaryExplorerCore;
+using LegendaryExplorerCore.Packages;
 using ProjectMilan;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Utility;
-using ProjectMilan_ExtraContent.Settings;
-using Serilog;
-using Timer = System.Timers.Timer;
-using System.Timers;
 using ProjectMilan_ExtraContent.Redemption;
 using ProjectMilan_ExtraContent.Rejects;
+using ProjectMilan_ExtraContent.Settings;
+using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
+using Serilog;
+using System.Diagnostics;
+using System.Timers;
+using Timer = System.Timers.Timer;
 
 namespace ProjectMilan_ExtraContent
 {
@@ -109,37 +110,51 @@ namespace ProjectMilan_ExtraContent
         private static void RunPipelines()
         {
             // These are required for build to work
-            if (BaseBuildSettings.OutputModPath == null)
+            if (MilanPipelinesShared.OutputModPath == null)
             {
-                BaseBuildSettings.OutputModPath = ""; // Set blank so next call works
+                MilanPipelinesShared.OutputModPath = ""; // Set blank so next call works
             }
 
-            if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath))
+            // If running standalone, this sources a pre-built BIOP_MP_COMMON.pcc from the mod library and chains
+            // it into the shared cache ourselves. If running combined (invoked from ProjectMilan's own Program.cs
+            // in the same process), ProjectMilan will already have populated this via PromoteMPCommonIntoCacheChain
+            // before running these pipelines, and this call becomes a no-op.
+            if (!MilanShared.EnsureMPCommonCacheChainFromLibrary())
             {
                 return;
             }
 
+            // Open the config bundle.
+
+
             // if statements are here because we don't want to change output paths unless necessary.
+            var contentBuilt = false;
             if (Settings.RunRejectionPipeline)
             {
-                MilanShared.InstallMPCommonClassInfo(mpCommonPath);
-                BaseBuildSettings.OutputModPath = Settings.OutputModPathREJ;
                 RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipelineEC, @"Rejection");
+                contentBuilt = true;
             }
 
             if (Settings.RunRedemptionPipeline)
             {
-                MilanShared.InstallMPCommonClassInfo(mpCommonPath);
-                BaseBuildSettings.OutputModPath = Settings.OutputModPathRED;
+                MilanPipelinesShared.OutputModPath = Settings.OutputModPathRED;
                 RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipelineEC, @"Redemption");
+                contentBuilt = true;
             }
 
-            MilanLog.Information($"Pipeline timings:");
-            foreach (var stat in pipelineTimes)
+            if (contentBuilt)
             {
-                MilanLog.Information($"\t{stat.Key.PadRight(pipelineTimes.Keys.MaxBy(x => x.Length).Length + 3)}{stat.Value}ms");
+                MilanLog.Information($"Pipeline timings:");
+                foreach (var stat in pipelineTimes)
+                {
+                    MilanLog.Information($"\t{stat.Key.PadRight(pipelineTimes.Keys.MaxBy(x => x.Length).Length + 3)}{stat.Value}ms");
+                }
+                MilanLog.Information($"\tTotal:\t{pipelineTimes.Sum(x => x.Value)}ms");
             }
-            MilanLog.Information($"\tTotal:\t{pipelineTimes.Sum(x => x.Value)}ms");
+            else
+            {
+                MilanLog.Information($"No pipelines were enabled");
+            }
         }
 
         /// <summary>

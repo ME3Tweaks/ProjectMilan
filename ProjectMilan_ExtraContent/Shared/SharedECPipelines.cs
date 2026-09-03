@@ -190,7 +190,7 @@ namespace ProjectMilan_ExtraContent.Shared
                 }
 
                 // Find matching TLK.
-                var destTLKPath = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"{Path.GetFileName(BaseBuildSettings.OutputModPath)}_{loc}.tlk");
+                var destTLKPath = Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", $"{Path.GetFileName(MilanPipelinesShared.OutputModPath)}_{loc}.tlk");
                 if (!File.Exists(destTLKPath))
                 {
                     MilanLog.Warning($"Destination TLK does not exist, will not merge into it: {destTLKPath}");
@@ -246,7 +246,7 @@ namespace ProjectMilan_ExtraContent.Shared
         internal static ConfigAssetBundle MergeConfig(EExtraContent content, string subfolder = null)
         {
             MilanLog.Information($"Merging config file", customPrefix: LOG_CATEGORY);
-            var configDest = Path.Combine(BaseBuildSettings.OutputModPath, "CookedPCConsole", $"Default_{Path.GetFileName(BaseBuildSettings.OutputModPath)}.bin"); // Points to output directory .bin, could be milan or R2
+            var configDest = Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", $"Default_{Path.GetFileName(MilanPipelinesShared.OutputModPath)}.bin"); // Points to output directory .bin, could be milan or R2
             var configSourceF = Path.Combine(SharedECPipelines.ECPipelineRoot, content.ToString(), "Config");
             if (subfolder != null)
             {
