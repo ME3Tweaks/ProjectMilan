@@ -1,0 +1,65 @@
+{
+  "MasterPackage": "BioP_MPSub_Proto",
+  "SourceFile": "BioP_MPSub_Proto.pcc",
+  "KillZ": 0,
+  "Sublevels": [
+    "BioA_MPSub_100",
+    "BioD_MPSub"
+  ],
+  "StartLocations": [
+    {
+      "Index": 0,
+      "Location": {
+        "X": 41763,
+        "Y": 14680.7295,
+        "Z": 3900
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": -17248,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 1,
+      "Location": {
+        "X": 41902,
+        "Y": 14680.7295,
+        "Z": 3900
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": -17248,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 2,
+      "Location": {
+        "X": 42200,
+        "Y": 14680.7295,
+        "Z": 3900
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": -17248,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 3,
+      "Location": {
+        "X": 42058,
+        "Y": 14680.7295,
+        "Z": 3900
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": -17248,
+        "Roll": 0
+      }
+    }
+  ],
+  "SublevelData": [],
+  "DisplayInfo": null
+}

@@ -1,0 +1,14 @@
+{
+  "MasterPackage": "BioP_MPGeth_proto_bioadmiral",
+  "SourceFile": "BioP_MPGeth_proto_bioadmiral.pcc",
+  "KillZ": -1000,
+  "Sublevels": [
+    "BioA_MPGeth_200WBjos",
+    "BioSnd_MPGeth",
+    "BioA_MPGeth_000Vista",
+    "BioD_MPGeth2"
+  ],
+  "StartLocations": [],
+  "SublevelData": [],
+  "DisplayInfo": null
+}

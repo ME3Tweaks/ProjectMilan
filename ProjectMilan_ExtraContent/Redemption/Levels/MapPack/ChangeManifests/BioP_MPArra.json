@@ -1,0 +1,88 @@
+{
+  "MasterPackage": "BioP_MPArra",
+  "SourceFile": "BioP_MPArra.pcc",
+  "KillZ": -4500,
+  "Sublevels": [
+    "BioP_CerJcb"
+  ],
+  "StartLocations": [
+    {
+      "Index": 0,
+      "Location": {
+        "X": -227.63089,
+        "Y": -8066.8433,
+        "Z": -3494
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 1,
+      "Location": {
+        "X": -266,
+        "Y": -8118,
+        "Z": -3494
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 2,
+      "Location": {
+        "X": -165.28093,
+        "Y": -8097.218,
+        "Z": -3494
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 3,
+      "Location": {
+        "X": -189.26173,
+        "Y": -8149.9727,
+        "Z": -3494
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    }
+  ],
+  "SublevelData": [
+    {
+      "PackageName": "BioP_CerJcb",
+      "SourceFile": "BioP_CerJcb.pcc",
+      "ObjectiveSpawnPoints": [],
+      "TriggerVolumes": [],
+      "EnemySpawnPoints": []
+    }
+  ],
+  "DisplayInfo": {
+    "GAWMapPositionX": 290,
+    "GAWMapPositionY": 100,
+    "Image": "GUI_MPImages.MatchSettings.OptMapGellix",
+    "PrettyName": {
+      "DEU": "Feuerstellung Zuflucht",
+      "ESN": "Base Artillera Refugio",
+      "FRA": "Firebase Refuge",
+      "INT": "Firebase Refuge",
+      "ITA": "Base d\u0027artiglieria Rifugio",
+      "JPN": "\u30D5\u30A1\u30A4\u30A2\u30D9\u30FC\u30B9 \u907F\u96E3\u5834\u6240",
+      "POL": "Baza Przytu\u0142ek",
+      "RUS": "\u041E\u0433\u043D\u0435\u0432\u0430\u044F \u0431\u0430\u0437\u0430 \u0423\u0431\u0435\u0436\u0438\u0449\u0435"
+    },
+    "Description": {},
+    "GAWMapSubtitle": {}
+  }
+}

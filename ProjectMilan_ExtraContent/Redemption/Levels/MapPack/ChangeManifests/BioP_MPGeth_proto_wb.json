@@ -1,0 +1,14 @@
+{
+  "MasterPackage": "BioP_MPGeth_proto_wb",
+  "SourceFile": "BioP_MPGeth_proto_wb.pcc",
+  "KillZ": -1000,
+  "Sublevels": [
+    "BioA_MPGeth_200WB",
+    "BioSnd_MPGeth",
+    "BioA_MPGeth_000Vista",
+    "BioD_MPGeth2"
+  ],
+  "StartLocations": [],
+  "SublevelData": [],
+  "DisplayInfo": null
+}

@@ -1,0 +1,143 @@
+{
+  "MasterPackage": "BioP_MPThes2",
+  "SourceFile": "BioP_MPThes2.pcc",
+  "KillZ": 0,
+  "Sublevels": [
+    "BioD_MPThes2_Pathing",
+    "BioD_MPThes_200",
+    "BioA_MPThes2",
+    "BioA_MPThes_200",
+    "BioSnd_MPThes"
+  ],
+  "StartLocations": [
+    {
+      "Index": 0,
+      "Location": {
+        "X": -11195.172,
+        "Y": -2480.25,
+        "Z": 1101
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 16156,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 1,
+      "Location": {
+        "X": -10867.947,
+        "Y": -2174.669,
+        "Z": 1101
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 16156,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 2,
+      "Location": {
+        "X": -11189.172,
+        "Y": -2175.5713,
+        "Z": 1101
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 16156,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 3,
+      "Location": {
+        "X": -10875.291,
+        "Y": -2478.745,
+        "Z": 1101
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 16156,
+        "Roll": 0
+      }
+    }
+  ],
+  "SublevelData": [
+    {
+      "PackageName": "BioD_MPThes2_Pathing",
+      "SourceFile": "BioD_Cat004_810KLPath.pcc",
+      "ObjectiveSpawnPoints": [],
+      "TriggerVolumes": [],
+      "EnemySpawnPoints": [
+        {
+          "ObjectName": "TheWorld.PersistentLevel.SFXEnemySpawnPoint_0",
+          "Location": {
+            "X": -10410.805,
+            "Y": -939.5371,
+            "Z": 803
+          },
+          "Rotation": {
+            "Pitch": 0,
+            "Yaw": 0,
+            "Roll": 0
+          },
+          "Properties": {
+            "PathList": [
+              "TheWorld.PersistentLevel.ReachSpec_33428",
+              "TheWorld.PersistentLevel.ReachSpec_33409",
+              "TheWorld.PersistentLevel.ReachSpec_33425",
+              "TheWorld.PersistentLevel.ReachSpec_33414",
+              "TheWorld.PersistentLevel.ReachSpec_33418"
+            ],
+            "Volumes": [
+              {
+                "Guid": {
+                  "A": -1669878925,
+                  "B": 1287045504,
+                  "C": 942205832,
+                  "D": -1682290663
+                },
+                "Actor": null
+              }
+            ],
+            "NavGuid": {
+              "A": -1820544835,
+              "B": 1157202664,
+              "C": 1761423234,
+              "D": 591893708
+            },
+            "MaxPathSize": {
+              "Radius": 140,
+              "Height": 195
+            },
+            "visitedWeight": 10000000,
+            "bestPathWeight": 1530,
+            "nextNavigationPoint": "TheWorld.PersistentLevel.PathNode_79",
+            "CylinderComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            },
+            "NetworkID": 2,
+            "ApproximateLineOfFire": 989188095,
+            "bHasCrossLevelPaths": true,
+            "Tag": "PathNode",
+            "CollisionComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "DisplayInfo": null
+}

@@ -1,0 +1,106 @@
+{
+  "MasterPackage": "BioP_MPSnct",
+  "SourceFile": "BioP_MPSnct.pcc",
+  "KillZ": -2000,
+  "Sublevels": [
+    "BioD_MPSnct_SubMaster"
+  ],
+  "StartLocations": [
+    {
+      "Index": 0,
+      "Location": {
+        "X": -1855,
+        "Y": -1731,
+        "Z": 950
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 1,
+      "Location": {
+        "X": -1795,
+        "Y": -2571,
+        "Z": 950
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 2,
+      "Location": {
+        "X": -1791,
+        "Y": -2080,
+        "Z": 950
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 3,
+      "Location": {
+        "X": -1783,
+        "Y": -1738,
+        "Z": 950
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    }
+  ],
+  "SublevelData": [
+    {
+      "PackageName": "BioD_MPSnct_SubMaster",
+      "SourceFile": "Biop_CerMir.pcc",
+      "ObjectiveSpawnPoints": [],
+      "TriggerVolumes": [],
+      "EnemySpawnPoints": []
+    }
+  ],
+  "DisplayInfo": {
+    "GAWMapPositionX": 412,
+    "GAWMapPositionY": 284,
+    "Image": "GUI_MPImages.MatchSettings.OptMapMoon2",
+    "PrettyName": {
+      "DEU": "Feuerstellung Zuflucht",
+      "ESN": "Base Artillera Santuario",
+      "FRA": "Sanctuaire enflamm\u00E9",
+      "INT": "Firebase Sanctuary",
+      "ITA": "Base d\u0027artiglieria Santuario",
+      "JPN": "\u30D5\u30A1\u30A4\u30A2\u30D9\u30FC\u30B9 \u30B5\u30F3\u30AF\u30C1\u30E5\u30A2\u30EA",
+      "POL": "Baza Sanktuarium",
+      "RUS": "\u041E\u043F\u043E\u0440\u043D\u0430\u044F \u0431\u0430\u0437\u0430 \u0022\u0421\u0432\u044F\u0442\u0438\u043B\u0438\u0449\u0435\u0022"
+    },
+    "Description": {
+      "DEU": "Horizon",
+      "ESN": "Horizonte",
+      "FRA": "Horizon",
+      "INT": "Horizon",
+      "ITA": "Orizzonte",
+      "JPN": "\u30DB\u30E9\u30A4\u30BE\u30F3",
+      "POL": "Horyzont",
+      "RUS": "\u0413\u043E\u0440\u0438\u0437\u043E\u043D\u0442"
+    },
+    "GAWMapSubtitle": {
+      "DEU": "Horizon",
+      "ESN": "Horizonte",
+      "FRA": "Horizon",
+      "INT": "Horizon",
+      "ITA": "Orizzonte",
+      "JPN": "\u30DB\u30E9\u30A4\u30BE\u30F3",
+      "POL": "Horyzont",
+      "RUS": "\u0413\u043E\u0440\u0438\u0437\u043E\u043D\u0442"
+    }
+  }
+}

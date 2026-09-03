@@ -1,0 +1,106 @@
+{
+  "MasterPackage": "BioP_MPMars3",
+  "SourceFile": "BioP_MPMars3.pcc",
+  "KillZ": -1000,
+  "Sublevels": [
+    "BioD_MPMars_SubMaster"
+  ],
+  "StartLocations": [
+    {
+      "Index": 0,
+      "Location": {
+        "X": -22052,
+        "Y": 49984,
+        "Z": 290
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": -16384,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 1,
+      "Location": {
+        "X": -21937,
+        "Y": 49976,
+        "Z": 290
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": -16384,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 2,
+      "Location": {
+        "X": -21922,
+        "Y": 50182,
+        "Z": 290
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": -16384,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 3,
+      "Location": {
+        "X": -22033,
+        "Y": 50182,
+        "Z": 290
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": -16384,
+        "Roll": 0
+      }
+    }
+  ],
+  "SublevelData": [
+    {
+      "PackageName": "BioD_MPMars_SubMaster",
+      "SourceFile": "Biop_ProMar.pcc",
+      "ObjectiveSpawnPoints": [],
+      "TriggerVolumes": [],
+      "EnemySpawnPoints": []
+    }
+  ],
+  "DisplayInfo": {
+    "GAWMapPositionX": 292,
+    "GAWMapPositionY": 405,
+    "Image": "GUI_MPImages.MatchSettings.OptMapMars",
+    "PrettyName": {
+      "DEU": "Feuerstellung Archiv",
+      "ESN": "Base Artillera Archivos",
+      "FRA": "Archives enflamm\u00E9es",
+      "INT": "Firebase Archives",
+      "ITA": "Base d\u0027artiglieria Archivio",
+      "JPN": "\u30D5\u30A1\u30A4\u30A2\u30D9\u30FC\u30B9 \u30A2\u30FC\u30AB\u30A4\u30D6",
+      "POL": "Baza Archiwa",
+      "RUS": "\u041E\u043F\u043E\u0440\u043D\u0430\u044F \u0431\u0430\u0437\u0430 \u0022A\u0440\u0445\u0438\u0432\u0022"
+    },
+    "Description": {
+      "DEU": "Mars",
+      "ESN": "Marte",
+      "FRA": "Mars",
+      "INT": "Mars",
+      "ITA": "Marte",
+      "JPN": "\u706B\u661F",
+      "POL": "Mars",
+      "RUS": "\u041C\u0430\u0440\u0441"
+    },
+    "GAWMapSubtitle": {
+      "DEU": "Mars",
+      "ESN": "Marte",
+      "FRA": "Mars",
+      "INT": "Mars",
+      "ITA": "Marte",
+      "JPN": "\u706B\u661F",
+      "POL": "Mars",
+      "RUS": "\u041C\u0430\u0440\u0441"
+    }
+  }
+}

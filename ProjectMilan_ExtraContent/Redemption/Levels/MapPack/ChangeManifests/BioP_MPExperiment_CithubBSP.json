@@ -1,0 +1,374 @@
+{
+  "MasterPackage": "BioP_MPExperiment_CithubBSP",
+  "SourceFile": "BioP_MPExperiment_CithubBSP.pcc",
+  "KillZ": -250000,
+  "Sublevels": [
+    "BioA_CitHub_000BSP"
+  ],
+  "StartLocations": [
+    {
+      "Index": 1,
+      "Location": {
+        "X": -3280,
+        "Y": 12135,
+        "Z": -185558
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 2,
+      "Location": {
+        "X": -3287,
+        "Y": 12305,
+        "Z": -185558
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 3,
+      "Location": {
+        "X": -3294,
+        "Y": 12305,
+        "Z": -185558
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    }
+  ],
+  "SublevelData": [
+    {
+      "PackageName": "BioA_CitHub_000BSP",
+      "SourceFile": "BioA_CitHub_000BSP.pcc",
+      "ObjectiveSpawnPoints": [],
+      "TriggerVolumes": [],
+      "EnemySpawnPoints": [
+        {
+          "ObjectName": "TheWorld.SFXEnemySpawnPoint_0",
+          "Location": {
+            "X": -14245.191,
+            "Y": 10061.341,
+            "Z": -185208.78
+          },
+          "Rotation": {
+            "Pitch": 0,
+            "Yaw": 0,
+            "Roll": 0
+          },
+          "Properties": {
+            "PathList": [
+              "TheWorld.PersistentLevel.ReachSpec_124",
+              "TheWorld.PersistentLevel.ReachSpec_125"
+            ],
+            "NavGuid": {
+              "A": 1438048959,
+              "B": 668267982,
+              "C": 122942118,
+              "D": 657772787
+            },
+            "MaxPathSize": {
+              "Radius": 140,
+              "Height": 195
+            },
+            "visitedWeight": 10000000,
+            "bestPathWeight": 832,
+            "nextNavigationPoint": "TheWorld.PathNode_50",
+            "CylinderComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            },
+            "NetworkID": 106,
+            "ApproximateLineOfFire": 1018238079,
+            "Tag": "PathNode",
+            "Base": "TheWorld.PersistentLevel.ModelComponent_3208",
+            "CollisionComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            }
+          }
+        },
+        {
+          "ObjectName": "TheWorld.SFXEnemySpawnPoint_1",
+          "Location": {
+            "X": -18607.797,
+            "Y": 8763.22,
+            "Z": -185208.78
+          },
+          "Rotation": {
+            "Pitch": 0,
+            "Yaw": 0,
+            "Roll": 0
+          },
+          "Properties": {
+            "PathList": [
+              "TheWorld.PersistentLevel.ReachSpec_156",
+              "TheWorld.PersistentLevel.ReachSpec_157"
+            ],
+            "NavGuid": {
+              "A": 480249277,
+              "B": 218746025,
+              "C": 1953533527,
+              "D": 726100858
+            },
+            "MaxPathSize": {
+              "Radius": 140,
+              "Height": 195
+            },
+            "visitedWeight": 10000000,
+            "bestPathWeight": 832,
+            "nextNavigationPoint": "TheWorld.PathNode_66",
+            "CylinderComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            },
+            "NetworkID": 106,
+            "ApproximateLineOfFire": 1018238079,
+            "Tag": "PathNode",
+            "Base": "TheWorld.PersistentLevel.ModelComponent_3208",
+            "CollisionComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            }
+          }
+        },
+        {
+          "ObjectName": "TheWorld.SFXEnemySpawnPoint_2",
+          "Location": {
+            "X": -14577.204,
+            "Y": 7784.1885,
+            "Z": -185208.78
+          },
+          "Rotation": {
+            "Pitch": 0,
+            "Yaw": 0,
+            "Roll": 0
+          },
+          "Properties": {
+            "PathList": [
+              "TheWorld.PersistentLevel.ReachSpec_186",
+              "TheWorld.PersistentLevel.ReachSpec_187",
+              "TheWorld.PersistentLevel.ReachSpec_359"
+            ],
+            "NavGuid": {
+              "A": 1318561351,
+              "B": 630964725,
+              "C": 530300357,
+              "D": 1227456033
+            },
+            "MaxPathSize": {
+              "Radius": 140,
+              "Height": 195
+            },
+            "visitedWeight": 10000000,
+            "bestPathWeight": 832,
+            "nextNavigationPoint": "TheWorld.PathNode_81",
+            "CylinderComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            },
+            "NetworkID": 106,
+            "ApproximateLineOfFire": 1018238079,
+            "Tag": "PathNode",
+            "Base": "TheWorld.PersistentLevel.ModelComponent_3208",
+            "CollisionComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            }
+          }
+        },
+        {
+          "ObjectName": "TheWorld.SFXEnemySpawnPoint_3",
+          "Location": {
+            "X": -9792.839,
+            "Y": 4562.93,
+            "Z": -185208.78
+          },
+          "Rotation": {
+            "Pitch": 0,
+            "Yaw": 0,
+            "Roll": 0
+          },
+          "Properties": {
+            "PathList": [
+              "TheWorld.PersistentLevel.ReachSpec_244",
+              "TheWorld.PersistentLevel.ReachSpec_245"
+            ],
+            "NavGuid": {
+              "A": 779917706,
+              "B": 387552118,
+              "C": 1649275181,
+              "D": 472719868
+            },
+            "MaxPathSize": {
+              "Radius": 140,
+              "Height": 195
+            },
+            "visitedWeight": 10000000,
+            "bestPathWeight": 832,
+            "nextNavigationPoint": "TheWorld.PathNode_110",
+            "CylinderComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            },
+            "NetworkID": 106,
+            "ApproximateLineOfFire": 1018238079,
+            "Tag": "PathNode",
+            "Base": "TheWorld.PersistentLevel.ModelComponent_3208",
+            "CollisionComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            }
+          }
+        },
+        {
+          "ObjectName": "TheWorld.SFXEnemySpawnPoint_4",
+          "Location": {
+            "X": -8308.211,
+            "Y": 3990.0903,
+            "Z": -185208.78
+          },
+          "Rotation": {
+            "Pitch": 0,
+            "Yaw": 0,
+            "Roll": 0
+          },
+          "Properties": {
+            "PathList": [
+              "TheWorld.PersistentLevel.ReachSpec_264",
+              "TheWorld.PersistentLevel.ReachSpec_265"
+            ],
+            "NavGuid": {
+              "A": 1969601671,
+              "B": 2085513808,
+              "C": 1332382943,
+              "D": 541047939
+            },
+            "MaxPathSize": {
+              "Radius": 140,
+              "Height": 195
+            },
+            "visitedWeight": 10000000,
+            "bestPathWeight": 832,
+            "nextNavigationPoint": "TheWorld.PathNode_120",
+            "CylinderComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            },
+            "NetworkID": 106,
+            "ApproximateLineOfFire": 1018238079,
+            "Tag": "PathNode",
+            "Base": "TheWorld.PersistentLevel.ModelComponent_3208",
+            "CollisionComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            }
+          }
+        },
+        {
+          "ObjectName": "TheWorld.SFXEnemySpawnPoint_5",
+          "Location": {
+            "X": -5377.8774,
+            "Y": 12097.949,
+            "Z": -185558.84
+          },
+          "Rotation": {
+            "Pitch": 0,
+            "Yaw": 0,
+            "Roll": 0
+          },
+          "Properties": {
+            "PathList": [
+              "TheWorld.PersistentLevel.ReachSpec_328",
+              "TheWorld.PersistentLevel.ReachSpec_329",
+              "TheWorld.PersistentLevel.ReachSpec_363"
+            ],
+            "NavGuid": {
+              "A": 54002307,
+              "B": 1186469894,
+              "C": 698598467,
+              "D": 677704081
+            },
+            "MaxPathSize": {
+              "Radius": 140,
+              "Height": 195
+            },
+            "visitedWeight": 10000000,
+            "bestPathWeight": 832,
+            "nextNavigationPoint": "TheWorld.PathNode_152",
+            "CylinderComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            },
+            "NetworkID": 106,
+            "ApproximateLineOfFire": 1018238079,
+            "Tag": "PathNode",
+            "Base": "TheWorld.PersistentLevel.ModelComponent_3208",
+            "CollisionComponent": {
+              "ClassName": "CylinderComponent",
+              "ReplacementPrimitive": null,
+              "LightingChannels": {
+                "bInitialized": true,
+                "Dynamic": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "DisplayInfo": null
+}

@@ -1,0 +1,62 @@
+{
+  "MasterPackage": "BioP_MPTest2",
+  "SourceFile": "BioP_MPTest2.pcc",
+  "KillZ": -250000,
+  "Sublevels": [
+    "BioA_MPTest",
+    "BioD_MPTest",
+    "BioS_MPTest",
+    "BioA_CitApt_BSP"
+  ],
+  "StartLocations": [
+    {
+      "Index": 1,
+      "Location": {
+        "X": -2400,
+        "Y": 3167.567,
+        "Z": 189
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 2,
+      "Location": {
+        "X": -2400,
+        "Y": 2722.0703,
+        "Z": 189
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    },
+    {
+      "Index": 3,
+      "Location": {
+        "X": -2400,
+        "Y": 2870.5684,
+        "Z": 189
+      },
+      "Rotation": {
+        "Pitch": 0,
+        "Yaw": 0,
+        "Roll": 0
+      }
+    }
+  ],
+  "SublevelData": [
+    {
+      "PackageName": "BioA_CitApt_BSP",
+      "SourceFile": "BioA_CitApt_BSP.pcc",
+      "ObjectiveSpawnPoints": [],
+      "TriggerVolumes": [],
+      "EnemySpawnPoints": []
+    }
+  ],
+  "DisplayInfo": null
+}
