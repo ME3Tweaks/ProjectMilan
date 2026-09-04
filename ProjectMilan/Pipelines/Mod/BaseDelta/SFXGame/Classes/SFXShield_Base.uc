@@ -452,7 +452,10 @@ public function ReplicateCurrentShields()
 {
     local float NewShields;
     
-    NewShields = float(Max(int(CurrentShields), 0));
+    // MILAN CHANGE - 08/31/2026 - Mgamerz
+    // Use FMax instead of Max to do float comparison, not integer
+    // (Original find by Tajfun)
+    NewShields = FMax(CurrentShields, 0);
     ReplicatedShield = byte(FCeil(NewShields / GetMaxShields() * float(TOTAL_SHIELD_STEPS)));
 }
 public function ReplicateShieldBreach(Class<SFXDamageType> DamageType)
@@ -479,19 +482,10 @@ public final function SetCurrentShields(float NewCurrentShields)
 {
     if (Role == ENetRole.ROLE_Authority)
     {
-        CurrentShields = float(Max(int(NewCurrentShields), 0));
-        ReplicateCurrentShields();
-    }
-}
-
-public final function SetCurrentShields(float NewCurrentShields)
-{
-    if (Role == ENetRole.ROLE_Authority)
-    {
         // MILAN CHANGE - 08/31/2026 - Mgamerz
         // Use FMax instead of Max to do float comparison, not integer
         // (Original find by Tajfun)
-        CurrentShields = FMax(NewCurrentShields, 0.0);
+        CurrentShields = FMax(NewCurrentShields, 0);
         ReplicateCurrentShields();
     }
 }

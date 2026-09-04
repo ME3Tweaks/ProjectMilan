@@ -3,6 +3,7 @@ using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.UnrealScript;
 using ProjectMilanCore;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -87,7 +88,13 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 
                 MilanLog.Information($"Compiling class {className}", customPrefix: LOG_CATEGORY);
                 var classSource = File.ReadAllText(cls);
-                UnrealScriptCompiler.CompileClass(sfxGamePackage, classSource, fileLib, usop, export: classExport);
+                var (_, log) = UnrealScriptCompiler.CompileClass(sfxGamePackage, classSource, fileLib, usop, export: classExport);
+                if (log.HasErrors)
+                {
+                    MilanLog.LogUSCErrors(log);
+                    MilanLog.Fatal($"Failed to compile SFXGame class {className} - this is a fatal error.");
+                    Environment.Exit(1);
+                }
             }
 
             var functionFolder = Path.Combine(baseDeltaFolder, "Functions");
@@ -99,7 +106,13 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 
                 MilanLog.Information($"Compiling function {functionIFP}", customPrefix: LOG_CATEGORY);
                 var functionSource = File.ReadAllText(func);
-                UnrealScriptCompiler.CompileFunction(function, functionSource, fileLib, usop);
+                var (_, log) = UnrealScriptCompiler.CompileFunction(function, functionSource, fileLib, usop);
+                if (log.HasErrors)
+                {
+                    MilanLog.LogUSCErrors(log);
+                    MilanLog.Fatal($"Failed to compile SFXGame function {functionIFP} - this is a fatal error.");
+                    Environment.Exit(1);
+                }
             }
 
             return sfxGamePackage.SaveToStream(BaseDeltaHandler.UseCompressedPackages).ToArray();

@@ -65,7 +65,7 @@ namespace ProjectMilan
         /// <summary>
         /// Bump this every time there are changes to MPCommon or NonStartup pipelines. It will invalidate stale checkpoints.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 3;
+        public const int MIN_CHECKPOINT_VERSION = 4;
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -445,9 +445,9 @@ namespace ProjectMilan
             MilanLog.Information($"Pipeline timings:");
             foreach (var stat in pipelineTimes)
             {
-                MilanLog.Information($"\t{stat.Key.PadRight(pipelineTimes.Keys.MaxBy(x => x.Length).Length + 3)}{stat.Value}ms");
+                MilanLog.Information($"\t{stat.Key.PadRight(pipelineTimes.Keys.MaxBy(x => x.Length).Length + 3)}{stat.Value / 1000}s");
             }
-            MilanLog.Information($"\tTotal:\t{pipelineTimes.Sum(x => x.Value)}ms");
+            MilanLog.Information($"\tTotal:\t{pipelineTimes.Sum(x => x.Value) / 1000}s");
 
             // Tiered cache usage
 #if DEBUG

@@ -330,7 +330,7 @@ namespace ProjectMilan.Pipelines.Levels
                 {
                     MilanLog.Information($@"Precorrecting {package.Key}", customPrefix: levelPipeline.LogCategory);
 
-                    // Todo: once MPCommon is functional, this will no longer be necessary.
+                    // SP maps should not set this property.
                     package.Value.GetBioWorldInfo().RemoveProperty("GameTypesSupportedOnThisMap");
 
                     if (BioTier.IsPersistentPackage(package.Value.FileNameNoExtension + ".pcc"))
@@ -358,6 +358,8 @@ namespace ProjectMilan.Pipelines.Levels
             else
             {
                 // MP mode
+
+                // 08/31/2026 - is this still necessary?
 
                 // Convert game modes to imports as that's how they will be in the target game
                 var biop = levelPipeline.ME3BioP;
