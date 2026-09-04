@@ -86,12 +86,13 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.MapPack
                 var sourceObj = sourcePackage.FindExport(sourceImage);
 
                 // Precorrect to reduce extra crap coming over
-                sourceObj.idxLink = 0;
+                var inPackageExport = sourcePackage.CreatePackageExport(RedemptionShared.DLM_MAP_PACKAGE_EXPORT_NAME);
+                sourceObj.idxLink = inPackageExport.UIndex; // Re-nest so it transfers over under this parent
                 sourceObj.ObjectName = $"OptMap{RedemptionShared.GetMapBaseName(manifest.MasterPackage)}";
 
                 EntryExporter.ExportExportToPackage(sourceObj, destPackage, out var newItem);
                 var newExp = newItem as ExportEntry;
-                newExp.SetForcedExportFlag(false); // So we can directly dynamic load it
+                newExp.SetForcedExportFlag(true); // This is required for dynamic load - load package, find object in it - very weird, it isn't a seek free load. Maybe required by GUI?
             }
             else
             {

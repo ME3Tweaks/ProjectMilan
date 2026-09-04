@@ -26,9 +26,14 @@ namespace ProjectMilan_ExtraContent.Redemption
         /// </summary>
         internal const string MAP_IMAGE_PACKAGE = "SFXMapImages_Redemption";
 
+        /// <summary>
+        /// In-package top level item. Dynamic load mapping seems to require this, unclear why - seems to be something related to how GUI assets load
+        /// </summary>
+        internal const string DLM_MAP_PACKAGE_EXPORT_NAME = "GUI_MPImages_Redemption";
+
         private static string BuildDLMForImage(string objectName)
         {
-            return $"(ObjectName=\"{objectName}\", SeekFreePackageName =\"{MAP_IMAGE_PACKAGE}\")";
+            return $"(ObjectName=\"{DLM_MAP_PACKAGE_EXPORT_NAME}.{objectName}\", SeekFreePackageName=\"{MAP_IMAGE_PACKAGE}\")";
         }
 
         public static string GetMapBaseName(string biopName)
@@ -109,7 +114,7 @@ namespace ProjectMilan_ExtraContent.Redemption
                    $"PackageName=\"{info.MapName}\", " +
                    $"PrettyName={MilanPipelinesShared.AssignTLK(info.LevelNameString)}, " +
                    $"Description={MilanPipelinesShared.AssignTLK(info.LevelDescriptionString)}, " +
-                   $"Image=\"OptMap{GetMapBaseName(info.MapName)}\", " +
+                   $"Image=\"{DLM_MAP_PACKAGE_EXPORT_NAME}.OptMap{GetMapBaseName(info.MapName)}\", " +
                    $"GalaxyAtWarMapPosition=(X={info.GAWMapPosition.X},Y={info.GAWMapPosition.Y}), " +
                    $"GalaxyAtWarMapSubtitle={MilanPipelinesShared.AssignTLK(info.GAWMapSubtitle)}, " +
                    $"MusicEventName=\"{GetMusicEventName()}\")";
