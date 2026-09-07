@@ -14,11 +14,11 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels
         /// <summary>
         /// PINNACLE STATION TROPICAL
         /// </summary>
-        public static bool CrossGenVMaps { get; set; } = false;
+        public static bool CrossGenVMaps { get; set; } = true;
 
         /// <summary>
         /// Builds redemption maps. Requires you have imported the MP Map Pack for Redemption into the Mod Manager library.
         /// </summary>
-        public static bool RedemptionMaps { get; internal set; } = true;
+        public static bool RedemptionMaps { get; internal set; } = false;
     }
 }

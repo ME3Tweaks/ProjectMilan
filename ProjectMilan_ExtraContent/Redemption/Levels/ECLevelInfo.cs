@@ -57,6 +57,11 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels
         public Dictionary<string,string> LevelFilesMap { get; set; }
 
         /// <summary>
+        /// Additional objects for putting into BioP - used for imports in lower levels
+        /// </summary>
+        public string[] ExtraBioPObjects { get; set; }
+
+        /// <summary>
         /// Where the initial player start should be placed. The other 3 positions will be automatically chosen nearby.
         /// </summary>
         public Vector3 StartLocation { get; set; }

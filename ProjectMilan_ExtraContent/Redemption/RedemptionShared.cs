@@ -9,6 +9,10 @@ using LegendaryExplorerCore.Coalesced;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.TLK;
 using LegendaryExplorerCore.TLK.ME2ME3;
+using LegendaryExplorerCore.Textures;
+using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.Classes;
+using ProjectMilan;
 using ProjectMilan_ExtraContent.Redemption.Levels;
 using ProjectMilanCore;
 
@@ -106,6 +110,53 @@ namespace ProjectMilan_ExtraContent.Redemption
                 // This is not supported due to 64 bit replication... I think? It's a bitmask
                 Debugger.Break();
             }
+        }
+
+        internal static void AddNewLevelBannerImage(string levelName, string logCategory)
+        {
+            // Look in Assets/LevelBanners/<levelName>.png for source, will be 512x128 PNG.
+            // Uses the constants for map image package file and the in-package package,
+            // feeds to AddNewGUIImage()
+            var sourcePng = Path.Combine(RedemptionPipeline.PipelineRoot, "Assets", "LevelBanners", $"{levelName}.png");
+            if (!File.Exists(sourcePng))
+            {
+                MilanLog.Error($"No level banner image found for {levelName} at {sourcePng}", customPrefix: logCategory);
+                return;
+            }
+
+            var package = GetMapImagesPackage();
+            var inPackageParent = package.CreatePackageExport(DLM_MAP_PACKAGE_EXPORT_NAME);
+            AddNewGUIImage(package, inPackageParent, $"OptMap{levelName}", sourcePng);
+        }
+
+        internal static ExportEntry AddNewGUIImage(IMEPackage package, IEntry parent, string textureName, string sourcePngPath, PixelFormat pixelFormat = PixelFormat.DXT1, NameReference textureGroup = default)
+        {
+            // Generic - takes a package file, a source texture, and a location to create it in the package,
+            // generates the texture, and adds it to the object referencer
+            if (textureGroup.Name == null)
+            {
+                textureGroup = new NameReference("TEXTUREGROUP_UI");
+            }
+
+            var image = new Image(sourcePngPath, Image.ImageFormat.PNG);
+            var sizeX = image.mipMaps[0].width;
+            var sizeY = image.mipMaps[0].height;
+
+            // Unmipped, package-stored texture - matches how the game's own GUI images are laid out
+            var texExport = Texture2D.CreateTexture(package, NameReference.FromInstancedString(textureName), sizeX, sizeY, pixelFormat, mipped: false, parent: parent, textureGroup: textureGroup);
+
+            var props = texExport.GetProperties();
+            props.AddOrReplaceProp(new BoolProperty(false, "SRGB"));
+            props.AddOrReplaceProp(new IntProperty(sizeX, "OriginalSizeX"));
+            props.AddOrReplaceProp(new IntProperty(sizeY, "OriginalSizeY"));
+            texExport.WriteProperties(props);
+
+            var texture = new Texture2D(texExport);
+            texture.Replace(image, props, isPackageStored: true, forcedNewFormat: pixelFormat);
+
+            texExport.AddToObjectReferencer();
+
+            return texExport;
         }
 
         private static string BuildMasterMapEntry(ECLevelInfo info)
