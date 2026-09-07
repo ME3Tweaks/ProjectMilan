@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LegendaryExplorerCore.Gammtek.Paths;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -50,6 +51,32 @@ namespace MilanShaderHost
         {
             string[] files = ReadPackageListFile() ?? [
                 
+                // LE1 Pinnacle Station
+                //"BIOA_LAV60_T",
+                //"BIOA_LAV70_T",
+                //"BIOA_PRC2_T",
+                //"BIOA_ICE60_T",
+                //"BIOG_APL_CON_Cargo_Container_L",
+                //"BIOA_STA60_T",
+                //"BIOA_PRC2_MatFX",
+                //"BIOG_V_Env_LavaSplash",
+                //"BIOA_PRO20_T",
+                //"BIOG_APL_STD_Work_Lamp_01_L",
+                //"BIOA_LAV40_T",
+                //"CROSSGENV",
+                //"BIOG_APL_STD_Drill_01_L",
+                //"BIOA_JUG80_T",
+                //"BIOA_ICE20_T",
+                //"BIOA_PRO10_T",
+                //"BIOA_WAR20_T",
+                //"BIOA_WAR40_T",
+                //"BIOG_VEH_TTR_A",
+                // "BIOA_APL_INT_ICE50_MiraBlock_L", // Used to create the LE1 version of the grid line walls mat. It uses 'Hologram_mat' with custom textures.
+                //"BIOG_APL_PHY_Tire_01_L",
+                //"BIOG_APL_Invisible_P",
+                //"BIOA_DLC_UNC52_T",
+                "BIOA_ICE60_T",
+
                 // TEST
                 //"EngineDebugMaterials",
 
@@ -67,24 +94,24 @@ namespace MilanShaderHost
                 //"BioT_Arctic",
                 //"biot_ancientcity.pcc",
 
-                // Tropical:
-                /*"BIOA_NOR10_T.pcc",
-                "BIOA_STA60_T.pcc",
-                "BIOA_STA60_02_T.pcc",
-                "BIOA_PRC2_MatFX.pcc",
-                "BIOA_STA30_T.pcc",
-                "BIOA_JUG40_T.pcc",
-                "BIOA_Jug20_T.pcc",
-                "BIOA_JUG80_T.pcc",
-                "BIOA_JUG00_T.pcc",
-                "BIOG_APL_PHY_Crate_XLarge_01_L.pcc",
-                "BIOG__SKIES__.pcc",
-                "BIOA_FRE10_T.pcc",
-                "BIOA_LOS40_APL_DOR_FFDoor_L.pcc",
-                "BIOG_V_Env_Jug_WaveCrash_Z.pcc",
-                "VFX_zz_ME1_Global_METR.pcc",
-                "BIOG_V_Env_Hologram_Z.pcc",
-                "BIOA_LAV20_T.pcc" */
+                // Tropical - requires some LE1 stuff set up.
+                //"BIOA_NOR10_T.pcc",
+                //"BIOA_STA60_T.pcc",
+                //"BIOA_STA60_02_T.pcc",
+                ////"BIOA_PRC2_MatFX.pcc", // Will require a special made donor that fits what we used for donors for LE1. We might just compile what we used for LE1 in LE3. Don't compile it this way
+                //"BIOA_STA30_T.pcc",
+                //"BIOA_JUG40_T.pcc",
+                //"BIOA_Jug20_T.pcc",
+                //"BIOA_JUG80_T.pcc",
+                //"BIOA_JUG00_T.pcc",
+                //"BIOG_APL_PHY_Crate_XLarge_01_L.pcc",
+                //"BIOG__SKIES__.pcc",
+                //"BIOA_FRE10_T.pcc",
+                //"BIOA_LOS40_APL_DOR_FFDoor_L.pcc",
+                //"BIOG_V_Env_Jug_WaveCrash_Z.pcc",
+                //"VFX_zz_ME1_Global_METR.pcc",
+                //"BIOG_V_Env_Hologram_Z.pcc",
+                //"BIOA_LAV20_T.pcc"
 
                 // Multiplayer Kits
 
@@ -95,10 +122,10 @@ namespace MilanShaderHost
                 //"BioVFX_DLC_MP1_BatMelee",
                 //"BioVFX_DLC_MP1_Geth",
 
-                // MP2
+                //// MP2
                 //"BioVFX_DLC_CerberusOp",
 
-                // MP3
+                //// MP3
                 //"BIOG_MP_Swords_01",
                 //"BioVFX_MP3_Annihilation",
                 //"BioVFX_MP3_PalmBlast",
@@ -113,86 +140,83 @@ namespace MilanShaderHost
                 //"BioVFX_DLC_MaleQuarian",
                 //"BioVFX_DLC_OmniBlade",
 
-                // MP4
-                // "BioVFX_MP4_Volus_Eng",
-                // "BioVFX_DLC_MaleQuarian",
-                // "BioVFX_MP4_Tur_Jets", // Produced no materials? Needs investigated. If left on the previous compiler level is leftover  and used
-                // "BioVFX_DLC_OmniBlade",
+                //// MP4
+                //"BioVFX_MP4_Volus_Eng",
+                //"BioVFX_DLC_MaleQuarian",
+                //"BioVFX_MP4_Tur_Jets", // Produced no materials? Needs investigated. If left on the previous compiler level is leftover  and used
+                //"BioVFX_DLC_OmniBlade",
 
-                // MP5
-                /*
-                "BioVFX_MP5_Prothean", // Collector Adept
-                "EffectMaterials_MP5", // Collector Adept // Contains Combined Effect
+                //// MP5
+                //"BioVFX_MP5_Prothean", // Collector Adept
+                //"EffectsMaterials_MP5", // Collector Adept // Contains Combined Effect
 
-                "BIOG_MP5_GTH_PLY_R", // Geth Destroyer
-                "BioVFX_MP5_GethPrime", // Geth Destroyer
+                //"BIOG_MP5_GTH_PLY_R", // Geth Destroyer
+                //"BioVFX_MP5_GethPrime", // Geth Destroyer
 
-                "BIOG_MP_INF_FBT", // Fembot Infiltrator
-                "BioVFX_MP5_Cone_Cold", // Fembot Infiltrator
-                "BioVFX_MP5_Fembot", // Fembot Infiltrator
+                //"BIOG_MP_INF_FBT", // Fembot Infiltrator
+                //"BioVFX_MP5_Cone_Cold", // Fembot Infiltrator
+                //"BioVFX_MP5_Fembot", // Fembot Infiltrator
 
-                "BioVFX_MP5_Engineer", // UGH the Merc Engineer
+                //"BioVFX_MP5_Engineer", // UGH the Merc Engineer
 
-                "BIOG_WPN_MLE_R_MP5", // Krogan Warlord // Contains Combined Effect
-                "BioVFX_MP5_KroganWL", // Krogan Warlord
-                */
+                //"BIOG_WPN_MLE_R_MP5", // Krogan Warlord // Contains Combined Effect
+                //"BioVFX_MP5_KroganWL", // Krogan Warlord
 
                 //"BioVFX_MP5_Vanguard", // Turian Female
                 //"BIOG_MP_VAN_TUF", // Turian Female
 
 
                 
-                //Multiplayer levels
-                "BioApl_Lvl_Foliage",
+                ////Multiplayer levels
+                //"BioApl_Lvl_Foliage",
 
-                // MPLobby
-                "MPLobby", // Black material
+                //// MPLobby
+                //"MPLobby", // Black material
 
-                // Hydra:
-                "BioT_GthMP",
-                "BioVFX_DLC_Env_MPGeth",
+                //// Hydra:
+                //"BioT_GthMP",
+                //"BioVFX_DLC_Env_MPGeth",
 
-                // Condor:
-                "BioT_MPMoon",
-                "BioVFX_DLC_Env_MPMoon",
+                //// Condor:
+                //"BioT_MPMoon",
+                //"BioVFX_DLC_Env_MPMoon",
 
-                // Jade:
-                "BioS_MPJungle",
-                "BioS_MPJungle_Trash",
-                "BioT_MPJungle",
-                "BioT_Tropical",
-                "BioVFX_DLC_Env_MPJngl",
+                //// Jade:
+                //"BioS_MPJungle",
+                //"BioS_MPJungle_Trash", // Todo: Why does water_tint, Waterfall_Master_lite not compile into something?
+                //"BioT_MPJungle",
+                //"BioT_Tropical",
+                //"BioVFX_DLC_Env_MPJngl",
                 
-                // Thessia:
-                "BioT_MPThes",
+                //// Thessia:
+                //"BioT_MPThes",
 
-                // Vancouver
-                "BioVFX_MP3_MPHosp",
-                "BioT_MPHosp",
-                "BioT_SolMP", // Is this actually here?
+                //// Vancouver
+                //"BioVFX_MP3_MPHosp",
+                //"BioT_MPHosp",
+                //"BioT_SolMP", // Is this actually here?
                 
-                // Rio
-                "BioT_MPOcean",
-                "BioVFX_MP3_MPOcean",
+                //// Rio
+                //"BioT_MPOcean",
+                //"BioVFX_MP3_MPOcean",
 
-                // London
-                "BioS_MPLondon",
+                //// London
+                //"BioS_MPLondon",
 
-                // Hazard Cer
-
-                "BioT_MPCer2",
+                //// Hazard Cer
+                //"BioT_MPCer2",
                 
-                // Hazard Dish
-                "BioT_MPDish2",
+                //// Hazard Dish
+                //"BioT_MPDish2",
 
-                // Hazard Nov
-                "BioT_MPNov2",
+                //// Hazard Nov
+                //"BioT_MPNov2",
                 
-                // Hazard Reactor
-                "BioT_MPRctr2",
+                //// Hazard Reactor
+                //"BioT_MPRctr2",
 
-                // Hazard Ghost
-                "biot_humanslumACID", // May need more.
+                //// Hazard Ghost
+                //"biot_humanslumACID", // May need more.
 
 
                 // More test stuff.
@@ -216,6 +240,17 @@ namespace MilanShaderHost
                 //"BioVFX_MP5_Gear.pcc"
             */
           ];
+
+            // Quick override for debugging
+#if DEBUG
+            // files = ["BioS_MPJungle_Trash"];
+#endif
+
+            Console.WriteLine($"Source folders:");
+            foreach (var path in MilanShaderPackageBuilder.SourceFolders)
+            {
+                Console.WriteLine($"\t{path}");
+            }
 
             foreach (var f in files)
             {
