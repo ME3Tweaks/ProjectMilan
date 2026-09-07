@@ -13,6 +13,7 @@ using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan;
 using ProjectMilan.Utility;
+using ProjectMilan_ExtraContent.Classes;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
 using System.Diagnostics;
@@ -56,7 +57,7 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                     // "BIOA_PRC2_CCTHAI06_SND", // Don't know how this can be ported across games
                 },
                 StartLocation = new Vector3(879,-22803,-2541),
-                KillZ = -2900,
+                KillZ = -27000,
             },
             new ECLevelInfo()
             {
@@ -85,13 +86,13 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                     {"BIOA_PRC2_CCCAVE03_LAY","BioD_PSSub_LAY3"},
                     {"BIOA_PRC2_CCCAVE04_LAY","BioD_PSSub_LAY4"},
                 },
-                StartLocation = new Vector3(879,-22803,-2541),
-                KillZ = -2900,
+                StartLocation = new Vector3(-16365, -25733,-2742),
+                KillZ = -27000,
             },
             new ECLevelInfo()
             {
                 MapName = "BioP_MPPSWarehouse",
-                Enabled = false,
+                Enabled = true,
                 LevelNameString = new()
                 {
                     { MELocalization.INT, "Pinnacle Station: Warehouse"}, // Todo: Learn how to spell
@@ -113,8 +114,38 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                     {"BIOA_PRC2_CCCRATE01_LAY","BioD_PSWarehouse_LAY1"},
                     {"BIOA_PRC2_CCCRATE02_LAY","BioD_PSWarehouse_LAY2"},
                 },
-                StartLocation = new Vector3(15041,-26485,-2899),
-                KillZ = -6000,
+                ExtraBioPObjects = [
+                    "BIOG_APL_MASTER_MATERIAL.APL__MASTER__Mat" // Required for the portable stairs meshes
+                ],
+                StartLocation = new Vector3(15872,-23390,-5493),
+                KillZ = -27000,
+            },
+            new ECLevelInfo()
+            {
+                MapName = "BioP_MPPSLava",
+                Enabled = true,
+                LevelNameString = new()
+                {
+                    { MELocalization.INT, "Pinnacle Station: Volcano"},
+                },
+                LevelDescriptionString = new()
+                {
+                    { MELocalization.INT , "Volcano Map in Pinnacle Station Simulator"},
+                },
+                GAWMapPosition = new Vector2(515, 200), // Placeholder
+                GAWMapSubtitle = new()
+                {
+                    { MELocalization.INT, "Pinnacle Station"}
+                },
+                LevelFilesMap = new()
+                {
+                    {"BIOA_PRC2_CCLAVA", "BioA_PSLava"},
+                    {"BIOA_PRC2_CCLAVA_CROSSGEN", "BioA_PSLava_CrossGen"},
+                    {"BIOA_PRC2_CCLAVA_L", "BioA_PSLava_Lighting"},
+                    {"BIOA_PRC2_CCLAVA_DSG", "BioD_PSLava"},
+                },
+                StartLocation = new Vector3(27220,-23510,-25845),
+                KillZ = -27500,
             }
         ];
 
@@ -190,6 +221,8 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                 PortCrossgenLevel(info, src, dest);
             }
 
+
+            RedemptionShared.AddNewLevelBannerImage(RedemptionShared.GetMapBaseName(info.MapName), info.LogCategory);
             ConfigureBioP(info);
             info.BioP.Save(); // Commit the file
 
@@ -246,7 +279,34 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             //}
 
             // Add BioLedgeMeshActor class
+            // Don't think this works
             AddBioLedgeMeshClass(info.BioP);
+
+            if (info.ExtraBioPObjects != null)
+            {
+                var theWorld = info.BioP.FindExport("TheWorld");
+                ObjectBinary.EditBinary<World>(theWorld, bin =>
+                {
+                    var list = bin.ExtraReferencedObjects.ToList();
+
+                    // Port in extra items.
+                    foreach (var item in info.ExtraBioPObjects)
+                    {
+                        var sources = MilanShared.LE3ObjectDB.GetFilesContainingObject(item);
+                        if (sources == null)
+                        {
+                            throw new Exception($"Unable to find extra BioP object {item} in MilanShared.LE3ObjectDB");
+                        }
+
+                        using var p = MilanShared.GetLE3Package(Path.GetFileName(sources[0]));
+                        var sourceExport = p.FindExport(item);
+                        EntryExporter.ExportExportToPackage(sourceExport, info.BioP, out var newItem);
+                        list.Add(newItem.UIndex);
+                    }
+
+                    bin.ExtraReferencedObjects = list.ToArray();
+                });
+            }
 
             // Set AdditionalPackagesToCook
             (info.BioP as MEPackage).AdditionalPackagesToCook.ReplaceAll(info.CrossPackageMapping.Select(x => x.Value.FileNameNoExtension));
@@ -275,10 +335,11 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
 
                     // Game1 Specific Stuff.
                     if (exp.ClassName == "BioSquadCombat") return false;
-                    if (exp.ClassName == "BioInert") return false;
+                    //if (exp.ClassName == "BioInert") return false; // We need this :)
                     if (exp.ClassName == "AmbientSound") return false;
                     if (exp.ClassName == "BioPawn") return false;
                     if (exp.ClassName == "BioSunActor") return false;
+                    if (exp.ClassName == "InterpActor") return CheckPSInterpActor(exp, info.LogCategory);
                     return true;
                 }
 
@@ -293,6 +354,50 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                     //case "BioLedgeMeshActor":
                     //    exp.Class = EntryImporter.EnsureClassIsInFile(exp.FileRef, "StaticMeshActor", new RelinkerOptionsPackage());
                     //    break;
+                    case "BioInert":
+                        MilanLog.Information($"  Converting BioInert to StaticMeshActor: {exp.InstancedFullPath}", customPrefix: info.LogCategory);
+                        // BioInert is a subclass of ArtPlaceable (subclass of Actor) - doesn't exist in LE3. So we must convert this
+                        // It looks like most of these can be static meshes, as long as it is bStatic: True.
+                        // So we're just going to convert these to a StaticMeshActor and pull them across as that.
+
+                        var smClass = EntryImporter.EnsureClassIsInFile(exp.FileRef, "StaticMeshActor", new RelinkerOptionsPackage());
+
+                        var props = exp.GetProperties();
+                        var newProps = new PropertyCollection();
+                        if (props.TryGetProp<ObjectProperty>("CollisionComponent", out var cc)) { newProps.Add(cc); }
+                        if (props.TryGetProp<FloatProperty>("DrawScale", out var ds)) { newProps.Add(ds); }
+                        if (props.TryGetProp<StructProperty>("DrawScale3D", out var ds3d)) { newProps.Add(ds3d); }
+                        if (props.TryGetProp<StructProperty>("Location", out var location)) { newProps.Add(location); }
+                        if (props.TryGetProp<StructProperty>("Rotation", out var rotation)) { newProps.Add(rotation); }
+                        if (props.TryGetProp<NameProperty>("Tag", out var tag)) { newProps.Add(tag); }
+                        if (props.TryGetProp<ObjectProperty>("PlaceableMesh", out var placeableMesh))
+                        {
+                            placeableMesh.Name = "StaticMeshComponent"; // Rename property
+                            newProps.Add(placeableMesh);
+                        }
+
+                        var pStack = new PrePropStack(exp);
+                        pStack.StateNode = pStack.Node = smClass;
+                        exp.WritePrePropsAndPropertiesAndBinary(pStack.GeneratePreProps(), newProps, new byte[0]); // Trim off old binary
+
+
+                        exp.Class = smClass;
+                        exp.ObjectName = exp.FileRef.GetNextIndexedName("StaticMeshActor");
+
+                        var smcProp = exp.GetProperty<ObjectProperty>("StaticMeshComponent")?.Value ?? 0;
+                        if (smcProp != 0)
+                        {
+                            var smc = exp.FileRef.GetEntry(smcProp) as ExportEntry;
+                            smc.RemoveProperty("LightEnvironment");
+                            smc.RemoveProperty("RBCollidWithChannels");
+                            smc.WriteProperty(new ObjectProperty(0, "ReplacementPrimitive"));
+                            // Needs archetype set to Engine.Default__StaticMeshActor.StaticMeshComponent0
+                            var smcDefault = exp.FileRef.GetEntryOrAddImport("Engine.Default__StaticMeshActor", "StaticMeshActor", "Engine");
+                            IEntry staticMeshComponentArchetype = exp.FileRef.GetEntryOrAddImport("Engine.Default__StaticMeshActor.StaticMeshComponent0", "StaticMeshComponent", "Engine");
+                            smc.Archetype = staticMeshComponentArchetype;
+                        }
+
+                        break;
                 }
             }
 
@@ -560,6 +665,31 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             //}
 
             return destPackage;
+        }
+
+        /// <summary>
+        /// Pinnacle Station has some InterpActors for strategic ring - we don't care at all about those so we will chop those out
+        /// </summary>
+        /// <param name="exp"></param>
+        /// <returns>True if it should port, false if it shouldn't</returns>
+        private static bool CheckPSInterpActor(ExportEntry interpActor, string logCategory)
+        {
+            var smc = interpActor.GetProperty<ObjectProperty>("StaticMeshComponent")?.ResolveToExport(interpActor.FileRef, null);
+            if (smc != null)
+            {
+                var sm = smc.GetProperty<ObjectProperty>("StaticMesh")?.ResolveToExport(interpActor.FileRef, null);
+                if (sm != null) {
+                    switch (sm.ObjectName)
+                    {
+                        // These are related to crossgen capture points
+                        case "Player_Pos__old":
+                        case "StrategicRing_S":
+                            MilanLog.Information($"Not porting {sm.ObjectName} as it won't be used by multiplayer", customPrefix: logCategory);
+                            return false;
+                    }
+                }
+            }   
+            return true;
         }
 
         /// <summary>
