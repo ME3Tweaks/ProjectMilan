@@ -154,6 +154,7 @@ namespace MilanShaderHost
             var shaderCompilingLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, Program.Game);
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
+            List<ExportEntry> portedTerrainMats = new List<ExportEntry>();
 
             // If slashing cache level don't put other materials into it
             if (buildMode != EShaderLevelMode.SlashLevel)
@@ -170,7 +171,7 @@ namespace MilanShaderHost
                     var bUsedWithStaticLighting = mat.GetProperty<BoolProperty>("bUsedWithStaticLighting");
                     if (mat.Game == MEGame.LE1 && mat.Game == MEGame.LE3 && bUsedWithStaticLighting == null)
                     {
-                        // LE1 sets this to true, LE3 doesn't have it defined (so its false). 
+                        // LE1 sets this to true, LE3 doesn't have it defined (so its false).
                         // If the mat doesn't explicitly specify, write it here, then port it over.
                         mat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
                     }
@@ -181,6 +182,15 @@ namespace MilanShaderHost
                     mat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
 
                     var pMat = PortSourceToCooked(mat, transientPackage);
+                }
+
+                // Port terrain materials (UTerrainMaterial) into transient. These don't compile through
+                // a UMaterial at all -- ATerrain::CacheResourceShaders drives FTerrainMaterialResource
+                // compilation natively off a real ATerrain actor's Layers, so each one needs a terrain to
+                // sit on. See AddTerrainActorForMaterial below.
+                foreach (var terrainMat in sourceStylePackage.Exports.Where(x => x.IsA("TerrainMaterial")))
+                {
+                    var pTerrainMat = PortSourceToCooked(terrainMat, transientPackage);
                 }
 
                 // This is the lazy way: Find all missing<X> objects and deduplicate them
@@ -207,6 +217,15 @@ namespace MilanShaderHost
                     if (pMat != null)
                     {
                         portedMats.Add(pMat);
+                    }
+                }
+
+                foreach (var terrainMat in transientPackage.Exports.Where(x => x.IsA("TerrainMaterial")))
+                {
+                    var pTerrainMat = PortSourceToCooked(terrainMat, shaderCompilingLevel);
+                    if (pTerrainMat != null)
+                    {
+                        portedTerrainMats.Add(pTerrainMat);
                     }
                 }
                 transientPackage.Save("C:\\users\\public\\transient.pcc");
@@ -267,9 +286,75 @@ namespace MilanShaderHost
 
                     startPos.Y -= 257; // Helps reduce Z-fighting
                 }
+
+                // Terrain materials don't compile through a static mesh actor at all -- give each one
+                // its own donor terrain instance instead (see AddTerrainActorForMaterial).
+                var terrainPos = new Point3D(startPos) { X = startPos.X + 8192 };
+                foreach (var pTerrainMat in portedTerrainMats)
+                {
+                    AddTerrainActorForMaterial(pTerrainMat, terrainPos);
+                    terrainPos.Y -= 8192; // Terrain footprint is much larger than one material's preview mesh.
+                }
             }
 
             return shaderCompilingLevel;
+        }
+
+        /// <summary>
+        /// Reference terrain used purely as a donor shell: a small, known-good, single-layer terrain
+        /// whose heightmap/weight-map paint data is reused unmodified for every terrain material we
+        /// compile. CacheWeightMaps (called from ATerrain::PostLoad) keys paint data by layer INDEX,
+        /// not by which UTerrainMaterial that layer's Setup wraps, so swapping only Layers[0].Setup's
+        /// wrapped material keeps the donor's existing "layer 0 covers everywhere" paint data valid
+        /// no matter what we plug into it.
+        /// </summary>
+        private static LEXOpenable GetDonorTerrainAsset(MEGame game) => game switch
+        {
+            MEGame.LE3 => new LEXOpenable()
+            {
+                EntryClass = "Terrain",
+                EntryPath = "TheWorld.PersistentLevel.Terrain_0",
+                FilePath = "BioA_KroGar_900FarCamp.pcc"
+            },
+            _ => throw new NotImplementedException("No donor terrain registered for this game yet -- add one to GetDonorTerrainAsset."),
+        };
+
+        /// <summary>
+        /// Ports the donor terrain (see GetDonorTerrainAsset) into <paramref name="terrainMaterial"/>'s
+        /// package and rewires its first layer to use <paramref name="terrainMaterial"/> instead of
+        /// whatever the donor originally had, so ATerrain::PostLoad compiles a FTerrainMaterialResource
+        /// for this specific material when the level loads. Every other field on the donor (heightmap,
+        /// weight-map textures, InfoData, TerrainComponents, Mask) is left exactly as authored.
+        /// </summary>
+        private static ExportEntry AddTerrainActorForMaterial(ExportEntry terrainMaterial, Point3D location)
+        {
+            var package = terrainMaterial.FileRef;
+            var donorExp = GetOpenableExport(package, GetDonorTerrainAsset(package.Game));
+            if (donorExp == null)
+                throw new Exception("Donor terrain asset is null");
+
+            EntryExporter.ExportExportToPackage(donorExp, package, out var portedTerrainEntry);
+            var portedTerrain = (ExportEntry)portedTerrainEntry;
+            PathEdUtils.SetLocation(portedTerrain, location);
+
+            var layers = portedTerrain.GetProperty<ArrayProperty<StructProperty>>("Layers");
+            if (layers == null || layers.Count == 0)
+                throw new Exception("Donor terrain has no Layers -- can't rewire it to a new material.");
+
+            var setupProp = layers[0].GetProp<ObjectProperty>("Setup");
+            var layerSetup = setupProp?.ResolveToEntry(package) as ExportEntry;
+            if (layerSetup == null)
+                throw new Exception("Donor terrain's Layers[0].Setup didn't resolve to a ported export.");
+
+            var materials = layerSetup.GetProperty<ArrayProperty<StructProperty>>("Materials");
+            if (materials == null || materials.Count == 0)
+                throw new Exception("Donor terrain's layer setup has no Materials -- can't rewire it to a new material.");
+
+            materials[0].Properties.AddOrReplaceProp(new ObjectProperty(terrainMaterial, "Material"));
+            layerSetup.WriteProperty(materials);
+
+            package.AddToLevelActorsIfNotThere(portedTerrain);
+            return portedTerrain;
         }
 
         private static void AddExistingMeshActor(IMEPackage package, LEXOpenable meshAsset, Point3D location, string name)

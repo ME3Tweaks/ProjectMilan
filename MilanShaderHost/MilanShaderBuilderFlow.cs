@@ -57,8 +57,12 @@ namespace MilanShaderHost
         {
             Game = MEGame.LE3;
             var path = Path.Combine(DecookedPackagesPath, Game.ToString());
-            // MilanShaderPackageBuilder.SourceFolders.Add(Path.Combine(DecookedPackagesPath, "LE1"));
-            MilanShaderPackageBuilder.SourceFolders.Add(path);
+            
+            // Compile shaders for LE1 -> LE3
+            MilanShaderPackageBuilder.SourceFolders.Add(Path.Combine(DecookedPackagesPath, "LE1"));
+            
+            // ME3 -> LE3
+            // MilanShaderPackageBuilder.SourceFolders.Add(path);
 
             // Dump HLSL for package
             if (Program.ParsedOptions.DumpHLSL)
@@ -139,9 +143,12 @@ namespace MilanShaderHost
                 using var sp = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
                 // Once we get normal materials working we can work on making this accept MaterialInstances.
                 // Then we can pre-bake the bHasStaticPermutation version.
-                if (sp.Exports.Count(x => x.IsA("Material")) == 0)
+                // TerrainMaterial (not Terrain) because MilanShaderPackageBuilder ports individual
+                // UTerrainMaterial assets onto a donor terrain rather than porting a source Terrain actor
+                // -- see AddTerrainActorForMaterial.
+                if (sp.Exports.Count(x => x.IsA("Material")) == 0 && sp.Exports.Count(x => x.IsA("TerrainMaterial")) == 0)
                 {
-                    // No materials to compile
+                    // Nothing to compile
                     return null;
                 }
             }
@@ -351,8 +358,42 @@ namespace MilanShaderHost
             return finalOut;
         }
 
+        /// <summary>
+        /// Friendly-name prefix FTerrainMaterialResource::GetFriendlyName() always emits (verified
+        /// against the ME3 binary's string table -- see ShaderClient/Hooks.cpp's IsTerrainMaterialResource()
+        /// for the native-side counterpart of this check).
+        /// </summary>
+        private const string TerrainMaterialResourceNamePrefix = "TerrainMaterialResource:";
+
         private static void OnMaterialCompiled(object? sender, CompileResult cr)
         {
+            // Merge the shader cache first and unconditionally: it's a generic, key-based store (keyed by
+            // FStaticParameterSet / shader Guid, not by which export owns it), so it's valid to merge in
+            // even when we can't yet find or build the specific export the resource metadata belongs to
+            // below. Doing this before the "no matching export" early-outs means the actual compiled
+            // shader bytecode is never silently discarded, terrain included.
+            Console.WriteLine($"Merging shader cache for {cr.MaterialName}");
+            var cache = scPackage.FindExport("SeekFreeShaderCache");
+            ObjectBinary.EditBinary<ShaderCache>(cache, (x) =>
+            {
+                cr.Cache.MergeInto(x);
+            });
+
+            if (cr.MaterialName.StartsWith(TerrainMaterialResourceNamePrefix, StringComparison.Ordinal))
+            {
+                // The native wire format (ShaderClient's SerializeMaterialResource) only ever serializes
+                // the shared FMaterial-base slice of cr.MaterialResource -- it doesn't carry the
+                // FTerrainMaterialResource-specific extension (Mask/Terrain/MaterialIds/LightingGuid) at
+                // all, and there's no reliable way from here to know which CachedTerrainMaterials[i] slot
+                // on which Terrain export this compile belongs to (that pairing is derived at runtime from
+                // painted weight-map data, not from anything exposed as a UProperty). So there's nothing
+                // safe to merge the resource metadata into yet -- the shader cache merge above is still
+                // real, useful progress (the compiled bytecode is now available for lookup by Guid/params),
+                // this is just flagging that the metadata half of the round trip isn't implemented.
+                Console.WriteLine($"Compiled terrain material '{cr.MaterialName}': shader cache merged, but merging the FTerrainMaterialResource metadata back into a Terrain export isn't implemented yet. Skipping.");
+                return;
+            }
+
             // Merge material into the package.
             var matchingMat = transientPackage.FindExport(cr.MaterialName);
             if (!matchingMat.IsA("Material"))
@@ -384,13 +425,6 @@ namespace MilanShaderHost
             ObjectBinary.EditBinary<Material>(matExp, (x) =>
             {
                 x.SM3MaterialResource = sm3r;
-            });
-
-            // Merge shader cache into the package.
-            var cache = scPackage.FindExport("SeekFreeShaderCache");
-            ObjectBinary.EditBinary<ShaderCache>(cache, (x) =>
-            {
-                cr.Cache.MergeInto(x);
             });
 
             // We need to link up the guids.
