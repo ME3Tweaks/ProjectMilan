@@ -41,6 +41,9 @@ public function ProfileMPGame()
     {
         return;
     }
+    // MILAN CHANGE 09/06/2026 - Mgamerz - Add difficulty profiling so it's easier to see what we're on since there's some bugginess in wave selection
+    DrawLine("Difficulty: ", GRI.DifficultyHandler != None ? string(GRI.DifficultyHandler.CurrentDifficulty) : "None");
+    // END MILAN CHANGE
     if (WaveCoordinator != None && Operation != None)
     {
         DrawLine("WaveCoordinator information: ", string(WaveCoordinator));

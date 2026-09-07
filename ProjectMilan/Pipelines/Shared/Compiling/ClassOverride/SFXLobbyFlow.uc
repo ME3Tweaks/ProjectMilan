@@ -1,5 +1,6 @@
-﻿// TEMP FIX MAYBE
-// Patches out the sorting of MP maps in GetAvailableMaps() as that crashes game for who knows why
+﻿// MILAN CHANGE - Mgamerz
+// Add some null guards
+// Raise map limit to 255, up from 30
 Class SFXLobbyFlow extends Info
     config(Game);
 
@@ -778,7 +779,10 @@ public final function bool DoesEveryoneHaveMap(int MapId)
     {
         return TRUE;
     }
-    else if (MapId >= 0 && MapId < 30)
+    // MILAN CHANGE 09/07/2026 - Mgamerz
+    // Raise map limit to 255, up from 30
+    else if (MapId >= 0 && MapId < 255)
+    // END MILAN CHANGE
     {
         PlayerMask = 0;
         for (idx = 0; idx < GRI.PRIArray.Length; ++idx)
