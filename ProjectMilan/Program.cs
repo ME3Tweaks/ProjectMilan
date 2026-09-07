@@ -65,7 +65,7 @@ namespace ProjectMilan
         /// <summary>
         /// Bump this every time there are changes to MPCommon or NonStartup pipelines. It will invalidate stale checkpoints.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 4;
+        public const int MIN_CHECKPOINT_VERSION = 5;
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -576,8 +576,8 @@ namespace ProjectMilan
             // Put your method in Research class and call it here.
             //Research.CopyPreview2();
             //return;
-            //Research.GetMissingShaderPackages(@"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Kits");
-            //return;
+            Research.GetMissingShaderPackages(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels");
+            return;
 
             Research.InstallCompiledShaders(force: true);// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
             return;

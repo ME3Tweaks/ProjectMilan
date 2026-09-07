@@ -35,7 +35,8 @@ namespace ProjectMilan.Pipelines.Kits
             Parallel.ForEach(kits.AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, kit =>
             {
                 // Uncomment this to port everything
-                if (/*false && */!kit.Enabled)
+                // or to filter to a specific kit
+                if (/*false && */!kit.Enabled /*|| !kit.PackageName.Contains("Collector")*/)
                 {
                     // This level is not marked for porting currently.
                     MilanLog.Information($"Skipping kit {kit.PackageName}, pipeline is not enabled", customPrefix: LOG_CATEGORY);

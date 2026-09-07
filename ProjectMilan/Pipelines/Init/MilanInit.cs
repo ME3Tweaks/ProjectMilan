@@ -41,8 +41,8 @@ namespace ProjectMilan.Pipelines.Init
 
             // Load object databases
 
-            MilanShared.LE3ObjectDB = LoadObjectDB(MEGame.LE3);
-            MilanShared.ME3ObjectDB = LoadObjectDB(MEGame.ME3);
+            MilanShared.LE3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.LE3);
+            MilanShared.ME3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.ME3);
 
             // Sync files from ME3Tweaks so developers are all on the same fileset.
             MilanSync();

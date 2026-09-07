@@ -25,8 +25,8 @@ namespace ProjectMilan.MilanUDK
         {
             //ConvertAssetsToUDK();
             //return;
-            MilanShared.LE3ObjectDB = MilanInit.LoadObjectDB(MEGame.LE3);
-            MilanShared.ME3ObjectDB = MilanInit.LoadObjectDB(MEGame.ME3);
+            MilanShared.LE3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.LE3);
+            MilanShared.ME3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.ME3);
             //DecookME3MPDLC();
             //return;
 
@@ -136,8 +136,8 @@ namespace ProjectMilan.MilanUDK
 
             var outPathFinal = @"S:\Milan\UDK\UDKGame\Content\MilanAssets";
 
-            MilanShared.LE3ObjectDB ??= MilanInit.LoadObjectDB(MEGame.LE3);
-            MilanShared.ME3ObjectDB ??= MilanInit.LoadObjectDB(MEGame.ME3);
+            MilanShared.LE3ObjectDB ??= MilanInitShared.LoadObjectDB(MEGame.LE3);
+            MilanShared.ME3ObjectDB ??= MilanInitShared.LoadObjectDB(MEGame.ME3);
 
             ConvertAssetsToUDK(outPathFinal, [outPathS1 /*, outPathS2, outPathS3*/], [mergePathS1]);
         }

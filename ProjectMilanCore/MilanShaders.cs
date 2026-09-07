@@ -14,6 +14,28 @@ namespace ProjectMilanCore
     public static class MilanShaders
     {
         /// <summary>
+        /// Maps old material <c>InstancedFullPath</c> values to new ones for cases where a developer renamed
+        /// a material between builds of the game. The key is the old path as it appears in the ported content
+        /// (e.g. <c>"BIOA_STA60_T.TRIMS02"</c>) and the value is the corresponding path in the compiled
+        /// shader packages (e.g. <c>"BIOA_STA60_02_T.TRIMS02"</c>). The linker for the compiled package
+        /// lookup is derived from the first dot-separated segment of the remapped path.
+        /// </summary>
+        public static Dictionary<string, string> MaterialPathRemap { get; } = new(StringComparer.OrdinalIgnoreCase)
+        {
+            // Crossgen, LE1:
+            // BioWare in LE1 renamed some packages (going from ME1 -> LE1) and split them into new ones, possibly because they got too big for Unreal in source side.
+            // We manually fixed this in crossgen but we have to manually fix it again here
+            // Making our lives miserable
+            { "BIOA_STA60_T.STA60_TRIMS02", "BIOA_STA60_02_T.STA60_TRIMS02" },
+            { "BIOA_STA60_T.STA60_WALL02", "BIOA_STA60_02_T.STA60_WALL02" },
+            { "CROSSGENV.BlackTextureMat", "BIOA_PRC2_MatFX.BlackOut_MAT" }, // This is effectively a donor material, but it's a black material, so I really don't care. A donor of a donor if you will.
+            { "BIOA_JUG80_T.JUG80_SAIL_mat", "BIOA_JUG80_T.JUG80_SAIL" }, // This god damn material has been such a pain for YEARS 
+            { "BIOA_PRC2_T.LAVCubemap.LAV60_PANNELWALL03_Dup", "BIOA_DLC_UNC52_T.LAV60_PANNELWALL03_Dup" }, // Lava - donors in Crossgen
+            { "BIOA_PRC2_T.LAVCubemap.LAV60_PANNELWALL02_Dup", "BIOA_LAV60_T.LAV60_PANNELWALL02" }, // Lava - donors in Crossgen
+            { "BIOA_PRC2_T.LAVCubemap.LAV60_SILO01_Dup" , "BIOA_DLC_UNC52_T.LAV60_SILO01_Dup" }, // Lava - donors in Crossgen
+        };
+
+        /// <summary>
         /// Installs shaders to the package for materials that are marked as broken. If a material isn't broken,
         /// this won't update their shaders, unless <paramref name="force"/> is set.
         /// </summary>
@@ -43,55 +65,106 @@ namespace ProjectMilanCore
             var materialsToProcess = force
                 ? package.Exports.Where(x => x.ClassName == "Material").ToList()
                 : ShaderCacheManipulator.GetBrokenMaterials(package);
+
+            // Source shader caches are deserialized once per compiled package and merged into a single
+            // accumulator, which is written to the destination package exactly once at the end. Doing this
+            // per-material instead (as before) meant repeatedly deserializing/reserializing the destination's
+            // SeekFreeShaderCache binary, which grows every iteration - O(n^2) for a package with many broken materials.
+            var sourceShaderCaches = new Dictionary<IMEPackage, ShaderCache>();
+            var accumulatedCache = ShaderCache.Create();
+            bool anyShadersToInstall = false;
+
             foreach (var brokenMat in materialsToProcess)
             {
                 if (brokenMat.ClassName != "Material")
                 {
                     continue;
                 }
+
                 var linker = brokenMat.GetLinker();
+                ExportEntry matchingMat = null;
+                IMEPackage shaderSourcePackage = null;
+
+                // Primary lookup: find a compiled package whose filename matches the material's linker.
                 if (packageMap.TryGetValue(linker, out var cmp))
                 {
                     var compiledPackage = cache.GetCachedPackage(cmp);
-                    var csc = compiledPackage.FindExport("SeekFreeShaderCache");
-                    if (csc == null)
-                        // dunno what happened here.
-                        continue;
-
-                    var matchingMat = compiledPackage.FindExport(brokenMat.MemoryFullPath, brokenMat.ClassName) ?? compiledPackage.FindExport(brokenMat.InstancedFullPath, brokenMat.ClassName);
-                    if (matchingMat == null)
+                    if (compiledPackage.FindExport("SeekFreeShaderCache") != null)
                     {
-                        // Try just finding it by name...
-                        var matchingPossibilities = compiledPackage.Exports.Where(x => x.ClassName == "Material" && x.ObjectName.Instanced == brokenMat.ObjectName).ToList();
-                        if (matchingPossibilities.Count == 1)
+                        shaderSourcePackage = compiledPackage;
+                        matchingMat = compiledPackage.FindExport(brokenMat.MemoryFullPath, brokenMat.ClassName)
+                                   ?? compiledPackage.FindExport(brokenMat.InstancedFullPath, brokenMat.ClassName);
+
+                        if (matchingMat == null)
                         {
-                            MilanLog.Warning($"Found material using name-match only. Decooker needs nesting fixes most likely.");
-                            matchingMat = matchingPossibilities[0];
-                        } else if (matchingPossibilities.Count > 0)
-                        {
-                            MilanLog.Error($"Multiple same-name materials in decooked package for {brokenMat.InstancedFullPath} in {package.FileNameNoExtension}; unable to safely choose, decooker needs fixed", customPrefix: logCategory);
+                            // Try just finding it by name...
+                            var matchingPossibilities = compiledPackage.Exports.Where(x => x.ClassName == "Material" && x.ObjectName.Instanced == brokenMat.ObjectName).ToList();
+                            if (matchingPossibilities.Count == 1)
+                            {
+                                MilanLog.Warning($"Found material using name-match only. Decooker needs nesting fixes most likely.");
+                                matchingMat = matchingPossibilities[0];
+                            }
+                            else if (matchingPossibilities.Count > 0)
+                            {
+                                MilanLog.Error($"Multiple same-name materials in decooked package for {brokenMat.InstancedFullPath} in {package.FileNameNoExtension}; unable to safely choose, decooker needs fixed", customPrefix: logCategory);
+                            }
                         }
                     }
+                }
 
-                    if (matchingMat == null)
+                // Remap fallback: the material was renamed between game builds. Check the explicit remap
+                // dictionary and retry against the compiled package for the remapped path's linker.
+                if (matchingMat == null && MaterialPathRemap.TryGetValue(brokenMat.InstancedFullPath, out var remappedPath))
+                {
+                    var remappedLinker = remappedPath.Split('.')[0];
+                    if (packageMap.TryGetValue(remappedLinker, out var remappedCmp))
                     {
-                        // couldn't find the mat
-                        MilanLog.Error($"No compiled shaders for {brokenMat.InstancedFullPath} ({brokenMat.ClassName}) in {package.FileNameNoExtension}", customPrefix: logCategory);
+                        var remappedPackage = cache.GetCachedPackage(remappedCmp);
+                        if (remappedPackage.FindExport("SeekFreeShaderCache") != null)
+                        {
+                            shaderSourcePackage = remappedPackage;
+                            matchingMat = remappedPackage.FindExport(remappedPath, brokenMat.ClassName);
+                            if (matchingMat != null)
+                                MilanLog.Information($"Found material via path remap: {brokenMat.InstancedFullPath} -> {remappedPath}", customPrefix: logCategory);
+                            else
+                                MilanLog.Warning($"Path remap for {brokenMat.InstancedFullPath} -> {remappedPath} did not find a matching material in the compiled package", customPrefix: logCategory);
+                        }
                     }
                     else
                     {
-                        MilanLog.Information($"Updating shadercache for {brokenMat.InstancedFullPath}", customPrefix: logCategory);
-                        var shaderCache = ObjectBinary.From<ShaderCache>(csc);
-                        ShaderCacheManipulator.AddShadersToFile(package, shaderCache, overwrite: force);
-                        // update the id of the material to match the compiled version
-                        var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
-                        ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
-
-                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
-                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
-                        brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
+                        MilanLog.Warning($"Path remap for {brokenMat.InstancedFullPath} targets linker '{remappedLinker}' but no compiled package was found for it", customPrefix: logCategory);
                     }
                 }
+
+                if (matchingMat == null)
+                {
+                    // couldn't find the mat
+                    MilanLog.Error($"No compiled shaders for {brokenMat.InstancedFullPath} ({brokenMat.ClassName}) in {package.FileNameNoExtension}", customPrefix: logCategory);
+                }
+                else
+                {
+                    MilanLog.Information($"Updating shadercache for {brokenMat.InstancedFullPath}", customPrefix: logCategory);
+                    if (!sourceShaderCaches.TryGetValue(shaderSourcePackage, out var shaderCache))
+                    {
+                        var csc = shaderSourcePackage.FindExport("SeekFreeShaderCache");
+                        shaderCache = ObjectBinary.From<ShaderCache>(csc);
+                        sourceShaderCaches[shaderSourcePackage] = shaderCache;
+                        shaderCache.MergeInto(accumulatedCache);
+                    }
+                    anyShadersToInstall = true;
+                    // update the id of the material to match the compiled version
+                    var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
+                    ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
+
+                    brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+                    brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
+                    brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
+                }
+            }
+
+            if (anyShadersToInstall)
+            {
+                ShaderCacheManipulator.AddShadersToFile(package, accumulatedCache, overwrite: force);
             }
 
             MilanLog.Information($"Compacting ShaderCache ({package.FileNameNoExtension})", customPrefix: logCategory);
