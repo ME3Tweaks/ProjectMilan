@@ -3,7 +3,6 @@ using LegendaryExplorerCore;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using System.Diagnostics;
-using System.IO.Compression;
 
 namespace LEDecooker
 {
@@ -122,19 +121,11 @@ namespace LEDecooker
             }
 
             
-            var zipfolder = Path.Combine("..", "..", "..", "supportfiles");
-            var zipfile = Path.Combine(zipfolder, "supportdbs.zip");
-            if (File.Exists(zipfile))
-            {
-                File.Delete(zipfile);
-            }
-
-            MemoryStream zipStream = new MemoryStream();
-
-            DecookerLog.Information("Compressing support files...");
-            ZipFile.CreateFromDirectory(zipfolder, zipStream, CompressionLevel.SmallestSize, false);
-            DecookerLog.Information($"Writing zip file: {zipfile}");
-            zipStream.WriteToFile(zipfile);
+            // Reuses SupportGenerators' own folder lookup (walks up from AppContext.BaseDirectory
+            // looking for a "supportfiles" directory) instead of a hardcoded "../../../" relative path,
+            // which broke as soon as the build output sat at a different depth (e.g. an x64 or
+            // RID-qualified output folder) than the Debug/net10.0 layout it was written for.
+            SupportGenerators.ZipSupportFiles();
         }
     }
 }

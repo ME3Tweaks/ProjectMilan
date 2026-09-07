@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
+using static LegendaryExplorerCore.Unreal.UnrealFlags;
 
 namespace LEDecooker
 {
@@ -25,6 +26,7 @@ namespace LEDecooker
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> StaticMeshLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> RvrEffectsMaterialUserLookupDB;
+        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> TerrainMaterialLookupDB;
         private static CaseInsensitiveConcurrentDictionary<string> PortingItems = new();
 
         /// <summary>
@@ -38,6 +40,24 @@ namespace LEDecooker
         private static readonly CaseInsensitiveDictionary<string> CandidateClassCache = new();
 
         /// <summary>
+        /// Source games whose T3D batch encodes package nesting directly in the filename, e.g.
+        /// "Materials.EMT_FaceSplash.T3D" means object EMT_FaceSplash nested under a package export
+        /// named "Materials". The last dot-separated segment is always the object's own name; every
+        /// segment before it is a package export to create/reuse as a parent, in order.
+        ///
+        /// This includes materials whose real parent is an RvrEffectsMaterialUser (a CombinedEffect_*
+        /// sibling of one) -- no special-casing is needed for that here. MoveToNested just creates a
+        /// plain Package placeholder for every segment, and the CopyProperties(RvrEffectsMaterialUserLookupDB)
+        /// pass later in CompileGameAssets promotes any placeholder whose full path matches that DB into
+        /// the real class, exactly as it already does today for MaterialInstanceConstant parents.
+        ///
+        /// Games not listed here fall back to the old system (matIfpDb, built by scanning the original
+        /// game). Add a game here once its T3D batch has been regenerated with nesting info in the
+        /// filename; remove it from the old batch's reliance as new batches arrive.
+        /// </summary>
+        private static readonly HashSet<MEGame> FilenameNestedGames = new() { MEGame.LE3 };
+
+        /// <summary>
         /// Compiles the T3D files for the specified game, generating packages with material expression data. It also generates the 
         /// source style packages for supporting assets that are needed for other things such as StaticMeshes, Material Instance Constants,
         /// and Textures.
@@ -49,11 +69,12 @@ namespace LEDecooker
             Directory.CreateDirectory(compiledOutputFolder);
 
             // Compile LE
-            CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game, CLIOptions.ParsedOptions.Game, false);
+            CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game, CLIOptions.ParsedOptions.Game, true);
             // Compile OT -> LE
             if (CLIOptions.ParsedOptions.Game != MEGame.LE2)
             {
                 // Port in the content from the opposite generation as well.
+                DecookerLog.Information($"------ Layering {CLIOptions.ParsedOptions.Game.ToOppositeGeneration()} assets into decooked files");
                 CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game.ToOppositeGeneration(), CLIOptions.ParsedOptions.Game, false);
             }
 
@@ -211,6 +232,9 @@ namespace LEDecooker
         /// <param name="outputFolder"></param>
         public static void CompileGameAssets(string outputFolder, MEGame sourceGame, MEGame targetGame, bool clearOutput)
         {
+            // Turn this on to save packages as the files are compiled - letting you see intermediate steps, but at a performance cost.
+            bool debugPackages = false;
+
             DecookerShared.TargetObjectDB = DecookerShared.LoadObjectDB(sourceGame);
 
             if (clearOutput)
@@ -252,10 +276,15 @@ namespace LEDecooker
             // We also want to add texture and mesh-only packages
             AddPackagesToList(allPackageNames, StaticMeshLookupDB);
             AddPackagesToList(allPackageNames, TextureLookupDB);
+            AddPackagesToList(allPackageNames, TerrainMaterialLookupDB);
             var packages = allPackageNames.Select(x => x.Key).OrderBy(x => x).ToList();
 
             // Used to restart from specific position.
             bool bypass = false;
+
+            
+            // FILTERING FOR DEBUGGING
+            packages = filterPackages(packages);
 
             int done = 0;
             int total = packages.Count;
@@ -263,24 +292,6 @@ namespace LEDecooker
             foreach (var packageName in packages)
             {
                 done++;
-                Debug.WriteLine($"{packageName}");
-
-                // Duplicates: 
-                //   BioD_MPRctr_100SP
-                //   BioD_Omg02A_400CntrlRm
-                //   biog_wpn_hvy_r
-                //   biot_rubble -> bioware screwed this one up.
-
-                // Crash out:
-                //   BIOG_WPN_SNP_M_CON_MP4 FIXED per import
-                //   BioS_MPJungle 
-                //   BioVFX_Env_Hologram
-                //if (!packageName.CaseInsensitiveEquals("BioG_VfxMaterials")
-                //// && !packageName.CaseInsensitiveEquals("biod_cithub_wards")
-                ////&& !bypass // debug filter. uncomment to make it continue after this single one.
-                //)
-                //continue;
-
                 bypass = true;
 
                 if (packageName.StartsWith("Engine", StringComparison.OrdinalIgnoreCase) && !packageName.Contains("EngineDebugMaterials", StringComparison.OrdinalIgnoreCase))
@@ -332,15 +343,17 @@ namespace LEDecooker
                 // We must do this to ensure we have the RVR stuff set up as the MaterialInstanceConstant may reference it as a parent
                 CopyProperties(package, sourceGame, "RvrEffectsMaterialUser", RvrEffectsMaterialUserLookupDB);
                 package.PreparePackageForUDKify();
+                VerifyCombinedEffectParents(package);
                 AddObjects(package, sourceGame, "MaterialInstanceConstant", MaterialInstanceConstantLookupDB);
-                package.Save();
+                if (debugPackages) { package.Save(); }
 
                 AddObjects(package, sourceGame, "StaticMesh", StaticMeshLookupDB);
+                AddObjects(package, sourceGame, "TerrainMaterial", TerrainMaterialLookupDB);
                 package.PreparePackageForUDKify();
 
-                package.Save();
+                if (debugPackages) { package.Save(); }
                 SpecialFixes(package, sourceGame);
-                package.Save();
+                if (debugPackages) { package.Save(); }
                 // NestObjects(package);
 
                 if (package.Exports.All(x => x.ClassName == "Package")) // UDK prep will add package name export so we only check if we have a non-package export
@@ -374,6 +387,35 @@ namespace LEDecooker
             {
                 Debug.WriteLine($"{f.Key}\t\t{f.Value}");
             }
+        }
+
+        private static List<string> filterPackages(List<string> packages)
+        {
+            // Duplicates: 
+            //   BioD_MPRctr_100SP
+            //   BioD_Omg02A_400CntrlRm
+            //   biog_wpn_hvy_r
+            //   biot_rubble -> bioware screwed this one up.
+
+            // Crash out:
+            //   BIOG_WPN_SNP_M_CON_MP4 FIXED per import
+            //   BioS_MPJungle 
+            //   BioVFX_Env_Hologram
+            return packages.Where(packageName =>
+            {
+                // Uncomment to disable filtering.
+                return true;
+
+                // Put filename here and anything not matching it will be skipped
+                if (!packageName.CaseInsensitiveEquals("BIOA_Apartment_S"))
+                {
+                    return false;
+                }
+
+                // Allowed
+                return true;
+            }).ToList();
+
         }
 
         private static void SpecialFixes(IMEPackage package, MEGame sourceGame)
@@ -432,6 +474,12 @@ namespace LEDecooker
             supportData = DecookerShared.ReadSupportFileString(zip, $"rvreffectsmaterialuserdb_{game}.json");
             RvrEffectsMaterialUserLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
+            // Terrain materials are package-root assets (like Materials), not nested under TheWorld, so
+            // they get their own lookup database the same way. Needed for MilanShaderHost to be able to
+            // find and compile them.
+            supportData = DecookerShared.ReadSupportFileString(zip, $"terrainmaterialdb_{game}.json");
+            TerrainMaterialLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
+
         }
 
         //private static void NestObjects(IMEPackage package)
@@ -447,6 +495,27 @@ namespace LEDecooker
         //        }
         //    }
         //}
+
+        /// <summary>
+        /// Sanity check for the RvrEffectsMaterialUser wrinkle: a CombinedEffect_* material's direct
+        /// parent is supposed to end up as a real RvrEffectsMaterialUser, promoted from the plain
+        /// Package placeholder that nesting creates by the CopyProperties(RvrEffectsMaterialUserLookupDB)
+        /// call just above this. That promotion only happens when the placeholder's full path matches an
+        /// entry in the RVR support DB -- if the T3D's encoded nesting path is wrong, or the DB is simply
+        /// missing that object (the game scan that builds it can only find what actually shipped), the
+        /// parent silently stays a Package and the material ends up decooked with the wrong parent type.
+        /// With hundreds of these files per batch that's easy to miss without an explicit log line.
+        /// </summary>
+        private static void VerifyCombinedEffectParents(IMEPackage package)
+        {
+            foreach (var mat in package.Exports.Where(x => x.IsA("Material") && x.ObjectName.Instanced.StartsWith("CombinedEffect_", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (mat.Parent is not { ClassName: "RvrEffectsMaterialUser" })
+                {
+                    DecookerLog.Warning($"\t\tCombinedEffect material's parent was not promoted to RvrEffectsMaterialUser: {mat.InstancedFullPath} (parent class: {mat.Parent?.ClassName ?? "<none>"})");
+                }
+            }
+        }
 
         /// <summary>
         /// Moves an export under another package export in the file to build the listed path
@@ -524,10 +593,11 @@ namespace LEDecooker
                         Cache = cache,
                         CustomRelinkUIndex = DecookerShared.ImportOutsideOfPackageRelink,
                         CustomImportDependency = ImportDependencyOutsideOfPackage,
+                        AllowMemoryPathLookups = true, // Prevents duplicate object porting in the OT layering step, especially for ME1 to LE1 as has natively uncooked packages.
                     };
 
                     // Convert to Seek Free porting
-                    if (sourceAsset.FileRef.FileNameNoExtension.StartsWith("BIOG_"))
+                    if (sourceAsset.FileRef.FileNameNoExtension.StartsWith("BIOG_") || !sourceAsset.FileRef.Flags.HasFlag(EPackageFlags.RequireImportsAlreadyLoaded) )
                     {
                         EntryExporter.PrepareGlobalFileForPorting(sourceAsset.FileRef, sourceAsset.FileRef.FileNameNoExtension);
                     }
@@ -591,6 +661,7 @@ namespace LEDecooker
                         Cache = cache,
                         CustomRelinkUIndex = DecookerShared.ImportOutsideOfPackageRelink,
                         CustomImportDependency = ImportDependencyOutsideOfPackage,
+                        AllowMemoryPathLookups = true, // helps prevent dupes after prepare for UDKify
                     };
 
 
@@ -634,6 +705,7 @@ namespace LEDecooker
                         Cache = cache,
                         CustomRelinkUIndex = DecookerShared.ImportOutsideOfPackageRelink,
                         CustomImportDependency = ImportDependencyOutsideOfPackage,
+                        AllowMemoryPathLookups = true
                     };
 
 
@@ -753,7 +825,7 @@ namespace LEDecooker
 
                 if (!writtenProps)
                 {
-                    DecookerLog.Error($"Did not set bUsedWith properties on {mat.MemoryFullPath}");
+                    DecookerLog.Information($"Did not set bUsedWith properties on {mat.MemoryFullPath} - might not exist");
                 }
             }
 
@@ -773,13 +845,35 @@ namespace LEDecooker
                 //    t3ds = archive.Entries.Where(x => x.FullName.StartsWith(prefix) && x.FullName.Length > len).ToList();
                 //}
 
+                bool filenameEncodesNesting = FilenameNestedGames.Contains(sourceGame);
+
                 foreach (var entry in t3ds)
                 {
-                    var matName = Path.GetFileNameWithoutExtension(entry.FullName);
+                    var rawName = Path.GetFileNameWithoutExtension(entry.FullName);
+                    var matName = rawName;
 
-                    if (_package.Exports.FirstOrDefault(x => x.ObjectName.Instanced == matName && x.IsA("Material")) != null)
+                    // Package-relative dotted path (parents + leaf), when the filename encodes nesting.
+                    string nestedPath = null;
+                    if (filenameEncodesNesting)
                     {
-                        // Already in package
+                        var nameParts = rawName.Split('.');
+                        if (nameParts.Length > 1)
+                        {
+                            matName = nameParts[^1];
+                            nestedPath = rawName;
+                        }
+                    }
+
+                    // Already in package? Nested materials must be checked by their full eventual path --
+                    // this batch legitimately has different materials sharing a leaf name under different
+                    // parents in the same package (e.g. two "CombinedEffect_Decoy", one under a stale
+                    // "..._old" RvrEffectsMaterialUser and one under the live one), so a bare-name check
+                    // would wrongly skip the second one as a duplicate of the first.
+                    var alreadyCompiled = nestedPath != null
+                        ? package.FindExport($"{_package.FileNameNoExtension}.{nestedPath}", "Material") != null
+                        : _package.Exports.FirstOrDefault(x => x.ObjectName.Instanced == matName && x.IsA("Material")) != null;
+                    if (alreadyCompiled)
+                    {
                         continue;
                     }
 
@@ -800,14 +894,21 @@ namespace LEDecooker
                         return log;
                     }
 
-                    // 04/18/2025 - check mat ifp db to see if it needs to be nested.
-                    if (matIfpDb.TryGetValue(_package.FileNameNoExtension, out var packageInfo) && packageInfo.TryGetValue(matName, out var matIfp))
+                    if (nestedPath != null)
                     {
-                        // NESTED - we must do parents.
+                        // New system: nesting comes straight from the T3D's own filename.
+                        DecookerLog.Information($"\t\t-> Nesting material at {nestedPath}");
+                        var obj = package.FindExport(matName);
+                        MoveToNested(obj, $"{_package.FileNameNoExtension}.{nestedPath}");
+                    }
+                    // 04/18/2025 - check mat ifp db to see if it needs to be nested.
+                    else if (!filenameEncodesNesting && matIfpDb.TryGetValue(_package.FileNameNoExtension, out var packageInfo) && packageInfo.TryGetValue(matName, out var matIfp))
+                    {
+                        // Old system - we must do parents.
                         DecookerLog.Information($"\t\t-> Nesting material at {matIfp}");
                         var obj = package.FindExport(matName);
 
-                        // We nest under packagename as it doesn't make us deal with dupes of bringing in forced exports under their 
+                        // We nest under packagename as it doesn't make us deal with dupes of bringing in forced exports under their
                         // nested parent. We will convert to that anyways after this step finishes
                         MoveToNested(obj, $"{_package.FileNameNoExtension}.{matIfp}");
                     }
@@ -1016,7 +1117,8 @@ namespace LEDecooker
             {
                 // Cache?
                 CustomRelinkUIndex = DecookerShared.ImportOutsideOfPackageRelink,
-                CustomImportDependency = ImportDependencyOutsideOfPackage
+                CustomImportDependency = ImportDependencyOutsideOfPackage,
+                AllowMemoryPathLookups = true,
             };
 
             if (!sourceTex.IsForcedExport)

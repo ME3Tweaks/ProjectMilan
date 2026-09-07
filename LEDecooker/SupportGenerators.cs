@@ -50,7 +50,14 @@ namespace LEDecooker
         [
             ("MaterialInstanceConstant", false),
             ("StaticMesh", false),
-            ("RvrEffectsMaterialUser", false)
+            ("RvrEffectsMaterialUser", false),
+            // TerrainMaterial is just a thin wrapper (UV mapping params + a MaterialInterface reference +
+            // a displacement texture) authored at package root right alongside its owning
+            // TerrainLayerSetup, same as a Material or MaterialInstanceConstant -- not nested under
+            // TheWorld, so the existing "skip TheWorld" filter in InventoryObjectTypes doesn't exclude it.
+            // Needed so MilanShaderHost can find and compile terrain materials the same way it does
+            // regular ones (see MilanShaderPackageBuilder.AddTerrainActorForMaterial).
+            ("TerrainMaterial", false)
         ];
 
         /// <summary>
