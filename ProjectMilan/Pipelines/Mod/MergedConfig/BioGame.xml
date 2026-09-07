@@ -8764,7 +8764,7 @@
 			<Property name="enemies">
 				<Value type="3">(Difficulty=DO_Level1,Enemies=((EnemyType="WAVE_CER_AssaultTrooper"),(EnemyType="WAVE_CER_Centurion", MinCount=2, MaxCount=2),(EnemyType="WAVE_CER_Guardian", MinCount=2, MaxCount=2),(EnemyType="WAVE_CER_Atlas", MinCount=1, MaxCount=1, MaxPerWave=1)))</Value>
 				<Value type="3">(Difficulty=DO_Level3,Enemies=((EnemyType="WAVE_CER_Phoenix"),(EnemyType="WAVE_CER_Phantom", MinCount=4, MaxCount=4),(EnemyType="WAVE_CER_Atlas", MinCount=2, MaxCount=2)))</Value>
-				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_CER_Phoenix"),(EnemyType="WAVE_CER_Atlas", MinCount=2, MaxCount=2),(EnemyType="WAVE_GTH_GethHunter", MinCount=2, MaxCount=2),(EnemyType="WAVE_CER_Atlas", MinCount=2, MaxCount=2)))</Value>
+				<Value type="3">(Difficulty=DO_Level4,Enemies=((EnemyType="WAVE_CER_Phoenix"),(EnemyType="WAVE_CER_Atlas", MinCount=2, MaxCount=2),(EnemyType="WAVE_GTH_GethHunter", MinCount=2, MaxCount=2)))</Value>
 				<Value type="4">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_CER_Centurion"),(EnemyType="WAVE_CER_Phoenix", MinCount=3, MaxCount=3),(EnemyType="WAVE_CER_Phantom", MinCount=1, MaxCount=1),(EnemyType="WAVE_CER_Atlas", MinCount=2, MaxCount=2)))</Value>
 				<Value type="3">(Difficulty=DO_Level2,Enemies=((EnemyType="WAVE_CER_Centurion"),(EnemyType="WAVE_CER_Phoenix", MinCount=2, MaxCount=2),(EnemyType="WAVE_CER_Phantom", MinCount=1, MaxCount=1),(EnemyType="WAVE_CER_Atlas", MinCount=2, MaxCount=2)))</Value>
 			</Property>
@@ -8941,8 +8941,7 @@
 				<Value type="3">(Difficulty=DO_Level1,Enemies=( (EnemyType="WAVE_COL_CollectorTrooper"), (EnemyType="WAVE_COL_Abomination", MinCount=2, MaxCount=2), (EnemyType="WAVE_COL_CollectorCaptain", MinCount=1, MaxCount=1), (EnemyType="WAVE_COL_Scion", MinCount=1, MaxCount=1, MaxPerWave=2) ))</Value>
 				<Value type="3">(Difficulty=DO_Level2,Enemies=( (EnemyType="WAVE_COL_CollectorTrooper"), (EnemyType="WAVE_COL_Scion", MinCount=1, MaxCount=1, MaxPerWave=2), (EnemyType="WAVE_COL_Praetorian", MinCount=1, MaxCount=1, MaxPerWave=2) ))</Value>
 				<Value type="3">(Difficulty=DO_Level3,Enemies=( (EnemyType="WAVE_COL_CollectorTrooper"), (EnemyType="WAVE_COL_Abomination", MinCount=2, MaxCount=2), (EnemyType="WAVE_COL_Scion", MinCount=1, MaxCount=1), (EnemyType="WAVE_COL_Praetorian", MinCount=1, MaxCount=1) ))</Value>
-				<Value type="3">(Difficulty=DO_Level3,Enemies=( (EnemyType="WAVE_COL_Scion"), (EnemyType="WAVE_COL_Praetorian", MinCount=1, MaxCount=1), (EnemyType="WAVE_CER_Phoenix", MinCount=2, MaxCount=2), (EnemyType="WAVE_CER_Phantom", MinCount=3, MaxCount=3) ))</Value>
-				<Value type="3">(Difficulty=DO_Level3,Enemies=( (EnemyType="WAVE_COL_CollectorTrooper"), (EnemyType="WAVE_COL_Abomination", MinCount=2, MaxCount=2), (EnemyType="WAVE_COL_Scion", MinCount=1, MaxCount=1), (EnemyType="WAVE_COL_Praetorian", MinCount=1, MaxCount=1, MaxPerWave=3) ))</Value>
+				<Value type="3">(Difficulty=DO_Level4,Enemies=( (EnemyType="WAVE_COL_Scion"), (EnemyType="WAVE_COL_Praetorian", MinCount=1, MaxCount=1), (EnemyType="WAVE_CER_Phoenix", MinCount=2, MaxCount=2), (EnemyType="WAVE_CER_Phantom", MinCount=3, MaxCount=3) ))</Value>
 			</Property>
 			<Property name="waveindex" type="0">5</Property>
 		</Section>
