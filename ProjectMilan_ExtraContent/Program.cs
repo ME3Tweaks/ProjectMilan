@@ -79,6 +79,7 @@ namespace ProjectMilan_ExtraContent
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.LE3]);
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
+            MilanShared.LE3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.LE3); // needed for crossgen
             try
             {
                 SystemSleepManager.PreventSleep("Compiling");

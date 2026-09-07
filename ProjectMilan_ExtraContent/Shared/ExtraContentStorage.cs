@@ -242,7 +242,7 @@ namespace ProjectMilan_ExtraContent.Shared
                 var lang = tlkStrSet.Key;
                 var strs = tlkStrSet.Value;
 
-                var endTlkId = strs.Max(x => x.StringID) + 1;
+                var endTlkId = strs.Count == 0 ? 975000 : strs.Max(x => x.StringID) + 1;
                 strs.Add(new TLKStringRef(endTlkId, CurrentContent.ToString() + " Developer DLC module"));
                 strs.Add(new TLKStringRef(endTlkId + 1, SharedECPipelines.GetDLCFolderName(CurrentContent)));
                 strs.Add(new TLKStringRef(endTlkId + 2, lang.ToString()));
