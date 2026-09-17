@@ -662,7 +662,7 @@ namespace ProjectMilan.Utility
         {
             var inputFolder = @"Z:\Mass Effect Builds\Legendary\2.0.0.48602\ME3\BioGame\CookedPCConsole";
             var le3OutputFolder = @"S:\Milan\Audio\LE3Banks";
-            Dictionary<string,string> dumpedBanks = new Dictionary<string, string>(); // Map BankName -> SourceFileName
+            Dictionary<string, string> dumpedBanks = new Dictionary<string, string>(); // Map BankName -> SourceFileName
 
             Console.WriteLine(@"------ DUMPING LE3 BANKS -------");
             foreach (var le3PackageP in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
@@ -681,7 +681,7 @@ namespace ProjectMilan.Utility
                     var outFile = Path.Combine(le3OutputFolder, bankName + ".bnk");
                     var wwiseBin = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(bankExport);
                     File.WriteAllBytes(outFile, wwiseBin.BnkFile);
-                    dumpedBanks[bankName] = le3PackageP; 
+                    dumpedBanks[bankName] = le3PackageP;
                 }
             }
 
@@ -741,7 +741,8 @@ namespace ProjectMilan.Utility
                     {
                         Console.WriteLine($"Skipping {Path.GetFileName(bankFile)} (version {bankVersion})");
                     }
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     Console.WriteLine($">>> ERROR GETTING BANK VERSION FOR {bankFile} {ex}");
                 }
@@ -1154,6 +1155,245 @@ namespace ProjectMilan.Utility
         {
             var banks = Research.ExtractConvertedBanksForTesting(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Kits\Asari_Adept_MP_LOC_INT.pcc", @"C:\temp\bnktest");
             foreach (var bank in banks) Research.TestBankAudio(bank);
+        }
+
+        internal static void TestBuildLavaTerrainSetup()
+        {
+            // target file should contain terrain without 'Layers' property
+            var ahernMap = true;
+            var lavaFile = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSAhern\BioA_MPPSAhern_TERRAIN.pcc";
+            var targetTerrainSetupFile = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME1\BioGame\CookedPCConsole\BIOA_LAV60_00_LAY.pcc";
+
+            // ahernMap = false;
+            //var lavaFile = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSLava\BioA_MPPSLava_TERRAIN.pcc";
+            //var targetTerrainSetupFile = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME1\BioGame\CookedPCConsole\BIOA_LAV60_00_LAY.pcc";
+
+
+            using var lavaPackage = MEPackageHandler.OpenMEPackage(lavaFile);
+            using var terrainSetupPackage = MEPackageHandler.OpenMEPackage(targetTerrainSetupFile);
+
+            MilanLog.Information($"Porting terrain layer setup from {terrainSetupPackage.FileNameNoExtension} to {lavaPackage.FileNameNoExtension}");
+
+
+            var terrainExport = terrainSetupPackage.Exports.FirstOrDefault(x => x.ClassName == "Terrain");
+            if (terrainExport == null)
+            {
+                throw new InvalidOperationException($"No Terrain export found in {terrainSetupPackage.FileNameNoExtension}");
+            }
+
+            // Strip everything but 'Layers'. Must stay on terrain as this struct property must remain parsable as it is an array.
+            var olayers = terrainExport.GetProperty<ArrayProperty<StructProperty>>("Layers");
+            if (ahernMap)
+            {
+                // Ahern map has only one alpha map, if we don't remove the layers and correct the index
+                // compiler crashes accessing OOB alpha map index
+                olayers = new ArrayProperty<StructProperty>("Layers") { olayers[3] };
+                olayers[0].Properties.AddOrReplaceProp(new IntProperty(0, "AlphaMapIndex"));
+            }
+            terrainExport.WriteProperties([olayers]);
+            terrainExport.WriteBinary(Terrain.Create());
+            terrainExport.ObjectName = "LayerSetupTemp";
+            terrainExport.Parent = null;
+
+
+            // Port to target file so it drags the terrain setups over
+            EntryExporter.ExportExportToPackage(terrainExport, lavaPackage, out var layerTerrain);
+            var layerTerrainExport = layerTerrain as ExportEntry;
+
+            ArrayProperty<StructProperty> layers = layerTerrainExport.GetProperty<ArrayProperty<StructProperty>>("Layers");
+            var lavaterrainExport = lavaPackage.Exports.FirstOrDefault(x => x.ClassName == "Terrain");
+            if (lavaterrainExport == null)
+            {
+                throw new InvalidOperationException($"No Terrain export found in {lavaPackage.FileNameNoExtension}");
+            }
+
+
+            // Overwrite terrain setups
+            lavaterrainExport.WriteProperty(layers);
+            ObjectBinary.EditBinary<Terrain>(terrainExport, x => x.CachedTerrainMaterials = []); // Strip the cached materials.
+
+            // Get rid of the temp ported object
+            EntryPruner.TrashEntryAndDescendants(layerTerrainExport);
+
+            // Required for shader host... Will have to remove later
+            ConvertMaterialsToDecooked(lavaPackage, @"E:\Decooked\LE1");
+
+            lavaPackage.Save();
+            MilanLog.Information("Done");
+
+            //MilanShaders.InstallTerrainShadersToPackage();
+        }
+
+        internal static void TestBuildTerrainPackage()
+        {
+            var decookedPath = @"E:\Decooked\LE1";
+
+            // Move terrain to target file
+            var inputTerrainPackage = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME1\BioGame\CookedPCConsole\BIOA_LAV60_00_LAY.pcc";
+            var outPath = $@"B:\UserProfile\source\repos\ME3Tweaks\ProjectMilan\MilanShaderHost\Test\{Path.GetFileNameWithoutExtension(inputTerrainPackage)}_terrain.pcc";
+
+            MilanLog.Information($"Creating empty level package at {outPath}");
+            MEPackageHandler.CreateEmptyLevel(outPath, MEGame.LE3);
+            using var package = MEPackageHandler.OpenMEPackage(outPath);
+
+            using var inTerrainPackage = MEPackageHandler.OpenMEPackage(inputTerrainPackage);
+            var terrainExport = inTerrainPackage.Exports.FirstOrDefault(x => x.ClassName == "Terrain");
+            if (terrainExport == null)
+            {
+                throw new InvalidOperationException($"No Terrain export found in {inputTerrainPackage}");
+            }
+
+            terrainExport.Parent = null;
+            MilanLog.Information($"Exporting Terrain {terrainExport.InstancedFullPath} from {inputTerrainPackage} to {outPath}");
+            EntryExporter.ExportExportToPackage(terrainExport, package, out var newTerrainExport, null, null);
+            newTerrainExport.Parent = package.GetLevel();
+
+            ConvertMaterialsToDecooked(package, decookedPath);
+            package.Save();
+            MilanLog.Information($"Saved modified package to {outPath}");
+        }
+
+        private static void ConvertMaterialsToDecooked(IMEPackage package, string decookedPath)
+        {
+            // Delete all material children and do a relink against decooked versions
+            foreach (var mat in package.Exports.Where(x => x.ClassName == "Material").ToList())
+            {
+                var linker = mat.GetLinker();
+                var file = Path.Combine(decookedPath, linker + ".pcc");
+                if (File.Exists(file))
+                {
+                    using var decookedPackage = MEPackageHandler.OpenMEPackage(file);
+                    var decookedMat = decookedPackage.FindExport(mat.InstancedFullPath, "Material");
+                    if (decookedMat != null)
+                    {
+                        MilanLog.Information($"Relinking {mat.InstancedFullPath} to decooked version from {file}");
+                        var expressions = package.Exports.Where(x => x.idxLink == decookedMat.UIndex).ToList();
+                        EntryPruner.TrashEntries(package, expressions);
+                        EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, decookedMat, mat.FileRef, mat, true, new RelinkerOptionsPackage(), out _);
+                    }
+                    else
+                    {
+                        MilanLog.Warning($"Decooked package {file} does not contain {mat.InstancedFullPath} - leaving original");
+                    }
+                }
+                else
+                {
+                    MilanLog.Warning($"Decooked package {file} not found for {mat.InstancedFullPath} - leaving original");
+                }
+            }
+        }
+        /// <summary>
+        /// Dumps the m_aWeapons array of the Data (SFXWeaponUIData) export from every SP and MP weapon UI data
+        /// donor package, so the actual struct layout and content can be inspected to build the merge mapping
+        /// used by NonStartupPipeline.PortWeaponDataPackage().
+        /// </summary>
+        internal static void DumpWeaponUIData()
+        {
+            var spFiles = new[]
+            {
+                "SFXGUI_WeaponUIDataSF.pcc",
+                "SFXGUI_WeaponUIDataDLC_HEN_PRSF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_GUN01SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_GUN02SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_SharedSF.pcc",
+            };
+
+            var mpFiles = new[]
+            {
+                "SFXGUI_WeaponUIDataDLC_CON_MP1SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP2SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP3SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP4SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP5SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_SharedSF.pcc",
+            };
+
+            Console.WriteLine("======== SP (LE3) FILES ========");
+            foreach (var f in spFiles)
+            {
+                DumpWeaponUIDataFile(MilanShared.GetLE3Package(f), f);
+            }
+
+            Console.WriteLine("======== MP (ME3) FILES ========");
+            foreach (var f in mpFiles)
+            {
+                DumpWeaponUIDataFile(MilanShared.GetME3Package(f), f);
+            }
+        }
+
+        private static void DumpWeaponUIDataFile(IMEPackage package, string fileName)
+        {
+            Console.WriteLine($"---- {fileName} ----");
+            if (package == null)
+            {
+                Console.WriteLine("  !! COULD NOT LOAD FILE");
+                return;
+            }
+
+            var dataExports = package.Exports.Where(x => x.ClassName == "SFXWeaponUIData").ToList();
+            if (dataExports.Count == 0)
+            {
+                Console.WriteLine("  !! No SFXWeaponUIData export found. Exports in file:");
+                foreach (var e in package.Exports)
+                {
+                    Console.WriteLine($"    {e.UIndex} {e.InstancedFullPath} ({e.ClassName})");
+                }
+                return;
+            }
+
+            foreach (var dataExport in dataExports)
+            {
+                Console.WriteLine($"  Export: {dataExport.InstancedFullPath}");
+                var weapons = dataExport.GetProperty<ArrayProperty<StructProperty>>("m_aWeapons");
+                if (weapons == null)
+                {
+                    Console.WriteLine("    !! No m_aWeapons property found. All properties:");
+                    foreach (var prop in dataExport.GetProperties())
+                    {
+                        Console.WriteLine($"      {prop.Name} ({prop.PropType})");
+                    }
+                    continue;
+                }
+
+                Console.WriteLine($"    m_aWeapons: {weapons.Count} entries");
+                for (var i = 0; i < weapons.Count; i++)
+                {
+                    Console.WriteLine($"    [{i}]");
+                    DumpStruct(package, weapons[i], "      ");
+                }
+            }
+        }
+
+        private static void DumpStruct(IMEPackage package, StructProperty structProp, string indent)
+        {
+            foreach (var prop in structProp.Properties)
+            {
+                switch (prop)
+                {
+                    case ObjectProperty op:
+                        var entry = op.Value != 0 ? package.GetEntry(op.Value) : null;
+                        Console.WriteLine($"{indent}{prop.Name} (Object) = {entry?.InstancedFullPath ?? "None"}");
+                        break;
+                    case StructProperty sp:
+                        Console.WriteLine($"{indent}{prop.Name} (Struct:{sp.StructType})");
+                        DumpStruct(package, sp, indent + "  ");
+                        break;
+                    case ArrayProperty<StructProperty> asp:
+                        Console.WriteLine($"{indent}{prop.Name} (Array<Struct>, {asp.Count} entries)");
+                        for (var i = 0; i < asp.Count; i++)
+                        {
+                            Console.WriteLine($"{indent}  [{i}]");
+                            DumpStruct(package, asp[i], indent + "    ");
+                        }
+                        break;
+                    case StringRefProperty srp:
+                        Console.WriteLine($"{indent}{prop.Name} (StringRef) = {srp.Value}");
+                        break;
+                    default:
+                        Console.WriteLine($"{indent}{prop.Name} ({prop.PropType}) = {prop}");
+                        break;
+                }
+            }
         }
 #endif
     }

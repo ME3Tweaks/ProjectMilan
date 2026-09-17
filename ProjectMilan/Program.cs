@@ -573,6 +573,13 @@ namespace ProjectMilan
         {
 #if DEBUG
 
+            DynamicMixinResearch.RunDynamicMixinInventory(@"B:\UserProfile\Desktop\dynamicmixins.csv", @"B:\UserProfile\Desktop\dynamicmixins_inventory.json");
+            return;
+
+            Research.TestBuildLavaTerrainSetup();
+            return;
+            Research.TestBuildTerrainPackage();
+            return;
             // Put your method in Research class and call it here.
             //Research.CopyPreview2();
             //return;
