@@ -1,8 +1,10 @@
 ﻿using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilan;
 using System;
 using System.Collections.Generic;
@@ -65,7 +67,7 @@ namespace ProjectMilanCore
             }
 
             var materialsToProcess = force
-                ? package.Exports.Where(x => x.ClassName == "Material").ToList()
+                ? package.Exports.Where(x => x.IsA("Material")).ToList()
                 : ShaderCacheManipulator.GetBrokenMaterials(package);
 
             // Source shader caches are deserialized once per compiled package and merged into a single
@@ -78,7 +80,7 @@ namespace ProjectMilanCore
 
             foreach (var brokenMat in materialsToProcess)
             {
-                if (brokenMat.ClassName != "Material")
+                if (!brokenMat.IsA("Material"))
                 {
                     continue;
                 }
@@ -183,6 +185,45 @@ namespace ProjectMilanCore
             }
 
 #endif
+        }
+
+        public static void InstallTerrainShadersToPackage(IMEPackage package, string terrainFolder, string logCategory)
+        {
+            var terrains = package.Exports.Where(x => x.ClassName == "Terrain").ToList();
+            if (terrains.Count == 0)
+            {
+                // Nothing to do here
+                return;
+            }
+
+            var terrainShaderPath = $@"{terrainFolder}\{package.FileNameNoExtension}.pcc";
+            if (File.Exists(terrainShaderPath) == false)
+            {
+                MilanLog.Error($"Terrain shader package not found: {terrainShaderPath} - skipping shader install", customPrefix: logCategory);
+                return;
+            }
+
+            using var terrainShaderPackage = MEPackageHandler.OpenMEPackage(terrainShaderPath);
+            foreach (var targetTerrain in terrains)
+            {
+                // 1. Find matching terrain in the compiled shader package
+                var matchingTerrain = terrainShaderPackage.FindExport(targetTerrain.InstancedFullPath, targetTerrain.ClassName);
+                if (matchingTerrain == null)
+                {
+                    MilanLog.Error($"No compiled shaders for {targetTerrain.InstancedFullPath} ({targetTerrain.ClassName}) in {terrainShaderPackage.FileNameNoExtension}", customPrefix: logCategory);
+                    continue;
+                }
+
+                // 2. Copy it over wholesale; it should bring the shaders over to the cache.
+                var rop = new RelinkerOptionsPackage();
+                MilanLog.Information($"Installing Terrain shaders for {targetTerrain.InstancedFullPath}", customPrefix: logCategory);
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, matchingTerrain, targetTerrain.FileRef, targetTerrain, true, rop, out _);
+            }
+
+            if (package.IsModified)
+            {
+                package.Save();
+            }
         }
     }
 }

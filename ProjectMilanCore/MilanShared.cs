@@ -1785,6 +1785,14 @@ namespace ProjectMilanCore
                     if (tex.ObjectName.Name.StartsWith("Cubemap", StringComparison.OrdinalIgnoreCase))
                         continue; // These are never moved to TFC as far as I know...
 
+                    var props = tex.GetProperties();
+                    if (props.TryGetProp<BoolProperty>("NeverStream", out var neverStreamProp) && neverStreamProp.Value)
+                    {
+                        MilanLog.Information($"  Skipping {tex.InstancedFullPath} because it is marked NeverStream", customPrefix: category);
+                        continue; // Never stream textures are never moved to TFC... not sure we want to keep this though.
+                    
+                    }
+
                     var bin = (UTexture2D)ObjectBinary.From(tex); // Cast since we want it to make the lowest-tier class but we only need the upper one.
 
                     var startedMovingTexture = false;
