@@ -4,6 +4,7 @@ using ProjectMilan;
 using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Redemption.Levels;
 using ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV;
+using ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV.Audio;
 using ProjectMilan_ExtraContent.Redemption.Levels.MapPack;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
@@ -84,11 +85,28 @@ namespace ProjectMilan_ExtraContent.Redemption
             }
             var test = CrossGenVShared.SourceFilesFolder;
 
+            // Built once for all the Pinnacle Station levels. BioSnd_Vegas is the staging package: each BioD gets a
+            // local copy of its Wwise_Vegas export tree, while all of those WwiseStreams point at the one shared AFC.
+            // The levels below also need the scan it produces to map LE1 cues to their generated event names.
+            VegasAudioPipeline.BuildAndImport(
+                Path.Combine(Path.GetTempPath(), "MilanVegasAudio"),
+                Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole"));
+
             using TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "Redemption BuildCrossgenLevel global LE3 root");
+            var audioLevelPaths = new List<string>();
             foreach (var level in CrossGenVShared.CrossgenLevels.Where(x => x.Enabled))
             {
                 CrossGenVShared.BuildLevel(level, cache);
+
+                var designSource = level.LevelFilesMap.Keys.FirstOrDefault(x => x.EndsWith("_DSG", StringComparison.OrdinalIgnoreCase));
+                if (designSource != null)
+                {
+                    audioLevelPaths.Add(Path.Combine(level.OutputPath, level.LevelFilesMap[designSource] + ".pcc"));
+                }
             }
+
+            // Run only after all level files exist, so local and cross-level imports have their complete search set.
+            VegasAudioPipeline.ValidateBuiltLevelImports(audioLevelPaths, cache);
         }
     }
 

@@ -5,6 +5,7 @@ using ProjectMilan;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Redemption;
+using ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV.Audio;
 using ProjectMilan_ExtraContent.Rejects;
 using ProjectMilan_ExtraContent.Settings;
 using ProjectMilan_ExtraContent.Shared;
@@ -42,6 +43,22 @@ namespace ProjectMilan_ExtraContent
         {
             MilanLog.CreateLogger();
             MilanLog.Information("Welcome to Project Milan - Extra Content");
+
+            if (obj.PinnacleStationAudioReport != null)
+            {
+                // Diagnostic-only path: reads LE1 source audio and reports, builds nothing. Needs LEC for package
+                // access but none of the pipeline settings/output folders, so it runs before all of that.
+                LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger);
+                VegasAudioPipeline.WriteScanReport(obj.PinnacleStationAudioReport);
+                return;
+            }
+
+            if (obj.PinnacleStationAudioBuild != null)
+            {
+                LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger);
+                VegasAudioPipeline.BuildAndImport(obj.PinnacleStationAudioBuild, Path.Combine(obj.PinnacleStationAudioBuild, "CookedPCConsole"));
+                return;
+            }
 
             Settings = LoadSettingsConfig(obj);
             VerifySettings();

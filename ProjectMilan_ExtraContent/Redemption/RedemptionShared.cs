@@ -138,7 +138,10 @@ namespace ProjectMilan_ExtraContent.Redemption
                 textureGroup = new NameReference("TEXTUREGROUP_UI");
             }
 
-            var image = new Image(sourcePngPath, Image.ImageFormat.PNG);
+            // Use TexConverter's file loader rather than Image's direct PNG decoder. The
+            // direct ImageSharp Rgba32 byte layout does not match the byte order expected
+            // by the texture compressor/exporter and swaps red and blue during round-trip.
+            var image = Image.LoadFromFile(sourcePngPath, pixelFormat);
             var sizeX = image.mipMaps[0].width;
             var sizeY = image.mipMaps[0].height;
 
