@@ -182,14 +182,16 @@
 			<Property name="titletextdelaytime" type="0">1.0</Property>
 		</Section>
 		<Section name="sfxgame.sfxweaponuidatamanager">
+			<!-- MILAN CHANGE -->
+			<!-- The 5 MP weapon-data resources (CON_MP1-5) are replaced by a single merged package built by
+			     NonStartupPipeline.PortWeaponDataPackage(), which mixes the shipped LE3 SP weapon assets/Wwise
+			     data with the MP weapons' own ClassPath/LoadoutInfo/Stats. SharedSF is untouched - it only
+			     carries weapon MOD data (m_aMods), not weapons. -->
 			<Property name="weaponuidataresources">
-				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP1SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP1.Data")</Value>
-				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP2SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP2.Data")</Value>
-				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP3SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP3.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MPMerged, Resource="SFXGUI_WeaponUIDataDLC_CON_MPMerged.Data")</Value>
 				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_SharedSF, Resource="SFXGUI_WeaponUIDataDLC_Shared.Data")</Value>
-				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP4SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP4.Data")</Value>
-				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MP5SF, Resource="SFXGUI_WeaponUIDataDLC_CON_MP5.Data")</Value>
 			</Property>
+			<!-- END MILAN -->
 		</Section>
 		<Section name="sfxgamecontentdlc_con_mp4_horde.sfxgui_collectorhudoverlay">
 			<!-- This should be ported to SP for Armax-->
