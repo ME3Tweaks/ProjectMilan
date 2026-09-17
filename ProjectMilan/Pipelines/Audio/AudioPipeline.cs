@@ -1,5 +1,6 @@
 using BankConverter.Bnk;
 using BankConverter.Bnk.Chunks;
+using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ME3Tweaks.Wwiser;
@@ -152,6 +153,7 @@ internal static class AudioPipeline
         // Snapshotted once and reused for every bank - rebuilding per-bank would be O(banks * unique WEM count).
         var prefetchFragments = AFCHandler.SnapshotPrefetchFragments();
         var embeddedReplacements = AFCHandler.SnapshotEmbeddedReplacements();
+        var stockResidentMedia = BuildStockResidentMedia();
 
         // Many packages reference byte-identical bank data; converting is comparatively expensive, so dedupe by content hash.
         var bankBinaryCache = new ConcurrentDictionary<string, Lazy<byte[]>>();
@@ -176,7 +178,7 @@ internal static class AudioPipeline
 
                 var hash = Convert.ToHexString(SHA256.HashData(bankBin.BnkFile));
                 var convertedBytes = bankBinaryCache.GetOrAdd(hash, _ => new Lazy<byte[]>(() =>
-                    ConvertBankBytes(exp, bankBin.BnkFile, prefetchFragments, embeddedReplacements))).Value;
+                    ConvertBankBytes(exp, bankBin.BnkFile, prefetchFragments, embeddedReplacements, stockResidentMedia))).Value;
 
                 bankBin.BnkFile = convertedBytes;
                 exp.WriteBinary(bankBin);
@@ -193,12 +195,65 @@ internal static class AudioPipeline
         LogConversionDiagnosticsSummary();
     }
 
-    private static byte[] ConvertBankBytes(ExportEntry bankExport, byte[] rawV56Bytes, Dictionary<uint, byte[]> prefetchFragments, Dictionary<uint, byte[]> embeddedReplacements)
+    /// <summary>
+    /// Source IDs LE3 already ships inside SFXGame.pcc's banks, mapped to the byte length LE3 embeds. Those banks
+    /// are resident for the whole session, and Wwise resolves embedded media globally by source ID rather than
+    /// per-bank - so any ID in here is already owned by the stock game and must not be re-embedded by a ported bank.
+    /// See BankFile.ConvertToV134's externallyProvidedMedia for the failure this prevents.
+    /// </summary>
+    private static IReadOnlyDictionary<uint, uint> BuildStockResidentMedia()
+    {
+        var result = new Dictionary<uint, uint>();
+        var sfxGamePath = Path.Combine(LE3Directory.CookedPCPath, "SFXGame.pcc");
+        if (!File.Exists(sfxGamePath))
+        {
+            MilanLog.Warning($"Stock LE3 SFXGame.pcc not found at {sfxGamePath}; ported banks may re-embed media LE3 already owns", customPrefix: LOG_CATEGORY);
+            return result;
+        }
+
+        using var package = MEPackageHandler.UnsafePartialLoad(sfxGamePath, x => x.ClassName == "WwiseBank");
+        foreach (var exp in package.Exports.Where(x => x.ClassName == "WwiseBank"))
+        {
+            var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(exp).BnkFile;
+            if (bnk is not { Length: > 0 }) continue;
+
+            foreach (var m in ReadMediaIndex(bnk))
+            {
+                result[m.Id] = m.Size;
+            }
+        }
+
+        MilanLog.Information($"Stock LE3 resident media: {result.Count} source ID(s) across SFXGame.pcc banks", customPrefix: LOG_CATEGORY);
+        return result;
+    }
+
+    /// <summary>Walks a bank's top-level chunks and returns its DIDX entries. DIDX is format-stable across v56/v134,
+    /// so this works on stock LE3 (v134) banks without needing a version-specific full parse.</summary>
+    private static List<MediaHeader> ReadMediaIndex(byte[] bankBytes)
+    {
+        var r = new BankReader(bankBytes);
+        while (r.Position + 8 <= r.Length)
+        {
+            var tag = r.Tag4();
+            var size = r.U32();
+            if (size > r.Length - r.Position) break;
+            if (tag == "DIDX") return DidxChunk.Read(r, size).Media;
+            r.Skip((int)size);
+        }
+        return [];
+    }
+
+    private static byte[] ConvertBankBytes(ExportEntry bankExport, byte[] rawV56Bytes, Dictionary<uint, byte[]> prefetchFragments, Dictionary<uint, byte[]> embeddedReplacements, IReadOnlyDictionary<uint, uint> stockResidentMedia)
     {
         var stats = new HircConversionStats();
         var missingWems = new List<uint>();
         var bank = BankFile.ReadV56(rawV56Bytes);
-        var converted = bank.ConvertToV134(stats, wemReplacements: embeddedReplacements, missingWems: missingWems, prefetchFragments: prefetchFragments);
+        var converted = bank.ConvertToV134(stats, wemReplacements: embeddedReplacements, missingWems: missingWems, prefetchFragments: prefetchFragments, externallyProvidedMedia: stockResidentMedia);
+
+        if (stats.ExternallyProvidedMedia > 0)
+        {
+            MilanLog.Information($"Bank {bankExport.InstancedFullPath}: deferred {stats.ExternallyProvidedMedia} media entry/entries ({stats.ExternallyProvidedBytesSaved} bytes) to LE3's own resident banks", customPrefix: LOG_CATEGORY);
+        }
 
         if (missingWems.Count > 0)
         {
