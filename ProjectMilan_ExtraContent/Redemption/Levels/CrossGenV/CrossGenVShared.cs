@@ -62,7 +62,7 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             new ECLevelInfo()
             {
                 MapName = "BioP_MPPSSub",
-                Enabled = false,
+                Enabled = true,
                 LevelNameString = new()
                 {
                     { MELocalization.INT, "Pinnacle Station: Subterranean"}, // Todo: Learn how to spell
@@ -78,13 +78,13 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                 },
                 LevelFilesMap = new()
                 {
-                    {"BIOA_PRC2_CCCAVE", "BioA_PSSub"},
-                    {"BIOA_PRC2_CCCAVE_L", "BioA_PSSub_Lighting"},
-                    {"BIOA_PRC2_CCCAVE_DSG", "BioD_PSSub"},
-                    {"BIOA_PRC2_CCCAVE01_LAY","BioD_PSSub_LAY1"},
-                    {"BIOA_PRC2_CCCAVE02_LAY","BioD_PSSub_LAY2"},
-                    {"BIOA_PRC2_CCCAVE03_LAY","BioD_PSSub_LAY3"},
-                    {"BIOA_PRC2_CCCAVE04_LAY","BioD_PSSub_LAY4"},
+                    {"BIOA_PRC2_CCCAVE", "BioA_MPPSSub"},
+                    {"BIOA_PRC2_CCCAVE_L", "BioA_MPPSSub_Lighting"},
+                    {"BIOA_PRC2_CCCAVE_DSG", "BioD_MPPSSub"},
+                    {"BIOA_PRC2_CCCAVE01_LAY","BioD_MPPSSub_LAY1"},
+                    {"BIOA_PRC2_CCCAVE02_LAY","BioD_MPPSSub_LAY2"},
+                    {"BIOA_PRC2_CCCAVE03_LAY","BioD_MPPSSub_LAY3"},
+                    {"BIOA_PRC2_CCCAVE04_LAY","BioD_MPPSSub_LAY4"},
                 },
                 StartLocation = new Vector3(-16365, -25733,-2742),
                 KillZ = -27000,
@@ -108,11 +108,11 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                 },
                 LevelFilesMap = new()
                 {
-                    {"BIOA_PRC2_CCCRATE", "BioA_PSWarehouse"},
-                    {"BIOA_PRC2_CCCRATE_L", "BioA_PSWarehouse_Lighting"},
-                    {"BIOA_PRC2_CCCRATE_DSG", "BioD_PSWarehouse"},
-                    {"BIOA_PRC2_CCCRATE01_LAY","BioD_PSWarehouse_LAY1"},
-                    {"BIOA_PRC2_CCCRATE02_LAY","BioD_PSWarehouse_LAY2"},
+                    {"BIOA_PRC2_CCCRATE", "BioA_MPPSWarehouse"},
+                    {"BIOA_PRC2_CCCRATE_L", "BioA_MPPSWarehouse_Lighting"},
+                    {"BIOA_PRC2_CCCRATE_DSG", "BioD_MPPSWarehouse"},
+                    {"BIOA_PRC2_CCCRATE01_LAY","BioD_MPPSWarehouse_LAY1"},
+                    {"BIOA_PRC2_CCCRATE02_LAY","BioD_MPPSWarehouse_LAY2"},
                 },
                 ExtraBioPObjects = [
                     "BIOG_APL_MASTER_MATERIAL.APL__MASTER__Mat" // Required for the portable stairs meshes
@@ -139,13 +139,39 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                 },
                 LevelFilesMap = new()
                 {
-                    {"BIOA_PRC2_CCLAVA", "BioA_PSLava"},
-                    {"BIOA_PRC2_CCLAVA_CROSSGEN", "BioA_PSLava_CrossGen"},
-                    {"BIOA_PRC2_CCLAVA_L", "BioA_PSLava_Lighting"},
-                    {"BIOA_PRC2_CCLAVA_DSG", "BioD_PSLava"},
+                    {"BIOA_PRC2_CCLAVA", "BioA_MPPSLava"},
+                    {"BIOA_PRC2_CCLAVA_CROSSGEN", "BioA_MPPSLava_CrossGen"},
+                    {"BIOA_PRC2_CCLAVA_L", "BioA_MPPSLava_Lighting"},
+                    {"BIOA_PRC2_CCLAVA_DSG", "BioD_MPPSLava"},
                 },
                 StartLocation = new Vector3(27220,-23510,-25845),
                 KillZ = -27500,
+            },
+            new ECLevelInfo()
+            {
+                MapName = "BioP_MPPSAhern",
+                Enabled = true,
+                LevelNameString = new()
+                {
+                    { MELocalization.INT, "Pinnacle Station: Ahern"},
+                },
+                LevelDescriptionString = new()
+                {
+                    { MELocalization.INT , "Ahern's Mission Map in Pinnacle Station Simulator"},
+                },
+                GAWMapPosition = new Vector2(515, 200), // Placeholder
+                GAWMapSubtitle = new()
+                {
+                    { MELocalization.INT, "Pinnacle Station"}
+                },
+                LevelFilesMap = new()
+                {
+                    {"BIOA_PRC2_CCAHERN", "BioA_MPPSAhern"},
+                    {"BIOA_PRC2_CCAHERN_ART", "BioA_MPPSAhern2"},
+                    {"BIOA_PRC2_CCAHERN_DSG", "BioD_MPPSAhern"},
+                },
+                StartLocation = new Vector3(-39749,-23403,-2472),
+                KillZ = -3493,
             }
         ];
 
@@ -221,6 +247,8 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                 PortCrossgenLevel(info, src, dest);
             }
 
+            PortAmbientAudio(info);
+
 
             RedemptionShared.AddNewLevelBannerImage(RedemptionShared.GetMapBaseName(info.MapName), info.LogCategory);
             ConfigureBioP(info);
@@ -228,6 +256,46 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
 
             RedemptionShared.AddLevelToConfig(info);
             info.Cleanup();
+        }
+
+        /// <summary>
+        /// Recreates the level's LE1 ambient audio as LE3 WwiseAmbientSound actors, playing events out of a local
+        /// Wwise_Vegas export tree embedded in the destination BioD (see <see cref="Audio.VegasAudioPipeline"/> for
+        /// how that bank is built from LE1's ISACT audio). The LE1 sound level - BIOA_PRC2_CCxxxx_SND - is
+        /// deliberately not in LevelFilesMap: its ISACT objects do not survive the trip across engines, so the point
+        /// sounds are rebuilt and its audio volumes are selectively converted rather than porting the package wholesale.
+        /// </summary>
+        private static void PortAmbientAudio(ECLevelInfo info)
+        {
+            // The sound level sits alongside the design level under the same BIOA_PRC2_CCxxxx prefix.
+            var designFile = info.LevelFilesMap.Keys.FirstOrDefault(x => x.EndsWith("_DSG", StringComparison.OrdinalIgnoreCase));
+            if (designFile == null)
+            {
+                MilanLog.Warning($"No _DSG level found for {info.MapName} - skipping ambient audio", customPrefix: info.LogCategory);
+                return;
+            }
+
+            var soundFile = designFile[..^4] + "_SND";
+            var soundPath = Path.Combine(SourceFilesFolder, soundFile + ".pcc");
+            if (!File.Exists(soundPath))
+            {
+                MilanLog.Warning($"No sound level at {soundPath} - {info.MapName} will have no ambient audio", customPrefix: info.LogCategory);
+                return;
+            }
+
+            // The ambient sounds are positioned in the same world space as the design level, so that is where they go.
+            var destPackage = info.CrossPackageMapping.First(x => x.Key.FileNameNoExtension.CaseInsensitiveEquals(designFile)).Value;
+
+            MilanLog.Information($"Porting ambient audio from {soundFile}", customPrefix: info.LogCategory);
+            Audio.VegasAudioPipeline.EmbedBankIntoLevel(destPackage, info.Cache, info.LogCategory);
+            using var soundPackage = MEPackageHandler.OpenMEPackage(soundPath);
+            var created = Audio.VegasAudioActors.PortAmbientSounds(soundPackage, destPackage, Audio.VegasAudioPipeline.SharedModel, info, info.LogCategory);
+            MilanLog.Information($"Created {created.AmbientSounds} WwiseAmbientSound actor(s) and {created.AudioVolumes} WwiseAudioVolume actor(s) in {destPackage.FileNameNoExtension}", customPrefix: info.LogCategory);
+
+            // PortCrossgenLevel saved this package before the separate audio pass ran. Persist these late additions
+            // explicitly; ECLevelInfo.Cleanup only disposes the packages and does not save them.
+            destPackage.Save();
+            MilanShared.RefreshMilanFiles = true;
         }
 
         private static void ConfigureBioP(ECLevelInfo info)
@@ -278,10 +346,6 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             //    info.BioP.GetBioWorldInfo().WriteProperty(ppStruct);
             //}
 
-            // Add BioLedgeMeshActor class
-            // Don't think this works
-            AddBioLedgeMeshClass(info.BioP);
-
             if (info.ExtraBioPObjects != null)
             {
                 var theWorld = info.BioP.FindExport("TheWorld");
@@ -327,19 +391,23 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                 if (sourcePackage.TryGetUExport(x, out var exp))
                 {
                     // Will be brought in automatically
-                    if (exp.ClassName == "Model") return false;
-                    if (exp.ClassName == "Polys") return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("Model")) return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("Polys")) return false;
 
                     // Already in the file
-                    if (exp.ClassName == "BioWorldInfo") return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("BioWorldInfo")) return false;
 
                     // Game1 Specific Stuff.
-                    if (exp.ClassName == "BioSquadCombat") return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("BioSquadCombat")) return false;
                     //if (exp.ClassName == "BioInert") return false; // We need this :)
-                    if (exp.ClassName == "AmbientSound") return false;
-                    if (exp.ClassName == "BioPawn") return false;
-                    if (exp.ClassName == "BioSunActor") return false;
-                    if (exp.ClassName == "InterpActor") return CheckPSInterpActor(exp, info.LogCategory);
+                    if (exp.ClassName.CaseInsensitiveEquals("AmbientSound")) return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("BioPawn")) return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("BioSunActor")) return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("InterpActor")) return CheckPSInterpActor(exp, info.LogCategory);
+                    if (exp.ClassName.CaseInsensitiveEquals("BioUseable")) return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("BioSquadSitAndShoot")) return false;
+                    if (exp.ClassName.CaseInsensitiveEquals("BioWaypointSet")) return false;
+                    if (exp.IsA("NavigationPoint")) return false;
                     return true;
                 }
 
@@ -351,9 +419,9 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             {
                 switch (exp.ClassName)
                 {
-                    //case "BioLedgeMeshActor":
-                    //    exp.Class = EntryImporter.EnsureClassIsInFile(exp.FileRef, "StaticMeshActor", new RelinkerOptionsPackage());
-                    //    break;
+                    case "BioLedgeMeshActor":
+                        ConvertBioLedgeMeshActor(exp, info.LogCategory);
+                        break;
                     case "BioInert":
                         MilanLog.Information($"  Converting BioInert to StaticMeshActor: {exp.InstancedFullPath}", customPrefix: info.LogCategory);
                         // BioInert is a subclass of ArtPlaceable (subclass of Actor) - doesn't exist in LE3. So we must convert this
@@ -398,42 +466,15 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                         }
 
                         break;
+                    case "Terrain":
+                        exp.RemoveProperty("Layers"); // Don't bring this over; we will replace it manually for Redemption port.
+                        break;
                 }
             }
 
             foreach (var sm in actors)
             {
-                // Ensure it's unique to the dest
-
-                if (destPackage.FindExport(sm.InstancedFullPath) != null)
-                {
-                    // Console.WriteLine($@" > Already exists: {sm.InstancedFullPath}");
-                }
-                else
-                {
-                    MilanLog.Information($"  Porting {sm.InstancedFullPath}", customPrefix: info.LogCategory);
-                    var badLinks = EntryImporter.ImportAndRelinkEntries(
-                        EntryImporter.PortingOption.CloneAllDependencies,
-                        sm, destPackage, destLevel, true,
-                        new RelinkerOptionsPackage()
-                        {
-                            IsCrossGame = true,
-                            TargetGameDonorDB = MilanShared.LE3ObjectDB,
-                            Cache = info.Cache,
-                            PortExportsAsImportsWhenPossible = true,
-                            PortImportsMemorySafe = true,
-                            DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
-                            SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
-                            // Not supported in EC right now
-                            // CustomDonorImporter = DonorBuilderPipeline.MaterialDonorImporter
-                        }, out var _);
-                    if (badLinks.Any())
-                    {
-                        // uh oh
-
-                        Debug.WriteLine("oi vey");
-                    }
-                }
+                PortCrossgenActor(info, sm, destPackage);
             }
 
             // Sequencing needs ported over eventually. This controls the shuttle flying away. Requires MP classes though.
@@ -551,38 +592,41 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             }
 
             // Torture! Pure torture.
-            // Bring over cover
-            if (sourcePersistentLevel.CoverListStart > 0)
+            var portNav = false;
+            if (portNav)
             {
-                destLevelBin.CoverListStart = destPackage.FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListStart).InstancedFullPath).UIndex;
-                destLevelBin.CoverListEnd = destPackage.FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListEnd).InstancedFullPath).UIndex;
+                // Bring over cover
+                if (sourcePersistentLevel.CoverListStart > 0)
+                {
+                    destLevelBin.CoverListStart = destPackage.FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListStart).InstancedFullPath).UIndex;
+                    destLevelBin.CoverListEnd = destPackage.FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListEnd).InstancedFullPath).UIndex;
 
-                GenerateCoverSlots(destPackage.FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListStart).InstancedFullPath), destLevelBin, info.Cache);
+                    GenerateCoverSlots(destPackage.FindExport(sourcePackage.GetUExport(sourcePersistentLevel.CoverListStart).InstancedFullPath), destLevelBin, info.Cache);
 
-                // Don't know if these matter
-                // Don't copy version - use LE version
-                //destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
-                //destLevelBin.CachedPhysBSPData = sourcePersistentLevel.CachedPhysBSPData;
-                //destLevelBin.CachedPhysPerTriSMDataMap = sourcePersistentLevel.CachedPhysPerTriSMDataMap;
-                //destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
-                //destLevelBin.CachedPhysSMDataMap = sourcePersistentLevel.CachedPhysSMDataMap;
+                    // Don't know if these matter
+                    // Don't copy version - use LE version
+                    //destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
+                    //destLevelBin.CachedPhysBSPData = sourcePersistentLevel.CachedPhysBSPData;
+                    //destLevelBin.CachedPhysPerTriSMDataMap = sourcePersistentLevel.CachedPhysPerTriSMDataMap;
+                    //destLevelBin.CachedPhysSMDataStore = sourcePersistentLevel.CachedPhysSMDataStore;
+                    //destLevelBin.CachedPhysSMDataMap = sourcePersistentLevel.CachedPhysSMDataMap;
+                }
+
+                if (sourcePersistentLevel.NavListStart > 0)
+                {
+                    var sStart = sourcePackage.GetUExport(sourcePersistentLevel.NavListStart);
+                    var sEnd = sourcePackage.GetUExport(sourcePersistentLevel.NavListEnd);
+
+                    var dStart = destPackage.FindExport(sStart.InstancedFullPath);
+                    var dEnd = destPackage.FindExport(sEnd.InstancedFullPath);
+                    destLevelBin.NavListStart = dStart.UIndex;
+                    destLevelBin.NavListEnd = dEnd.UIndex;
+                }
+
+                // NavRefs, CoverRefs
+                // CrossLevelActors
+                destPackage.GetLevel().WriteBinary(destLevelBin);
             }
-
-            if (sourcePersistentLevel.NavListStart > 0)
-            {
-                var sStart = sourcePackage.GetUExport(sourcePersistentLevel.NavListStart);
-                var sEnd = sourcePackage.GetUExport(sourcePersistentLevel.NavListEnd);
-
-                var dStart = destPackage.FindExport(sStart.InstancedFullPath);
-                var dEnd = destPackage.FindExport(sEnd.InstancedFullPath);
-                destLevelBin.NavListStart = dStart.UIndex;
-                destLevelBin.NavListEnd = dEnd.UIndex;
-            }
-
-            // NavRefs, CoverRefs
-            // CrossLevelActors
-            destPackage.GetLevel().WriteBinary(destLevelBin);
-
             // Port sequence
             //var srcSeq = sourcePackage.FindExport("TheWorld.PersistentLevel.Main_Sequence");
             //var destSeq = destPackage.FindExport("TheWorld.PersistentLevel.Main_Sequence");
@@ -624,11 +668,24 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             LevelTools.CalculateTextureToInstancesMap(destPackage, info.Cache);
 
             // Link in the pathing
-            CorrectPathfindingNetwork(sourcePackage, destPackage);
+            //CorrectPathfindingNetwork(sourcePackage, destPackage);
+
+            // Add back missing bUsedWithStaticLighting
+            foreach (var mat in destPackage.Exports.Where(x => x.ClassName == "Material"))
+            {
+                // LE1 had this on by default, and ShaderHost forces it on, I think.
+                // If we port directly from LE1 and then install shaders, this flag will be 
+                // missing, so we set it here
+                mat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+            }
 
             // Apply ShaderCache
             RevertLE1SpecificMaterialChanges(destPackage, info);
             MilanShaders.InstallCompiledShadersToPackage(destPackage, info.LogCategory);
+
+            // Terrain shaders are tied to the specific terrain; we cache a built version here
+            var terrainDonorPath = Path.Combine(SharedECPipelines.ECPipelineRoot, "Redemption", "Assets", "Terrain");
+            MilanShaders.InstallTerrainShadersToPackage(destPackage, terrainDonorPath, info.LogCategory);
 
             // Test only - strip lightmaps
             if (false)
@@ -668,6 +725,102 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
         }
 
         /// <summary>
+        /// Converts LE1's native BioLedgeMeshActor to its LE3-compatible base class.
+        /// BioLedgeMeshActor only changes defaults on StaticMeshActor and its component, so materialize
+        /// those defaults before replacing its class and component archetypes. Source properties take
+        /// precedence because their presence represents an instance-level override.
+        /// </summary>
+        private static void ConvertBioLedgeMeshActor(ExportEntry actor, string logCategory)
+        {
+            MilanLog.Information($"  Converting BioLedgeMeshActor to StaticMeshActor: {actor.InstancedFullPath}", customPrefix: logCategory);
+
+            var staticMeshActorClass = EntryImporter.EnsureClassIsInFile(actor.FileRef, "StaticMeshActor", new RelinkerOptionsPackage());
+            var staticMeshActorDefault = actor.FileRef.GetEntryOrAddImport("Engine.Default__StaticMeshActor", "StaticMeshActor", "Engine");
+
+            // These values are inherited from Default__BioLedgeMeshActor in LE1 and otherwise disappear
+            // when the actor begins inheriting from Default__StaticMeshActor in LE3.
+            if (actor.GetProperty<BoolProperty>("bHidden") == null)
+                actor.WriteProperty(new BoolProperty(true, "bHidden"));
+            if (actor.GetProperty<BoolProperty>("BlockRigidBody") == null)
+                actor.WriteProperty(new BoolProperty(false, "BlockRigidBody"));
+            if (actor.GetProperty<EnumProperty>("CollisionType") == null)
+                actor.WriteProperty(new EnumProperty("COLLIDE_NoCollision", "ECollisionType", actor.FileRef.Game, "CollisionType"));
+
+            var staticMeshComponentProperty = actor.GetProperty<ObjectProperty>("StaticMeshComponent");
+            if (staticMeshComponentProperty != null && actor.FileRef.TryGetUExport(staticMeshComponentProperty.Value, out var component))
+            {
+                var staticMeshComponentDefault = actor.FileRef.GetEntryOrAddImport(
+                    "Engine.Default__StaticMeshActor.StaticMeshComponent0", "StaticMeshComponent", "Engine");
+                component.Archetype = staticMeshComponentDefault;
+
+                // These defaults come from BioLedgeMeshActor's StaticMeshComponent0 template.
+                if (component.GetProperty<ObjectProperty>("ReplacementPrimitive") == null)
+                    component.WriteProperty(new ObjectProperty(0, "ReplacementPrimitive"));
+                if (component.GetProperty<EnumProperty>("RBChannel") == null)
+                    component.WriteProperty(new EnumProperty("RBCC_Untitled1", "ERBCollisionChannel", actor.FileRef.Game, "RBChannel"));
+                if (component.GetProperty<BoolProperty>("CastShadow") == null)
+                    component.WriteProperty(new BoolProperty(false, "CastShadow"));
+                if (component.GetProperty<BoolProperty>("bCastDynamicShadow") == null)
+                    component.WriteProperty(new BoolProperty(false, "bCastDynamicShadow"));
+                if (component.GetProperty<BoolProperty>("bAcceptsLights") == null)
+                    component.WriteProperty(new BoolProperty(false, "bAcceptsLights"));
+                if (component.GetProperty<BoolProperty>("bAcceptsDynamicLights") == null)
+                    component.WriteProperty(new BoolProperty(false, "bAcceptsDynamicLights"));
+            }
+
+            actor.Class = staticMeshActorClass;
+            actor.Archetype = staticMeshActorDefault;
+            actor.ObjectName = actor.FileRef.GetNextIndexedName("StaticMeshActor");
+
+            if (actor.HasStack)
+            {
+                var stack = new PrePropStack(actor)
+                {
+                    Node = staticMeshActorClass,
+                    StateNode = staticMeshActorClass,
+                };
+                actor.WritePrePropsAndPropertiesAndBinary(stack.GeneratePreProps(), actor.GetProperties(), actor.GetBinaryData());
+            }
+        }
+
+        /// <summary>
+        /// Ports one actor through the same cross-game dependency/relink path used by the normal level actor pass.
+        /// The Pinnacle Station audio pass also uses this for BioAudioVolumes after changing their source-side class
+        /// to WwiseAudioVolume; keeping the operation here ensures their brush/model/component hierarchy is treated
+        /// exactly like the rest of the level's actors without importing the obsolete contents of the whole _SND level.
+        /// </summary>
+        internal static ExportEntry PortCrossgenActor(ECLevelInfo info, ExportEntry sourceActor, IMEPackage destPackage)
+        {
+            if (destPackage.FindExport(sourceActor.InstancedFullPath) is { } existing)
+            {
+                return existing;
+            }
+
+            var destLevel = destPackage.GetLevel();
+            MilanLog.Information($"  Porting {sourceActor.InstancedFullPath}", customPrefix: info.LogCategory);
+            var badLinks = EntryImporter.ImportAndRelinkEntries(
+                EntryImporter.PortingOption.CloneAllDependencies,
+                sourceActor, destPackage, destLevel, true,
+                new RelinkerOptionsPackage()
+                {
+                    IsCrossGame = true,
+                    TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                    Cache = info.Cache,
+                    PortExportsAsImportsWhenPossible = true,
+                    PortImportsMemorySafe = true,
+                    DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                    // SourceCustomImportFileResolver = MilanShared.ME3PackageResolver, // We are not porting from ME3.
+                }, out var newEntry);
+
+            if (badLinks.Any())
+            {
+                Debug.WriteLine("oi vey");
+            }
+
+            return newEntry as ExportEntry;
+        }
+
+        /// <summary>
         /// Pinnacle Station has some InterpActors for strategic ring - we don't care at all about those so we will chop those out
         /// </summary>
         /// <param name="exp"></param>
@@ -678,7 +831,8 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             if (smc != null)
             {
                 var sm = smc.GetProperty<ObjectProperty>("StaticMesh")?.ResolveToExport(interpActor.FileRef, null);
-                if (sm != null) {
+                if (sm != null)
+                {
                     switch (sm.ObjectName)
                     {
                         // These are related to crossgen capture points
@@ -688,7 +842,7 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
                             return false;
                     }
                 }
-            }   
+            }
             return true;
         }
 
@@ -828,48 +982,15 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
 
         /// <summary>
         /// When we ported ME1->LE1 there were some materials that we had to change, they got renamed.
-        /// When porting to LMP it wont' find shaders cause name is different. Since we can compile shader
+        /// When porting to LMP it won't find shaders cause name is different. Since we can compile shaders now,
         /// we should undo our name changes.
         /// </summary>
         /// <param name="package"></param>
         internal static void RevertLE1SpecificMaterialChanges(IMEPackage package, ECLevelInfo info)
         {
-            // From CrossgenV:
-            /*
-            var portWindow = me1Package.FindExport("BIOA_PRC2_S.BIOA_PRC2_PortWindow");
-            portWindow.ObjectName = "SpaceVista_Window_Mat";
-            */
-
-            // These two textures have same IFP as their materials, so they got renamed when we renamed the materials.
-            // We need to rename them back to match the compiled shader packages or it will be missingtexture
-            // Maybe this needs to be in ShaderHost and not here.
-            /*
-            if (exp.ClassName == "Texture2D")
-            {
-                if (exp.InstancedFullPath == "BIOA_JUG80_T.JUG80_SAIL")
-                {
-                    // Rename to match crossgen
-                    exp.ObjectName = "JUG80_SAIL_CROSSGENFIX";
-                }
-                else if (exp.InstancedFullPath == "BIOA_ICE60_T.checker")
-                {
-                    // Rename to match crossgen
-                    exp.ObjectName = "BIOA_ICE60_T.checker_CROSSGENFIX";
-                }
-            }*/
-
             if (package.FindExport("BIOA_Jug20_T.CROSSGEN_Jug20_2waywetsandB", "Material") is ExportEntry sandBar)
             {
                 sandBar.ObjectName = "Jug20_2waywetsandB";
-            }
-            //if (package.FindExport("BIOA_JUG20_T.CROSSGEN_Jug20_2waywetsandB", "Material") is ExportEntry sandBar)
-            //{
-            //    sandBar.ObjectName = "CROSSGEN_Jug20_2waywetsandB";
-            //}
-            if (package.FindExport("BIOA_PRC2_MatFX.Holodeck_Grid_MAT", "Material") is ExportEntry holodeck)
-            {
-                // We need to find a donor or recompile the original material
-                // Original material is the LE1 version of BIOA_GalaxyMap_V_FX_Z.Scanner_Grid_Mat
             }
         }
 
@@ -944,31 +1065,6 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.CrossGenV
             //CorrectReachSpecs(me1File, le1File);
             //CorrectBioWaypointSet(me1File, le1File, vTestOptions); // Has NavReference -> ActorReference
             le3PL.WriteBinary(le3L);
-        }
-
-        /// <summary>
-        /// This doesn't seem to do anything
-        /// </summary>
-        /// <param name="package"></param>
-        internal static void AddBioLedgeMeshClass(IMEPackage package)
-        {
-            if (package.FindExport("SFXGame.BioLedgeMeshActor") != null)
-                return; // Already in package
-
-            var parent = package.FindEntry("SFXGame");
-            if (parent == null)
-            {
-                parent = package.CreateImport("Package", "SFXGame");
-            }
-
-            var ledgeMeshActorUc = File.ReadAllText(Path.Combine(SharedECPipelines.ECPipelineRoot, "Redemption", "Assets", "Templates", "BioLedgeMeshActor.uc"));
-
-            var ledgeMeshActorClass = SharedECPipelines.CompileClass(package, ledgeMeshActorUc, "BioLedgeMeshActor", new PackageCache(), parent: parent);
-
-            var world = package.FindExport("TheWorld");
-            var worldBin = ObjectBinary.From<World>(world);
-            worldBin.ExtraReferencedObjects = worldBin.ExtraReferencedObjects.Append(ledgeMeshActorClass.UIndex).ToArray();
-            world.WriteBinary(worldBin);
         }
 
         // FROM LEX
