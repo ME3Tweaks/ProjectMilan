@@ -77,6 +77,16 @@ public sealed class BankSourceData
     /// </param>
     public void WriteV134(BankWriter w, uint? overrideInMemoryMediaSize = null, bool forceData = false)
     {
+        // A third-party/studio-proprietary plugin (company ID in Wwise's PLUGINDEV range) has no LE3
+        // equivalent - its factory was never linked into LE3's stock Wwise runtime. Confirmed against
+        // shipped, working LE3 content (native SFXPawn_GethPrime.pcc, PluginId 0x00650002 - company
+        // 101, pluginType Source - reached by the geth prime's self-destruct explosion event): the
+        // official conversion keeps the PluginId completely unchanged (does NOT remap it to a standard
+        // plugin) and just reports zero media (InMemoryMediaSize=0, and an empty zero-length
+        // PluginParams where one is expected) - i.e. LE3 tolerates an unregistered plugin ID as long as
+        // it's given nothing to actually instantiate/decode. Match that exactly rather than inventing
+        // different (unvalidated) behavior.
+        var isThirdParty = PluginSupport.IsThirdParty(PluginId);
         w.U32(PluginId);
         var pluginType = PluginId & 0x0F;
 
@@ -93,7 +103,7 @@ public sealed class BankSourceData
         w.U8((byte)v134StreamType);
 
         w.U32(SourceId);
-        w.U32(overrideInMemoryMediaSize ?? InMemoryMediaSize);
+        w.U32(isThirdParty ? 0 : overrideInMemoryMediaSize ?? InMemoryMediaSize);
 
         byte sourceBits = 0;
         if (IsLanguageSpecific) sourceBits |= 1 << 0;
@@ -104,7 +114,7 @@ public sealed class BankSourceData
         var hasParam = pluginType == 2;
         if (hasParam)
         {
-            var bytes = PluginParams ?? Array.Empty<byte>();
+            var bytes = isThirdParty ? Array.Empty<byte>() : (PluginParams ?? Array.Empty<byte>());
             w.U32((uint)bytes.Length);
             w.Bytes(bytes);
         }

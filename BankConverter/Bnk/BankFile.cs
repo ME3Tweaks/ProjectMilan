@@ -112,7 +112,15 @@ public sealed class BankFile
     /// than a truncated prefix - i.e. there is no genuine external continuation for these. Only needed for the
     /// prefetchFragments path; the wemReplacements path detects this itself (it has the full replacement to compare
     /// against). See BankSourceData.WriteV134's forceData param for why this must be reclassified as StreamType=Data.</param>
-    public byte[] ConvertToV134(HircConversionStats stats, Dictionary<uint, byte[]>? wemReplacements = null, List<uint>? missingWems = null, Dictionary<uint, byte[]>? prefetchFragments = null, HashSet<uint>? fullyEmbeddedPrefetchIds = null)
+    /// <param name="externallyProvidedMedia">Source IDs the target game already ships in its own always-loaded banks,
+    /// mapped to the byte length those banks embed. Wwise resolves embedded media globally across every loaded bank
+    /// rather than per-bank, so re-embedding our own re-encode of one of these registers a SECOND, different blob
+    /// under an ID the stock game already owns - the resulting size/content disagreement is fed to the Vorbis decoder
+    /// as garbage. Confirmed in the wild: source 2269036, owned by LE3's resident Wwise_Generic_Explosions at 58855
+    /// bytes, re-embedded by ported MP banks at 300288 - which corrupted every explosion that referenced it. IDs
+    /// listed here are left out of DIDX/DATA entirely and their Sounds declare the stock size instead, exactly how
+    /// LE3's own banks reference them.</param>
+    public byte[] ConvertToV134(HircConversionStats stats, Dictionary<uint, byte[]>? wemReplacements = null, List<uint>? missingWems = null, Dictionary<uint, byte[]>? prefetchFragments = null, HashSet<uint>? fullyEmbeddedPrefetchIds = null, IReadOnlyDictionary<uint, uint>? externallyProvidedMedia = null)
     {
         var w = new BankWriter();
 
@@ -160,6 +168,19 @@ public sealed class BankFile
                 byte[] mediaBytes;
                 var isPrefetch = streamTypes.TryGetValue(m.Id, out var streamType) && streamType == Hirc.SourceStreamType.PrefetchStreaming;
 
+                // The stock game already owns this ID in an always-loaded bank - defer to it rather than
+                // registering a competing blob under the same ID (see externallyProvidedMedia). Only plain
+                // embedded sources are deferred: a PrefetchStreaming source's in-bank bytes are a header
+                // fragment that the engine continues reading from OUR AFC, so it can't be served by whatever
+                // the stock bank happens to hold under that ID.
+                if (!isPrefetch && externallyProvidedMedia != null && externallyProvidedMedia.TryGetValue(m.Id, out var stockSize))
+                {
+                    newEmbeddedSizes[m.Id] = stockSize;
+                    stats.ExternallyProvidedMedia++;
+                    stats.ExternallyProvidedBytesSaved += m.Size;
+                    continue;
+                }
+
                 if (isPrefetch && prefetchFragments != null && prefetchFragments.TryGetValue(m.Id, out var fragment))
                 {
                     // Already truncated by the caller - use as-is, no need for (or access to) the full replacement.
@@ -204,6 +225,17 @@ public sealed class BankFile
                 newDidx.Media.Add(new MediaHeader { Id = m.Id, Offset = (uint)newData.Count, Size = (uint)mediaBytes.Length });
                 newData.AddRange(mediaBytes);
             }
+
+            // NOTE: a Sound source declared Data/PrefetchStreaming in HIRC with no matching entry in
+            // THIS bank's own DIDX is not a defect - confirmed by directly cross-referencing shipped,
+            // working LE3 content (native SFXPawn_GethPrime.pcc and SFXWeapon_Heavy_Blackstar.pcc both
+            // carry SourceId 2269036 this exact way: nonzero InMemoryMediaSize, zero local DIDX
+            // entries). Wwise resolves embedded media globally across every currently-loaded bank, not
+            // just the declaring bank's own DIDX, so such a source plays fine as long as some other
+            // loaded bank supplies the real DIDX/DATA entry. Do not zero these out here - that would
+            // silence legitimately cross-bank-shared audio instead of fixing anything. (Third-party/
+            // unsupported-plugin sources are a real, separate case - see BankSourceData.WriteV134.)
+
             didxBody = newDidx.Write();
             dataBytes = newData.ToArray();
         }

@@ -16,6 +16,13 @@ public sealed class HircConversionStats
     /// <summary>Total bytes NOT embedded in bank DATA thanks to prefetch truncation (full replacement
     /// size minus the truncated fragment size, summed across all PrefetchFragmentsBuilt).</summary>
     public long PrefetchBytesSaved;
+
+    /// <summary>Number of embedded media entries dropped because the target game already ships that
+    /// source ID in an always-loaded bank (see BankFile.ConvertToV134's externallyProvidedMedia).</summary>
+    public int ExternallyProvidedMedia;
+
+    /// <summary>Original v56 byte count of the media dropped in favour of the stock game's own copy.</summary>
+    public long ExternallyProvidedBytesSaved;
 }
 
 /// <summary>
