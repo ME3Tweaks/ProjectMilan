@@ -12,6 +12,7 @@ using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using MilanShaderHost.Old;
+using ProjectMilanCore;
 
 namespace MilanShaderHost
 {
@@ -35,6 +36,25 @@ namespace MilanShaderHost
         /// </summary>
         private static IMEPackage transientPackage;
 
+        /// <summary>
+        /// Terrain shader compilation is a rebuild, rather than an incremental merge with the
+        /// source package's cache. Tracks which output terrains have had their old caches removed
+        /// for the current package so every subsequently returned mask can accumulate normally.
+        /// </summary>
+        private static readonly HashSet<string> resetTerrainCaches = new(StringComparer.OrdinalIgnoreCase);
+
+        // ShaderClient sends failures independently from material-resource payloads. Do not replace
+        // an input package in writeback mode unless its whole in-game compile session completed and
+        // actually yielded at least one resource to merge.
+        private static volatile bool currentCompileSessionFailed;
+        private static int mergedCompileResourceCount;
+
+        internal static void MarkCompileFailure(string errorMessage)
+        {
+            currentCompileSessionFailed = true;
+            Console.Error.WriteLine($"ShaderClient reported a compile failure; writeback is disabled for this package: {errorMessage}");
+        }
+
         public static void KillGame()
         {
             // Kill existing game processes.
@@ -56,13 +76,32 @@ namespace MilanShaderHost
         public static void StartFlow()
         {
             Game = MEGame.LE3;
+            if (!string.IsNullOrWhiteSpace(Program.ParsedOptions?.CaptureRoot))
+            {
+                DecookedPackagesPath = Path.GetFullPath(Program.ParsedOptions.CaptureRoot);
+            }
             var path = Path.Combine(DecookedPackagesPath, Game.ToString());
             
-            // Compile shaders for LE1 -> LE3
-            MilanShaderPackageBuilder.SourceFolders.Add(Path.Combine(DecookedPackagesPath, "LE1"));
-            
-            // ME3 -> LE3
-            // MilanShaderPackageBuilder.SourceFolders.Add(path);
+            // Donor imports are resolved by walking SourceFolders in order and taking the first
+            // folder that holds a package of the matching name. 96 package names exist in both the
+            // LE1 and LE3 decooked sets (BioEngineMaterials, BioBaseResources, ...), so the folder
+            // for the game actually being compiled has to come first or a capture silently picks up
+            // the other game's materials.
+            var explicitSourceFolders = Program.ParsedOptions?.SourceFolders?.ToList() ?? [];
+            if (explicitSourceFolders.Count > 0)
+            {
+                foreach (var folder in explicitSourceFolders)
+                {
+                    MilanShaderPackageBuilder.SourceFolders.Add(Path.GetFullPath(folder));
+                }
+            }
+            else
+            {
+                // LE3 decooked data only. Pass --sourcefolder to compile from another game's
+                // decooked set (LE1 -> LE3, ME3 -> LE3); do not add one here alongside this, or
+                // whichever is listed first wins for every package name the two sets share.
+                MilanShaderPackageBuilder.SourceFolders.Add(path);
+            }
 
             // Dump HLSL for package
             if (Program.ParsedOptions.DumpHLSL)
@@ -112,7 +151,7 @@ namespace MilanShaderHost
                     Console.WriteLine($"Dumping HLSL for package {Path.GetFileNameWithoutExtension(file)}");
 
                     // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit(EShaderLevelMode.Compile, Path.GetFileNameWithoutExtension(file));
+                    StartGameAndWaitForExit(EShaderLevelMode.Compile, Path.GetFileNameWithoutExtension(file), IsLE1SourcePackage(file));
 
                     // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
                     Console.WriteLine($"  Finished dumping HLSL for {Path.GetFileNameWithoutExtension(file)}");
@@ -129,6 +168,13 @@ namespace MilanShaderHost
         {
             public required IMEPackage TransientPackage { get; init; }
             public required IMEPackage MapPackage { get; init; }
+            public required bool IsLE1SourcePackage { get; init; }
+        }
+
+        private static bool IsLE1SourcePackage(string sourcePath)
+        {
+            using var sourcePackage = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
+            return sourcePackage.Game == MEGame.LE1;
         }
 
         /// <summary>
@@ -138,15 +184,24 @@ namespace MilanShaderHost
         /// </summary>
         private static PreparedLevel? BuildShaderLevelInMemory(string sourcePath, EShaderLevelMode buildMode)
         {
+            var isLE1SourcePackage = false;
             if (buildMode != EShaderLevelMode.SlashLevel)
             {
                 using var sp = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
+                isLE1SourcePackage = sp.Game == MEGame.LE1;
+                if (!string.IsNullOrWhiteSpace(Program.ParsedOptions.TerrainPackagePath) && sp.Game != MEGame.LE3)
+                {
+                    throw new InvalidOperationException($"--terrain requires an LE3 package; '{sourcePath}' is {sp.Game}.");
+                }
                 // Once we get normal materials working we can work on making this accept MaterialInstances.
                 // Then we can pre-bake the bHasStaticPermutation version.
-                // TerrainMaterial (not Terrain) because MilanShaderPackageBuilder ports individual
-                // UTerrainMaterial assets onto a donor terrain rather than porting a source Terrain actor
-                // -- see AddTerrainActorForMaterial.
-                if (sp.Exports.Count(x => x.IsA("Material")) == 0 && sp.Exports.Count(x => x.IsA("TerrainMaterial")) == 0)
+                var hasCompilableTerrain = sp.Exports.Any(x => x.IsA("Terrain"));
+                if (!string.IsNullOrWhiteSpace(Program.ParsedOptions.TerrainPackagePath) && !hasCompilableTerrain)
+                {
+                    throw new InvalidOperationException($"Terrain package '{sourcePath}' contains no Terrain exports.");
+                }
+
+                if (sp.Exports.Count(x => x.IsA("Material")) == 0 && !hasCompilableTerrain)
                 {
                     // Nothing to compile
                     return null;
@@ -159,6 +214,7 @@ namespace MilanShaderHost
             var package = MilanShaderPackageBuilder.BuildMapPackage(mapName, sourcePath, localTransient, buildMode);
             if (buildMode == EShaderLevelMode.Preview)
             {
+                Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Copying source shader cache into preview level.");
                 // Copy SeekFreeShaderCache
                 using var tPackage = MEPackageHandler.OpenMEPackage(sourcePath);
                 var cache = tPackage.FindExport("SeekFreeShaderCache");
@@ -166,6 +222,7 @@ namespace MilanShaderHost
             }
             else if (buildMode == EShaderLevelMode.Compile)
             {
+                Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Installing automatic shader-compile exit sequence.");
                 // Install auto exit sequence
                 var flowPackagePath = $"EntryMenu/entry_{Program.Game}.pcc"; // copied to output path by compile step.
                 var flowPackage = MEPackageHandler.OpenMEPackage(flowPackagePath);
@@ -179,7 +236,9 @@ namespace MilanShaderHost
             // Remove unused mips
             if (true)
             {
-                foreach (var tex in package.Exports.Where(x => x.IsTexture()))
+                var textures = package.Exports.Where(x => x.IsTexture()).ToList();
+                Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Removing empty mips from {textures.Count:N0} compiler-level texture(s).");
+                foreach (var tex in textures)
                 {
                     var t2d = (UTexture2D)ObjectBinary.From(tex);
                     t2d.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty); // Remove empty mips
@@ -193,7 +252,8 @@ namespace MilanShaderHost
                 }
             }
 
-            return new PreparedLevel { TransientPackage = localTransient, MapPackage = package };
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Compiler level prepared in memory ({package.Exports.Count:N0} exports).");
+            return new PreparedLevel { TransientPackage = localTransient, MapPackage = package, IsLE1SourcePackage = isLE1SourcePackage };
         }
 
         static void SetupShaderCompileFlow()
@@ -250,9 +310,37 @@ namespace MilanShaderHost
                 if (Program.ParsedOptions.CompileShaders) // Shader compile
                 {
                     Console.WriteLine($"Building shaders for: {baseName}");
+                    var outputGame = MilanLicensee.GetGame(file);
+                    if (Program.ParsedOptions.WriteBack)
+                    {
+                        if (outputGame == MEGame.LMP)
+                        {
+                            // Temporarily change to LE3
+                            MilanLicensee.SetGame(file, MEGame.LE3);
+                        }
+                        scPackage = MEPackageHandler.OpenMEPackage(file);
+                        if (scPackage.Game != Program.Game)
+                        {
+                            throw new InvalidOperationException($"--writeback only supports {Program.Game} input packages; '{file}' is {scPackage.Game}.");
+                        }
 
-                    scPackage = MEPackageHandler.CreateMemoryEmptyPackage(Path.GetFileName(file), Program.Game);
+                        // Writeback keeps the original authored exports instead of re-exporting the
+                        // transient compile graph. Persist the same material invariant here too:
+                        // an otherwise correctly compiled foliage material would still be rejected
+                        // by LE3's runtime static-lighting usage check if this remained false.
+                        MilanShaderPackageBuilder.EnableStaticLightingForAllMaterials(scPackage);
+
+                        Console.WriteLine($"Writeback enabled: compiled resources will be saved into {file}");
+                    }
+                    else
+                    {
+                        scPackage = MEPackageHandler.CreateMemoryEmptyPackage(Path.GetFileName(file), Program.Game);
+                    }
+
                     scPackage.CreateShaderCache();
+                    resetTerrainCaches.Clear();
+                    currentCompileSessionFailed = false;
+                    Interlocked.Exchange(ref mergedCompileResourceCount, 0);
 
                     // Use the pre-prepared level from the previous iteration if available, otherwise build now
                     PreparedLevel? current = nextLevelTask != null
@@ -268,9 +356,12 @@ namespace MilanShaderHost
 
                     // Apply the prepared level: set instance state and save to disk
                     transientPackage = current.TransientPackage;
-                    Console.WriteLine("Saving...");
                     var outGameDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
-                    current.MapPackage.Save(Path.Combine(outGameDir, GetMapName(EShaderLevelMode.Compile) + ".pcc"));
+                    var compilerMapPath = Path.Combine(outGameDir, GetMapName(EShaderLevelMode.Compile) + ".pcc");
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Saving compiler map ({current.MapPackage.Exports.Count:N0} exports) to {compilerMapPath}.");
+                    var saveTimer = Stopwatch.StartNew();
+                    current.MapPackage.Save(compilerMapPath);
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Saved compiler map in {saveTimer.Elapsed.TotalSeconds:F1}s.");
 
                     // While the game runs, prepare the next file in the background
                     if (i + 1 < files.Count)
@@ -281,9 +372,40 @@ namespace MilanShaderHost
                     }
 
                     // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit(EShaderLevelMode.Compile, baseName);
+                    StartGameAndWaitForExit(EShaderLevelMode.Compile, baseName, current.IsLE1SourcePackage);
 
-                    scPackage.Save(outPath);
+                    if (Program.ParsedOptions.WriteBack)
+                    {
+                        if (currentCompileSessionFailed || Volatile.Read(ref mergedCompileResourceCount) == 0)
+                        {
+                            throw new InvalidOperationException($"Refusing to write back '{file}': " +
+                                (currentCompileSessionFailed
+                                    ? "ShaderClient reported at least one compilation failure."
+                                    : "ShaderClient returned no material or terrain resources."));
+                        }
+
+                        scPackage.Save(file);
+                        MilanLicensee.SetGame(file, outputGame);
+                        Console.WriteLine($"Wrote {Volatile.Read(ref mergedCompileResourceCount)} compiled resource(s) and shader cache back to {file}");
+                    }
+                    else if (currentCompileSessionFailed || Volatile.Read(ref mergedCompileResourceCount) == 0)
+                    {
+                        // A failed or empty compile session must never overwrite a prior good result:
+                        // scPackage here is a bare in-memory package (just SeekFreeShaderCache, no
+                        // materials), and saving it over an existing outPath silently destroys whatever
+                        // compiled resources that file already held. --writeback already refuses this
+                        // above; the default output path needs the identical guard.
+                        Console.WriteLine($"Skipping save for '{baseName}': " +
+                            (currentCompileSessionFailed
+                                ? "ShaderClient reported at least one compilation failure."
+                                : "ShaderClient returned no material or terrain resources.") +
+                            (File.Exists(outPath) ? $" Leaving existing {outPath} untouched." : ""));
+                    }
+                    else
+                    {
+                        scPackage.Save(outPath);
+                    }
+
                 }
 
                 // Once game exits, ShaderHost should have received the shader cache, and our OnShaderCacheUpdated() event should have triggered.
@@ -350,20 +472,15 @@ namespace MilanShaderHost
                 return null;
 
             transientPackage = prepared.TransientPackage;
-            Console.WriteLine("Saving...");
             var outDir = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\ME3\BioGame\CookedPCConsole";
             var mapName = GetMapName(buildMode) + ".pcc";
             var finalOut = Path.Combine(outDir, mapName);
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Saving compiler map ({prepared.MapPackage.Exports.Count:N0} exports) to {finalOut}.");
+            var saveTimer = Stopwatch.StartNew();
             prepared.MapPackage.Save(finalOut);
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Saved compiler map in {saveTimer.Elapsed.TotalSeconds:F1}s.");
             return finalOut;
         }
-
-        /// <summary>
-        /// Friendly-name prefix FTerrainMaterialResource::GetFriendlyName() always emits (verified
-        /// against the ME3 binary's string table -- see ShaderClient/Hooks.cpp's IsTerrainMaterialResource()
-        /// for the native-side counterpart of this check).
-        /// </summary>
-        private const string TerrainMaterialResourceNamePrefix = "TerrainMaterialResource:";
 
         private static void OnMaterialCompiled(object? sender, CompileResult cr)
         {
@@ -379,24 +496,19 @@ namespace MilanShaderHost
                 cr.Cache.MergeInto(x);
             });
 
-            if (cr.MaterialName.StartsWith(TerrainMaterialResourceNamePrefix, StringComparison.Ordinal))
+            if (cr.IsTerrainResource)
             {
-                // The native wire format (ShaderClient's SerializeMaterialResource) only ever serializes
-                // the shared FMaterial-base slice of cr.MaterialResource -- it doesn't carry the
-                // FTerrainMaterialResource-specific extension (Mask/Terrain/MaterialIds/LightingGuid) at
-                // all, and there's no reliable way from here to know which CachedTerrainMaterials[i] slot
-                // on which Terrain export this compile belongs to (that pairing is derived at runtime from
-                // painted weight-map data, not from anything exposed as a UProperty). So there's nothing
-                // safe to merge the resource metadata into yet -- the shader cache merge above is still
-                // real, useful progress (the compiled bytecode is now available for lookup by Guid/params),
-                // this is just flagging that the metadata half of the round trip isn't implemented.
-                Console.WriteLine($"Compiled terrain material '{cr.MaterialName}': shader cache merged, but merging the FTerrainMaterialResource metadata back into a Terrain export isn't implemented yet. Skipping.");
+                MergeTerrainMaterialResource(cr);
                 return;
             }
 
             // Merge material into the package.
             var matchingMat = transientPackage.FindExport(cr.MaterialName);
-            if (!matchingMat.IsA("Material"))
+            // FindExport returns null when the name does not resolve at all, so the null check has
+            // to happen here and not just at the "no matching material" early-out below -- the pipe
+            // reader runs on one thread, so an exception here kills the host and every debug package
+            // that would have followed.
+            if (matchingMat == null || !matchingMat.IsA("Material"))
             {
                 // Bad naming...
                 matchingMat = transientPackage.Exports.FirstOrDefault(x => x.InstancedFullPath == cr.MaterialName && x.IsA("Material"));
@@ -410,9 +522,22 @@ namespace MilanShaderHost
 
             Console.WriteLine($"Serializing material resource {cr.MaterialName}");
 
-            // Export matching material from transient package to final compiled package
-            EntryExporter.ExportExportToPackage(matchingMat, scPackage, out var pMat);
-            var matExp = (ExportEntry)pMat;
+            ExportEntry matExp;
+            if (Program.ParsedOptions.WriteBack)
+            {
+                // In writeback mode scPackage is the original input file. Keep its existing
+                // material export and replace only the freshly compiled resource below; exporting
+                // the transient material would duplicate authored graph exports in the source.
+                matExp = scPackage.Exports.FirstOrDefault(x => x.IsA("Material")
+                    && x.InstancedFullPath.Equals(matchingMat.InstancedFullPath, StringComparison.OrdinalIgnoreCase))
+                    ?? throw new InvalidOperationException($"Could not find source material '{matchingMat.InstancedFullPath}' for writeback in {scPackage.FileNameNoExtension}.");
+            }
+            else
+            {
+                // Export matching material from transient package to final compiled package.
+                EntryExporter.ExportExportToPackage(matchingMat, scPackage, out var pMat);
+                matExp = (ExportEntry)pMat;
+            }
 
             // Replace the final package material resource with the one we got from the game.
             var ms = new MemoryStream(cr.MaterialResource);
@@ -428,7 +553,127 @@ namespace MilanShaderHost
             });
 
             // We need to link up the guids.
-            Console.WriteLine($"Merged {cr.MaterialName} into result package");
+            Interlocked.Increment(ref mergedCompileResourceCount);
+            Console.WriteLine($"Merged {cr.MaterialName} into " +
+                              (Program.ParsedOptions.WriteBack ? "the input package" : "the result package"));
+        }
+
+        /// <summary>
+        /// Merges one native <c>FTerrainMaterialResource</c> into the exact terrain actor that
+        /// generated it. Terrain resources are keyed by their material mask, not their serialized
+        /// array index: the latter is regenerated whenever the terrain's components change.
+        /// </summary>
+        private static void MergeTerrainMaterialResource(CompileResult cr)
+        {
+            if (string.IsNullOrWhiteSpace(cr.TerrainPath))
+            {
+                throw new InvalidOperationException($"Terrain compile result '{cr.MaterialName}' did not identify its owning terrain.");
+            }
+
+            var sourceTerrain = FindTerrainByRuntimePath(transientPackage, cr.TerrainPath);
+            if (sourceTerrain == null)
+            {
+                throw new InvalidOperationException($"Could not match compiled terrain '{cr.TerrainPath}' to an input terrain in {transientPackage.FileNameNoExtension}.");
+            }
+
+            // Bring the owning terrain and its linked authored data into the result before resolving
+            // the packageless resource's texture/object references.
+            var targetTerrain = scPackage.Exports.FirstOrDefault(x => x.IsA("Terrain")
+                && x.InstancedFullPath.Equals(sourceTerrain.InstancedFullPath, StringComparison.OrdinalIgnoreCase));
+            if (targetTerrain == null)
+            {
+                EntryExporter.ExportExportToPackage(sourceTerrain, scPackage, out var portedTerrain);
+                targetTerrain = portedTerrain as ExportEntry
+                    ?? throw new InvalidOperationException($"Failed to port terrain '{sourceTerrain.InstancedFullPath}' into the shader result package.");
+            }
+
+            var stream = new MemoryStream(cr.MaterialResource, writable: false);
+            var serializer = new PackagelessWithObjectsSerializingContainer(stream, scPackage, true);
+            serializer.SetGame(Program.Game);
+            var compiledResource = new TerrainMaterialResource();
+            serializer.Serialize(ref compiledResource);
+
+            // The terrain translator should have filled the common FMaterial texture table before
+            // ShaderClient serializes the resource. Keep this at the receive boundary so a capture
+            // immediately distinguishes a native compile failure from a wire/writeback failure.
+            Console.WriteLine($"Received terrain resource {compiledResource.Mask.BitMask:X}: " +
+                              $"ID={compiledResource.ID}, UniformExpressionTextures={compiledResource.UniformExpressionTextures?.Length ?? 0}, " +
+                              $"MaterialIds={compiledResource.MaterialIds?.Length ?? 0}");
+            if (compiledResource.UniformExpressionTextures is not { Length: > 0 })
+            {
+                Console.WriteLine("WARNING: Terrain resource arrived without uniform-expression textures.");
+            }
+            else
+            {
+                for (var textureIndex = 0; textureIndex < compiledResource.UniformExpressionTextures.Length; textureIndex++)
+                {
+                    var textureUIndex = compiledResource.UniformExpressionTextures[textureIndex];
+                    var textureEntry = scPackage.GetEntry(textureUIndex);
+                    Console.WriteLine($"  Terrain texture [{textureIndex}]: {textureUIndex} -> " +
+                                      (textureEntry == null
+                                          ? "<unresolved>"
+                                          : $"{textureEntry.ClassName} {textureEntry.InstancedFullPath}"));
+                }
+            }
+
+            // Set terrain of the resource to the in-package terrain
+            compiledResource.Terrain = targetTerrain.UIndex;
+
+            ObjectBinary.EditBinary<Terrain>(targetTerrain, terrain =>
+            {
+                // A terrain capture is a complete rebuild of this terrain's compiled data. Do this
+                // once per target terrain, before the first returned resource is merged. Clearing
+                // during every callback would leave only the final mask-specific resource behind.
+                if (resetTerrainCaches.Add(targetTerrain.InstancedFullPath))
+                {
+                    terrain.CachedTerrainMaterials = [];
+                    terrain.CachedTerrainMaterials2 = [];
+                    Console.WriteLine($"Cleared existing terrain material caches for {targetTerrain.InstancedFullPath}");
+                }
+
+                // LE3's ATerrain::GetCachedMaterial (MassEffect3.exe+0x807C70) maps the active
+                // SM5 platform (5) to cache index 0. This is the first serialized terrain cache
+                // array, matching stock LE3 terrain packages.
+                var cache = terrain.CachedTerrainMaterials ?? [];
+                var replacementIndex = Array.FindIndex(cache, x => x.Mask.NumBits == compiledResource.Mask.NumBits
+                    && x.Mask.BitMask == compiledResource.Mask.BitMask);
+
+                if (replacementIndex >= 0)
+                {
+                    cache[replacementIndex] = compiledResource;
+                }
+                else
+                {
+                    Array.Resize(ref cache, cache.Length + 1);
+                    cache[^1] = compiledResource;
+                }
+
+                // Resources are keyed by mask rather than their transient cache array index.
+                terrain.CachedTerrainMaterials = cache;
+            });
+
+            Interlocked.Increment(ref mergedCompileResourceCount);
+            Console.WriteLine($"Merged terrain resource {compiledResource.Mask.BitMask:X} ({compiledResource.Mask.NumBits} bits) into LE3 terrain cache for {targetTerrain.InstancedFullPath}");
+        }
+
+        /// <summary>
+        /// The runtime compiler map has its own package name, while the source terrain is retained
+        /// under its original package in <see cref="transientPackage"/>. Match the full local export
+        /// path as a suffix so we do not depend on the compiler-map's generated package name.
+        /// </summary>
+        private static ExportEntry? FindTerrainByRuntimePath(IMEPackage package, string runtimePath)
+        {
+            var matches = package.Exports.Where(x => x.IsA("Terrain")
+                    && (runtimePath.Equals(x.InstancedFullPath, StringComparison.OrdinalIgnoreCase)
+                        || runtimePath.EndsWith($".{x.InstancedFullPath}", StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
+            return matches.Count switch
+            {
+                0 => null,
+                1 => matches[0],
+                _ => throw new InvalidOperationException($"Runtime terrain path '{runtimePath}' is ambiguous in {package.FileNameNoExtension}: {string.Join(", ", matches.Select(x => x.InstancedFullPath))}")
+            };
         }
 
 
@@ -471,7 +716,7 @@ namespace MilanShaderHost
             // Game is now ready.
         }
 
-        private static void StartGameAndWaitForExit(EShaderLevelMode buildMode, string builtFor)
+        private static void StartGameAndWaitForExit(EShaderLevelMode buildMode, string builtFor, bool isLE1SourcePackage = false)
         {
             Console.WriteLine($"Starting game for {(buildMode == EShaderLevelMode.Compile ? "compilation" : "preview")} of {builtFor}");
             TOCCreator.CreateTOCForGame(Game);
@@ -483,11 +728,15 @@ namespace MilanShaderHost
             var bootArg = buildMode switch
             {
                 EShaderLevelMode.Preview => "-ShaderPreview -NoShaderCompile",
-                EShaderLevelMode.Compile => "-ShaderCompile -NoSplash -ResX=640 -ResY=360",
+                // LE3 refuses to create a 640x360 render surface on current systems. Keep
+                // shader compilation lightweight while using a reliably supported mode.
+                EShaderLevelMode.Compile => "-ShaderCompile -NoSplash -ResX=1280 -ResY=720",
                 _ => throw new Exception("Unhandled build mode: " + buildMode)
             };
 
-            if (buildMode == EShaderLevelMode.Compile && (Program.ParsedOptions.BuildDebugPackages || Program.ParsedOptions.CaptureOnly))
+            var captureDebugPackages = buildMode == EShaderLevelMode.Compile
+                && (Program.ParsedOptions.BuildDebugPackages || Program.ParsedOptions.CaptureOnly);
+            if (captureDebugPackages)
             {
                 bootArg += " -SendDebugPackages";
             }
@@ -497,10 +746,42 @@ namespace MilanShaderHost
                 bootArg += " -CaptureOnly";
             }
 
+            if (buildMode == EShaderLevelMode.Compile && Program.ParsedOptions.TraceRvrMaterialResolution)
+            {
+                bootArg += " -TraceRvrMaterialResolution";
+            }
+
+            if (buildMode == EShaderLevelMode.Compile && Program.ParsedOptions.TraceMaterialTranslation)
+            {
+                bootArg += " -TraceMaterialTranslation";
+            }
+
+            if (buildMode == EShaderLevelMode.Compile && isLE1SourcePackage)
+            {
+                Console.WriteLine("Enabling legacy opaque SceneDepth compatibility mode for an LE1 source package");
+                bootArg += " -AllowLegacyOpaqueSceneDepthTest";
+            }
+
             var processPath = MEDirectories.GetExecutablePath(Game);
-            var process = Process.Start(processPath, $"{bootArg} -NOHOMEDIR");
-            process.WaitForExit();
-            Console.WriteLine($"Game exited with code {process.ExitCode}");
+            Console.WriteLine($"Process.Start(): \"{processPath}\" {bootArg} -NOHOMEDIR");
+            if (captureDebugPackages)
+            {
+                ShaderHost.BeginDebugCapture(builtFor);
+            }
+
+            try
+            {
+                var process = Process.Start(processPath, $"{bootArg} -NOHOMEDIR");
+                process.WaitForExit();
+                Console.WriteLine($"Game exited with code {process.ExitCode}");
+            }
+            finally
+            {
+                if (captureDebugPackages)
+                {
+                    ShaderHost.EndDebugCapture(builtFor);
+                }
+            }
         }
 
         private static string GetMapName(EShaderLevelMode buildMode)

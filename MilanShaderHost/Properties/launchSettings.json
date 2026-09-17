@@ -9,6 +9,11 @@
       "commandName": "Project",
       "commandLineArgs": "--compile --builddebugpackages",
       "nativeDebugging": false
+    },
+    "MilanShaderhost - Compile Terrain": {
+      "commandName": "Project",
+      "commandLineArgs": "--terrain \"S:\\SteamLibrary\\steamapps\\common\\Mass Effect Legendary Edition\\Game\\LMP\\BioGame\\DLC\\DLC_MOD_PMR3\\CookedPCConsole\\Levels\\BioP_MPPSAhern\\BioA_MPPSAhern_TERRAIN.pcc\" --writeback",
+      "nativeDebugging": false
     }
   }
 }

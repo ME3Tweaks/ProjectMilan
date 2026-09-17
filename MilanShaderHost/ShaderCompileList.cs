@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using LegendaryExplorerCore;
+using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Packages;
 
 namespace MilanShaderHost
 {
@@ -44,11 +47,32 @@ namespace MilanShaderHost
         /// Generates the list of packages to compile shaders in.
         ///
         /// When --packagelist is given, the list is read from that file instead of the array below,
-        /// one package name per line (blank lines and # comments ignored). That is how the capture
-        /// plan from ShaderResearchTool is fed in without editing this file for every run.
+        /// one package name or package path per line (blank lines and # comments ignored). A direct
+        /// path is useful for map-local assets such as Terrain: the package and its CookedPCConsole
+        /// root are automatically made available to the relinker while that input is processed.
         /// </summary>
         internal static void SetupFileList()
         {
+            PackageFilesToProcess.Clear();
+
+            // Terrain packages are a focused, direct-input workflow. Do not accidentally combine
+            // them with the hardcoded list or a package-list file: the compiler map must contain
+            // only the terrain(s) requested by this invocation.
+            var terrainPackagePath = Program.ParsedOptions?.TerrainPackagePath;
+            if (!string.IsNullOrWhiteSpace(terrainPackagePath))
+            {
+                var explicitPath = NormalizeExplicitPackagePath(terrainPackagePath);
+                if (!File.Exists(explicitPath))
+                {
+                    throw new FileNotFoundException("Terrain package was not found.", explicitPath);
+                }
+
+                AddSourceRootsForExplicitPackage(explicitPath);
+                PackageFilesToProcess.Add(explicitPath);
+                Console.WriteLine($"Terrain compile input: {explicitPath}");
+                return;
+            }
+
             string[] files = ReadPackageListFile() ?? [
                 
                 // LE1 Pinnacle Station
@@ -58,7 +82,7 @@ namespace MilanShaderHost
                 //"BIOA_ICE60_T",
                 //"BIOG_APL_CON_Cargo_Container_L",
                 //"BIOA_STA60_T",
-                //"BIOA_PRC2_MatFX",
+                ////"BIOA_PRC2_MatFX", // Do not do this one
                 //"BIOG_V_Env_LavaSplash",
                 //"BIOA_PRO20_T",
                 //"BIOG_APL_STD_Work_Lamp_01_L",
@@ -75,7 +99,16 @@ namespace MilanShaderHost
                 //"BIOG_APL_PHY_Tire_01_L",
                 //"BIOG_APL_Invisible_P",
                 //"BIOA_DLC_UNC52_T",
-                "BIOA_ICE60_T",
+                //"BIOA_ICE60_T",
+                //"BIOG_V_Veh_Impact_Lava_Z",
+                //"BIOG_V_B_Weaken_Z",
+                //"BIOA_LOS10_T", // Audemus pod shader source for tropical
+                "BIOA_PRC2_S.Ships",
+                "BIOG_APL_PHY_Contain_Cells_01_L",
+                "BIOG_APL_STD_Geth_Bomb_L",
+                "BIOG_APL_INT_Pro_Terminal_01_L",
+                "BIOG_APL_INT_ElevConsole_02_L",
+                "BIOG_V_Env_VolumeLights_Z",
 
                 // TEST
                 //"EngineDebugMaterials",
@@ -254,12 +287,18 @@ namespace MilanShaderHost
 
             foreach (var f in files)
             {
-                var realf = f;
-                if (!realf.EndsWith(".pcc"))
+                // A package list may name an exact package outside the normal decooked source roots.
+                // Keep the path intact so an LE3 map (including its local Terrain exports) can be
+                // compiled directly rather than requiring a separately generated donor package.
+                if (File.Exists(f))
                 {
-                    realf += ".pcc";
+                    var explicitPath = NormalizeExplicitPackagePath(f);
+                    AddSourceRootsForExplicitPackage(explicitPath);
+                    PackageFilesToProcess.Add(explicitPath);
+                    continue;
                 }
 
+                var realf = f.EndsWith(".pcc", StringComparison.OrdinalIgnoreCase) ? f : f + ".pcc";
                 bool found = false;
                 foreach (var path in MilanShaderPackageBuilder.SourceFolders)
                 {
@@ -276,6 +315,57 @@ namespace MilanShaderHost
                     Console.Error.WriteLine($"Could not find source package {realf} in any of the source folders.");
                 }
             }
+        }
+
+        private static string NormalizeExplicitPackagePath(string path)
+        {
+            if (!Path.HasExtension(path))
+            {
+                path += ".pcc";
+            }
+
+            return Path.GetFullPath(path);
+        }
+
+        /// <summary>
+        /// Adds lookup roots needed by a direct package-list entry. The package's own directory is
+        /// tried first (for map-local assets), followed by its CookedPCConsole root when present.
+        /// </summary>
+        private static void AddSourceRootsForExplicitPackage(string packagePath)
+        {
+            AddSourceFolder(Path.GetDirectoryName(packagePath));
+
+            // Custom terrain packages often live beside the game (for example Game\\BioA) rather
+            // than under CookedPCConsole. Their TerrainLayerSetup references still need to resolve
+            // stock LE3 materials/textures, so always include the selected target game's cooked root.
+            if (Program.Game == MEGame.LE3)
+            {
+                AddSourceFolder(LE3Directory.CookedPCPath);
+            }
+
+            var directory = new DirectoryInfo(Path.GetDirectoryName(packagePath)!);
+            while (directory != null)
+            {
+                if (directory.Name.Equals("CookedPCConsole", StringComparison.OrdinalIgnoreCase))
+                {
+                    AddSourceFolder(directory.FullName);
+                    break;
+                }
+
+                directory = directory.Parent;
+            }
+        }
+
+        private static void AddSourceFolder(string? path)
+        {
+            if (string.IsNullOrWhiteSpace(path) ||
+                MilanShaderPackageBuilder.SourceFolders.Any(x => x.Equals(path, StringComparison.OrdinalIgnoreCase)))
+            {
+                return;
+            }
+
+            MilanShaderPackageBuilder.SourceFolders.Add(path);
+            Console.WriteLine($"Added source lookup folder: {path}");
         }
     }
 }

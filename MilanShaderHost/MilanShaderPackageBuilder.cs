@@ -45,6 +45,49 @@ namespace MilanShaderHost
         public static List<string> SourceFolders { get; } = new();
 
         /// <summary>
+        /// Cache of installed-game packages used only for texture imports intentionally absent from
+        /// the decooked material corpus (for example BioVFX_Z_TEXTURES). This avoids reparsing a
+        /// source package for every expression in a large effects material package.
+        /// </summary>
+        private static readonly PackageCache InstalledTexturePackageCache = new();
+
+        /// <summary>
+        /// Above this many materials, porting is reported per-material. A package like
+        /// EffectsMaterials holds ~1800 materials and each is ported twice (into the transient
+        /// package, then into the compiler level), which runs for minutes with no output at all --
+        /// indistinguishable from a hang. Small packages stay quiet so ordinary runs aren't noisier.
+        /// </summary>
+        private const int MaterialProgressThreshold = 10;
+
+        private static void ReportMaterialProgress(string phase, int index, int total, ExportEntry mat)
+        {
+            if (total <= MaterialProgressThreshold)
+                return;
+            Console.WriteLine($"  [{phase} {index}/{total}] {mat.InstancedFullPath}");
+        }
+
+        private static void ReportBuildStage(string stage)
+        {
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {stage}");
+        }
+
+        /// <summary>
+        /// Placeholder textures for unresolvable imports only have to *exist* for shader
+        /// compilation -- codegen depends on the material graph, not on a texture's dimensions or
+        /// contents. They are package-stored (<c>isPackageStored: true</c>), and package-stored
+        /// mips cannot be deduplicated across packages, so a 512x512 DXT1 with a full mip chain
+        /// costs ~170 KB per placeholder per package -- and a cubemap is six of them. A package
+        /// with many missing imports bloats badly for data nothing ever samples.
+        ///
+        /// Compile and capture runs therefore use a 32x32 base (a 6-mip chain, well under a KB)
+        /// and skip painting the artwork in at all. Preview runs are looked at by a human, so they
+        /// keep the real 512x512 image.
+        /// </summary>
+        private static bool UseMinimalMissingTextures => !Program.ParsedOptions.PreviewShaders;
+
+        private static int MissingTextureSize => UseMinimalMissingTextures ? 32 : 512;
+
+        /// <summary>
         /// Gets asset used for the floor of the level.
         /// </summary>
         /// <param name="game"></param>
@@ -107,6 +150,7 @@ namespace MilanShaderHost
             var sourceStylePackage = MEPackageHandler.OpenMEPackage(sourceStylePath);
 
             ConvertSourceToForcedExport(sourceStylePackage);
+            EnableStaticLightingForAllMaterials(sourceStylePackage);
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
 
@@ -115,6 +159,7 @@ namespace MilanShaderHost
             {
                 var pMat = PortSourceToCooked(mat, transientPackage);
             }
+            EnableStaticLightingForAllMaterials(transientPackage);
 
             // Also port materials into the startup level. This should be faster... I hope
             foreach (var mat in transientPackage.Exports.Where(x => x.IsA("Material")))
@@ -125,6 +170,7 @@ namespace MilanShaderHost
                     portedMats.Add(pMat);
                 }
             }
+            EnableStaticLightingForAllMaterials(startupLevel);
 
             Point3D startPos = new Point3D(0, 0, 0);
 
@@ -154,7 +200,7 @@ namespace MilanShaderHost
             var shaderCompilingLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, Program.Game);
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
-            List<ExportEntry> portedTerrainMats = new List<ExportEntry>();
+            List<ExportEntry> portedTerrains = new List<ExportEntry>();
 
             // If slashing cache level don't put other materials into it
             if (buildMode != EShaderLevelMode.SlashLevel)
@@ -163,35 +209,69 @@ namespace MilanShaderHost
                 var sourceStylePackage = MEPackageHandler.OpenMEPackage(sourceStylePath);
 
                 ConvertSourceToForcedExport(sourceStylePackage);
+                // LE1's Material default is static-lighting enabled while LE3's is disabled.
+                // ShaderHost always compiles the LE3 representation with the bit explicitly on:
+                // foliage, static meshes, and terrain all share the same material dependencies.
+                EnableStaticLightingForAllMaterials(sourceStylePackage);
 
 
-                // Port materials into transient
-                foreach (var mat in sourceStylePackage.Exports.Where(x => x.IsA("Material")))
+                // A focused terrain invocation relies on the terrain's authored references: its
+                // layer setups pull in only the material graph dependencies it actually needs.
+                // Normal package compilation retains the historical all-material behavior.
+                var compileTerrainOnly = !string.IsNullOrWhiteSpace(Program.ParsedOptions.TerrainPackagePath);
+                if (!compileTerrainOnly)
                 {
-                    var bUsedWithStaticLighting = mat.GetProperty<BoolProperty>("bUsedWithStaticLighting");
-                    if (mat.Game == MEGame.LE1 && mat.Game == MEGame.LE3 && bUsedWithStaticLighting == null)
+                    // Port materials into transient
+                    var sourceMats = sourceStylePackage.Exports.Where(x => x.IsA("Material"));
+                    var requestedMaterial = Program.ParsedOptions?.MaterialPath;
+                    if (!string.IsNullOrWhiteSpace(requestedMaterial))
                     {
-                        // LE1 sets this to true, LE3 doesn't have it defined (so its false).
-                        // If the mat doesn't explicitly specify, write it here, then port it over.
-                        mat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+                        sourceMats = sourceMats.Where(x => string.Equals(x.InstancedFullPath, requestedMaterial,
+                            StringComparison.OrdinalIgnoreCase));
                     }
+                    var sourceMatsList = sourceMats.ToList();
+                    if (!string.IsNullOrWhiteSpace(requestedMaterial))
+                    {
+                        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Focused material filter selected {sourceMatsList.Count} of the source package's materials: {requestedMaterial}");
+                    }
+                    for (int i = 0; i < sourceMatsList.Count; i++)
+                    {
+                        var mat = sourceMatsList[i];
+                        ReportMaterialProgress("port -> transient", i + 1, sourceMatsList.Count, mat);
 
-                    // Custom milan additions for now.
-                    mat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
-                    mat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
-                    mat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
+                        mat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
+                        mat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
 
-                    var pMat = PortSourceToCooked(mat, transientPackage);
+                        PortSourceToCooked(mat, transientPackage);
+                    }
+                    ReportBuildStage($"Finished porting {sourceMatsList.Count:N0} material(s) into the transient package.");
                 }
 
-                // Port terrain materials (UTerrainMaterial) into transient. These don't compile through
-                // a UMaterial at all -- ATerrain::CacheResourceShaders drives FTerrainMaterialResource
-                // compilation natively off a real ATerrain actor's Layers, so each one needs a terrain to
-                // sit on. See AddTerrainActorForMaterial below.
-                foreach (var terrainMat in sourceStylePackage.Exports.Where(x => x.IsA("TerrainMaterial")))
+                // A terrain resource is generated from its owning ATerrain, its components' batch masks,
+                // and its layer setups. Port the real terrain rather than compiling loose TerrainMaterial
+                // wrappers on a synthetic donor; the result can then be matched back to this exact Terrain
+                // export by its cached-resource mask.
+                foreach (var terrain in sourceStylePackage.Exports.Where(x => x.IsA("Terrain")).ToList())
                 {
-                    var pTerrainMat = PortSourceToCooked(terrainMat, transientPackage);
+                    terrain.Parent = null; // Remove out of tree so it doesn't bring in TheWorld
+                    ObjectBinary.EditBinary<Terrain>(terrain, t =>
+                    {
+                        // Dump all cached materials so we don't reserialize any of them; we only want our new ones we are 
+                        // regenerating
+                        t.CachedTerrainMaterials = [];
+                    });
+                    var transientTerrain = PortSourceToCooked(terrain, transientPackage);
+
+                    // This is important; otherwise PackagelessSerializer won't find it later
+                    // Build fake level structure
+                    var tw = transientPackage.CreatePackageExport("TheWorld");
+                    var pl = transientPackage.CreatePackageExport("PersistentLevel", parent: tw);
+                    transientTerrain.Parent = pl;
                 }
+                // Terrain-only builds arrive here through the authored terrain graph rather than the
+                // all-material loop above. Normalize the actual relinker output as well, so there is
+                // no path that can feed a false bUsedWithStaticLighting material to ShaderClient.
+                EnableStaticLightingForAllMaterials(transientPackage);
 
                 // This is the lazy way: Find all missing<X> objects and deduplicate them
                 //string[] names = ["MissingTexture", "MissingTextureCube"];
@@ -210,25 +290,36 @@ namespace MilanShaderHost
 
 
                 // Also port materials into the compiler level. This should be faster to port... I hope
-                foreach (var mat in transientPackage.Exports.Where(x => x.IsA("Material")))
+                if (!compileTerrainOnly)
                 {
-                    // This should already have the bUsedWithStaticLighting set.
-                    var pMat = PortSourceToCooked(mat, shaderCompilingLevel);
-                    if (pMat != null)
+                    var transientMats = transientPackage.Exports.Where(x => x.IsA("Material")).ToList();
+                    for (int i = 0; i < transientMats.Count; i++)
                     {
-                        portedMats.Add(pMat);
+                        var mat = transientMats[i];
+                        ReportMaterialProgress("port -> level", i + 1, transientMats.Count, mat);
+
+                        // This should already have the bUsedWithStaticLighting set.
+                        var pMat = PortSourceToCooked(mat, shaderCompilingLevel);
+                        if (pMat != null)
+                        {
+                            portedMats.Add(pMat);
+                        }
                     }
+                    ReportBuildStage($"Finished porting {portedMats.Count:N0} material(s) into the compiler level.");
                 }
 
-                foreach (var terrainMat in transientPackage.Exports.Where(x => x.IsA("TerrainMaterial")))
+                foreach (var terrain in transientPackage.Exports.Where(x => x.IsA("Terrain")))
                 {
-                    var pTerrainMat = PortSourceToCooked(terrainMat, shaderCompilingLevel);
-                    if (pTerrainMat != null)
+                    var pTerrain = PortSourceToCooked(terrain, shaderCompilingLevel);
+                    if (pTerrain != null)
                     {
-                        portedTerrainMats.Add(pTerrainMat);
+                        portedTerrains.Add(pTerrain);
                     }
                 }
+                EnableStaticLightingForAllMaterials(shaderCompilingLevel);
+                ReportBuildStage($"Saving transient diagnostic package ({transientPackage.Exports.Count:N0} exports) to C:\\users\\public\\transient.pcc.");
                 transientPackage.Save("C:\\users\\public\\transient.pcc");
+                ReportBuildStage("Finished saving transient diagnostic package.");
             }
             else
             {
@@ -237,6 +328,7 @@ namespace MilanShaderHost
             }
 
             // PlayerStart is required or we can't even load into it
+            ReportBuildStage("Adding required PlayerStart to compiler level.");
             var startPos = new Point3D(0, 0, 1000);
             AddPlayerStart(shaderCompilingLevel, startPos);
 
@@ -270,8 +362,11 @@ namespace MilanShaderHost
 
                 // Add static meshes for each material
                 // In compile mode we need mesh here still to force it to compile.
-                foreach (var pMat in portedMats)
+                ReportBuildStage($"Adding {portedMats.Count:N0} material actor(s) to the compiler level to force shader permutations.");
+                for (var i = 0; i < portedMats.Count; i++)
                 {
+                    var pMat = portedMats[i];
+                    ReportMaterialProgress("add -> compiler actor", i + 1, portedMats.Count, pMat);
                     // Required - if missing, the game will crash when trying to compile, not sure why.
                     AddStaticMeshActorForMaterial(pMat, startPos, buildMode == EShaderLevelMode.Preview);
 
@@ -287,74 +382,51 @@ namespace MilanShaderHost
                     startPos.Y -= 257; // Helps reduce Z-fighting
                 }
 
-                // Terrain materials don't compile through a static mesh actor at all -- give each one
-                // its own donor terrain instance instead (see AddTerrainActorForMaterial).
+                // Terrain material resources are generated by ATerrain::PostLoad / CacheResourceShaders,
+                // not by static-mesh rendering. The copied actor retains its authored components, layer
+                // ordering, weight maps, and per-component masks, which are all inputs to the generated
+                // FTerrainMaterialResource cache.
                 var terrainPos = new Point3D(startPos) { X = startPos.X + 8192 };
-                foreach (var pTerrainMat in portedTerrainMats)
+                if (portedTerrains.Count > 0)
                 {
-                    AddTerrainActorForMaterial(pTerrainMat, terrainPos);
+                    ReportBuildStage($"Adding {portedTerrains.Count:N0} terrain actor(s) to the compiler level.");
+                }
+                foreach (var pTerrain in portedTerrains)
+                {
+                    AddTerrainActorForCompilation(pTerrain, terrainPos);
                     terrainPos.Y -= 8192; // Terrain footprint is much larger than one material's preview mesh.
                 }
             }
 
+            ReportBuildStage($"Compiler level assembly complete ({shaderCompilingLevel.Exports.Count:N0} exports).");
             return shaderCompilingLevel;
         }
 
         /// <summary>
-        /// Reference terrain used purely as a donor shell: a small, known-good, single-layer terrain
-        /// whose heightmap/weight-map paint data is reused unmodified for every terrain material we
-        /// compile. CacheWeightMaps (called from ATerrain::PostLoad) keys paint data by layer INDEX,
-        /// not by which UTerrainMaterial that layer's Setup wraps, so swapping only Layers[0].Setup's
-        /// wrapped material keeps the donor's existing "layer 0 covers everywhere" paint data valid
-        /// no matter what we plug into it.
+        /// Places a ported terrain into the synthetic compiler level without changing the authored
+        /// terrain data that determines its material-resource permutations.
         /// </summary>
-        private static LEXOpenable GetDonorTerrainAsset(MEGame game) => game switch
+        private static ExportEntry AddTerrainActorForCompilation(ExportEntry terrain, Point3D location)
         {
-            MEGame.LE3 => new LEXOpenable()
-            {
-                EntryClass = "Terrain",
-                EntryPath = "TheWorld.PersistentLevel.Terrain_0",
-                FilePath = "BioA_KroGar_900FarCamp.pcc"
-            },
-            _ => throw new NotImplementedException("No donor terrain registered for this game yet -- add one to GetDonorTerrainAsset."),
-        };
+            PathEdUtils.SetLocation(terrain, location);
+            terrain.Parent = terrain.FileRef.GetLevel();
+            terrain.FileRef.AddToLevelActorsIfNotThere(terrain);
+            return terrain;
+        }
 
         /// <summary>
-        /// Ports the donor terrain (see GetDonorTerrainAsset) into <paramref name="terrainMaterial"/>'s
-        /// package and rewires its first layer to use <paramref name="terrainMaterial"/> instead of
-        /// whatever the donor originally had, so ATerrain::PostLoad compiles a FTerrainMaterialResource
-        /// for this specific material when the level loads. Every other field on the donor (heightmap,
-        /// weight-map textures, InfoData, TerrainComponents, Mask) is left exactly as authored.
+        /// Makes static lighting an explicit ShaderHost compilation invariant. LE1 supplies this
+        /// through its class default, but LE3 defaults it off; preserving the source omission would
+        /// therefore skip static-lighting shader permutations after the port. Apply it to each
+        /// intermediate package because relinking terrain dependencies bypasses the normal root
+        /// material loop.
         /// </summary>
-        private static ExportEntry AddTerrainActorForMaterial(ExportEntry terrainMaterial, Point3D location)
+        internal static void EnableStaticLightingForAllMaterials(IMEPackage package)
         {
-            var package = terrainMaterial.FileRef;
-            var donorExp = GetOpenableExport(package, GetDonorTerrainAsset(package.Game));
-            if (donorExp == null)
-                throw new Exception("Donor terrain asset is null");
-
-            EntryExporter.ExportExportToPackage(donorExp, package, out var portedTerrainEntry);
-            var portedTerrain = (ExportEntry)portedTerrainEntry;
-            PathEdUtils.SetLocation(portedTerrain, location);
-
-            var layers = portedTerrain.GetProperty<ArrayProperty<StructProperty>>("Layers");
-            if (layers == null || layers.Count == 0)
-                throw new Exception("Donor terrain has no Layers -- can't rewire it to a new material.");
-
-            var setupProp = layers[0].GetProp<ObjectProperty>("Setup");
-            var layerSetup = setupProp?.ResolveToEntry(package) as ExportEntry;
-            if (layerSetup == null)
-                throw new Exception("Donor terrain's Layers[0].Setup didn't resolve to a ported export.");
-
-            var materials = layerSetup.GetProperty<ArrayProperty<StructProperty>>("Materials");
-            if (materials == null || materials.Count == 0)
-                throw new Exception("Donor terrain's layer setup has no Materials -- can't rewire it to a new material.");
-
-            materials[0].Properties.AddOrReplaceProp(new ObjectProperty(terrainMaterial, "Material"));
-            layerSetup.WriteProperty(materials);
-
-            package.AddToLevelActorsIfNotThere(portedTerrain);
-            return portedTerrain;
+            foreach (var material in package.Exports.Where(x => x.IsA("Material")))
+            {
+                material.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+            }
         }
 
         private static void AddExistingMeshActor(IMEPackage package, LEXOpenable meshAsset, Point3D location, string name)
@@ -414,65 +486,111 @@ namespace MilanShaderHost
             return newEntry as ExportEntry;
         }
 
+        /// <summary>
+        /// Delegate function that performs a relink against a cooked package
+        /// </summary>
+        /// <param name="importingPcc"></param>
+        /// <param name="relinkingExport"></param>
+        /// <param name="uIndex"></param>
+        /// <param name="propertyName"></param>
+        /// <param name="prefix"></param>
+        /// <param name="rop"></param>
+        /// <param name="result"></param>
+        /// <returns></returns>
         private static bool ConvertToCookedRelink(IMEPackage importingPcc, ExportEntry relinkingExport, ref int uIndex, string propertyName, string prefix, RelinkerOptionsPackage rop, out EntryStringPair result)
         {
             result = null;
             var sourceObj = importingPcc.GetEntry(uIndex);
             if (sourceObj is ImportEntry imp)
             {
+                if (imp.ClassName == "Class")
+                    return false; // We aren't relinking classes here.
+
                 // Attempt source type lookup
                 foreach (var sourceFolder in SourceFolders)
                 {
                     var sourcePackagePath = Path.Combine(sourceFolder, $"{imp.GetLinker()}.pcc");
-                    if (File.Exists(sourcePackagePath))
-                    {
-                        // Console.WriteLine($@"Attempting to port as export: {imp.InstancedFullPath}");
-                        // Source package exists
-                        // todo: Maybe use cache.
-                        using var sourcePackage = MEPackageHandler.OpenMEPackage(sourcePackagePath);
-                        ConvertSourceToForcedExport(sourcePackage);
-                        var sourceExport = sourcePackage.FindExport(imp.InstancedFullPath, imp.ClassName);
-                        if (sourceExport != null)
-                        {
-                            // We found an export version of the object
-                            // Port it and use it instead.
-                            EntryExporter.ExportExportToPackage(sourceExport, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
-                            uIndex = portedSourceObj.UIndex;
-                            return true;
-                        }
-                    }
+                    if (!File.Exists(sourcePackagePath))
+                        continue;
 
-                    // Could not find import!
-                    if (sourceObj.ClassName == "Texture2D")
-                    {
-                        return RelinkMissingTexture2D(imp, relinkingExport, out uIndex, rop);
-                    }
-                    else if (sourceObj.ClassName == "TextureCube")
-                    {
-                        return RelinkMissingTextureCube(imp, relinkingExport, out uIndex, rop);
-                    }
-                    else if (sourceObj.ClassName == "TextureRenderTarget2D")
-                    {
-                        return RelinkMissingTextureRenderTarget2D(imp, relinkingExport, out uIndex, rop);
-                    }
-                    else if (sourceObj.ClassName == "TextureFlipBook")
-                    {
-                        return RelinkMissingTextureFlipbook(imp, relinkingExport, out uIndex, rop);
-                    }
-                    else if (sourceObj.ClassName == "TextureRenderTargetCube")
-                    {
-                        return RelinkMissingTextureRenderTargetCube(imp, relinkingExport, out uIndex, rop);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Unknown source class {imp.InstancedFullPath} ({imp.ClassName})");
-                    }
+                    // Console.WriteLine($@"Attempting to port as export: {imp.InstancedFullPath}");
+                    // Source package exists.
+                    using var sourcePackage = MEPackageHandler.OpenMEPackage(sourcePackagePath);
+                    ConvertSourceToForcedExport(sourcePackage);
+                    var sourceExport = sourcePackage.FindExport(imp.InstancedFullPath, imp.ClassName);
+                    if (sourceExport == null)
+                        continue;
 
+                    // We found an export version of the object. Port it and use it instead.
+                    EntryExporter.ExportExportToPackage(sourceExport, relinkingExport.FileRef, out var portedSourceObj, customROP: rop);
+                    uIndex = portedSourceObj.UIndex;
+                    return true;
                 }
+
+                if (sourceObj.GetLinker() == "EngineMaterials")
+                {
+                    // This is a special case: EngineMaterials is not in the source folders (we purposely skip it). It should always be available to the game however; we won't be editing these.
+                    return false; // Do not use custom relink
+                }
+
+                // The decooked corpus intentionally contains material packages, not every texture
+                // source package. A missing source file therefore does not mean a missing game
+                // texture. Import the exact LE3 asset before using a shared placeholder: otherwise
+                // every absent texture becomes one MissingTexture, distinct samples collapse to one
+                // slot, and the captured shader cannot match the shipped bytecode.
+                if (sourceObj.ClassName is "Texture2D" or "TextureCube" or "TextureRenderTarget2D" or "TextureFlipBook" or "TextureRenderTargetCube")
+                {
+                    if (TryPortTextureFromInstalledGame(imp, relinkingExport, ref uIndex, rop))
+                        return true;
+
+                    return sourceObj.ClassName switch
+                    {
+                        "Texture2D" => RelinkMissingTexture2D(imp, relinkingExport, out uIndex, rop),
+                        "TextureCube" => RelinkMissingTextureCube(imp, relinkingExport, out uIndex, rop),
+                        "TextureRenderTarget2D" => RelinkMissingTextureRenderTarget2D(imp, relinkingExport, out uIndex, rop),
+                        "TextureFlipBook" => RelinkMissingTextureFlipbook(imp, relinkingExport, out uIndex, rop),
+                        "TextureRenderTargetCube" => RelinkMissingTextureRenderTargetCube(imp, relinkingExport, out uIndex, rop),
+                        _ => false,
+                    };
+                }
+
+                Console.WriteLine($"Unknown source class {imp.InstancedFullPath} ({imp.ClassName})");
             }
 
             // We don't handle unless it is an import
             return false;
+        }
+
+        /// <summary>
+        /// Ports the exact installed LE3 texture when its owning package is intentionally absent
+        /// from the material-only decooked corpus. This preserves independent texture slots and
+        /// format-dependent shader generation without introducing LE1 or ME3 source folders.
+        /// </summary>
+        private static bool TryPortTextureFromInstalledGame(ImportEntry imp, ExportEntry relinkingExport,
+            ref int uIndex, RelinkerOptionsPackage rop)
+        {
+            var linkerFile = $"{imp.GetLinker()}.pcc";
+            if (!MELoadedFiles.GetFilesLoadedInGame(Program.Game).TryGetValue(linkerFile, out var sourcePath))
+                return false;
+
+            try
+            {
+                var sourcePackage = InstalledTexturePackageCache.GetCachedPackage(sourcePath);
+                var sourceExport = sourcePackage.FindExport(imp.InstancedFullPath, imp.ClassName);
+                if (sourceExport == null)
+                    return false;
+
+                EntryExporter.ExportExportToPackage(sourceExport, relinkingExport.FileRef, out var portedSourceObj,
+                    customROP: rop);
+                uIndex = portedSourceObj.UIndex;
+                Console.WriteLine($"Resolved texture from installed LE3: {imp.InstancedFullPath}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Could not resolve installed texture {imp.InstancedFullPath}: {ex.Message}");
+                return false;
+            }
         }
 
         private static bool RelinkMissingTextureRenderTarget2D(ImportEntry imp, ExportEntry relinkingExport, out int uIndex, RelinkerOptionsPackage rop)
@@ -574,11 +692,16 @@ namespace MilanShaderHost
             {
                 var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
 
-                missingTexturesExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", 512, 512, PixelFormat.DXT1, true, null);
+                missingTexturesExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", MissingTextureSize, MissingTextureSize, PixelFormat.DXT1, true, null);
                 missingTexturesExport.SetForcedExportFlag(false);
-                var t2d = new Texture2D(missingTexturesExport);
-                var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
-                t2d.Replace(im, missingTexturesExport.GetProperties(), isPackageStored: true);
+                if (!UseMinimalMissingTextures)
+                {
+                    // CreateTexture already wrote a valid pccUnc blank mip chain; Replace only
+                    // exists to paint the visible artwork in, which no compile run ever samples.
+                    var t2d = new Texture2D(missingTexturesExport);
+                    var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
+                    t2d.Replace(im, missingTexturesExport.GetProperties(), isPackageStored: true);
+                }
                 missingTexturesExport.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
             }
 
@@ -600,12 +723,15 @@ namespace MilanShaderHost
             {
                 var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
 
-                missingTexturesFlipbookExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", 512, 512, PixelFormat.DXT1, true, null);
+                missingTexturesFlipbookExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", MissingTextureSize, MissingTextureSize, PixelFormat.DXT1, true, null);
                 missingTexturesFlipbookExport.SetForcedExportFlag(false);
 
-                var t2d = new Texture2D(missingTexturesFlipbookExport);
-                var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
-                t2d.Replace(im, missingTexturesFlipbookExport.GetProperties(), isPackageStored: true);
+                if (!UseMinimalMissingTextures)
+                {
+                    var t2d = new Texture2D(missingTexturesFlipbookExport);
+                    var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
+                    t2d.Replace(im, missingTexturesFlipbookExport.GetProperties(), isPackageStored: true);
+                }
                 missingTexturesFlipbookExport.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
                 missingTexturesFlipbookExport.Class = EntryImporter.EnsureClassIsInFile(missingTexturesPackage, "TextureFlipbook", new RelinkerOptionsPackage());
 
@@ -688,10 +814,13 @@ namespace MilanShaderHost
                 // Make the face of a cube
                 for (int i = 0; i < 6; i++)
                 {
-                    var tex = Texture2D.CreateTexture(missingTexturesPackage, $"CubemapFace{i}", 512, 512, PixelFormat.DXT1, true, missingTextureCubeExport);
-                    var t2d = new Texture2D(tex);
-                    var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
-                    t2d.Replace(im, tex.GetProperties(), isPackageStored: true);
+                    var tex = Texture2D.CreateTexture(missingTexturesPackage, $"CubemapFace{i}", MissingTextureSize, MissingTextureSize, PixelFormat.DXT1, true, missingTextureCubeExport);
+                    if (!UseMinimalMissingTextures)
+                    {
+                        var t2d = new Texture2D(tex);
+                        var im = Image.LoadFromFileMemory(ShaderHost.ExtractResource("MilanShaderHost.missingtexture.png"), 2, PixelFormat.DXT1);
+                        t2d.Replace(im, tex.GetProperties(), isPackageStored: true);
+                    }
                     tex.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
                     string propName = i switch
                     {

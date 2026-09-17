@@ -51,10 +51,91 @@ namespace MilanShaderHost
             /// Debug package JSON is coming in next
             /// </summary>
             DebugPackage = 6,
+            /// <summary>
+            /// A complete FTerrainMaterialResource is about to be sent. Unlike MaterialResource,
+            /// this includes the native terrain-specific extension (owner, mask, material IDs and
+            /// lighting GUID) required to persist the result into Terrain.CachedTerrainMaterials.
+            /// </summary>
+            TerrainMaterialResource = 7,
         }
 
         EReadMode CurrentReadMode = EReadMode.None;
         int IncomingShaderCacheSize = 0;
+
+        // Debug packages are returned for every material the compiler map happens to load,
+        // including imported dependency materials. Keep the currently requested source package
+        // here so those dependency captures cannot overwrite the standalone capture that owns
+        // the same qualified material path.
+        private sealed class DebugCaptureSession(string packageName)
+        {
+            internal string PackageName { get; } = packageName;
+            internal TaskCompletionSource PipeDrained { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+            internal int SkippedForeignPayloadCount;
+        }
+
+        private static DebugCaptureSession? activeDebugCapture;
+
+        internal static void BeginDebugCapture(string packageName)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(packageName);
+            var session = new DebugCaptureSession(packageName);
+            if (Interlocked.CompareExchange(ref activeDebugCapture, session, null) != null)
+            {
+                throw new InvalidOperationException("Cannot start a debug capture before the previous game's pipe payloads have drained.");
+            }
+        }
+
+        internal static void EndDebugCapture(string packageName)
+        {
+            var session = Volatile.Read(ref activeDebugCapture);
+            if (session == null || !string.Equals(session.PackageName, packageName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"Debug capture state was lost while waiting for {packageName}.");
+            }
+
+            // Process exit only closes the client end. The pipe can still hold JSON that the
+            // listener has not read yet, so keep the ownership boundary active until that stream
+            // is fully drained. Starting the next game early would otherwise misclassify its tail.
+            if (!session.PipeDrained.Task.Wait(TimeSpan.FromSeconds(60)))
+            {
+                throw new TimeoutException($"ShaderClient's pipe did not drain within 60 seconds after {packageName} exited; refusing to start the next capture with an unsafe ownership boundary.");
+            }
+
+            if (Interlocked.CompareExchange(ref activeDebugCapture, null, session) != session)
+            {
+                throw new InvalidOperationException($"Debug capture state changed while finishing {packageName}.");
+            }
+
+            var skippedCount = Volatile.Read(ref session.SkippedForeignPayloadCount);
+            if (skippedCount > 0)
+            {
+                Console.WriteLine($"Discarded {skippedCount:N0} foreign debug package payload(s) while capturing {packageName}.");
+            }
+        }
+
+        private static bool IsForeignDebugPackage(string packageName)
+        {
+            var session = Volatile.Read(ref activeDebugCapture);
+            if (session == null || packageName == "Unqualified")
+            {
+                // Preserve the existing Unqualified bucket: there is no reliable package
+                // ownership information to filter on, and it cannot overwrite a qualified job.
+                return false;
+            }
+
+            if (string.Equals(session.PackageName, packageName, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            Interlocked.Increment(ref session.SkippedForeignPayloadCount);
+            return true;
+        }
+
+        private static void MarkDebugCapturePipeDrained()
+        {
+            Volatile.Read(ref activeDebugCapture)?.PipeDrained.TrySetResult();
+        }
 
         /// <summary>
         /// Invoked when a new shader cache is generated (a material has been successfully compiled)
@@ -107,7 +188,10 @@ namespace MilanShaderHost
                     }
                     catch (IOException)
                     {
-                        // We just exit, it may be pipe disconnected
+                        // End-of-stream is the point at which every buffered payload from this
+                        // game has been read. Let the launcher advance only after this signal.
+                        MarkDebugCapturePipeDrained();
+                        CurrentReadMode = EReadMode.None;
                     }
                     continue;
 
@@ -154,6 +238,7 @@ namespace MilanShaderHost
                 {
                     var errorMessage = reader.ReadSZString();
                     Console.WriteLine(errorMessage);
+                    MilanShaderBuilderFlow.MarkCompileFailure(errorMessage);
                     CurrentReadMode = EReadMode.None;
                 }
                 else if (CurrentReadMode == EReadMode.MaterialResource)
@@ -175,6 +260,29 @@ namespace MilanShaderHost
                     cr = null; // Reset
 
                     //Console.WriteLine($"Received material resource binary for {materialName}, {incomingDataLen} bytes");
+                    CurrentReadMode = EReadMode.None;
+                    Console.WriteLine();
+                }
+                else if (CurrentReadMode == EReadMode.TerrainMaterialResource)
+                {
+                    if (cr == null)
+                    {
+                        throw new InvalidOperationException("Received terrain resource data before its shader cache.");
+                    }
+
+                    var terrainPathLength = reader.ReadInt32();
+                    var terrainPath = Encoding.Unicode.GetString(reader.ReadBytes(terrainPathLength));
+                    var resourceLength = reader.ReadInt32();
+                    var resource = reader.ReadBytes(resourceLength);
+
+                    Console.WriteLine($"Incoming terrain resource data: {terrainPath}");
+                    cr.IsTerrainResource = true;
+                    cr.TerrainPath = terrainPath;
+                    cr.MaterialName = terrainPath;
+                    cr.MaterialResource = resource;
+                    NewShaderCacheGenerated?.Invoke(this, cr);
+                    cr = null;
+
                     CurrentReadMode = EReadMode.None;
                     Console.WriteLine();
                 }
@@ -202,12 +310,27 @@ namespace MilanShaderHost
                     var strLen = reader.ReadInt32();
                     var strData = reader.ReadBytes(strLen); // Unicode
                     var materialIFP = Encoding.Unicode.GetString(strData);
-                    var packageName = materialIFP.Substring(0, materialIFP.IndexOf('.'));
-                    var localIFP = materialIFP.Substring(materialIFP.IndexOf('.') + 1);
+                    var separatorIndex = materialIFP.IndexOf('.');
+                    // Debug payloads are normally fully qualified (Package.Export), but a
+                    // malformed/unqualified name must not take down the pipe server and lose
+                    // all subsequent compiler results.
+                    var packageName = separatorIndex >= 0 ? materialIFP.Substring(0, separatorIndex) : "Unqualified";
+                    var localIFP = separatorIndex >= 0 ? materialIFP.Substring(separatorIndex + 1) : materialIFP;
 
                     // Console.WriteLine($"  Incoming debug package JSON for {materialIFP}");
                     var jsonLen = reader.ReadInt32();
                     var jsonData = reader.ReadBytes(jsonLen);
+
+                    if (IsForeignDebugPackage(packageName))
+                    {
+                        // The payload still has to be consumed to leave the named-pipe stream
+                        // aligned for the next compiler result. Skip JSON parsing and HLSL
+                        // preprocessing, however: this material belongs to another source
+                        // package and would overwrite its standalone capture.
+                        CurrentReadMode = EReadMode.None;
+                        continue;
+                    }
+
                     var json = Encoding.ASCII.GetString(jsonData);
 
                     var materialOutPath = Path.Combine(MilanShaderBuilderFlow.DecookedPackagesPath, "DebugPackages", MilanShaderBuilderFlow.Game.ToString(), packageName);
@@ -221,7 +344,8 @@ namespace MilanShaderHost
                     var possibleMacros = HlslPreprocessor.FindConditionalMacros(obj.sourceFilename, obj.functionName, Path.Combine(MEDirectories.GetDefaultGamePath(Program.Game), "Engine", "Shaders"), obj.materialHlsl, obj.vertexFactoryShaderFilename);
                     obj.possibleMacros = possibleMacros.Except(KnownIgnoredMacros).ToArray();
 
-                    var shaderOutPath = Path.Combine(materialOutPath, localIFP, vertexFactory ?? "None");
+                    var safeLocalIFP = string.Concat(localIFP.Select(c => Path.GetInvalidFileNameChars().Contains(c) ? '_' : c));
+                    var shaderOutPath = Path.Combine(materialOutPath, safeLocalIFP, vertexFactory ?? "None");
                     Directory.CreateDirectory(shaderOutPath);
 
                     var formattedJson = JsonConvert.SerializeObject(obj, Formatting.Indented);

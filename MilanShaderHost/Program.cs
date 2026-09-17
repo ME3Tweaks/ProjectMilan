@@ -35,9 +35,23 @@ namespace MilanShaderHost
 
         private static void Init(CLIOptions options)
         {
+            if (!string.IsNullOrWhiteSpace(options.TerrainPackagePath))
+            {
+                // Terrain compilation is necessarily an in-game shader compile. Make the focused
+                // command ergonomic while leaving the normal --compile / --packagelist workflow
+                // unchanged.
+                options.CompileShaders = true;
+            }
+
+            if (options.WriteBack && !options.CompileShaders)
+            {
+                Console.WriteLine("--writeback requires --compile or --terrain <LE3 package>.");
+                return;
+            }
+
             if (options.CompileShaders == false && options.PreviewShaders == false)
             {
-                Console.WriteLine("Must specify an operation: --compile, --preview, or both");
+                Console.WriteLine("Must specify --compile, --preview, or --terrain <LE3 package>");
                 return;
             }
 

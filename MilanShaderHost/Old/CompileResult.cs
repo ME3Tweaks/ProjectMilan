@@ -23,5 +23,17 @@ namespace MilanShaderHost.Old
         /// The material resource binary data
         /// </summary>
         public byte[] MaterialResource { get; internal set; }
+
+        /// <summary>
+        /// True when <see cref="MaterialResource"/> contains a full native
+        /// FTerrainMaterialResource rather than the base MaterialResource format.
+        /// </summary>
+        public bool IsTerrainResource { get; internal set; }
+
+        /// <summary>
+        /// Runtime full path of the terrain actor that owns a terrain resource. This is sent
+        /// separately because terrain resources have no backing UMaterial export to identify them.
+        /// </summary>
+        public string TerrainPath { get; internal set; }
     }
 }
