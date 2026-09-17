@@ -33,6 +33,8 @@ namespace ProjectMilanCore
             { "BIOA_PRC2_T.LAVCubemap.LAV60_PANNELWALL03_Dup", "BIOA_DLC_UNC52_T.LAV60_PANNELWALL03_Dup" }, // Lava - donors in Crossgen
             { "BIOA_PRC2_T.LAVCubemap.LAV60_PANNELWALL02_Dup", "BIOA_LAV60_T.LAV60_PANNELWALL02" }, // Lava - donors in Crossgen
             { "BIOA_PRC2_T.LAVCubemap.LAV60_SILO01_Dup" , "BIOA_DLC_UNC52_T.LAV60_SILO01_Dup" }, // Lava - donors in Crossgen
+            { "BIOA_JUG80_T.JUG80_POD01_CROSSGEN", "BIOA_LOS10_T.LOS10_Gethlamp" }, // Custom Audemus lightpost thing used in Tropical to fix the emis
+            { "BIOA_ICE60_T.checker_mat", "BIOA_ICE60_T.checker" }, // we renamed this in crossgen cause of name collision
         };
 
         /// <summary>
