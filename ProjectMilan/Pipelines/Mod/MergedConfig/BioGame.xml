@@ -2148,101 +2148,67 @@
 		</Section> -->
 		<Section name="sfxgame.sfxgameconfig">
 			<Property name="mpplayervariablemappings">
-				<Value type="4">(ClassName="recru_asa",ID=272)</Value>
-				<Value type="4">(ClassName="recru_kro",ID=273)</Value>
-				<Value type="4">(ClassName="recru_qua",ID=274)</Value>
-				<Value type="4">(ClassName="recru_sal",ID=275)</Value>
-				<Value type="4">(ClassName="recru_tur",ID=276)</Value>
-				<Value type="4">(ClassName="recru_dre",ID=277)</Value>
-				<Value type="4">(ClassName="SFXGameChoiceGUIData_StoreData_MPAssaultRifles_InventoryLocked",ID=56)</Value>
-				<Value type="4">(ClassName="SFXGameChoiceGUIData_StoreData_MPPistols_InventoryLocked",ID=57)</Value>
-				<Value type="4">(ClassName="SFXGameChoiceGUIData_StoreData_MPShotguns_InventoryLocked",ID=58)</Value>
-				<Value type="4">(ClassName="SFXGameChoiceGUIData_StoreData_MPSMGs_InventoryLocked",ID=59)</Value>
-				<Value type="4">(ClassName="SFXGameChoiceGUIData_StoreData_MPSniperRifles_InventoryLocked",ID=60)</Value>
-				<Value type="4">(ClassName="MatchConsumable_ActiveXPBonusMultiplierIndex_1",ID=132)</Value>
-				<Value type="4">(ClassName="MatchConsumable_ActiveXPBonusMultiplierIndex_2",ID=133)</Value>
-				<Value type="4">(ClassName="MatchConsumable_ActiveXPBonusMultiplierIndex_3",ID=134)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Reckoning",ID=241)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleTimeDilation",ID=39)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleDamage_Display",ID=61)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleAccuracy_Display",ID=62)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleStability_Display",ID=63)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleMagSize_Display",ID=64)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleForce_Display",ID=65)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleDamage_Display",ID=66)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleAccuracy_Display",ID=67)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleStability_Display",ID=68)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleTimeDilation_Display",ID=69)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleConstraintDamage_Display",ID=70)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunDamage_Display",ID=71)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunMeleeDamage_Display",ID=72)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunStability_Display",ID=73)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunAccuracy_Display",ID=74)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunReloadSpeed_Display",ID=75)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_PistolDamage_Display",ID=76)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_PistolAccuracy_Display",ID=77)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_PistolStability_Display",ID=78)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_PistolMagSize_Display",ID=79)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_PistolReloadSpeed_Display",ID=80)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SMGDamage_Display",ID=81)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SMGAccuracy_Display",ID=82)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SMGStability_Display",ID=83)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SMGMagSize_Display",ID=84)</Value>
-				<Value type="4">(ClassName="SFXGameContent.SFXWeaponMod_SMGConstraintDamage_Display",ID=85)</Value>
-				<Value type="3">(ClassName="loyalty1",ID=141)</Value>
-				<Value type="3">(ClassName="loyalty2",ID=149)</Value>
-				<Value type="3">(ClassName="loyalty3",ID=153)</Value>
-				<Value type="3">(ClassName="loyalty4",ID=154)</Value>
-				<Value type="3">(ClassName="loyalty5",ID=155)</Value>
-				<Value type="3">(ClassName="collectible0",ID=157)</Value>
-				<Value type="3">(ClassName="collectible1",ID=161)</Value>
-				<Value type="3">(ClassName="collectible2",ID=164)</Value>
-				<Value type="3">(ClassName="collectible3",ID=165)</Value>
-				<Value type="3">(ClassName="collectible4",ID=167)</Value>
-				<Value type="3">(ClassName="collectible5",ID=169)</Value>
-				<Value type="3">(ClassName="collectible6",ID=171)</Value>
-				<Value type="3">(ClassName="collectible7",ID=175)</Value>
-				<Value type="3">(ClassName="collectible8",ID=178)</Value>
-				<Value type="3">(ClassName="premiumcollectible0",ID=186)</Value>
-				<Value type="3">(ClassName="collector0",ID=187)</Value>
-				<Value type="3">(ClassName="collector1",ID=190)</Value>
-				<Value type="3">(ClassName="collector2",ID=191)</Value>
-				<Value type="3">(ClassName="collector3",ID=192)</Value>
-				<Value type="3">(ClassName="collector4",ID=193)</Value>
-				<Value type="3">(ClassName="collector5",ID=194)</Value>
-				<Value type="3">(ClassName="collector6",ID=195)</Value>
-				<Value type="3">(ClassName="collector7",ID=211)</Value>
-				<Value type="3">(ClassName="collector8",ID=214)</Value>
-				<Value type="3">(ClassName="premiumcollectible1",ID=215)</Value>
-				<Value type="3">(ClassName="premiumcollectible2",ID=216)</Value>
-				<Value type="3">(ClassName="avengerpack",ID=233)</Value>
-				<Value type="3">(ClassName="premiumcollectible4",ID=234)</Value>
-				<Value type="3">(ClassName="premiumcollectible5",ID=235)</Value>
-				<Value type="3">(ClassName="collector9",ID=236)</Value>
-				<Value type="3">(ClassName="collector10",ID=237)</Value>
-				<Value type="3">(ClassName="EngineerGeth",ID=238)</Value>
-				<Value type="3">(ClassName="InfiltratorGeth",ID=239)</Value>
-				<Value type="3">(ClassName="SoldierBatarian",ID=240)</Value>
-				<Value type="3">(ClassName="SentinelBatarian",ID=267)</Value>
-				<Value type="3">(ClassName="VanguardKrogan",ID=272)</Value>
-				<Value type="3">(ClassName="AdeptAsariCommando",ID=273)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXWeapon_AssaultRifle_Krogan",ID=274)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXWeapon_SniperRifle_Batarian",ID=275)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXWeapon_SMG_Geth",ID=276)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethPassive",ID=277)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Avenger",ID=0)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Collector",ID=1)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Geth",ID=2)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Mattock",ID=3)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Cobra",ID=4)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Falcon",ID=5)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Revenant",ID=6)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Vindicator",ID=7)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Incisor",ID=8)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Mantis",ID=9)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Raptor",ID=10)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Javelin",ID=11)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Viper",ID=12)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Widow",ID=13)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Claymore",ID=14)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Eviscerator",ID=15)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Geth",ID=16)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Katana",ID=17)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Graal",ID=18)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Disciple",ID=19)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Scimitar",ID=20)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Pistol_Carnifex",ID=21)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Pistol_Talon",ID=22)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Pistol_Thor",ID=23)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Pistol_Phalanx",ID=24)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Pistol_Predator",ID=25)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Pistol_Scorpion",ID=26)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SMG_Locust",ID=27)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SMG_Hornet",ID=28)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SMG_Shuriken",ID=29)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SMG_Tempest",ID=30)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleDamage",ID=31)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleAccuracy",ID=32)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleStability",ID=33)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleMagSize",ID=34)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_AssaultRifleForce",ID=35)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleDamage",ID=36)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleAccuracy",ID=37)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleReloadSpeed",ID=38)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianNet",ID=39)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SniperRifleConstraintDamage",ID=40)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunDamage",ID=41)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunMeleeDamage",ID=42)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunStability",ID=43)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunAccuracy",ID=44)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_ShotgunReloadSpeed",ID=45)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_PistolDamage",ID=46)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_PistolAccuracy",ID=47)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_PistolStability",ID=48)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_PistolMagSize",ID=49)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_PistolReloadSpeed",ID=50)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SMGDamage",ID=51)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SMGAccuracy",ID=52)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SMGStability",ID=53)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SMGMagSize",ID=54)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeaponMod_SMGConstraintDamage",ID=55)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethMeleePassive",ID=56)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethSentryTurret",ID=57)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Supercharge",ID=58)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethTurretAttack",ID=59)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethTurretHeal",ID=60)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Overload_Geth",ID=132)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Cloak_Geth",ID=133)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_ProximityMine_Geth",ID=134)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianPassive",ID=229)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianMeleePassive",ID=230)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianAttack",ID=231)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianArmor",ID=241)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianNet",ID=39)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_InfernoGrenade_Batarian",ID=61)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Shockwave_Batarian",ID=62)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BioticCharge_Krogan",ID=63)</Value>
@@ -2267,119 +2233,225 @@
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_HeadshotDamage_0",ID=82)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_HeadshotDamage_1",ID=83)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXGameEffect_MatchConsumable_HeadshotDamage_2",ID=84)</Value>
-				<Value type="4">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus_3",ID=108)</Value>
-				<Value type="4">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus_4",ID=109)</Value>
-				<Value type="4">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus_5",ID=110)</Value>
-				<Value type="4">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage_3",ID=262)</Value>
-				<Value type="4">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage_4",ID=263)</Value>
-				<Value type="4">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage_5",ID=264)</Value>
-				<Value type="3">(ClassName="collector11",ID=329)</Value>
-				<Value type="3">(ClassName="collectible9",ID=496)</Value>
-				<Value type="3">(ClassName="collectible10",ID=497)</Value>
-				<Value type="3">(ClassName="collectible11",ID=575)</Value>
-				<Value type="3">(ClassName="predatorpack",ID=498)</Value>
-				<Value type="3">(ClassName="avengerpack2",ID=499)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_Flamer",ID=85)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Ammo",ID=86)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Revive",ID=87)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Rocket",ID=88)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Shield",ID=89)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary_0",ID=90)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary_1",ID=91)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary_2",ID=92)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor_0",ID=93)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor_1",ID=94)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor_2",ID=95)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing_0",ID=96)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing_1",ID=97)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing_2",ID=98)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp_0",ID=99)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp_1",ID=100)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp_2",ID=101)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo_0",ID=102)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo_1",ID=103)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo_2",ID=104)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus_0",ID=105)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus_1",ID=106)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonus_2",ID=107)</Value>
 				<Value type="3">(ClassName="commendation1",ID=108)</Value>
 				<Value type="3">(ClassName="victory1",ID=109)</Value>
-				<Value type="3">(ClassName="commendation2",ID=359)</Value>
-				<Value type="3">(ClassName="victory2",ID=360)</Value>
-				<Value type="3">(ClassName="commendation2v2",ID=371)</Value>
-				<Value type="3">(ClassName="reserves1",ID=372)</Value>
-				<Value type="3">(ClassName="victory3",ID=396)</Value>
-				<Value type="3">(ClassName="commendation3",ID=397)</Value>
-				<Value type="3">(ClassName="commendation4",ID=405)</Value>
-				<Value type="3">(ClassName="victory5",ID=471)</Value>
-				<Value type="3">(ClassName="commendation5",ID=472)</Value>
-				<Value type="3">(ClassName="victory7",ID=478)</Value>
-				<Value type="3">(ClassName="commendation7",ID=479)</Value>
-				<Value type="3">(ClassName="victory8",ID=491)</Value>
-				<Value type="3">(ClassName="commendation8",ID=492)</Value>
-				<Value type="3">(ClassName="commendation9",ID=531)</Value>
-				<Value type="3">(ClassName="victory10",ID=534)</Value>
-				<Value type="3">(ClassName="commendation10",ID=535)</Value>
-				<Value type="3">(ClassName="victory11",ID=568)</Value>
-				<Value type="3">(ClassName="commendation11",ID=569)</Value>
-				<Value type="3">(ClassName="victory12",ID=571)</Value>
-				<Value type="3">(ClassName="commendation12",ID=572)</Value>
-				<Value type="3">(ClassName="victory13",ID=585)</Value>
-				<Value type="3">(ClassName="commendation13",ID=586)</Value>
-				<Value type="3">(ClassName="victory14",ID=593)</Value>
-				<Value type="3">(ClassName="commendation14",ID=594)</Value>
-				<Value type="3">(ClassName="victory15",ID=596)</Value>
-				<Value type="3">(ClassName="commendation15",ID=597)</Value>
-				<Value type="3">(ClassName="victory16",ID=613)</Value>
-				<Value type="3">(ClassName="weekly1",ID=599)</Value>
-				<Value type="3">(ClassName="weekly2",ID=600)</Value>
-				<Value type="3">(ClassName="weekly3",ID=601)</Value>
-				<Value type="3">(ClassName="weekly4",ID=605)</Value>
-				<Value type="3">(ClassName="weekly5",ID=606)</Value>
-				<Value type="3">(ClassName="weekly6",ID=612)</Value>
-				<Value type="3">(ClassName="weekly7",ID=614); Operation Detonator</Value>
-				<Value type="3">(ClassName="weekly8",ID=615); Operation Onslaught</Value>
-				<Value type="3">(ClassName="weekly9",ID=616); Operation Alamo</Value>
-				<Value type="3">(ClassName="weekly10",ID=617); Operation Genesis</Value>
-				<Value type="3">(ClassName="weekly11",ID=618); Operation Geronimo!</Value>
-				<Value type="3">(ClassName="weekly12",ID=658); Operation Balistic</Value>
-				<Value type="3">(ClassName="weekly13",ID=660); Operation Firestorm</Value>
-				<Value type="3">(ClassName="weekly14",ID=661); Operation Nightfall</Value>
-				<Value type="3">(ClassName="weekly15",ID=662); Operation Heartbreaker</Value>
-				<Value type="3">(ClassName="weekly16",ID=664); Operation Tribute</Value>
-				<Value type="3">(ClassName="FreeReckoning",ID=665); Giving a free kit for next week operation</Value>
-				<Value type="3">(ClassName="weekly17",ID=666); Operation Impact</Value>
-				<Value type="3">(ClassName="FreeLodestar",ID=667); Operation Lodestar free pack</Value>
-				<Value type="3">(ClassName="Lodestar1",ID=668); Operation Lodestar (Normal)</Value>
-				<Value type="3">(ClassName="Lodestar2",ID=669); Operation Lodestar (Insanity)</Value>
-				<Value type="3">(ClassName="prophecy",ID=634); Operation Prophecy</Value>
-				<Value type="3">(ClassName="customer1",ID=382)</Value>
-				<Value type="3">(ClassName="customer2",ID=573)</Value>
-				<Value type="3">(ClassName="customer3",ID=574)</Value>
-				<Value type="3">(ClassName="mp2press",ID=398)</Value>
-				<Value type="3">(ClassName="mp3press",ID=502)</Value>
-				<Value type="3">(ClassName="mp4press",ID=595)</Value>
-				<Value type="3">(ClassName="conmp5dlctest",ID=663)</Value>
-				<Value type="3">(ClassName="service1",ID=579)</Value>
-				<Value type="3">(ClassName="trilogy",ID=605)</Value>
-				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Argus",ID=367)</Value>
-				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Valkyrie",ID=368)</Value>
-				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Indra",ID=369)</Value>
 				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Valiant",ID=110)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_AssaultRifle_0",ID=111)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_AssaultRifle_1",ID=112)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_AssaultRifle_2",ID=113)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SniperRifle_0",ID=114)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SniperRifle_1",ID=115)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SniperRifle_2",ID=116)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Shotgun_0",ID=117)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Shotgun_1",ID=118)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Shotgun_2",ID=119)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Pistol_0",ID=120)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Pistol_1",ID=121)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_Pistol_2",ID=122)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SMG_0",ID=123)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SMG_1",ID=124)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_WeaponDamageBonus_SMG_2",ID=125)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_SpeedBonus_0",ID=126)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_SpeedBonus_1",ID=127)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_SpeedBonus_2",ID=128)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus_0",ID=129)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus_1",ID=130)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus_2",ID=131)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Overload_Geth",ID=132)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_Cloak_Geth",ID=133)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_ProximityMine_Geth",ID=134)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Saber",ID=135)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_BlackWidow",ID=136)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Striker",ID=137)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Pistol_Ivory",ID=138)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_AdrenalineRush",ID=139)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_AIHacking",ID=140)</Value>
+				<Value type="3">(ClassName="loyalty1",ID=141)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Barrier",ID=142)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_BioticCharge",ID=143)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_BioticGrenade",ID=144)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Carnage",ID=145)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Cloak",ID=146)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_CombatDrone",ID=147)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_ConcussiveShot",ID=148)</Value>
+				<Value type="3">(ClassName="loyalty2",ID=149)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_CryoBlast",ID=150)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Decoy",ID=151)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Discharge",ID=152)</Value>
+				<Value type="3">(ClassName="loyalty3",ID=153)</Value>
+				<Value type="3">(ClassName="loyalty4",ID=154)</Value>
+				<Value type="3">(ClassName="loyalty5",ID=155)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_EnergyDrain",ID=156)</Value>
+				<Value type="3">(ClassName="collectible0",ID=157)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Fortification",ID=158)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_FragGrenade",ID=159)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_GethShieldBoost",ID=160)</Value>
+				<Value type="3">(ClassName="collectible1",ID=161)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Incinerate",ID=162)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_InfernoGrenade",ID=163)</Value>
+				<Value type="3">(ClassName="collectible2",ID=164)</Value>
+				<Value type="3">(ClassName="collectible3",ID=165)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_LiftGrenade",ID=166)</Value>
+				<Value type="3">(ClassName="collectible4",ID=167)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Marksman",ID=168)</Value>
+				<Value type="3">(ClassName="collectible5",ID=169)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Overload",ID=170)</Value>
+				<Value type="3">(ClassName="collectible6",ID=171)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_ProximityMine",ID=172)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Pull",ID=173)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Reave",ID=174)</Value>
+				<Value type="3">(ClassName="collectible7",ID=175)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_SentryTurret",ID=176)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Shockwave",ID=177)</Value>
+				<Value type="3">(ClassName="collectible8",ID=178)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Singularity",ID=179)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Slam",ID=180)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Stasis",ID=181)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_StickyGrenade",ID=182)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_TechArmor",ID=183)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Throw",ID=184)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_Warp",ID=185)</Value>
+				<Value type="3">(ClassName="premiumcollectible0",ID=186)</Value>
+				<Value type="3">(ClassName="collector0",ID=187)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_AsariMeleePassive",ID=188)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_AsariPassive",ID=189)</Value>
+				<Value type="3">(ClassName="collector1",ID=190)</Value>
+				<Value type="3">(ClassName="collector2",ID=191)</Value>
+				<Value type="3">(ClassName="collector3",ID=192)</Value>
+				<Value type="3">(ClassName="collector4",ID=193)</Value>
+				<Value type="3">(ClassName="collector5",ID=194)</Value>
+				<Value type="3">(ClassName="collector6",ID=195)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_DrellMeleePassive",ID=196)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_DrellPassive",ID=197)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_FemQuarianMeleePassive",ID=198)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_FemQuarianPassive",ID=199)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Adept",ID=200)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Engineer",ID=201)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Infiltrator",ID=202)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Sentinel",ID=203)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Soldier",ID=204)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_HumanMeleePassive_Vanguard",ID=205)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_HumanPassive",ID=206)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_KroganMeleePassive",ID=207)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_KroganPassive",ID=208)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_SalarianMeleePassive",ID=209)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_SalarianPassive",ID=210)</Value>
+				<Value type="3">(ClassName="collector7",ID=211)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_TurianMeleePassive",ID=212)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_TurianPassive",ID=213)</Value>
+				<Value type="3">(ClassName="collector8",ID=214)</Value>
+				<Value type="3">(ClassName="premiumcollectible1",ID=215)</Value>
+				<Value type="3">(ClassName="premiumcollectible2",ID=216)</Value>
+				<Value type="3">(ClassName="AdeptAsari",ID=217)</Value>
+				<Value type="3">(ClassName="AdeptDrell",ID=218)</Value>
+				<Value type="3">(ClassName="EngineerQuarian",ID=219)</Value>
+				<Value type="3">(ClassName="EngineerSalarian",ID=220)</Value>
+				<Value type="3">(ClassName="InfiltratorSalarian",ID=221)</Value>
+				<Value type="3">(ClassName="InfiltratorQuarian",ID=222)</Value>
+				<Value type="3">(ClassName="SentinelTurian",ID=223)</Value>
+				<Value type="3">(ClassName="SentinelKrogan",ID=224)</Value>
+				<Value type="3">(ClassName="SoldierKrogan",ID=225)</Value>
+				<Value type="3">(ClassName="SoldierTurian",ID=226)</Value>
+				<Value type="3">(ClassName="VanguardDrell",ID=227)</Value>
+				<Value type="3">(ClassName="VanguardAsari",ID=228)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianPassive",ID=229)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianMeleePassive",ID=230)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianAttack",ID=231)</Value>
+				<Value type="3">(ClassName="starter",ID=232)</Value>
+				<Value type="3">(ClassName="avengerpack",ID=233)</Value>
+				<Value type="3">(ClassName="premiumcollectible4",ID=234)</Value>
+				<Value type="3">(ClassName="premiumcollectible5",ID=235)</Value>
+				<Value type="3">(ClassName="collector9",ID=236)</Value>
+				<Value type="3">(ClassName="collector10",ID=237)</Value>
+				<Value type="3">(ClassName="EngineerGeth",ID=238)</Value>
+				<Value type="3">(ClassName="InfiltratorGeth",ID=239)</Value>
+				<Value type="3">(ClassName="SoldierBatarian",ID=240)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_BatarianArmor",ID=241)</Value>
+				<Value type="3">(ClassName="MPCapacity_Ammo",ID=242)</Value>
+				<Value type="3">(ClassName="MPCapacity_Revive",ID=243)</Value>
+				<Value type="3">(ClassName="MPCapacity_Rocket",ID=244)</Value>
+				<Value type="3">(ClassName="MPCapacity_Shield",ID=245)</Value>
+				<Value type="3">(ClassName="MPRespec",ID=246)</Value>
+				<Value type="3">(ClassName="AdeptHumanFemale",ID=247)</Value>
+				<Value type="3">(ClassName="AdeptHumanMale",ID=248)</Value>
+				<Value type="3">(ClassName="EngineerHumanFemale",ID=249)</Value>
+				<Value type="3">(ClassName="EngineerHumanMale",ID=250)</Value>
+				<Value type="3">(ClassName="InfiltratorHumanFemale",ID=251)</Value>
+				<Value type="3">(ClassName="InfiltratorHumanMale",ID=252)</Value>
+				<Value type="3">(ClassName="SentinelHumanFemale",ID=253)</Value>
+				<Value type="3">(ClassName="SentinelHumanMale",ID=254)</Value>
+				<Value type="3">(ClassName="SoldierHumanFemale",ID=255)</Value>
+				<Value type="3">(ClassName="SoldierHumanMale",ID=256)</Value>
+				<Value type="3">(ClassName="VanguardHumanFemale",ID=257)</Value>
+				<Value type="3">(ClassName="VanguardHumanMale",ID=258)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage_0",ID=259)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage_1",ID=260)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage_2",ID=261)</Value>
 				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Crusader",ID=262)</Value>
-				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Raider",ID=370)</Value>
 				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Pistol_Eagle",ID=263)</Value>
 				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SMG_Hurricane",ID=264)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_TechArmor_Turian",ID=265)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXPowerCustomActionMP_TechArmor_Krogan",ID=266)</Value>
+				<Value type="3">(ClassName="SentinelBatarian",ID=267)</Value>
+				<Value type="3">(ClassName="SoldierHumanMaleBF3",ID=268)</Value>
+				<Value type="3">(ClassName="bf3",ID=269)</Value>
+				<Value type="3">(ClassName="LastPromoIDShown",ID=270)</Value>
+				<Value type="3">(ClassName="NewlyAffordableStoreItems",ID=271)</Value>
+				<Value type="3">(ClassName="VanguardKrogan",ID=272)</Value>
+				<Value type="3">(ClassName="AdeptAsariCommando",ID=273)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXWeapon_AssaultRifle_Krogan",ID=274)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXWeapon_SniperRifle_Batarian",ID=275)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXWeapon_SMG_Geth",ID=276)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethPassive",ID=277)</Value>
 				<Value type="3">(ClassName="SoldierVorcha",ID=278)</Value>
 				<Value type="3">(ClassName="SentinelVorcha",ID=279)</Value>
 				<Value type="3">(ClassName="EngineerQuarianMale",ID=280)</Value>
 				<Value type="3">(ClassName="InfiltratorQuarianMale",ID=281)</Value>
 				<Value type="3">(ClassName="AdeptHumanMaleCerberus",ID=282)</Value>
 				<Value type="3">(ClassName="VanguardHumanMaleCerberus",ID=283)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_BloodLust",ID=285)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_Flamer",ID=85)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_VorchaMeleePassive",ID=365)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_VorchaPassive",ID=366)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_Damping",ID=342)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomAction_EMPGrenade",ID=362)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_MaleQuarianMeleePassive",ID=363)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_MaleQuarianPassive",ID=364)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_Lash",ID=284)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomAction_WhipSmash",ID=361)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_WhipManPassive",ID=356)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_WhipManMeleePassive",ID=357)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXWeapon_AssaultRifle_Prothean_MP",ID=358)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_BloodLust",ID=285)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXWeapon_AssaultRifle_Cerberus",ID=286)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXWeapon_Shotgun_Quarian",ID=287)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXWeapon_SniperRifle_Turian",ID=288)</Value>
+				<!-- gap: 289-328 -->
+				<Value type="3">(ClassName="collector11",ID=329)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_MeleeDamage_0",ID=330)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_HeadshotDamage_0",ID=331)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_PowerBonus_Damage_0",ID=332)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_PowerBonus_Cooldown_0",ID=333)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_ShieldStrength_0",ID=334)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_ShieldRegen_0",ID=335)</Value>
+				<!-- gap: 336 -->
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_AssaultRifle_0",ID=337)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_SniperRifle_0",ID=338)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_Shotgun_0",ID=339)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_Pistol_0",ID=340)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_SMG_0",ID=341)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_Damping",ID=342)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_GrenadeCapacity_0",ID=343)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Combo_AssaultDamageGrenadeCap_0",ID=344)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Combo_PistolDamageBioticDamage_0",ID=345)</Value>
@@ -2387,29 +2459,34 @@
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Combo_ShotgunDamageMeleeDamage_0",ID=347)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Combo_SMGDamagePowerCooldown_0",ID=348)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Combo_SniperDamageTechDamage_0",ID=349)</Value>
-				<Value type="3">(ClassName="SoldierN7",ID=378)</Value>
+				<!-- gap: 350-355 -->
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_WhipManPassive",ID=356)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_WhipManMeleePassive",ID=357)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXWeapon_AssaultRifle_Prothean_MP",ID=358)</Value>
+				<Value type="3">(ClassName="commendation2",ID=359)</Value>
+				<Value type="3">(ClassName="victory2",ID=360)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomAction_WhipSmash",ID=361)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomAction_EMPGrenade",ID=362)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_MaleQuarianMeleePassive",ID=363)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_MaleQuarianPassive",ID=364)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_VorchaMeleePassive",ID=365)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXPowerCustomActionMP_VorchaPassive",ID=366)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Argus",ID=367)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Valkyrie",ID=368)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_SniperRifle_Indra",ID=369)</Value>
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_Shotgun_Raider",ID=370)</Value>
+				<Value type="3">(ClassName="commendation2v2",ID=371)</Value>
+				<Value type="3">(ClassName="reserves1",ID=372)</Value>
 				<Value type="3">(ClassName="AdeptN7",ID=373)</Value>
 				<Value type="3">(ClassName="EngineerN7",ID=374)</Value>
 				<Value type="3">(ClassName="SentinelN7",ID=375)</Value>
 				<Value type="3">(ClassName="VanguardN7",ID=376)</Value>
 				<Value type="3">(ClassName="InfiltratorN7",ID=377)</Value>
+				<Value type="3">(ClassName="SoldierN7",ID=378)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_CryoCone",ID=379)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_SupplyTurret",ID=393)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomAction_DevestatorMode",ID=394)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomAction_MissileLauncher",ID=395)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_ShadowStrike",ID=401)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_Cloak_N7Infiltrator",ID=402)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_PalmBlaster",ID=403)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_SonicSlash",ID=400)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_DarkChannel2",ID=432)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_AnnihilationSphere",ID=433)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_Throw_N7",ID=473)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_EMPGrenade2",ID=474)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_HomingGrenade",ID=475)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_ElectricSlash",ID=476)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomAction_MultiFragGrenade",ID=477)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_N7SentinelPassive",ID=380)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_N7SentinelMeleePassive",ID=381)</Value>
+				<Value type="3">(ClassName="customer1",ID=382)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_N7SoldierPassive",ID=383)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_N7SoldierMeleePassive",ID=384)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_N7EngineerPassive",ID=385)</Value>
@@ -2420,8 +2497,19 @@
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_N7VanguardMeleePassive",ID=390)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_N7AdeptPassive",ID=391)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_N7AdeptMeleePassive",ID=392)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXWeaponMod_AssaultRifleMelee",ID=466)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXWeaponMod_AssaultRifleSuperPen",ID=467)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_SupplyTurret",ID=393)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomAction_DevestatorMode",ID=394)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomAction_MissileLauncher",ID=395)</Value>
+				<Value type="3">(ClassName="victory3",ID=396)</Value>
+				<Value type="3">(ClassName="commendation3",ID=397)</Value>
+				<Value type="3">(ClassName="mp2press",ID=398)</Value>
+				<!-- gap: 399 -->
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_SonicSlash",ID=400)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_ShadowStrike",ID=401)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_Cloak_N7Infiltrator",ID=402)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_PalmBlaster",ID=403)</Value>
+				<!-- gap: 404 -->
+				<Value type="3">(ClassName="commendation4",ID=405)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXWeaponMod_AssaultRifleSuperScope",ID=406)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXWeaponMod_PistolHeadShot",ID=407)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXWeaponMod_PistolSuperDamage",ID=408)</Value>
@@ -2443,6 +2531,9 @@
 				<Value type="3">(ClassName="SFXGameMPContentDLC_Shared_MP.SFXGameEffect_MatchConsumable_Gear_BioticDamage_0",ID=424)</Value>
 				<Value type="3">(ClassName="SFXGameMPContentDLC_Shared_MP.SFXGameEffect_MatchConsumable_Gear_TechDamage_0",ID=425)</Value>
 				<Value type="3">(ClassName="SFXGameMPContentDLC_Shared_MP.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_All_0",ID=426)</Value>
+				<!-- gap: 427-431 -->
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_DarkChannel2",ID=432)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_AnnihilationSphere",ID=433)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXGameEffect_MatchConsumable_Gear_Combo_AssaultRifleDamagePistolDamage_1",ID=434)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXGameEffect_MatchConsumable_Gear_Combo_MeleeDamageBioticDamage_1",ID=435)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXGameEffect_MatchConsumable_Gear_Combo_ShieldStrengthMeleeDamage_1",ID=436)</Value>
@@ -2465,14 +2556,44 @@
 				<Value type="3">(ClassName="SFXGameMPContentDLC_Shared_MP.SFXGameEffect_MatchConsumable_Gear_BioticDamage_2",ID=453)</Value>
 				<Value type="3">(ClassName="SFXGameMPContentDLC_Shared_MP.SFXGameEffect_MatchConsumable_Gear_TechDamage_2",ID=454)</Value>
 				<Value type="3">(ClassName="SFXGameMPContentDLC_Shared_MP.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_All_2",ID=455)</Value>
+				<!-- gap: 456-465 -->
+				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXWeaponMod_AssaultRifleMelee",ID=466)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXWeaponMod_AssaultRifleSuperPen",ID=467)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXWeapon_AssaultRifle_LMG",ID=468)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXWeapon_Shotgun_Assault",ID=469)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXWeapon_Pistol_Asari",ID=470)</Value>
-				<Value type="3">(ClassName="AdeptVolus",ID=500)</Value>
-				<Value type="3">(ClassName="EngineerVolus",ID=501)</Value>
+				<Value type="3">(ClassName="victory5",ID=471)</Value>
+				<Value type="3">(ClassName="commendation5",ID=472)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_Throw_N7",ID=473)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_EMPGrenade2",ID=474)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_HomingGrenade",ID=475)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomActionMP_ElectricSlash",ID=476)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP3.SFXPowerCustomAction_MultiFragGrenade",ID=477)</Value>
+				<Value type="3">(ClassName="victory7",ID=478)</Value>
+				<Value type="3">(ClassName="commendation7",ID=479)</Value>
 				<Value type="3">(ClassName="N7SoldierTurian",ID=480)</Value>
 				<Value type="3">(ClassName="N7InfiltratorTurian",ID=481)</Value>
-				<Value type="3">(ClassName="AdeptKrogan",ID=514)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_ShieldBoost",ID=482)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_BioticOrbs",ID=483)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary_3",ID=484)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor_3",ID=485)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing_3",ID=486)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp_3",ID=487)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo_3",ID=488)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage_3",ID=489)</Value>
+				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus_3",ID=490)</Value>
+				<Value type="3">(ClassName="victory8",ID=491)</Value>
+				<Value type="3">(ClassName="commendation8",ID=492)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_ReconMine",ID=493)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_VolusPassive",ID=494)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_VolusMeleePassive",ID=495)</Value>
+				<Value type="3">(ClassName="collectible9",ID=496)</Value>
+				<Value type="3">(ClassName="collectible10",ID=497)</Value>
+				<Value type="3">(ClassName="predatorpack",ID=498)</Value>
+				<Value type="3">(ClassName="avengerpack2",ID=499)</Value>
+				<Value type="3">(ClassName="AdeptVolus",ID=500)</Value>
+				<Value type="3">(ClassName="EngineerVolus",ID=501)</Value>
+				<Value type="3">(ClassName="mp3press",ID=502)</Value>
 				<Value type="3">(ClassName="EngineerTurian",ID=503)</Value>
 				<Value type="3">(ClassName="InfiltratorDrell",ID=504)</Value>
 				<Value type="3">(ClassName="SentinelVolus",ID=505)</Value>
@@ -2484,16 +2605,33 @@
 				<Value type="3">(ClassName="SentinelAsari",ID=511)</Value>
 				<Value type="3">(ClassName="SoldierMQuarian",ID=512)</Value>
 				<Value type="3">(ClassName="VanguardBatarian",ID=513)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_ShieldBoost",ID=482)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_BioticOrbs",ID=483)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_ReconMine",ID=493)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_VolusPassive",ID=494)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_VolusMeleePassive",ID=495)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_StimPack",ID=560)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_JetPackCharge",ID=561)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_TurianCloak",ID=562)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_N7TurianMeleePassive",ID=563)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_N7TurianPassive",ID=564)</Value>
+				<Value type="3">(ClassName="AdeptKrogan",ID=514)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium_0",ID=515)</Value>
+				<!-- gap: 516 -->
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler_0",ID=517)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser_0",ID=518)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic_0",ID=519)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium_1",ID=520)</Value>
+				<!-- gap: 521 -->
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler_1",ID=522)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser_1",ID=523)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic_1",ID=524)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium_2",ID=525)</Value>
+				<!-- gap: 526 -->
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler_2",ID=527)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser_2",ID=528)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic_2",ID=529)</Value>
+				<!-- gap: 530 -->
+				<Value type="3">(ClassName="commendation9",ID=531)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXWeapon_SniperRifle_Collector",ID=532)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXWeapon_SMG_Collector",ID=533)</Value>
+				<Value type="3">(ClassName="victory10",ID=534)</Value>
+				<Value type="3">(ClassName="commendation10",ID=535)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_MassMedigel_0",ID=536)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_CobraCapacity_0",ID=537)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_MedigelCapacity_0",ID=538)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_SurvivalCapacity_0",ID=539)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_ThermalCapacity_0",ID=540)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXPowerCustomActionMP_Supercharge_Shared",ID=541)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXPowerCustomActionMP_GethPassive_Shared",ID=542)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXPowerCustomActionMP_GethMeleePassive_Shared",ID=543)</Value>
@@ -2513,77 +2651,70 @@
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXPowerCustomActionMP_BatarianArmor_Shared",ID=557)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXPowerCustomActionMP_DarkChannel2_Shared",ID=558)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXPowerCustomActionMP_Flamer_Shared",ID=559)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_StimPack",ID=560)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_JetPackCharge",ID=561)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_TurianCloak",ID=562)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_N7TurianMeleePassive",ID=563)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_N7TurianPassive",ID=564)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_AsariPassive_Infiltrator",ID=565)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_AsariPassive_Sentinel",ID=566)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_Decoy_Volus",ID=567)</Value>
+				<Value type="3">(ClassName="victory11",ID=568)</Value>
+				<Value type="3">(ClassName="commendation11",ID=569)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXPowerCustomActionMP_AsariCloak",ID=570)</Value>
-				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Incendiary_3",ID=484)</Value>
-				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Disruptor_3",ID=485)</Value>
-				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_ArmorPiercing_3",ID=486)</Value>
-				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Warp_3",ID=487)</Value>
-				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_AmmoPower_Cryo_3",ID=488)</Value>
-				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_PowerBonusDamage_3",ID=489)</Value>
-				<Value type="3">(ClassName="SFXGameMPContent.SFXGameEffect_MatchConsumable_ShieldBonus_3",ID=490)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium_0",ID=515)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler_0",ID=517)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser_0",ID=518)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic_0",ID=519)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium_1",ID=520)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler_1",ID=522)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser_1",ID=523)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic_1",ID=524)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium_2",ID=525)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler_2",ID=527)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser_2",ID=528)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic_2",ID=529)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXWeapon_SniperRifle_Collector",ID=532)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXWeapon_SMG_Collector",ID=533)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_MassMedigel_0",ID=536)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_CobraCapacity_0",ID=537)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_MedigelCapacity_0",ID=538)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_SurvivalCapacity_0",ID=539)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_Gear_ThermalCapacity_0",ID=540)</Value>
+				<Value type="3">(ClassName="victory12",ID=571)</Value>
+				<Value type="3">(ClassName="commendation12",ID=572)</Value>
+				<Value type="3">(ClassName="customer2",ID=573)</Value>
+				<Value type="3">(ClassName="customer3",ID=574)</Value>
+				<Value type="3">(ClassName="collectible11",ID=575)</Value>
 				<Value type="3">(ClassName="SoldierGethDestroyer",ID=576)</Value>
 				<Value type="3">(ClassName="AdeptCollector",ID=577)</Value>
-				<Value type="3">(ClassName="SentinelKroganWarlord",ID=583)</Value>
-				<Value type="3">(ClassName="EngineerMerc",ID=584)</Value>
-				<Value type="3">(ClassName="VanguardTurianFemale",ID=592)</Value>
-				<Value type="3">(ClassName="InfiltratorFembot",ID=602)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_SiegePulse",ID=578)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_HexShield",ID=582)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_MercBowModalBase",ID=590)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_MercBowModalOne",ID=591)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_MercBowModalTwo",ID=587)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_CainMine",ID=598)</Value>
+				<Value type="3">(ClassName="service1",ID=579)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_GethDestroyerPassive",ID=580)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_GethDestroyerMeleePassive",ID=581)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_HexShield",ID=582)</Value>
+				<Value type="3">(ClassName="SentinelKroganWarlord",ID=583)</Value>
+				<Value type="3">(ClassName="EngineerMerc",ID=584)</Value>
+				<Value type="3">(ClassName="victory13",ID=585)</Value>
+				<Value type="3">(ClassName="commendation13",ID=586)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_MercBowModalTwo",ID=587)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_MercPassive",ID=588)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_MercMeleePassive",ID=589)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_MercBowModalBase",ID=590)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_MercBowModalOne",ID=591)</Value>
+				<Value type="3">(ClassName="VanguardTurianFemale",ID=592)</Value>
+				<Value type="3">(ClassName="victory14",ID=593)</Value>
+				<Value type="3">(ClassName="commendation14",ID=594)</Value>
+				<Value type="3">(ClassName="mp4press",ID=595)</Value>
+				<Value type="3">(ClassName="victory15",ID=596)</Value>
+				<Value type="3">(ClassName="commendation15",ID=597)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_CainMine",ID=598)</Value>
+				<Value type="3">(ClassName="weekly1",ID=599)</Value>
+				<Value type="3">(ClassName="weekly2",ID=600)</Value>
+				<Value type="3">(ClassName="weekly3",ID=601)</Value>
+				<Value type="3">(ClassName="InfiltratorFembot",ID=602)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_VisionHelmet_0",ID=603)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_BatarianGauntlet_0",ID=604)</Value>
+				<Value type="3">(ClassName="weekly4",ID=605)</Value>
+				<Value type="3">(ClassName="trilogy",ID=605)</Value>
+				<Value type="3">(ClassName="weekly5",ID=606)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_Shared.SFXPowerCustomActionMP_GethSentryTurret_Shared",ID=607)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_GethSentryTurret_MP5",ID=659)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_HammerSmash",ID=608)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_BioticHammerModal",ID=609)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_TechHammerModal",ID=610)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_WarlordMeleePassive",ID=611)</Value>
+				<Value type="3">(ClassName="weekly6",ID=612)</Value>
+				<Value type="3">(ClassName="victory16",ID=613)</Value>
+				<Value type="3">(ClassName="weekly7",ID=614); Operation Detonator</Value>
+				<Value type="3">(ClassName="weekly8",ID=615); Operation Onslaught</Value>
+				<Value type="3">(ClassName="weekly9",ID=616); Operation Alamo</Value>
+				<Value type="3">(ClassName="weekly10",ID=617); Operation Genesis</Value>
+				<Value type="3">(ClassName="weekly11",ID=618); Operation Geronimo!</Value>
+				<!-- gap: 619 -->
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_LineStrike",ID=620)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_VenomTippedBlades",ID=621)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_BioticFocus",ID=622)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_RepairMatrix",ID=630)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_SnapFreeze",ID=646)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotCloak",ID=631)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotPassive",ID=632)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotMeleePassive",ID=633)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_TechArmor_Warlord",ID=635)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_WarlordPassive",ID=636)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FemTurianPassive",ID=643)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FemTurianMeleePassive",ID=644)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomAction_DarkSingularity",ID=637)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_SeekerSwarm",ID=638)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_DarkChannelProthean",ID=639)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_CollectorPassive",ID=640)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_ProtheanMeleePassive",ID=641)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_VisionHelmet_0",ID=603)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXGameEffect_MatchConsumable_Gear_BatarianGauntlet_0",ID=604)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeapon_AssaultRifle_Lancer_MP",ID=623)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeapon_SMG_Bloodpack_MP",ID=624)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeapon_Shotgun_Salarian_MP",ID=625)</Value>
@@ -2591,12 +2722,23 @@
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeapon_AssaultRifle_Adas_MP",ID=627)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeapon_Pistol_Bloodpack_MP",ID=628)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeapon_Pistol_Silencer_MP",ID=629)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_AssaultRifleUltraLight_MP5",ID=653)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_SniperRifleUltraLight_MP5",ID=654)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_ShotgunUltraLight_MP5",ID=655)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_PistolPowerDamage_MP5",ID=656)</Value>
-				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_SMGPowerDamage_MP5",ID=657)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_RepairMatrix",ID=630)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotCloak",ID=631)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotPassive",ID=632)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotMeleePassive",ID=633)</Value>
+				<Value type="3">(ClassName="prophecy",ID=634); Operation Prophecy</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_TechArmor_Warlord",ID=635)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_WarlordPassive",ID=636)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomAction_DarkSingularity",ID=637)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_SeekerSwarm",ID=638)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_DarkChannelProthean",ID=639)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_CollectorPassive",ID=640)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_ProtheanMeleePassive",ID=641)</Value>
+				<!-- gap: 642 -->
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FemTurianPassive",ID=643)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FemTurianMeleePassive",ID=644)</Value>
 				<Value type="3">(ClassName="collectible12",ID=645)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_SnapFreeze",ID=646)</Value>
 				<Value type="3">(ClassName="collectible13",ID=646)</Value>
 				<Value type="3">(ClassName="collectible14",ID=647)</Value>
 				<Value type="3">(ClassName="collectible15",ID=648)</Value>
@@ -2604,10 +2746,31 @@
 				<Value type="3">(ClassName="collectible17",ID=650)</Value>
 				<Value type="3">(ClassName="collectible18",ID=651)</Value>
 				<Value type="3">(ClassName="collectible19",ID=652)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_AssaultRifleUltraLight_MP5",ID=653)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_SniperRifleUltraLight_MP5",ID=654)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_ShotgunUltraLight_MP5",ID=655)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_PistolPowerDamage_MP5",ID=656)</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_SMGPowerDamage_MP5",ID=657)</Value>
+				<Value type="3">(ClassName="weekly12",ID=658); Operation Balistic</Value>
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_GethSentryTurret_MP5",ID=659)</Value>
+				<Value type="3">(ClassName="weekly13",ID=660); Operation Firestorm</Value>
+				<Value type="3">(ClassName="weekly14",ID=661); Operation Nightfall</Value>
+				<Value type="3">(ClassName="weekly15",ID=662); Operation Heartbreaker</Value>
+				<Value type="3">(ClassName="conmp5dlctest",ID=663)</Value>
+				<Value type="3">(ClassName="weekly16",ID=664); Operation Tribute</Value>
+				<Value type="3">(ClassName="FreeReckoning",ID=665); Giving a free kit for next week operation</Value>
+				<Value type="3">(ClassName="weekly17",ID=666); Operation Impact</Value>
+				<Value type="3">(ClassName="FreeLodestar",ID=667); Operation Lodestar free pack</Value>
+				<Value type="3">(ClassName="Lodestar1",ID=668); Operation Lodestar (Normal)</Value>
+				<Value type="3">(ClassName="Lodestar2",ID=669); Operation Lodestar (Insanity)</Value>
 				<Value type="3">(ClassName="collectible20",ID=670)</Value>
+				<!-- Milan IDs (start at 700)-->
+				<!-- Chakram Launcher-->
+				<Value type="3">(ClassName="SFXGameContent.SFXWeapon_AssaultRifle_Reckoning",ID=700)</Value>
+				<!-- Weapon Stabilizer Gear -->
+				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponStability_0",ID=701)</Value>
 			</Property>
 		</Section>
-		<!-- Not sure if this matters in MP... not sure it uses any gestures. -->
 		<Section name="sfxgame.sfxgestures">
 			<Property name="gesturespackagenameeditor" type="0">BIOG_GesturesConfigDLC</Property>
 			<Property name="m_bonlyallowdlcperfediting" type="0">TRUE</Property>
@@ -6501,6 +6664,12 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP5.SFXWeapon_AssaultRifle_Spitfire", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=814438, GUIDescription=814604, GUICategory=EReinforcementGUICategory_AssaultRifle, GUIType="assault", GUITextureRef="DLC_MPImages_MP5.WPN_MP5_Spitfire_256x128")</Value>
 				<Value type="4">(UniqueName="SoldierHumanMaleBF3", Rarity=Rarity_Uncommon, GUIName=723302, GUIDescription=723303, GUIType="char", GUITextureRef="GUI_MPImages.Cards.KitSoldierMale")</Value>
 				<Value type="3">(UniqueName="SoldierHumanMaleBF3", Rarity=Rarity_Rare, VersionIdx=2, MaxCount = 1, GUIName=723302, GUIDescription=723303, GUIType="char", GUITextureRef="GUI_MPImages.Cards.KitSoldierMale")</Value>
+			
+				<!-- MILAN CHANGES-->
+				<!-- Add Chakram Launcher-->
+				<Value type="3">(UniqueName="SFXGameContent.SFXWeapon_AssaultRifle_Reckoning", MaxCount = 10, Rarity=Rarity_Rare, GUIName=708423, GUIDescription=708424, GUICategory=EReinforcementGUICategory_AssaultRifle, GUIType="assault", GUITextureRef="GUI_Icons.Weapons.hvy_reckoning_256x128")</Value>
+			
+			
 			</Property>
 			<Property name="consumableidpacknamemap">
 				<Value type="3">(ID=200000, PackName="silver")</Value>
@@ -7436,6 +7605,8 @@
 				<Value type="3">(UniqueName="SFXGameContent.SFXWeapon_SMG_Locust")</Value>
 				<Value type="3">(UniqueName="SFXGameContent.SFXWeapon_Shotgun_Eviscerator")</Value>
 				<Value type="3">(UniqueName="SFXGameContent.SFXWeapon_SniperRifle_Incisor")</Value>
+				<!-- MILAN CHANGE - Add Chakram Launcher to drop pool -->
+				<Value type="3">(UniqueName="SFXGameContent.SFXWeapon_AssaultRifle_Reckoning")</Value>
 			</Property>
 			<Property name="poolname" type="0">goldcommonweapon</Property>
 		</Section>
