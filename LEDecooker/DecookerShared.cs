@@ -232,6 +232,7 @@ namespace LEDecooker
         {
             result = null;
 
+            var oIndex = uindex;
             if (uindex == 0)
                 return false;
 
@@ -283,6 +284,11 @@ namespace LEDecooker
             }
 
             var sourceEntry = importingpcc.GetEntry(uindex);
+            if (sourceEntry == null)
+            {
+                relinkingexport.FileRef.Save();
+                Debugger.Break();
+            }
             var linker = sourceEntry.GetLinker();
             if (!linker.CaseInsensitiveEquals(relinkingexport.FileRef.FileNameNoExtension))
             {
@@ -347,7 +353,7 @@ namespace LEDecooker
                     var sourceObj = TargetObjectDB.GetFilesContainingObject(sourceEntry.InstancedFullPath);
                     if (sourceObj != null)
                     {
-                        var firstFile = Path.Combine(ME3TweaksBackups.GetGameBackupPath(CLIOptions.ParsedOptions.Game), sourceObj[0]);
+                        var firstFile = Path.Combine(ME3TweaksBackups.GetGameBackupPath(ie.Game), sourceObj[0]);
                         if (ImportObject(firstFile, ie, ref uindex, null))
                         {
                             return true;

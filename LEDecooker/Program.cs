@@ -106,6 +106,7 @@ namespace LEDecooker
         [Conditional("DEBUG")]
         private static void RunSupportGenerators()
         {
+#if DEBUG
             MEGame[] games = [MEGame.ME1, MEGame.ME2, MEGame.ME3, MEGame.LE1, MEGame.LE2, MEGame.LE3];
 
             foreach (var g in games)
@@ -126,6 +127,7 @@ namespace LEDecooker
             // which broke as soon as the build output sat at a different depth (e.g. an x64 or
             // RID-qualified output folder) than the Debug/net10.0 layout it was written for.
             SupportGenerators.ZipSupportFiles();
+#endif
         }
     }
 }
