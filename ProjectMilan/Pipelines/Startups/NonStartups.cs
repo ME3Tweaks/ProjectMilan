@@ -89,11 +89,9 @@ namespace ProjectMilan.Pipelines.Startups
             { "GUI_CollectorHUDOverlay", NonStartupCategory.GUI },
             { "MP_DLC_SFResources_Cooked", NonStartupCategory.GUI },
             { "SFXGE_MP1_MatchConsumables", NonStartupCategory.GUI },
-            { "SFXGUI_WeaponUIDataDLC_CON_MP1SF", NonStartupCategory.GUI },
-            { "SFXGUI_WeaponUIDataDLC_CON_MP2SF", NonStartupCategory.GUI },
-            { "SFXGUI_WeaponUIDataDLC_CON_MP3SF", NonStartupCategory.GUI },
-            { "SFXGUI_WeaponUIDataDLC_CON_MP4SF", NonStartupCategory.GUI },
-            { "SFXGUI_WeaponUIDataDLC_CON_MP5SF", NonStartupCategory.GUI },
+            // SFXGUI_WeaponUIDataDLC_CON_MP{1-5}SF are NOT ported generically here - their weapon (m_aWeapons)
+            // data is merged with the shipped LE3 SP data by PortWeaponDataPackage() instead. SharedSF only
+            // carries weapon MOD data (m_aMods), not weapons, so it's unaffected and still ported generically.
             { "SFXGUI_WeaponUIDataDLC_SharedSF", NonStartupCategory.GUI },
 
             // --- Images ---
@@ -151,25 +149,25 @@ namespace ProjectMilan.Pipelines.Startups
             { "SFXMPObjectives_Special", NonStartupCategory.Objectives },
 
             // --- WeaponPreview ---
-            { "SFXGUI_W_A_Adas_MP", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_A_Cerberus", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_A_Krogan", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_A_Lancer_MP", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_A_LMG", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_A_Prothean_MP", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_A_Spitfire", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_P_Asari", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_P_Bloodpack_MP", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_P_Silencer_MP", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_SG_Assault", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_SG_Quarian", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_SG_Salarian_MP", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_SMG_Bloodpack_MP", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_SMG_Collector", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_SMG_Geth", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_S_Batarian", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_S_Collector", NonStartupCategory.WeaponPreviews },
-            { "SFXGUI_W_S_Turian", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_A_Adas_MP", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_A_Cerberus", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_A_Krogan", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_A_Lancer_MP", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_A_LMG", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_A_Prothean_MP", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_A_Spitfire", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_P_Asari", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_P_Bloodpack_MP", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_P_Silencer_MP", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_SG_Assault", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_SG_Quarian", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_SG_Salarian_MP", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_SMG_Bloodpack_MP", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_SMG_Collector", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_SMG_Geth", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_S_Batarian", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_S_Collector", NonStartupCategory.WeaponPreviews },
+            //{ "SFXGUI_W_S_Turian", NonStartupCategory.WeaponPreviews },
 
             // --- WeaponModPreview ---
             { "SFXGUI_WMod_AssaultRifleMelee", NonStartupCategory.WeaponModPreviews },
@@ -263,19 +261,30 @@ namespace ProjectMilan.Pipelines.Startups
                     le3File.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint common package
                     le3File.LECLTagData.IsPostLoadFile = false;
 
-
+                    //NonStartupPrecorrection(me3File, LOG_CATEGORY);
                     MilanShared.PortObjectReferencer(me3File, le3File, cache, LOG_CATEGORY, null);
                     MilanShared.PortLocalizations(packageBaseName, outputFolder, cache, LOG_CATEGORY);
                 });
             MilanLog.LogDonorMessages = true; // Turn off spammy messaging.
         }
 
-        /// <summary>
-        /// Moves files in the NonStartup
-        /// </summary>
-        internal static void OrganizeFiles()
+        private static void NonStartupPrecorrection(IMEPackage me3File, string logCategory)
         {
-
+            // Precorrection logic specific to NonStartup files can be implemented here.
+            // This may include fixing references, adjusting properties, or any other necessary modifications
+            // before porting the package to the LE3 format.
+        
+            switch (me3File.FileNameNoExtension)
+            {
+                //case "SFXGUI_W_S_Turian.pcc":
+                //    var donorPackage = me3File.CreatePackageExport("BIOG_WPN_SNP_L_CON_GUN01");
+                //    me3File.FindExport("Wwise_Weapons_S_Turian").ObjectName = "Wwise_Weapons_S_Turian_SP";
+                //    me3File.FindExport("BIOG_WPN_SNP_L_CON_MP2").ObjectName = "BIOG_WPN_SNP_L_CON_GUN01";
+                //    break;
+                //case "SFXGUI_W_S_Turian.pcc":
+                //    me3File.FindExport("BIOG_WPN_A_CON_MP1").ObjectName = "BIOG_WPN_SNP_L_CON_GUN01";
+                //    break;
+            }
         }
 
         /// <summary>
