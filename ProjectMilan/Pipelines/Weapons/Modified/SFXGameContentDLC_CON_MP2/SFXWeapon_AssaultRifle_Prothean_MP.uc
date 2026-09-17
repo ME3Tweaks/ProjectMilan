@@ -102,7 +102,11 @@ public simulated function StopFireEffects(byte FireModeNum)
 }
 public simulated function WeaponFired(byte FiringMode, bool bViaReplication, optional Vector HitLocation)
 {
-    Super(SFXWeapon).WeaponFired(FiringMode, bViaReplication, HitLocation); // MILAN Change - Use supersuper version of function as we track our firing time locally now (LE3 HENPR)
+    // 09/11/2026 - This commented out version was our original change. It seems to have broken the end-trace updates due to bIsFiring being directly in super
+    // I am not really sure why this was changed. -Mgamerz
+    //Super(SFXWeapon).WeaponFired(FiringMode, bViaReplication, HitLocation); // MILAN Change - Use supersuper version of function as we track our firing time locally now (LE3 HENPR)
+    // Restore original logic
+    Super.WeaponFired(FiringMode, bViaReplication, HitLocation);
     LastFireTime = WorldInfo.GameTimeSeconds;
 }
 public simulated function DoReload()
