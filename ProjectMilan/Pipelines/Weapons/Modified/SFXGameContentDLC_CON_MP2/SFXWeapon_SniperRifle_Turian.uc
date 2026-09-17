@@ -1,5 +1,6 @@
 ﻿// MILAN Weapon
 // Source: TestPatch
+// Use GUN01 assets
 Class SFXWeapon_SniperRifle_Turian extends SFXWeapon_SniperRifle_Base
     placeable
     config(Weapon);
@@ -382,8 +383,8 @@ defaultproperties
     FireSound = WwiseEvent'Wwise_Weapons_S_Turian_SP.Play_wep_np_turian_fire_SP' // MILAN CHANGE - Use GUN01 asset
     PlayerFireSound = WwiseEvent'Wwise_Weapons_S_Turian_SP.Play_wep_p_turian_fire_SP' // MILAN CHANGE - Use GUN01 asset
     WeaponReloadSound = WwiseEvent'Wwise_Weapons_Generic.Play_wep_g_reload_sniper_heavy'
-    WeaponExpandSound = WwiseEvent'Wwise_Weapons_S_Turian.Play_wep_s_turian_expand' // MILAN Note: Will have to be fixed in Audio pipeline (LE version removes this sound)
-    WeaponCollapseSound = WwiseEvent'Wwise_Weapons_S_Turian.Play_wep_s_turian_collapse' // MILAN Note: Will have to be fixed in Audio pipeline (LE version removes this sound)
+    WeaponExpandSound = WwiseEvent'Wwise_Weapons_S_Turian_SP.Play_wep_s_turian_expand_SP' // MILAN CHANGE - Use GUN01 asset
+    WeaponCollapseSound = WwiseEvent'Wwise_Weapons_S_Turian_SP.Play_wep_s_turian_collapse_SP' // MILAN CHANGE - Use GUN01 asset
     AmmoPowerPSCO = AmmoPowerHologram
     AmmoPowerIconPSCO = AmmoPowerIconHologram
     CameraSetup = CameraSetup0
