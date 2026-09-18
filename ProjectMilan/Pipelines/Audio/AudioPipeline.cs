@@ -2,6 +2,7 @@ using BankConverter.Bnk;
 using BankConverter.Bnk.Chunks;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ME3Tweaks.Wwiser;
 using ProjectMilanCore;
@@ -36,6 +37,17 @@ internal static class AudioPipeline
     private static readonly ConcurrentDictionary<byte, int> _aggregateSkipped = new();
     private static readonly ConcurrentBag<string> _aggregateErrors = new();
 
+    /// <summary>
+    /// Every source ID embedded by a converted bank this run, mapped to the distinct embedded byte lengths seen for
+    /// it and which bank produced each. Wwise's media pool is global across all loaded banks and keyed only by source
+    /// ID, so two of OUR banks embedding the same ID with different bytes is the same defect as colliding with a
+    /// stock bank (see BuildStockResidentMedia) - one of the two blobs wins for every consumer, and any consumer
+    /// declaring the other one's InMemoryMediaSize then decodes garbage. Reported by
+    /// <see cref="LogConversionDiagnosticsSummary"/>; note ME3 duplicating one WEM across several banks is normal
+    /// and harmless, it only becomes a problem when the copies come out of conversion differing.
+    /// </summary>
+    private static readonly ConcurrentDictionary<uint, ConcurrentDictionary<uint, string>> _embeddedMediaOwners = new();
+
     private static string HircTypeName(byte type) => type switch
     {
         0x01 => "State",
@@ -66,6 +78,7 @@ internal static class AudioPipeline
         AFCHandler.ResetWemCaches();
         _aggregateSkipped.Clear();
         _aggregateErrors.Clear();
+        _embeddedMediaOwners.Clear();
         BusRemap.FallbackUses.Clear();
 
         // Phase 1: partial-load scan over every package - finds which ones actually contain WwiseBank exports, and
@@ -153,7 +166,7 @@ internal static class AudioPipeline
         // Snapshotted once and reused for every bank - rebuilding per-bank would be O(banks * unique WEM count).
         var prefetchFragments = AFCHandler.SnapshotPrefetchFragments();
         var embeddedReplacements = AFCHandler.SnapshotEmbeddedReplacements();
-        var stockResidentMedia = BuildStockResidentMedia();
+        var stockResidentMedia = BuildExternallyProvidedMedia(packagePaths);
 
         // Many packages reference byte-identical bank data; converting is comparatively expensive, so dedupe by content hash.
         var bankBinaryCache = new ConcurrentDictionary<string, Lazy<byte[]>>();
@@ -196,34 +209,107 @@ internal static class AudioPipeline
     }
 
     /// <summary>
-    /// Source IDs LE3 already ships inside SFXGame.pcc's banks, mapped to the byte length LE3 embeds. Those banks
-    /// are resident for the whole session, and Wwise resolves embedded media globally by source ID rather than
-    /// per-bank - so any ID in here is already owned by the stock game and must not be re-embedded by a ported bank.
-    /// See BankFile.ConvertToV134's externallyProvidedMedia for the failure this prevents.
+    /// Every source ID that will already be in Wwise's global media pool from a bank we are NOT converting, mapped to
+    /// the byte length that copy has. Two sources:
+    ///
+    /// 1. LE3's always-loaded packages (see <see cref="BuildStockResidentMedia"/>) - resident for the whole session.
+    /// 2. The donored LE3-native banks the mod itself ships. These arrive already at v134, so the conversion loop
+    ///    skips them - but they still register their media globally the moment their package loads. This is the case
+    ///    that the resident-only version of this map missed: Wwise_Crt_DLC_MP4_shared is donored byte-identical from
+    ///    LE3's Citadel DLC (44.1kHz media), while Wwise_MP5_shared has no LE3 counterpart and must be converted from
+    ///    ME3 (32kHz) - and both embed the same source IDs. A Collector kit fighting Collector enemies loads both, and
+    ///    whichever registered first wins for every consumer, so the loser's consumers decode garbage. Deferring to
+    ///    the stock copy is right here for the same reason it is for resident banks: it is the one the donored,
+    ///    unmodified LE3 content expects.
+    /// </summary>
+    private static IReadOnlyDictionary<uint, uint> BuildExternallyProvidedMedia(List<string> packagePaths)
+    {
+        var result = new ConcurrentDictionary<uint, uint>();
+
+        var donoredBanks = 0;
+        Parallel.ForEach(packagePaths, new ParallelOptions { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, pf =>
+        {
+            var package = MEPackageHandler.UnsafePartialLoad(pf, x => x.ClassName == "WwiseBank");
+            foreach (var exp in package.Exports.Where(x => x.ClassName == "WwiseBank"))
+            {
+                var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(exp).BnkFile;
+                if (bnk is not { Length: > 0 }) continue;
+
+                using (var versionStream = new MemoryStream(bnk, writable: false))
+                {
+                    // v56 banks are the ones we're about to convert - they provide nothing yet. Anything already at
+                    // v134 in the output is LE3-native content the donor system brought in untouched.
+                    if (WwiseBankParser.GetWwiseBankVersion(versionStream) == 56) continue;
+                }
+
+                Interlocked.Increment(ref donoredBanks);
+                foreach (var m in ReadMediaIndex(bnk))
+                {
+                    result[m.Id] = m.Size;
+                }
+            }
+        });
+
+        MilanLog.Information($"Mod-shipped donored (already-v134) banks provide {result.Count} source ID(s) across {donoredBanks} bank(s)", customPrefix: LOG_CATEGORY);
+
+        // Stock wins on the rare ID both provide - it's the copy that's loaded unconditionally.
+        foreach (var (id, size) in BuildStockResidentMedia())
+        {
+            result[id] = size;
+        }
+
+        MilanLog.Information($"Externally-provided media total: {result.Count} source ID(s) that converted banks must not re-embed", customPrefix: LOG_CATEGORY);
+        return result;
+    }
+
+    /// <summary>
+    /// Source IDs LE3 already ships inside its always-loaded packages' banks, mapped to the byte length LE3 embeds.
+    /// Those banks are resident for the whole session, and Wwise resolves embedded media globally by source ID rather
+    /// than per-bank - so any ID in here is already owned by the stock game and must not be re-embedded by a ported
+    /// bank. See BankFile.ConvertToV134's externallyProvidedMedia for the failure this prevents.
+    ///
+    /// The file set is EntryImporter's own always-loaded lists rather than a hardcoded SFXGame.pcc: SFXGame carries
+    /// the bulk of it (22 banks), but WwiseAudio.pcc (the Init bank + Wwise_Generic_Foley_Procedural) and Startup.pcc
+    /// are resident too and were missed when this only looked at SFXGame. PostLoad files are included because a bank
+    /// rooted at first level transition is still loaded for the entire rest of the session - which is all that
+    /// matters here, since a ported bank only has to avoid colliding with it, not import from it.
     /// </summary>
     private static IReadOnlyDictionary<uint, uint> BuildStockResidentMedia()
     {
         var result = new Dictionary<uint, uint>();
-        var sfxGamePath = Path.Combine(LE3Directory.CookedPCPath, "SFXGame.pcc");
-        if (!File.Exists(sfxGamePath))
-        {
-            MilanLog.Warning($"Stock LE3 SFXGame.pcc not found at {sfxGamePath}; ported banks may re-embed media LE3 already owns", customPrefix: LOG_CATEGORY);
-            return result;
-        }
+        var fileNames = EntryImporter.FilesSafeToImportFrom(MEGame.LE3)
+            .Concat(EntryImporter.FilesSafeToImportFromPostLoad(MEGame.LE3))
+            .Distinct(StringComparer.OrdinalIgnoreCase);
 
-        using var package = MEPackageHandler.UnsafePartialLoad(sfxGamePath, x => x.ClassName == "WwiseBank");
-        foreach (var exp in package.Exports.Where(x => x.ClassName == "WwiseBank"))
+        var scanned = 0;
+        foreach (var fileName in fileNames)
         {
-            var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(exp).BnkFile;
-            if (bnk is not { Length: > 0 }) continue;
-
-            foreach (var m in ReadMediaIndex(bnk))
+            if (!MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, fileName, out var filePath))
             {
-                result[m.Id] = m.Size;
+                // Not every always-loaded name exists in every install (and the script-only ones have no audio at
+                // all) - only worth a warning for the one we know carries most of the resident media.
+                if (string.Equals(fileName, "SFXGame.pcc", StringComparison.OrdinalIgnoreCase))
+                {
+                    MilanLog.Warning($"Stock LE3 {fileName} not found; ported banks may re-embed media LE3 already owns", customPrefix: LOG_CATEGORY);
+                }
+                continue;
+            }
+
+            using var package = MEPackageHandler.UnsafePartialLoad(filePath, x => x.ClassName == "WwiseBank");
+            foreach (var exp in package.Exports.Where(x => x.ClassName == "WwiseBank"))
+            {
+                var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(exp).BnkFile;
+                if (bnk is not { Length: > 0 }) continue;
+
+                scanned++;
+                foreach (var m in ReadMediaIndex(bnk))
+                {
+                    result[m.Id] = m.Size;
+                }
             }
         }
 
-        MilanLog.Information($"Stock LE3 resident media: {result.Count} source ID(s) across SFXGame.pcc banks", customPrefix: LOG_CATEGORY);
+        MilanLog.Information($"Stock LE3 resident media: {result.Count} source ID(s) across {scanned} bank(s) in LE3's always-loaded packages", customPrefix: LOG_CATEGORY);
         return result;
     }
 
@@ -249,6 +335,15 @@ internal static class AudioPipeline
         var missingWems = new List<uint>();
         var bank = BankFile.ReadV56(rawV56Bytes);
         var converted = bank.ConvertToV134(stats, wemReplacements: embeddedReplacements, missingWems: missingWems, prefetchFragments: prefetchFragments, externallyProvidedMedia: stockResidentMedia);
+
+        // Record what this bank ends up owning in the global media pool, so LogConversionDiagnosticsSummary can
+        // catch two banks registering different bytes under one source ID. Done on the CONVERTED bytes, since
+        // that's what actually ships - deferred entries (externallyProvidedMedia) are already gone by here.
+        foreach (var m in ReadMediaIndex(converted))
+        {
+            _embeddedMediaOwners.GetOrAdd(m.Id, _ => new ConcurrentDictionary<uint, string>())
+                .TryAdd(m.Size, bankExport.ObjectName.Instanced);
+        }
 
         if (stats.ExternallyProvidedMedia > 0)
         {
@@ -291,6 +386,17 @@ internal static class AudioPipeline
         if (!_aggregateErrors.IsEmpty)
         {
             MilanLog.Warning($"{_aggregateErrors.Count} HIRC object(s) across all banks failed to parse/convert (see per-bank warnings above for details)", customPrefix: LOG_CATEGORY);
+        }
+
+        var collisions = _embeddedMediaOwners.Where(kv => kv.Value.Count > 1).ToList();
+        if (collisions.Count > 0)
+        {
+            MilanLog.Warning($"{collisions.Count} source ID(s) were embedded by more than one converted bank with DIFFERENT byte lengths - Wwise's media pool is global and keyed only by source ID, so one blob wins for everyone and consumers expecting the other will decode garbage:", customPrefix: LOG_CATEGORY);
+            foreach (var (id, byLength) in collisions.OrderBy(kv => kv.Key))
+            {
+                var detail = string.Join(", ", byLength.OrderBy(x => x.Key).Select(x => $"{x.Value}={x.Key}B"));
+                MilanLog.Warning($"  source {id}: {detail}", customPrefix: LOG_CATEGORY);
+            }
         }
 
         if (!BusRemap.FallbackUses.IsEmpty)
