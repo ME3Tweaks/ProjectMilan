@@ -29,6 +29,7 @@ using ProjectMilanCore;
 using static ProjectMilanCore.ConsoleHelpers;
 using Serilog;
 using Timer = System.Timers.Timer;
+using ProjectMilan.Pipelines.Shaders;
 
 // MAKE SURE YOU SET YOUR SETTINGS PATH IN YOUR RUN CONFIGURATION
 // DO NOT EDIT OTHERS! MAKE YOUR OWN AND SET YOUR SETTINGS PATH.
@@ -173,7 +174,17 @@ namespace ProjectMilan
                             MilanLog.Information("Checkpoint creation enabled for this run");
                         }
                     }
+
+                    // A run that isn't restoring a checkpoint is a from-scratch build, so the converted-WEM cache
+                    // has to go with it. That cache is keyed by source ID alone and records nothing about which
+                    // tools produced each entry, so anything converted under an older toolchain (e.g. the wrong
+                    // ww2ogg codebook pack) otherwise survives every "clean" build forever and ships corrupt audio.
+                    if (!RestoreCheckpointForThisRun)
+                    {
+                        MilanLog.Information("Not restoring a checkpoint - purging the converted-WEM cache so audio is regenerated from source");
+                        AudioPipeline.Clean();
                 }
+            }
             }
 
             if (!researchMode)
