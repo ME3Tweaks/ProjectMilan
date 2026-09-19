@@ -23,6 +23,7 @@ namespace ProjectMilan.Settings
         public bool RunAudioPipeline { get; set; } = false;
         public bool RunTexturePipeline { get; set; } = false;
         public bool RunResynthesis { get; set; } = false;
+        public bool RunShaderPipeline { get; set; } = false;
 
 
         public int MaxThreads { get; set; } = 4;

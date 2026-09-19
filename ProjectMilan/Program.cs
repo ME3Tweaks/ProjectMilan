@@ -404,6 +404,10 @@ namespace ProjectMilan
             // Package resynthesis
             RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
 
+        shaders:
+            // Shader install
+            RunPipeline(Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
+
             // Fix up vtables.
         vtables:
             RunPipeline(true, VTablePipeline.RunPipeline, "VTables");

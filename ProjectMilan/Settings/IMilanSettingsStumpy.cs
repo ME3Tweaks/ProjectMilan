@@ -24,6 +24,7 @@ namespace ProjectMilan.Settings
         public bool RunAudioPipeline { get; set; } = false;
         public bool RunTexturePipeline { get; set; } = FullBuild;
         public bool RunResynthesis { get; set; } = FullBuild;
+        public bool RunShaderPipeline { get; set; } = false;
 
         public int MaxThreads { get; set; } = int.Parse(Environment.GetEnvironmentVariable("MAXTHREADS"));
         public bool DontDeleteModFolder { get; set; } = !FullBuild;

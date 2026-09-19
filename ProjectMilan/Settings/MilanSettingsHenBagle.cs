@@ -24,6 +24,7 @@ namespace ProjectMilan.Settings
         public bool RunAudioPipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = false;
         public bool RunResynthesis { get; set; } = false;
+        public bool RunShaderPipeline { get; set; } = false;
 
         public bool DontDeleteModFolder { get; set; } = true;
         public bool UseCheckpointSystem { get; set; } = false;

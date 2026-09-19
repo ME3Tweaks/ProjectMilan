@@ -91,6 +91,7 @@ namespace ProjectMilan.Settings
         public bool RunAudioPipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = true;
         public bool RunResynthesis { get; set; } = true;
+        public bool RunShaderPipeline { get; set; } = true;
 
 
         // Defined in my launch profiles

@@ -21,6 +21,7 @@ namespace ProjectMilan.Settings
         public bool RunLevelsPipeline { get; set; }
         public bool RunAudioPipeline { get; set; }
         public bool RunTexturePipeline { get; set; }
+        public bool RunShaderPipeline { get; set; } = false;
         public int MaxThreads { get; set; } = 1;
         public bool DontDeleteModFolder { get; set; }
         public bool RunNonStartupPipeline { get; set; }

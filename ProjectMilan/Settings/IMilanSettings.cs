@@ -115,6 +115,11 @@
         /// If packages should be reconstructed at the end of pipelines to be more vanilla-organized.
         /// </summary>
         bool RunResynthesis { get; set; }
+
+        /// <summary>
+        /// If compiled shaders should be installed
+        /// </summary>
+        bool RunShaderPipeline { get; set; }
         #endregion
 
         #region Performance tuning
