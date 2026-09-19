@@ -819,7 +819,7 @@ namespace ProjectMilanCore
                                     // Use decomp
                                     MilanLog.Information($"  Recompiling {className}", customPrefix: logCategory);
                                     (_, text) = UnrealScriptCompiler.DecompileExport(cc.classExp, lib, usop);
-                                    Debug.WriteLine(text);
+                                    // Debug.WriteLine(text);
                                 }
                             }
                             UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
