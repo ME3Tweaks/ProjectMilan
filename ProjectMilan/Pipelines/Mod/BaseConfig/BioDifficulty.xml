@@ -4,6 +4,8 @@
 		<Section name="iniversion">
 			<Property name="0" type="2">2474535172.000000</Property>
 		</Section>
+		<!-- Don't care about SP -->
+		<!--
 		<Section name="sfxgame.sfxdifficultyhandler">
 			<Property name="level1difficultydata">
 				<Value type="2">(Category="Global", CategoryData=((StatName="OutAIDamageScale",StatRange=(X=-0.9f,Y=-0.8f)),(StatName="OutHenchDamageScale",StatRange=(X=0.0f,Y=0.0f)),(StatName="HenchDamageTaken",StatRange=(X=-0.5f,Y=-0.5f)),(StatName="AmmoDropPct",StatRange=(X=0.4f,Y=0.4f)),(StatName="AmmoPct",StatRange=(X=0.75f,Y=0.75f)),(StatName="GrenadesPerDrop",StatRange=(X=10.0f,Y=10.0f)),(StatName="AIEnergyShieldGatePct",StatRange=(X=0.0f,Y=0.0f)),(StatName="AIArmorDamageReduction",StatRange=(X=0.0f,Y=0.0f)),(StatName="PlayerShieldRegenPct",StatRange=(X=0.5f,Y=0.5f)),(StatName="PlayerShieldRegenDelayFromDestroyed",StatRange=(X=2.5f,Y=2.5f)),(StatName="PlayerShieldRegenDelayFromPartial",StatRange=(X=1.5f,Y=1.5f)),(StatName="ReviveHealthReturn",StatRange=(X=1.0f,Y=1.0f)),(StatName="StoppingPowerScalar",StatRange=(X=0.0f,Y=0.0f)),(StatName="CoverDamageReduction",StatRange=(X=1.0f,Y=1.0f)),(StatName="GlobalEnemyGrenadeCooldown",StatRange=(X=60.0f,Y=60.0f)),(StatName="NoCoverDamageBonus",StatRange=(X=0.0f,Y=0.0f)),(StatName="ReviveDamageReductionLength",StatRange=(X=5.0f,Y=5.0f)),(StatName="ReviveDamageReductionAmount",StatRange=(X=0.75f,Y=0.75f)),(StatName="PlayerShieldGateDuration",StatRange=(X=1.0f,Y=1.0f)),(StatName="PlayerHealthGateDuration",StatRange=(X=1.0f,Y=1.0f))))</Value>
@@ -143,6 +145,10 @@
 			<Property name="maxplayerlevel" type="2">60</Property>
 			<Property name="normalizeddifficulty" type="2">DO_Level3</Property>
 		</Section>
+		-->
+		
+		<!-- Moved to Milan BioDifficulty.xml -->
+		<!-- 
 		<Section name="sfxgamempcontent.sfxdifficultyhandlermp">
 			<Property name="level1difficultydata">
 				<Value type="2">(Category="Global", CategoryData=((StatName="OutAIDamageScale",StatRange=(X=-0.25f,Y=0.25f)),(StatName="OutHenchDamageScale",StatRange=(X=0.0f,Y=0.0f)),(StatName="HenchDamageTaken",StatRange=(X=-0.25f,Y=-0.25f)),(StatName="AmmoDropPct",StatRange=(X=0.0f,Y=0.0f)),(StatName="AmmoPct",StatRange=(X=0.5f,Y=0.5f)),(StatName="GrenadesPerDrop",StatRange=(X=2.0f,Y=2.0f)),(StatName="AIEnergyShieldGatePct",StatRange=(X=0.5f,Y=0.5f)),(StatName="AIArmorDamageReduction",StatRange=(X=15.0f,Y=15.0f)),(StatName="PlayerShieldRegenPct",StatRange=(X=0.33f,Y=0.33f)),(StatName="PlayerShieldRegenDelayFromDestroyed",StatRange=(X=3.5f,Y=3.5f)),(StatName="PlayerShieldRegenDelayFromPartial",StatRange=(X=2.5f,Y=2.5f)),(StatName="ReviveHealthReturn",StatRange=(X=1.0f,Y=1.0f)),(StatName="StoppingPowerScalar",StatRange=(X=1.5f,Y=1.5f)),(StatName="CoverDamageReduction",StatRange=(X=0.9f,Y=0.9f)),(StatName="GlobalEnemyGrenadeCooldown",StatRange=(X=25.0f,Y=25.0f)),(StatName="NoCoverDamageBonus",StatRange=(X=0.4f,Y=0.4f)),(StatName="ReviveDamageReductionLength",StatRange=(X=2.5f,Y=2.5f)),(StatName="ReviveDamageReductionAmount",StatRange=(X=0.75f,Y=0.75f)),(StatName="PlayerShieldGateDuration",StatRange=(X=0.5f,Y=0.5f)),(StatName="PlayerHealthGateDuration",StatRange=(X=0.5f,Y=0.5f))))</Value>
@@ -222,5 +228,6 @@
 			<Property name="maxplayerlevel" type="2">20</Property>
 			<Property name="normalizeddifficulty" type="2">DO_Level1</Property>
 		</Section>
+		-->
 	</Sections>
 </CoalesceAsset>
