@@ -274,7 +274,7 @@ internal static class AudioPipeline
     /// rooted at first level transition is still loaded for the entire rest of the session - which is all that
     /// matters here, since a ported bank only has to avoid colliding with it, not import from it.
     /// </summary>
-    private static IReadOnlyDictionary<uint, uint> BuildStockResidentMedia()
+    internal static IReadOnlyDictionary<uint, uint> BuildStockResidentMedia()
     {
         var result = new Dictionary<uint, uint>();
         var fileNames = EntryImporter.FilesSafeToImportFrom(MEGame.LE3)
@@ -296,7 +296,7 @@ internal static class AudioPipeline
             }
 
             using var package = MEPackageHandler.UnsafePartialLoad(filePath, x => x.ClassName == "WwiseBank");
-            foreach (var exp in package.Exports.Where(x => x.ClassName == "WwiseBank"))
+            foreach (var exp in package.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "WwiseBank"))
             {
                 var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(exp).BnkFile;
                 if (bnk is not { Length: > 0 }) continue;

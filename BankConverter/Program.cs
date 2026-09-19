@@ -53,7 +53,8 @@ namespace BankConverter
             Console.WriteLine("       BankConverter reencode-wems <inFolder> <outFolder> <wprojPath> [conversionPresetName]");
             Console.WriteLine("           Converts every ME3-era (v56) .wem in inFolder to a new LE3-era (v134) .wem in outFolder.");
             Console.WriteLine("           Input files are matched by filename (e.g. <id>.wem); output files keep the same name.");
-            Console.WriteLine("           Requires ww2ogg + the aoTuV 6.03 codebooks (bundled under Tools/ww2ogg), ffmpeg on PATH,");
+            Console.WriteLine("           Requires ww2ogg + the ME3-era packed_codebooks.bin (bundled under Tools/ww2ogg - NOT the");
+            Console.WriteLine("           aoTuV pack next to it, which decodes v56 audio to clipped noise), ffmpeg on PATH,");
             Console.WriteLine("           and Wwise's WwiseCLI.exe (found via the WWISEROOT environment variable by default).");
             Console.WriteLine("       BankConverter convert-afc <inFile.afc> <outFile.afc> <wprojPath> [mappingJsonPath] [conversionPresetName]");
             Console.WriteLine("           An AFC is just concatenated WEMs (each self-delimited by its own RIFF size field, no");

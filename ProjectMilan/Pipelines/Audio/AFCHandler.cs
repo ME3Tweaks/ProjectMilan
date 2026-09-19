@@ -153,7 +153,7 @@ namespace ProjectMilan.Pipelines.Audio
         /// <summary>
         /// On-disk cache of converted (v134) WEM bytes, keyed by ID, surviving across pipeline runs. Re-running the
         /// pipeline without changes to the source audio then skips WwiseCLI entirely for anything already cached here.
-        /// Cleared out by <see cref="ClearDiskCache"/> (hooked up to Program.CleanupMilan) for a full rebuild.
+        /// Emptied by <see cref="ClearDiskCache"/> on any run that isn't restoring a checkpoint, for a full rebuild.
         /// </summary>
         private static readonly Lazy<string> _wemDiskCacheFolder = new(() =>
         {
@@ -204,16 +204,29 @@ namespace ProjectMilan.Pipelines.Audio
         }
 
         /// <summary>
-        /// Deletes the on-disk converted-WEM cache, forcing a full re-conversion (and re-download of nothing, since
-        /// it's all local) on the next pipeline run. Not currently wired up to run automatically - see
-        /// AudioPipeline.Clean(), called from Program.CleanupMilan().
+        /// Empties the on-disk converted-WEM cache, forcing a full re-conversion of every source on the next
+        /// pipeline run. Reached through AudioPipeline.Clean(), which Program runs whenever a build isn't restoring
+        /// a checkpoint, and from Program.CleanupMilan().
         /// </summary>
         public static void ClearDiskCache()
         {
-            if (Directory.Exists(WemDiskCacheFolder))
+            if (!Directory.Exists(WemDiskCacheFolder)) return;
+
+            // Delete the contents rather than the folder itself: WemDiskCacheFolder is a Lazy that only creates the
+            // directory on first access, so removing the directory here would leave every WriteDiskCachedWem for the
+            // rest of the process throwing DirectoryNotFoundException, and nothing would be cached at all.
+            var cached = Directory.GetFiles(WemDiskCacheFolder, "*.wem");
+            MilanLog.Information($"Purging WEM conversion cache ({cached.Length} entries): {WemDiskCacheFolder}", customPrefix: LOG_CATEGORY);
+            foreach (var cachedWem in cached)
             {
-                MilanLog.Information($"Deleting WEM conversion cache: {WemDiskCacheFolder}", customPrefix: LOG_CATEGORY);
-                Directory.Delete(WemDiskCacheFolder, true);
+                try
+                {
+                    File.Delete(cachedWem);
+                }
+                catch (Exception e)
+                {
+                    MilanLog.Exception(e, $"Failed to delete cached WEM {cachedWem}", customPrefix: LOG_CATEGORY);
+                }
             }
         }
 
@@ -451,6 +464,15 @@ namespace ProjectMilan.Pipelines.Audio
                 foreach (var (idStr, reason) in result.Failed)
                 {
                     MilanLog.Error($"Failed to re-encode WEM id {idStr}: {reason}", customPrefix: LOG_CATEGORY);
+                }
+
+                if (result.SubstitutedSilence.Count > 0)
+                {
+                    // Not an error, and deliberately one line rather than one per id: these are clips too short for
+                    // the Ogg decoder to emit any sample frames, rebuilt as silence of their declared length. In ME3
+                    // this is a single 323-sample (13.5ms) all-zero VO placeholder that the geth bark banks reuse
+                    // across every speaker and language, so the rebuilt audio is identical to the original anyway.
+                    MilanLog.Information($"Rebuilt {result.SubstitutedSilence.Count} sub-window clip(s) as silence of their declared length (nothing decodable in the source): {string.Join(", ", result.SubstitutedSilence.Select(x => $"{x.Key} ({x.Value} frames)"))}", customPrefix: LOG_CATEGORY);
                 }
 
                 foreach (var (idStr, convertedBytes) in result.Converted)

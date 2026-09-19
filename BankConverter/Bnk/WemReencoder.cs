@@ -58,6 +58,14 @@ public sealed class WemReencodeResult
     /// <summary>ID/name -> failure reason, for every input that could not be converted (e.g. a truncated
     /// prefetch fragment that isn't a complete standalone Vorbis stream).</summary>
     public Dictionary<string, string> Failed { get; } = new();
+
+    /// <summary>
+    /// ID/name -> sample-frame count, for every input whose Ogg decode produced no sample frames and was rebuilt
+    /// as silence of the length its own header declares (see ReencodeBatch). These ARE in <see cref="Converted"/>;
+    /// they're tracked separately so a caller can report them as one line rather than a wall of errors. In practice
+    /// this is ME3's 13.5ms all-zero VO placeholder, which decodes to digital silence anyway.
+    /// </summary>
+    public Dictionary<string, int> SubstitutedSilence { get; } = new();
 }
 
 /// <summary>
@@ -134,6 +142,23 @@ public static class WemReencoder
                 return;
             }
 
+            // ffmpeg can exit 0 and still write a header-only WAV. A clip shorter than one Vorbis window - e.g.
+            // ME3's 323-sample (13.5ms) silent VO placeholder, which every geth bark bank reuses - sits entirely
+            // inside the codec's lapping region, so a strict Ogg decoder emits zero sample frames. Everything
+            // downstream then faithfully does nothing with nothing, and WwiseCLI's resulting 0-byte output used to
+            // get reported as "source clip too short to re-encode", which blamed the wrong tool. The source's own
+            // header still declares the real length, so rebuild the clip from that rather than dropping the media.
+            if (CountWavSampleFrames(wavFile) == 0)
+            {
+                if (!TryWriteSilenceFromSourceHeader(bytes, wavFile, out var silentFrames))
+                {
+                    lock (resultLock) { result.Failed[id] = "decoded to zero sample frames and the source header declares no usable length"; }
+                    onItemDecoded?.Invoke(id);
+                    return;
+                }
+                lock (resultLock) { result.SubstitutedSilence[id] = silentFrames; }
+            }
+
             decodedIds.Add(id);
             onItemDecoded?.Invoke(id);
         });
@@ -208,14 +233,14 @@ public static class WemReencoder
             }
             else if (producedBytes != null)
             {
-                // WwiseCLI exited cleanly and produced the output file, but it's empty - seen for very
-                // short source clips (confirmed against a real ~278-byte source WEM, well under 200ms of
-                // audio) where the batch's overall exit code stays 0 even though this one item silently
-                // failed to encode (this CLI version has no per-file success/failure signal - see the
-                // onItemConverted doc comment above). Must NOT be treated as a successful conversion:
-                // callers cache Converted results to disk keyed by id, and an empty "success" poisons that
-                // cache forever (nothing ever re-attempts a disk-cache hit).
-                result.Failed[id] = $"WwiseCLI produced a 0-byte output (exit {wwiseResult.ExitCode}) - likely a source clip too short to re-encode";
+                // WwiseCLI exited cleanly and produced the output file, but it's empty - the batch's overall
+                // exit code stays 0 even when one item silently fails to encode (this CLI version has no
+                // per-file success/failure signal - see the onItemConverted doc comment above). What used to
+                // land here was a zero-sample-frame WAV, which is now caught and rebuilt at the decode step,
+                // so anything reaching this point is a genuine encoder failure. Must NOT be treated as a
+                // successful conversion: callers cache Converted results to disk keyed by id, and an empty
+                // "success" poisons that cache forever (nothing ever re-attempts a disk-cache hit).
+                result.Failed[id] = $"WwiseCLI produced a 0-byte output (exit {wwiseResult.ExitCode})";
             }
             else
             {
@@ -230,6 +255,94 @@ public static class WemReencoder
     {
         var batch = ReencodeBatch(new Dictionary<string, byte[]> { ["single"] = wemBytes }, workDir, options);
         return batch.Converted.TryGetValue("single", out var bytes) ? bytes : null;
+    }
+
+    /// <summary>
+    /// Number of PCM sample frames in a RIFF/WAVE file, or 0 if it's header-only, malformed or unreadable.
+    /// Deliberately tolerant: this only ever decides whether the decode produced anything at all.
+    /// </summary>
+    private static int CountWavSampleFrames(string wavPath)
+    {
+        try
+        {
+            var b = File.ReadAllBytes(wavPath);
+            if (b.Length < 12 || b[0] != (byte)'R' || b[1] != (byte)'I' || b[2] != (byte)'F' || b[3] != (byte)'F') return 0;
+
+            int channels = 0, bitsPerSample = 0;
+            var off = 12;
+            while (off + 8 <= b.Length)
+            {
+                var chunkId = Encoding.ASCII.GetString(b, off, 4);
+                var size = BitConverter.ToInt32(b, off + 4);
+                if (size < 0 || off + 8 + size > b.Length) size = b.Length - off - 8;
+                if (chunkId == "fmt " && size >= 16)
+                {
+                    channels = BitConverter.ToUInt16(b, off + 8 + 2);
+                    bitsPerSample = BitConverter.ToUInt16(b, off + 8 + 14);
+                }
+                else if (chunkId == "data")
+                {
+                    var bytesPerFrame = channels * (bitsPerSample / 8);
+                    return bytesPerFrame > 0 ? size / bytesPerFrame : 0;
+                }
+                off += 8 + size + (size & 1); // RIFF chunks are word-aligned
+            }
+        }
+        catch
+        {
+            // Unreadable is indistinguishable from empty for our purposes - the caller handles both the same way.
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// Writes <paramref name="wavPath"/> as digital silence matching the channel count, sample rate and declared
+    /// sample-frame count of a source Wwise (v56) WEM, for clips too short for the Ogg decoder to emit anything.
+    /// The frame count lives at offset 6 of the 48-byte extension on the WEM's 66-byte "fmt " chunk (i.e. offset 24
+    /// of the chunk body) - verified against real ME3 sources at both ends of the range (323 and 12454 frames).
+    /// </summary>
+    private static bool TryWriteSilenceFromSourceHeader(byte[] sourceWem, string wavPath, out int sampleFrames)
+    {
+        sampleFrames = 0;
+        if (sourceWem.Length < 12) return false;
+
+        int channels = 0, sampleRate = 0;
+        var off = 12;
+        while (off + 8 <= sourceWem.Length)
+        {
+            var chunkId = Encoding.ASCII.GetString(sourceWem, off, 4);
+            var size = BitConverter.ToInt32(sourceWem, off + 4);
+            if (size < 0 || off + 8 + size > sourceWem.Length) return false;
+            if (chunkId == "fmt ")
+            {
+                if (size < 28) return false; // needs the extension's frame count at body offset 24
+                channels = BitConverter.ToUInt16(sourceWem, off + 8 + 2);
+                sampleRate = BitConverter.ToInt32(sourceWem, off + 8 + 4);
+                sampleFrames = BitConverter.ToInt32(sourceWem, off + 8 + 24);
+                break;
+            }
+            off += 8 + size + (size & 1);
+        }
+
+        if (channels <= 0 || sampleRate <= 0 || sampleFrames <= 0) return false;
+
+        const int bitsPerSample = 16;
+        var dataBytes = sampleFrames * channels * (bitsPerSample / 8);
+        using var w = new BinaryWriter(File.Create(wavPath));
+        w.Write(Encoding.ASCII.GetBytes("RIFF"));
+        w.Write(36 + dataBytes);
+        w.Write(Encoding.ASCII.GetBytes("WAVEfmt "));
+        w.Write(16);                                          // PCM fmt chunk size
+        w.Write((short)1);                                    // WAVE_FORMAT_PCM
+        w.Write((short)channels);
+        w.Write(sampleRate);
+        w.Write(sampleRate * channels * (bitsPerSample / 8)); // byte rate
+        w.Write((short)(channels * (bitsPerSample / 8)));     // block align
+        w.Write((short)bitsPerSample);
+        w.Write(Encoding.ASCII.GetBytes("data"));
+        w.Write(dataBytes);
+        w.Write(new byte[dataBytes]);
+        return true;
     }
 
     private static string Truncate(string s, int max) => s.Length <= max ? s : s[^max..];
