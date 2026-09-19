@@ -179,6 +179,8 @@ namespace ProjectMilan.Pipelines.Levels
                     }, out var _);
             }
 
+            PortSPAutoPersistentObjects(levelPipeline);
+
             MilanLevelTools.RebuildPersistentLevelChildren(level);
             MilanLevelTools.SetupHordeModes(levelPipeline.LE3BioP, false);
 
@@ -186,6 +188,47 @@ namespace ProjectMilan.Pipelines.Levels
             // Save BioP into folder
             levelPipeline.LE3BioP.Save(Path.Combine(outputPath, Path.GetFileName(levelPipeline.LE3BioP.FilePath)), diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
+        }
+
+        /// <summary>
+        /// The basegame MP maps are our own copies with nothing in them, they are missing content from their SP counterparts.
+        /// the SP map's m_AutoPersistentObjects (textures, materials, etc that must always be loaded with
+        /// the level). Ports the local content (skipping imports) from BioP_SP[mapname] into the MP BioP.
+        /// </summary>
+        private static void PortSPAutoPersistentObjects(LevelSpecificPipeline levelPipeline)
+        {
+            var spBioPName = levelPipeline.BioP.Replace("BioP_MP", "BioP_SP");
+            using var spBioP = MilanShared.GetLE3Package($"{spBioPName}.pcc");
+            if (spBioP == null)
+            {
+                MilanLog.Warning($"Could not find {spBioPName}.pcc to port m_AutoPersistentObjects from", customPrefix: levelPipeline.LogCategory);
+                return;
+            }
+
+            var sourceObjects = spBioP.GetBioWorldInfo()?.GetProperty<ArrayProperty<ObjectProperty>>("m_AutoPersistentObjects");
+            if (sourceObjects == null)
+                return;
+
+            var target = levelPipeline.LE3BioP;
+            var targetBwi = target.GetBioWorldInfo();
+            var targetObjects = targetBwi.GetProperty<ArrayProperty<ObjectProperty>>("m_AutoPersistentObjects") ?? new ArrayProperty<ObjectProperty>("m_AutoPersistentObjects");
+
+            foreach (var objProp in sourceObjects)
+            {
+                // Only bring across the map's own content (textures, materials, material instances, decals, etc) -
+                // imports are shared assets that don't need to be explicitly re-added.
+                if (objProp.ResolveToEntry(spBioP) is not ExportEntry sourceExport)
+                    continue;
+
+                MilanLog.Information($"Porting persistent object {sourceExport.InstancedFullPath} from {spBioPName}", customPrefix: levelPipeline.LogCategory);
+                EntryExporter.ExportExportToPackage(sourceExport, target, out var newObj, levelPipeline.Cache);
+                if (targetObjects.All(x => x.Value != newObj.UIndex))
+                {
+                    targetObjects.Add(new ObjectProperty(newObj));
+                }
+            }
+
+            targetBwi.WriteProperty(targetObjects);
         }
 
         private static void BeginPortingGeneric(LevelSpecificPipeline levelPipeline, TieredPackageCache parent)
