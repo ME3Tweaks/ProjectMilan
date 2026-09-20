@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using LegendaryExplorerCore.Packages;
+﻿using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ProjectMilanCore;
@@ -59,9 +58,17 @@ namespace ProjectMilan.Pipelines.Mod
                         {
                             if (exp.IsTrash())
                                 continue; // We don't care
-                            var nExp = newPackage.FindExport(exp.InstancedFullPath);
+                            // Match on class as well as path. A package can hold several objects sharing an
+                            // instanced full path but differing by class (e.g. a Material and a Texture2D), and a
+                            // path-only lookup returns whichever one the lookup table happens to hold - so comparing
+                            // the source Material against the destination Texture2D reports bogus size/class/flag
+                            // changes for an output that is actually correct.
+                            var nExp = newPackage.FindExport(exp.InstancedFullPath, exp.ClassName);
                             if (nExp == null)
-                                Debugger.Break();
+                            {
+                                MilanLog.Error($"Export missing from resynthesis: {exp.ClassName} {exp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
+                                continue;
+                            }
 
                             if (nExp.DataSize != exp.DataSize)
                                 MilanLog.Error($"Size of export changed in resynthesis: {nExp.InstancedFullPath}", customPrefix: LOG_CATEGORY);
