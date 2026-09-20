@@ -32,9 +32,10 @@
         public string OutputModPath { get; set; }
 
         /// <summary>
-        /// Directory where the source data is located that is synchronized from ME3Tweaks.com. The contents of this folder will be updated when ProjectMilan runs.
+        /// Directory containing the shared texture upscale workspace (the 'Extracted' folder), laid out as &lt;PackageName&gt;\&lt;RestOfMemoryPath&gt;_0x&lt;CRC&gt;.[tga|dds|png].
+        /// If this is null the Upscale pipeline will not run, even if <see cref="RunUpscalePipeline"/> is true.
         /// </summary>
-        public string InputSyncPath { get; set; }
+        public string TextureSyncFolder { get; set; }
         #endregion
 
         #region Content pipelines
@@ -106,6 +107,13 @@
         /// If audio should be extracted and converted for use in the resulting mod
         /// </summary>
         bool RunAudioPipeline { get; set; }
+
+        /// <summary>
+        /// If texture upscales from <see cref="TextureSyncFolder"/> should be installed over the ported textures.
+        /// Requires <see cref="TextureSyncFolder"/> to be set. This runs as part of the texture pipeline, so it does nothing unless
+        /// <see cref="RunTexturePipeline"/> is also on.
+        /// </summary>
+        bool RunUpscalePipeline { get; set; }
 
         /// <summary>
         /// If TFC data should be built for the resulting mod

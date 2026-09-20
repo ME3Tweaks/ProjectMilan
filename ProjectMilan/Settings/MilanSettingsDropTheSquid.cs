@@ -6,6 +6,7 @@
         private static readonly bool fullBuild = false;
         public string OutputModPath { get; set; } = @"H:\MELE_Mods\mods in development\LE3\Project Milan\DLC_MOD_ProjectMilan";
         public string InputSyncPath { get; set; } = @"H:\MELE_Mods\mods in development\LE3\Project Milan\MilanSync";
+        public string TextureSyncFolder { get; set; } = null;
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunDonorBuildPipeline { get; set; } = fullBuild;
         public bool RunMP4EnemiesPipeline { get; set; } = fullBuild;
@@ -18,6 +19,7 @@
         public string MilanUDKPath { get; set; } // NEEDS TO BE SET!
         public bool RunLevelsPipeline { get; set; } = fullBuild;
         public bool RunAudioPipeline { get; set; } = false;
+        public bool RunUpscalePipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = fullBuild;
         public bool RunShaderPipeline { get; set; } = false;
         public int MaxThreads { get; set; } = 4;

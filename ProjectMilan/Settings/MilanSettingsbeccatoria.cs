@@ -8,6 +8,7 @@ namespace ProjectMilan.Settings
         private static readonly bool fullBuild = false;
         public string OutputModPath { get; set; } = $@"C:\Users\becca\Downloads\MILAN\ME3Tweaks Mod Manager Milan Build\mods\LMP\Project Milan\{MilanShared.DLC_NAME}";
         public string InputSyncPath { get; set; } = @"C:\Users\becca\Downloads\MILAN\ME3Tweaks Mod Manager Milan Build\mods\LMP\Project Milan\MilanSync";
+        public string TextureSyncFolder { get; set; } = null;
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunDonorBuildPipeline { get; set; } = fullBuild;
         public bool RunMP4EnemiesPipeline { get; set; } = fullBuild;
@@ -20,6 +21,7 @@ namespace ProjectMilan.Settings
         public string MilanUDKPath { get; set; } // NEEDS TO BE SET!
         public bool RunLevelsPipeline { get; set; } = fullBuild;
         public bool RunAudioPipeline { get; set; } = false;
+        public bool RunUpscalePipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = fullBuild;
         public bool RunShaderPipeline { get; set; } = false;
         public int MaxThreads { get; set; } = 4;

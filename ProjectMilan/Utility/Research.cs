@@ -20,6 +20,7 @@ using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilanCore;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace ProjectMilan.Utility
 {
@@ -637,6 +638,389 @@ namespace ProjectMilan.Utility
                 }
             });
         }
+
+        #region Standalone ME3 bank cache + bank install
+
+        /// <summary>
+        /// Standalone cache of ME3's original (v56) sound banks. Deliberately NOT S:\Milan\Audio\ME3Banks - that one
+        /// is filled by <see cref="DumpAllBanks"/> from the basegame only and is meant to stay a like-for-like corpus
+        /// with LE3Banks for the Fx param comparison. This one includes the MP1-MP5 DLC SFAR content that Milan
+        /// actually ports, which LE3Banks has no counterpart for.
+        /// </summary>
+        private const string ME3BankCacheFolder = @"S:\Milan\Audio\ME3BankCache";
+
+        /// <summary>
+        /// Index of the cache: one line per (source package, bank name) pair, naming the file holding those bytes.
+        ///
+        /// Keying on the PACKAGE and not just the bank name matters. A bank name is not unique content in ME3:
+        /// "Wwise_VO_Exertions_DLC_CON_MP1" ships in four packages across two DLCs, and the MP1 copy (6662 bytes) and
+        /// the MP4 copy (5234 bytes) are genuinely different banks. The pipeline converts each package's own bytes,
+        /// so anything keyed by name alone will hand the wrong source to at least one of them. Localization falls out
+        /// of this for free - "..._LOC_DEU.pcc" is simply a different package.
+        /// </summary>
+        private const string ME3BankCacheIndex = @"S:\Milan\Audio\ME3BankCache\_index.txt";
+
+        /// <summary>
+        /// Dumps every WwiseBank ME3 ships into <see cref="ME3BankCacheFolder"/> as "&lt;bankName&gt;.&lt;hash&gt;.bnk",
+        /// deduplicated by content (the same bank shipped in twenty packages is stored once), with
+        /// <see cref="ME3BankCacheIndex"/> recording which file each (package, bank) pair resolves to. Basegame first,
+        /// then the MP1-MP5 DLC SFARs, so a DLC package's copy wins exactly as it does at runtime.
+        ///
+        /// Run this once. <see cref="InstallConvertedBanks"/> then re-converts out of it, so iterating on the
+        /// v56-&gt;v134 HIRC conversion (PluginSupport, the Fx param layouts, bus remaps...) never needs a full
+        /// ProjectMilan run - and never needs to touch WwiseCLI, ww2ogg or the AFCs.
+        /// </summary>
+        internal static void BuildME3BankCache()
+        {
+            Directory.CreateDirectory(ME3BankCacheFolder);
+            foreach (var stale in Directory.GetFiles(ME3BankCacheFolder, "*.bnk"))
+            {
+                File.Delete(stale); // Cheap to rebuild (~3 min) and a partial cache is worse than none.
+            }
+
+            // (package, bank) -> cache file. SortedDictionary purely so the index file is diffable run to run.
+            var index = new SortedDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var written = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            void DumpFrom(IMEPackage package, string sourceName)
+            {
+                foreach (var bankExport in package.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "WwiseBank"))
+                {
+                    var bankName = bankExport.ObjectName.Instanced;
+                    var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(bankExport).BnkFile;
+                    if (bnk is not { Length: > 0 }) continue;
+
+                    var cacheName = $"{bankName}.{Convert.ToHexString(SHA256.HashData(bnk))[..8]}.bnk";
+                    if (written.Add(cacheName))
+                    {
+                        File.WriteAllBytes(Path.Combine(ME3BankCacheFolder, cacheName), bnk);
+                    }
+                    index[$"{sourceName}\t{bankName}"] = cacheName;
+                }
+            }
+
+            MilanLog.Information("------ CACHING ME3 BASEGAME BANKS ------");
+            var me3Cooked = Path.Combine(ME3Directory.BioGamePath, MEGame.ME3.CookedDirName());
+            foreach (var packagePath in Directory.GetFiles(me3Cooked, "*.pcc", SearchOption.AllDirectories))
+            {
+                try
+                {
+                    using var package = MEPackageHandler.OpenMEPackage(packagePath);
+                    DumpFrom(package, Path.GetFileName(packagePath));
+                }
+                catch (Exception e)
+                {
+                    MilanLog.Warning($"Could not read {Path.GetFileName(packagePath)}: {e.Message}");
+                }
+            }
+
+            // DLC last so a DLC package's copy overrides a same-named basegame one, as the game's mount order does.
+            MilanLog.Information("------ CACHING ME3 MP DLC BANKS ------");
+            MilanShared.LoadME3DLCTOCs();
+            foreach (var (fileName, _) in MilanShared.ME3DLCFileMap.Where(x => x.Key.EndsWith(".pcc", StringComparison.OrdinalIgnoreCase)))
+            {
+                try
+                {
+                    using var package = MilanShared.GetME3Package(fileName, logIfNotFound: false);
+                    if (package == null) continue;
+                    DumpFrom(package, fileName);
+                }
+                catch (Exception e)
+                {
+                    MilanLog.Warning($"Could not read DLC package {fileName}: {e.Message}");
+                }
+            }
+
+            File.WriteAllLines(ME3BankCacheIndex, index.Select(x => $"{x.Key}\t{x.Value}"));
+            MilanLog.Information($"ME3 bank cache: {index.Count} (package, bank) pair(s) over {written.Count} distinct bank file(s) in {ME3BankCacheFolder}");
+        }
+
+        /// <summary>
+        /// Bank names LE3 itself ships. Milan DONORS these from LE3 rather than converting them from ME3, so
+        /// <see cref="InstallConvertedBanks"/> must leave them alone - re-converting one from its ME3 source would
+        /// replace a byte-perfect LE3 bank with a port of the older game's version. Cached to disk because the scan
+        /// is a full pass over the LE3 install.
+        /// </summary>
+        private const string LE3BankNamesFile = @"S:\Milan\Audio\LE3BankNames.txt";
+
+        private static HashSet<string> GetLE3BankNames(bool rebuild = false)
+        {
+            if (!rebuild && File.Exists(LE3BankNamesFile))
+            {
+                return new HashSet<string>(File.ReadAllLines(LE3BankNamesFile), StringComparer.OrdinalIgnoreCase);
+            }
+
+            MilanLog.Information("Scanning LE3 for bank names (one-time; cached to disk afterwards)");
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var filePath in MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, includeModDLC: false).Values)
+            {
+                if (!filePath.EndsWith(".pcc", StringComparison.OrdinalIgnoreCase)) continue;
+                try
+                {
+                    using var package = MEPackageHandler.UnsafePartialLoad(filePath, x => x.ClassName == "WwiseBank");
+                    foreach (var exp in package.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "WwiseBank"))
+                    {
+                        names.Add(exp.ObjectName.Instanced);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MilanLog.Warning($"Could not scan {Path.GetFileName(filePath)} for banks: {e.Message}");
+                }
+            }
+
+            File.WriteAllLines(LE3BankNamesFile, names.OrderBy(x => x, StringComparer.OrdinalIgnoreCase));
+            MilanLog.Information($"LE3 ships {names.Count} distinct bank name(s); cached to {LE3BankNamesFile}");
+            return names;
+        }
+
+        /// <summary>
+        /// Re-runs the v56-&gt;v134 bank conversion over an already-installed mod folder, in place, without running
+        /// the audio pipeline. This is the bank equivalent of <see cref="InstallCompiledShaders"/>: build, point it
+        /// at the installed DLC, launch the game.
+        ///
+        /// Only the HIRC half is recomputed. Each bank's audio is taken from the copy already installed (its v134
+        /// DIDX/DATA carried over verbatim), falling back to the pipeline's WEM disk cache for anything the installed
+        /// bank doesn't carry - so nothing here re-encodes audio, and a conversion-code change can't silently alter
+        /// the media.
+        ///
+        /// Two things this has to reproduce that the real pipeline gets for free, because by the time we run,
+        /// EVERY bank in the folder is already v134 and the version test it uses no longer discriminates:
+        /// <list type="bullet">
+        /// <item>Which banks are ours. The pipeline converts v56 banks and skips v134 (donored) ones. Here that is
+        /// decided by name against <see cref="GetLE3BankNames"/> instead.</item>
+        /// <item>The media-deferral map. AudioPipeline.BuildExternallyProvidedMedia indexes every already-v134 bank
+        /// in the output, which post-install is all of them - feeding it this folder defers every single source ID
+        /// and strips the audio out of every bank it touches. Built here from LE3's resident banks plus only the
+        /// DONORED banks in the folder.</item>
+        /// </list>
+        /// </summary>
+        /// <param name="targetFolder">Installed mod folder to rewrite. Defaults to the installed Milan DLC.</param>
+        /// <param name="bankFilter">Case-insensitive substring; only banks whose name contains it are touched.
+        /// Use this to iterate on one bank (e.g. "GUI_DLC_MP") instead of all of them.</param>
+        /// <param name="dryRun">Report what would change without writing any package.</param>
+        internal static void InstallConvertedBanks(string targetFolder = null, string bankFilter = null, bool dryRun = false)
+        {
+            targetFolder ??= Path.Combine(LMPDirectory.DefaultGamePath, @"BioGame\DLC\DLC_MOD_ProjectMilan");
+            if (!Directory.Exists(targetFolder))
+            {
+                MilanLog.Error($"Bank install target path not found: {targetFolder}");
+                return;
+            }
+            if (!File.Exists(ME3BankCacheIndex))
+            {
+                MilanLog.Error($"No ME3 bank cache index at {ME3BankCacheIndex} - run {nameof(BuildME3BankCache)}() first.");
+                return;
+            }
+
+            // Mirror AudioPipeline.BuildCanonicalV56Banks: one source per (bank, localization), largest wins, so the
+            // harness converts exactly what a real build would. Keyed per-package on the way in because the index is,
+            // then collapsed - ME3 ships some names at more than one size and we must not carry that through.
+            var sourceByPackageAndBank = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var candidates = new Dictionary<string, List<(string Package, string CacheFile)>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var line in File.ReadAllLines(ME3BankCacheIndex))
+            {
+                var parts = line.Split('\t');
+                if (parts.Length != 3) continue;
+                sourceByPackageAndBank[$"{parts[0]}\t{parts[1]}"] = parts[2];
+                var key = $"{parts[1]}|{parts[0].GetUnrealLocalization()}";
+                if (!candidates.TryGetValue(key, out var list)) candidates[key] = list = new List<(string, string)>();
+                list.Add((parts[0], parts[2]));
+            }
+
+            // Conflicts are recorded here but only reported when one is actually reached below: the cache spans all
+            // of ME3 (19 names ship more than one version), while Milan ships a small subset of it, so warning up
+            // front would be mostly about banks this folder doesn't contain.
+            var canonicalByKey = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var conflicts = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (key, list) in candidates)
+            {
+                var distinct = list.Select(x => x.CacheFile).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+                var winner = distinct.Count == 1
+                    ? distinct[0]
+                    : distinct.OrderByDescending(f => new FileInfo(Path.Combine(ME3BankCacheFolder, f)).Length).First();
+                canonicalByKey[key] = winner;
+
+                if (distinct.Count > 1)
+                {
+                    var sizes = distinct
+                        .Select(f => new FileInfo(Path.Combine(ME3BankCacheFolder, f)).Length)
+                        .OrderByDescending(x => x);
+                    conflicts[key] = $"{distinct.Count} versions ({string.Join(", ", sizes)} bytes) - using the largest";
+                }
+            }
+            var reportedConflicts = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            var packages = Directory.GetFiles(targetFolder, "*.pcc", SearchOption.AllDirectories).ToList();
+            var le3BankNames = GetLE3BankNames();
+            MilanLog.Information($"Re-converting banks across {packages.Count} package(s) in {targetFolder}{(dryRun ? " (DRY RUN)" : "")}");
+
+            // Pass 1: classify, and collect what the banks we are NOT touching already own in the global media pool.
+            var donoredMedia = new Dictionary<uint, uint>();
+            var ours = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var donored = 0;
+            foreach (var packagePath in packages)
+            {
+                using var package = MEPackageHandler.UnsafePartialLoad(packagePath, x => x.ClassName == "WwiseBank");
+                foreach (var bankExport in package.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "WwiseBank"))
+                {
+                    var bankName = bankExport.ObjectName.Instanced;
+                    if (!le3BankNames.Contains(bankName))
+                    {
+                        ours.Add(bankName);
+                        continue;
+                    }
+
+                    donored++;
+                    var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(bankExport).BnkFile;
+                    if (bnk is not { Length: > 0 }) continue;
+                    foreach (var (id, bytes) in BankConverter.Bnk.Chunks.WemExtractor.ExtractRaw(bnk))
+                    {
+                        donoredMedia[id] = (uint)bytes.Length;
+                    }
+                }
+            }
+
+            // Stock wins over a donored copy, matching BuildExternallyProvidedMedia's own precedence.
+            var externallyProvidedMedia = new Dictionary<uint, uint>(donoredMedia);
+            foreach (var (id, size) in AudioPipeline.BuildStockResidentMedia())
+            {
+                externallyProvidedMedia[id] = size;
+            }
+            MilanLog.Information($"{ours.Count} converted bank(s), {donored} donored bank instance(s); deferring {externallyProvidedMedia.Count} source ID(s) to stock/donored copies");
+
+            int changed = 0, identical = 0, skipped = 0, noSource = 0, failed = 0;
+            foreach (var packagePath in packages)
+            {
+                using var package = MEPackageHandler.OpenMEPackage(packagePath);
+                var packageFileName = Path.GetFileName(packagePath);
+
+                foreach (var bankExport in package.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "WwiseBank").ToList())
+                {
+                    var bankName = bankExport.ObjectName.Instanced;
+                    if (bankFilter != null && !bankName.Contains(bankFilter, StringComparison.OrdinalIgnoreCase)) continue;
+                    if (le3BankNames.Contains(bankName))
+                    {
+                        skipped++;
+                        continue; // Donored straight from LE3 - the pipeline never converts these, and neither do we.
+                    }
+
+                    // Milan keeps ME3's package names, so the (package, bank) pair resolves directly. No name-only
+                    // fallback on purpose: a bank name can cover several genuinely different banks, and silently
+                    // converting from the wrong one is exactly the failure this index exists to prevent.
+                    var canonicalKey = $"{bankName}|{packagePath.GetUnrealLocalization()}";
+                    if (!sourceByPackageAndBank.ContainsKey($"{packageFileName}\t{bankName}")
+                        || !canonicalByKey.TryGetValue(canonicalKey, out var cacheName))
+                    {
+                        noSource++;
+                        continue;
+                    }
+
+                    if (conflicts.TryGetValue(canonicalKey, out var conflict) && reportedConflicts.Add(canonicalKey))
+                    {
+                        MilanLog.Warning($"  {bankName}: ME3 ships {conflict}");
+                    }
+
+                    try
+                    {
+                        var v56 = File.ReadAllBytes(Path.Combine(ME3BankCacheFolder, cacheName));
+                        var installed = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(bankExport).BnkFile ?? [];
+                        var sourceBank = BankConverter.Bnk.BankFile.ReadV56(v56);
+
+                        // Split the installed media the same way the pipeline does. A PrefetchStreaming source's
+                        // embedded bytes are ALREADY a truncated header fragment, so they must go in as
+                        // prefetchFragments - handing them to wemReplacements would run PrefetchBuilder over an
+                        // existing fragment and truncate it a second time.
+                        var streamTypes = sourceBank.HircRaw != null
+                            ? BankConverter.Bnk.Chunks.HircChunk.ScanSourceStreamTypes(sourceBank.HircRaw)
+                            : new Dictionary<uint, BankConverter.Bnk.Hirc.SourceStreamType>();
+
+                        var wemReplacements = new Dictionary<uint, byte[]>();
+                        var prefetchFragments = new Dictionary<uint, byte[]>();
+                        foreach (var (id, bytes) in BankConverter.Bnk.Chunks.WemExtractor.ExtractRaw(installed))
+                        {
+                            if (streamTypes.TryGetValue(id, out var st) && st == BankConverter.Bnk.Hirc.SourceStreamType.PrefetchStreaming)
+                            {
+                                prefetchFragments[id] = bytes;
+                            }
+                            else
+                            {
+                                wemReplacements[id] = bytes;
+                            }
+                        }
+
+                        foreach (var id in BankConverter.Bnk.Chunks.WemExtractor.ExtractRaw(v56).Keys)
+                        {
+                            if (wemReplacements.ContainsKey(id) || prefetchFragments.ContainsKey(id)) continue;
+                            var cachedWem = Path.Combine(AFCHandler.WemDiskCacheFolder, $"{id}.wem");
+                            if (!File.Exists(cachedWem)) continue;
+                            // A disk-cache entry is the FULL re-encoded WEM, not a fragment, so it always goes
+                            // through wemReplacements and lets PrefetchBuilder truncate it properly.
+                            wemReplacements[id] = File.ReadAllBytes(cachedWem);
+                        }
+
+                        var stats = new BankConverter.Bnk.Chunks.HircConversionStats();
+                        var missingWems = new List<uint>();
+                        var converted = sourceBank.ConvertToV134(stats,
+                            wemReplacements: wemReplacements, missingWems: missingWems,
+                            prefetchFragments: prefetchFragments, externallyProvidedMedia: externallyProvidedMedia);
+
+                        if (missingWems.Count > 0)
+                        {
+                            MilanLog.Warning($"  {bankName}: {missingWems.Distinct().Count()} WEM id(s) had no v134 replacement (left unconverted - WILL crash on playback)");
+                        }
+                        if (stats.Errors.Count > 0)
+                        {
+                            MilanLog.Warning($"  {bankName}: {stats.Errors.Count} HIRC object(s) failed to convert: {string.Join("; ", stats.Errors.Take(3))}");
+                        }
+
+                        if (converted.AsSpan().SequenceEqual(installed))
+                        {
+                            identical++;
+                            continue;
+                        }
+
+                        MilanLog.Information($"  {bankName}: {installed.Length} -> {converted.Length} bytes ({packageFileName})");
+                        changed++;
+                        if (!dryRun)
+                        {
+                            ObjectBinary.EditBinary<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(bankExport, x => x.BnkFile = converted);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        failed++;
+                        MilanLog.Exception(e, $"  {bankName}: conversion threw");
+                    }
+                }
+
+                if (!dryRun && package.IsModified)
+                {
+                    package.Save();
+                }
+            }
+
+            MilanLog.Information($"Bank install complete: {changed} changed, {identical} already identical, {skipped} donored (left alone), {noSource} without an ME3 source, {failed} failed");
+        }
+
+        /// <summary>
+        /// Runs <see cref="AudioPipeline.AuditBankNameConsistency"/> over an installed mod folder, so the UE3
+        /// object-identity rule (same bank name =&gt; same bytes, or load order decides which one the game gets) can
+        /// be checked against a shipped build without re-running the pipeline.
+        /// </summary>
+        internal static void AuditInstalledBankConsistency(string targetFolder = null)
+        {
+            targetFolder ??= Path.Combine(LMPDirectory.DefaultGamePath, @"BioGame\DLC\DLC_MOD_ProjectMilan");
+            if (!Directory.Exists(targetFolder))
+            {
+                MilanLog.Error($"Audit target path not found: {targetFolder}");
+                return;
+            }
+
+            AudioPipeline.AuditBankNameConsistency(Directory.GetFiles(targetFolder, "*.pcc", SearchOption.AllDirectories).ToList());
+        }
+
+        #endregion
 
         /// <summary>
         /// Installs a single bank into the game

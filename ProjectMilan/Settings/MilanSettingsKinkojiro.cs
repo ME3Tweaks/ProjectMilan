@@ -8,6 +8,7 @@ namespace ProjectMilan.Settings
     {
         public string OutputModPath { get; set; } = $@"E:\Modding\LE3\Project Milan\{MilanShared.DLC_NAME}";
         public string InputSyncPath { get; set; } = $@"E:\Modding\LE3\Project Milan\InputSync";
+        public string TextureSyncFolder { get; set; } = null;
         public bool RunMPCommonPipeline { get; set; }
         public bool RunDonorBuildPipeline { get; set; }
         public bool RunMP4EnemiesPipeline { get; set; }
@@ -20,6 +21,7 @@ namespace ProjectMilan.Settings
         public string MilanUDKPath { get; set; } // NEEDS TO BE SET!
         public bool RunLevelsPipeline { get; set; }
         public bool RunAudioPipeline { get; set; }
+        public bool RunUpscalePipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; }
         public bool RunShaderPipeline { get; set; } = false;
         public int MaxThreads { get; set; } = 1;

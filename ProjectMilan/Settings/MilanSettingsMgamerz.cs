@@ -54,16 +54,18 @@ namespace ProjectMilan.Settings
             }
         }
 
+        public string TextureSyncFolder { get; set; } = @"G:\My Drive\Mass Effect Legendary Modding\LE3\ProjectMilan\Texture\Extracted";
+
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunNonStartupPipeline { get; set; } = true;
         public bool RunDonorBuildPipeline { get; set; } = true;
         public bool RunMP4EnemiesPipeline { get; set; } = true;
         public bool RunKitsPipeline { get; set; } = true;
         public bool RunWeaponsPipeline { get; set; } = true;
-        public bool RunConformancePipeline { get; set; } = false;
+        public bool RunConformancePipeline { get; set; } = true;
         public bool RunRejectionPipeline { get; set; }
         public bool RunRedemptionPipeline { get; set; }
-        public bool IsStaticLightingBuild { get; set; } = false;
+        public bool IsStaticLightingBuild { get; set; } = true;
 
         private string _milanUDKPath;
         public string MilanUDKPath
@@ -89,6 +91,7 @@ namespace ProjectMilan.Settings
 
         public bool RunLevelsPipeline { get; set; } = true;
         public bool RunAudioPipeline { get; set; } = true;
+        public bool RunUpscalePipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = true;
         public bool RunResynthesis { get; set; } = true;
         public bool RunShaderPipeline { get; set; } = true;

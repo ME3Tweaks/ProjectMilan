@@ -7,6 +7,7 @@ namespace ProjectMilan.Settings
     {
         public string OutputModPath { get; set; } = $@"D:\MEModding\ME3TweaksModManager\mods\LE3\Project Milan\{MilanShared.DLC_NAME}";
         public string InputSyncPath { get; set; } = @"D:\MEModding\ME3TweaksModManager\mods\LE3\Project Milan\MilanSync";
+        public string TextureSyncFolder { get; set; } = null;
         public string MilanUDKPath { get; set; } = @"D:\MEModding\UDK";
         public int MaxThreads { get; set; } = 2;
 
@@ -22,6 +23,7 @@ namespace ProjectMilan.Settings
         public bool IsStaticLightingBuild { get; set; } = false;
         public bool RunLevelsPipeline { get; set; } = false;
         public bool RunAudioPipeline { get; set; } = true;
+        public bool RunUpscalePipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = false;
         public bool RunResynthesis { get; set; } = false;
         public bool RunShaderPipeline { get; set; } = false;

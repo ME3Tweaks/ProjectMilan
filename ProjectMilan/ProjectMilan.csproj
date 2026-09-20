@@ -46,6 +46,7 @@
   <ItemGroup>
 	<PackageReference Include="Iced" Version="1.21.0" />
     <PackageReference Include="CliWrap" Version="3.8.2" />
+    <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="CsvHelper" Version="30.0.1" />
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />

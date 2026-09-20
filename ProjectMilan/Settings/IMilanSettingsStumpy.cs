@@ -9,6 +9,7 @@ namespace ProjectMilan.Settings
 
         public string OutputModPath { get; set; } = $@"{MilanHome}\ModLib\LMP\Project Milan\{MilanShared.DLC_NAME}";
         public string InputSyncPath { get; set; } = $@"{MilanHome}\Sync";
+        public string TextureSyncFolder { get; set; } = null;
         public bool RunMPCommonPipeline { get; set; } = true;
         public bool RunNonStartupPipeline { get; set; } = FullBuild;
         public bool RunDonorBuildPipeline { get; set; } = FullBuild;
@@ -22,6 +23,7 @@ namespace ProjectMilan.Settings
         public string MilanUDKPath { get; set; } = $@"{MilanHome}\MilanUDK";
         public bool RunLevelsPipeline { get; set; } = FullBuild;
         public bool RunAudioPipeline { get; set; } = false;
+        public bool RunUpscalePipeline { get; set; } = true;
         public bool RunTexturePipeline { get; set; } = FullBuild;
         public bool RunResynthesis { get; set; } = FullBuild;
         public bool RunShaderPipeline { get; set; } = false;
