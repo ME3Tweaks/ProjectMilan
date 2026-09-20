@@ -20,6 +20,38 @@ namespace ProjectMilan.Pipelines.Weapons
     internal class SFXWeapons
     {
         private const string LOG_CATEGORY = "MILAN-Weapon";
+
+        /// <summary>
+        /// Folder in the mod output that every built weapon package is written to.
+        /// </summary>
+        private static string OutputFolder => Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"DLCWeapons");
+
+        /// <summary>
+        /// Replays the process-global state this pipeline publishes - each built weapon package is
+        /// registered as a donor (see the AddDonorPackage call in <see cref="CompileWeapon"/>), which
+        /// generates its class info and adds it to the object database. Called instead of
+        /// <see cref="RunPipeline"/> when a restored checkpoint already contains the weapon packages;
+        /// without this, later pipelines (MP4Enemies, Levels) can't resolve the weapon classes.
+        /// </summary>
+        internal static void RehydrateFromCheckpoint()
+        {
+            if (!Directory.Exists(OutputFolder))
+            {
+                // Can happen if the checkpoint was built with RunWeaponsPipeline disabled.
+                MilanLog.Warning($"Restored checkpoint has no {Path.GetFileName(OutputFolder)} folder; weapon donors were not rehydrated.", customPrefix: LOG_CATEGORY);
+                return;
+            }
+
+            var weaponPackages = Directory.GetFiles(OutputFolder, "*.pcc", SearchOption.TopDirectoryOnly);
+            MilanLog.Information($"Rehydrating {weaponPackages.Length} checkpointed weapon package(s) as donors", customPrefix: LOG_CATEGORY);
+
+            using var cache = new PackageCache("SFXWeapons checkpoint rehydration cache");
+            foreach (var weaponPackage in weaponPackages)
+            {
+                MilanShared.AddDonorPackage(weaponPackage, cache);
+            }
+        }
+
         public static void RunPipeline()
         {
             var vars = new MPWeaponVars();
@@ -255,9 +287,8 @@ namespace ProjectMilan.Pipelines.Weapons
             weaponPipeline.Cache = pipelineCache.ChainNewCache(debugName: $"SFXWeapons weapon cache ({weaponPipeline.PackageName})");
             weaponPipeline.Cache.InsertIntoCache(MilanShared.GetLE3GlobalPackages());
 
-            var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", @"DLCWeapons");
-            Directory.CreateDirectory(outputPath);
-            var finalPackagePath = Path.Combine(outputPath, weaponPipeline.PackageName + ".pcc");
+            Directory.CreateDirectory(OutputFolder);
+            var finalPackagePath = Path.Combine(OutputFolder, weaponPipeline.PackageName + ".pcc");
 
             // Find modified source text.
             string file;

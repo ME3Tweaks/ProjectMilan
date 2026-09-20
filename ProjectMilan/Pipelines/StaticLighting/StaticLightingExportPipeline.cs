@@ -55,7 +55,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             // This is kind of a hack. This is just so we can pass the delegates through 
             // without having to change stuff in LEC right now.
             RelinkerOptionsPackage delegatesROP = new RelinkerOptionsPackage();
-            delegatesROP.CustomRelinkUIndex = UDKSetupT3D.ImportOutsideOfPackageRelink;
+            delegatesROP.CustomRelinkUIndex = UDKRelinker.ImportOutsideOfPackageRelink;
             delegatesROP.SourceCustomImportFileResolver = MilanShared.LE3PackageResolver;
 
             string persistentPath = ConvertToUDK.GenerateUDKFileForLevel(levelMaster, mapOutputPath, assetOutputPath, decookedMaterialsDir);
