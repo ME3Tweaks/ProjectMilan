@@ -40,6 +40,19 @@ namespace ProjectMilanCore
         };
 
         /// <summary>
+        /// True for a MaterialInstance that owns a static permutation, i.e. one the engine compiles a
+        /// separate shader map for instead of reusing its parent's.
+        /// </summary>
+        /// <remarks>
+        /// Static switch, component mask and normal parameters are compile-time, so an instance that
+        /// overrides any of them cannot share the parent's shaders. Instances without a permutation
+        /// render through the parent's map and need nothing installed.
+        /// </remarks>
+        private static bool IsPermutationInstance(ExportEntry export) =>
+            export.IsA("MaterialInstance")
+            && export.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true;
+
+        /// <summary>
         /// Installs shaders to the package for materials that are marked as broken. If a material isn't broken,
         /// this won't update their shaders, unless <paramref name="force"/> is set.
         /// </summary>
@@ -66,8 +79,11 @@ namespace ProjectMilanCore
                 packageMap[Path.GetFileNameWithoutExtension(p)] = p;
             }
 
+            // MaterialInstances with a static permutation own a shader map of their own, keyed by their
+            // SM3StaticParameterSet rather than by a material resource ID. GetBrokenMaterials already
+            // returns them; the force path has to ask for them explicitly.
             var materialsToProcess = force
-                ? package.Exports.Where(x => x.IsA("Material")).ToList()
+                ? package.Exports.Where(x => x.IsA("Material") || IsPermutationInstance(x)).ToList()
                 : ShaderCacheManipulator.GetBrokenMaterials(package);
 
             // Source shader caches are deserialized once per compiled package and merged into a single
@@ -80,7 +96,8 @@ namespace ProjectMilanCore
 
             foreach (var brokenMat in materialsToProcess)
             {
-                if (!brokenMat.IsA("Material"))
+                var isInstance = IsPermutationInstance(brokenMat);
+                if (!brokenMat.IsA("Material") && !isInstance)
                 {
                     continue;
                 }
@@ -102,7 +119,7 @@ namespace ProjectMilanCore
                         if (matchingMat == null)
                         {
                             // Try just finding it by name...
-                            var matchingPossibilities = compiledPackage.Exports.Where(x => x.ClassName == "Material" && x.ObjectName.Instanced == brokenMat.ObjectName).ToList();
+                            var matchingPossibilities = compiledPackage.Exports.Where(x => x.ClassName == brokenMat.ClassName && x.ObjectName.Instanced == brokenMat.ObjectName).ToList();
                             if (matchingPossibilities.Count == 1)
                             {
                                 MilanLog.Warning($"Found material using name-match only. Decooker needs nesting fixes most likely.");
@@ -156,6 +173,31 @@ namespace ProjectMilanCore
                         shaderCache.MergeInto(accumulatedCache);
                     }
                     anyShadersToInstall = true;
+
+                    if (isInstance)
+                    {
+                        // An instance's shader map is keyed by its whole SM3StaticParameterSet, not by a
+                        // resource ID, so the set is copied wholesale rather than field by field. That
+                        // also carries over BaseMaterialId, which has to match the compiled parent's
+                        // resource ID -- and the Material branch below rewrites exactly that ID, so an
+                        // instance left on the old BaseMaterialId would key into nothing and render the
+                        // engine's fallback.
+                        // SM3 only. The SM2 block still has to serialize for the binary to round-trip,
+                        // but the games never read it, so there is nothing to install into it.
+                        var matchingInstBin = ObjectBinary.From<MaterialInstance>(matchingMat);
+                        ObjectBinary.EditBinary<MaterialInstance>(brokenMat, x =>
+                        {
+                            x.SM3StaticParameterSet = matchingInstBin.SM3StaticParameterSet;
+                            x.SM3StaticPermutationResource.ID = matchingInstBin.SM3StaticPermutationResource.ID;
+                        });
+
+                        // The installed map is only reachable if the instance still asks for one.
+                        brokenMat.WriteProperty(new BoolProperty(true, "bHasStaticPermutationResource"));
+
+                        // No bUsedWith* here: those are UMaterial fields. The parent carries them.
+                        continue;
+                    }
+
                     // update the id of the material to match the compiled version
                     var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
                     ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
