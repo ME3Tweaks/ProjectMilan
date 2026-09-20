@@ -196,7 +196,6 @@ namespace ProjectMilan
                             var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
                             if ("N".CaseInsensitiveEquals(input))
                             {
-                                RestoreCheckpointForThisRun = false;
                                 MilanLog.Information("Not using checkpoint for this run");
                             }
                             else
@@ -230,8 +229,8 @@ namespace ProjectMilan
                     {
                         MilanLog.Information("Not restoring a checkpoint - purging the converted-WEM cache so audio is regenerated from source");
                         AudioPipeline.Clean();
+                    }
                 }
-            }
             }
 
             if (!researchMode)
@@ -444,20 +443,17 @@ namespace ProjectMilan
                     BaseDeltaHandler.PrepareForCheckpointRestore();
                 }
                 else
-                    {
+                {
                     MilanLog.Error("Could not use checkpoint; continuing with full pipeline run.");
                     RestoreStage = ECheckpointStage.None;
-                    }
                 }
+            }
 
             if (RestoreStage == ECheckpointStage.None)
             {
                 // Build/cache patch targets (e.g. SFXGame) before anything that might import from them.
                 BaseDeltaHandler.PrepareForFreshBuild(CreateStage != ECheckpointStage.None);
             }
-
-            // Build/cache patch targets (e.g. SFXGame) before anything that might import from them.
-            BaseDeltaHandler.PrepareForFreshBuild(CreateCheckpointForThisRun);
 
             // Pre-build pipelines
             RunPipeline(ECheckpointStage.ModBuild, true, ModBuilder.RunPipeline, "ModBuild"); // Always run, unless a restored checkpoint already contains its output
@@ -469,7 +465,6 @@ namespace ProjectMilan
             RunPipeline(ECheckpointStage.NonStartup, Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
             // goto end;
 
-        postMpCommon:
             // Content build pipelines
 
             if (!MilanShared.EnsureMPCommonInGame(out var mpCommonPath)) // These require BIOP_MP_COMMON
@@ -495,10 +490,6 @@ namespace ProjectMilan
 
             // This pipeline must come after weapons as it depends on Collector SMG.
             if (Settings.RunMP4EnemiesPipeline && !Settings.RunWeaponsPipeline)
-            {
-                RunPipeline(Settings.RunMP4EnemiesPipeline, MP4NewEnemiesPipeline.RunPipeline, "MP4Enemies"); // Ports MP4 enemies that need custom code handling
-            }
-            else if (Settings.RunMP4EnemiesPipeline)
             {
                 MilanLog.Error(@"MP4Enemies pipeline cannot run without SFXWeapons, pipeline being skipped.");
             }
@@ -709,7 +700,7 @@ namespace ProjectMilan
                 $"CheckpointStages table disagrees with the inline setting for pipeline {pipelineName}");
 
             if (stage != ECheckpointStage.None && RestoreStage != ECheckpointStage.None && stage <= RestoreStage)
-        {
+            {
                 MilanLog.Information($"Skipping pipeline: {pipelineName}, already covered by the restored checkpoint (stage {RestoreStage})");
 
                 // Output is on disk, but nothing has loaded it into memory - replay whatever global
@@ -770,13 +761,11 @@ namespace ProjectMilan
             return;
             Research.TestBuildTerrainPackage();
             return;
-            // Put your method in Research class and call it here.
-            //Research.CopyPreview2();
-            //return;
-            Research.GetMissingShaderPackages(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels");
+
+            TextureResearch.FindUniqueLMPTextures(@"S:\Milan\Textures");
             return;
 
-            Research.InstallCompiledShaders(force: true);// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
+            Research.InstallCompiledShaders(force: false);// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
             return;
 
             //return;
@@ -795,12 +784,7 @@ namespace ProjectMilan
             //UDKSetup.TestConvertToUDK();
             //UDKSetup.TestFixingUDKCrash();
 
-            //UDKSetupT3D.GeneratePackageInfos();
-
             //Research.GeneratePerPackageNesting();
-            //UDKSetupT3D.DecookME3MPDLC();
-            //UDKSetupT3D.CompileT3Ds();
-            // UDKSetupT3D.ConvertAssetsToUDK();
             //Research.LightingBake();
             // Research.ScanForShaderCompPackages();
             Research.InstallCompiledShaders();
