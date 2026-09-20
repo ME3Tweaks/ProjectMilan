@@ -36,17 +36,22 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="LEDecooker/LEDecooker.csproj">
+    <BuildType Solution="Debug|x64" Project="Debug" />
+    <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
-    <BuildType Solution="WinAzureTest|*" Project="Release" />
-    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Debug" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
     <Platform Solution="Debug|x64" Project="x64" />
+    <Platform Solution="Release|x64" Project="x64" />
   </Project>
   <Project Path="LegendaryExplorer/LegendaryExplorer/LegendaryExplorerCore/LegendaryExplorerCore.csproj">
-    <BuildType Solution="Debug|*" Project="WinDebug" />
-    <BuildType Solution="Release|Any CPU" Project="WinAzureRelease" />
-    <BuildType Solution="Release|x64" Project="WinRelease" />
-    <BuildType Solution="Release|x86" Project="WinRelease" />
+    <BuildType Solution="Debug|x64" Project="Debug" />
+    <BuildType Solution="Release|x64" Project="Release" />
+    <BuildType Solution="WinAzureRelease|*" Project="WinAzureRelease" />
+    <BuildType Solution="WinAzureTest|*" Project="WinAzureTest" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
     <Platform Project="x64" />
   </Project>
   <Project Path="LegendaryExplorer/LegendaryExplorer/submodules/Wwiser.NET/BinarySerializer/BinarySerializer/BinarySerializer.csproj">
@@ -159,10 +164,13 @@
     <Build Solution="WinRelease|x64" Project="false" />
   </Project>
   <Project Path="RedemptionMapTool/RedemptionMapTool.csproj" Id="2fae0277-39f4-482d-8167-6da191f38d11">
+    <BuildType Solution="Debug|x64" Project="Debug" />
+    <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
-    <BuildType Solution="WinAzureTest|*" Project="Release" />
-    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Debug" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Project="x64" />
   </Project>
   <Project Path="ShaderCompare/ShaderCompare.csproj">
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
@@ -171,10 +179,13 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="ShaderResearchTool/ShaderResearchTool.csproj">
+    <BuildType Solution="Debug|x64" Project="Debug" />
+    <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
-    <BuildType Solution="WinAzureTest|*" Project="Release" />
-    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Debug" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Project="x64" />
   </Project>
   <Project Path="WwiseTools/WwiseTools_DotNet6/WwiseTools_DotNet6.csproj">
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
