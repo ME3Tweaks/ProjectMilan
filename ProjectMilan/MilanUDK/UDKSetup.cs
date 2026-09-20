@@ -14,11 +14,16 @@ using ProjectMilan.Pipelines.StaticLighting;
 
 namespace ProjectMilan.MilanUDK
 {
-    // DEPRECATED - USE UDKSetupT3D.
-
     /// <summary>
     /// Sets up UDK for use with Milan. It is best to make a brand new installation of UDK, separate from the one you use for LEX.
     /// </summary>
+    /// <remarks>
+    /// This used to be marked "DEPRECATED - USE UDKSetupT3D", but UDKSetupT3D was a pre-split copy of the
+    /// decooker and has been deleted; the decooker proper is the LEDecooker project. Only EnsureUDK,
+    /// SetupUDK and GetMilanDecookedMaterialsDirectory are still called. Everything reachable only from
+    /// DecookGameToUDK or TestFixingUDKCrash is the superseded v1 decook-to-UDK path - unused, but unlike
+    /// UDKSetupT3D it is not duplicated anywhere else, so it is kept rather than deleted.
+    /// </remarks>
     internal class UDKSetup
     {
         public static void EnsureUDK()
