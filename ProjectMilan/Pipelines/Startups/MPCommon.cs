@@ -1079,6 +1079,30 @@ namespace ProjectMilan.Pipelines.Startups
         }
 
         /// <summary>
+        /// Replays the process-global state this pipeline publishes (see the tail of the build method:
+        /// the global package cache entry and the shared MPCommon FileLib tier) against an already-built
+        /// BIOP_MP_COMMON that a restored checkpoint put back on disk. Called instead of
+        /// <see cref="RunPipeline"/> when a checkpoint covers this stage - the output is already there,
+        /// but nothing has loaded it into memory yet.
+        /// </summary>
+        internal static void RehydrateFromCheckpoint()
+        {
+            var restoredPath = Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", MilanShared.MP_STARTUP_FILENAME);
+            if (!File.Exists(restoredPath))
+            {
+                // Can happen if the checkpoint was built with RunMPCommonPipeline disabled. Downstream
+                // pipelines will fail on their own if they actually needed it; don't kill the run here.
+                MilanLog.Warning($"Restored checkpoint does not contain {MilanShared.MP_STARTUP_FILENAME}; MPCommon state was not rehydrated.", customPrefix: LOG_CATEGORY);
+                return;
+            }
+
+            MilanLog.Information($"Rehydrating MPCommon state from checkpointed {MilanShared.MP_STARTUP_FILENAME}", customPrefix: LOG_CATEGORY);
+            var restoredPackage = MEPackageHandler.OpenMEPackage(restoredPath, diskIOSyncLock: MilanShared.DiskIOSyncLock);
+            MilanShared.AddGlobalCachedPackage(restoredPackage);
+            LE3FileLibCache.InitializeMPCommonFileLib(restoredPackage);
+        }
+
+        /// <summary>
         /// Deletes every on-disk cache owned by the MPCommon pipeline: decompiled MPCommon classes, decompiled
         /// autodonor dependency classes, and the merge mod staging cache. Does NOT touch hand-authored content
         /// such as MPCommonAdditionalClasses, FunctionOverride, MPCommonAddins, or InjectedFunctions.

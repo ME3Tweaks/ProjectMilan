@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ProjectMilan.Pipelines.Mod.BaseDelta;
@@ -40,9 +42,35 @@ namespace ProjectMilan.Utility
         {
             public DateTime CreatedUtc { get; set; }
             public int MinCheckpointVersion { get; set; }
+
+            /// <summary>
+            /// Name of the <see cref="ECheckpointStage"/> this checkpoint was taken at - the last
+            /// pipeline whose output it contains. Absent on checkpoints written before multi-stage
+            /// support existed, which were all taken after NonStartup.
+            /// </summary>
+            public string? Stage { get; set; }
+
+            /// <summary>
+            /// Pipelines at or before <see cref="Stage"/> that were disabled in settings when this
+            /// checkpoint was built, and so contributed nothing to it. Restoring warns about any of
+            /// these that the current settings have since re-enabled, because they still won't run.
+            /// </summary>
+            public List<string>? SkippedPipelines { get; set; }
         }
 
-        internal static void CreateCheckpoint()
+        /// <summary>
+        /// What a checkpoint's metadata file says about it. Also returned (as version 0) when there
+        /// is no readable metadata at all, which makes it fail the version check like any other
+        /// outdated checkpoint.
+        /// </summary>
+        internal sealed record CheckpointInfo(int Version, ECheckpointStage Stage, DateTime CreatedUtc, IReadOnlyList<string> SkippedPipelines);
+
+        /// <summary>
+        /// Writes the mod output to the checkpoint folder and records which pipeline it was taken at.
+        /// </summary>
+        /// <param name="stage">The last pipeline whose output this checkpoint contains.</param>
+        /// <param name="skippedPipelines">Pipelines at or before <paramref name="stage"/> that were disabled in settings this run.</param>
+        internal static void CreateCheckpoint(ECheckpointStage stage, IReadOnlyList<string> skippedPipelines)
         {
             if (string.IsNullOrWhiteSpace(Program.Settings.CheckpointFolder))
             {
@@ -56,7 +84,7 @@ namespace ProjectMilan.Utility
                 return;
             }
 
-            MilanLog.Information($"Creating checkpoint at {Program.Settings.CheckpointFolder}");
+            MilanLog.Information($"Creating checkpoint at {Program.Settings.CheckpointFolder} (stage: {stage})");
 
             // Only clear/rewrite Data - Delta is maintained independently by BaseDeltaHandler
             // (PrepareForFreshBuild(), which already ran earlier this pipeline run) and must not be
@@ -71,7 +99,9 @@ namespace ProjectMilan.Utility
                 var metadata = new CheckpointMetadata
                 {
                     CreatedUtc = DateTime.UtcNow,
-                    MinCheckpointVersion = Program.MIN_CHECKPOINT_VERSION
+                    MinCheckpointVersion = Program.MIN_CHECKPOINT_VERSION,
+                    Stage = stage.ToString(),
+                    SkippedPipelines = skippedPipelines?.ToList() ?? []
                 };
 
                 var json = JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true });
@@ -128,23 +158,53 @@ namespace ProjectMilan.Utility
             Utilities.DeleteFilesAndFoldersRecursively(Program.Settings.CheckpointFolder, deleteDirectoryItself: false);
         }
 
-        internal static int ReadCheckpointVersion()
+        /// <summary>
+        /// Reads the existing checkpoint's metadata. Missing or unreadable metadata reads as version 0,
+        /// which fails the <see cref="Program.MIN_CHECKPOINT_VERSION"/> check and so is treated as an
+        /// outdated checkpoint.
+        /// </summary>
+        internal static CheckpointInfo ReadCheckpointMetadata()
         {
             try
             {
                 var metaPath = Path.Combine(Program.Settings.CheckpointFolder ?? string.Empty, METADATA_FILENAME);
                 if (!File.Exists(metaPath))
-                    return 0; // version zero if missing
+                    return new CheckpointInfo(0, DEFAULT_STAGE, default, []);
 
                 var json = File.ReadAllText(metaPath);
                 var metadata = JsonSerializer.Deserialize<CheckpointMetadata>(json);
-                return metadata?.MinCheckpointVersion ?? 0;
+                if (metadata == null)
+                    return new CheckpointInfo(0, DEFAULT_STAGE, default, []);
+
+                return new CheckpointInfo(metadata.MinCheckpointVersion, ParseStage(metadata.Stage), metadata.CreatedUtc,
+                    metadata.SkippedPipelines ?? []);
             }
             catch (Exception ex)
             {
                 MilanLog.Error($"Failed to read checkpoint metadata: {ex}");
-                return 0;
+                return new CheckpointInfo(0, DEFAULT_STAGE, default, []);
             }
+        }
+
+        /// <summary>
+        /// Stage assumed for a checkpoint that doesn't record one. Checkpoints written before
+        /// multi-stage support existed were always taken immediately after NonStartup, so they can
+        /// still be restored correctly rather than being thrown away.
+        /// </summary>
+        private const ECheckpointStage DEFAULT_STAGE = ECheckpointStage.NonStartup;
+
+        private static ECheckpointStage ParseStage(string? stageName)
+        {
+            if (string.IsNullOrWhiteSpace(stageName))
+                return DEFAULT_STAGE;
+
+            if (!Enum.TryParse<ECheckpointStage>(stageName, ignoreCase: true, out var stage) || stage == ECheckpointStage.None)
+            {
+                MilanLog.Warning($"Checkpoint metadata names an unknown stage '{stageName}'; assuming {DEFAULT_STAGE}.");
+                return DEFAULT_STAGE;
+            }
+
+            return stage;
         }
 
         private static void CopyDirectoryContents(string sourceDirectory, string destinationDirectory)

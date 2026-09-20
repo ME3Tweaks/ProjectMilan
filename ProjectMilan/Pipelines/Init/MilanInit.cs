@@ -44,23 +44,8 @@ namespace ProjectMilan.Pipelines.Init
             MilanShared.LE3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.LE3);
             MilanShared.ME3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.ME3);
 
-            // Sync files from ME3Tweaks so developers are all on the same fileset.
-            MilanSync();
-
             WriteDonorOutputPath(); // For development
             SharedMaterialDonor.RegisterSharedDonors();
-        }
-
-        /// <summary>
-        /// Gets the path of a file located in the specific sync directory
-        /// </summary>
-        /// <param name="filename"></param>
-        /// <returns></returns>
-        public static string GetSyncFile(string filename)
-        {
-            var outP = Path.Combine(Program.Settings.InputSyncPath, filename.Replace("/", "\\"));
-            Directory.GetParent(outP).Create();
-            return outP;
         }
 
         /// <summary>
@@ -110,57 +95,6 @@ namespace ProjectMilan.Pipelines.Init
                 MilanLog.Error(@"You must specify an output path in your settings class.");
                 Environment.Exit(1);
                 return;
-            }
-            if (Program.Settings.InputSyncPath == null)
-            {
-                MilanLog.Error(@"You must specify an input sync path in your settings class.");
-                Environment.Exit(1);
-                return;
-            }
-        }
-
-        private const string PROJECT_ENDPOINT = @"https://me3tweaks.com/projects/qB45ZdqYTdve7T7eUjgb";
-
-        private static void MilanSync()
-        {
-            // Get manifest
-            MilanLog.Information(@"Performing MilanSync");
-            var manifest = Utilities.GetJsonStringFromEndpoint(PROJECT_ENDPOINT + @"/getinfo");
-            if (manifest == null)
-            {
-                MilanLog.Warning(@"Unable to get manifest from ME3Tweaks. Skipping MilanSync");
-                return;
-            }
-
-            Directory.CreateDirectory(Program.Settings.InputSyncPath);
-            var files = JsonConvert.DeserializeObject<List<SyncFile>>(manifest);
-            foreach (var file in files)
-            {
-                var localFile = GetSyncFile(file.FileName);
-                bool shouldSync = !File.Exists(localFile);
-                if (!shouldSync)
-                {
-                    shouldSync = new FileInfo(localFile).Length != file.FileSize;
-                }
-
-                var filetime = DateTimeOffset.FromUnixTimeSeconds(file.FileTime);
-                if (!shouldSync)
-                {
-                    shouldSync = new FileInfo(localFile).LastWriteTimeUtc != filetime;
-                }
-
-                if (!shouldSync)
-                {
-                    MilanLog.Information($@"Synced file is up to date: {file.FileName}", customPrefix: LOG_CATEGORY);
-                    continue;
-                }
-
-                MilanLog.Information($@"Updating synced file: {file.FileName}", customPrefix: LOG_CATEGORY);
-                using (var client = new WebClient())
-                {
-                    client.DownloadFile(PROJECT_ENDPOINT + "/files/" + file.FileName, localFile);
-                    File.SetLastWriteTimeUtc(localFile, filetime.DateTime);
-                }
             }
         }
     }

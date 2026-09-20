@@ -59,12 +59,52 @@ namespace ProjectMilan
         /// </summary>
         private static Dictionary<string, long> pipelineTimes = new();
 
-        private static bool CreateCheckpointForThisRun;
-        private static bool RestoreCheckpointForThisRun;
+        /// <summary>
+        /// Pipeline to create a checkpoint at once it finishes, or <see cref="ECheckpointStage.None"/> to not create one.
+        /// </summary>
+        private static ECheckpointStage CreateStage;
+
+        /// <summary>
+        /// Pipeline a restored checkpoint covers - every pipeline up to and including this one is skipped -
+        /// or <see cref="ECheckpointStage.None"/> when not restoring.
+        /// </summary>
+        private static ECheckpointStage RestoreStage;
+
+        /// <summary>
+        /// The pipelines a checkpoint can be taken at, in run order, paired with the setting that decides
+        /// whether each one runs. Drives the checkpoint stage menu and the "your checkpoint won't contain X"
+        /// warnings; <see cref="RunPipelines"/> still gates each pipeline with the same setting inline, and
+        /// <see cref="RunPipeline(ECheckpointStage,bool,Action,string)"/> asserts the two agree.
+        /// </summary>
+        private static readonly (ECheckpointStage Stage, string Name, Func<bool> Enabled)[] CheckpointStages =
+        [
+            (ECheckpointStage.MPCommon, "MPCommon", () => Settings.RunMPCommonPipeline),
+            (ECheckpointStage.NonStartup, "NonStartup", () => Settings.RunNonStartupPipeline),
+            (ECheckpointStage.Kits, "Kits", () => Settings.RunKitsPipeline),
+            (ECheckpointStage.Weapons, "Weapons", () => Settings.RunWeaponsPipeline),
+            (ECheckpointStage.MP4Enemies, "MP4Enemies", () => Settings.RunWeaponsPipeline && Settings.RunMP4EnemiesPipeline),
+            (ECheckpointStage.Levels, "Levels", () => Settings.RunLevelsPipeline),
+            (ECheckpointStage.Rejection, "Rejection", () => Settings.RunRejectionPipeline),
+            (ECheckpointStage.Redemption, "Redemption", () => Settings.RunRedemptionPipeline),
+        ];
+
+        /// <summary>
+        /// Pipelines that publish process-global in-memory state which later pipelines depend on. When a
+        /// restored checkpoint means one of these never runs, its output is on disk but nothing has loaded
+        /// it into memory, so the registration has to be replayed instead. Every other pipeline is disk-only
+        /// and needs no entry here - if you add a global registration to one, add it here too.
+        /// </summary>
+        private static readonly Dictionary<ECheckpointStage, Action> CheckpointRehydrators = new()
+        {
+            [ECheckpointStage.MPCommon] = MPCommon.RehydrateFromCheckpoint,
+            [ECheckpointStage.Weapons] = SFXWeapons.RehydrateFromCheckpoint,
+        };
 
 
         /// <summary>
-        /// Bump this every time there are changes to MPCommon or NonStartup pipelines. It will invalidate stale checkpoints.
+        /// Bump this every time there are changes to a pipeline that can be checkpointed (MPCommon through
+        /// Redemption - see <see cref="ECheckpointStage"/>). It invalidates every existing checkpoint,
+        /// regardless of which stage it was taken at, forcing a complete rebuild.
         /// </summary>
         public const int MIN_CHECKPOINT_VERSION = 5;
 
@@ -121,20 +161,24 @@ namespace ProjectMilan
 
                     if (checkpointExists)
                     {
-                        // Read metadata version (missing or unreadable metadata = version 0)
-                        var cpVersion = Checkpoint.ReadCheckpointVersion();
-                        if (cpVersion < MIN_CHECKPOINT_VERSION)
+                        // Missing or unreadable metadata reads back as version 0, so it fails the check below.
+                        var checkpointInfo = Checkpoint.ReadCheckpointMetadata();
+                        if (checkpointInfo.Version < MIN_CHECKPOINT_VERSION)
                         {
                             Console.WriteLine("-------------------------------");
-                            Console.WriteLine($"Existing checkpoint is outdated (version {cpVersion}, required {MIN_CHECKPOINT_VERSION}).\nUpdate checkpoint now? [Y/n]");
+                            Console.WriteLine($"Existing checkpoint is outdated (version {checkpointInfo.Version}, required {MIN_CHECKPOINT_VERSION}).");
+                            Console.WriteLine($"It was taken at the {checkpointInfo.Stage} pipeline{DescribeCheckpointAge(checkpointInfo.CreatedUtc)}.");
+                            Console.WriteLine("Update checkpoint now? [Y/n]");
                             var input = Console.ReadLine();
                             if ("Y".CaseInsensitiveEquals(input) || string.IsNullOrWhiteSpace(input))
                             {
-                                CreateCheckpointForThisRun = true;
-                                MilanLog.Information("Checkpoint update requested; will create a new checkpoint during this run.");
+                                // Default the menu to the stage the stale checkpoint used, since that's
+                                // almost always what the user wants to end up with again.
+                                CreateStage = PromptForCheckpointStage(checkpointInfo.Stage);
+                                MilanLog.Information($"Checkpoint update requested; will create a new checkpoint at the {CreateStage} pipeline during this run.");
 
-                                // The checkpoint is stale because MPCommon/NonStartup code changed (that's what bumps
-                                // MIN_CHECKPOINT_VERSION), so dump their on-disk caches to force a fully clean
+                                // The checkpoint is stale because pipeline code changed (that's what bumps
+                                // MIN_CHECKPOINT_VERSION), so dump the on-disk caches to force a fully clean
                                 // regeneration instead of reusing decompiled classes from before the change.
                                 MPCommon.Clean();
                                 NonStartupPipeline.Clean();
@@ -147,7 +191,8 @@ namespace ProjectMilan
                         else
                         {
                             Console.WriteLine("-------------------------------");
-                            Console.WriteLine("Use existing checkpoint and skip pre-NonStartup pipelines [Y/n]? (5 second timeout)");
+                            Console.WriteLine($"Existing checkpoint was taken at the {checkpointInfo.Stage} pipeline{DescribeCheckpointAge(checkpointInfo.CreatedUtc)}.");
+                            Console.WriteLine($"Use it and skip all pipelines through {checkpointInfo.Stage} [Y/n]? (5 second timeout)");
                             var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
                             if ("N".CaseInsensitiveEquals(input))
                             {
@@ -156,22 +201,24 @@ namespace ProjectMilan
                             }
                             else
                             {
-                                RestoreCheckpointForThisRun = true;
-                                MilanLog.Information("Using checkpoint for this run");
+                                RestoreStage = checkpointInfo.Stage;
+                                MilanLog.Information($"Using checkpoint for this run; skipping all pipelines through {RestoreStage}");
+                                WarnAboutPipelinesMissingFromCheckpoint(checkpointInfo);
                             }
                         }
                     }
 
-                    // Always ask whether to create a checkpoint after NonStartup (unless user already chose to update/restore)
-                    if (!CreateCheckpointForThisRun && !RestoreCheckpointForThisRun)
+                    // Always ask whether to create a checkpoint (unless the user already chose to update/restore).
+                    // A run either restores or creates, never both.
+                    if (CreateStage == ECheckpointStage.None && RestoreStage == ECheckpointStage.None)
                     {
                         Console.WriteLine("-------------------------------");
-                        Console.WriteLine("Create checkpoint after NonStartup [y/N]? (5 second timeout)");
+                        Console.WriteLine("Create a checkpoint during this run [y/N]? (5 second timeout)");
                         var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
                         if ("Y".CaseInsensitiveEquals(input))
                         {
-                            CreateCheckpointForThisRun = true;
-                            MilanLog.Information("Checkpoint creation enabled for this run");
+                            CreateStage = PromptForCheckpointStage(ECheckpointStage.NonStartup);
+                            MilanLog.Information($"Checkpoint creation enabled for this run at the {CreateStage} pipeline");
                         }
                     }
 
@@ -179,7 +226,7 @@ namespace ProjectMilan
                     // has to go with it. That cache is keyed by source ID alone and records nothing about which
                     // tools produced each entry, so anything converted under an older toolchain (e.g. the wrong
                     // ww2ogg codebook pack) otherwise survives every "clean" build forever and ships corrupt audio.
-                    if (!RestoreCheckpointForThisRun)
+                    if (RestoreStage == ECheckpointStage.None)
                     {
                         MilanLog.Information("Not restoring a checkpoint - purging the converted-WEM cache so audio is regenerated from source");
                         AudioPipeline.Clean();
@@ -243,6 +290,80 @@ namespace ProjectMilan
                 _keepAwakeTimer.Stop();
                 SystemSleepManager.AllowSleep();
             }
+        }
+
+        /// <summary>
+        /// Shows the checkpoint stage menu and returns the pipeline the user picked. Stages whose
+        /// pipeline (or an earlier one) is turned off in settings are flagged in the list, and picking
+        /// one logs a warning rather than blocking - a developer may have deliberately disabled a
+        /// pipeline they never build - but the checkpoint will not contain that pipeline's output.
+        /// </summary>
+        /// <param name="defaultStage">Stage selected if the user just presses enter.</param>
+        private static ECheckpointStage PromptForCheckpointStage(ECheckpointStage defaultStage)
+        {
+            var labels = new List<string>();
+            for (int i = 0; i < CheckpointStages.Length; i++)
+            {
+                var missing = GetDisabledPipelinesThrough(CheckpointStages[i].Stage);
+                labels.Add(missing.Count == 0
+                    ? CheckpointStages[i].Name
+                    : $"{CheckpointStages[i].Name}  [will not contain: {string.Join(", ", missing)}]");
+            }
+
+            var defaultIndex = Array.FindIndex(CheckpointStages, x => x.Stage == defaultStage);
+            var selectedIndex = ConsoleHelpers.PromptForMenuSelection(
+                "Which pipeline should the checkpoint be taken after?", labels, defaultIndex);
+
+            var selected = CheckpointStages[selectedIndex].Stage;
+            var disabled = GetDisabledPipelinesThrough(selected);
+            if (disabled.Count > 0)
+            {
+                MilanLog.Warning($"Checkpoint at {selected} will not contain output from these pipelines, which are disabled in settings: {string.Join(", ", disabled)}");
+            }
+
+            return selected;
+        }
+
+        /// <summary>
+        /// Names of the pipelines at or before <paramref name="stage"/> that are turned off in settings,
+        /// and so will contribute nothing to a checkpoint taken at that stage.
+        /// </summary>
+        private static List<string> GetDisabledPipelinesThrough(ECheckpointStage stage)
+        {
+            return CheckpointStages.Where(x => x.Stage <= stage && !x.Enabled()).Select(x => x.Name).ToList();
+        }
+
+        /// <summary>
+        /// Warns about pipelines that are enabled in the current settings but were disabled when the
+        /// checkpoint being restored was built. Restoring skips them, so despite the setting they will
+        /// not run and their content will be missing from this build.
+        /// </summary>
+        private static void WarnAboutPipelinesMissingFromCheckpoint(Checkpoint.CheckpointInfo checkpointInfo)
+        {
+            if (checkpointInfo.SkippedPipelines == null || checkpointInfo.SkippedPipelines.Count == 0)
+                return;
+
+            foreach (var stage in CheckpointStages.Where(x => x.Stage <= checkpointInfo.Stage && x.Enabled()))
+            {
+                if (checkpointInfo.SkippedPipelines.Contains(stage.Name, StringComparer.OrdinalIgnoreCase))
+                {
+                    MilanLog.Warning($"Pipeline {stage.Name} is enabled in settings, but the checkpoint being restored was built without it - it will NOT run this build. Rebuild the checkpoint if you need it.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Renders a checkpoint's creation time as ", created N days ago (date)", or an empty string
+        /// for a checkpoint that didn't record one.
+        /// </summary>
+        private static string DescribeCheckpointAge(DateTime createdUtc)
+        {
+            if (createdUtc == default)
+                return string.Empty;
+
+            var age = DateTime.UtcNow - createdUtc;
+            var ageText = age.TotalDays >= 1 ? $"{(int)age.TotalDays}d ago" : $"{(int)age.TotalHours}h ago";
+            return $", created {ageText} ({createdUtc.ToLocalTime()})";
         }
 
         /// <summary>
@@ -312,44 +433,40 @@ namespace ProjectMilan
             //RunPipeline(true, MaterialExpressionPipeline.RunPipeline, "MaterialExpression");
             //return;
 
-            if (RestoreCheckpointForThisRun)
+            if (RestoreStage != ECheckpointStage.None)
             {
                 SetConsoleTitle(ConsoleTitlePostFix, "Restoring checkpoint");
                 if (Checkpoint.RestoreCheckpoint())
                 {
+                    // The output folder's contents just changed wholesale - make LE3PackageResolver
+                    // enumerate it again rather than trusting a listing from before the restore.
+                    MilanShared.RefreshMilanFiles = true;
                     BaseDeltaHandler.PrepareForCheckpointRestore();
-
-                    // MPCommon.RunPipeline is skipped on this path (its output was already captured
-                    // into the checkpoint), so nothing has loaded BIOP_MP_COMMON.pcc into memory or
-                    // built the shared MPCommon FileLib tier yet - do that now instead.
-                    var restoredMpCommonPath = Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", MilanShared.MP_STARTUP_FILENAME);
-                    if (File.Exists(restoredMpCommonPath))
+                }
+                else
                     {
-                        var restoredMpCommonPkg = MEPackageHandler.OpenMEPackage(restoredMpCommonPath);
-                        MilanShared.AddGlobalCachedPackage(restoredMpCommonPkg);
-                        LE3FileLibCache.InitializeMPCommonFileLib(restoredMpCommonPkg);
+                    MilanLog.Error("Could not use checkpoint; continuing with full pipeline run.");
+                    RestoreStage = ECheckpointStage.None;
                     }
-
-                    // HATE goto statements
-                    // But it makes it less ugly here...
-                    goto postMpCommon;
                 }
 
-                MilanLog.Error("Could not use checkpoint; continuing with full pipeline run.");
+            if (RestoreStage == ECheckpointStage.None)
+            {
+                // Build/cache patch targets (e.g. SFXGame) before anything that might import from them.
+                BaseDeltaHandler.PrepareForFreshBuild(CreateStage != ECheckpointStage.None);
             }
 
             // Build/cache patch targets (e.g. SFXGame) before anything that might import from them.
             BaseDeltaHandler.PrepareForFreshBuild(CreateCheckpointForThisRun);
 
             // Pre-build pipelines
-            RunPipeline(true, ModBuilder.RunPipeline, "ModBuild"); // This is always run
+            RunPipeline(ECheckpointStage.ModBuild, true, ModBuilder.RunPipeline, "ModBuild"); // Always run, unless a restored checkpoint already contains its output
 
-            RunPipeline(Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
-            RunPipeline(Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
-            if (CreateCheckpointForThisRun && Settings.RunNonStartupPipeline)
-            {
-                Checkpoint.CreateCheckpoint();
-            }
+            // Every pipeline from here through Redemption is checkpointable: passing its stage lets
+            // RunPipeline skip it when a restored checkpoint already covers it (replaying any global
+            // state it publishes), and write the checkpoint once it's done when it's the chosen stage.
+            RunPipeline(ECheckpointStage.MPCommon, Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
+            RunPipeline(ECheckpointStage.NonStartup, Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
             // goto end;
 
         postMpCommon:
@@ -372,12 +489,12 @@ namespace ProjectMilan
             //goto levelBuild;
 
         kitsBuild:
-            RunPipeline(Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
+            RunPipeline(ECheckpointStage.Kits, Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
         weaponsBuild:
-            RunPipeline(Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
+            RunPipeline(ECheckpointStage.Weapons, Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
 
             // This pipeline must come after weapons as it depends on Collector SMG.
-            if (Settings.RunWeaponsPipeline)
+            if (Settings.RunMP4EnemiesPipeline && !Settings.RunWeaponsPipeline)
             {
                 RunPipeline(Settings.RunMP4EnemiesPipeline, MP4NewEnemiesPipeline.RunPipeline, "MP4Enemies"); // Ports MP4 enemies that need custom code handling
             }
@@ -385,15 +502,21 @@ namespace ProjectMilan
             {
                 MilanLog.Error(@"MP4Enemies pipeline cannot run without SFXWeapons, pipeline being skipped.");
             }
+            // The weapons dependency is folded into the gate rather than wrapped around the call so this
+            // stage is always reached - a checkpoint chosen at MP4Enemies still gets written when it's skipped.
+            RunPipeline(ECheckpointStage.MP4Enemies, Settings.RunWeaponsPipeline && Settings.RunMP4EnemiesPipeline, MP4NewEnemiesPipeline.RunPipeline, "MP4Enemies"); // Ports MP4 enemies that need custom code handling
 
         levelBuild:
-            RunPipeline(Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
+            RunPipeline(ECheckpointStage.Levels, Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
         rejectionBuild:
-            RunPipeline(Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
+            RunPipeline(ECheckpointStage.Rejection, Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
         redemptionBuild:
-            RunPipeline(Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipeline, "Redemption"); // Builds Redemption Maps
+            RunPipeline(ECheckpointStage.Redemption, Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipeline, "Redemption"); // Builds Redemption Maps
 
+
+
+        // EVERYTHING AFTER THIS IS NON-CONTENT PORTING AND SHOULD NOT BE CHECKPOINTED ---------
 
             // MIDWAY POINT - We should no longer be porting content, so we can
             // drop some caches to release memory.
@@ -558,14 +681,49 @@ namespace ProjectMilan
 #endif
 
         /// <summary>
-        /// Runs a single pipeline
+        /// Runs a single pipeline that cannot be checkpointed.
         /// </summary>
         /// <param name="shouldRunPipeline"></param>
         /// <param name="runPipeline"></param>
         /// <param name="pipelineName"></param>
-        /// <exception cref="NotImplementedException"></exception>
         private static void RunPipeline(bool shouldRunPipeline, Action runPipeline, string pipelineName)
+            => RunPipeline(ECheckpointStage.None, shouldRunPipeline, runPipeline, pipelineName);
+
+        /// <summary>
+        /// Runs a single checkpointable pipeline. If a restored checkpoint already covers
+        /// <paramref name="stage"/>, the pipeline is skipped and any global state it publishes is
+        /// replayed from the restored output instead. If <paramref name="stage"/> is the stage the user
+        /// chose to checkpoint at, the checkpoint is written once the slot completes.
+        /// </summary>
+        /// <param name="stage">Which checkpoint stage this pipeline is, or <see cref="ECheckpointStage.None"/> for a pipeline that can't be checkpointed.</param>
+        /// <param name="shouldRunPipeline"></param>
+        /// <param name="runPipeline"></param>
+        /// <param name="pipelineName"></param>
+        private static void RunPipeline(ECheckpointStage stage, bool shouldRunPipeline, Action runPipeline, string pipelineName)
         {
+            // The gate here and the CheckpointStages table both decide whether this pipeline runs; if they
+            // ever disagree the stage menu would be lying about what a checkpoint contains. Stages that
+            // aren't offered in the menu (ModBuild) have no table entry and nothing to cross-check.
+            var tableEntry = CheckpointStages.FirstOrDefault(x => x.Stage == stage);
+            Debug.Assert(tableEntry.Name == null || tableEntry.Enabled() == shouldRunPipeline,
+                $"CheckpointStages table disagrees with the inline setting for pipeline {pipelineName}");
+
+            if (stage != ECheckpointStage.None && RestoreStage != ECheckpointStage.None && stage <= RestoreStage)
+        {
+                MilanLog.Information($"Skipping pipeline: {pipelineName}, already covered by the restored checkpoint (stage {RestoreStage})");
+
+                // Output is on disk, but nothing has loaded it into memory - replay whatever global
+                // registrations the pipeline would have made.
+                if (CheckpointRehydrators.TryGetValue(stage, out var rehydrate))
+                {
+                    SetConsoleTitle(ConsoleTitlePostFix, $"Rehydrating {pipelineName}");
+                    rehydrate();
+                }
+
+                MaybeCreateCheckpoint(stage);
+                return;
+            }
+
             if (shouldRunPipeline)
             {
                 MilanLog.Information($"Running pipeline: {pipelineName}");
@@ -582,6 +740,23 @@ namespace ProjectMilan
             {
                 MilanLog.Information($"Skipping pipeline: {pipelineName}, not selected for running in settings");
             }
+
+            MaybeCreateCheckpoint(stage);
+        }
+
+        /// <summary>
+        /// Writes the checkpoint if <paramref name="completedStage"/> is the stage the user chose to take it
+        /// at. Called whether or not the stage's pipeline actually ran - a checkpoint at a stage whose pipeline
+        /// is disabled in settings is still written (the user was warned when they picked it), it just won't
+        /// contain that pipeline's output.
+        /// </summary>
+        private static void MaybeCreateCheckpoint(ECheckpointStage completedStage)
+        {
+            if (completedStage == ECheckpointStage.None || completedStage != CreateStage)
+                return;
+
+            SetConsoleTitle(ConsoleTitlePostFix, "Creating checkpoint");
+            Checkpoint.CreateCheckpoint(completedStage, GetDisabledPipelinesThrough(completedStage));
         }
 
         private static void RunResearch()
