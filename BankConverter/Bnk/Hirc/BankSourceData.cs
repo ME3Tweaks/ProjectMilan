@@ -77,16 +77,19 @@ public sealed class BankSourceData
     /// </param>
     public void WriteV134(BankWriter w, uint? overrideInMemoryMediaSize = null, bool forceData = false)
     {
-        // A third-party/studio-proprietary plugin (company ID in Wwise's PLUGINDEV range) has no LE3
-        // equivalent - its factory was never linked into LE3's stock Wwise runtime. Confirmed against
-        // shipped, working LE3 content (native SFXPawn_GethPrime.pcc, PluginId 0x00650002 - company
-        // 101, pluginType Source - reached by the geth prime's self-destruct explosion event): the
-        // official conversion keeps the PluginId completely unchanged (does NOT remap it to a standard
-        // plugin) and just reports zero media (InMemoryMediaSize=0, and an empty zero-length
-        // PluginParams where one is expected) - i.e. LE3 tolerates an unregistered plugin ID as long as
-        // it's given nothing to actually instantiate/decode. Match that exactly rather than inventing
-        // different (unvalidated) behavior.
-        var isThirdParty = PluginSupport.IsThirdParty(PluginId);
+        // A SOURCE plugin generates its audio rather than reading a media file, so it reports no media.
+        // Confirmed against shipped, working LE3 content (native SFXPawn_GethPrime.pcc, PluginId 0x00650002,
+        // reached by the geth prime's self-destruct explosion event): the official conversion keeps the PluginId
+        // completely unchanged and reports InMemoryMediaSize=0 with an empty zero-length PluginParams. Stock LE3
+        // does this for every source plugin it ships (148/148 resident, 435/435 LMP base).
+        //
+        // This keys off the plugin TYPE, not off who registered it. It used to call IsThirdParty, which was
+        // decoding the wrong bitfield and so happened to return true for exactly these - verified equivalent on
+        // real data: across 83,604 ME3 and 78,925 LE3 Sound objects the two predicates never disagree, because
+        // every source plugin in either game is Audiokinetic (company 0) and every non-source source is the
+        // Vorbis codec 0x00040001. Same behaviour, correct reason - and it no longer moves when IsThirdParty is
+        // fixed. See PluginSupport.
+        var isSourcePlugin = PluginSupport.IsSourcePlugin(PluginId);
         w.U32(PluginId);
         var pluginType = PluginId & 0x0F;
 
@@ -103,7 +106,7 @@ public sealed class BankSourceData
         w.U8((byte)v134StreamType);
 
         w.U32(SourceId);
-        w.U32(isThirdParty ? 0 : overrideInMemoryMediaSize ?? InMemoryMediaSize);
+        w.U32(isSourcePlugin ? 0 : overrideInMemoryMediaSize ?? InMemoryMediaSize);
 
         byte sourceBits = 0;
         if (IsLanguageSpecific) sourceBits |= 1 << 0;
@@ -111,10 +114,9 @@ public sealed class BankSourceData
         if (HasSource) sourceBits |= 1 << 7;
         w.U8(sourceBits);
 
-        var hasParam = pluginType == 2;
-        if (hasParam)
+        if (isSourcePlugin)
         {
-            var bytes = isThirdParty ? Array.Empty<byte>() : (PluginParams ?? Array.Empty<byte>());
+            var bytes = Array.Empty<byte>(); // stock LE3 ships an empty param block for every source plugin
             w.U32((uint)bytes.Length);
             w.Bytes(bytes);
         }
