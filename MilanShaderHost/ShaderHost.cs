@@ -71,9 +71,19 @@ namespace MilanShaderHost
             internal string PackageName { get; } = packageName;
             internal TaskCompletionSource PipeDrained { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
             internal int SkippedForeignPayloadCount;
+
+            /// <summary>
+            /// Foreign-package payloads kept because they are instance permutations this capture is
+            /// the only source of. Reported separately so the ownership rule's effect stays visible.
+            /// </summary>
+            internal int RetainedForeignPermutationCount;
+            internal int RetainedPayloadCount;
         }
 
         private static DebugCaptureSession? activeDebugCapture;
+
+        /// <summary>Debug payloads retained by the most recently finished capture.</summary>
+        internal static int LastCaptureRetainedPayloadCount;
 
         internal static void BeginDebugCapture(string packageName)
         {
@@ -106,14 +116,26 @@ namespace MilanShaderHost
                 throw new InvalidOperationException($"Debug capture state changed while finishing {packageName}.");
             }
 
+            var retainedForeign = Volatile.Read(ref session.RetainedForeignPermutationCount);
+            if (retainedForeign > 0)
+            {
+                Console.WriteLine($"Kept {retainedForeign:N0} foreign-package permutation payload(s) while capturing {packageName}; they are filed under their parent material's package.");
+            }
+
             var skippedCount = Volatile.Read(ref session.SkippedForeignPayloadCount);
             if (skippedCount > 0)
             {
                 Console.WriteLine($"Discarded {skippedCount:N0} foreign debug package payload(s) while capturing {packageName}.");
             }
+
+            // The retained count is what a --captureonly run actually produces. Merged compile
+            // resources are a separate product and can legitimately be zero while the capture is
+            // fine, so the caller needs this number rather than that one to judge the run.
+            LastCaptureRetainedPayloadCount = Volatile.Read(ref session.RetainedPayloadCount);
+            Console.WriteLine($"Captured {LastCaptureRetainedPayloadCount:N0} debug package payload(s) for {packageName}.");
         }
 
-        private static bool IsForeignDebugPackage(string packageName)
+        private static bool IsForeignDebugPackage(string packageName, string localIFP)
         {
             var session = Volatile.Read(ref activeDebugCapture);
             if (session == null || packageName == "Unqualified")
@@ -125,6 +147,29 @@ namespace MilanShaderHost
 
             if (string.Equals(session.PackageName, packageName, StringComparison.OrdinalIgnoreCase))
             {
+                return false;
+            }
+
+            // A MaterialInstance permutation is compiled through its *parent* UMaterial, so a level
+            // package's instance of a shared master material (BioG_MasterMats, BioG_LevelDetails,
+            // BioG_Volumetric...) arrives attributed to the master's package and looks foreign --
+            // even though this capture is the only thing that will ever ask for that permutation.
+            // The master's own standalone capture cannot produce it: the instance that needs it does
+            // not live there.
+            //
+            // Discarding it is what the ownership rule was protecting against for *base* materials,
+            // where the same material compiled under two packages would overwrite one capture with
+            // another. A permutation cannot do that. It is filed under `<parent>#<set hash>`, a
+            // directory the parent's base-material capture never writes, and any other package
+            // asking for the same set produces the same shader map by definition -- the hash *is*
+            // the static parameter set, which is the engine's own shader map identity.
+            //
+            // Measured on BioT_CitCasino before this changed: 38 distinct permutations predicted,
+            // 13 captured, 25 discarded here -- two thirds of the permutations in a typical level
+            // package, concentrated on the most reused materials in the game.
+            if (StaticPermutationNaming.HasPermutationKey(localIFP))
+            {
+                Interlocked.Increment(ref session.RetainedForeignPermutationCount);
                 return false;
             }
 
@@ -321,7 +366,7 @@ namespace MilanShaderHost
                     var jsonLen = reader.ReadInt32();
                     var jsonData = reader.ReadBytes(jsonLen);
 
-                    if (IsForeignDebugPackage(packageName))
+                    if (IsForeignDebugPackage(packageName, localIFP))
                     {
                         // The payload still has to be consumed to leave the named-pipe stream
                         // aligned for the next compiler result. Skip JSON parsing and HLSL
@@ -329,6 +374,11 @@ namespace MilanShaderHost
                         // package and would overwrite its standalone capture.
                         CurrentReadMode = EReadMode.None;
                         continue;
+                    }
+
+                    {
+                        var retainSession = Volatile.Read(ref activeDebugCapture);
+                        if (retainSession != null) Interlocked.Increment(ref retainSession.RetainedPayloadCount);
                     }
 
                     var json = Encoding.ASCII.GetString(jsonData);

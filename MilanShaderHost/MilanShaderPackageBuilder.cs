@@ -149,7 +149,7 @@ namespace MilanShaderHost
             // Load our input package we are building shaders out of
             var sourceStylePackage = MEPackageHandler.OpenMEPackage(sourceStylePath);
 
-            ConvertSourceToForcedExport(sourceStylePackage);
+            ConvertSourceToForcedExport(sourceStylePackage, sourceStylePackage.FileNameNoExtension);
             EnableStaticLightingForAllMaterials(sourceStylePackage);
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
@@ -200,6 +200,7 @@ namespace MilanShaderHost
             var shaderCompilingLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, Program.Game);
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
+            List<ExportEntry> portedInstances = new List<ExportEntry>();
             List<ExportEntry> portedTerrains = new List<ExportEntry>();
 
             // If slashing cache level don't put other materials into it
@@ -208,7 +209,13 @@ namespace MilanShaderHost
                 // Load our input package we are building shaders out of
                 var sourceStylePackage = MEPackageHandler.OpenMEPackage(sourceStylePath);
 
-                ConvertSourceToForcedExport(sourceStylePackage);
+                var captureRoot = MilanShaderBuilderFlow.CaptureRootNameFor(sourceStylePath);
+                if (captureRoot != sourceStylePackage.FileNameNoExtension)
+                {
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {sourceStylePackage.FileNameNoExtension} is loaded by the game at boot; " +
+                                      $"compiling its objects as '{captureRoot}' so ours are the ones that load.");
+                }
+                ConvertSourceToForcedExport(sourceStylePackage, captureRoot);
                 // LE1's Material default is static-lighting enabled while LE3's is disabled.
                 // ShaderHost always compiles the LE3 representation with the bit explicitly on:
                 // foliage, static meshes, and terrain all share the same material dependencies.
@@ -245,6 +252,32 @@ namespace MilanShaderHost
                         PortSourceToCooked(mat, transientPackage);
                     }
                     ReportBuildStage($"Finished porting {sourceMatsList.Count:N0} material(s) into the transient package.");
+
+                    // MaterialInstanceConstants carry their own compiled shader map whenever their
+                    // static parameter set diverges from the parent's: static switches, component
+                    // masks and normal parameters are all compile-time, so the instance cannot share
+                    // the parent's shaders. Porting only Materials left every such permutation
+                    // uncompiled, and the instance then rendered the parent's defaults.
+                    // MaterialInstance derives from MaterialInterface, not Material, so IsA("Material")
+                    // above does not reach them.
+                    if (!Program.ParsedOptions.NoInstances)
+                    {
+                        var sourceInstances = sourceStylePackage.Exports
+                            .Where(x => x.IsA("MaterialInstance") && HasStaticPermutation(x))
+                            .ToList();
+                        for (int i = 0; i < sourceInstances.Count; i++)
+                        {
+                            var mic = sourceInstances[i];
+                            ReportMaterialProgress("port instance -> transient", i + 1, sourceInstances.Count, mic);
+                            // No bUsedWith* writes here: those are UMaterial fields. The parent picks
+                            // them up through the material loop above and EnableStaticLightingForAllMaterials.
+                            PortSourceToCooked(mic, transientPackage);
+                        }
+                        if (sourceInstances.Count > 0)
+                        {
+                            ReportBuildStage($"Finished porting {sourceInstances.Count:N0} material instance(s) into the transient package.");
+                        }
+                    }
                 }
 
                 // A terrain resource is generated from its owning ATerrain, its components' batch masks,
@@ -306,6 +339,27 @@ namespace MilanShaderHost
                         }
                     }
                     ReportBuildStage($"Finished porting {portedMats.Count:N0} material(s) into the compiler level.");
+
+                    if (!Program.ParsedOptions.NoInstances)
+                    {
+                        var transientInstances = transientPackage.Exports
+                            .Where(x => x.IsA("MaterialInstance") && HasStaticPermutation(x))
+                            .ToList();
+                        for (int i = 0; i < transientInstances.Count; i++)
+                        {
+                            var mic = transientInstances[i];
+                            ReportMaterialProgress("port instance -> level", i + 1, transientInstances.Count, mic);
+                            var pMic = PortSourceToCooked(mic, shaderCompilingLevel);
+                            if (pMic != null)
+                            {
+                                portedInstances.Add(pMic);
+                            }
+                        }
+                        if (portedInstances.Count > 0)
+                        {
+                            ReportBuildStage($"Finished porting {portedInstances.Count:N0} material instance(s) into the compiler level.");
+                        }
+                    }
                 }
 
                 foreach (var terrain in transientPackage.Exports.Where(x => x.IsA("Terrain")))
@@ -382,6 +436,22 @@ namespace MilanShaderHost
                     startPos.Y -= 257; // Helps reduce Z-fighting
                 }
 
+                // Each instance needs its own actor for the same reason the materials do: the engine
+                // compiles a shader map when something in the level renders with it. An instance's
+                // permutation is a separate shader map from its parent's, so placing the parent is
+                // not enough to get it compiled.
+                if (portedInstances.Count > 0)
+                {
+                    ReportBuildStage($"Adding {portedInstances.Count:N0} material instance actor(s) to the compiler level to force static permutations.");
+                    for (var i = 0; i < portedInstances.Count; i++)
+                    {
+                        var pMic = portedInstances[i];
+                        ReportMaterialProgress("add -> instance actor", i + 1, portedInstances.Count, pMic);
+                        AddStaticMeshActorForMaterial(pMic, startPos, buildMode == EShaderLevelMode.Preview, namePrefix: "Inst_");
+                        startPos.Y -= 257;
+                    }
+                }
+
                 // Terrain material resources are generated by ATerrain::PostLoad / CacheResourceShaders,
                 // not by static-mesh rendering. The copied actor retains its authored components, layer
                 // ordering, weight maps, and per-component masks, which are all inputs to the generated
@@ -421,6 +491,19 @@ namespace MilanShaderHost
         /// intermediate package because relinking terrain dependencies bypasses the normal root
         /// material loop.
         /// </summary>
+        /// <summary>
+        /// True when this MaterialInstance owns a static permutation, i.e. the engine will compile a
+        /// shader map for it rather than reusing its parent's.
+        /// </summary>
+        /// <remarks>
+        /// Instances without one are deliberately left out of the compile level: they render through
+        /// the parent's shader map, which the material loop already compiles, so adding them would be
+        /// pure capture cost. The decooker only leaves the flag set when it preserved a real parameter
+        /// set (see DecookerShared.PreparePackageForUDKify).
+        /// </remarks>
+        private static bool HasStaticPermutation(ExportEntry instance) =>
+            instance.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true;
+
         internal static void EnableStaticLightingForAllMaterials(IMEPackage package)
         {
             foreach (var material in package.Exports.Where(x => x.IsA("Material")))
@@ -443,14 +526,34 @@ namespace MilanShaderHost
         /// Converts a source-style package exports to forced export style
         /// </summary>
         /// <param name="sourcePackage"></param>
-        private static void ConvertSourceToForcedExport(IMEPackage sourcePackage)
+        /// <param name="rootName">
+        /// Name to give the package object every other export is reparented under. This is the object
+        /// name the game matches against the packages it already loaded at boot, so a capture rename
+        /// has to be applied here — to the object, not to the file. See
+        /// <see cref="CapturePackageNaming"/>.
+        /// </param>
+        private static void ConvertSourceToForcedExport(IMEPackage sourcePackage, string rootName)
         {
-            if (sourcePackage.FindExport(sourcePackage.FileNameNoExtension) == null)
+            var fileRefExp = sourcePackage.FindExport(rootName);
+            if (fileRefExp == null)
             {
-                ExportCreator.CreatePackageExport(sourcePackage, sourcePackage.FileNameNoExtension);
-            }
+                // A package object under the original name already exists in most decooked packages;
+                // rename that one rather than creating a second root and leaving the colliding name
+                // in the tree.
+                var authoredRoot = sourcePackage.FindExport(sourcePackage.FileNameNoExtension);
+                if (authoredRoot is { Parent: null })
+                {
+                    authoredRoot.ObjectName = rootName;
+                }
+                else
+                {
+                    ExportCreator.CreatePackageExport(sourcePackage, rootName);
+                }
 
-            var fileRefExp = sourcePackage.FindExport(sourcePackage.FileNameNoExtension);
+                fileRefExp = sourcePackage.FindExport(rootName)
+                    ?? throw new InvalidOperationException(
+                        $"Could not establish package object '{rootName}' in {sourcePackage.FileNameNoExtension}.");
+            }
 
             // Move all root non-forced export objects to forced export
             foreach (var exp in sourcePackage.Exports.Where(x => x.idxLink == 0 && x != fileRefExp && (x.ExportFlags & UnrealFlags.EExportFlags.ForcedExport) == 0))
@@ -516,7 +619,10 @@ namespace MilanShaderHost
                     // Console.WriteLine($@"Attempting to port as export: {imp.InstancedFullPath}");
                     // Source package exists.
                     using var sourcePackage = MEPackageHandler.OpenMEPackage(sourcePackagePath);
-                    ConvertSourceToForcedExport(sourcePackage);
+                    // Donor packages keep their real name deliberately: the import being satisfied
+                    // names them, and these are dependencies we *want* resolved against the game's
+                    // own objects. Only the package actually being compiled gets a capture rename.
+                    ConvertSourceToForcedExport(sourcePackage, sourcePackage.FileNameNoExtension);
                     var sourceExport = sourcePackage.FindExport(imp.InstancedFullPath, imp.ClassName);
                     if (sourceExport == null)
                         continue;
@@ -714,7 +820,7 @@ namespace MilanShaderHost
         private static ExportEntry GetMissingTextureFlipbook(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
-            var existingMissingTex = targetPackage.FindExport("MissingTextureFlipbook", "TextureFlipbook");
+            var existingMissingTex = targetPackage.FindExport("MissingTextureFlipbook", "TextureFlipBook");
             if (existingMissingTex != null)
             {
                 return existingMissingTex;
@@ -723,7 +829,17 @@ namespace MilanShaderHost
             {
                 var missingTexturesPackage = MEPackageHandler.CreateMemoryEmptyPackage(@"MissingTextures.pcc", Program.Game);
 
-                missingTexturesFlipbookExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTexture", MissingTextureSize, MissingTextureSize, PixelFormat.DXT1, true, null);
+                // Named for the class it will become, not the class it is built as. Every other
+                // placeholder here already matches its own FindExport above; this one did not, and the
+                // mismatch cost more than a dead cache lookup. All of these get ported into the same
+                // compiler-level package, so a flipbook placeholder called "MissingTexture" collides
+                // there with the Texture2D placeholder of that exact name and a flipbook reference can
+                // end up resolved against a plain 2D texture -- which is how a FlipBookSample's
+                // sub-image division silently became a default (HANDOFF 24).
+                //
+                // It is still *created* as a Texture2D so CreateTexture writes a valid mip chain, then
+                // re-classed to TextureFlipBook below. That part is deliberate.
+                missingTexturesFlipbookExport = Texture2D.CreateTexture(missingTexturesPackage, "MissingTextureFlipbook", MissingTextureSize, MissingTextureSize, PixelFormat.DXT1, true, null);
                 missingTexturesFlipbookExport.SetForcedExportFlag(false);
 
                 if (!UseMinimalMissingTextures)
@@ -733,7 +849,7 @@ namespace MilanShaderHost
                     t2d.Replace(im, missingTexturesFlipbookExport.GetProperties(), isPackageStored: true);
                 }
                 missingTexturesFlipbookExport.ObjectFlags |= UnrealFlags.EObjectFlags.Standalone; // Keep if unreferenced.
-                missingTexturesFlipbookExport.Class = EntryImporter.EnsureClassIsInFile(missingTexturesPackage, "TextureFlipbook", new RelinkerOptionsPackage());
+                missingTexturesFlipbookExport.Class = EntryImporter.EnsureClassIsInFile(missingTexturesPackage, "TextureFlipBook", new RelinkerOptionsPackage());
 
                 // Some placeholders
                 missingTexturesFlipbookExport.WriteProperty(new IntProperty(8, "HorizontalImages"));

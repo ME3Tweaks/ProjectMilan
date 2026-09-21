@@ -26,8 +26,14 @@ namespace MilanShaderHost
         [Option("tracervrmaterialresolution", HelpText = "Passes -TraceRvrMaterialResolution to ShaderClient. This opt-in diagnostic records Rvr routing only for the Miranda CombinedEffect trace target and does not alter shader compilation.")]
         public bool TraceRvrMaterialResolution { get; set; }
 
-        [Option("tracematerialtranslation", HelpText = "Passes -TraceMaterialTranslation to ShaderClient. This opt-in diagnostic records the live normal-texture unpack state only for the Miranda scalp CombinedEffect trace target and does not alter shader compilation.")]
+        [Option("tracematerialtranslation", HelpText = "Passes -TraceMaterialTranslation to ShaderClient. This opt-in diagnostic records the live normal-texture unpack state only for the trace target family and does not alter shader compilation.")]
         public bool TraceMaterialTranslation { get; set; }
+
+        [Option("tracematerialfilter", HelpText = "Substring matched against a material's full path to choose which family the two trace options above follow. Defaults to the Miranda scalp CombinedEffect target they were written for. Cannot contain a space.")]
+        public string TraceMaterialFilter { get; set; }
+
+        [Option("no-instances", HelpText = "Excludes MaterialInstanceConstants from the compile level, restoring the Material-only behaviour. Their static permutations are then never compiled, so any instance that overrides a static switch, component mask or normal parameter renders its parent's defaults. Present so an instance-related regression can be bisected without a rebuild.")]
+        public bool NoInstances { get; set; }
 
         [Option("packagelist", HelpText = "Reads the packages to process from this file (one name per line, # for comments) instead of the hardcoded list in ShaderCompileList.")]
         public string PackageListFile { get; set; }
@@ -43,6 +49,9 @@ namespace MilanShaderHost
 
         [Option("terrain", HelpText = "Compiles Terrain resources from this LE3 map package. This implies --compile and does not require the package to be in a decooked source folder.")]
         public string TerrainPackagePath { get; set; }
+
+        [Option("noautorename", HelpText = "Disables the automatic capture rename. By default a package the game loads at boot (engine.startuppackages) has its package object compiled under a MILAN-suffixed name, because otherwise the game's own copy wins the load and nothing compiles at all. Use this only to reproduce the collision.")]
+        public bool NoAutoRename { get; set; }
 
         [Option("writeback", HelpText = "After a successful LE3 compile, writes compiled material resources, terrain material resources, and the merged shader cache back to each input package. This overwrites the input package; without this option results are written to E:\\CompiledShaderPackages.")]
         public bool WriteBack { get; set; }

@@ -103,30 +103,12 @@ namespace MilanShaderHost
                 //"BIOG_V_Veh_Impact_Lava_Z",
                 //"BIOG_V_B_Weaken_Z",
                 //"BIOA_LOS10_T", // Audemus pod shader source for tropical
-                "BIOA_PRC2_S.Ships",
-                "BIOG_APL_PHY_Contain_Cells_01_L",
-                "BIOG_APL_STD_Geth_Bomb_L",
-                "BIOG_APL_INT_Pro_Terminal_01_L",
-                "BIOG_APL_INT_ElevConsole_02_L",
-                "BIOG_V_Env_VolumeLights_Z",
-
-                // TEST
-                //"EngineDebugMaterials",
-
-                // Existing: For test comparison
-                /*
-                "BioS_CitApt_Alt.pcc",
-                "BioS_CitCasino.pcc",
-                "BioS_CitCouncil.pcc",
-                "BioS_CitRestaurant.pcc",
-                "BioS_CitSim.pcc",
-                "BioS_CitSim_Alt.pcc",
-                "BioS_CitStreets.pcc",
-                "BioS_CitWards.pcc",
-                "BioS_Cit_lev004.pcc",*/
-                //"BioT_Arctic",
-                //"biot_ancientcity.pcc",
-
+                //"BIOA_PRC2_S.Ships",
+                //"BIOG_APL_PHY_Contain_Cells_01_L",
+                //"BIOG_APL_STD_Geth_Bomb_L",
+                //"BIOG_APL_INT_Pro_Terminal_01_L",
+                //"BIOG_APL_INT_ElevConsole_02_L",
+                //"BIOG_V_Env_VolumeLights_Z",
                 // Tropical - requires some LE1 stuff set up.
                 //"BIOA_NOR10_T.pcc",
                 //"BIOA_STA60_T.pcc",
@@ -148,135 +130,127 @@ namespace MilanShaderHost
 
                 // Multiplayer Kits
 
+                "BIOG_MP_BF_HMM", // BF3 Soldier
+
                 // MP1
-                //"BioVFX_DLC_MP1_BubbleShield",
-                //"BioVFX_DLC_MP1_Bat",
-                //"BioVFX_DLC_MP1_Bat_2",
-                //"BioVFX_DLC_MP1_BatMelee",
-                //"BioVFX_DLC_MP1_Geth",
+                "BioVFX_DLC_MP1_BubbleShield",
+                "BioVFX_DLC_MP1_Bat",
+                "BioVFX_DLC_MP1_Bat_2",
+                "BioVFX_DLC_MP1_BatMelee",
+                "BioVFX_DLC_MP1_Geth",
 
-                //// MP2
-                //"BioVFX_DLC_CerberusOp",
+                // MP2
+                "BioVFX_DLC_CerberusOp",
 
-                //// MP3
-                //"BIOG_MP_Swords_01",
-                //"BioVFX_MP3_Annihilation",
-                //"BioVFX_MP3_PalmBlast",
-                //"BioVFX_MP3_Asari_Pistol",
-                //"BioVFX_MP3_Engineer",
-                //"BioVFX_MP3_ShadowStrike",
-                //"BioVFX_MP3_Sonic_Boom",
-                //"BioVFX_MP3_Sword",
-                //"BioVFX_MP3_Cone_Cold",
-                //"BioVFX_MP3_OmniShield",
-                //"BioVFX_DLC_Shared",
-                //"BioVFX_DLC_MaleQuarian",
-                //"BioVFX_DLC_OmniBlade",
+                // MP3
+                "BIOG_MP_Swords_01",
+                "BioVFX_MP3_Annihilation",
+                "BioVFX_MP3_PalmBlast",
+                "BioVFX_MP3_Asari_Pistol",
+                "BioVFX_MP3_Engineer",
+                "BioVFX_MP3_ShadowStrike",
+                "BioVFX_MP3_Sonic_Boom",
+                "BioVFX_MP3_Sword",
+                "BioVFX_MP3_Cone_Cold",
+                "BioVFX_MP3_OmniShield",
+                "BioVFX_DLC_Shared",
+                "BioVFX_DLC_MaleQuarian",
+                "BioVFX_DLC_OmniBlade",
 
-                //// MP4
-                //"BioVFX_MP4_Volus_Eng",
-                //"BioVFX_DLC_MaleQuarian",
-                //"BioVFX_MP4_Tur_Jets", // Produced no materials? Needs investigated. If left on the previous compiler level is leftover  and used
-                //"BioVFX_DLC_OmniBlade",
+                // MP4
+                "BioVFX_MP4_Volus_Eng",
+                "BioVFX_DLC_MaleQuarian",
+                // "BioVFX_MP4_Tur_Jets", // Produced no materials? Needs investigated. If left on the previous compiler level is leftover  and used
+                "BioVFX_DLC_OmniBlade",
 
-                //// MP5
-                //"BioVFX_MP5_Prothean", // Collector Adept
-                //"EffectsMaterials_MP5", // Collector Adept // Contains Combined Effect
+                // MP5
+                "BioVFX_MP5_Prothean", // Collector Adept
+                "EffectsMaterials_MP5", // Collector Adept // Contains Combined Effect
 
-                //"BIOG_MP5_GTH_PLY_R", // Geth Destroyer
-                //"BioVFX_MP5_GethPrime", // Geth Destroyer
+                "BIOG_MP5_GTH_PLY_R", // Geth Destroyer
+                "BioVFX_MP5_GethPrime", // Geth Destroyer
 
-                //"BIOG_MP_INF_FBT", // Fembot Infiltrator
-                //"BioVFX_MP5_Cone_Cold", // Fembot Infiltrator
-                //"BioVFX_MP5_Fembot", // Fembot Infiltrator
+                "BIOG_MP_INF_FBT", // Fembot Infiltrator
+                "BioVFX_MP5_Cone_Cold", // Fembot Infiltrator
+                "BioVFX_MP5_Fembot", // Fembot Infiltrator
 
-                //"BioVFX_MP5_Engineer", // UGH the Merc Engineer
+                "BioVFX_MP5_Engineer", // UGH the Merc Engineer
 
-                //"BIOG_WPN_MLE_R_MP5", // Krogan Warlord // Contains Combined Effect
-                //"BioVFX_MP5_KroganWL", // Krogan Warlord
+                "BIOG_WPN_MLE_R_MP5", // Krogan Warlord // Contains Combined Effect
+                "BioVFX_MP5_KroganWL", // Krogan Warlord
 
-                //"BioVFX_MP5_Vanguard", // Turian Female
-                //"BIOG_MP_VAN_TUF", // Turian Female
+                "BioVFX_MP5_Vanguard", // Turian Female
+                "BIOG_MP_VAN_TUF", // Turian Female
+
+                "BioVFX_MP5_Gear", // Geth Vision Gear
 
 
                 
                 ////Multiplayer levels
-                //"BioApl_Lvl_Foliage",
+                "BioApl_Lvl_Foliage",
 
                 //// MPLobby
-                //"MPLobby", // Black material
+                "MPLobby", // Black material
 
                 //// Hydra:
-                //"BioT_GthMP",
-                //"BioVFX_DLC_Env_MPGeth",
+                "BioT_GthMP",
+                "BioVFX_DLC_Env_MPGeth",
 
                 //// Condor:
-                //"BioT_MPMoon",
-                //"BioVFX_DLC_Env_MPMoon",
+                "BioT_MPMoon",
+                "BioVFX_DLC_Env_MPMoon",
 
                 //// Jade:
-                //"BioS_MPJungle",
-                //"BioS_MPJungle_Trash", // Todo: Why does water_tint, Waterfall_Master_lite not compile into something?
-                //"BioT_MPJungle",
-                //"BioT_Tropical",
-                //"BioVFX_DLC_Env_MPJngl",
+                "BioS_MPJungle",
+                "BioS_MPJungle_Trash", // Todo: Why does water_tint, Waterfall_Master_lite not compile into something?
+                "BioT_MPJungle",
+                "BioT_Tropical",
+                "BioVFX_DLC_Env_MPJngl",
                 
                 //// Thessia:
-                //"BioT_MPThes",
+                "BioT_MPThes",
 
                 //// Vancouver
-                //"BioVFX_MP3_MPHosp",
-                //"BioT_MPHosp",
-                //"BioT_SolMP", // Is this actually here?
+                "BioVFX_MP3_MPHosp",
+                "BioT_MPHosp",
+                "BioT_SolMP", // Is this actually here?
                 
                 //// Rio
-                //"BioT_MPOcean",
-                //"BioVFX_MP3_MPOcean",
+                "BioT_MPOcean",
+                "BioVFX_MP3_MPOcean",
 
                 //// London
-                //"BioS_MPLondon",
+                "BioS_MPLondon",
 
                 //// Hazard Cer
-                //"BioT_MPCer2",
+                "BioT_MPCer2",
                 
                 //// Hazard Dish
-                //"BioT_MPDish2",
+                "BioT_MPDish2",
 
                 //// Hazard Nov
-                //"BioT_MPNov2",
+                "BioT_MPNov2",
                 
                 //// Hazard Reactor
-                //"BioT_MPRctr2",
+                "BioT_MPRctr2",
 
                 //// Hazard Ghost
-                //"biot_humanslumACID", // May need more.
-
-
-                // More test stuff.
-                /*
-                //"Biot_Normandy_Int.pcc",
-                //"BioApl_Lvl_Foliage.pcc",
-                //"BioS_MPJungle.pcc",
-                //"BioS_MPLondon.pcc",
-                //"BIOG_PhotoModeFilters.pcc",
-                //"biot_humanslumACID.pcc",
-                //"BioT_MPCer2.pcc",
-                //"BioT_MPHosp.pcc",
-                //"BioT_MPOcean.pcc",
-                //"BioT_MPThes.pcc",
-                //"BioT_MPThes_Milan.pcc",
-                //"BioT_SolMP.pcc",
-                //"BioVFX_DLC_MP1_BatMelee.pcc",
-                //"BioVFX_DLC_MP1_Geth.pcc",
-                //"BioVFX_MP3_MPHosp.pcc",
-                //"BioVFX_MP3_MPOcean.pcc",
-                //"BioVFX_MP5_Gear.pcc"
-            */
+                "biot_humanslumACID", // May need more.
           ];
 
-            // Quick override for debugging
+            // Dedupe it in case we goof it up
+            files = files.Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+
+            // Quick override for debugging -- but never over an explicit --packagelist. This sits after
+            // the list has already been read and reported, so overriding it there turns a 164-package
+            // recapture into a one-package run that still prints "Read 164 packages" and still exits 0.
+            // The only visible trace is the single "Building shaders for:" line, which is easy to miss
+            // in a run expected to take hours.
 #if DEBUG
-            // files = ["BioS_MPJungle_Trash"];
+            //if (string.IsNullOrWhiteSpace(Program.ParsedOptions?.PackageListFile))
+            //{
+            //    files = ["BioVFX_FB_RenderSyle"];
+            //}
 #endif
 
             Console.WriteLine($"Source folders:");
@@ -284,6 +258,12 @@ namespace MilanShaderHost
             {
                 Console.WriteLine($"\t{path}");
             }
+
+            // A package the caller explicitly asked for that cannot be found is a failed run, not a
+            // skipped entry: the list is the definition of what this run is supposed to produce.
+            // Warning and carrying on ends with "Shader compiling complete." and exit 0 over an
+            // empty corpus, which is the same silent success the capture reporting exists to stop.
+            var missing = new List<string>();
 
             foreach (var f in files)
             {
@@ -313,7 +293,20 @@ namespace MilanShaderHost
                 if (!found)
                 {
                     Console.Error.WriteLine($"Could not find source package {realf} in any of the source folders.");
+                    missing.Add(realf);
                 }
+            }
+
+            if (missing.Count > 0)
+            {
+                Console.Error.WriteLine();
+                Console.Error.WriteLine($"*** {missing.Count} requested package(s) were not found and nothing was run for them:");
+                foreach (var m in missing) Console.Error.WriteLine($"      {m}");
+                Console.Error.WriteLine("    Source folders searched:");
+                foreach (var path in MilanShaderPackageBuilder.SourceFolders) Console.Error.WriteLine($"      {path}");
+                Console.Error.WriteLine("    Note: --capture-root also moves the default source folder. Pass --sourcefolder to");
+                Console.Error.WriteLine("    capture into an isolated root while still reading the normal decooked packages.");
+                Environment.Exit(2);
             }
         }
 

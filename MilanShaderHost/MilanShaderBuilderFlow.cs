@@ -37,6 +37,47 @@ namespace MilanShaderHost
         private static IMEPackage transientPackage;
 
         /// <summary>
+        /// The package object name the current package is being compiled under, and the name it must
+        /// be restored to before anything is written back out. These differ only for a package the
+        /// game loads at boot — see <see cref="CapturePackageNaming"/>. The rename exists purely to
+        /// win the load; every artifact that leaves this process carries the original name.
+        /// </summary>
+        private static string currentSourceRoot = "";
+        private static string currentCaptureRoot = "";
+
+        /// <summary>
+        /// The package object name to compile <paramref name="sourcePath"/> under. Every stage that
+        /// needs this name — the port step, the debug-capture ownership filter, and the un-rename
+        /// before save — derives it from here so they cannot drift apart.
+        /// </summary>
+        internal static string CaptureRootNameFor(string sourcePath)
+            => Program.ParsedOptions is { NoAutoRename: true }
+                ? Path.GetFileNameWithoutExtension(sourcePath)
+                : CapturePackageNaming.CaptureRootName(sourcePath);
+
+        /// <summary>
+        /// Renames a result package's root package object back to the package's real name, undoing
+        /// the capture rename. No-op when the package was not renamed.
+        /// </summary>
+        private static void RestoreSourceRootName(IMEPackage package)
+        {
+            if (currentCaptureRoot == currentSourceRoot) return;
+
+            var renamedRoot = package.Exports.FirstOrDefault(x =>
+                x.Parent == null && x.ObjectName.Instanced.Equals(currentCaptureRoot, StringComparison.Ordinal));
+            if (renamedRoot == null)
+            {
+                // Nothing compiled under the renamed root, so there is nothing to undo. Saying so is
+                // better than silently writing a package whose contents are not what was asked for.
+                Console.WriteLine($"Note: no '{currentCaptureRoot}' package object in the result for {currentSourceRoot}; nothing to un-rename.");
+                return;
+            }
+
+            renamedRoot.ObjectName = currentSourceRoot;
+            Console.WriteLine($"Restored package object name '{currentCaptureRoot}' -> '{currentSourceRoot}' before saving.");
+        }
+
+        /// <summary>
         /// Terrain shader compilation is a rebuild, rather than an incremental merge with the
         /// source package's cache. Tracks which output terrains have had their old caches removed
         /// for the current package so every subsequently returned mask can accumulate normally.
@@ -48,6 +89,25 @@ namespace MilanShaderHost
         // actually yielded at least one resource to merge.
         private static volatile bool currentCompileSessionFailed;
         private static int mergedCompileResourceCount;
+
+        /// <summary>
+        /// Material resource names merged during the current package's compile, used only to detect
+        /// a name arriving twice.
+        /// </summary>
+        /// <remarks>
+        /// This is a tripwire for one specific hazard. A MaterialInstance permutation is expected to
+        /// arrive named <c>&lt;parent&gt;#&lt;hash&gt;</c>, which routes to MergeInstancePermutation. If the
+        /// ASI ever sends a permutation's resource under the parent's *plain* name instead, it is
+        /// indistinguishable from the parent's own resource and would overwrite it -- silently
+        /// corrupting the parent material, with no error anywhere.
+        ///
+        /// A repeated name is the symptom, but it is not proof: the engine also compiles the same base
+        /// material more than once within a package quite legitimately, and each of those merges writes
+        /// the same material's own resource, so the overwrite is harmless. That is what the first real
+        /// writeback run showed -- BioT_CitCasino on 2026-09-20 hit this five times, all base-material
+        /// recompiles, none of them permutations. So report it as something to check, not as damage.
+        /// </remarks>
+        private static readonly HashSet<string> mergedMaterialNamesThisPackage = new(StringComparer.OrdinalIgnoreCase);
 
         internal static void MarkCompileFailure(string errorMessage)
         {
@@ -171,6 +231,31 @@ namespace MilanShaderHost
             public required bool IsLE1SourcePackage { get; init; }
         }
 
+        /// <summary>
+        /// Exit code ShaderClient uses when it terminates the game itself once the load screen comes
+        /// down, having already written every payload to the pipe. Must match k_shaderClientExitCode
+        /// in LExASIs/ShaderClient/Hooks.hpp.
+        /// </summary>
+        private const int ShaderClientExitCode = 0x4D49;
+
+        /// <summary>
+        /// Exit code ShaderClient's idle backstop uses when the load screen never came down. Must
+        /// match k_shaderClientIdleExitCode in the same header.
+        /// </summary>
+        private const int ShaderClientIdleExitCode = 0x4D57;
+
+        /// <summary>
+        /// Annotates the raw exit code so a deliberate kill is not mistaken for a crash, and so a
+        /// plain 0 is not mistaken for the fast path having worked.
+        /// </summary>
+        private static string DescribeGameExitCode(int exitCode) => exitCode switch
+        {
+            ShaderClientExitCode => " (ShaderClient exited at the load screen -- expected)",
+            ShaderClientIdleExitCode => " (ShaderClient idle backstop fired: the load screen never came down, so this compile likely wedged)",
+            0 => " (game exited through its own returntolauncher path; the ShaderClient fast exit did not fire)",
+            _ => " (unexpected -- 0xC0000005 here means the game crashed)"
+        };
+
         private static bool IsLE1SourcePackage(string sourcePath)
         {
             using var sourcePackage = MEPackageHandler.UnsafePartialLoad(sourcePath, x => false);
@@ -201,7 +286,18 @@ namespace MilanShaderHost
                     throw new InvalidOperationException($"Terrain package '{sourcePath}' contains no Terrain exports.");
                 }
 
-                if (sp.Exports.Count(x => x.IsA("Material")) == 0 && !hasCompilableTerrain)
+                // A package can carry MaterialInstanceConstants whose parents are imported from
+                // elsewhere, so it has permutations to compile without owning a single Material
+                // export. Checking only for Material silently skipped those.
+                // Class name only. `sp` is an UnsafePartialLoad with an x => false predicate, so no
+                // export has its data loaded and GetProperty throws on every one of them -- which is
+                // why the Material check above is also class-only. Whether an instance actually owns a
+                // permutation is settled in BuildMapPackage, where the package is fully loaded; at
+                // worst this lets a package through that turns out to have nothing to compile.
+                var hasCompilableInstances = !Program.ParsedOptions.NoInstances
+                    && sp.Exports.Any(x => x.IsA("MaterialInstance"));
+
+                if (sp.Exports.Count(x => x.IsA("Material")) == 0 && !hasCompilableTerrain && !hasCompilableInstances)
                 {
                     // Nothing to compile
                     return null;
@@ -298,6 +394,18 @@ namespace MilanShaderHost
             var files = ShaderCompileList.PackageFilesToProcess;
             Task<PreparedLevel?>? nextLevelTask = null;
 
+            // Packages whose compile session produced nothing. A package can run to completion with
+            // the game exiting 0 and still capture zero jobs, and every per-package signal looks
+            // like success when it does, so collect them and say so loudly at the end rather than
+            // leaving a silent empty result.
+            //
+            // The known cause -- the object name already belonging to a package the game loaded at
+            // boot -- is now handled automatically by the capture rename (CapturePackageNaming), so
+            // anything that still lands here is either a package run with --noautorename or a cause
+            // we have not identified yet. Either way it is worth stopping for.
+            var producedNothing = new List<string>();
+            var reportedFailure = new List<string>();
+
             for (int i = 0; i < files.Count; i++)
             {
                 var file = files[i];
@@ -307,6 +415,11 @@ namespace MilanShaderHost
                     continue;
                 }*/
                 var outPath = Path.Combine(outDir, baseName + ".pcc");
+
+                // Set before the game starts: the pipe thread reads these while it runs.
+                currentSourceRoot = baseName;
+                currentCaptureRoot = CaptureRootNameFor(file);
+
                 if (Program.ParsedOptions.CompileShaders) // Shader compile
                 {
                     Console.WriteLine($"Building shaders for: {baseName}");
@@ -341,6 +454,7 @@ namespace MilanShaderHost
                     resetTerrainCaches.Clear();
                     currentCompileSessionFailed = false;
                     Interlocked.Exchange(ref mergedCompileResourceCount, 0);
+                    lock (mergedMaterialNamesThisPackage) mergedMaterialNamesThisPackage.Clear();
 
                     // Use the pre-prepared level from the previous iteration if available, otherwise build now
                     PreparedLevel? current = nextLevelTask != null
@@ -371,8 +485,12 @@ namespace MilanShaderHost
                         nextLevelTask = Task.Run(() => BuildShaderLevelInMemory(nextFile, EShaderLevelMode.Compile));
                     }
 
-                    // Runs game, which builds shaders and feeds them back to us.
-                    StartGameAndWaitForExit(EShaderLevelMode.Compile, baseName, current.IsLE1SourcePackage);
+                    // Runs game, which builds shaders and feeds them back to us. The capture root is
+                    // what ShaderClient will report every material under, so it is also what the
+                    // capture's ownership filter has to be keyed on -- passing baseName here would
+                    // make a renamed package's own payloads look foreign and discard all of them.
+                    StartGameAndWaitForExit(EShaderLevelMode.Compile, currentCaptureRoot, current.IsLE1SourcePackage,
+                        progressDone: i + 1, progressTotal: files.Count, currentPackage: baseName);
 
                     if (Program.ParsedOptions.WriteBack)
                     {
@@ -395,14 +513,44 @@ namespace MilanShaderHost
                         // materials), and saving it over an existing outPath silently destroys whatever
                         // compiled resources that file already held. --writeback already refuses this
                         // above; the default output path needs the identical guard.
-                        Console.WriteLine($"Skipping save for '{baseName}': " +
-                            (currentCompileSessionFailed
-                                ? "ShaderClient reported at least one compilation failure."
-                                : "ShaderClient returned no material or terrain resources.") +
-                            (File.Exists(outPath) ? $" Leaving existing {outPath} untouched." : ""));
+                        // A capture-only run's product is the debug payloads, not merged compile
+                        // resources -- those can be zero while the capture itself is complete, so
+                        // judging the run by the merge count alone reports false failures.
+                        var capturedPayloads = ShaderHost.LastCaptureRetainedPayloadCount;
+                        var captureOnly = Program.ParsedOptions.CaptureOnly;
+
+                        if (currentCompileSessionFailed) reportedFailure.Add(baseName);
+                        else if (!captureOnly || capturedPayloads == 0) producedNothing.Add(baseName);
+
+                        if (currentCompileSessionFailed)
+                        {
+                            Console.WriteLine($"*** NO OUTPUT for '{baseName}': ShaderClient reported at least one compilation failure." +
+                                (File.Exists(outPath) ? $" Leaving existing {outPath} untouched." : ""));
+                        }
+                        else if (captureOnly && capturedPayloads > 0)
+                        {
+                            Console.WriteLine($"No compiled resources merged for '{baseName}', but the capture retained " +
+                                $"{capturedPayloads:N0} debug payload(s) -- expected for --captureonly.");
+                        }
+                        else
+                        {
+                            var collisionHint = currentCaptureRoot != currentSourceRoot
+                                ? $" This ran under the capture rename ('{currentCaptureRoot}'), so a boot-package collision is not the explanation."
+                                : CapturePackageNaming.RequiresRename(baseName)
+                                    ? " This package is loaded by the game at boot and the capture rename was disabled (--noautorename), so the game's copy won the load."
+                                    : " The game's own copy of these objects likely loaded first, so ours never compiled.";
+
+                            Console.WriteLine($"*** NO OUTPUT for '{baseName}': ShaderClient returned no material or terrain " +
+                                "resources and captured no debug payloads." + collisionHint +
+                                (File.Exists(outPath) ? $" Leaving existing {outPath} untouched." : ""));
+                        }
                     }
                     else
                     {
+                        // The rename exists only to win the load inside the game. The compiled
+                        // package that leaves this process must carry the real name, or it is not a
+                        // drop-in replacement for the package it was built from.
+                        RestoreSourceRootName(scPackage);
                         scPackage.Save(outPath);
                     }
 
@@ -422,10 +570,33 @@ namespace MilanShaderHost
                         Console.WriteLine($"Saving preview level to {savePath}");
                         File.Copy(shaderPreviewLevelPath, savePath, true);
                     }
-                    StartGameAndWaitForExit(EShaderLevelMode.Preview, baseName);
+                    StartGameAndWaitForExit(EShaderLevelMode.Preview, baseName,
+                        progressDone: i + 1, progressTotal: files.Count);
                 }
             }
 
+
+            // A run is not "complete" in any useful sense if packages captured nothing. Report that
+            // before the success line, and exit non-zero, so a batch run cannot pass an audit that
+            // only checks the trailing message and the exit code.
+            if (producedNothing.Count > 0 || reportedFailure.Count > 0)
+            {
+                Console.WriteLine();
+                Console.WriteLine($"*** {producedNothing.Count + reportedFailure.Count} of {files.Count} package(s) produced NO output:");
+                foreach (var p in reportedFailure)
+                {
+                    Console.WriteLine($"      {p}  (compilation failure reported)");
+                }
+                foreach (var p in producedNothing)
+                {
+                    Console.WriteLine($"      {p}  (no resources -- object name likely already loaded by the game)");
+                }
+                Console.WriteLine("    A package whose objects the game loads at boot cannot be captured until the");
+                Console.WriteLine("    shipping object is renamed; see ShaderResearchTool 'plan-capture' rename list.");
+                Console.WriteLine();
+                Console.WriteLine($"Shader compiling finished with {producedNothing.Count + reportedFailure.Count} empty package(s).");
+                Environment.Exit(2);
+            }
 
             Console.WriteLine($"Shader compiling complete.");
             Environment.Exit(0);
@@ -502,6 +673,20 @@ namespace MilanShaderHost
                 return;
             }
 
+            // A MaterialInstance permutation arrives named <parent path>#<static parameter set hash>,
+            // because the resource it was compiled through points at the *parent* UMaterial and the
+            // key is the only thing distinguishing one instance's permutation from another's. It has
+            // to be handled before the Material path below: that path resolves the name to an export
+            // and overwrites SM3MaterialResource, so a permutation falling through it would either
+            // resolve to nothing, or -- if the name ever arrives unsuffixed -- overwrite the parent
+            // material's own compiled resource with the instance's. See MergeInstancePermutation.
+            var (permutationBasePath, permutationKey) = StaticPermutationNaming.Split(cr.MaterialName);
+            if (permutationKey != null)
+            {
+                MergeInstancePermutation(cr, permutationBasePath, permutationKey);
+                return;
+            }
+
             // Merge material into the package.
             var matchingMat = transientPackage.FindExport(cr.MaterialName);
             // FindExport returns null when the name does not resolve at all, so the null check has
@@ -528,9 +713,16 @@ namespace MilanShaderHost
                 // In writeback mode scPackage is the original input file. Keep its existing
                 // material export and replace only the freshly compiled resource below; exporting
                 // the transient material would duplicate authored graph exports in the source.
+                //
+                // The input file on disk was never renamed -- only the in-memory copy the compiler
+                // level was built from -- so a renamed capture has to be matched by the original
+                // path or nothing here resolves.
+                var writebackPath = CapturePackageNaming.DeRenameInstancedPath(
+                                        matchingMat.InstancedFullPath, currentCaptureRoot, currentSourceRoot)
+                                    ?? matchingMat.InstancedFullPath;
                 matExp = scPackage.Exports.FirstOrDefault(x => x.IsA("Material")
-                    && x.InstancedFullPath.Equals(matchingMat.InstancedFullPath, StringComparison.OrdinalIgnoreCase))
-                    ?? throw new InvalidOperationException($"Could not find source material '{matchingMat.InstancedFullPath}' for writeback in {scPackage.FileNameNoExtension}.");
+                    && x.InstancedFullPath.Equals(writebackPath, StringComparison.OrdinalIgnoreCase))
+                    ?? throw new InvalidOperationException($"Could not find source material '{writebackPath}' for writeback in {scPackage.FileNameNoExtension}.");
             }
             else
             {
@@ -554,8 +746,138 @@ namespace MilanShaderHost
 
             // We need to link up the guids.
             Interlocked.Increment(ref mergedCompileResourceCount);
+
+            bool firstTime;
+            lock (mergedMaterialNamesThisPackage) firstTime = mergedMaterialNamesThisPackage.Add(cr.MaterialName);
+            if (!firstTime)
+            {
+                // See mergedMaterialNamesThisPackage. Usually benign -- the same base material
+                // compiled twice writes its own resource both times. Only harmful in the case this
+                // watches for: an instance permutation that lost its key, whose resource would then
+                // land on the parent.
+                Console.WriteLine($"NOTE: material resource '{cr.MaterialName}' merged more than once for this package; " +
+                                  "the later merge overwrote the earlier one. Expected for a base material compiled " +
+                                  "more than once. If this name belongs to an instance permutation that arrived without " +
+                                  "its '#' key, the parent material's resource is now the instance's -- check before shipping.");
+            }
+
             Console.WriteLine($"Merged {cr.MaterialName} into " +
                               (Program.ParsedOptions.WriteBack ? "the input package" : "the result package"));
+        }
+
+        /// <summary>
+        /// Merges one compiled MaterialInstance static permutation into the result package.
+        ///
+        /// <para>The shader bytecode is already in by the time this runs -- <see cref="OnMaterialCompiled"/>
+        /// merges the cache unconditionally, keyed by FStaticParameterSet. What is missing is the
+        /// *export* that points at it: an instance only reaches its permutation's shader map when it
+        /// carries <c>bHasStaticPermutationResource</c>, a matching <c>SM3StaticParameterSet</c> and
+        /// the compiled <c>SM3StaticPermutationResource</c>. Without this the map sits in the cache
+        /// unreferenced and the instance renders its parent's defaults -- exactly the appearance bug
+        /// the whole MIC effort exists to fix.</para>
+        ///
+        /// <para>Instances are matched by hashing their own parameter set rather than by name,
+        /// because the name identifies the parent. Several instances can share one permutation (that
+        /// is the point of keying on the set), so every match is updated, not just the first.</para>
+        /// </summary>
+        /// <param name="parentPath">Instanced full path of the parent UMaterial the resource compiled through.</param>
+        /// <param name="permutationKey">The <c>#&lt;16 hex&gt;</c> static parameter set key.</param>
+        private static void MergeInstancePermutation(CompileResult cr, string parentPath, string permutationKey)
+        {
+            // Candidates are instances that own a permutation; anything else shares the parent's map
+            // and has nothing to install.
+            var matches = new List<ExportEntry>();
+            foreach (var export in transientPackage.Exports)
+            {
+                if (!export.IsA("MaterialInstance")) continue;
+                if (export.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value != true) continue;
+
+                StaticParameterSet? set;
+                try
+                {
+                    set = ObjectBinary.From<MaterialInstance>(export).SM3StaticParameterSet;
+                }
+                catch
+                {
+                    continue; // Unreadable instance binary; it cannot be the one that asked for this.
+                }
+
+                if (set != null && StaticPermutationNaming.RawKey(set) == permutationKey)
+                {
+                    matches.Add(export);
+                }
+            }
+
+            if (matches.Count == 0)
+            {
+                // Not fatal: the permutation may belong to an instance in another package that this
+                // compile pulled in as a dependency. The bytecode is already merged either way.
+                Console.WriteLine($"No instance in the transient package matches permutation {permutationKey} of {parentPath}. Shader cache merged; no export updated.");
+                return;
+            }
+
+            var ms = new MemoryStream(cr.MaterialResource);
+            var serializer = new PackagelessWithObjectsSerializingContainer(ms, scPackage, true);
+            serializer.SetGame(transientPackage.Game);
+            var permutationResource = new MaterialResource();
+            serializer.Serialize(ref permutationResource);
+
+            foreach (var sourceInstance in matches)
+            {
+                ExportEntry targetInstance;
+                if (Program.ParsedOptions.WriteBack)
+                {
+                    // scPackage is the original input file here. Match by the pre-rename path, since
+                    // only the in-memory copy the compiler level was built from was ever renamed.
+                    var writebackPath = CapturePackageNaming.DeRenameInstancedPath(
+                                            sourceInstance.InstancedFullPath, currentCaptureRoot, currentSourceRoot)
+                                        ?? sourceInstance.InstancedFullPath;
+                    var found = scPackage.Exports.FirstOrDefault(x => x.IsA("MaterialInstance")
+                        && x.InstancedFullPath.Equals(writebackPath, StringComparison.OrdinalIgnoreCase));
+                    if (found == null)
+                    {
+                        Console.WriteLine($"Could not find source instance '{writebackPath}' for writeback in {scPackage.FileNameNoExtension}; skipping.");
+                        continue;
+                    }
+                    targetInstance = found;
+                }
+                else
+                {
+                    var existing = scPackage.Exports.FirstOrDefault(x => x.IsA("MaterialInstance")
+                        && x.InstancedFullPath.Equals(sourceInstance.InstancedFullPath, StringComparison.OrdinalIgnoreCase));
+                    if (existing != null)
+                    {
+                        targetInstance = existing;
+                    }
+                    else
+                    {
+                        EntryExporter.ExportExportToPackage(sourceInstance, scPackage, out var ported);
+                        if (ported is not ExportEntry portedInstance)
+                        {
+                            Console.WriteLine($"Failed to port instance '{sourceInstance.InstancedFullPath}' into the result package; skipping.");
+                            continue;
+                        }
+                        targetInstance = portedInstance;
+                    }
+                }
+
+                // The parameter set is copied from the transient instance rather than rebuilt, so it
+                // stays identical to the key the game filed the shader map under -- BaseMaterialId
+                // included. A set assembled any other way risks keying into nothing.
+                var sourceSet = ObjectBinary.From<MaterialInstance>(sourceInstance).SM3StaticParameterSet;
+                ObjectBinary.EditBinary<MaterialInstance>(targetInstance, x =>
+                {
+                    x.SM3StaticParameterSet = sourceSet;
+                    x.SM3StaticPermutationResource = permutationResource;
+                });
+
+                // The installed map is only reachable while the instance still asks for one.
+                targetInstance.WriteProperty(new BoolProperty(true, "bHasStaticPermutationResource"));
+
+                Interlocked.Increment(ref mergedCompileResourceCount);
+                Console.WriteLine($"Merged permutation {permutationKey} into {targetInstance.InstancedFullPath} " +
+                                  (Program.ParsedOptions.WriteBack ? "(input package)" : "(result package)"));
+            }
         }
 
         /// <summary>
@@ -716,7 +1038,17 @@ namespace MilanShaderHost
             // Game is now ready.
         }
 
-        private static void StartGameAndWaitForExit(EShaderLevelMode buildMode, string builtFor, bool isLE1SourcePackage = false)
+        /// <summary>
+        /// Boots the game for one package and waits for it to exit.
+        /// </summary>
+        /// <param name="progressDone">1-based position of this package in the run, for the loading
+        /// screen's counter. Null leaves the counter off.</param>
+        /// <param name="progressTotal">How many packages the run covers. Null leaves the counter off.</param>
+        /// <param name="currentPackage">Package name to show on the loading screen. Defaults to
+        /// <paramref name="builtFor"/>, which for a capture is the renamed capture root rather than the
+        /// readable source name, so callers that have the latter should pass it.</param>
+        private static void StartGameAndWaitForExit(EShaderLevelMode buildMode, string builtFor, bool isLE1SourcePackage = false,
+            int? progressDone = null, int? progressTotal = null, string currentPackage = null)
         {
             Console.WriteLine($"Starting game for {(buildMode == EShaderLevelMode.Compile ? "compilation" : "preview")} of {builtFor}");
             TOCCreator.CreateTOCForGame(Game);
@@ -756,6 +1088,34 @@ namespace MilanShaderHost
                 bootArg += " -TraceMaterialTranslation";
             }
 
+            // Repoints both traces above at another material family. ShaderClient reads the value up to
+            // the next space, so a filter containing one would silently truncate; reject it here rather
+            // than let the trace quietly follow the wrong materials.
+            var traceFilter = Program.ParsedOptions.TraceMaterialFilter;
+            if (buildMode == EShaderLevelMode.Compile && !string.IsNullOrWhiteSpace(traceFilter))
+            {
+                if (traceFilter.Contains(' '))
+                {
+                    throw new Exception("--tracematerialfilter cannot contain a space: " + traceFilter);
+                }
+                bootArg += $" -TraceMaterialFilter={traceFilter}";
+            }
+
+            // Progress for the compiler level's loading screen. One game process runs per package, so
+            // without this the window opens and closes with no indication of where the run is. Both
+            // counts are needed for the counter to mean anything, so they travel together.
+            if (progressDone.HasValue && progressTotal.HasValue)
+            {
+                bootArg += $" --numdone={progressDone.Value} --numtotal={progressTotal.Value}";
+            }
+
+            // ShaderClient reads this up to the next space, and a package name cannot contain one.
+            var displayPackage = currentPackage ?? builtFor;
+            if (!string.IsNullOrWhiteSpace(displayPackage) && !displayPackage.Contains(' '))
+            {
+                bootArg += $" --currentpackage={displayPackage}";
+            }
+
             if (buildMode == EShaderLevelMode.Compile && isLE1SourcePackage)
             {
                 Console.WriteLine("Enabling legacy opaque SceneDepth compatibility mode for an LE1 source package");
@@ -773,7 +1133,7 @@ namespace MilanShaderHost
             {
                 var process = Process.Start(processPath, $"{bootArg} -NOHOMEDIR");
                 process.WaitForExit();
-                Console.WriteLine($"Game exited with code {process.ExitCode}");
+                Console.WriteLine($"Game exited with code {process.ExitCode}{DescribeGameExitCode(process.ExitCode)}");
             }
             finally
             {

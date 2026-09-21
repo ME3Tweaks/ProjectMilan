@@ -16,6 +16,12 @@ namespace MilanShaderHost
     internal class Program
     {
         /// <summary>
+        /// Exit code for a shader builder flow that threw. Separate from 0 (finished) and 2 (the flow
+        /// chose to stop), so a batch driver can distinguish an unhandled fault from an orderly halt.
+        /// </summary>
+        internal const int k_flowFaultedExitCode = 3;
+
+        /// <summary>
         /// The command line arguments for the app.
         /// </summary>
         public static CLIOptions ParsedOptions;
@@ -78,10 +84,25 @@ namespace MilanShaderHost
 
             // Faults here used to be swallowed: the task's exception went unobserved and the host
             // sat listening on the pipe forever, which is indistinguishable from a hang.
+            //
+            // Printing the exception was not enough. StartFlow ends the process itself on its normal
+            // paths (Environment.Exit(0) / Exit(2)), so a *faulted* flow was the one case where
+            // nothing exited: the continuation printed the stack trace and the main thread stayed in
+            // StartListening's `while (true)` on the pipe. Measured 2026-09-20 -- the flow threw
+            // "ShaderClient's pipe did not drain within 60 seconds" after a game crash on
+            // EffectsMaterials, printed the trace at 10:44, and the host was still sitting there 58
+            // minutes later holding the named pipe. A batch driver waiting on the process waits
+            // forever, and the run is dead without a single line saying so.
             Task.Run(MilanShaderBuilderFlow.StartFlow).ContinueWith(t =>
             {
                 Console.Error.WriteLine("Shader builder flow failed:");
                 Console.Error.WriteLine(t.Exception?.ToString());
+                Console.Error.Flush();
+                Console.Out.Flush();
+
+                // Distinct from 2 (a flow that decided to stop) so a caller can tell an orderly halt
+                // from an unhandled fault.
+                Environment.Exit(k_flowFaultedExitCode);
             }, TaskContinuationOptions.OnlyOnFaulted);
 
             // Start the pipe server.
