@@ -96,6 +96,7 @@ namespace ProjectMilan
         /// </summary>
         private static readonly Dictionary<ECheckpointStage, Action> CheckpointRehydrators = new()
         {
+            [ECheckpointStage.ModBuild] = ModBuilder.RehydrateFromCheckpoint,
             [ECheckpointStage.MPCommon] = MPCommon.RehydrateFromCheckpoint,
             [ECheckpointStage.Weapons] = SFXWeapons.RehydrateFromCheckpoint,
         };
@@ -106,7 +107,7 @@ namespace ProjectMilan
         /// Redemption - see <see cref="ECheckpointStage"/>). It invalidates every existing checkpoint,
         /// regardless of which stage it was taken at, forcing a complete rebuild.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 5;
+        public const int MIN_CHECKPOINT_VERSION = 6; // 6: dynamic MP map-list registration - old checkpoints' Default_<DLC_NAME>.bin predates MapListConfigWriter/MapIdAllocator entirely
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -514,6 +515,22 @@ namespace ProjectMilan
             MilanShared.DropPortingCaches();
 
 
+        shaders:
+            // Shader install.
+            //
+            // This has to run before the texture pipeline. TFCBuild.UpdateTextures strips
+            // bHasStaticPermutationResource from any MaterialInstance whose shader map is missing, and
+            // until the shaders are installed *every* ported permutation looks exactly like that. The
+            // installer only selects instances that still carry the flag, so with the old ordering a
+            // MIC permutation could never be installed: the repair removed the flag, and the absent
+            // flag then hid the instance from the thing that would have supplied the map.
+            //
+            // Running the install first makes that repair what it was meant to be -- a net for
+            // instances that genuinely ended up with no shaders. Resynthesis, which runs later, ports
+            // and compacts the shader cache against the final material set and keeps maps belonging to
+            // flagged instances, so installed permutations survive it.
+            RunPipeline(Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
+
             // Post-build pipelines
             RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
 
@@ -528,10 +545,6 @@ namespace ProjectMilan
         resynthesis:
             // Package resynthesis
             RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
-
-        shaders:
-            // Shader install
-            RunPipeline(Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
 
             // Fix up vtables.
         vtables:

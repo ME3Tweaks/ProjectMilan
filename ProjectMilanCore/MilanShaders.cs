@@ -176,22 +176,49 @@ namespace ProjectMilanCore
 
                     if (isInstance)
                     {
-                        // An instance's shader map is keyed by its whole SM3StaticParameterSet, not by a
-                        // resource ID, so the set is copied wholesale rather than field by field. That
-                        // also carries over BaseMaterialId, which has to match the compiled parent's
-                        // resource ID -- and the Material branch below rewrites exactly that ID, so an
-                        // instance left on the old BaseMaterialId would key into nothing and render the
-                        // engine's fallback.
-                        // SM3 only. The SM2 block still has to serialize for the binary to round-trip,
-                        // but the games never read it, so there is nothing to install into it.
-                        var matchingInstBin = ObjectBinary.From<MaterialInstance>(matchingMat);
-                        ObjectBinary.EditBinary<MaterialInstance>(brokenMat, x =>
-                        {
-                            x.SM3StaticParameterSet = matchingInstBin.SM3StaticParameterSet;
-                            x.SM3StaticPermutationResource.ID = matchingInstBin.SM3StaticPermutationResource.ID;
-                        });
+                        // Replace the instance wholesale instead of copying the parameter set and the
+                        // resource ID onto whatever binary the destination already had.
+                        //
+                        // An instance's shader map is keyed by its whole SM3StaticParameterSet (which
+                        // carries BaseMaterialId, and that has to match the compiled parent's resource ID.
+                        // The Material branch below rewrites exactly that ID, so an instance left on
+                        // the old one would key into nothing and render the engine's fallback). The
+                        // compiled permutation resource that goes with it holds uniform expressions whose
+                        // texture references are UIndexes into the *compiled* package, so hand-copying the
+                        // binary would leave them pointing at whatever sits at those indexes here.
+                        // Relinking translates them and adds the cross-imports.
+                        //
+                        // Taking the compiled resource wholesale is also the point, not a side effect.
+                        // LE3 itself produced this blob, for these exact shaders. Whatever the destination
+                        // is carrying came from ME3 by way of the port, and ME3 and LE3 can differ subtly
+                        // in what the resource holds, so the game's own output is the one to trust.
+                        //
+                        // Replacing the properties along with the binary is safe under engine rules: a
+                        // dependency that already exists under the same name is the same object, so the
+                        // relinked Parent resolves to the parent already in this package rather than
+                        // duplicating it.
+                        var badLinks = EntryImporter.ImportAndRelinkEntries(
+                            EntryImporter.PortingOption.ReplaceSingularWithRelink, matchingMat, package, brokenMat,
+                            true, new RelinkerOptionsPackage()
+                            {
+                                Cache = cache,
+                                // Both sides are LE3 here: the compiled shader packages are built from the
+                                // decooked LE3 output, not from ME3 donors.
+                                SourceCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                                DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                                TargetGameDonorDB = MilanShared.LE3ObjectDB,
+                                PortExportsAsImportsWhenPossible = true,
+                            }, out _);
 
-                        // The installed map is only reachable if the instance still asks for one.
+                        foreach (var badLink in badLinks)
+                        {
+                            MilanLog.Error($"Relink issue installing permutation for {brokenMat.InstancedFullPath}: {badLink.Message}", customPrefix: logCategory);
+                        }
+
+                        // The installed map is only reachable if the instance still asks for one. The
+                        // replace brings the flag across with the rest of the properties; writing it
+                        // anyway means a compiled package that somehow lacks it cannot produce a silently
+                        // dead install.
                         brokenMat.WriteProperty(new BoolProperty(true, "bHasStaticPermutationResource"));
 
                         // No bUsedWith* here: those are UMaterial fields. The parent carries them.

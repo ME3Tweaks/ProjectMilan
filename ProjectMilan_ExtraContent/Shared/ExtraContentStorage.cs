@@ -103,6 +103,12 @@ namespace ProjectMilan_ExtraContent.Shared
             var newMemory = CoalescedConverter.CompileFromMemory(files);
             MilanPipelinesShared.ConfigBundle = ConfigAssetBundle.FromSingleStream(MEGame.LMP, newMemory);
 
+            // Standalone EC output is only for development for performances - the final mod always gets these maps via the pipelines
+            // rolled into ProjectMilan itself - but starting well above anything the main mod will ever
+            // allocate on its own keeps a developer's standalone build from ever colliding if installed
+            // side by side with it.
+            MapIdAllocator.ResetCounter(60);
+
             // Add precomputed files to the CookedPCConsole folders
             //foreach (var dir in Directory.GetDirectories(Path.Combine(MilanShared.PipelineRoot, @"Mod"))
             //             .Where(x => x.StartsWith("Precomputed")))
@@ -259,8 +265,7 @@ namespace ProjectMilan_ExtraContent.Shared
 
 
             // Write Config Bundle
-            var configOutPath = Path.Combine(outDir, $@"Default_{SharedECPipelines.GetDLCFolderName(CurrentContent)}.bin");
-            MilanPipelinesShared.ConfigBundle.CommitAssets(configOutPath, MELocalization.None);
+            MilanPipelinesShared.CommitConfigBundle();
 
             // Reset so next users are forced to set it up properly
             MilanPipelinesShared.Reset();

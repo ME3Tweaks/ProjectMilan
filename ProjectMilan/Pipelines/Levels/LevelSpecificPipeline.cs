@@ -1,5 +1,6 @@
 ﻿using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Pathing;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Levels
 {
@@ -19,6 +20,13 @@ namespace ProjectMilan.Pipelines.Levels
         /// If level is marked for porting
         /// </summary>
         public bool Enabled { get; set; } = true;
+
+        /// <summary>
+        /// Map-select-UI registration data for this level, or null if it should not appear as a selectable
+        /// multiplayer map (e.g. MPLobby, prototypes). Only registered via <see cref="MapListConfigWriter"/>
+        /// when <see cref="Enabled"/> is also true, so a disabled level never shows up in-game.
+        /// </summary>
+        public MapListEntry MapListInfo { get; set; }
 
         /// <summary>
         /// Which function should run before porting the level - after default precorrections

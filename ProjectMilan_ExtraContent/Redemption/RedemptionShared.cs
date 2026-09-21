@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
 using System.Threading.Tasks;
-using LegendaryExplorerCore.Coalesced;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.TLK;
 using LegendaryExplorerCore.TLK.ME2ME3;
@@ -21,11 +19,6 @@ namespace ProjectMilan_ExtraContent.Redemption
     internal class RedemptionShared
     {
         /// <summary>
-        /// The current mastermaplist id. This should be tuned when we know exactly where to start when building extra map content.
-        /// </summary>
-        private static int? CurrentMapId = 30;
-
-        /// <summary>
         /// Base name of the package that stores the map images
         /// </summary>
         internal const string MAP_IMAGE_PACKAGE = "SFXMapImages_Redemption";
@@ -34,11 +27,6 @@ namespace ProjectMilan_ExtraContent.Redemption
         /// In-package top level item. Dynamic load mapping seems to require this, unclear why - seems to be something related to how GUI assets load
         /// </summary>
         internal const string DLM_MAP_PACKAGE_EXPORT_NAME = "GUI_MPImages_Redemption";
-
-        private static string BuildDLMForImage(string objectName)
-        {
-            return $"(ObjectName=\"{DLM_MAP_PACKAGE_EXPORT_NAME}.{objectName}\", SeekFreePackageName=\"{MAP_IMAGE_PACKAGE}\")";
-        }
 
         public static string GetMapBaseName(string biopName)
         {
@@ -72,44 +60,27 @@ namespace ProjectMilan_ExtraContent.Redemption
         }
 
         /// <summary>
-        /// Add information to config for this map. The map name must be BioP_MP[MapName].
+        /// Add information to config for this map. The map name must be BioP_MP[MapName]. New StrRef IDs are
+        /// assigned via MilanPipelinesShared.AssignTLK rather than reusing the OT mod's own IDs, which are far
+        /// too high to be safe for this project's own content. The map ID itself and its music event are
+        /// assigned automatically by MapListConfigWriter.
         /// </summary>
-        /// <param name="biop"></param>
+        /// <param name="info"></param>
         public static void AddLevelToConfig(ECLevelInfo info)
         {
-            #region ENGINE
+            var entry = new MapListEntry
             {
-                var engine = MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine");
-                var sfxengine = engine.GetOrAddSection("sfxgame.sfxengine");
+                PackageName = info.MapName,
+                PrettyNameStrRefId = MilanPipelinesShared.AssignTLK(info.LevelNameString),
+                DescriptionStrRefId = MilanPipelinesShared.AssignTLK(info.LevelDescriptionString),
+                GAWMapPositionX = (int)info.GAWMapPosition.X,
+                GAWMapPositionY = (int)info.GAWMapPosition.Y,
+                GAWMapSubtitleStrRefId = MilanPipelinesShared.AssignTLK(info.GAWMapSubtitle),
+                ImageObjectPath = $"{DLM_MAP_PACKAGE_EXPORT_NAME}.OptMap{GetMapBaseName(info.MapName)}",
+                ImageSeekFreePackageName = MAP_IMAGE_PACKAGE,
+            };
 
-                // Add level image for GUI
-                var objName = GetMapBaseName(info.MapName);
-                objName = "OptMap" + objName;
-                sfxengine.AddEntry(new CoalesceProperty("dynamicloadmapping", new CoalesceValue(BuildDLMForImage(objName), CoalesceParseAction.AddUnique)));
-            }
-            #endregion
-
-            #region GAME
-
-            {
-                var game = MilanPipelinesShared.ConfigBundle.GetAsset("BioGame");
-                var onlinegamesettings = game.GetOrAddSection("sfxonlinefoundation.sfxonlinegamesettings");
-
-                // Add to availablemaps
-                onlinegamesettings.AddEntry(new CoalesceProperty("availablemaps", new CoalesceValue(info.MapName, CoalesceParseAction.AddUnique)));
-
-                // Add to mastermaplist
-                onlinegamesettings.AddEntry(new CoalesceProperty("mastermaplist", new CoalesceValue(BuildMasterMapEntry(info), CoalesceParseAction.AddUnique)));
-            }
-
-            #endregion
-
-            CurrentMapId++;
-            if (CurrentMapId > 64)
-            {
-                // This is not supported due to 64 bit replication... I think? It's a bitmask
-                Debugger.Break();
-            }
+            MapListConfigWriter.RegisterMap(entry);
         }
 
         internal static void AddNewLevelBannerImage(string levelName, string logCategory)
@@ -160,39 +131,6 @@ namespace ProjectMilan_ExtraContent.Redemption
             texExport.AddToObjectReferencer();
 
             return texExport;
-        }
-
-        private static string BuildMasterMapEntry(ECLevelInfo info)
-        {
-            return $"(ID={CurrentMapId}, " +
-                   $"PackageName=\"{info.MapName}\", " +
-                   $"PrettyName={MilanPipelinesShared.AssignTLK(info.LevelNameString)}, " +
-                   $"Description={MilanPipelinesShared.AssignTLK(info.LevelDescriptionString)}, " +
-                   $"Image=\"{DLM_MAP_PACKAGE_EXPORT_NAME}.OptMap{GetMapBaseName(info.MapName)}\", " +
-                   $"GalaxyAtWarMapPosition=(X={info.GAWMapPosition.X},Y={info.GAWMapPosition.Y}), " +
-                   $"GalaxyAtWarMapSubtitle={MilanPipelinesShared.AssignTLK(info.GAWMapSubtitle)}, " +
-                   $"MusicEventName=\"{GetMusicEventName()}\")";
-        }
-
-        private static int MusicEventNameIdx = 4; // See comment below.
-
-        private static string[] MusicEvents =
-        [
-            "Set_mus_map_mpslum",
-            "Set_mus_map_mpdish",
-            "Set_mus_map_mprctr",
-            "Set_mus_map_mpnov",
-            "Set_mus_map_mptowr", // Last official map is 'Nov2' which uses mpnov.
-            "Set_mus_map_mpcer",
-        ];
-
-        /// <summary>
-        /// Gets the name of the music event. It loops around the array.
-        /// </summary>
-        /// <returns></returns>
-        private static string GetMusicEventName()
-        {
-            return MusicEvents[MusicEventNameIdx++ % MusicEvents.Length];
         }
     }
 }

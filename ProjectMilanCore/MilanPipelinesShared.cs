@@ -39,6 +39,31 @@ namespace ProjectMilanCore
         public static ConfigAssetBundle ConfigBundle { get; set; }
 
         /// <summary>
+        /// Path to the compiled coalesced config for whichever DLC is currently building, derived from
+        /// <see cref="OutputModPath"/>'s own folder name - the same convention already used by
+        /// SharedECPipelines.MergeConfig, generalized here so it works identically whether that's the main
+        /// ProjectMilan mod's own output or ProjectMilan_ExtraContent's separate Redemption/Rejects output.
+        /// </summary>
+        public static string CurrentConfigBinPath =>
+            Path.Combine(OutputModPath, "CookedPCConsole", $"Default_{Path.GetFileName(OutputModPath)}.bin");
+
+        /// <summary>
+        /// Loads <see cref="ConfigBundle"/> from whatever's currently compiled at <see cref="CurrentConfigBinPath"/>.
+        /// </summary>
+        public static void LoadConfigBundle()
+        {
+            ConfigBundle = ConfigAssetBundle.FromSingleFile(MEGame.LE3, CurrentConfigBinPath);
+        }
+
+        /// <summary>
+        /// Commits <see cref="ConfigBundle"/>'s current state back to <see cref="CurrentConfigBinPath"/>.
+        /// </summary>
+        public static void CommitConfigBundle()
+        {
+            ConfigBundle?.CommitAssets(CurrentConfigBinPath, MELocalization.None);
+        }
+
+        /// <summary>
         /// The TLK to use when starting to build. Will throw if not set. Will start +1 from this value.
         /// </summary>
         public static int TLKStartIndex { get; set; }

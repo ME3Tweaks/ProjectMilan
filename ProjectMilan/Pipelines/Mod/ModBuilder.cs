@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.TLK.ME2ME3;
 using ProjectMilan.Pipelines.TLK;
 using ProjectMilanCore;
+using System.Text.RegularExpressions;
 
 namespace ProjectMilan.Pipelines.Mod
 {
@@ -72,7 +73,14 @@ namespace ProjectMilan.Pipelines.Mod
             MilanLog.Information($"Compiling {MilanShared.DLC_NAME}.bin", customPrefix: LOG_CATEGORY);
             CoalescedConverter.ConvertToBin(manifest, dest);
 
-            
+            // Load the just-compiled config back in as a live bundle so MPLevels (and, if enabled later in
+            // the same run, Rejection/Redemption) can register their multiplayer maps into it dynamically -
+            // this is the first point the main mod's own build starts using MilanPipelinesShared.ConfigBundle.
+            MilanPipelinesShared.OutputModPath = Program.Settings.OutputModPath;
+            MilanPipelinesShared.LoadConfigBundle();
+            MapIdAllocator.ResetCounter(1);
+
+
             // Add precomputed files to the CookedPCConsole folders
             foreach (var dir in Directory.GetDirectories(Path.Combine(MilanShared.PipelineRoot, @"Mod"))
                          .Where(x => x.StartsWith("Precomputed")))
@@ -121,6 +129,28 @@ namespace ProjectMilan.Pipelines.Mod
                     Environment.Exit(1);
                 }
             }
+        }
+
+        /// <summary>
+        /// Called instead of <see cref="RunPipeline"/> when a restored checkpoint already covers ModBuild -
+        /// its pipeline body (which recompiles Default_&lt;DLC_NAME&gt;.bin from source) is always skipped on
+        /// any checkpoint restore, but MilanPipelinesShared.ConfigBundle is pure in-memory state that the
+        /// checkpoint's file copy doesn't restore on its own, so it has to be reloaded from the
+        /// already-correct restored bin instead. Also fast-forwards MapIdAllocator past whatever map IDs are
+        /// already in that restored bundle, since a later stage (e.g. Rejection/Redemption, which are
+        /// numerically after Levels) can still run fresh this session and would otherwise re-allocate
+        /// colliding IDs starting back at 1.
+        /// </summary>
+        public static void RehydrateFromCheckpoint()
+        {
+            MilanPipelinesShared.LoadConfigBundle();
+
+            var section = MilanPipelinesShared.ConfigBundle.GetAsset("BioGame").GetOrAddSection("sfxonlinefoundation.sfxonlinegamesettings");
+            var highestId = section.TryGetValue("mastermaplist", out var mastermaplist)
+                ? mastermaplist.Select(v => Regex.Match(v.Value, @"ID=(\d+)"))
+                    .Where(m => m.Success).Select(m => int.Parse(m.Groups[1].Value)).DefaultIfEmpty(0).Max()
+                : 0;
+            MapIdAllocator.FastForwardPast(highestId);
         }
     }
 }

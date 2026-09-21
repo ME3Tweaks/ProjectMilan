@@ -258,18 +258,8 @@
 				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptChallgSilver",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptChallgGold",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptChallgPlatinum",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
+				<!-- Map images are populated by the pipelines when maps are registered on build -->
 				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapRandom",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapDish",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapSlum",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapTowr",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapRctr",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapRail",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapCer",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapNoveria",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon2",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapMoon3",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages.MatchSettings.OptMapGeth",SeekFreePackageName="SFXMPImagesMatchSettings")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages.StoreItems.Store001",SeekFreePackageName="SFXMPImagesStore")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages.StoreItems.Store002",SeekFreePackageName="SFXMPImagesStore")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages.StoreItems.Store003",SeekFreePackageName="SFXMPImagesStore")</Value>
@@ -388,8 +378,6 @@
 				<Value type="3">(ObjectName="DLC_MPImages.Cards.KitKroganBM",SeekFreePackageName="MP1Images")</Value>
 				<Value type="3">(ObjectName="DLC_MPImages.Kits.MP_AsariComm",SeekFreePackageName="MP1Images")</Value>
 				<Value type="3">(ObjectName="DLC_MPImages.Kits.MP_KroganBM",SeekFreePackageName="MP1Images")</Value>
-				<Value type="3">(ObjectName="DLC_MPImages.Map.OptMapMoon",SeekFreePackageName="MP1Images")</Value>
-				<Value type="3">(ObjectName="DLC_MPImages.Map.OptMapGeth",SeekFreePackageName="MP1Images")</Value>
 				<Value type="3">(ObjectName="GUI_SF_DLC1_PowerIcons.DLC1_PowerIcons",SeekFreePackageName="MP1PowerIcons")</Value>
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethPassive",SeekFreePackageName="SFXPower_GethPassive")</Value>
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP1.SFXPowerCustomActionMP_GethMeleePassive",SeekFreePackageName="SFXPower_GethMeleePassive")</Value>
@@ -504,8 +492,6 @@
 				<Value type="3">(ObjectName="GUI_MPImages_MP2.WpnDamageTurian",SeekFreePackageName="SFXMP2GearImages1")</Value>
 				<!-- Changed from Startup_DLC_CON_MP2 -->
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP2_Retrieve.SFXEngagement_Retrieve_DLC",SeekFreePackageName="BIOP_MP_COMMON")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP2.OptMapJade",SeekFreePackageName="MP2Images")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP2.OptMapGoddess",SeekFreePackageName="MP2Images")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP2.KitQuarianM",SeekFreePackageName="MP2Images")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP2.KitVorcha",SeekFreePackageName="MP2Images")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP2.KitXCerberus",SeekFreePackageName="MP2Images")</Value>
@@ -576,9 +562,6 @@
 				<Value type="3">(ObjectName="GUI_MPImages_MP3.GearTechDmg",SeekFreePackageName="MP3GearImages")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP3.GearWeaponDmg",SeekFreePackageName="MP3GearImages")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP3.Maps.MPJngl",SeekFreePackageName="MP3Images")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP3.OptMapHosp",SeekFreePackageName="MP3Images")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP3.OptMapLondon",SeekFreePackageName="MP3Images")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP3.OptMapRio",SeekFreePackageName="MP3Images")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP3.MP_AllianceENG",SeekFreePackageName="MP3Images")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP3.MP_AllianceADP",SeekFreePackageName="MP3Images")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP3.MP_AllianceSOL",SeekFreePackageName="MP3Images")</Value>
@@ -761,12 +744,6 @@
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser",SeekFreePackageName="SFXMP4AmmoPowers")</Value>
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler",SeekFreePackageName="SFXMP4AmmoPowers")</Value>
 				<Value type="3">(ObjectName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic",SeekFreePackageName="SFXMP4AmmoPowers")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptMapAcid",SeekFreePackageName="SFXHazardMapImages")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptMapMeltdown",SeekFreePackageName="SFXHazardMapImages")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptMapSandstorm",SeekFreePackageName="SFXHazardMapImages")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptMapSnowstorm",SeekFreePackageName="SFXHazardMapImages")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptMapSwarm",SeekFreePackageName="SFXHazardMapImages")</Value>
-				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptMapTower",SeekFreePackageName="SFXHazardMapImages")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptEmyCollector",SeekFreePackageName="SFXHazardMapImages")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptEmyCerberus",SeekFreePackageName="SFXHazardMapImages")</Value>
 				<Value type="3">(ObjectName="GUI_MPImages_MP4.OptEmyGeth",SeekFreePackageName="SFXHazardMapImages")</Value>
