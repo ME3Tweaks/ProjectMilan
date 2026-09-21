@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilanCore;
+using LegendaryExplorerCore.Kismet;
 
 namespace ProjectMilan.Pipelines.Levels
 {
@@ -271,7 +272,7 @@ namespace ProjectMilan.Pipelines.Levels
                         DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
                         SourceCustomImportFileResolver = MilanShared.ME3PackageResolver,
                     }, out var _);
-
+                FixSequencing(destSeq, levelPipeline);
             }
 
             MilanLevelTools.RebuildPersistentLevelChildren(destLevel);
@@ -332,6 +333,24 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             return destPackage;
+        }
+
+        /// <summary>
+        /// Fixes sequencing in a level package after porting. This is necessary because the port was done in LE3 and once in LMP those classes no longer exist
+        /// </summary>
+        /// <param name="main_seq">File main sequence</param>
+        /// <param name="levelPipeline">Level pipeline this level is part of</param>
+        private static void FixSequencing(ExportEntry main_seq, LevelSpecificPipeline levelPipeline)
+        {
+            // Find SeqCond_IsGameInfo objects
+            // They look for SFXGameInfo_SP which no longer exists.
+            var isGameInfos = main_seq.FileRef.Exports.Where(x => x.ClassName == "SeqCond_IsGameInfo").ToList();
+            foreach (var igi in isGameInfos)
+            {
+                MilanLog.Information($"    Force-branching SeqCond_IsGameInfo {igi.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
+                KismetHelper.SkipSequenceElement(igi, levelPipeline.IsSP ? "True" : "False");
+                KismetHelper.RemoveFromSequence(igi, true);
+            }
         }
     }
 }
