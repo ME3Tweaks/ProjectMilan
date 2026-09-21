@@ -171,6 +171,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             var udkInfo = new ProcessStartInfo()
             {
                 FileName = UDKDirectory.GetExecutablePath(Program.Settings.MilanUDKPath),
+                // Add -unattended if startup messages are getting in the way.
                 Arguments = $"editor -log",
                 // Arguments = $"editor {mapName}.udk -log", // commented out; we control map load now.
             };
@@ -190,7 +191,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 AttachWithRetry(udkProcess, TimeSpan.FromMinutes(3));
                 ResolveRemoteViews();
 
-                WaitForUDKReady(TimeSpan.FromMinutes(10));
+                WaitForUDKReady(udkProcess, TimeSpan.FromMinutes(10));
                 MilanLog.Information("UDK is ready", customPrefix: LOG_CATEGORY);
 
                 var mapPath = StaticLightingExport.GetMapOutputPath(mapName);
@@ -256,6 +257,11 @@ namespace ProjectMilan.Pipelines.StaticLighting
                             var dest = Path.Combine(staticLightingFolder, Path.GetFileName(file));
                             CopyWithLockRetry(file, dest);
                         }
+
+                        // Now that the baked results are safely copied back to Milan, clear the UDK
+                        // output folder - it might result in ambiguous packages on next boot
+                        MilanLog.Information($"Cleaning up UDK map output folder for {mapName}", customPrefix: LOG_CATEGORY);
+                        Utilities.DeleteFilesAndFoldersRecursively(udkOutputFolder, deleteDirectoryItself: false);
                     }
                     else
                     {
@@ -607,27 +613,29 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 $"(last win32 {lastError?.NativeErrorCode}: {lastError?.Message})");
         }
 
-        private static void WaitForUDKReady(TimeSpan timeout)
+        private static void WaitForUDKReady(Process udkProcess, TimeSpan timeout)
         {
             var deadline = DateTime.UtcNow + timeout;
             var lastReport = DateTime.UtcNow;
 
             while (DateTime.UtcNow < deadline)
             {
-                if (IsUDKReady()) return;
+                var status = GetStatusOrThrowIfUDKExited(udkProcess, "waiting for UDK to become ready");
+                if (status.EngineTickCount >= 5 && status.SlowTaskDepth == 0) return;
 
                 // Don't stall silently -- a wait with no visible state is what made the previous
                 // readiness race so hard to tell apart from "UDK is just slow today".
                 if (DateTime.UtcNow - lastReport > TimeSpan.FromSeconds(15))
                 {
                     lastReport = DateTime.UtcNow;
-                    MilanLog.Information($"  waiting for UDK... {GetStatus()}", customPrefix: LOG_CATEGORY);
+                    MilanLog.Information($"  waiting for UDK... {status}", customPrefix: LOG_CATEGORY);
                 }
 
                 Thread.Sleep(TimeSpan.FromSeconds(1));
             }
 
-            throw new TimeoutException($"UDK was not ready within {timeout} (last status: {GetStatus()})");
+            var lastStatus = GetStatusOrThrowIfUDKExited(udkProcess, "checking UDK readiness after timeout");
+            throw new TimeoutException($"UDK was not ready within {timeout} (last status: {lastStatus})");
         }
 
         /// <summary>
@@ -656,10 +664,43 @@ namespace ProjectMilan.Pipelines.StaticLighting
             UpdateTick = lightmassProgressView.ReadInt32(520),
         };
 
-        private static bool IsUDKReady()
+        /// <summary>
+        /// Reads the agent's status only while the UDK process is still alive. A pre-read
+        /// <see cref="Process.HasExited"/> check gives the real failure cause when UDK quits
+        /// during startup; the ERROR_PARTIAL_COPY fallback closes the small race where it exits
+        /// between that check and ReadProcessMemory.
+        /// </summary>
+        private static AgentStatus GetStatusOrThrowIfUDKExited(Process udkProcess, string operation)
         {
-            var status = GetStatus();
-            return status.EngineTickCount >= 5 && status.SlowTaskDepth == 0;
+            ThrowIfUDKExited(udkProcess, operation);
+
+            try
+            {
+                return GetStatus();
+            }
+            catch (Win32Exception ex) when (ex.NativeErrorCode == 299)
+            {
+                // ERROR_PARTIAL_COPY normally means the remote address was unmapped because
+                // UDK exited. Refresh before checking so Process has current exit state.
+                udkProcess.Refresh();
+                ThrowIfUDKExited(udkProcess, operation);
+
+                // The process did not exit, so this is a genuine injector/memory-access
+                // failure rather than misreporting a UDK shutdown as one.
+                throw new InvalidOperationException(
+                    $"Could not read the UDK agent status while {operation}, even though UDK " +
+                    $"(PID {udkProcess.Id}) is still running.", ex);
+            }
+        }
+
+        private static void ThrowIfUDKExited(Process udkProcess, string operation)
+        {
+            udkProcess.Refresh();
+            if (!udkProcess.HasExited) return;
+
+            throw new InvalidOperationException(
+                $"UDK (PID {udkProcess.Id}) exited with code {udkProcess.ExitCode} while {operation}. " +
+                "See UDKGame\\Logs\\Launch.log for its shutdown reason.");
         }
 
         /// <summary>Total load errors captured since injection. Monotonic - callers diff it

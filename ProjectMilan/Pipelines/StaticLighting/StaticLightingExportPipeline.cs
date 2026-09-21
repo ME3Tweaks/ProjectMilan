@@ -44,11 +44,14 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
             string persistentLevelFileName = levelMaster.FileNameNoExtension;
 
+            MilanLog.Information($"Converting {persistentLevelFileName} to UDK", customPrefix: LOG_CATEGORY);
+
+            // Wipe the whole Maps folder, not just this map's subfolder - a leftover subfolder from a
+            // previously exported map sitting alongside this one is what trips UDK's "ambiguous packages"
+            Utilities.DeleteFilesAndFoldersRecursively(UDKDirectory.MapsPath, deleteDirectoryItself: false);
+
             var mapOutputPath = GetMapOutputPath(persistentLevelFileName);
             var assetOutputPath = GetAssetsOutputPath(persistentLevelFileName);
-
-            MilanLog.Information($"Converting {persistentLevelFileName} to UDK", customPrefix: LOG_CATEGORY);
-            Utilities.DeleteFilesAndFoldersRecursively(mapOutputPath, deleteDirectoryItself: false);
             Utilities.DeleteFilesAndFoldersRecursively(assetOutputPath, deleteDirectoryItself: false);
             var decookedMaterialsDir = UDKSetup.GetMilanDecookedMaterialsDirectory();
 
