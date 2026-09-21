@@ -102,6 +102,10 @@ internal static class AudioPipeline
         // anywhere has a cached converted replacement. Packages are re-opened again for the same reason as phase 3.
         ConvertBankBodiesInPackages(bankPackagePaths);
 
+        // Phase 5: verify the finished output obeys UE3's object-identity rule. Runs last because phases 3 and 4
+        // both rewrite bank data per-package, so only the final bytes on disk can settle it.
+        AuditBankNameConsistency(bankPackagePaths);
+
         // We no longer need the AFC streams open.
         AFCHandler.CloseHandler();
     }
@@ -167,6 +171,7 @@ internal static class AudioPipeline
         var prefetchFragments = AFCHandler.SnapshotPrefetchFragments();
         var embeddedReplacements = AFCHandler.SnapshotEmbeddedReplacements();
         var stockResidentMedia = BuildExternallyProvidedMedia(packagePaths);
+        var canonicalBanks = BuildCanonicalV56Banks(packagePaths);
 
         // Many packages reference byte-identical bank data; converting is comparatively expensive, so dedupe by content hash.
         var bankBinaryCache = new ConcurrentDictionary<string, Lazy<byte[]>>();
@@ -189,9 +194,16 @@ internal static class AudioPipeline
                     if (WwiseBankParser.GetWwiseBankVersion(versionStream) != 56) continue; // already converted (or not ours to touch)
                 }
 
-                var hash = Convert.ToHexString(SHA256.HashData(bankBin.BnkFile));
+                // Always convert the canonical source for this bank identity, never this package's own copy -
+                // see BuildCanonicalV56Banks. Two packages holding different v56 bytes under one object name would
+                // otherwise produce two different v134 banks under that name, and UE3 keeps whichever loads first.
+                var sourceBytes = canonicalBanks.TryGetValue(CanonicalBankKey(exp, pf), out var canonical)
+                    ? canonical
+                    : bankBin.BnkFile;
+
+                var hash = Convert.ToHexString(SHA256.HashData(sourceBytes));
                 var convertedBytes = bankBinaryCache.GetOrAdd(hash, _ => new Lazy<byte[]>(() =>
-                    ConvertBankBytes(exp, bankBin.BnkFile, prefetchFragments, embeddedReplacements, stockResidentMedia))).Value;
+                    ConvertBankBytes(exp, sourceBytes, prefetchFragments, embeddedReplacements, stockResidentMedia))).Value;
 
                 bankBin.BnkFile = convertedBytes;
                 exp.WriteBinary(bankBin);
@@ -367,6 +379,159 @@ internal static class AudioPipeline
         }
 
         return converted;
+    }
+
+    /// <summary>
+    /// Identity of a bank for consistency purposes: its instanced full path, scoped by the package's localization.
+    /// Two languages' copies never load together (switching language needs a game restart) and a base package's
+    /// copy versus its own _LOC_ file is the localization override mechanism, so only banks at the same
+    /// localization are the "same object" for this purpose.
+    /// </summary>
+    private static string CanonicalBankKey(ExportEntry bankExport, string packagePath) =>
+        $"{bankExport.InstancedFullPath}|{packagePath.GetUnrealLocalization()}";
+
+    /// <summary>
+    /// One canonical v56 source per bank identity, so every package shipping a given bank converts the SAME bytes
+    /// and therefore ends up with the same v134 bank.
+    ///
+    /// ME3 does not guarantee this itself: "Wwise_VO_Exertions_DLC_CON_MP1" ships at 6662 bytes in DLC_CON_MP1 and
+    /// at 5234 bytes in DLC_CON_MP4 under the identical instanced full path. Both reference the same 16 Batarian
+    /// exertion VO lines; the MP4 copy was simply re-exported from Wwise with every object renumbered and a smaller
+    /// switch mapping (3 SwitchContainers at 325 bytes instead of 801 - which is the whole 1428-byte difference).
+    /// Converting each package's own copy faithfully reproduces that ambiguity into our output, and UE3 discards
+    /// every copy after the first one loaded, so which build the game gets comes down to load order.
+    ///
+    /// Tie-break is the LARGEST source, i.e. the copy carrying the most content - a superset of switch associations
+    /// can still resolve anything a trimmed one could, where the reverse isn't guaranteed. For the one real case in
+    /// the corpus this selects MP1's copy, which is the intended outcome. Anything this has to collapse is logged,
+    /// because a second case may well want a different answer than "bigger".
+    /// </summary>
+    private static Dictionary<string, byte[]> BuildCanonicalV56Banks(List<string> packagePaths)
+    {
+        var variants = new ConcurrentDictionary<string, ConcurrentDictionary<string, (byte[] Bytes, ConcurrentBag<string> Packages)>>();
+
+        Parallel.ForEach(packagePaths, new ParallelOptions { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, pf =>
+        {
+            using var package = MEPackageHandler.UnsafePartialLoad(pf, x => x.ClassName == "WwiseBank");
+            foreach (var exp in package.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "WwiseBank"))
+            {
+                var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(exp).BnkFile;
+                if (bnk is not { Length: > 0 }) continue;
+
+                using (var versionStream = new MemoryStream(bnk, writable: false))
+                {
+                    if (WwiseBankParser.GetWwiseBankVersion(versionStream) != 56) continue; // donored v134 - not ours
+                }
+
+                var hash = Convert.ToHexString(SHA256.HashData(bnk));
+                variants.GetOrAdd(CanonicalBankKey(exp, pf), _ => new ConcurrentDictionary<string, (byte[], ConcurrentBag<string>)>())
+                    .GetOrAdd(hash, _ => (bnk, new ConcurrentBag<string>()))
+                    .Packages.Add(Path.GetFileName(pf));
+            }
+        });
+
+        var result = new Dictionary<string, byte[]>();
+        var collapsed = 0;
+        foreach (var (key, byHash) in variants)
+        {
+            if (byHash.Count == 1)
+            {
+                result[key] = byHash.Values.First().Bytes;
+                continue;
+            }
+
+            collapsed++;
+            var ordered = byHash.Values.OrderByDescending(v => v.Bytes.Length).ToList();
+            var winner = ordered[0];
+            result[key] = winner.Bytes;
+
+            MilanLog.Warning($"{key.Split('|')[0]} ships {byHash.Count} different v56 banks under one name - converting the largest so every package agrees:", customPrefix: LOG_CATEGORY);
+            foreach (var v in ordered)
+            {
+                var pkgs = v.Packages.Distinct().OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
+                var shown = string.Join(", ", pkgs.Take(4)) + (pkgs.Count > 4 ? $", +{pkgs.Count - 4} more" : "");
+                MilanLog.Warning($"    {(ReferenceEquals(v.Bytes, winner.Bytes) ? "USING " : "      ")}{v.Bytes.Length} bytes from {shown}", customPrefix: LOG_CATEGORY);
+            }
+        }
+
+        if (collapsed > 0)
+        {
+            MilanLog.Information($"Canonicalized {collapsed} bank name(s) that ME3 ships more than one version of", customPrefix: LOG_CATEGORY);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Verifies the finished output obeys UE3's object-identity rule for banks: two exports sharing an instanced
+    /// full path are the SAME object to the engine - whichever package loads first wins and every later copy is
+    /// discarded - so two banks under one name MUST be byte-identical, or which build the game actually gets is
+    /// decided by load order and is not deterministic.
+    ///
+    /// This is not hypothetical and is not only ours to create: ME3 itself ships "Wwise_VO_Exertions_DLC_CON_MP1"
+    /// at 6662 bytes in DLC_CON_MP1 and a different 5234-byte bank under the exact same instanced full path in
+    /// DLC_CON_MP4 (verified 2026-09-19 - same 16 VO lines either way, but re-exported from Wwise with every object
+    /// renumbered and a smaller switch mapping), so ported content can carry a violation in from the source game.
+    /// The conversion can also create one unaided: ConvertBankBodiesInPackages dedupes by SOURCE hash, so two
+    /// packages whose v56 bytes differ produce two different v134 banks under one name.
+    ///
+    /// **Localization is not a violation, in either of its two forms.** Banks are compared only against others at
+    /// the same localization:
+    /// <list type="bullet">
+    /// <item>Two languages' copies (Foo_LOC_INT vs Foo_LOC_DEU) legitimately hold different audio under one object
+    /// name - only one language's packages are ever mounted, and switching needs a game restart.</item>
+    /// <item>A base package and its own LOC file (Foo vs Foo_LOC_INT) are the localization override mechanism
+    /// itself, not a conflict.</item>
+    /// </list>
+    /// Comparing across those axes reports every localized VO bank in the game as a false positive - measured at 7
+    /// such names on the first pass, then 3 more (SFXPawn_Atlas2, SFXPawn_Phoenix) when only the language axis was
+    /// fixed. Neither was a real defect.
+    ///
+    /// Reported as errors rather than fixed here: picking a winner is a content decision (which DLC's build of the
+    /// bank do we want), not something to resolve silently at the end of a build.
+    /// </summary>
+    internal static void AuditBankNameConsistency(List<string> packagePaths)
+    {
+        var entries = new ConcurrentBag<(string BankName, MELocalization Loc, string Hash, int Size, string Package)>();
+
+        Parallel.ForEach(packagePaths, new ParallelOptions { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, pf =>
+        {
+            using var package = MEPackageHandler.UnsafePartialLoad(pf, x => x.ClassName == "WwiseBank");
+            var loc = pf.GetUnrealLocalization();
+            foreach (var exp in package.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "WwiseBank"))
+            {
+                var bnk = ObjectBinary.From<LegendaryExplorerCore.Unreal.BinaryConverters.WwiseBank>(exp).BnkFile;
+                if (bnk is not { Length: > 0 }) continue;
+                entries.Add((exp.InstancedFullPath, loc, Convert.ToHexString(SHA256.HashData(bnk))[..12], bnk.Length, Path.GetFileName(pf)));
+            }
+        });
+
+        var all = entries.ToList();
+        var violations = all
+            .GroupBy(x => (x.BankName, x.Loc))
+            .Where(g => g.Select(x => x.Hash).Distinct().Count() > 1)
+            .OrderBy(g => g.Key.BankName, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(g => g.Key.Loc)
+            .ToList();
+
+        var distinctNames = all.Select(x => x.BankName).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+        if (violations.Count == 0)
+        {
+            MilanLog.Information($"Bank name consistency: OK - {distinctNames} distinct bank name(s), every one byte-identical across everything that can be loaded together", customPrefix: LOG_CATEGORY);
+            return;
+        }
+
+        MilanLog.Error($"{violations.Count} bank name(s) ship with DIFFERENT content across packages that load together. UE3 keeps only the first copy loaded and discards the rest, so which build the game gets is decided by load order - this must be made consistent:", customPrefix: LOG_CATEGORY);
+        foreach (var group in violations)
+        {
+            var scope = group.Key.Loc == MELocalization.None ? "unlocalized" : group.Key.Loc.ToString();
+            MilanLog.Error($"  {group.Key.BankName} [{scope}]", customPrefix: LOG_CATEGORY);
+            foreach (var variant in group.GroupBy(x => x.Hash).OrderByDescending(v => v.Count()))
+            {
+                var pkgs = variant.Select(x => x.Package).Distinct().OrderBy(x => x, StringComparer.OrdinalIgnoreCase).ToList();
+                var shown = string.Join(", ", pkgs.Take(4)) + (pkgs.Count > 4 ? $", +{pkgs.Count - 4} more" : "");
+                MilanLog.Error($"      {variant.First().Size} bytes (sha {variant.Key}) in {pkgs.Count} package(s): {shown}", customPrefix: LOG_CATEGORY);
+            }
+        }
     }
 
     /// <summary>
