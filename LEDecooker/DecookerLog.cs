@@ -139,29 +139,89 @@ namespace LEDecooker
             }
         }
 
+        /// <summary>
+        /// How many run logs to keep on disk, including the one being written.
+        /// </summary>
+        private const int RetainedLogCount = 2;
+
+        /// <summary>
+        /// Full path of this run's log file, or null if file logging could not be set up.
+        /// </summary>
+        public static string LogFilePath { get; private set; }
+
+        /// <summary>
+        /// Where run logs are written: a <c>logs</c> folder beside the executable.
+        /// </summary>
+        public static string LogDirectory => Path.Combine(AppContext.BaseDirectory, @"logs");
+
         public static void CreateLogger()
         {
-            Log.Logger = new LoggerConfiguration()
-                // Write to the console
-                .WriteTo.Console()
+            // One file per run rather than Serilog's rolling interval. A decook is a discrete
+            // operation that can be run several times in an afternoon, so "the last two runs" is the
+            // useful unit; a daily roll would merge them into one file and lose the boundary.
+            // Serilog's retainedFileCountLimit only prunes files it rolls itself, so with a unique
+            // name per run the pruning has to be done here.
+            string logFile = null;
+            try
+            {
+                Directory.CreateDirectory(LogDirectory);
+                PruneOldLogs();
+                logFile = Path.Combine(LogDirectory, $@"LEDecooker-{DateTime.Now:yyyyMMdd-HHmmss}.log");
+            }
+            catch (Exception e)
+            {
+                // Never let logging setup stop a decook. The console sink below still works.
+                Console.Error.WriteLine($@"Could not prepare the log directory, continuing without a log file: {e.Message}");
+            }
 
-                // Write to disk file
-#if FILELOGGING
-                // File based logging
-                //.WriteTo
-                //.File(Path.Combine(MCoreFilesystem.GetLogDir(), $@"{Prefix}-.txt"),
-                //    rollingInterval: RollingInterval.Day,
-                //    fileSizeLimitBytes: FileSize.MebiByte * 10, // 10 MB
-                //                                                // shared: true, // Allow us to read log without closing it // doesn't work in shared mode
-                //    hooks: new CaptureFilePathHook()) // Allow us to capture current log path 
-#endif
+            var config = new LoggerConfiguration()
+                // Write to the console
+                .WriteTo.Console();
+
+            if (logFile != null)
+            {
+                // shared: true so the file can be read while the run is still going -- a full decook
+                // takes long enough that waiting for it to finish to see what happened is no use.
+                config = config.WriteTo.File(logFile, shared: true, flushToDiskInterval: TimeSpan.FromSeconds(2));
+                LogFilePath = logFile;
+            }
 
 #if DEBUG
-                // Write to Visual Studio debug console
-                .WriteTo.Debug()
+            // Write to Visual Studio debug console
+            config = config.WriteTo.Debug();
 #endif
 
-                .CreateLogger();
+            Log.Logger = config.CreateLogger();
+
+            if (LogFilePath != null)
+            {
+                Information($@"Logging to {LogFilePath}");
+            }
+        }
+
+        /// <summary>
+        /// Deletes the oldest run logs, leaving room for the one about to be created.
+        /// </summary>
+        private static void PruneOldLogs()
+        {
+            // Ordered by name, which sorts chronologically because the stamp is yyyyMMdd-HHmmss.
+            // That avoids trusting mtime, which a copy or a restore can rewrite.
+            var existing = Directory.GetFiles(LogDirectory, @"LEDecooker-*.log")
+                .OrderBy(x => x, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            for (int i = 0; i <= existing.Count - RetainedLogCount; i++)
+            {
+                try
+                {
+                    File.Delete(existing[i]);
+                }
+                catch (Exception e)
+                {
+                    // Most likely another decook still has it open. Leaving an extra log is harmless.
+                    Console.Error.WriteLine($@"Could not delete old log {existing[i]}: {e.Message}");
+                }
+            }
         }
 
         public static void LogUSCErrors(MessageLog log)

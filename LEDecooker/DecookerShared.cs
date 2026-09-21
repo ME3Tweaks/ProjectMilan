@@ -6,6 +6,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Compression;
@@ -151,7 +152,30 @@ namespace LEDecooker
         /// </summary>
         /// <param name="package"></param>
         /// <param name="packageName"></param>
-        public static void PreparePackageForUDKify(this IMEPackage package, string packageName = null)
+        /// <param name="stripStaticPermutations">
+        /// True discards each MaterialInstance's static permutation entirely, which is what UDK needs.
+        /// False keeps the StaticParameterSet and blanks only the compiled resource, so the instance
+        /// still asks the engine for its own permutation and the engine has to compile it. Pass false
+        /// on the decook path: the output there feeds ShaderHost, and UDK conversion runs this again
+        /// through <see cref="ConvertPackageToUncooked"/> with the default, so UDK is unaffected.
+        /// </param>
+        /// <summary>
+        /// True when a MaterialInstance's static parameter set actually diverges from its parent's
+        /// defaults. The set carries the parent's whole parameter list; only entries flagged
+        /// bOverride are the instance's own, so a set with none of them describes no permutation.
+        /// </summary>
+        /// <remarks>
+        /// Kept in step with <c>MilanShaderHost.StaticPermutationNaming.HasAnyOverride</c>, which asks
+        /// the same question on the ShaderHost side. Inlined rather than shared because LEDecooker
+        /// references only LegendaryExplorerCore, and this predicate is three field reads.
+        /// </remarks>
+        private static bool OverridesAnything(StaticParameterSet set) =>
+            set != null
+            && (set.StaticSwitchParameters.Any(p => p.bOverride)
+                || set.StaticComponentMaskParameters.Any(p => p.bOverride)
+                || set.NormalParameters.Any(p => p.bOverride));
+
+        public static void PreparePackageForUDKify(this IMEPackage package, string packageName = null, bool stripStaticPermutations = true)
         {
             // Move all unfound textures to a single package
             var nonshippingTextures = package.Imports.Where(x => x.idxLink == 0 && x.IsTexture()).ToList();
@@ -174,12 +198,62 @@ namespace LEDecooker
             pPackage.SetForcedExportFlag(true);
 
 
-            // MIC - Remove static permutations
+            // MIC - static permutations.
+            //
+            // Static switch / component mask / normal parameters are compile-time: they select a
+            // subgraph, a channel, or a normal unpack range. Nothing at runtime can re-apply them, so
+            // an instance that loses its permutation renders its parent's defaults instead. That is a
+            // rendering change, not just a performance one -- see ShaderResearchTool HANDOFF Section 26,
+            // which measured 8391 affected instances across 2387 distinct parameter sets.
             foreach (var mic in package.Exports.Where(x => x.IsA("MaterialInstance")))
             {
                 var hasPerm = mic.GetProperty<BoolProperty>("bHasStaticPermutationResource");
-                if (hasPerm?.Value == true)
+                if (hasPerm?.Value != true)
                 {
+                    continue;
+                }
+
+                if (stripStaticPermutations)
+                {
+                    mic.RemoveProperty("bHasStaticPermutationResource");
+                    mic.WriteBinary([]);
+                    continue;
+                }
+
+                // Keep the parameter set -- it is the only record of what the instance asked for --
+                // but blank the compiled resources. Retaining the ported ones would leave a shader map
+                // ID pointing at shaders this package does not contain, and the engine would bind that
+                // stale map instead of compiling, which is the opposite of what the capture needs.
+                try
+                {
+                    var mi = ObjectBinary.From<MaterialInstance>(mic);
+
+                    // An instance whose set overrides nothing resolves to its parent's shader map, so
+                    // the engine never compiles a permutation for it and the blanked resource below
+                    // stays blank forever. bHasStaticPermutationResource is what decides which resource
+                    // UMaterialInstance::GetMaterialResource() hands back, so leaving the flag on with an
+                    // empty resource gives the instance *no shaders at all* -- strictly worse than the
+                    // strip this branch replaced, which at least fell back to the parent's defaults.
+                    //
+                    // Strip those. Only an instance that genuinely diverges has a permutation to keep.
+                    if (!OverridesAnything(mi.SM3StaticParameterSet))
+                    {
+                        mic.RemoveProperty("bHasStaticPermutationResource");
+                        mic.WriteBinary([]);
+                        continue;
+                    }
+
+                    mi.SM3StaticPermutationResource = MaterialResource.Create();
+                    // SM3 is the only block the games read. SM2 is blanked purely so no stale
+                    // UIndex-bearing resource is carried into the rebuild; nothing ever installs to it.
+                    mi.SM2StaticPermutationResource = MaterialResource.Create();
+                    mic.WriteBinary(mi);
+                }
+                catch (Exception e)
+                {
+                    // A MIC whose binary will not round-trip is worse than one without a permutation:
+                    // it can fail to load at all. Fall back to the old behaviour and say so.
+                    DecookerLog.Warning($@"Could not preserve static permutation on {mic.InstancedFullPath}: {e.Message}. Stripping it instead.");
                     mic.RemoveProperty("bHasStaticPermutationResource");
                     mic.WriteBinary([]);
                 }

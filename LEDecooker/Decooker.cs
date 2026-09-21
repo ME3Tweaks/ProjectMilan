@@ -24,6 +24,21 @@ namespace LEDecooker
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialIFPDB;
         private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupDB;
         private static CaseInsensitiveDictionary<ObjectLocation> OppositeTextureLookupDB;
+
+        /// <summary>
+        /// <see cref="TextureLookupDB"/> reduced to one entry per bare object name, for resolving a
+        /// T3D texture reference that carries no package path.
+        /// </summary>
+        /// <remarks>
+        /// The texture database itself is keyed by instanced full path so that same-named textures in
+        /// different packages all survive it. This index restores the bare-name lookup the fallback
+        /// resolver needs, and keeps the tie-break the database used to apply -- lowest path wins --
+        /// so a name that resolved to a particular copy before still resolves to that same copy.
+        /// Which copy a material *should* use is decided at resolve time, where the material's own
+        /// package is known and preferred; this is only the last resort.
+        /// </remarks>
+        private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupByName;
+        private static CaseInsensitiveDictionary<ObjectLocation> OppositeTextureLookupByName;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> StaticMeshLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> RvrEffectsMaterialUserLookupDB;
@@ -76,29 +91,61 @@ namespace LEDecooker
             var compiledOutputFolder = Path.Combine(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game.ToString());
             Directory.CreateDirectory(compiledOutputFolder);
 
+            // Packages this run actually wrote. FixImports only rewrites these, never the whole folder -
+            // see the remarks on FixImports for why.
+            var producedPackages = new CaseInsensitiveDictionary<string>();
+
+            void recordProduced(IEnumerable<string> paths)
+            {
+                foreach (var p in paths)
+                {
+                    producedPackages[p] = p;
+                }
+            }
+
             // Compile LE
-            bool clearOutput = false;
-            CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game, CLIOptions.ParsedOptions.Game, clearOutput);
+            // Only the first pass clears; the ME3 -> LE3 layering pass below must add to what it wrote.
+            bool clearOutput = CLIOptions.ParsedOptions?.ClearOutput == true;
+            recordProduced(CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game, CLIOptions.ParsedOptions.Game, clearOutput));
             // Compile OT -> LE
             if (CLIOptions.ParsedOptions.Game != MEGame.LE2)
             {
                 // Port in the content from the opposite generation as well.
                 DecookerLog.Information($"------ Layering {CLIOptions.ParsedOptions.Game.ToOppositeGeneration()} assets into decooked files");
-                CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game.ToOppositeGeneration(), CLIOptions.ParsedOptions.Game, false);
+                recordProduced(CompileGameAssets(compiledOutputFolder, CLIOptions.ParsedOptions.Game.ToOppositeGeneration(), CLIOptions.ParsedOptions.Game, false));
             }
 
-            FixImports(CLIOptions.ParsedOptions.CompiledAssetsOutputFolder, CLIOptions.ParsedOptions.Game);
+            // 09/19/2026 - this was passing CompiledAssetsOutputFolder (e.g. E:\Decooked) rather than the
+            // per-game folder the packages are actually written to (E:\Decooked\LE3). That folder holds no
+            // .pcc files at all, and the glob below is non-recursive, so this pass had been a silent no-op
+            // since the decooker was split into its own project.
+            FixImports(compiledOutputFolder, CLIOptions.ParsedOptions.Game, producedPackages.Values);
         }
 
         /// <summary>
         /// Resolve imports in LE3 packages - test they actually can resolve, move around missing ones.
         /// </summary>
-        /// <param name="inPath"></param>
-        private static void FixImports(string inPath, MEGame game)
+        /// <param name="inPath">The per-game decooked folder, e.g. E:\Decooked\LE3. Flat, non-recursive:
+        /// it is also the base for the sibling-package lookups below and the local resolution set.</param>
+        /// <param name="game">Game the packages belong to.</param>
+        /// <param name="packagesToFix">Packages this run produced. Only these are opened and possibly
+        /// rewritten; when null, every package in <paramref name="inPath"/> is.</param>
+        /// <remarks>
+        /// The distinction matters. Resolution needs the whole folder as context (an import is resolved
+        /// against every decooked package, and a misplaced object is hunted in its sibling), but rewriting
+        /// must not be: a targeted `--packages Foo` run would otherwise re-save any of the ~1,500 packages
+        /// in the folder that happened to carry a repointable import, and every rewrite invalidates the
+        /// shader captures taken against that package.
+        /// </remarks>
+        private static void FixImports(string inPath, MEGame game, IEnumerable<string> packagesToFix = null)
         {
             TieredPackageCache tpc = TieredPackageCache.GetGlobalPackageCache(game);
             var localFiles = Directory.GetFiles(inPath, "*.pcc");
-            foreach (var f in localFiles)
+            var targetFiles = packagesToFix?.ToArray() ?? localFiles;
+
+            DecookerLog.Information($"Fixing imports in {targetFiles.Length} package(s), resolving against {localFiles.Length} decooked package(s) in {inPath}");
+
+            foreach (var f in targetFiles)
             {
                 var cache = tpc.ChainNewCache();
                 //var package = MEPackageHandler.UnsafePartialLoad(f, x => false);
@@ -186,60 +233,14 @@ namespace LEDecooker
             public string classname { get; set; }
         }
 
-#if MP
-        /// <summary>
-        /// Decooks ME3 MP DLC content to packages for use in UDK
-        /// </summary>
-        public static void DecookME3MPDLC()
-        {
-            var inputFolder = @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC";
-            var le3Milan = @"S:\Milan\UDK\MilanMaterialDecook_T3D";
-            var me3mmMilan = @"S:\Milan\UDK\MilanMaterialDecook_ME3MP";
-
-            // essentially a toc
-            var le3Files = Directory.GetFiles(le3Milan).Select(Path.GetFileNameWithoutExtension).ToList();
-
-            var smDb = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(File.ReadAllText(@"S:\Milan\UDK\ME3MPDLCPackageMappingForStaticMesh.json"));
-
-            foreach (var mPackage in smDb)
-            {
-                IMEPackage decookedPackage = null;
-                if (le3Files.Contains(mPackage.Key, StringComparer.OrdinalIgnoreCase))
-                {
-                    // Adding assets to package
-                    continue;
-                    //decookedPackage = MEPackageHandler.OpenMEPackage(Path.Combine(le3Milan, $"{mPackage.Key}.pcc"));
-                }
-                else
-                {
-                    // Making new package
-                    decookedPackage = MEPackageHandler.CreateAndOpenPackage(Path.Combine(me3mmMilan, $"{mPackage.Key}.pcc"), MEGame.LE3);
-                }
-
-                AddObjects(decookedPackage, "StaticMesh", smDb);
-
-                decookedPackage.Save();
-                /*
-                foreach (var meshEntry in mPackage.Value)
-                {
-                    var ifp = meshEntry.Key[(meshEntry.Key.IndexOf('.') + 1)..];
-                    if (decookedPackage.FindExport(ifp) == null)
-                    {
-                        // Asset does not exist in package.
-
-                    }
-                }*/
-            }
-
-            FixImports(me3mmMilan);
-        }
-#endif
-
         /// <summary>
         /// Generates decooked packages that will later be converted to UPKs
         /// </summary>
         /// <param name="outputFolder"></param>
-        public static void CompileGameAssets(string outputFolder, MEGame sourceGame, MEGame targetGame, bool clearOutput)
+        /// <returns>Full paths of the packages this call wrote. Packages that were skipped by the filters,
+        /// or deleted again for holding nothing but Package exports, are not included. FixImports uses this
+        /// so it only rewrites what the run produced.</returns>
+        public static List<string> CompileGameAssets(string outputFolder, MEGame sourceGame, MEGame targetGame, bool clearOutput)
         {
             // Turn this on to save packages as the files are compiled - letting you see intermediate steps, but at a performance cost.
             bool debugPackages = false;
@@ -296,6 +297,7 @@ namespace LEDecooker
 
             int done = 0;
             int total = packages.Count;
+            var writtenPackages = new List<string>();
 
             foreach (var packageName in packages)
             {
@@ -306,7 +308,9 @@ namespace LEDecooker
 
                 bypass = true;
 
-                if (packageName.StartsWith("Engine", StringComparison.OrdinalIgnoreCase) && !packageName.Contains("EngineDebugMaterials", StringComparison.OrdinalIgnoreCase))
+                if (packageName.StartsWith("Engine", StringComparison.OrdinalIgnoreCase) 
+                    && !packageName.Contains("EngineDebugMaterials", StringComparison.OrdinalIgnoreCase)
+                    && !packageName.Contains("Engine_MI_Shaders", StringComparison.OrdinalIgnoreCase)) // NEW
                     continue;
                 if (packageName.StartsWith("Editor", StringComparison.OrdinalIgnoreCase))
                     continue;
@@ -354,17 +358,17 @@ namespace LEDecooker
                     : Array.Empty<ZipArchiveEntry>();
                 CompilePackageMaterials(package, sourceGame, materialEntries, MaterialIFPDB);
                 AddTextures(package, sourceGame, TextureLookupDB);
-                package.PreparePackageForUDKify();
+                package.PreparePackageForUDKify(stripStaticPermutations: false);
                 // We must do this to ensure we have the RVR stuff set up as the MaterialInstanceConstant may reference it as a parent
                 CopyProperties(package, sourceGame, "RvrEffectsMaterialUser", RvrEffectsMaterialUserLookupDB);
-                package.PreparePackageForUDKify();
+                package.PreparePackageForUDKify(stripStaticPermutations: false);
                 VerifyCombinedEffectParents(package);
                 AddObjects(package, sourceGame, "MaterialInstanceConstant", MaterialInstanceConstantLookupDB);
                 if (debugPackages) { package.Save(); }
 
                 AddObjects(package, sourceGame, "StaticMesh", StaticMeshLookupDB);
                 AddObjects(package, sourceGame, "TerrainMaterial", TerrainMaterialLookupDB);
-                package.PreparePackageForUDKify();
+                package.PreparePackageForUDKify(stripStaticPermutations: false);
 
                 if (debugPackages) { package.Save(); }
                 SpecialFixes(package, sourceGame);
@@ -391,6 +395,7 @@ namespace LEDecooker
                     // Set flags to match what source side package would. This affects import resolution code.
                     package.setFlags(UnrealFlags.EPackageFlags.AllowDownload | UnrealFlags.EPackageFlags.NoExportsData);
                     package.Save();
+                    writtenPackages.Add(packagePath);
                     /*if (package.IsModified)
                     {
                         package.Save(ChangeDirectory(package.FilePath, @"E:\Decooked\LE3ME3"));
@@ -402,6 +407,8 @@ namespace LEDecooker
             {
                 Debug.WriteLine($"{f.Key}\t\t{f.Value}");
             }
+
+            return writtenPackages;
         }
 
         private static List<string> filterPackages(List<string> packages)
@@ -416,22 +423,82 @@ namespace LEDecooker
             //   BIOG_WPN_SNP_M_CON_MP4 FIXED per import
             //   BioS_MPJungle 
             //   BioVFX_Env_Hologram
+            // --allpackages decooks everything the source set offers, which is what a full rebuild
+            // needs. The checked-in list below is a debug worklist, so without this a full decook means
+            // editing this file and remembering to put it back -- and a forgotten edit silently reduces
+            // the next run to whatever that worklist happened to contain.
+            if (CLIOptions.ParsedOptions is { AllPackages: true })
+            {
+                DecookerLog.Information($@"--allpackages: decooking all {packages.Count} packages, ignoring the built-in filter list");
+                return packages;
+            }
+
+            // --packages wins over the checked-in list below, so rebuilding a single package does not
+            // mean editing this file and remembering to put it back.
+            var requested = CLIOptions.ParsedOptions?.Packages?.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (requested is { Count: > 0 })
+            {
+                var selected = packages.Where(requested.Contains).ToList();
+
+                // A name that matches nothing is almost always a typo or a package excluded earlier by
+                // the StartsWith rules in CompileGameAssets, and silently decooking nothing looks like
+                // success until something downstream relinks to MissingTextures.
+                foreach (var missing in requested.Except(selected, StringComparer.OrdinalIgnoreCase))
+                {
+                    Console.Error.WriteLine($"--packages: '{missing}' matched no package in the source set.");
+                }
+
+                return selected;
+            }
+
             return packages.Where(packageName =>
             {
                 // Uncomment to disable filtering.
                 // return true;
 
-                // Put filename here and anything not matching it will be skipped
-                if (!packageName.CaseInsensitiveEquals("EffectsMaterials"))
-                {
-                    return false;
-                }
-
-                // Allowed
-                return true;
+                // Currently rebuilding the shader-parity residual: every package that still owns a
+                // byte mismatch after the 2026-09-17 qualified-path texture resolver landed. See
+                // ShaderResearchTool/audits/residual-worklist-20260917.tsv for the per-job list.
+                //
+                // EffectsMaterials is deliberately absent. It has already been rebuilt and validated
+                // against this resolver (314 mismatches cleared, 0 regressions), and at 2,725
+                // materials it costs ~30 minutes to decook plus ~1.5 hours to capture, which is most
+                // of the run time for none of the remaining information.
+                //
+                // To rebuild one package instead, replace the set with a single name. To rebuild
+                // everything, uncomment the `return true` above.
+                return ResidualParityPackages.Contains(packageName);
             }).ToList();
 
         }
+
+        /// <summary>
+        /// Packages still holding shader byte mismatches as of 2026-09-17, excluding EffectsMaterials
+        /// (already rebuilt and validated) and BIOG_Humanoid_MASTER_MTR_R (recaptured clean, 0
+        /// mismatches). Counts in comments are that package's residual mismatching jobs.
+        /// </summary>
+        private static readonly HashSet<string> ResidualParityPackages = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "BIOG_HMM_HED_PROMorph",     // 108
+            "BIOG_HMF_HED_PROMorph_R",   //  94
+            "BioApl_GUI_Terminal02",     //  76 -- known qualified-path texture defect
+            "BioT_Thessia",              //  50
+            "BioT_CitApt",               //  43 -- known qualified-path texture defect
+            "BioT_HooDoo_Ter",           //  28
+            "BioT_Human_Ext",            //  28
+            "BioApl_OMG_TalonLogo",      //  26
+            "biot_krogru",               //  26
+            "BioVFX_FB_MotionBlur",      //  20
+            "BioVFX_C_Fire",             //  16
+            "BIOG_HMM_ARM_AND_R",        //   4
+            "VFX_zz_ME3_Global_METR",    //   3
+            "BioChar_Crowds_Omega",      //   2
+            "biog_hmm_hgr_shp_r",        //   2
+            "BioS_CitRestaurant",        //   2
+            "BioVFX_Env_Cat002",         //   2
+            "BioVFX_Env_Gthleg",         //   2
+            "BioVFX_DLC_EXP1_Lev004",    //   1
+        };
 
         private static void SpecialFixes(IMEPackage package, MEGame sourceGame)
         {
@@ -470,12 +537,17 @@ namespace LEDecooker
             var supportData = DecookerShared.ReadSupportFileString(zip, $"materialifps_{game}.json");
             MaterialIFPDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
-            // List of all textures. We use this to make sure we just pull in all game textures
+            // List of all textures. We use this to make sure we just pull in all game textures.
+            // Keyed by instanced full path (see SupportGenerators.InventoryTextures), so it holds every
+            // texture rather than one per bare name. The bare-name index the T3D fallback needs is
+            // derived from it below.
             supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{game}.json");
             TextureLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
+            TextureLookupByName = BuildNameIndex(TextureLookupDB);
 
             supportData = DecookerShared.ReadSupportFileString(zip, $"texturedb_{oppositeGame}.json");
             OppositeTextureLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<ObjectLocation>>(supportData);
+            OppositeTextureLookupByName = BuildNameIndex(OppositeTextureLookupDB);
 
             // Static meshes are used during lighting and udk export, so we pull them in
             supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{game}.json");
@@ -603,7 +675,22 @@ namespace LEDecooker
                     using var sourcePackage = cache.GetCachedPackage(path, openIfNotInCache: true);
                     PortingItems[asset.Key] = path;
 
+                    // A source package the DB names but that will not open is a support-database problem,
+                    // not a reason to abort the run. This went unnoticed until the first decook from a
+                    // genuinely empty output folder: with existing output the texture is already present
+                    // and skipped above, so the lookup never runs.
+                    if (sourcePackage == null)
+                    {
+                        DecookerLog.Warning($"\t\tCould not open source package for {memoryifp}: {path} - skipping texture");
+                        continue;
+                    }
+
                     var sourceAsset = sourcePackage.FindExport(memoryifp) ?? sourcePackage.FindExport(ifp);
+                    if (sourceAsset == null)
+                    {
+                        DecookerLog.Warning($"\t\t{memoryifp} not found in {Path.GetFileName(path)} - skipping texture");
+                        continue;
+                    }
                     // These are nested under terrain; IDK how we could decook that without bringing in levels
                     //if (sourceAsset.ClassName == "TerrainWeightMapTexture")
                     //{
@@ -706,7 +793,21 @@ namespace LEDecooker
                     DecookerLog.Information($"\t\tPorting asset in: {asset.Key}");
                     var path = Path.Combine(DecookerShared.GetCachedGameBackupPath(sourceGame), asset.Value.TrimStart('\\', '/'));
                     using var sourcePackage = cache.GetCachedPackage(path, openIfNotInCache: true);
+
+                    // Same guard as AddTextures: an unopenable source package or a missing object is a
+                    // support-database problem to report, not a reason to abort a multi-hour decook.
+                    if (sourcePackage == null)
+                    {
+                        DecookerLog.Warning($"\t\tCould not open source package for {asset.Key}: {path} - skipping {classType}");
+                        continue;
+                    }
+
                     var sourceAsset = sourcePackage.FindExport(asset.Key) ?? sourcePackage.FindExport(asset.Key.Substring(asset.Key.IndexOf('.') + 1));
+                    if (sourceAsset == null)
+                    {
+                        DecookerLog.Warning($"\t\t{asset.Key} not found in {Path.GetFileName(path)} - skipping {classType}");
+                        continue;
+                    }
 
                     PortingItems[asset.Key] = path;
 
@@ -736,7 +837,7 @@ namespace LEDecooker
             {
                 // This is a special case where we want to copy properties but not the actual object. The RVR effect materials are nested under the package root and are used as parents for CombinedEffect_* materials. We only want to copy the properties of these RVR effect materials to the package, but we don't want to port the actual RVR effect material objects themselves.
                 //DecookerLog.Information($"\tCopying properties for asset type '{classType}' to package (special case)");
-                Debug.WriteLine("Test");
+                // Debug.WriteLine("Test");
             }
 
             if (assetMap.TryGetValue(package.FileNameNoExtension, out var assetList))
@@ -757,7 +858,21 @@ namespace LEDecooker
                     DecookerLog.Information($"\t\tCopying properties for asset in: {asset.Key}");
                     var path = Path.Combine(DecookerShared.GetCachedGameBackupPath(sourceGame), asset.Value.TrimStart('\\', '/'));
                     using var sourcePackage = cache.GetCachedPackage(path, openIfNotInCache: true);
+
+                    // Same guard as AddTextures: an unopenable source package or a missing object is a
+                    // support-database problem to report, not a reason to abort a multi-hour decook.
+                    if (sourcePackage == null)
+                    {
+                        DecookerLog.Warning($"\t\tCould not open source package for {asset.Key}: {path} - skipping {classType}");
+                        continue;
+                    }
+
                     var sourceAsset = sourcePackage.FindExport(asset.Key) ?? sourcePackage.FindExport(asset.Key.Substring(asset.Key.IndexOf('.') + 1));
+                    if (sourceAsset == null)
+                    {
+                        DecookerLog.Warning($"\t\t{asset.Key} not found in {Path.GetFileName(path)} - skipping {classType}");
+                        continue;
+                    }
 
                     PortingItems[asset.Key] = path;
 
@@ -849,7 +964,7 @@ namespace LEDecooker
             }
 
             // We align to cooked version for now.
-            package.PreparePackageForUDKify();
+            package.PreparePackageForUDKify(stripStaticPermutations: false);
 
             if (result != null)
             {
@@ -1013,7 +1128,7 @@ namespace LEDecooker
             IEntry MissingObjectResolver(IMEPackage sourcepackage, string instancedfullpath, string classname)
             {
                 // Resolve texture references
-                if (classname != "Texture2D" && classname != "TextureCube")
+                if (classname != "Texture2D" && classname != "TextureCube" && classname != "TextureFlipBook" && classname != "TextureRenderTarget2D" && classname != "TextureRenderTargetCube")
                 {
                     return null;
                 }
@@ -1029,26 +1144,37 @@ namespace LEDecooker
                 // that DB happens to hold then decides the pixel format, and format changes the
                 // generated shader: a two channel normal map (BC5/V8U8) makes the material reconstruct
                 // Z, a three channel one (DXT1/BC7) does not, so the bytecode stops matching what the
-                // game shipped. Resolve the exact shipping binding for this material first. The
-                // same-package preference remains a useful fallback for materials not present in the
-                // shipping database, but EffectsMaterials is an assembly package: its CombinedEffect
-                // materials commonly bind textures from their external base-material package instead.
-                var shippingMatch = sourceGame == package.Game
+                // game shipped.
+                //
+                // Most T3D texture references are already package qualified -- the exporter writes
+                // Texture2D'BIOG_Humanoid_MASTER_MTR_R.GBL_ARM_ALL_Norm, naming the exact copy. Reducing
+                // that to a leaf throws away the only unambiguous statement of intent in the input and
+                // then makes every later rule guess it back. So take the qualified path at its word
+                // first, and keep the older recovery policies for references that really are bare.
+                var qualifiedMatch = sourceGame == package.Game
+                    ? TryResolveTextureByQualifiedPath(instancedfullpath, classname, sourceGame)
+                    : null;
+                // Resolve the exact shipping binding for this material next. The same-package
+                // preference remains a useful fallback for materials not present in the shipping
+                // database, but EffectsMaterials is an assembly package: its CombinedEffect materials
+                // commonly bind textures from their external base-material package instead.
+                var shippingMatch = qualifiedMatch == null && sourceGame == package.Game
                     ? TryResolveTextureFromShippingMaterial(activeMaterialPath, lookupName, classname, sourceGame, cache)
                     : null;
-                var ownPackageMatch = shippingMatch == null
+                var ownPackageMatch = qualifiedMatch == null && shippingMatch == null
                     ? TryResolveTextureInOwnPackage(sourcepackage, lookupName, classname, sourceGame)
                     : null;
-                var selectedMatch = shippingMatch ?? ownPackageMatch;
+                var selectedMatch = qualifiedMatch ?? shippingMatch ?? ownPackageMatch;
                 var portedItem = selectedMatch != null
                     ? PortTextureFromLocation(package, sourcepackage, sourceGame, selectedMatch, classname, cache)
                     : null;
 
-                portedItem ??= TryPortTexture(package, sourcepackage, sourceGame, lookupName, classname, TextureLookupDB, cache);
-                if (portedItem == null && OppositeTextureLookupDB != null)
+                // Bare name, so the by-name index rather than the path-keyed database itself.
+                portedItem ??= TryPortTexture(package, sourcepackage, sourceGame, lookupName, classname, TextureLookupByName, cache);
+                if (portedItem == null && OppositeTextureLookupByName != null)
                 {
                     var oppositeGame = sourceGame.ToOppositeGeneration();
-                    portedItem = TryPortTexture(package, sourcepackage, oppositeGame, lookupName, classname, OppositeTextureLookupDB, cache);
+                    portedItem = TryPortTexture(package, sourcepackage, oppositeGame, lookupName, classname, OppositeTextureLookupByName, cache);
                 }
 
                 if (portedItem == null)
@@ -1057,6 +1183,33 @@ namespace LEDecooker
                 }
                 return portedItem;
             }
+        }
+
+        /// <summary>
+        /// Reduces a path-keyed texture database to one entry per bare object name, lowest path
+        /// winning. This reproduces exactly what the database itself used to contain, so the
+        /// bare-name fallback resolver picks the same copy it always did.
+        /// </summary>
+        private static CaseInsensitiveDictionary<ObjectLocation> BuildNameIndex(CaseInsensitiveDictionary<ObjectLocation> db)
+        {
+            var index = new CaseInsensitiveDictionary<ObjectLocation>();
+            if (db == null)
+            {
+                return index;
+            }
+
+            foreach (var entry in db)
+            {
+                var mfp = entry.Value.memoryfullpath;
+                var name = mfp[(mfp.LastIndexOf('.') + 1)..];
+                if (!index.TryGetValue(name, out var existing)
+                    || string.Compare(mfp, existing.memoryfullpath, StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    index[name] = entry.Value;
+                }
+            }
+
+            return index;
         }
 
         /// <summary>
@@ -1078,10 +1231,48 @@ namespace LEDecooker
         }
 
         /// <summary>
+        /// Resolves a T3D texture reference that is already package qualified by taking it literally:
+        /// the exporter names the exact copy it meant, and the target object database indexes objects
+        /// by instanced full path, so no disambiguation is needed. Returns null for a bare name, for a
+        /// path the database does not know, or when the object at that path is not the class being
+        /// resolved -- each of which leaves the caller on the older recovery policies.
+        ///
+        /// This exists because several packages ship same-named textures at different compression, and
+        /// picking the wrong copy changes the generated shader (a two channel BC5 normal map makes the
+        /// material reconstruct Z; a three channel DXT1 one does not).
+        /// </summary>
+        private static ObjectLocation TryResolveTextureByQualifiedPath(string instancedfullpath,
+            string classname, MEGame sourceGame)
+        {
+            if (DecookerShared.TargetObjectDB == null || string.IsNullOrWhiteSpace(instancedfullpath))
+                return null;
+
+            // A bare name carries no qualification to honour; that is the older policies' job.
+            if (!instancedfullpath.Contains('.'))
+                return null;
+
+            var files = DecookerShared.TargetObjectDB.GetFilesContainingObject(instancedfullpath);
+            if (files == null || files.Count == 0)
+                return null;
+
+            // The path index covers every object, not just textures, so confirm the class before
+            // binding -- the same guard TryResolveTextureInOwnPackage needs for the same reason.
+            if (!CandidateIsClass(instancedfullpath, classname, sourceGame))
+                return null;
+
+            return new ObjectLocation
+            {
+                packagefile = files[0],
+                memoryfullpath = instancedfullpath,
+                classname = classname
+            };
+        }
+
+        /// <summary>
         /// Resolves a bare T3D texture name through the shipping MaterialResource of the material
-        /// currently being rebuilt. The source T3D does not retain a package-qualified texture IFP,
-        /// whereas the cooked resource does. Only a unique leaf-name match is accepted; an absent or
-        /// ambiguous binding deliberately falls back to the older package/name policies.
+        /// currently being rebuilt, recovering a package qualification the reference did not carry.
+        /// Only a unique leaf-name match is accepted; an absent or ambiguous binding deliberately
+        /// falls back to the older package/name policies.
         /// </summary>
         private static ObjectLocation TryResolveTextureFromShippingMaterial(string materialPath, string lookupName,
             string classname, MEGame sourceGame, PackageCache cache)

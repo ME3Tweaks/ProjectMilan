@@ -25,17 +25,27 @@ namespace LEDecooker
             DecookerLog.CreateLogger();
             Console.Write(" Done.\n");
 
-#if DEBUG
-            // Uncomment to run support generation. Only when launched with no arguments, so that the
-            // CLI (including --gensupportfiles for a single game) still works from a debug build.
-            if (args.Length == 0)
+            // Serilog buffers, so without this the tail of a run -- which is exactly the part worth
+            // reading after a crash or a kill -- never reaches the file. try/finally rather than a
+            // call at the end of Main so it still runs when a decook throws.
+            try
             {
-                RunSupportGenerators();
-                return;
-            }
+#if DEBUG
+                // Uncomment to run support generation. Only when launched with no arguments, so that the
+                // CLI (including --gensupportfiles for a single game) still works from a debug build.
+                if (args.Length == 0)
+                {
+                    RunSupportGenerators();
+                    return;
+                }
 #endif
 
-            Parser.Default.ParseArguments<CLIOptions>(args).WithParsed(RunDecook);
+                Parser.Default.ParseArguments<CLIOptions>(args).WithParsed(RunDecook);
+            }
+            finally
+            {
+                DecookerLog.CloseAndFlush();
+            }
         }
 
         private static void RunDecook(CLIOptions options)
@@ -61,6 +71,17 @@ namespace LEDecooker
                 SupportGenerators.GenerateObjectInstanceDB(options.Game);
 #else
                 DecookerLog.Fatal("--genobjectdb is only available in DEBUG builds.");
+                Environment.Exit(1);
+#endif
+                return;
+            }
+
+            if (options.GenerateTextureDB)
+            {
+#if DEBUG
+                SupportGenerators.GenerateSupportFiles(options.Game, SupportGenerators.SupportDatabase.Textures);
+#else
+                DecookerLog.Fatal("--gentexturedb is only available in DEBUG builds.");
                 Environment.Exit(1);
 #endif
                 return;

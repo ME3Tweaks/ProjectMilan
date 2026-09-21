@@ -440,18 +440,31 @@ namespace LEDecooker
                     classname = tex.ClassName
                 };
 
-                // Several packages can own a texture with the same object name. Keeping whichever
-                // arrived first made the winner depend on thread scheduling, so the same inputs could
-                // produce a different DB -- and a different pixel format, which changes the compiled
-                // shader -- from one run to the next. Break the tie on the path instead so the result
-                // is reproducible. Which copy a material should actually use is decided at resolve
-                // time, where the material's own package is known and preferred.
+                // Keyed by instanced full path, so every texture in the game gets an entry.
+                //
+                // This used to be keyed by tex.ObjectName.Instanced -- one slot per bare name,
+                // game-wide -- which silently dropped every texture that shared a name with another.
+                // In LE3 that is 2,141 of 11,119 Texture2Ds (1,236 names are used more than once).
+                // The loss is not academic: the layering pass hands a package the entries whose path
+                // starts with that package's name (Decooker.AddTextures), so a texture whose slot was
+                // taken by a same-named one in a different package can never be layered into anything.
+                // BioVFX_Z_TEXTURES.Fractals.Wave was the reported case -- BioVFX_Env_Gthleg.Textures.Wave
+                // sorted first and took "Wave", so the Z_TEXTURES copy was absent from the decook.
+                //
+                // The bare-name index the T3D fallback resolver needs is derived at load time instead
+                // (Decooker.BuildNameIndex), using the same tie-break, so that path is unchanged.
+                // The same texture path lives in many packages (fx_Distort_3 is in 804 files), so the
+                // key still collides -- just between copies of one object rather than between
+                // different objects. Break that tie on the containing file so the chosen copy does not
+                // depend on thread scheduling. The old code kept whichever copy arrived first here,
+                // which was genuinely nondeterministic: its path tie-break could not separate two
+                // entries whose paths were equal.
                 lock (textureDb)
                 {
-                    if (!textureDb.TryGetValue(tex.ObjectName.Instanced, out var existing)
-                        || string.Compare(candidate.memoryfullpath, existing.memoryfullpath, StringComparison.OrdinalIgnoreCase) < 0)
+                    if (!textureDb.TryGetValue(tex.MemoryFullPath, out var existing)
+                        || string.Compare(candidate.packagefile, existing.packagefile, StringComparison.OrdinalIgnoreCase) < 0)
                     {
-                        textureDb[tex.ObjectName.Instanced] = candidate;
+                        textureDb[tex.MemoryFullPath] = candidate;
                     }
                 }
             }
