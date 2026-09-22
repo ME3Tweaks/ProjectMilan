@@ -3,6 +3,7 @@
 // HordeWaveSort loses its delegate flag because it breaks the .Sort() method (its never assigned). 
 // It seems that per-object-config sorting isn't guaranteed which was causing waves to become unordered
 // with our coalesced compiler so this latent bug surfaced, which was also present in OT but did not surface.
+// 09/21/2026 - Add Random Enemies feature
 Class SFXWaveManager_Horde extends SFXWaveManager
     transient
     config(Game);
@@ -23,6 +24,12 @@ var config array<WavePointRange> WavePointsRanges;
 var array<SFXEnemySpawnPoint> EnemySpawnPoints;
 var config Vector2D WaveProgressionRange;
 var config int MaxWaves;
+
+// MILAN CHANGE: Random Enemies --
+var config float RandomEnemyCostTolerance;
+var config int RandomEnemyMinTypes;
+var config int RandomEnemyMaxTypes;
+// END MILAN CHANGE
 
 public simulated function GeneratePotentialWaveList(optional Class<SFXWave> SpecifiedWaveType)
 {
@@ -132,6 +139,54 @@ public simulated function int HordeWaveSort(Object A, Object B)
     return SFXWave_Horde(A).WaveIndex > SFXWave_Horde(B).WaveIndex ? -1 : 0;
 }
 
+// MILAN CHANGE - Random Enemies algorithm
+// Seed enemy chosen uniformly at random from the shared master roster (all factions), then
+// fill out with other roster entries whose WaveCost is within tolerance of the seed's.
+public function array<Name> GenerateScaledRandomComposition(float ScoreBudget)
+{
+    local array<EnemySpawnInfo> FullRoster;
+    local EnemySpawnInfo Seed;
+    local EnemySpawnInfo Candidate;
+    local array<EnemySpawnInfo> InBand;
+    local array<Name> Result;
+    local float LowCost;
+    local float HighCost;
+    local int NumToPick;
+    local int i;
+    local int PickIdx;
+
+    FullRoster = Class'SFXWave_Horde'.default.EnemyList;
+    if (FullRoster.Length == 0)
+    {
+        return Result;
+    }
+    Seed = FullRoster[Rand(FullRoster.Length)];
+    Result.AddItem(Seed.EnemyType);
+
+    LowCost = float(Seed.WaveCost) * (1.0 - RandomEnemyCostTolerance);
+    HighCost = float(Seed.WaveCost) * (1.0 + RandomEnemyCostTolerance);
+    foreach FullRoster(Candidate, )
+    {
+        if (Candidate.EnemyType == Seed.EnemyType)
+        {
+            continue;
+        }
+        if (float(Candidate.WaveCost) >= LowCost && float(Candidate.WaveCost) <= HighCost)
+        {
+            InBand.AddItem(Candidate);
+        }
+    }
+
+    NumToPick = Clamp(RandomEnemyMinTypes + Rand(RandomEnemyMaxTypes - RandomEnemyMinTypes + 1) - 1, 0, InBand.Length);
+    for (i = 0; i < NumToPick && InBand.Length > 0; i++)
+    {
+        PickIdx = Rand(InBand.Length);
+        Result.AddItem(InBand[PickIdx].EnemyType);
+        InBand.Remove(PickIdx, 1);
+    }
+    return Result;
+}
+// END MILAN CHANGE
 //class default properties can be edited in the Properties tab for the class's Default__ object.
 defaultproperties
 {
