@@ -8836,21 +8836,18 @@
 			<Property name="srfriendbeatme_challengepoints" type="0">764398</Property>
 		</Section>
 		<Section name="sfxonlinefoundation.sfxonlinegamesettings">
-			<Property name="challengetypes" type="3">(ID=3,Name=747607,AllCapsName=747608,Image="GUI_MPImages.MatchSettings.OptChallgPlatinum")</Property>
-			<Property name="enemytypes">
-				<!-- Clear list of enemy types so we start fresh-->
-				<Value type="1">null</Value>
-
-				<!-- Define the list of enemy types -->
-				<Value type="3">(ID=0,Name=701523,AllCapsName=701523,Image="GUI_MPImages.MatchSettings.OptEmyRandom",WaveClass="")</Value>
-				<Value type="3">(ID=1,Name=683914,AllCapsName=683908,Image="GUI_MPImages_MP4.OptEmyCerberus",WaveClass="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Cerberus2")</Value>
-				<Value type="3">(ID=2,Name=683915,AllCapsName=683909,Image="GUI_MPImages_MP4.OptEmyGeth",WaveClass="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Geth2")</Value>
-				<Value type="3">(ID=3,Name=683916,AllCapsName=683910,Image="GUI_MPImages.MatchSettings.OptEmyReapers",WaveClass="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Reaper2")</Value>
-				<Value type="3">(ID=4,Name=746075,AllCapsName=746076,Image="GUI_MPImages_MP4.OptEmyCollector",WaveClass="SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Collector")</Value>
+			<Property name="challengetypes">
+				<Value type="3">(ID=0,Name=683917,AllCapsName=683911,Image="GUI_MPImages.MatchSettings.OptChallgBrnz")</Value>
+				<Value type="3">(ID=1,Name=683918,AllCapsName=683912,Image="GUI_MPImages.MatchSettings.OptChallgSilver")</Value>
+				<Value type="3">(ID=2,Name=683919,AllCapsName=683913,Image="GUI_MPImages.MatchSettings.OptChallgGold")</Value>
+				<Value type="3">(ID=3,Name=747607,AllCapsName=747608,Image="GUI_MPImages.MatchSettings.OptChallgPlatinum")</Value>
+				<!-- Milan dynamically will append to this in level build -->
 			</Property>
+			<!-- Enemy type (faction) list is built by the level pipelines during build -->
 			<!-- Map list is built by the level pipelines during build -->
+			<!-- Must have empty map for random option to work. Use type 2 to avoid the value checking.-->
+			<Property name="availablemaps" type="2"></Property>
 			<Property name="mastermaplist" type="3">(ID=0, PackageName="", PrettyName=616735, Description=616738, Image="GUI_MPImages.MatchSettings.OptMapRandom")</Property>
-			<Property name="privacytypes" type="4">(ID=2,Name=758480,AllCapsName=758481,Image="GUI_MPImages_MP4.OptTeamFriends")</Property>
 		</Section>
 		<Section name="sfxonlinefoundation.sfxonlinejobsavesettings">
 			<Property name="m_save_rpc_throttle" type="0">0.1f</Property>
