@@ -1,4 +1,4 @@
-namespace ProjectMilanCore
+namespace ProjectMilanCore.Config
 {
     /// <summary>
     /// Multiplayer map-select-UI registration data for a single map. Deliberately has no map ID or music

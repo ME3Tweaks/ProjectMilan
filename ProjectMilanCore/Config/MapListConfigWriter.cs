@@ -1,6 +1,7 @@
 using LegendaryExplorerCore.Coalesced;
+using ProjectMilanCore;
 
-namespace ProjectMilanCore
+namespace ProjectMilanCore.Config
 {
     /// <summary>
     /// Writes a multiplayer map's map-select-UI registration (icon, availablemaps, mastermaplist) into

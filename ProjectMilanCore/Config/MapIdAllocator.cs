@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace ProjectMilanCore
+namespace ProjectMilanCore.Config
 {
     /// <summary>
     /// Assigns sequential IDs to newly-registered multiplayer maps for the mastermaplist/availablemaps
@@ -11,7 +11,7 @@ namespace ProjectMilanCore
     /// </summary>
     public static class MapIdAllocator
     {
-        private static int _nextId = 1;
+        private static int _nextId = 2;
 
         /// <summary>
         /// Allocates and returns the next free map ID.

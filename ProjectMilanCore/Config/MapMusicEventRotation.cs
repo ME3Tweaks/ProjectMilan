@@ -1,4 +1,4 @@
-namespace ProjectMilanCore
+namespace ProjectMilanCore.Config
 {
     /// <summary>
     /// Assigns each newly-registered multiplayer map a music event, rotating through the fixed set the
