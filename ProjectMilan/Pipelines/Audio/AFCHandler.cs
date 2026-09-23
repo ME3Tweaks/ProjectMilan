@@ -247,10 +247,10 @@ namespace ProjectMilan.Pipelines.Audio
         /// Writes an already-converted WEM's data into the Milan AFC and builds its prefetch fragment, populating
         /// <see cref="streamedWemCache"/>. Used both for freshly batch-converted WEMs and for on-disk cache hits.
         /// </summary>
-        private static void FinalizeStreamedWem(uint id, MELocalization loc, byte[] convertedBytes, string afcName = null)
+        private static void FinalizeStreamedWem(uint id, MELocalization loc, byte[] convertedBytes)
         {
-            var afcKey = GetAFCName(afcName ?? MilanAFCBaseName, loc);
-            var newOffset = WriteWEM(afcName ?? MilanAFCBaseName, loc, convertedBytes);
+            var afcKey = GetAFCName(MilanAFCBaseName, loc);
+            var newOffset = WriteWEM(MilanAFCBaseName, loc, convertedBytes);
             var fragment = PrefetchBuilder.BuildFragment(convertedBytes);
 
             streamedWemCache[id] = new StreamedWemInfo
@@ -482,7 +482,7 @@ namespace ProjectMilan.Pipelines.Audio
 
                     if (pendingStreamedSources.TryGetValue(id, out var srcLoc))
                     {
-                        FinalizeStreamedWem(id, srcLoc.Loc, convertedBytes, srcLoc.SourceAfcName);
+                        FinalizeStreamedWem(id, srcLoc.Loc, convertedBytes);
                     }
                     else
                     {
