@@ -15,6 +15,7 @@ using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Rejects.Enemies;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
+using ProjectMilanCore.Config;
 using System.Security.AccessControl;
 
 namespace ProjectMilan_ExtraContent.Rejects
@@ -102,10 +103,35 @@ namespace ProjectMilan_ExtraContent.Rejects
             SharedECPipelines.MergeTLK(EExtraContent.Rejects);
             GenerateGUIPackage(vars);
             GenerateMergedContent(vars);
-            // To speed up builds don't split enemy packages in dev mode    
+            // To speed up builds don't split enemy packages in dev mode
 #if !DEBUG
-            SplitEnemyPackages(vars);
+            SplitEnemyPackages(vars); // may run MergeConfig again (Release subfolder)
 #endif
+
+            // MergeConfig above writes its static XML merges directly to disk, bypassing
+            // MilanPipelinesShared.ConfigBundle entirely - reload so the Rejects faction gets registered
+            // into, and this commit doesn't wipe out, whatever config content is actually on disk now.
+            MilanPipelinesShared.LoadConfigBundle();
+            RegisterEnemyType();
+            MilanPipelinesShared.CommitConfigBundle();
+        }
+
+        /// <summary>
+        /// Registers the Rejects faction into the "enemytypes" select list - was previously a static XML row
+        /// in Rejects\Config\BioGame.xml, moved here so it builds through the same dynamic system as
+        /// ProjectMilan's own factions (see MPLevels.cs). ID/TLK string IDs are the pre-existing values that
+        /// row already used and won't be changing, so they're literal here rather than dynamically assigned.
+        /// </summary>
+        private static void RegisterEnemyType()
+        {
+            EnemyTypeConfigWriter.RegisterEnemyType(new EnemyTypeEntry
+            {
+                ID = 8,
+                NameStrRefId = 13250215,
+                AllCapsNameStrRefId = 13250216,
+                Image = "SFXGUIMPImages_Milan_Rejects.OptEmyRejects",
+                WaveClass = "SFXGameContent_Milan.SFXWave_Horde_Rejects",
+            });
         }
 
         private static string PipelineRoot => Path.Combine(SharedECPipelines.ECPipelineRoot, "Rejects");

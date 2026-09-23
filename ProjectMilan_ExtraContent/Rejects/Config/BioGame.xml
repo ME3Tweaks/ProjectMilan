@@ -19,9 +19,7 @@
 				<Value type="3">(ClassName="SFXPawn_CloneDrone", WaveCost=10)</Value>
 			</Property>
 		</Section>
-		<Section name="sfxonlinefoundation.sfxonlinegamesettings">
-			<Property name="enemytypes" type="3">(ID=8,Name=13250215,AllCapsName=13250216,Image="SFXGUIMPImages_Milan_Rejects.OptEmyRejects", WaveClass="SFXGameContent_Milan.SFXWave_Horde_Rejects")</Property>
-		</Section>
+		<!-- enemytypes is now registered dynamically by RejectsPipeline.RegisterEnemyType() -->
 		<Section name="sfxwave_horde_rejects1 sfxwave_horde_rejects">
 			<Property name="enemies">
 				<Value type="1">null</Value>

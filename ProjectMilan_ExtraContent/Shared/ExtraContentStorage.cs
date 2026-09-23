@@ -11,6 +11,7 @@ using ProjectMilan;
 using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
+using ProjectMilanCore.Config;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -82,14 +83,7 @@ namespace ProjectMilan_ExtraContent.Shared
             mf.WriteMountFile(Path.Combine(outDir, "mount.dlc"));
 
             // Prepare the TLK data.
-            MilanPipelinesShared.TLKSet = new Dictionary<MELocalization, List<TLKStringRef>>();
-            foreach (var lang in Enum.GetValues(typeof(MELocalization)).Cast<MELocalization>())
-            {
-                if (lang == MELocalization.None)
-                    continue;
-
-                MilanPipelinesShared.TLKSet.Add(lang, new List<TLKStringRef>());
-            }
+            MilanPipelinesShared.InitializeTLKSet();
 
             //Generate Coalesced.bin for mod
             MilanLog.Information($@"Compiling blank config file for {content}", customPrefix: LOG_CATEGORY);
@@ -243,17 +237,11 @@ namespace ProjectMilan_ExtraContent.Shared
             var outDir =  Path.Combine(MilanPipelinesShared.OutputModPath, @"CookedPCConsole");
 
             // Write TLK files
+            TLKStarterKit.AssignAndAppend($"{CurrentContent} Developer DLC module", SharedECPipelines.GetDLCFolderName(CurrentContent));
             foreach(var tlkStrSet in MilanPipelinesShared.TLKSet)
             {
                 var lang = tlkStrSet.Key;
                 var strs = tlkStrSet.Value;
-
-                var endTlkId = strs.Count == 0 ? 975000 : strs.Max(x => x.StringID) + 1;
-                strs.Add(new TLKStringRef(endTlkId, CurrentContent.ToString() + " Developer DLC module"));
-                strs.Add(new TLKStringRef(endTlkId + 1, SharedECPipelines.GetDLCFolderName(CurrentContent)));
-                strs.Add(new TLKStringRef(endTlkId + 2, lang.ToString()));
-                strs.Add(new TLKStringRef(endTlkId + 3, @"Male"));
-                strs.Add(new TLKStringRef(endTlkId + 3, @"Female"));
 
                 foreach (var str in strs)
                 {
