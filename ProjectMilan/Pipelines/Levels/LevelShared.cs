@@ -344,11 +344,21 @@ namespace ProjectMilan.Pipelines.Levels
         {
             // Find SeqCond_IsGameInfo objects
             // They look for SFXGameInfo_SP which no longer exists.
-            var isGameInfos = main_seq.FileRef.Exports.Where(x => x.ClassName == "SeqCond_IsGameInfo").ToList();
+            var isGameInfos = main_seq.FileRef.Exports.Where(x => !x.IsDefaultObject && x.ClassName == "SFXSeqCond_IsGameInfo").ToList();
             foreach (var igi in isGameInfos)
             {
+                var gameType = igi.GetProperty<ObjectProperty>("GameType").ResolveToEntry(main_seq.FileRef);
+                var res = "No";
+                if (gameType.ObjectName == "SFXGameInfoSP")
+                {
+                    res = levelPipeline.IsSP ? "Yes" : "No";
+                } else
+                {
+                    MilanLog.Information($"    Assuming game type for {gameType.ObjectName} is MP game type");
+                    res = levelPipeline.IsSP ? "No" : "Yes";
+                }
                 MilanLog.Information($"    Force-branching SeqCond_IsGameInfo {igi.InstancedFullPath}", customPrefix: levelPipeline.LogCategory);
-                KismetHelper.SkipSequenceElement(igi, levelPipeline.IsSP ? "True" : "False");
+                KismetHelper.SkipSequenceElement(igi, res);
                 KismetHelper.RemoveFromSequence(igi, true);
             }
         }
