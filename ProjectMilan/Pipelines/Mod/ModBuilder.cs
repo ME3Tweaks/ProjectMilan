@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.TLK.ME2ME3;
 using ProjectMilan.Pipelines.TLK;
 using ProjectMilanCore;
+using ProjectMilanCore.Config;
 using System.Text.RegularExpressions;
 
 namespace ProjectMilan.Pipelines.Mod
@@ -133,13 +134,13 @@ namespace ProjectMilan.Pipelines.Mod
 
         /// <summary>
         /// Called instead of <see cref="RunPipeline"/> when a restored checkpoint already covers ModBuild -
-        /// its pipeline body (which recompiles Default_&lt;DLC_NAME&gt;.bin from source) is always skipped on
-        /// any checkpoint restore, but MilanPipelinesShared.ConfigBundle is pure in-memory state that the
-        /// checkpoint's file copy doesn't restore on its own, so it has to be reloaded from the
-        /// already-correct restored bin instead. Also fast-forwards MapIdAllocator past whatever map IDs are
-        /// already in that restored bundle, since a later stage (e.g. Rejection/Redemption, which are
-        /// numerically after Levels) can still run fresh this session and would otherwise re-allocate
-        /// colliding IDs starting back at 1.
+        /// its pipeline body (which recompiles Default_&lt;DLC_NAME&gt;.bin and the DLC's .tlk files from
+        /// source) is always skipped on any checkpoint restore, but MilanPipelinesShared.ConfigBundle/TLKSet/
+        /// TLKStartIndex are pure in-memory state that the checkpoint's file copy doesn't restore on its
+        /// own, so they have to be rebuilt from the already-correct restored output instead. Also
+        /// fast-forwards MapIdAllocator/TLKStartIndex past whatever map IDs/string IDs are already present,
+        /// since a later stage (e.g. Rejection/Redemption, which are numerically after Levels) can still run
+        /// fresh this session and would otherwise re-allocate colliding IDs starting back at 1.
         /// </summary>
         public static void RehydrateFromCheckpoint()
         {
@@ -151,6 +152,12 @@ namespace ProjectMilan.Pipelines.Mod
                     .Where(m => m.Success).Select(m => int.Parse(m.Groups[1].Value)).DefaultIfEmpty(0).Max()
                 : 0;
             MapIdAllocator.FastForwardPast(highestId);
+
+            var outDir = Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole");
+            MilanPipelinesShared.TLKStartIndex = Directory.GetFiles(outDir, "*.tlk", SearchOption.TopDirectoryOnly)
+                .SelectMany(tlk => new ME2ME3TalkFile(tlk).StringRefs)
+                .Select(x => x.StringID).DefaultIfEmpty(0).Max();
+            MilanPipelinesShared.InitializeTLKSet();
         }
     }
 }

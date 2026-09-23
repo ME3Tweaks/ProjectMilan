@@ -1,6 +1,7 @@
 ﻿using LegendaryExplorerCore.Coalesced.Config;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.TLK;
+using ProjectMilanCore.Utility;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,11 +70,25 @@ namespace ProjectMilanCore
         public static int TLKStartIndex { get; set; }
 
         /// <summary>
+        /// (Re)initializes <see cref="TLKSet"/> to a fresh, empty per-language dictionary (one entry per
+        /// non-<see cref="MELocalization.None"/> localization), ready for <see cref="AssignTLK"/> calls.
+        /// </summary>
+        public static void InitializeTLKSet()
+        {
+            TLKSet = new Dictionary<MELocalization, List<TLKStringRef>>();
+            foreach (var lang in Enum.GetValues(typeof(MELocalization)).Cast<MELocalization>())
+            {
+                if (lang != MELocalization.None)
+                    TLKSet.Add(lang, new List<TLKStringRef>());
+            }
+        }
+
+        /// <summary>
         /// Assigns a set of TLK strings to the current building TLK set and returns the ID assigned to them.
         /// </summary>
         /// <param name="localizationData">A dictionary mapping localizations to their corresponding strings.</param>
         /// <returns>The ID assigned to the set of TLK strings.</returns>
-        public static int AssignTLK(Dictionary<MELocalization, string> localizationData)
+        public static int AssignTLK(LocalizedString localizationData)
         {
             if (TLKSet == null)
                 throw new Exception("TLKSet is not initialized. Ensure that TLKSet is set before calling AssignTLK.");
@@ -95,6 +110,21 @@ namespace ProjectMilanCore
             }
 
             return assignedStringId;
+        }
+
+        /// <summary>
+        /// Like <see cref="AssignTLK"/>, but for a string pair that must share one ID (e.g. Male/Female) -
+        /// TLK gender is decided by which of two same-ID entries was inserted first, so male must always
+        /// be added first.
+        /// </summary>
+        public static int AssignTLKGenderPair(LocalizedString male, LocalizedString female)
+        {
+            var id = AssignTLK(male);
+            foreach (var loc in female)
+            {
+                TLKSet[loc.Key].Add(new TLKStringRef(id, loc.Value));
+            }
+            return id;
         }
 
         /// <summary>

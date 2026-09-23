@@ -27,6 +27,11 @@ namespace ProjectMilanCore
         /// </summary>
         public static string DLC_NAME { get; } = @"DLC_MOD_ProjectMilan";
 
+        /// <summary>
+        /// Human-readable display name for Project Milan, used as the TLK starter kit's DLC description.
+        /// </summary>
+        public static string DisplayName { get; } = @"Project Milan";
+
         // DEV MODE ONLY!!!
         public static string REJECTS_DLC_NAME { get; } = @"DLC_MOD_PMR2";
 

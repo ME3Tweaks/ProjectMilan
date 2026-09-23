@@ -18,6 +18,7 @@ using ProjectMilan.Pipelines.Mod;
 using ProjectMilan.Pipelines.Mod.BaseDelta;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.Texture;
+using ProjectMilan.Pipelines.TLK;
 using ProjectMilan.Pipelines.Verify;
 using ProjectMilan.Pipelines.VTables;
 using ProjectMilan.Pipelines.Weapons;
@@ -506,6 +507,12 @@ namespace ProjectMilan
         redemptionBuild:
             RunPipeline(ECheckpointStage.Redemption, Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipeline, "Redemption"); // Builds Redemption Maps
 
+            // Finalize the dynamic TLK range: every stage that could call AssignTLK (Kits through
+            // Redemption, including Rejection/Redemption running in-process) has now either run, or
+            // been skipped and rehydrated via ModBuilder.RehydrateFromCheckpoint. Unconditional - no
+            // checkpoint stage exists at or after Redemption, so this point is never itself skipped.
+            SetConsoleTitle(ConsoleTitlePostFix, "Finalizing TLK");
+            TLKPipeline.FinalizePipeline();
 
 
         // EVERYTHING AFTER THIS IS NON-CONTENT PORTING AND SHOULD NOT BE CHECKPOINTED ---------

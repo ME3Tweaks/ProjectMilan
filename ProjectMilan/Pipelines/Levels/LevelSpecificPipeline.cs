@@ -1,6 +1,7 @@
 ﻿using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Pathing;
 using ProjectMilanCore;
+using ProjectMilanCore.Config;
 
 namespace ProjectMilan.Pipelines.Levels
 {

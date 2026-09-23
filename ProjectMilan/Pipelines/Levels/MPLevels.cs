@@ -14,6 +14,8 @@ using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
+using ProjectMilanCore.Config;
+using ProjectMilanCore.Utility;
 
 namespace ProjectMilan.Pipelines.Levels
 {
@@ -24,6 +26,14 @@ namespace ProjectMilan.Pipelines.Levels
     {
         private const string LOG_CATEGORY = "MILAN-Level";
 
+        // Only "Random waves"/"Mixed" need fresh TLK strings - the rest reuse their existing vanilla StrRef IDs.
+        private static readonly LocalizedString RandomWaveName = new() { [MELocalization.INT] = "Coalition" }; // Random Wave
+        private static readonly LocalizedString RandomWaveAllCapsName = new() { [MELocalization.INT] = "COALITION" };
+        private static readonly LocalizedString MixedName = new() { [MELocalization.INT] = "Unified" }; // Mixed
+        private static readonly LocalizedString MixedAllCapsName = new() { [MELocalization.INT] = "UNIFIED" };
+
+        private static readonly LocalizedString DiamondDifficultyName = new() { [MELocalization.INT] = "Diamond" };
+        private static readonly LocalizedString DiamondDifficultyAllCapsName = new() { [MELocalization.INT] = "DIAMOND" };
         class MPLevelsVars
         {
             /// <summary>
