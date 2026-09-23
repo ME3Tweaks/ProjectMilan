@@ -3,11 +3,6 @@
 // MILAN CHANGE - 09/21/2026 - Mgamerz
 // Change how wave loading works so host pushes archetypes to client
 // so that modding waves is easier and allows us to make dynamic wavelists.
-// Source: ME3, Patch_WaveCoord_HordeOperation
-// Decompiled 9/20/2026 9:50:31 PM
-// MILAN CHANGE - 09/21/2026 - Mgamerz
-// Change how wave loading works so host pushes archetypes to client
-// so that modding waves is easier and allows us to make dynamic wavelists.
 Class SFXWaveCoordinator_HordeOperation extends SFXWaveCoordinator
     transient
     config(Game);
@@ -61,9 +56,13 @@ struct ReplicatedArchetypeEntry
 {
     var Name EnemyType;
     var string EnemyArchetypeName;
+    var int MinCount;
+    var int MaxCount;
+    var int MaxPerWave;
 };
 struct ReplicatedWaveComposition
 {
+    var int WaveNumber;                            // Horde wave this composition belongs to
     var array<Name> Types;                        // ChooseEnemyToSpawn() selects from this
     var array<ReplicatedArchetypeEntry> Archetypes; // Name -> asset path, for precache/loading
 };
@@ -370,6 +369,7 @@ protected simulated function StartNewWave()
     if (Role == ENetRole.ROLE_Authority)
     {
     	// Server side only: Resets ReplicatedComposition struct each new wave
+	    ReplicatedComposition.WaveNumber = -1;
     	ReplicatedComposition.Types.Length = 0;
         ReplicatedComposition.Archetypes.Length = 0;
     }
@@ -378,6 +378,10 @@ protected simulated function StartNewWave()
     NewHordeWave = HordeManager.GetNewWave(HordeWaveIndex, HordeWaveType);
     NewHordeWave.SetWaveCoordinator(Self);
     ActiveWaves.AddItem(NewHordeWave);
+    if (Role == ENetRole.ROLE_Authority)
+    {
+        PublishEnemyComposition(SFXWave_Horde(NewHordeWave));
+    }
     if (IsCurrentWaveAnOperation() && OperationWaveIndex != -1)
     {
         NewOperationWave = OperationManager.GetNewWave(OperationWaveIndex, OperationWaveType);
@@ -407,6 +411,60 @@ protected simulated function StartNewWave()
     ReplicateWaveEventInfo(1);
 }
 
+protected simulated function BeginWaveLoading()
+{
+    local SFXWave WaveIter;
+    local SFXWave_Horde HordeWave;
+
+    // On the host, StartNewWave() has already published the composition. On a
+    // client the replicated struct can arrive a frame after the wave event, so
+    // wait for the composition belonging to this exact wave before allowing
+    // the base coordinator to start its loading/update loop.
+    if (Role != ENetRole.ROLE_Authority && ReplicatedComposition.WaveNumber != CurrentWaveNumber)
+    {
+        // TEMP WAVEDBG
+        LogInternal("[WAVEDBG] BeginWaveLoading: waiting for composition, role=" $ int(Role) $ " compWave=" $ ReplicatedComposition.WaveNumber $ " curWave=" $ CurrentWaveNumber);
+        SetTimer(0.1, FALSE, 'BeginWaveLoading', );
+        return;
+    }
+
+    foreach ActiveWaves(WaveIter, )
+    {
+        HordeWave = SFXWave_Horde(WaveIter);
+        if (HordeWave != None && !HordeWave.PrepareWaveAssetLoadData())
+        {
+            SetTimer(0.1, FALSE, 'BeginWaveLoading', );
+            return;
+        }
+        // TEMP WAVEDBG
+        LogInternal("[WAVEDBG] BeginWaveLoading: BeginLoading on " $ WaveIter.Name $ " role=" $ int(Role) $ " assets=" $ WaveIter.AssetLoadData.Length $ " curWave=" $ CurrentWaveNumber);
+        WaveIter.BeginLoading();
+    }
+    WavesAreLoading = TRUE;
+    SetTimer(0.2, TRUE, 'UpdateWaveLoading', );
+    UpdateWaveLoading();
+}
+
+// TEMP WAVEDBG - remove once the async-load stall is diagnosed.
+// Dumps every not-yet-complete asset each poll (status 3 == ASYNC_LOAD_COMPLETE).
+public simulated function UpdateWaveLoading()
+{
+    local SFXWave WaveIter;
+    local int i;
+
+    Super.UpdateWaveLoading();
+    foreach ActiveWaves(WaveIter, )
+    {
+        for (i = 0; i < WaveIter.AssetLoadData.Length; i++)
+        {
+            if (int(WaveIter.AssetLoadData[i].AssetLoadStatus) != 3)
+            {
+                LogInternal("[WAVEDBG] UpdateWaveLoading: role=" $ int(Role) $ " wave=" $ WaveIter.Name $ " asset='" $ WaveIter.AssetLoadData[i].AssetToLoad $ "' status=" $ int(WaveIter.AssetLoadData[i].AssetLoadStatus) $ " loaded=" $ (WaveIter.AssetLoadData[i].LoadedAsset != None) $ " timerActive=" $ IsTimerActive('UpdateWaveLoading'));
+            }
+        }
+    }
+}
+
 public simulated function StartWaves()
 {
     local SFXPlayerController PC;
@@ -417,35 +475,35 @@ public simulated function StartWaves()
         if (HordeManager == None)
         {
             HordeManager = Spawn(Class'SFXWaveManager_Horde', Self);
-            if (HordeWaveType == None)
+            HordeManager.GenerateEnemySpawnPointList();
+        }
+        if (HordeWaveType == None)
+        {
+        	// MILAN CHANGE
+        	// Determine if we're doing randomized faction per wave
+            if (SFXGRI(WorldInfo.GRI).GetEnemyWaveTypeID() == RANDOM_WAVES_ENEMY_SETTING_ID)
             {
-            	// MILAN CHANGE
-            	// Determine if we're doing randomized faction per wave
-                if (SFXGRI(WorldInfo.GRI).GetEnemyWaveTypeID() == RANDOM_WAVES_ENEMY_SETTING_ID)
+                bRandomizeWaveTypePerWave = TRUE;
+                HordeWaveType = PickRandomFactionWaveType();
+            }
+            else
+            {
+	            // Original Logic
+                EnemyTypesIndex = Class'SFXOnlineGameSettings'.default.EnemyTypes.Find('Id', SFXGRI(WorldInfo.GRI).GetEnemyWaveTypeID());
+                if (EnemyTypesIndex == -1)
                 {
-                    bRandomizeWaveTypePerWave = TRUE;
-                    HordeWaveType = PickRandomFactionWaveType();
+                    HordeWaveType = Class'SFXWave_Horde';
                 }
                 else
                 {
-	                // Original Logic
-                    EnemyTypesIndex = Class'SFXOnlineGameSettings'.default.EnemyTypes.Find('Id', SFXGRI(WorldInfo.GRI).GetEnemyWaveTypeID());
-                    if (EnemyTypesIndex == -1)
+                    HordeWaveType = Class<SFXWave>(FindObject(Class'SFXOnlineGameSettings'.default.EnemyTypes[EnemyTypesIndex].WaveClass, Class'Class'));
+                    if (HordeWaveType == None)
                     {
-                        HordeWaveType = Class'SFXWave_Horde';
-                    }
-                    else
-                    {
-                        HordeWaveType = Class<SFXWave>(FindObject(Class'SFXOnlineGameSettings'.default.EnemyTypes[EnemyTypesIndex].WaveClass, Class'Class'));
-                        if (HordeWaveType == None)
-                        {
-                            HordeWaveType = Class<SFXWave>(Class'SFXEngine'.static.GetSeekFreeObject(Class'SFXOnlineGameSettings'.default.EnemyTypes[EnemyTypesIndex].WaveClass, Class'Class'));
-                        }
+                        HordeWaveType = Class<SFXWave>(Class'SFXEngine'.static.GetSeekFreeObject(Class'SFXOnlineGameSettings'.default.EnemyTypes[EnemyTypesIndex].WaveClass, Class'Class'));
                     }
                 }
-                // END MILAN CHANGE
             }
-            HordeManager.GenerateEnemySpawnPointList();
+            // END MILAN CHANGE
         }
         if (OperationManager == None)
         {
@@ -808,7 +866,9 @@ public function HandleJoinInProgress()
 
 // MILAN CHANGE
 // NEW: Random Waves
-// Weighted pick over factions only (WaveClass != "" excludes Random-style faction entries)
+// Weighted pick over real factions only - IsRandomOption excludes Unknown/Random Waves/
+// Random Enemies (and any future meta-option) explicitly, same flag ChooseRandomEnemy()
+// in SFXGameInfoMP_Lobby now filters on, instead of relying on WaveClass=="" incidentally.
 private final function Class<SFXWave> PickRandomFactionWaveType()
 {
     local array<MPEnemyInfo> Candidates;
@@ -821,36 +881,42 @@ private final function Class<SFXWave> PickRandomFactionWaveType()
 
     foreach Class'SFXOnlineGameSettings'.default.EnemyTypes(Info, )
     {
-        if (Info.WaveClass != "")
+        if (!Info.IsRandomOption && Info.WaveClass != "")
         {
-            Candidates.AddItem(Info);
+            idx = Class'SFXWaveManager_Horde'.default.WaveTypes.Find('WaveClassName', Info.WaveClass);
+            if (idx != -1 && Class'SFXWaveManager_Horde'.default.WaveTypes[idx].SelectionWeight > 0)
+            {
+                Candidates.AddItem(Info);
+                SelectionSum += float(Class'SFXWaveManager_Horde'.default.WaveTypes[idx].SelectionWeight);
+            }
         }
     }
-    foreach Candidates(Info, )
+
+    if (Candidates.Length == 0 || SelectionSum <= 0.0)
     {
-        idx = Class'SFXWaveManager_Horde'.default.WaveTypes.Find('WaveClassName', Info.WaveClass);
-        if (idx != -1)
-        {
-            SelectionSum += float(Class'SFXWaveManager_Horde'.default.WaveTypes[idx].SelectionWeight);
-        }
+        return Class'SFXWave_Horde_Cerberus';
     }
+
     RandVal = FRand() * SelectionSum;
     foreach Candidates(Info, )
     {
         idx = Class'SFXWaveManager_Horde'.default.WaveTypes.Find('WaveClassName', Info.WaveClass);
-        if (idx == -1)
-        {
-            continue;
-        }
         Weight = float(Class'SFXWaveManager_Horde'.default.WaveTypes[idx].SelectionWeight);
         if (RandVal < Weight)
         {
             Picked = Class<SFXWave>(FindObject(Info.WaveClass, Class'Class'));
-            break;
+            if (Picked == None)
+            {
+                Picked = Class<SFXWave>(Class'SFXEngine'.static.GetSeekFreeObject(Info.WaveClass, Class'Class'));
+            }
+            if (Picked != None)
+            {
+                return Picked;
+            }
         }
         RandVal -= Weight;
     }
-    return Picked != None ? Picked : Class'SFXWave_Horde_Cerberus';
+    return Class'SFXWave_Horde_Cerberus';
 }
 
 // NEW: Random Enemies
@@ -869,6 +935,7 @@ public function PublishEnemyComposition(SFXWave_Horde Wave)
     }
     ReplicatedComposition.Types.Length = 0;
     ReplicatedComposition.Archetypes.Length = 0;
+    ReplicatedComposition.WaveNumber = CurrentWaveNumber;
 
     Wave.GetLocalEnemyArray(LocalComposition);
     foreach LocalComposition(Info, )
@@ -877,7 +944,12 @@ public function PublishEnemyComposition(SFXWave_Horde Wave)
         SpawnInfo = Wave.GetEnemySpawnInfoForEnemyType(Info.EnemyType);
         Entry.EnemyType = Info.EnemyType;
         Entry.EnemyArchetypeName = SpawnInfo.EnemyArchetypeName;
+        Entry.MinCount = Info.MinCount;
+        Entry.MaxCount = Info.MaxCount;
+        Entry.MaxPerWave = Info.MaxPerWave;
         ReplicatedComposition.Archetypes.AddItem(Entry);
+        // TEMP WAVEDBG
+        LogInternal("[WAVEDBG] PublishEnemyComposition: wave=" $ CurrentWaveNumber $ " waveObj=" $ Wave.Name $ " type=" $ Entry.EnemyType $ " archetype='" $ Entry.EnemyArchetypeName $ "'");
     }
     bForceNetUpdate = TRUE;
 }
