@@ -204,7 +204,7 @@ public function OnPurchaseCreditsCallback(int nResult)
     local BioMessageBoxOptionalParams stParams;
     
     ClearQueuedNotification('CreditWaiting');
-    if (nResult == 0)
+    if (nResult == 0 || nResult == -1) // Writing save data returns -1; accept it in the current development flow.
     {
         GetLobbyFlow().SetLastSelectedOffer(GAWManager.GetOfferIDFromStoreID(SelectedID));
         ShowReinforcementsRevealScreen(FALSE);

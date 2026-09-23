@@ -1483,7 +1483,24 @@ auto state Startup
     // State Functions
     public function Tick(float TimeDelta)
     {
+        local SFXEngine Engine;
+
         Super.Tick(TimeDelta);
+
+        // MILAN CHANGE - Force MPSaveManager to initialize while the online
+        // component is unavailable; otherwise the lobby UI can stall.
+        Engine = SFXEngine(Class'SFXEngine'.static.GetEngine());
+        if (Engine != None && Engine.MPSaveManager == None)
+        {
+            Engine.InitializePlayerStorage();
+            Engine.MPSaveManager.bInitialized = true;
+        }
+        else if (Engine != None && Engine.MPSaveManager != None && Engine.MPSaveManager.OnlineSave == None)
+        {
+            Engine.MPSaveManager.Initialize();
+            Engine.MPSaveManager.bInitialized = true;
+        }
+
         if (GetPRI() != None && GetPRI().bReplicationReady)
         {
             if (!bPlayerDataSent)

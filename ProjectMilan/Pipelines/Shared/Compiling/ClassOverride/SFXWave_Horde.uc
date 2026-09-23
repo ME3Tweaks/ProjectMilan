@@ -160,41 +160,46 @@ public function PawnDied(BioPawn Pawn, optional BioPawn Killer = None)
     }
 }
 // MILAN CHANGE
-// Use replicated composition to determine which assets to preload
-public function bool BeginWave()
+// Queue the host-authoritative composition before the coordinator starts its
+// normal async loading/update loop. BeginWave() must not start loading itself:
+// SFXWaveCoordinator.BeginWaveLoading() owns the UpdateWaveLoading timer.
+public function bool PrepareWaveAssetLoadData()
 {
-    local int i;
-    local int Index;
     local ReplicatedArchetypeEntry ArchetypeEntry;
     local SFXWaveAssetLoadData NewAssetLoadData;
     local SFXWaveCoordinator_HordeOperation Coord;
 
-    Coord = SFXWaveCoordinator_HordeOperation(WaveCoordinator);
-    if (Coord.ReplicatedComposition.Types.Length == 0)
+    if (AssetLoadData.Length > 0)
     {
-        if (BioWorldInfo != None && BioWorldInfo.Role == ENetRole.ROLE_Authority)
-        {
-            Coord.PublishEnemyComposition(Self);
-        }
-        if (Coord.ReplicatedComposition.Types.Length == 0)
-        {
-            // not generated yet (server) or not yet received (client) - try again shortly.
-            // OnAllWavesFinishedLoading()/BeginWave() only fires ~BetweenWaveDelay (10s)
-            // after StartNewWave() replicated ReplicatedWaveEventInfo, so there is ample
-            // margin for ReplicatedComposition to have already arrived by the time this
-            // ever actually needs to retry.
-            WaveCoordinator.SetTimer(0.1, FALSE, 'BeginWave', Self);
-            return FALSE;
-        }
-        // composition just became available this tick - queue its assets for async loading
-        foreach Coord.ReplicatedComposition.Archetypes(ArchetypeEntry, )
-        {
-            NewAssetLoadData.AssetToLoad = ArchetypeEntry.EnemyArchetypeName;
-            AssetLoadData.AddItem(NewAssetLoadData);
-        }
-        BeginLoading();
+        return TRUE;
     }
-    // END MILAN CHANGE
+    Coord = SFXWaveCoordinator_HordeOperation(WaveCoordinator);
+    if (Coord == None && BioWorldInfo != None && BioWorldInfo.GRI != None)
+    {
+        WaveCoordinator = SFXGRI(BioWorldInfo.GRI).WaveCoordinator;
+        Coord = SFXWaveCoordinator_HordeOperation(WaveCoordinator);
+    }
+    if (Coord == None || Coord.ReplicatedComposition.Types.Length == 0)
+    {
+        // TEMP WAVEDBG
+        LogInternal("[WAVEDBG] PrepareWaveAssetLoadData: not ready, coord=" $ Coord $ " types=" $ (Coord == None ? -1 : Coord.ReplicatedComposition.Types.Length) $ " archetypes=" $ (Coord == None ? -1 : Coord.ReplicatedComposition.Archetypes.Length));
+        return FALSE;
+    }
+    foreach Coord.ReplicatedComposition.Archetypes(ArchetypeEntry, )
+    {
+        NewAssetLoadData.AssetToLoad = ArchetypeEntry.EnemyArchetypeName;
+        AssetLoadData.AddItem(NewAssetLoadData);
+        // TEMP WAVEDBG
+        LogInternal("[WAVEDBG] PrepareWaveAssetLoadData: queued '" $ ArchetypeEntry.EnemyArchetypeName $ "' for " $ ArchetypeEntry.EnemyType);
+    }
+    return AssetLoadData.Length > 0;
+}
+
+public function bool BeginWave()
+{
+    local int i;
+    local int Index;
+
     if (!Super.BeginWave())
     {
         return FALSE;
@@ -272,6 +277,14 @@ public function InitializeWave(SFXWaveManager OwnerManager)
     local Name EnemyTypeIter;
 
     Super.InitializeWave(OwnerManager);
+    // SFXWaveManager.GetNewWave() initializes the new wave before
+    // SFXWaveCoordinator_HordeOperation.StartNewWave() calls SetWaveCoordinator.
+    // Recover the existing coordinator from the GRI for this initialization
+    // path and for waves created through any other manager path.
+    if (WaveCoordinator == None && BioWorldInfo != None && BioWorldInfo.GRI != None)
+    {
+        WaveCoordinator = SFXGRI(BioWorldInfo.GRI).WaveCoordinator;
+    }
     LogInternal("Initializing wave", );
     bWaveIsOver = FALSE;
     AliveEnemiesByType.Length = EnemyList.Length;
@@ -578,14 +591,46 @@ public function GetEnemyArray(out array<EnemyWaveInfo> EnemyArray)
 {
     local Name TypeName;
     local EnemyWaveInfo Info;
+    local int EntryIndex;
+    local SFXWaveCoordinator_HordeOperation Coord;
 
     EnemyArray.Length = 0;
-    foreach SFXWaveCoordinator_HordeOperation(WaveCoordinator).ReplicatedComposition.Types(TypeName, )
+    Coord = SFXWaveCoordinator_HordeOperation(WaveCoordinator);
+    if (Coord == None && BioWorldInfo != None && BioWorldInfo.GRI != None)
+    {
+        WaveCoordinator = SFXGRI(BioWorldInfo.GRI).WaveCoordinator;
+        Coord = SFXWaveCoordinator_HordeOperation(WaveCoordinator);
+    }
+    if (Coord == None)
+    {
+        // Defensive fallback for the initialization window. The normal host
+        // path publishes before GetEnemyArray() is used; clients must not
+        // invent a different random composition locally.
+        if (BioWorldInfo != None && BioWorldInfo.Role == ENetRole.ROLE_Authority)
+        {
+            GetLocalEnemyArray(EnemyArray);
+        }
+        return;
+    }
+    foreach Coord.ReplicatedComposition.Types(TypeName, )
     {
         Info.EnemyType = TypeName;
-        Info.MinCount = 0;
-        Info.MaxCount = 0;
-        Info.MaxPerWave = 0;
+        EntryIndex = Coord.ReplicatedComposition.Archetypes.Find('EnemyType', TypeName);
+        if (EntryIndex != -1)
+        {
+            Info.MinCount = Coord.ReplicatedComposition.Archetypes[EntryIndex].MinCount;
+            Info.MaxCount = Coord.ReplicatedComposition.Archetypes[EntryIndex].MaxCount;
+            Info.MaxPerWave = Coord.ReplicatedComposition.Archetypes[EntryIndex].MaxPerWave;
+        }
+        else
+        {
+            // A missing metadata entry cannot happen with a host running the
+            // matching coordinator. Preserve the historical unrestricted
+            // behavior rather than preventing the wave from spawning.
+            Info.MinCount = 0;
+            Info.MaxCount = 0;
+            Info.MaxPerWave = 0;
+        }
         EnemyArray.AddItem(Info);
     }
 }
