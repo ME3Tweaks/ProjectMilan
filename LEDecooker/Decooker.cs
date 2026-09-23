@@ -1179,6 +1179,13 @@ namespace LEDecooker
 
                 if (portedItem == null)
                 {
+                    // A miss here writes a TextureSample with no texture, and the engine then refuses
+                    // the whole material with "InitShaderMap failed" -- so the material silently has no
+                    // shaders at all. Debug.WriteLine meant a release decook reported nothing: the
+                    // 2026-09-21 full run logged zero warnings while writing null samplers into 23 LE3
+                    // materials, and the first anyone knew of it was an ASI error hours later.
+                    DecookerLog.Warning($"Texture not found, leaving the sampler unbound: {instancedfullpath}. " +
+                                        "The material will fail to compile in-game.");
                     Debug.WriteLine($"Texture not found: {instancedfullpath}");
                 }
                 return portedItem;
