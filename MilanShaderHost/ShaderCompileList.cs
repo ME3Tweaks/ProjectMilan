@@ -128,8 +128,17 @@ namespace MilanShaderHost
                 //"BIOG_V_Env_Hologram_Z.pcc",
                 //"BIOA_LAV20_T.pcc"
 
-                // Multiplayer Kits
+                
+                // Contain MICs
+                "biot_krogru",
+                "BioApl_Ind_Mining_Drill03",
+                "bioapl_ind_mainframe01",
+                "BioApl_Sea_Cake01",
 
+
+                // Multiplayer Kits
+                "BIOG_MP_HMF_MED_R",
+                "BIOG_MP_HMM_HVY_R",
                 "BIOG_MP_BF_HMM", // BF3 Soldier
 
                 // MP1
@@ -199,6 +208,7 @@ namespace MilanShaderHost
                 //// Condor:
                 "BioT_MPMoon",
                 "BioVFX_DLC_Env_MPMoon",
+                "BioT_RedRock_Ter", // MIC
 
                 //// Jade:
                 "BioS_MPJungle",
