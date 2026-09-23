@@ -116,6 +116,25 @@ namespace ProjectMilan.Pipelines.Startups
         private static bool CompileMPCommonPackage(string packagePath, PackageCache cache, HashSet<string> discoveredAutoDonorClasses)
         {
             MilanLog.Information("Compiling loose classes", customPrefix: LOG_CATEGORY);
+
+            var classFunctionOverrideConflicts = MilanShared.GetClassFunctionOverrideConflicts();
+            if (classFunctionOverrideConflicts.Count > 0)
+            {
+                MilanLog.Fatal(
+                    "MPCommon compilation cannot continue: ClassOverride file should not be mixed with FunctionOverride files for the same class. " +
+                    "Merge the function changes into the class source, then remove the FunctionOverride file.",
+                    customPrefix: LOG_CATEGORY);
+                foreach (var conflict in classFunctionOverrideConflicts)
+                {
+                    MilanLog.Fatal(
+                        $"  {conflict.ClassName}: class={conflict.ClassOverridePath}; function={conflict.FunctionOverridePath}",
+                        customPrefix: LOG_CATEGORY);
+                }
+
+                Environment.Exit(1);
+                return false;
+            }
+
             var classes = new List<UnrealScriptCompiler.LooseClass>();
             foreach (string ucFilePath in GetMPCommonClassFiles())
             {

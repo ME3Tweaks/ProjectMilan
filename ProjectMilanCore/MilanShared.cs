@@ -368,6 +368,32 @@ namespace ProjectMilanCore
         }
 
         /// <summary>
+        /// Finds classes that have both a complete ClassOverride source file and one or more
+        /// FunctionOverride files. A class override is the authoritative complete class source;
+        /// allowing a function override for the same class creates an order-dependent second
+        /// source of truth.
+        /// </summary>
+        public static IReadOnlyList<(string ClassName, string ClassOverridePath, string FunctionOverridePath)> GetClassFunctionOverrideConflicts()
+        {
+            var conflicts = new List<(string ClassName, string ClassOverridePath, string FunctionOverridePath)>();
+            foreach (var functionOverridePath in GetAllFunctionOverrides())
+            {
+                var functionOverrideDirectory = Directory.GetParent(functionOverridePath);
+                if (functionOverrideDirectory == null)
+                    continue;
+
+                var className = functionOverrideDirectory.Name;
+                var classOverridePath = GetClassOverride(className);
+                if (classOverridePath != null)
+                {
+                    conflicts.Add((className, classOverridePath, functionOverridePath));
+                }
+            }
+
+            return conflicts;
+        }
+
+        /// <summary>
         /// Compiles a single function override file into the given class export. Dotted filenames
         /// (e.g. State.Function.uc) target a sub-function inside a state.
         /// </summary>
