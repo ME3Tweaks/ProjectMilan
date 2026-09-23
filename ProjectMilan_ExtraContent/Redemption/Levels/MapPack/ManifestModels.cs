@@ -1,4 +1,5 @@
 using LegendaryExplorerCore.Packages;
+using ProjectMilanCore.Utility;
 
 namespace ProjectMilan_ExtraContent.Redemption.Levels.MapPack
 {
@@ -43,9 +44,9 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.MapPack
         /// <summary>
         /// The map's display name, resolved per language from the original mod's own TLK files.
         /// </summary>
-        public Dictionary<MELocalization, string> PrettyName { get; set; } = new();
-        public Dictionary<MELocalization, string> Description { get; set; } = new();
-        public Dictionary<MELocalization, string> GAWMapSubtitle { get; set; } = new();
+        public LocalizedString PrettyName { get; set; } = new();
+        public LocalizedString Description { get; set; } = new();
+        public LocalizedString GAWMapSubtitle { get; set; } = new();
     }
 
     public sealed class StartLocationEntry

@@ -13,6 +13,7 @@ using LegendaryExplorerCore.Unreal.Classes;
 using ProjectMilan;
 using ProjectMilan_ExtraContent.Redemption.Levels;
 using ProjectMilanCore;
+using ProjectMilanCore.Config;
 
 namespace ProjectMilan_ExtraContent.Redemption
 {

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
+using ProjectMilanCore.Utility;
 
 namespace ProjectMilan_ExtraContent.Redemption.Levels
 {
@@ -29,12 +30,12 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels
         /// <summary>
         /// UI-display string
         /// </summary>
-        public Dictionary<MELocalization, string> LevelNameString { get; set; }
+        public LocalizedString LevelNameString { get; set; }
 
         /// <summary>
         /// UI-display string for level description (TODO: FIGURE OUT WHAT THIS ACTUALLY MEANT IN OT)
         /// </summary>
-        public Dictionary<MELocalization, string> LevelDescriptionString { get; set; }
+        public LocalizedString LevelDescriptionString { get; set; }
 
         // Image is set automatically based on map name
 
@@ -46,7 +47,7 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels
         /// <summary>
         /// UI-display string for GAW location (TODO: FIGURE OUT WHAT THIS ACTUALLY MEANT IN OT)
         /// </summary>
-        public Dictionary<MELocalization, string> GAWMapSubtitle { get; set; }
+        public LocalizedString GAWMapSubtitle { get; set; }
 
         // MusicEventName is automatically set in-order of level assignment
 

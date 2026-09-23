@@ -40,13 +40,12 @@ namespace ProjectMilan_ExtraContent.Redemption
         /// <summary>
         /// Runs the pipeline, assuming folder is already prepared for mod use. This is what is called by Project Milan's main project.
         ///
-        /// TODO: 09/20/2026
-        /// KNOWN GAP: when called this way (in-process from ProjectMilan's own Program.cs, as opposed to
-        /// standalone via RunPipelineEC()), MilanPipelinesShared.TLKSet/TLKStartIndex are never initialized by
-        /// the main mod. BuildCrossgenLevel() -> RedemptionShared.AddLevelToConfig() -> AssignTLK() will throw
-        /// if ECLevelBuild.CrossGenVMaps is enabled for a run like that. ConfigBundle/OutputModPath are fine
-        /// (ModBuilder sets those up for the main mod before this stage runs), it's specifically the TLK side
-        /// that's unaddressed - not fixed here, flagged so it isn't forgotten.
+        /// MilanPipelinesShared.TLKSet/TLKStartIndex are guaranteed initialized by this point when called
+        /// this way (in-process from ProjectMilan's own Program.cs, as opposed to standalone via
+        /// RunPipelineEC()) - either by TLKPipeline.RunPipeline() on a fresh build, or by
+        /// ModBuilder.RehydrateFromCheckpoint() when a checkpoint restore skipped that stage - so
+        /// BuildCrossgenLevel() -> RedemptionShared.AddLevelToConfig() -> AssignTLK() is safe to call here
+        /// without special-casing in-process vs. standalone.
         /// </summary>
         public static void RunPipeline()
         {
