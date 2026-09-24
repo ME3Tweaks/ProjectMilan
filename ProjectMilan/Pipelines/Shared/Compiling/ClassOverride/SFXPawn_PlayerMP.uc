@@ -280,7 +280,19 @@ public simulated function UpdateAppearance()
 public function bool Died(Controller Killer, Class<DamageType> DamageType, Vector HitLocation)
 {
     local bool ToRet;
-    
+    // MILAN CHANGE - Mgamerz - 2026-09-23
+    // Read the lethal sync-kill damage type so its attacker can be credited as the executioner.
+    // Set execution credit only when a sync-kill damage event actually kills the player.
+    local Class<SFXDamageType> MPDamageType;
+
+
+    MPDamageType = Class<SFXDamageType>(DamageType);
+    if (Killer != None && Killer.Pawn != None && MPDamageType != None && MPDamageType.default.bMPKillDamage)
+    {
+        Executioner = SFXPawn(Killer.Pawn);
+    }
+    // END MILAN CHANGE
+
     ToRet = Super.Died(Killer, DamageType, HitLocation);
     ReplicatedDeathInfo.KillerPawn = Killer.Pawn;
     PlayerKilledMessage();
@@ -608,12 +620,26 @@ public function LoadWeapons()
 public function PermaDeath()
 {
     local SFXGUI_PlayerCountdown movie;
+    // MILAN CHANGE - Mgamerz - 2026-09-23
+    // Track damage type
+    local Class<SFXDamageType> MPDamageType;
+    // END MILAN CHANGE
     
     movie = GetPlayerCountdownMovie(BioPlayerController(Controller));
     if (movie != None)
     {
         movie.AbortAnimation(0);
     }
+
+    // MILAN CHANGE - Mgamerz - 2026-09-23
+    // Only clear execution intent for a real bleedout; sync kills use the short death-flourish timer instead
+    MPDamageType = Class<SFXDamageType>(KilledByDamageType);
+    if (MPDamageType == None || !MPDamageType.default.bMPKillDamage)
+    {
+        Executioner = None;
+    }
+    // END MILAN CHANGE
+
     ServerPermaDeath();
 }
 public simulated function PlayerRevivedMessage()
