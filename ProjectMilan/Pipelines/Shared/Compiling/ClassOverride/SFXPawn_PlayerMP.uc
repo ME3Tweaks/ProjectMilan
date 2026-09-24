@@ -864,6 +864,15 @@ public simulated function PermaDeadChanged()
 public simulated function PlayerKilledMessage()
 {
     local string TickerMessage;
+    // MILAN CHANGE - Mgamerz - 2026-09-23
+    // Suppress the ordinary kill ticker for sync-kill damage; PermaDeadChanged reports the execution
+    local Class<SFXDamageType> MPDamageType;
+    MPDamageType = Class<SFXDamageType>(KilledByDamageType);
+    if (MPDamageType != None && MPDamageType.default.bMPKillDamage)
+    {
+        return;
+    }
+    // END MILAN CHANGE
     
     if (bDisplayedKilledMessage || ReplicatedDeathInfo.KillerPawn == None)
     {
