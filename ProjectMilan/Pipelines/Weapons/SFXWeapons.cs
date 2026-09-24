@@ -886,7 +886,7 @@ namespace ProjectMilan.Pipelines.Weapons
             {
                 // Lancer
                 // they just reused the PPR name too
-                patchAnim = package.FindExport("BIOG_DLC_EXP003_HMM_A.HMM_CB_ProtheanRifleReload", "BioAnimSetData");
+                patchAnim = package.FindExport("BIOG_DLC_EXP003_HMM_A.HMM_CB_ProtheanRifleReload_BioAnimSetData", "BioAnimSetData");
             }
 
             if (patchAnim == null)
