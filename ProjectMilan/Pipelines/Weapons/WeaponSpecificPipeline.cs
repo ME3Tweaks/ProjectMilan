@@ -34,5 +34,10 @@ namespace ProjectMilan.Pipelines.Weapons
         public string LE3PackageName { get; set; }
 
         public List<string> BaseObjectPaths { get; } = new List<string>();
+
+        /// <summary>
+        /// Delegate to invoke after porting to perform any corrections or adjustments
+        /// </summary>
+        public Action<IMEPackage, WeaponSpecificPipeline> ApplyPostPortingCorrections { get; init; }
     }
 }

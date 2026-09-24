@@ -436,6 +436,11 @@ namespace ProjectMilan.Pipelines.Weapons
                 PackageTools.AddToObjectReferencer(classExp);
             }
 
+            if (pipeline.ApplyPostPortingCorrections != null)
+            {
+                pipeline.ApplyPostPortingCorrections(weaponDestPackage, pipeline);
+            }
+
             weaponDestPackage.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
 
             // Register as donor-able
@@ -467,7 +472,7 @@ namespace ProjectMilan.Pipelines.Weapons
             }
 
 
-            MilanLog.Information($"Decompiling {classExp.FileRef.Game} {classExp.InstancedFullPath}", shouldLog: MilanLog.LogDonorMessages , customPrefix: LOG_CATEGORY);
+            MilanLog.Information($"Decompiling {classExp.FileRef.Game} {classExp.InstancedFullPath}", shouldLog: MilanLog.LogDonorMessages, customPrefix: LOG_CATEGORY);
             if (usingTestPatch)
             {
                 MilanLog.Information($@"  Using DLC_TestPatch version of {classExp.InstancedFullPath}", shouldLog: MilanLog.LogDonorMessages, customPrefix: LOG_CATEGORY);
@@ -744,7 +749,8 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Prothean_MP",
                 PackageName = "SFXWeapon_AssaultRifle_ProtheanDLC",
                 LE3PackageName = "SFXWeapon_AssaultRifles_DLC1",
-                Enabled  = true
+                Enabled  = true,
+                ApplyPostPortingCorrections = ApplyDrellCameraFix
             },
             new WeaponSpecificPipeline()
             { 
@@ -823,7 +829,8 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_AssaultRifle_Lancer_MP",
                 PackageName = "SFXWeapon_AssaultRifle_Lancer_MP",
                 LE3PackageName = "SFXWeapon_AssaultRifle_Lancer",
-                Enabled  = true
+                Enabled  = true,
+                ApplyPostPortingCorrections = ApplyDrellCameraFix
             },
             new WeaponSpecificPipeline()
             {
@@ -866,5 +873,30 @@ namespace ProjectMilan.Pipelines.Weapons
                 Enabled  = true
             },
         };
+
+        private static void ApplyDrellCameraFix(IMEPackage package, WeaponSpecificPipeline pipeline)
+        {
+            // Drell have a different camera offset for some reason so the lancer and ppr's animations break stuff
+            // we have to track the 'camera' bone during translation or it shifts it
+
+            // It's called reload for the whole animset
+            // PPR
+            var patchAnim = package.FindExport("BIOG_HMM_CB_HEN_PR.HMM_CB_ProtheanRifleReload_BioAnimSetData", "BioAnimSetData");
+            if (patchAnim == null)
+            {
+                // Lancer
+                // they just reused the PPR name too
+                patchAnim = package.FindExport("BIOG_DLC_EXP003_HMM_A.HMM_CB_ProtheanRifleReload", "BioAnimSetData");
+            }
+
+            if (patchAnim == null)
+            {
+                throw new Exception($"Couldn't find drell camera export to fix in {package.FileNameNoExtension}");
+            }
+
+            var translation = patchAnim.GetProperty<ArrayProperty<NameProperty>>("UseTranslationBoneNames");
+            translation.Add(new NameProperty("Camera"));
+            patchAnim.WriteProperty(translation);
+        }
     }
 }
