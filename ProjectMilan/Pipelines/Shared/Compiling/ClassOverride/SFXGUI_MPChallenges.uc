@@ -30,6 +30,10 @@ struct ChallengeUIData
     var int CurrentValue;
     var int GoalValue;
     var int NumCompletions;
+    //MILAN CHANGE: Carry title availability and eligibility in the challenge row data
+    var bool bHasTitleReward;
+    var bool bCanSetTitle;
+    //END MILAN CHANGE
     var MPChallengeRankIcon Icon;
     var MPChallengeRank Rank;
 };
@@ -73,8 +77,6 @@ var transient string m_sCurrentDetailImageResource;
 var config array<ChallengeDisplayItem> GeneralChallenges;
 var config array<ChallengeDisplayItem> AlienChallenges;
 var config array<ChallengeDisplayItem> WeaponChallenges;
-var delegate<ChallengeSort_Rank_Index> __ChallengeSort_Rank_Index__Delegate;
-var delegate<ChallengeSort_Parent> __ChallengeSort_Parent__Delegate;
 var transient int m_nCurrentChallengeIndex;
 var transient int m_nDefaultChallengeId;
 var config stringref TitleText;
@@ -214,8 +216,10 @@ public final function ExSetLastEntry(int nListIndex)
         default:
     }
     SetDetails(Data.DisplayBody, Data.Image);
-    SetRewardButtonVisibility(Data.GoalValue > 0);
-    SetRewardButtonEnabled(Data.NumCompletions > 0);
+    //MILAN CHANGE: The UI applies reward visibility and eligibility supplied by challenge data
+    SetRewardButtonVisibility(Data.bHasTitleReward);
+    SetRewardButtonEnabled(Data.bCanSetTitle);
+    //END MILAN CHANGE
 }
 public event function bool HandleInputEvent(BioGuiEvents Event, optional float fValue = 1.0)
 {
@@ -294,12 +298,16 @@ public final function BuildPercentCompletion(out array<float> PercentCompletion,
 {
     local int idx;
     
-    aChallenges.Sort(ChallengeSort_Parent);
+    //MILAN CHANGE: Find every root regardless of DLC entry order
     PercentCompletion.Length = aChallenges.Length;
-    for (idx = 0; idx < aChallenges.Length && aChallenges[idx].Parent == -1; idx++)
+    for (idx = 0; idx < aChallenges.Length; idx++)
     {
-        BuildPercentCompletion_Helper(PercentCompletion, aChallenges, idx, AccomplishmentManager);
+        if (aChallenges[idx].Parent == -1)
+        {
+            BuildPercentCompletion_Helper(PercentCompletion, aChallenges, idx, AccomplishmentManager);
+        }
     }
+    //END MILAN CHANGE
 }
 private final function BuildPercentCompletion_Helper(out array<float> PercentCompletion, const out array<ChallengeDisplayItem> aChallenges, int nCurrentChallengeIndex, SFXAccomplishmentManager AccomplishmentManager)
 {
@@ -313,36 +321,42 @@ private final function BuildPercentCompletion_Helper(out array<float> PercentCom
     local int nCurrentAccomplishmentIndex;
     local int nAccomplishmentDataIndex;
     local int nGrinderIndex;
-    local int nParentAccomplishmentIndex;
-    local int nParentAccomplishmentDataIndex;
     local int nChildrenPercentagesIdx;
     local int nMinChildrenPercentIdx;
-    local bool bParentIsRepeatable;
     local int nNumCompletions;
+    //MILAN CHANGE: Track whether every configured child has completed at least once
+    local int nChildCount;
+    local bool bAllChildrenCompleted;
+    //END MILAN CHANGE
     local ChallengeDisplayItem CurrentChallenge;
     
     CurrentChallenge = aChallenges[nCurrentChallengeIndex];
     nCurrentAccomplishmentIndex = CurrentChallenge.AccomplishmentIndex;
-    nParentAccomplishmentIndex = CurrentChallenge.Parent;
-    nChallengeIdx = aChallenges.Find('Parent', nCurrentAccomplishmentIndex);
     nAccomplishmentDataIndex = AccomplishmentManager.AccomplishmentData.Find('Index', nCurrentAccomplishmentIndex);
     if (nAccomplishmentDataIndex == -1)
     {
         PercentCompletion[nCurrentChallengeIndex] = 0.0;
         return;
     }
-    nParentAccomplishmentDataIndex = AccomplishmentManager.AccomplishmentData.Find('Index', nParentAccomplishmentIndex);
-    if (nParentAccomplishmentDataIndex != -1)
-    {
-        bParentIsRepeatable = IsAccomplishmentRepeatable(nParentAccomplishmentDataIndex);
-    }
     nGrinderIndex = AccomplishmentManager.GrinderAccomplishmentData.Find('AccomplishmentName', AccomplishmentManager.AccomplishmentData[nAccomplishmentDataIndex].Name);
-    GoalValue = AccomplishmentManager.GrinderAccomplishmentData[nGrinderIndex].Goal;
-    nNumCompletions = AccomplishmentManager.AccomplishmentIsComplete[nCurrentAccomplishmentIndex];
-    if (nChallengeIdx != -1)
+    //MILAN CHANGE: Read the goal only when this challenge has grinder data
+    if (nGrinderIndex != -1)
     {
-        for (nChallengeIdx = nChallengeIdx; nChallengeIdx < aChallenges.Length && aChallenges[nChallengeIdx].Parent == nCurrentAccomplishmentIndex; nChallengeIdx++)
+        GoalValue = AccomplishmentManager.GrinderAccomplishmentData[nGrinderIndex].Goal;
+    }
+    //END MILAN CHANGE
+    nNumCompletions = AccomplishmentManager.AccomplishmentIsComplete[nCurrentAccomplishmentIndex];
+    //MILAN CHANGE: Visit every matching child, including challenges appended later in the DLC config
+    bAllChildrenCompleted = TRUE;
+    for (nChallengeIdx = 0; nChallengeIdx < aChallenges.Length; nChallengeIdx++)
+    {
+        if (aChallenges[nChallengeIdx].Parent == nCurrentAccomplishmentIndex)
         {
+            nChildCount++;
+            if (AccomplishmentManager.AccomplishmentIsComplete[aChallenges[nChallengeIdx].AccomplishmentIndex] == 0)
+            {
+                bAllChildrenCompleted = FALSE;
+            }
             BuildPercentCompletion_Helper(PercentCompletion, aChallenges, nChallengeIdx, AccomplishmentManager);
             CurrentChildrenPercent = PercentCompletion[nChallengeIdx];
             ChildrenPercentSum += CurrentChildrenPercent;
@@ -356,7 +370,9 @@ private final function BuildPercentCompletion_Helper(out array<float> PercentCom
                 nMinChildrenPercentIdx = -1;
                 for (nChildrenPercentagesIdx = 0; nChildrenPercentagesIdx < ChildrenPercentages.Length; nChildrenPercentagesIdx++)
                 {
-                    if (ChildrenPercentages[nChildrenPercentagesIdx] < MinChildrenPercent)
+                    //MILAN CHANGE: Select a minimum even when every child is at 100%
+                    if (nMinChildrenPercentIdx == -1 || ChildrenPercentages[nChildrenPercentagesIdx] < MinChildrenPercent)
+                    //END MILAN CHANGE
                     {
                         MinChildrenPercent = ChildrenPercentages[nChildrenPercentagesIdx];
                         nMinChildrenPercentIdx = nChildrenPercentagesIdx;
@@ -371,23 +387,41 @@ private final function BuildPercentCompletion_Helper(out array<float> PercentCom
             }
         }
     }
-    if ((nParentAccomplishmentIndex != -1 && nParentAccomplishmentDataIndex != -1) && (bParentIsRepeatable && nNumCompletions > AccomplishmentManager.AccomplishmentIsComplete[nParentAccomplishmentIndex] || !bParentIsRepeatable && nNumCompletions > 0))
+    //END MILAN CHANGE
+    //MILAN CHANGE: Use the challenge's own grinder progress until its first completion, then keep the lifetime display at 100%
+    if (nNumCompletions > 0)
     {
         PercentCompletion[nCurrentChallengeIndex] = 1.0;
     }
-    else if (ChildrenPercentages.Length > 0)
+    //MILAN CHANGE: A top-level challenge is complete when every configured child has a recorded completion
+    else if (CurrentChallenge.Parent == -1 && nChildCount > 0 && bAllChildrenCompleted)
     {
-        PercentCompletion[nCurrentChallengeIndex] = ChildrenPercentSum / float(GoalValue);
+        PercentCompletion[nCurrentChallengeIndex] = 1.0;
     }
-    else if (nGrinderIndex == -1)
-    {
-        PercentCompletion[nCurrentChallengeIndex] = 0.0;
-    }
-    else
+    //END MILAN CHANGE
+    else if (nGrinderIndex != -1 && GoalValue > 0)
     {
         CurrentValue = AccomplishmentManager.GetGrinderAccomplishmentProgress(AccomplishmentManager.GrinderAccomplishmentData[nGrinderIndex].AccomplishmentProgressName, BioPlayerController(GetPC()));
         PercentCompletion[nCurrentChallengeIndex] = FClamp(float(CurrentValue) / float(GoalValue), 0.0, 1.0);
     }
+    else if (ChildrenPercentages.Length > 0)
+    {
+        //MILAN CHANGE: Keep aggregate challenge progress within its display range and avoid division by zero
+        if (GoalValue > 0)
+        {
+            PercentCompletion[nCurrentChallengeIndex] = FClamp(ChildrenPercentSum / float(GoalValue), 0.0, 1.0);
+        }
+        else
+        {
+            PercentCompletion[nCurrentChallengeIndex] = 0.0;
+        }
+        //END MILAN CHANGE
+    }
+    else
+    {
+        PercentCompletion[nCurrentChallengeIndex] = 0.0;
+    }
+    //END MILAN CHANGE
 }
 public final function BuildUIData(out array<ChallengeDisplayItem> aChallenges, int nChallengeIndex, const out array<float> PercentageCompletion, optional SFXAccomplishmentManager AccomplishmentManager)
 {
@@ -400,7 +434,6 @@ public final function BuildUIData(out array<ChallengeDisplayItem> aChallenges, i
     local ChallengeDisplayItem challengeItem;
     local int nPercentComplete;
     local int nTimesCompleted;
-    local int nTimesParentCompleted;
     local string sParsedBody;
     local string sParsedTimesCompleted;
     local string sParsedChallengePoints;
@@ -409,6 +442,10 @@ public final function BuildUIData(out array<ChallengeDisplayItem> aChallenges, i
     local bool bEntitlementFound;
     local bool bCompleteChallengeIcon;
     local bool bChallengeIsRepeatable;
+    //MILAN CHANGE: Share completion evaluation between the row icon and title eligibility
+    local bool bChallengeComplete;
+    local int nRewardIndex;
+    //END MILAN CHANGE
     
     challengeItem = aChallenges[nChallengeIndex];
     if (AccomplishmentManager == None)
@@ -436,40 +473,37 @@ public final function BuildUIData(out array<ChallengeDisplayItem> aChallenges, i
         }
     }
     foundAccomplishment = AccomplishmentManager.AccomplishmentData[nAccomplishmentIndex];
-    if (challengeItem.Parent != -1)
-    {
-        nTimesParentCompleted = AccomplishmentManager.AccomplishmentIsComplete[challengeItem.Parent];
-    }
-    else
-    {
-        nTimesParentCompleted = 0;
-    }
     nTimesCompleted = AccomplishmentManager.AccomplishmentIsComplete[foundAccomplishment.Index];
     ReturnData.NumCompletions = nTimesCompleted;
+    //MILAN CHANGE: Only challenges with a configured reward can offer Set Title
+    nRewardIndex = AccomplishmentManager.Rewards.Find('AccomplishmentName', foundAccomplishment.Name);
+    ReturnData.bHasTitleReward = nRewardIndex != -1;
+    //END MILAN CHANGE
     nGrinderIndex = AccomplishmentManager.GrinderAccomplishmentData.Find('AccomplishmentName', foundAccomplishment.Name);
     if (nGrinderIndex != -1)
     {
         ReturnData.CurrentValue = AccomplishmentManager.GetGrinderAccomplishmentProgress(AccomplishmentManager.GrinderAccomplishmentData[nGrinderIndex].AccomplishmentProgressName, BioPlayerController(GetPC()));
         ReturnData.GoalValue = AccomplishmentManager.GrinderAccomplishmentData[nGrinderIndex].Goal;
         ReturnData.CurrentValue = Min(ReturnData.CurrentValue, ReturnData.GoalValue);
-        if (PercentageCompletion[nChallengeIndex] > float(0))
-        {
-            nPercentComplete = Max(FFloor(PercentageCompletion[nChallengeIndex] * float(100)), 1);
-        }
-        else
-        {
-            nPercentComplete = 0;
-        }
     }
-    bChallengeIsRepeatable = IsAccomplishmentRepeatable(nAccomplishmentIndex);
-    if (bChallengeIsRepeatable)
+    //MILAN CHANGE: A recorded completion displays as lifetime 100% even if the aggregate slot is unfilled
+    if (nTimesCompleted > 0)
     {
-        bCompleteChallengeIcon = nPercentComplete == 100 || nTimesCompleted > nTimesParentCompleted;
+        nPercentComplete = 100;
+    }
+    else if (PercentageCompletion[nChallengeIndex] > float(0))
+    {
+        nPercentComplete = Min(Max(FFloor(PercentageCompletion[nChallengeIndex] * float(100)), 1), 100);
     }
     else
     {
-        bCompleteChallengeIcon = nPercentComplete == 100;
+        nPercentComplete = 0;
     }
+    bChallengeIsRepeatable = IsAccomplishmentRepeatable(nAccomplishmentIndex);
+    bChallengeComplete = nPercentComplete == 100;
+    bCompleteChallengeIcon = bChallengeComplete;
+    ReturnData.bCanSetTitle = ReturnData.bHasTitleReward && bChallengeComplete;
+    //END MILAN CHANGE
     if (challengeItem.Parent == -1)
     {
         ReturnData.Rank = MPChallengeRank.MPChallengeRank_Gold;
@@ -758,21 +792,18 @@ public final function SetDetails(string sBody, string sImageResourceString, opti
 }
 public function SetRewardButtonEnabled(bool bEnabled)
 {
-    local GFxValue buttonObject;
+    // MILAN CHANGE 09/23/2026 Mgamerz
+    // ActionScriptVoid takes only a path; Invoke passes the eligibility state explicitly
+    local array<ASValue> ActionScriptArgs;
+    local ASValue EnabledArg;
     
     m_bIsRewardButtonEnabled = bEnabled;
-    // MILAN CHANGE DropTheSquid 12/15/2023
-    // this was going off of whether it was a console build, which is a bad way to determine this
-    // if (bUsingGamepad)
-    // END MILAN
-    // {
-        buttonObject = GetVariableObject("_root.mcConsoleButtons.ControlX");
-        buttonObject.SetBool("Active", bEnabled);
-    // }
-    // else
-    // {
-        ActionScriptVoid("mcGUI.PC_MiddleButton.SetEnabled");
-    // }
+    EnabledArg.Type = ASType.AS_Boolean;
+    EnabledArg.B = bEnabled;
+    ActionScriptArgs.AddItem(EnabledArg);
+    Invoke("mcGUI.controller.ControlX.SetEnabled", ActionScriptArgs);
+    Invoke("mcGUI.PC_MiddleButton.SetEnabled", ActionScriptArgs);
+    //END MILAN CHANGE
 }
 public function SetRewardButtonVisibility(bool bVisible)
 {
