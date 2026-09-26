@@ -2,7 +2,6 @@
     config(Game);
 
 var array<Actor> HitActors;
-var delegate<ShouldDoAOE> __ShouldDoAOE__Delegate;
 var const float ChargeSeekTime;
 
 public function bool NotifyBump(Actor Other, Vector HitNormal)
