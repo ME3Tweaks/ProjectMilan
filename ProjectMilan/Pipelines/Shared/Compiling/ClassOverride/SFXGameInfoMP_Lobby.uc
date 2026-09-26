@@ -97,27 +97,36 @@ public function OnQuickMatchComplete(byte Result)
 {
     local string joinGameHostIp;
 
+    // MILAN CHANGE - Mgamerz - 2026-09-25
+    // A successful server reservation must travel to its host, not start a new listen lobby.
+    if (OnlineSub != None)
+    {
+        GameInterface = OnlineSub.GameInterface;
+        if (GameInterface != None)
+        {
+            GameInterface.ClearQuickMatchCompleteDelegate(OnQuickMatchComplete);
+        }
+    }
     if (int(Result) == 2)
     {
-        if (OnlineSub != None)
+        if (GameInterface != None && GameInterface.GetResolvedConnectString('Game', joinGameHostIp) && joinGameHostIp != "")
         {
-            GameInterface = OnlineSub.GameInterface;
-            if (GameInterface != None)
-            {
-                GameInterface.GetResolvedConnectString('Game', joinGameHostIp);
-                GameInterface.AddJoinOnlineGameCompleteDelegate(OnQuickMatchJoined);
-                OnMPGameStarted(TRUE);
-            }
+            WorldInfo.ConsoleCommand("open " $ joinGameHostIp);
+        }
+        else
+        {
+            ShowNetworkErrorPrompt(srMatchMakingError);
         }
     }
     else if (int(Result) == 3)
     {
-        QuickMatch();
+        QuickMatch(MatchMakingGameSettings);
     }
     else
     {
-        OnMPGameStarted(int(Result) != 4);
+        ShowNetworkErrorPrompt(srMatchMakingError);
     }
+    // END MILAN CHANGE
 }
 public event simulated function PostBeginPlay()
 {
@@ -384,7 +393,15 @@ public function StartMPMatch(optional SFXOnlineGameSettings GameSettings)
         {
             if (GameSettings == None)
             {
-                bMatchRequestSent = QuickMatch();
+                // MILAN CHANGE - Mgamerz - 2026-09-25
+                // Default Quick Match searches every public map, enemy, and difficulty.
+                MatchMakingGameSettings = new Class'SFXOnlineGameSettings';
+                MatchMakingGameSettings.mME3MapName = "";
+                MatchMakingGameSettings.EnemyType = 127;
+                MatchMakingGameSettings.Difficulty = 127;
+                MatchMakingGameSettings.mCreateNewMatch = FALSE;
+                bMatchRequestSent = QuickMatch(MatchMakingGameSettings);
+                // END MILAN CHANGE
             }
             else
             {
