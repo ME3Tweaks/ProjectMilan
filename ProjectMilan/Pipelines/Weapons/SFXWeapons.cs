@@ -72,10 +72,10 @@ namespace ProjectMilan.Pipelines.Weapons
             // once every weapon is done, so nothing here outlives the Weapons pipeline.
             using var pipelineCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "SFXWeapons pipeline cache");
 
-            Parallel.ForEach(vars.WeaponPipelines.OrderBy(x => x.Enabled).AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, weapon =>
+            Parallel.ForEach(vars.WeaponPipelines.OrderBy(x => x.ShouldBuild).AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, weapon =>
             {
                 // Uncomment this to port everything
-                if (/*false && */!weapon.Enabled)
+                if (/*false && */!weapon.ShouldBuild)
                 {
                     // This level is not marked for porting currently.
                     MilanLog.Information($"Skipping weapon {weapon.PackageName}, pipeline is not enabled", customPrefix: LOG_CATEGORY);
@@ -811,7 +811,8 @@ namespace ProjectMilan.Pipelines.Weapons
                 WeaponClassName = "SFXWeapon_SniperRifle_Collector",
                 PackageName = "SFXWeapon_SniperRifle_Collector",
                 LE3PackageName = null, // There is no LE3 version of this package.
-                Enabled  = true
+                Enabled  = true,
+                ApplyPostPortingCorrections = ApplyDrellCameraFix
             },
 
             // MP5
@@ -876,7 +877,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
         private static void ApplyDrellCameraFix(IMEPackage package, WeaponSpecificPipeline pipeline)
         {
-            // Drell have a different camera offset for some reason so the lancer and ppr's animations break stuff
+            // Drell have a different camera offset, so these weapons' shared firing animation shifts the camera.
             // we have to track the 'camera' bone during translation or it shifts it
 
             // It's called reload for the whole animset
@@ -887,6 +888,12 @@ namespace ProjectMilan.Pipelines.Weapons
                 // Lancer
                 // they just reused the PPR name too
                 patchAnim = package.FindExport("BIOG_DLC_EXP003_HMM_A.HMM_CB_ProtheanRifleReload_BioAnimSetData", "BioAnimSetData");
+            }
+
+            if (patchAnim == null)
+            {
+                // Collector Sniper Rifle
+                patchAnim = package.FindExport("BIOG_DLC_MP4_CBT_A.HMM_CB_ProtheanRifleReload_BioAnimSetData", "BioAnimSetData");
             }
 
             if (patchAnim == null)
