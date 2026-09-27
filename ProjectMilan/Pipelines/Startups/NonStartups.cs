@@ -155,7 +155,7 @@ namespace ProjectMilan.Pipelines.Startups
             //{ "SFXGUI_W_A_Lancer_MP", NonStartupCategory.WeaponPreviews },
             //{ "SFXGUI_W_A_LMG", NonStartupCategory.WeaponPreviews },
             //{ "SFXGUI_W_A_Prothean_MP", NonStartupCategory.WeaponPreviews },
-            //{ "SFXGUI_W_A_Spitfire", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_A_Spitfire", NonStartupCategory.WeaponPreviews }, // Not in actual SP (its heavy weapon)
             //{ "SFXGUI_W_P_Asari", NonStartupCategory.WeaponPreviews },
             //{ "SFXGUI_W_P_Bloodpack_MP", NonStartupCategory.WeaponPreviews },
             //{ "SFXGUI_W_P_Silencer_MP", NonStartupCategory.WeaponPreviews },
@@ -163,10 +163,10 @@ namespace ProjectMilan.Pipelines.Startups
             //{ "SFXGUI_W_SG_Quarian", NonStartupCategory.WeaponPreviews },
             //{ "SFXGUI_W_SG_Salarian_MP", NonStartupCategory.WeaponPreviews },
             //{ "SFXGUI_W_SMG_Bloodpack_MP", NonStartupCategory.WeaponPreviews },
-            //{ "SFXGUI_W_SMG_Collector", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_SMG_Collector", NonStartupCategory.WeaponPreviews }, // Not in SP
             //{ "SFXGUI_W_SMG_Geth", NonStartupCategory.WeaponPreviews },
             //{ "SFXGUI_W_S_Batarian", NonStartupCategory.WeaponPreviews },
-            //{ "SFXGUI_W_S_Collector", NonStartupCategory.WeaponPreviews },
+            { "SFXGUI_W_S_Collector", NonStartupCategory.WeaponPreviews }, // Not in SP
             //{ "SFXGUI_W_S_Turian", NonStartupCategory.WeaponPreviews },
 
             // --- WeaponModPreview ---
