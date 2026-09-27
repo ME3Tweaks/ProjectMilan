@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Shaders;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using MilanShaderHost;
 using ProjectMilan;
 using System;
 using System.Collections.Generic;
@@ -53,6 +54,153 @@ namespace ProjectMilanCore
             && export.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true;
 
         /// <summary>
+        /// Of <paramref name="brokenMaterials"/>, clears <c>bHasStaticPermutationResource</c> from the
+        /// instances whose parameter set overrides nothing, so they render through their parent's shader
+        /// map. Returns the instances it cleared.
+        /// </summary>
+        /// <remarks>
+        /// Same rule and reason as the decooker's (<c>DecookerShared.PreparePackageForUDKify</c>): such an
+        /// instance has no permutation of its own, so the shader host never compiles one and no compiled
+        /// package can supply it. Left flagged, it asks for a map that will never exist and is reported
+        /// broken on every install. <c>BioT_MPMoon.Materials.Rocks_MAT_INST</c> and
+        /// <c>BioT_MPThes.Materials.Water_Puddle_Flowing_INST02</c> were the cases; TFCBuild strips these too,
+        /// but only for the packages its pass covers.
+        ///
+        /// Only broken ones. A no-override instance whose map *is* reachable is left alone: the game looks
+        /// it up by its stored values, and when its live parent is an LE3 material with different defaults
+        /// (a different normal compression, say) that map and the parent's own can differ, so stripping it
+        /// could change what it renders. BioA_MPMoon has 10 no-override instances and only one was broken.
+        /// </remarks>
+        public static HashSet<ExportEntry> StripPermutationsThatOverrideNothing(IEnumerable<ExportEntry> brokenMaterials, string logCategory)
+        {
+            var stripped = new HashSet<ExportEntry>();
+            foreach (var export in brokenMaterials.Where(IsPermutationInstance))
+            {
+                StaticParameterSet set;
+                try
+                {
+                    set = ObjectBinary.From<MaterialInstance>(export).SM3StaticParameterSet;
+                }
+                catch
+                {
+                    continue; // Unreadable binary: not ours to judge here.
+                }
+                if (set == null || StaticPermutationNaming.HasAnyOverride(set)) continue;
+
+                export.RemoveProperty("bHasStaticPermutationResource");
+                export.WriteBinary([]);
+                MilanLog.Information($"Cleared static permutation flag on {export.InstancedFullPath}: it overrides nothing and has no shader map of its own, so it uses its parent's", customPrefix: logCategory);
+                stripped.Add(export);
+            }
+            return stripped;
+        }
+
+        /// <summary>
+        /// Rebases each permutation instance's <c>SM3StaticParameterSet</c> onto the base material it will
+        /// actually have in game, when a shader map already exists under the rebased key. Returns how many
+        /// instances were re-keyed.
+        /// </summary>
+        /// <remarks>
+        /// The engine looks an instance's permutation up by its stored parameter values but with
+        /// <c>BaseMaterialId</c> replaced by the live base material's resource ID. LEC's
+        /// <see cref="ShaderCacheManipulator.GetBrokenMaterials"/> uses the stored ID. A ported instance
+        /// stores ME3's parent ID, so the two disagree whenever the parent resolves to an LE3 material --
+        /// typically one that ships in SFXGame, like <c>BIOG_APL_MASTER_MATERIAL.Placeable_MM</c> or
+        /// <c>BioG_MasterMats.Material_Parents.ME3_OPAQUE_MM</c>. LE3's RefShaderCache often already holds
+        /// the permutation under the LE3 ID; the shader host then compiles nothing, because the game finds
+        /// that map and never asks, and the stored key made Milan report the instance broken and TFCBuild
+        /// strip it. ShaderResearchTool HANDOFF section 38.
+        ///
+        /// Only the ID changes. Every stored value is kept, non-overridden ones included -- measured, not
+        /// assumed: recompiling BioT_GthMP, the game keyed each ME3_OPAQUE_MM permutation it compiled by
+        /// SFXGame's ID plus the instance's stored ME3 normal compressions (7/1/4), not the LE3 parent's
+        /// defaults (12/12/4), and the instances it skipped are exactly those whose stored values under
+        /// SFXGame's ID are in RefShaderCache. A first version that also re-derived non-overridden values
+        /// from the parent missed every one of those.
+        ///
+        /// The new key is kept only if a map is reachable under it (this package's cache or RefShaderCache).
+        /// Anything else is left for the compiled-permutation install, which brings its own key.
+        /// </remarks>
+        public static int RekeyPermutationsToLiveParent(IMEPackage package, PackageCache cache, string logCategory,
+            Func<string, PackageCache, IMEPackage> fileResolver = null)
+        {
+            var candidates = new List<(ExportEntry instance, StaticParameterSet rekeyed)>();
+            foreach (var export in package.Exports.Where(IsPermutationInstance))
+            {
+                var chain = ResolveParentChain(export, cache, fileResolver);
+                if (chain == null) continue;
+
+                var stored = ObjectBinary.From<MaterialInstance>(export).SM3StaticParameterSet;
+                if (stored == null) continue;
+
+                var liveId = ObjectBinary.From<Material>(chain[^1]).SM3MaterialResource.ID;
+                if (liveId == Guid.Empty || liveId == stored.BaseMaterialId) continue;
+
+                candidates.Add((export, new StaticParameterSet
+                {
+                    BaseMaterialId = liveId,
+                    StaticSwitchParameters = stored.StaticSwitchParameters,
+                    StaticComponentMaskParameters = stored.StaticComponentMaskParameters,
+                    NormalParameters = stored.NormalParameters,
+                    TerrainWeightParameters = stored.TerrainWeightParameters,
+                }));
+            }
+
+            if (candidates.Count == 0) return 0;
+
+            // Whatever is still in this set afterwards has no map under its new key.
+            var unreachable = candidates.Select(x => x.rekeyed).ToHashSet();
+            if (package.FindExport("SeekFreeShaderCache") is ExportEntry localCacheExport)
+            {
+                foreach ((StaticParameterSet key, _) in ObjectBinary.From<ShaderCache>(localCacheExport).MaterialShaderMaps)
+                {
+                    unreachable.Remove(key);
+                }
+            }
+            if (unreachable.Count > 0)
+            {
+                RefShaderCacheReader.RemoveStaticParameterSetsThatAreInTheGlobalCache(unreachable, package.Game);
+            }
+
+            int rekeyedCount = 0;
+            foreach (var (instance, rekeyed) in candidates)
+            {
+                if (unreachable.Contains(rekeyed)) continue;
+                ObjectBinary.EditBinary<MaterialInstance>(instance, x => x.SM3StaticParameterSet = rekeyed);
+                MilanLog.Information($"Re-keyed permutation of {instance.InstancedFullPath} to its live base material ({rekeyed.BaseMaterialId}); the game already has this map", customPrefix: logCategory);
+                rekeyedCount++;
+            }
+            return rekeyedCount;
+        }
+
+        /// <summary>
+        /// The instance's ancestors, nearest first, ending at the UMaterial at the root, with imports resolved
+        /// the way the game would. Null if the chain breaks or does not end at a material.
+        /// </summary>
+        private static List<ExportEntry> ResolveParentChain(ExportEntry instance, PackageCache cache, Func<string, PackageCache, IMEPackage> fileResolver)
+        {
+            var chain = new List<ExportEntry>();
+            var current = instance;
+            // Instances chain, but not deeply. The cap only guards against a malformed cycle.
+            for (int depth = 0; depth < 32; depth++)
+            {
+                var parentRef = current.GetProperty<ObjectProperty>("Parent")?.Value ?? 0;
+                current = current.FileRef.GetEntry(parentRef) switch
+                {
+                    ExportEntry parentExport => parentExport,
+                    ImportEntry parentImport => EntryImporter.ResolveImport(parentImport, cache, fileResolver: fileResolver),
+                    _ => null,
+                };
+                if (current == null) return null;
+
+                chain.Add(current);
+                if (current.IsA("Material")) return chain;
+                if (!current.IsA("MaterialInstance")) return null;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Installs shaders to the package for materials that are marked as broken. If a material isn't broken,
         /// this won't update their shaders, unless <paramref name="force"/> is set.
         /// </summary>
@@ -79,12 +227,26 @@ namespace ProjectMilanCore
                 packageMap[Path.GetFileNameWithoutExtension(p)] = p;
             }
 
+            // Before the broken check, so an instance whose permutation the game already has is not
+            // reported broken (and then stripped by TFCBuild) just because its stored key came from ME3.
+            RekeyPermutationsToLiveParent(package, cache, logCategory, MilanShared.LE3PackageResolver);
+
             // MaterialInstances with a static permutation own a shader map of their own, keyed by their
             // SM3StaticParameterSet rather than by a material resource ID. GetBrokenMaterials already
             // returns them; the force path has to ask for them explicitly.
-            var materialsToProcess = force
-                ? package.Exports.Where(x => x.IsA("Material") || IsPermutationInstance(x)).ToList()
-                : ShaderCacheManipulator.GetBrokenMaterials(package);
+            List<ExportEntry> materialsToProcess;
+            if (force)
+            {
+                materialsToProcess = package.Exports.Where(x => x.IsA("Material") || IsPermutationInstance(x)).ToList();
+            }
+            else
+            {
+                materialsToProcess = ShaderCacheManipulator.GetBrokenMaterials(package);
+                // Broken instances that override nothing need no compiled permutation; they go back to
+                // their parent's map instead of being reported as missing one.
+                var stripped = StripPermutationsThatOverrideNothing(materialsToProcess, logCategory);
+                materialsToProcess.RemoveAll(stripped.Contains);
+            }
 
             // Source shader caches are deserialized once per compiled package and merged into a single
             // accumulator, which is written to the destination package exactly once at the end. Doing this
