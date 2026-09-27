@@ -1,0 +1,37 @@
+﻿<Window x:Class="ImageScannerHost.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ImageScannerHost"
+        mc:Ignorable="d"
+        Title="Slit Scan Image Scanner" Height="600" Width="1000">
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Controls -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,5">
+            <TextBlock Text="Slit Width (px):" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBox x:Name="SlitWidthBox" Width="60" Text="8" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <Button x:Name="StartListeningBtn" Content="Start Listening" Padding="10,3" Click="StartListening_Click"/>
+            <Button x:Name="SaveFullBtn" Content="Save Full Image" Padding="10,3" Margin="10,0,0,0" Click="SaveFull_Click" IsEnabled="False"/>
+            <Button x:Name="SaveTilesBtn" Content="Save Tiles" Padding="10,3" Margin="5,0,0,0" Click="SaveTiles_Click" IsEnabled="False"/>
+        </StackPanel>
+
+        <!-- Preview -->
+        <Border Grid.Row="1" Background="#FF1E1E1E" BorderBrush="Gray" BorderThickness="1">
+            <Image x:Name="PreviewImage" Stretch="Uniform" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+        </Border>
+
+        <!-- Progress -->
+        <ProgressBar x:Name="CaptureProgress" Grid.Row="2" Height="20" Margin="0,5,0,0" Minimum="0"/>
+
+        <!-- Status -->
+        <TextBlock x:Name="StatusText" Grid.Row="3" Text="Ready" Margin="0,3,0,0"/>
+    </Grid>
+</Window>
