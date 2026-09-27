@@ -26,6 +26,12 @@ namespace ProjectMilan.Pipelines.Levels
     {
         private const string LOG_CATEGORY = "MILAN-Level";
 
+        /// <summary>
+        /// Lightmap resolution multiplier for production builds, applied on top of the per-component resolutions
+        /// restored from BioWare's bakes. 2x is roughly 4x the lightmap texels (and bake time) of a dev build.
+        /// </summary>
+        private const float ProductionLightmapResolutionMultiplier = 2f;
+
         // Only "Random waves"/"Mixed" need fresh TLK strings - the rest reuse their existing vanilla StrRef IDs.
         private static readonly LocalizedString RandomWaveName = new() { [MELocalization.INT] = "Coalition" }; // Random Wave
         private static readonly LocalizedString RandomWaveAllCapsName = new() { [MELocalization.INT] = "COALITION" };
@@ -89,7 +95,7 @@ namespace ProjectMilan.Pipelines.Levels
                     MapListInfo = new MapListEntry { PackageName="BioP_MPNov3", PrettyNameStrRefId=618048, DescriptionStrRefId=618057, GAWMapPositionX=352, GAWMapPositionY=352, GAWMapSubtitleStrRefId=706334, ImageObjectPath="GUI_MPImages.MatchSettings.OptMapNoveria", ImageSeekFreePackageName="SFXMPImagesMatchSettings" } },
 
                 // The original MPTowr had problems with spawns outside the map; we don't want to use this as a classic map
-                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled = false, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Giant
+                // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Giant
 
                 // MP1 Resurgence
                 new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled = true, SpecialPrePortingDelegate = MPMoonSpecific.PreCorrect, IgnoredLightingLevels = MPMoonSpecific.IgnoredLightingLevels, // Condor
@@ -98,31 +104,31 @@ namespace ProjectMilan.Pipelines.Levels
                     MapListInfo = new MapListEntry { PackageName="BioP_MPGeth", PrettyNameStrRefId=728069, DescriptionStrRefId=null, GAWMapPositionX=435, GAWMapPositionY=211, GAWMapSubtitleStrRefId=326824, ImageObjectPath="DLC_MPImages.Map.OptMapGeth", ImageSeekFreePackageName="MP1Images" } },
 
                 // MP2 Rebellion
-                new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled = false, SpecialPortingDelegate = null, // Jade
+                new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled = true, SpecialPortingDelegate = null, // Jade
                     MapListInfo = new MapListEntry { PackageName="BioP_MPJngl", PrettyNameStrRefId=728030, DescriptionStrRefId=null, GAWMapPositionX=231, GAWMapPositionY=362, GAWMapSubtitleStrRefId=500264, ImageObjectPath="GUI_MPImages_MP2.OptMapJade", ImageSeekFreePackageName="MP2Images" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled = false, SpecialPortingDelegate = null, IgnoredLightingLevels = MPThesSpecific.IgnoredLightingLevels, // Goddess
+                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled = true, SpecialPortingDelegate = null, IgnoredLightingLevels = MPThesSpecific.IgnoredLightingLevels, // Goddess
                     MapListInfo = new MapListEntry { PackageName="BioP_MPThes", PrettyNameStrRefId=728031, DescriptionStrRefId=null, GAWMapPositionX=105, GAWMapPositionY=278, GAWMapSubtitleStrRefId=500427, ImageObjectPath="GUI_MPImages_MP2.OptMapGoddess", ImageSeekFreePackageName="MP2Images" } },
 
                 // MP3 Earth
-                new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled = false, SpecialPortingDelegate = null, IgnoredLightingLevels = MPOceanSpecific.IgnoredLightingLevels, // Rio
+                new LevelSpecificPipeline() { BioP="BioP_MPOcean", Enabled = true, SpecialPortingDelegate = null, IgnoredLightingLevels = MPOceanSpecific.IgnoredLightingLevels, // Rio
                     MapListInfo = new MapListEntry { PackageName="BioP_MPOcean", PrettyNameStrRefId=731650, DescriptionStrRefId=618054, GAWMapPositionX=290, GAWMapPositionY=410, GAWMapSubtitleStrRefId=345696, ImageObjectPath="GUI_MPImages_MP3.OptMapRio", ImageSeekFreePackageName="MP3Images" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled = false, SpecialPortingDelegate = null, IgnoredLightingLevels = MPHospSpecific.IgnoredLightingLevels, // Vancouver
+                new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled = true, SpecialPortingDelegate = null, IgnoredLightingLevels = MPHospSpecific.IgnoredLightingLevels, // Vancouver
                     MapListInfo = new MapListEntry { PackageName="BioP_MPHosp", PrettyNameStrRefId=728032, DescriptionStrRefId=618054, GAWMapPositionX=290, GAWMapPositionY=410, GAWMapSubtitleStrRefId=345696, ImageObjectPath="GUI_MPImages_MP3.OptMapHosp", ImageSeekFreePackageName="MP3Images" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled = false, SpecialPortingDelegate = null, // London
+                new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled = true, SpecialPortingDelegate = null, // London
                     MapListInfo = new MapListEntry { PackageName="BioP_MPRoad", PrettyNameStrRefId=731651, DescriptionStrRefId=618054, GAWMapPositionX=290, GAWMapPositionY=410, GAWMapSubtitleStrRefId=345696, ImageObjectPath="GUI_MPImages_MP3.OptMapLondon", ImageSeekFreePackageName="MP3Images" } },
 
                 // MP4 Retaliation
-                new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled = false, SpecialPortingDelegate = null, // Glacier - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled = true, SpecialPortingDelegate = null, // Glacier - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPCer2", PrettyNameStrRefId=772398, DescriptionStrRefId=618047, GAWMapPositionX=280, GAWMapPositionY=97, GAWMapSubtitleStrRefId=706333, ImageObjectPath="GUI_MPImages_MP4.OptMapSwarm", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled = false, SpecialPortingDelegate = null, // Dagger - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled = true, SpecialPortingDelegate = null, // Dagger - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPDish2", PrettyNameStrRefId=772393, DescriptionStrRefId=618041, GAWMapPositionX=424, GAWMapPositionY=216, GAWMapSubtitleStrRefId=706337, ImageObjectPath="GUI_MPImages_MP4.OptMapSandstorm", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPNov2", Enabled = false, SpecialPortingDelegate = null, // White - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPNov2", Enabled = true, SpecialPortingDelegate = null, // White - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPNov2", PrettyNameStrRefId=772316, DescriptionStrRefId=618048, GAWMapPositionX=352, GAWMapPositionY=352, GAWMapSubtitleStrRefId=706334, ImageObjectPath="GUI_MPImages_MP4.OptMapSnowstorm", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled = false, SpecialPortingDelegate = null, // Reactor - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled = true, SpecialPortingDelegate = null, // Reactor - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPRctr2", PrettyNameStrRefId=772396, DescriptionStrRefId=618044, GAWMapPositionX=111, GAWMapPositionY=333, GAWMapSubtitleStrRefId=706336, ImageObjectPath="GUI_MPImages_MP4.OptMapMeltdown", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled = false, SpecialPortingDelegate = null, // Ghost - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled = true, SpecialPortingDelegate = null, // Ghost - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPSlum2", PrettyNameStrRefId=772394, DescriptionStrRefId=618042, GAWMapPositionX=310, GAWMapPositionY=403, GAWMapSubtitleStrRefId=706335, ImageObjectPath="GUI_MPImages_MP4.OptMapAcid", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled = false, SpecialPortingDelegate = null, // Giant - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled = true, SpecialPortingDelegate = null, // Giant - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPTowr2", PrettyNameStrRefId=772399, DescriptionStrRefId=618043, GAWMapPositionX=195, GAWMapPositionY=358, GAWMapSubtitleStrRefId=706332, ImageObjectPath="GUI_MPImages_MP4.OptMapTower", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 
                 // MP5 Reckoning
@@ -141,13 +147,13 @@ namespace ProjectMilan.Pipelines.Levels
                 // Prototype and unused maps
                 // These are named that were assigned to the maps for ModMaker
                 // There are technically 2 additional variations of MPSub if you swap to a different unused BioD
-                new LevelSpecificPipeline() { BioP="BioP_MPThes2", Enabled =false, SpecialPortingDelegate = null}, // Athena (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPBrdg", Enabled =false, SpecialPortingDelegate = null}, // Gauntlet (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPFoun", Enabled =false, SpecialPortingDelegate = null}, // Dragon (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPPump", Enabled = false, SpecialPortingDelegate = null}, // Forge (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPRays", Enabled =false, SpecialPortingDelegate = null}, // Maelstrom (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPSub", Enabled = false, SpecialPortingDelegate = null}, // Neptune (prototype)
-                new LevelSpecificPipeline() { BioP="BioP_MPTest", Enabled = false, SpecialPortingDelegate = null}, // Scorpion (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPThes2", Enabled =false, SpecialPortingDelegate = null, ExcludeFromProduction = true}, // Athena (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPBrdg", Enabled =false, SpecialPortingDelegate = null, ExcludeFromProduction = true}, // Gauntlet (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPFoun", Enabled =false, SpecialPortingDelegate = null, ExcludeFromProduction = true}, // Dragon (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPPump", Enabled = false, SpecialPortingDelegate = null, ExcludeFromProduction = true}, // Forge (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPRays", Enabled =false, SpecialPortingDelegate = null, ExcludeFromProduction = true}, // Maelstrom (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPSub", Enabled = false, SpecialPortingDelegate = null, ExcludeFromProduction = true}, // Neptune (prototype)
+                new LevelSpecificPipeline() { BioP="BioP_MPTest", Enabled = false, SpecialPortingDelegate = null, ExcludeFromProduction = true}, // Scorpion (prototype)
 
 
 
@@ -177,7 +183,7 @@ namespace ProjectMilan.Pipelines.Levels
                 //    continue;
                 //}
 
-                if (!level.Enabled)
+                if (!level.ShouldBuild)
                 {
                     // This level is not marked for porting currently.
                     MilanLog.Information($"Skipping level {level.BioP}, pipeline is not enabled");
@@ -194,12 +200,15 @@ namespace ProjectMilan.Pipelines.Levels
                 }
                 
                 // Static lighting does not save the source package, so we are now free to modify it now that the final save has occurred
-                if (Program.Settings.IsStaticLightingBuild && level.BuildLighting)
+                if (Program.BuildStaticLighting && level.BuildLighting)
                 {
                     // This significantly delay build time - it runs UDK and imports lighting after bake!
-                    if (StaticLightingExport.ExportLevelToUDK(level))
+                    // Lightmap texel count - and so bake time and lightmap memory - scales with the square of this.
+                    var lightmapResolutionMultiplier = Program.Settings.ProductionBuild ? ProductionLightmapResolutionMultiplier : 1f;
+                    var defaultStaticMeshLightingRes = (int)(128 * lightmapResolutionMultiplier); // BioWare default is 32
+                    if (StaticLightingExport.ExportLevelToUDK(level, lightmapResolutionMultiplier, defaultStaticMeshLightingRes))
                     {
-                    StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension, allowLightmapCompression: false, defaultStaticMeshLightingRes: 128); // BioWare default is 32 
+                        StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes, keepPreBakeMaps: Program.KeepPreBakeMaps);
                         LevelShared.ImportStaticLighting(level, true);
                     }
                     else

@@ -1,10 +1,11 @@
-﻿using System.Diagnostics;
-using LegendaryExplorerCore.GameFilesystem;
+﻿using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilanCore;
+using System.Diagnostics;
 
 namespace ProjectMilan.Pipelines.Kits
 {
@@ -31,12 +32,12 @@ namespace ProjectMilan.Pipelines.Kits
             // once every kit is done, so nothing here outlives the Kits pipeline.
             using var pipelineCache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "MPKits pipeline cache");
 
-            var kits = vars.KitPipelines.OrderBy(x => x.Enabled); // Frontload enabled ones for multithread
+            var kits = vars.KitPipelines.OrderBy(x => x.ShouldBuild); // Frontload enabled ones for multithread
             Parallel.ForEach(kits.AsParallel().AsOrdered(), new ParallelOptions() { MaxDegreeOfParallelism = Program.Settings.MaxThreads }, kit =>
             {
                 // Uncomment this to port everything
                 // or to filter to a specific kit
-                if (/*false && */!kit.Enabled /*|| !kit.PackageName.Contains("Collector")*/)
+                if (/*false && */!kit.ShouldBuild /*|| !kit.PackageName.Contains("Collector")*/)
                 {
                     // This level is not marked for porting currently.
                     MilanLog.Information($"Skipping kit {kit.PackageName}, pipeline is not enabled", customPrefix: LOG_CATEGORY);
@@ -68,11 +69,26 @@ namespace ProjectMilan.Pipelines.Kits
 
             // Before we port object referencer, we port loose classes found in the package from our catalog of classes
             // This way we can pre-apply fixes in source rather than in post which makes for a cleaner build
-            MilanShared.PrePortClasses(kitSourcePackage, kitSourcePackage, kitPipeline.Cache, kitPipeline.LogCategory);
-            MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory);
+            // Literally does nothing 09/26/2026
+            // MilanShared.PrePortClasses(kitSourcePackage, kitSourcePackage, kitPipeline.Cache, kitPipeline.LogCategory);
+            MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory, postPortModifier: ApplyKitChanges);
             MilanShared.PortLocalizations(kitPipeline.PackageName, outputPath, kitPipeline.Cache, kitPipeline.LogCategory);
 
             kitPipeline.Cache.Dispose();
+        }
+
+        private static void ApplyKitChanges(IMEPackage package)
+        {
+            return; 
+            var referencer = package.CreateObjectReferencer(); // Returns it
+            var archetype = referencer.GetProperty<ArrayProperty<ObjectProperty>>("ReferencedObjects")[0].ResolveToEntry(package) as ExportEntry;
+            var pawnClass = archetype.Class as ExportEntry;
+            var pawnDefaults = pawnClass.GetDefaults();
+            
+            // Too lazy to do this the right way so we just search the children
+            var module = package.Exports.FirstOrDefault(x => x.Parent == pawnDefaults && x.ClassName == "SFXModule_MarkerPlayer");
+
+            var markerClass = EntryImporter.EnsureClassIsInFile(package, "SFXGUIValue_MarkerPlayerHealth", new RelinkerOptionsPackage() { DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver });
         }
 
         // Used to find kits
@@ -125,7 +141,7 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "Asari_Adept_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "Asari_Vanguard_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "Drell_Adept_MP", Enabled = true},
-            new KitSpecificPipeline() { PackageName = "Drell_Vanguard_MP", Enabled = true},
+            new KitSpecificPipeline() { PackageName = "Drell_Vanguard_MP", Enabled = true },
             new KitSpecificPipeline() { PackageName = "HumanFemale_Adept_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "HumanFemale_Engineer_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "HumanFemale_Infiltrator_MP", Enabled = true},
@@ -201,7 +217,7 @@ namespace ProjectMilan.Pipelines.Kits
 
 
             // This kit is broken and will require manual fixes. BioWare chickened out of making a female BF3 soldier
-            new KitSpecificPipeline() { PackageName = "HumanFemale_InfBF3_MP", Enabled = false},
+            new KitSpecificPipeline() { PackageName = "HumanFemale_InfBF3_MP", Enabled = false, ExcludeFromProduction = true},
 
         };
     }

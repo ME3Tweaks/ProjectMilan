@@ -292,7 +292,7 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             // If not static lighting build, see if we have static lighting to import
-            if (!Program.Settings.IsStaticLightingBuild)
+            if (!Program.BuildStaticLighting)
             {
                 var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", levelPipeline.BioP, $"{destPackage.FileNameNoExtension}.udk");
                 if (File.Exists(staticLightingPath))

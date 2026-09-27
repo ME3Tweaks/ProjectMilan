@@ -23,9 +23,19 @@ namespace ProjectMilan.Pipelines.Levels
         public bool Enabled { get; set; } = true;
 
         /// <summary>
+        /// If this level must not be forced on by <see cref="Settings.IMilanSettings.ProductionBuild"/> (prototypes, broken maps)
+        /// </summary>
+        public bool ExcludeFromProduction { get; set; }
+
+        /// <summary>
+        /// If this level should be ported this run: <see cref="Enabled"/>, or forced on by a production build
+        /// </summary>
+        public bool ShouldBuild => Enabled || (Program.Settings.ProductionBuild && !ExcludeFromProduction);
+
+        /// <summary>
         /// Map-select-UI registration data for this level, or null if it should not appear as a selectable
         /// multiplayer map (e.g. MPLobby, prototypes). Only registered via <see cref="MapListConfigWriter"/>
-        /// when <see cref="Enabled"/> is also true, so a disabled level never shows up in-game.
+        /// when <see cref="ShouldBuild"/> is also true, so a disabled level never shows up in-game.
         /// </summary>
         public MapListEntry MapListInfo { get; set; }
 

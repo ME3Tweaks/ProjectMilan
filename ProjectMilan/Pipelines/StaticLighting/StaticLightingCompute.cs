@@ -122,13 +122,24 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// </summary>
         /// <param name="mapName">The extensionless name of the map. Should already be in the UDK maps folder</param>
         /// <param name="allowLightmapCompression">Overrides DevOptions.StaticLighting.bAllowLightmapCompression
-        /// in UDKLightmass.ini for just this build. Null leaves the file's existing setting alone.</param>
+        /// in UDKLightmass.ini for just this build. Always applied: compressed lightmaps are DXT1, which
+        /// bands badly, so bakes are uncompressed unless a caller explicitly opts back in.</param>
         /// <param name="defaultStaticMeshLightingRes">Overrides DevOptions.StaticLighting.DefaultStaticMeshLightingRes
         /// in UDKLightmass.ini for just this build (e.g. a one-off 256 test bake). Null leaves the
         /// file's existing setting alone.</param>
-        /// <param name="qualityLevel">Lightmass build quality. See <see cref="LightmassBuildQuality"/>.</param>
-        internal static void ComputeLighting(string mapName, bool? allowLightmapCompression = null, int? defaultStaticMeshLightingRes = null, LightmassBuildQuality qualityLevel = LightmassBuildQuality.Medium)
+        /// <param name="qualityLevel">Lightmass build quality. See <see cref="LightmassBuildQuality"/>. Forced to
+        /// <see cref="LightmassBuildQuality.Production"/> on a production build.</param>
+        /// <param name="keepPreBakeMaps">Keep a copy of the exported maps before UDK modifies them.</param>
+        internal static void ComputeLighting(string mapName, bool allowLightmapCompression = false, int? defaultStaticMeshLightingRes = null, LightmassBuildQuality qualityLevel = LightmassBuildQuality.Medium, bool keepPreBakeMaps = false)
         {
+            if (Program.Settings.ProductionBuild && qualityLevel != LightmassBuildQuality.Production)
+            {
+                MilanLog.Information($"Production build: overriding lighting quality {qualityLevel} -> {LightmassBuildQuality.Production} for {mapName}", customPrefix: LOG_CATEGORY);
+                qualityLevel = LightmassBuildQuality.Production;
+                qualityLevel = LightmassBuildQuality.Medium; // For not actual production lighting!
+                MilanLog.Fatal(@"NOTE - BUILDILNG LIGHTING AT MEDIUM QUALITY, NOT ACTUALLY PRODUCTION!----------");
+            }
+
             var path = UDKDirectory.GetUDKGamePath();
             var userSettingsPath = Path.Combine(path, "Config", "UDKEditorUserSettings.ini");
             var lightmassIniPath = Path.Combine(path, "Config", "UDKLightmass.ini");
@@ -151,21 +162,34 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 }
             }
 
+            if (keepPreBakeMaps)
+                KeepPreBakeMaps(mapName);
+
             using var configOverride = new EditorConfigOverride(userSettingsPath, EditorConfigOverride.AutomationProfile);
 
             // Same whole-file restore-on-exit pattern as configOverride above, just against
-            // UDKLightmass.ini and only for the two keys the caller actually asked to override -
-            // everything else in the file (photon counts, shadow rays, ...) is left exactly as the
-            // user tuned it.
-            var lightmassOverrides = new List<(string Section, string Key, string Value)>();
-            if (allowLightmapCompression is { } compression)
-                lightmassOverrides.Add(("DevOptions.StaticLighting", "bAllowLightmapCompression", compression ? "True" : "False"));
+            // UDKLightmass.ini and only for the keys we actually need to control - everything else in
+            // the file (photon counts, shadow rays, ...) is left exactly as the user tuned it.
+            // Compression is read once per build by FStaticLightingSystem, straight from GConfig, so
+            // writing it before UDK boots is enough.
+            var lightmassOverrides = new List<(string Section, string Key, string Value)>
+            {
+                ("DevOptions.StaticLighting", "bAllowLightmapCompression", allowLightmapCompression ? "True" : "False"),
+            };
             if (defaultStaticMeshLightingRes is { } res)
                 lightmassOverrides.Add(("DevOptions.StaticLighting", "DefaultStaticMeshLightingRes", res.ToString()));
 
-            using var lightmassOverride = lightmassOverrides.Count > 0
-                ? new EditorConfigOverride(lightmassIniPath, lightmassOverrides)
-                : null;
+            using var lightmassOverride = new EditorConfigOverride(lightmassIniPath, lightmassOverrides);
+
+            // Uncompressed lightmaps routinely push a big sublevel past 300 MB, and UObject::SavePackage then
+            // puts up a modal "Package X was successfully saved and is N MByte in size. This exceeds the
+            // recommended package size" box (Core.int PackageBiggerThanSoftLimit) that stalls the save
+            // until someone clicks OK. The save itself already succeeded - it's purely advisory - and the
+            // check is `size > PackageSizeSoftLimit << 20` in 32-bit math (UDK.exe SavePackage, RVA
+            // 0x1BF8D4), so 2047 is the largest limit that doesn't overflow; the package format caps
+            // out at 2 GB anyway (see LightmapResolutionOverrides.MaxTexelsPerPackage).
+            using var engineOverride = new EditorConfigOverride(Path.Combine(path, "Config", "UDKEngine.ini"),
+                [("Core.System", "PackageSizeSoftLimit", "2047")]);
 
             // Boot UDK.
             var udkInfo = new ProcessStartInfo()
@@ -277,6 +301,24 @@ namespace ProjectMilan.Pipelines.StaticLighting
             }
         }
 
+        private static void KeepPreBakeMaps(string mapName)
+        {
+            var mapPath = StaticLightingExport.GetMapOutputPath(mapName);
+            var sourceMaps = Directory.GetFiles(mapPath, "*.udk", SearchOption.TopDirectoryOnly);
+            if (!sourceMaps.Any(file => Path.GetFileNameWithoutExtension(file).Equals(mapName, StringComparison.OrdinalIgnoreCase)))
+                throw new FileNotFoundException($"Cannot preserve pre-bake maps: master map {mapName}.udk was not exported", Path.Combine(mapPath, $"{mapName}.udk"));
+
+            // Keep this outside StaticLighting/Levels: the post-bake copy clears that folder.
+            var snapshotPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "PreBake", mapName);
+            Directory.CreateDirectory(snapshotPath);
+            foreach (var oldMap in Directory.GetFiles(snapshotPath, "*.udk", SearchOption.TopDirectoryOnly))
+                File.Delete(oldMap);
+            foreach (var sourceMap in sourceMaps)
+                File.Copy(sourceMap, Path.Combine(snapshotPath, Path.GetFileName(sourceMap)));
+
+            MilanLog.Information($"Preserved {sourceMaps.Length} pre-bake UDK maps at {snapshotPath}", customPrefix: LOG_CATEGORY);
+        }
+
         private static readonly TimeSpan LockRetryInterval = TimeSpan.FromSeconds(2);
         private static readonly TimeSpan LockRetryTimeout = TimeSpan.FromMinutes(2);
 
@@ -382,6 +424,11 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
             using (new LightmassProgressReporter())
                 RunLightmass(qualityLevel);
+
+            // Sleep for a few seconds.
+            // Thread.Sleep(TimeSpan.FromSeconds(60));
+            // Debugger.Break();
+
 
             SaveMapFiles();
         }

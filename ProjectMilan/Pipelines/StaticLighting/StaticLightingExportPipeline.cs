@@ -34,7 +34,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
             return Directory.CreateDirectory(Path.Combine(UDKDirectory.SharedPath, "Assets", mapName)).FullName;
         }
 
-        public static bool ExportLevelToUDK(LevelSpecificPipeline level)
+        /// <summary>
+        /// Converts a level and its sublevels to UDK maps ready for a lighting bake.
+        /// </summary>
+        /// <param name="lightmapResolutionMultiplier">Scale on top of the restored per-component lightmap resolutions. See <see cref="LightmapResolutionOverrides"/>.</param>
+        /// <param name="defaultStaticMeshLightingRes">The DefaultStaticMeshLightingRes the bake will use, so overrides are computed against what UDK would actually pick.</param>
+        public static bool ExportLevelToUDK(LevelSpecificPipeline level, float lightmapResolutionMultiplier, int defaultStaticMeshLightingRes)
         {
             var levelMaster = level.LE3BioP;
 
@@ -61,40 +66,66 @@ namespace ProjectMilan.Pipelines.StaticLighting
             delegatesROP.CustomRelinkUIndex = UDKRelinker.ImportOutsideOfPackageRelink;
             delegatesROP.SourceCustomImportFileResolver = MilanShared.LE3PackageResolver;
 
-            string persistentPath = ConvertToUDK.GenerateUDKFileForLevel(levelMaster, mapOutputPath, assetOutputPath, decookedMaterialsDir);
-            var levelFiles = new List<string>();
-            if (levelMaster is MEPackage mePackage)
+            var sublevelPaths = new List<(string Name, string Path)>();
+            if (levelMaster is MEPackage masterPackage)
             {
                 var loadedFiles = MELoadedFiles.GetFilesLoadedInGame(levelMaster.Game);
-                foreach (string additionalPackage in mePackage.AdditionalPackagesToCook)
+                var masterFolder = Directory.GetParent(levelMaster.FilePath).FullName;
+                foreach (string additionalPackage in masterPackage.AdditionalPackagesToCook)
                 {
                     if (level.IgnoredLightingLevels != null && level.IgnoredLightingLevels.Contains(additionalPackage, StringComparer.OrdinalIgnoreCase))
                     {
-                        // This also will make it not populate into levelfiles so UDK won't build it either there.
                         MilanLog.Information($"Ignoring sublevel {additionalPackage} for UDK conversion", customPrefix: LOG_CATEGORY);
                         continue;
                     }
 
-                    if (loadedFiles.TryGetValue($"{additionalPackage}.pcc", out string filePath))
+                    if (loadedFiles.TryGetValue($"{additionalPackage}.pcc", out string loadedPath))
                     {
-                        MilanLog.Information($"Converting sublevel {additionalPackage} to UDK", customPrefix: LOG_CATEGORY);
-                        using IMEPackage levPcc = MEPackageHandler.OpenMEPackage(filePath);
-                        levelFiles.Add(ConvertToUDK.GenerateUDKFileForLevel(levPcc, mapOutputPath, assetOutputPath, decookedMaterialsDir, delegatesROP));
+                        sublevelPaths.Add((additionalPackage, loadedPath));
                         continue;
                     }
 
-                    // Not found; try local directory for master
-                    var masterFolder = Directory.GetParent(levelMaster.FilePath).FullName;
-                    var testFile = Path.Combine(masterFolder, additionalPackage + ".pcc");
-                    if (File.Exists(testFile))
+                    string localPath = Path.Combine(masterFolder, additionalPackage + ".pcc");
+                    if (File.Exists(localPath))
                     {
-                        MilanLog.Information($"Converting sublevel {additionalPackage} to UDK", customPrefix: LOG_CATEGORY);
-                        using IMEPackage levPcc = MEPackageHandler.OpenMEPackage(testFile);
-                        levelFiles.Add(ConvertToUDK.GenerateUDKFileForLevel(levPcc, mapOutputPath, assetOutputPath, decookedMaterialsDir, delegatesROP));
-                        continue;
+                        sublevelPaths.Add((additionalPackage, localPath));
                     }
+                    else
+                    {
+                        MilanLog.Error($"Sublevel file not found: {additionalPackage}, skipping...", customPrefix: LOG_CATEGORY);
+                    }
+                }
+            }
 
-                    MilanLog.Error($"Sublevel file not found: {additionalPackage}, skipping...", customPrefix: LOG_CATEGORY);
+            // A shadow-casting light can live in the persistent map while its shadow maps live in sublevels.
+            // Collect the complete set before conversion mutates any source component binaries.
+            var shadowMappedLightGuids = ConvertToUDK.GetUsedShadowMapLightGuids(levelMaster);
+            foreach ((string _, string path) in sublevelPaths)
+            {
+                using IMEPackage sublevel = MEPackageHandler.OpenMEPackage(path);
+                shadowMappedLightGuids.UnionWith(ConvertToUDK.GetUsedShadowMapLightGuids(sublevel));
+            }
+            MilanLog.Information($"Preserving shadow-map output for {shadowMappedLightGuids.Count} source lights", customPrefix: LOG_CATEGORY);
+
+            // Lightmap resolution overrides have to be read from each source package before it's converted -
+            // conversion empties the source components' binary, which holds BioWare's lightmaps.
+            string ConvertLevel(IMEPackage pcc, RelinkerOptionsPackage rop)
+            {
+                var overrides = LightmapResolutionOverrides.Compute(pcc, lightmapResolutionMultiplier, defaultStaticMeshLightingRes, level.Cache);
+                var udkPath = ConvertToUDK.GenerateUDKFileForLevel(pcc, mapOutputPath, assetOutputPath, decookedMaterialsDir, rop, shadowMappedLightGuids);
+                LightmapResolutionOverrides.Apply(udkPath, overrides);
+                return udkPath;
+            }
+
+            string persistentPath = ConvertLevel(levelMaster, null);
+            var levelFiles = new List<string>();
+            if (levelMaster is MEPackage mePackage)
+            {
+                foreach ((string additionalPackage, string filePath) in sublevelPaths)
+                {
+                    MilanLog.Information($"Converting sublevel {additionalPackage} to UDK", customPrefix: LOG_CATEGORY);
+                    using IMEPackage levPcc = MEPackageHandler.OpenMEPackage(filePath);
+                    levelFiles.Add(ConvertLevel(levPcc, delegatesROP));
                 }
 
                 using IMEPackage persistentUDK = MEPackageHandler.OpenUDKPackage(persistentPath);
