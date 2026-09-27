@@ -53,23 +53,7 @@ namespace ProjectMilan_ExtraContent.Shared
     {
         private const string LOG_CATEGORY = @"MILAN-ECShared";
 
-        private const string ROOT_FOLDER_NAME = @"ProjectMilan_ExtraContent";
-        private static string _ecPipelineRoot;
-        public static string ECPipelineRoot
-        {
-            get
-            {
-                if (_ecPipelineRoot != null) return _ecPipelineRoot;
-                var dir = Directory.GetCurrentDirectory();
-                while (Path.GetFileName(dir) != ROOT_FOLDER_NAME)
-                {
-                    dir = Directory.GetParent(dir).FullName;
-                }
-
-                _ecPipelineRoot = dir;
-                return _ecPipelineRoot;
-            }
-        }
+        public static string ECPipelineRoot => MilanShared.ExtraContentPipelineRoot;
 
         public static void PortAsset(RejectVars vars, PortingAsset asset, IMEPackage destPackage)
         {

@@ -168,6 +168,7 @@ namespace ProjectMilan_ExtraContent.Shared
                 "DLC_EXP_Pack002",
                 "DLC_EXP_Pack003",
                 "DLC_EXP_Pack003_Base",
+                "DLC_METR_Patch01",
             };
 
             TFCCompactorInfoPackage info = new TFCCompactorInfoPackage()
@@ -231,7 +232,7 @@ namespace ProjectMilan_ExtraContent.Shared
         /// <summary>
         /// Saves TLK and the DLC config file
         /// </summary>
-        internal static void SaveContent()
+        internal static void SaveContent(bool mergeStaticTLK = false)
         {
             // Ensure this does not save any packages as this comes after the licensee pipeline is run.
             var outDir =  Path.Combine(MilanPipelinesShared.OutputModPath, @"CookedPCConsole");
@@ -249,6 +250,13 @@ namespace ProjectMilan_ExtraContent.Shared
                 }
                 var tlkOutPath = Path.Combine(outDir, $"{SharedECPipelines.GetDLCFolderName(CurrentContent)}_{lang}.tlk");
                 HuffmanCompression.SaveToTlkFile(tlkOutPath, strs);
+            }
+
+            // Standalone Rejects creates its destination TLKs here. Merge its fixed XML refs only
+            // after those files exist; the in-process ProjectMilan path merges them into its base TLKs.
+            if (mergeStaticTLK)
+            {
+                SharedECPipelines.MergeTLK(CurrentContent);
             }
 
 

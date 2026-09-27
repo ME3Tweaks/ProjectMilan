@@ -59,14 +59,14 @@ namespace ProjectMilan_ExtraContent.Rejects
             new RejectPawnSource() { SourceFile = "SFXPawn_Husk.pcc", AssetIFP = "Wwise_Generic_Foley.Play_foley_melee_hit_standard_flesh", Name="Foley2", IsSupportingObject = true},
 
             //// Second - pawns
-            //new RejectPawnSource() { SourceFile = "SFXPawn_Demo.pcc", AssetIFP = "Char_Enemies_Citadel.Demo", Name="Specialist"},
-            //new RejectPawnSource() { SourceFile = "SFXPawn_Heavy.pcc", AssetIFP = "Char_Enemies_Citadel.Heavy", Name="Heavy"},
-            //new RejectPawnSource() { SourceFile = "SFXPawn_Sniper.pcc", AssetIFP = "Char_Enemies_Citadel.Sniper", Name="Sniper"},
-            //new RejectPawnSource() { SourceFile = "BioD_OMG003_303Trap.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Rampart_Combat", Name="RampartMP", PrePortingDelegate = RejectsRampart.PrePort},
-            //new RejectPawnSource() { SourceFile = "BioD_OMG003_125LitExtra.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Adjutant_Combat", Name="AdjutantMP", PrePortingDelegate = RejectsAdjutant.PrePort},
-            //new RejectPawnSource() { SourceFile = "BioD_Cit004_270ShuttleBay1.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.FemmeFatale", Name="Forerunner", PrePortingDelegate = RejectsForerunner.PrePort},
-            //new RejectPawnSource() { SourceFile = "BioD_Cit004_272MaleClone.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.CloneShepardMale", Name="Executioner", PrePortingDelegate = RejectsExecutioner.PrePort},
-            //new RejectPawnSource() { SourceFile = "BioD_Cit003_600MechEvent.pcc", AssetIFP = "Char_Enemies_Citadel.Atlas", Name="Catlas", PrePortingDelegate = RejectsCatlas.PrePort},
+            new RejectPawnSource() { SourceFile = "SFXPawn_Demo.pcc", AssetIFP = "Char_Enemies_Citadel.Demo", Name="Specialist"},
+            new RejectPawnSource() { SourceFile = "SFXPawn_Heavy.pcc", AssetIFP = "Char_Enemies_Citadel.Heavy", Name="Heavy"},
+            new RejectPawnSource() { SourceFile = "SFXPawn_Sniper.pcc", AssetIFP = "Char_Enemies_Citadel.Sniper", Name="Sniper"},
+            new RejectPawnSource() { SourceFile = "BioD_OMG003_303Trap.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Rampart_Combat", Name="RampartMP", PrePortingDelegate = RejectsRampart.PrePort},
+            new RejectPawnSource() { SourceFile = "BioD_OMG003_125LitExtra.pcc", AssetIFP = "Char_Omega_Enemies.Archetypes.Adjutant_Combat", Name="AdjutantMP", PrePortingDelegate = RejectsAdjutant.PrePort},
+            new RejectPawnSource() { SourceFile = "BioD_Cit004_270ShuttleBay1.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.FemmeFatale", Name="Forerunner", PrePortingDelegate = RejectsForerunner.PrePort},
+            new RejectPawnSource() { SourceFile = "BioD_Cit004_272MaleClone.pcc", AssetIFP = "Char_Enemies_Citadel.Bosses.CloneShepardMale", Name="Executioner", PrePortingDelegate = RejectsExecutioner.PrePort},
+            new RejectPawnSource() { SourceFile = "BioD_Cit003_600MechEvent.pcc", AssetIFP = "Char_Enemies_Citadel.Atlas", Name="Catlas", PrePortingDelegate = RejectsCatlas.PrePort},
             new RejectPawnSource() { SourceFile = "BioD_Cat004_625ProtoReaper.pcc", AssetIFP = "BioChar_Cat004.Archetypes.Nemesis_Legion", Name="GethAssassin", PrePortingDelegate = RejectsGethAssassin.PrePort},
             new RejectPawnSource() { SourceFile = "BioD_Cat004_800KaiLeng.pcc", AssetIFP = "char_enemies.Archetypes.Cerberus.KaiLeng", Name="Agent", PrePortingDelegate = RejectsAgent.PrePort},
             // FemClone Char_Enemies_Citadel.Bosses.CloneShepardFemale BioD_Cit004_273FemClone
@@ -78,13 +78,14 @@ namespace ProjectMilan_ExtraContent.Rejects
         internal static void RunPipelineEC()
         {
             ExtraContentStorage.PrepareContent(EExtraContent.Rejects);
-            RunPipeline();
+            RunPipelineCore(mergeStaticTLK: false);
             MilanShared.MoveTexturesToTFC("Textures", MilanShared.REJECTS_DLC_NAME, false, @"MILANEC-TFC");
             ExtraContentStorage.CompactTFC(EExtraContent.Rejects, false); // Milan main will handle this when it pulls everything together
             ExtraContentStorage.CompactAFC(EExtraContent.Rejects); // Milan main will handle this when it pulls everything together
 
             // Convert the licensee version on packages.
             MilanLicensee.RunPipeline(MilanPipelinesShared.OutputModPath);
+            ExtraContentStorage.SaveContent(mergeStaticTLK: true);
         }
 
         /// <summary>
@@ -92,15 +93,32 @@ namespace ProjectMilan_ExtraContent.Rejects
         /// </summary>
         public static void RunPipeline()
         {
+            RunPipelineCore(mergeStaticTLK: true);
+        }
+
+        private static void RunPipelineCore(bool mergeStaticTLK)
+        {
             var vars = new RejectVars();
             Directory.CreateDirectory(CookedPCFolder); // Ensure it exists.
-            InternalRunPipeline(vars);
+            InternalRunPipeline(vars, mergeStaticTLK);
         }
 
         public static void InternalRunPipeline(RejectVars vars)
         {
+            InternalRunPipeline(vars, mergeStaticTLK: true);
+        }
+
+        private static void InternalRunPipeline(RejectVars vars, bool mergeStaticTLK)
+        {
+            // PrepareContent initializes the standalone config bundle in memory, but the output .bin
+            // is normally written by SaveContent after the pipeline completes. Rejects merges its
+            // XML config from disk first, so seed the output file before that merge runs.
+            MilanPipelinesShared.CommitConfigBundle();
             SharedECPipelines.MergeConfig(EExtraContent.Rejects);
-            SharedECPipelines.MergeTLK(EExtraContent.Rejects);
+            if (mergeStaticTLK)
+            {
+                SharedECPipelines.MergeTLK(EExtraContent.Rejects);
+            }
             GenerateGUIPackage(vars);
             GenerateMergedContent(vars);
             // To speed up builds don't split enemy packages in dev mode
@@ -126,7 +144,7 @@ namespace ProjectMilan_ExtraContent.Rejects
         {
             EnemyTypeConfigWriter.RegisterEnemyType(new EnemyTypeEntry
             {
-                ID = 8,
+                ID = 7, // Right after the Milan base ones
                 NameStrRefId = 13250215,
                 AllCapsNameStrRefId = 13250216,
                 Image = "SFXGUIMPImages_Milan_Rejects.OptEmyRejects",
