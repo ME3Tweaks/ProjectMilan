@@ -39,6 +39,7 @@ namespace ProjectMilanCore
         public static string REDEMPTION_DLC_NAME { get; } = @"DLC_MOD_PMR3";
 
         private const string ROOT_FOLDER_NAME = @"ProjectMilan";
+        private const string EXTRA_CONTENT_ROOT_FOLDER_NAME = @"ProjectMilan_ExtraContent";
         public static ObjectInstanceDB LE3ObjectDB { get; set; }
         public static ObjectInstanceDB ME3ObjectDB { get; set; }
 
@@ -69,15 +70,53 @@ namespace ProjectMilanCore
             get
             {
                 if (_pipelineRoot != null) return _pipelineRoot;
-                var dir = Directory.GetCurrentDirectory();
-                while (Path.GetFileName(dir) != ROOT_FOLDER_NAME)
-                {
-                    dir = Directory.GetParent(dir).FullName;
-                }
-
-                _pipelineRoot = Path.Combine(dir, "Pipelines");
+                _pipelineRoot = Path.Combine(FindProjectRoot(ROOT_FOLDER_NAME, "Pipelines"), "Pipelines");
                 return _pipelineRoot;
             }
+        }
+
+        private static string _extraContentPipelineRoot;
+
+        /// <summary>
+        /// Root directory for the sibling ProjectMilan_ExtraContent project. Resolve this centrally so
+        /// both the standalone ExtraContent executable and ProjectMilan's in-process pipelines can find
+        /// the same source assets regardless of which project is the current working directory.
+        /// </summary>
+        public static string ExtraContentPipelineRoot
+        {
+            get
+            {
+                if (_extraContentPipelineRoot != null) return _extraContentPipelineRoot;
+                _extraContentPipelineRoot = FindProjectRoot(EXTRA_CONTENT_ROOT_FOLDER_NAME, "Rejects");
+                return _extraContentPipelineRoot;
+            }
+        }
+
+        private static string FindProjectRoot(string projectFolderName, string markerDirectory)
+        {
+            var starts = new[] { Directory.GetCurrentDirectory(), AppContext.BaseDirectory };
+            foreach (var start in starts)
+            {
+                var dir = new DirectoryInfo(Path.GetFullPath(start));
+                while (dir != null)
+                {
+                    if (dir.Name.Equals(projectFolderName, StringComparison.OrdinalIgnoreCase) &&
+                        Directory.Exists(Path.Combine(dir.FullName, markerDirectory)))
+                    {
+                        return dir.FullName;
+                    }
+
+                    var child = Path.Combine(dir.FullName, projectFolderName);
+                    if (Directory.Exists(Path.Combine(child, markerDirectory)))
+                    {
+                        return child;
+                    }
+
+                    dir = dir.Parent;
+                }
+            }
+
+            throw new DirectoryNotFoundException($"Could not locate the {projectFolderName} project root from the current directory or application directory.");
         }
 
 
@@ -730,7 +769,7 @@ namespace ProjectMilanCore
         /// <param name="destPackage"></param>
         /// <param name="cache"></param>
         /// <param name="logCategory"></param>
-        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, IEntry> customDonorImporter = null)
+        public static void PortObjectReferencer(IMEPackage sourcePackage, IMEPackage destPackage, PackageCache cache, string logCategory, Func<IMEPackage, ExportEntry, RelinkerOptionsPackage, IEntry> customDonorImporter = null, Action<IMEPackage> postPortModifier = null)
         {
             var objReferencer = sourcePackage.Exports.FirstOrDefault(x => x.ClassName == "ObjectReferencer");
 
@@ -760,151 +799,159 @@ namespace ProjectMilanCore
             };
             try
             {
-            var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
-                destPackage, null, true,
-                rop,
-                out var newEntry);
+                var results = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, objReferencer,
+                    destPackage, null, true,
+                    rop,
+                    out var newEntry);
 
-            sw.Stop();
-            foreach (var r in results)
-            {
-                MilanLog.Warning($"Relink result: {r.Message} for {r.Entry?.InstancedFullPath}", customPrefix: logCategory);
-            }
-
-            //DotTrace.SaveData();
-
-            // destPackage.Save();
-
-            MilanLog.Information("Recompiling ported classes (if necessary)", customPrefix: logCategory);
-            UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
-            {
-                Cache = cache,
-                CustomFileResolver = MilanShared.LE3PackageResolver,
-                MissingObjectResolver = MilanShared.MissingObjectResolver,
-                BaseFilesFileLib = LE3FileLibCache.GetBaseFilesFileLibFor(destPackage),
-            };
-            FileLib lib = new FileLib(destPackage);
-            if (!lib.Initialize(usop))
-            {
-                MilanShared.LogFailedFileLibInit(lib, $"Failed to initialize FileLib for recompilation of classes in {destPackage.FileNameNoExtension}", logCategory);
-            }
-
-            var classes = rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass).ToList();
-            var completions = new Dictionary<string, CompilationCompletion>();
-            foreach (var c in classes)
-            {
-                completions.Add(c.ObjectName, new CompilationCompletion(c, c.SuperClassName));
-            }
-
-            foreach (CompilationCompletion completion in completions.Values)
-            {
-                try
+                sw.Stop();
+                foreach (var r in results)
                 {
-                    if (completion.Completed)
+                    MilanLog.Warning($"Relink result: {r.Message} for {r.Entry?.InstancedFullPath}", customPrefix: logCategory);
+                }
+
+                // Apply the post port modifier
+                postPortModifier?.Invoke(destPackage);
+
+                //DotTrace.SaveData();
+
+                // destPackage.Save();
+
+                MilanLog.Information("Recompiling ported classes (if necessary)", customPrefix: logCategory);
+                UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+                {
+                    Cache = cache,
+                    CustomFileResolver = MilanShared.LE3PackageResolver,
+                    MissingObjectResolver = MilanShared.MissingObjectResolver,
+                    BaseFilesFileLib = LE3FileLibCache.GetBaseFilesFileLibFor(destPackage),
+                };
+                FileLib lib = new FileLib(destPackage);
+                if (!lib.Initialize(usop))
+                {
+                    MilanShared.LogFailedFileLibInit(lib, $"Failed to initialize FileLib for recompilation of classes in {destPackage.FileNameNoExtension}", logCategory);
+                }
+
+                var classes = rop.CrossPackageMap.Values.OfType<ExportEntry>().Where(x => x.IsClass).ToList();
+                var completions = new Dictionary<string, CompilationCompletion>();
+                foreach (var c in classes)
+                {
+                    completions.Add(c.ObjectName, new CompilationCompletion(c, c.SuperClassName));
+                }
+
+                foreach (CompilationCompletion completion in completions.Values)
+                {
+                    try
+                    {
+                        if (completion.Completed)
+                        {
+                            continue;
+                        }
+                        PerformRecompile(completion);
+                        void PerformRecompile(CompilationCompletion cc)
+                        {
+                            if (cc.SuperClassName is not null
+                                && completions.TryGetValue(cc.SuperClassName, out CompilationCompletion superCompletion)
+                                && !superCompletion.Completed)
+                            {
+                                // Compile parent first.
+                                PerformRecompile(superCompletion);
+                            }
+
+                            // Recompile class if necessary
+                            try
+                            {
+                                bool useOverride = false;
+                                var className = cc.classExp.ObjectName;
+
+                                // Check if we have an override already loaded
+                                if (!PostPortingClassOverrides.TryGetValue(className, out var text))
+                                {
+                                    // No loaded override - does it exist on disk?
+                                    lock (PostPortingClassOverrides)
+                                    {
+                                        if (File.Exists(Path.Combine(PostPortingClassOverrideFolder, $"{className}.uc")))
+                                        {
+                                            // It exists - load and cache it
+                                            MilanLog.Information($"  Recompiling {className} with Milan override", customPrefix: logCategory);
+                                            text = File.ReadAllText(Path.Combine(PostPortingClassOverrideFolder, $"{className}.uc"));
+                                            PostPortingClassOverrides[className] = text;
+                                            useOverride = true;
+                                        }
+                                    }
+
+                                    if (!useOverride)
+                                    {
+                                        // Check if we need to do this at all
+                                        var isValid = VTables.VerifyVTable(cc.classExp, cache, false);
+                                        if (isValid)
+                                        {
+                                            cc.Completed = true;
+                                            return;
+                                        }
+
+                                        // Use decomp
+                                        MilanLog.Information($"  Recompiling {className}", customPrefix: logCategory);
+                                        (_, text) = UnrealScriptCompiler.DecompileExport(cc.classExp, lib, usop);
+                                        // Debug.WriteLine(text);
+                                    }
+                                }
+                                UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
+                            }
+                            catch (Exception e)
+                            {
+                                // destPackage.Save(@"C:\users\public\fail.pcc");
+                                MilanLog.Exception(e, "  Error recompiling function:");
+                            }
+
+                            cc.Completed = true;
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        var log = new MessageLog();
+                        log.LogError($"Exception while compiling '{completion.classExp.ObjectName}': {e}");
+                        MilanLog.LogUSCErrors(log);
+                    }
+                }
+
+#if DEBUG
+                // Dump classes out to loose classes folder
+                foreach (var cls in destPackage.Exports.Where(x => x.IsClass))
+                {
+                    var linker = cls.GetLinker();
+                    if (linker.CaseInsensitiveEquals("SFXGame"))
                     {
                         continue;
                     }
-                    PerformRecompile(completion);
-                    void PerformRecompile(CompilationCompletion cc)
+                    if (linker.CaseInsensitiveEquals("SFXGameContent"))
                     {
-                        if (cc.SuperClassName is not null
-                            && completions.TryGetValue(cc.SuperClassName, out CompilationCompletion superCompletion)
-                            && !superCompletion.Completed)
+                        continue;
+                    }
+                    var outFolder = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, "Shared", "ClassLibrary", "LooseClasses", cls.GetLinker())).FullName;
+                    var existingUC = Path.Combine(outFolder, cls.ObjectName + ".uc");
+                    lock (globalDumpObj)
+                    {
+                        if (!File.Exists(existingUC))
                         {
-                            // Compile parent first.
-                            PerformRecompile(superCompletion);
+                            MilanShared.DecompileClassToFile(cls, lib, cache, existingUC);
                         }
-
-                        // Recompile class if necessary
-                        try
-                        {
-                            bool useOverride = false;
-                            var className = cc.classExp.ObjectName;
-
-                            // Check if we have an override already loaded
-                            if (!PostPortingClassOverrides.TryGetValue(className, out var text))
-                            {
-                                // No loaded override - does it exist on disk?
-                                lock (PostPortingClassOverrides)
-                                {
-                                    if (File.Exists(Path.Combine(PostPortingClassOverrideFolder, $"{className}.uc")))
-                                    {
-                                        // It exists - load and cache it
-                                        MilanLog.Information($"  Recompiling {className} with Milan override", customPrefix: logCategory);
-                                        text = File.ReadAllText(Path.Combine(PostPortingClassOverrideFolder, $"{className}.uc"));
-                                        PostPortingClassOverrides[className] = text;
-                                        useOverride = true;
-                                    }
-                                }
-
-                                if (!useOverride)
-                                {
-                                    // Check if we need to do this at all
-                                    var isValid = VTables.VerifyVTable(cc.classExp, cache, false);
-                                    if (isValid)
-                                    {
-                                        cc.Completed = true;
-                                        return;
-                                    }
-
-                                    // Use decomp
-                                    MilanLog.Information($"  Recompiling {className}", customPrefix: logCategory);
-                                    (_, text) = UnrealScriptCompiler.DecompileExport(cc.classExp, lib, usop);
-                                    // Debug.WriteLine(text);
-                                }
-                            }
-                            UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
-                        }
-                        catch (Exception e)
-                        {
-                            // destPackage.Save(@"C:\users\public\fail.pcc");
-                            MilanLog.Exception(e, "  Error recompiling function:");
-                        }
-
-                        cc.Completed = true;
                     }
                 }
-                catch (Exception e)
-                {
-                    var log = new MessageLog();
-                    log.LogError($"Exception while compiling '{completion.classExp.ObjectName}': {e}");
-                    MilanLog.LogUSCErrors(log);
-                }
-            }
-
-#if DEBUG
-            // Dump classes out to loose classes folder
-            foreach (var cls in destPackage.Exports.Where(x => x.IsClass))
-            {
-                var linker = cls.GetLinker();
-                if (linker.CaseInsensitiveEquals("SFXGame"))
-                {
-                    continue;
-                }
-                if (linker.CaseInsensitiveEquals("SFXGameContent"))
-                {
-                    continue;
-                }
-                var outFolder = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, "Shared", "ClassLibrary", "LooseClasses", cls.GetLinker())).FullName;
-                var existingUC = Path.Combine(outFolder, cls.ObjectName + ".uc");
-                lock (globalDumpObj)
-                {
-                    if (!File.Exists(existingUC))
-                    {
-                        MilanShared.DecompileClassToFile(cls, lib, cache, existingUC);
-                    }
-                }
-            }
 #endif
 
-            MilanLog.Information("Saving package", customPrefix: logCategory);
-            destPackage.Save(diskIOSyncLock: DiskIOSyncLock);
-            MilanShared.RefreshMilanFiles = true;
+                MilanLog.Information("Saving package", customPrefix: logCategory);
+                destPackage.Save(diskIOSyncLock: DiskIOSyncLock);
+                MilanShared.RefreshMilanFiles = true;
             }
             finally
             {
                 rop.Dispose();
             }
+        }
+
+        private static void ApplyKitChanges(IMEPackage destPackage)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -1821,7 +1868,7 @@ namespace ProjectMilanCore
                     {
                         MilanLog.Information($"  Skipping {tex.InstancedFullPath} because it is marked NeverStream", customPrefix: category);
                         continue; // Never stream textures are never moved to TFC... not sure we want to keep this though.
-                    
+
                     }
 
                     var bin = (UTexture2D)ObjectBinary.From(tex); // Cast since we want it to make the lowest-tier class but we only need the upper one.
