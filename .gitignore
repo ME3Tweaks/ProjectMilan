@@ -379,6 +379,7 @@ FodyWeavers.xsd
 /ProjectMilan/Pipelines/Materials/Build
 /ProjectMilan/Pipelines/Materials/Shaders/Compiled/DamWaterfall/FLocalVertexFactory
 /ProjectMilan/Pipelines/StaticLighting/Levels/
+/ProjectMilan/Pipelines/StaticLighting/PreBake/
 /ProjectMilan/Pipelines/Shared/ClassLibrary/LooseClasses
 /ProjectMilan/Pipelines/Audio/ConvertedCache
 /ProjectMilan/Pipelines/Mod/MergedConfig/Default_DLC_MOD_ProjectMilan.bin
@@ -389,3 +390,7 @@ FodyWeavers.xsd
 /LEDecooker/supportfiles/ME1.bin
 /LEDecooker/supportfiles/ME2.bin
 /LEDecooker/supportfiles/ME3.bin
+/AfcReferenceScanner
+/ClassDiffTool
+/MilanShaderResearchTool/Shaders/.chat-history
+/MilanShaderResearchTool
