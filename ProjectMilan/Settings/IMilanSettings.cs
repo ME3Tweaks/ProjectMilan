@@ -38,6 +38,17 @@
         public string TextureSyncFolder { get; set; }
         #endregion
 
+        #region Build mode
+        /// <summary>
+        /// Builds a release. Overrides the rest of the settings so that every kit, weapon and level builds
+        /// (ignoring per-entry Enabled flags, but not entries marked ExcludeFromProduction), static
+        /// lighting is always baked (as if <see cref="IsStaticLightingBuild"/> were on) at Production
+        /// quality, and no checkpoint is restored - a new one is
+        /// written at the last enabled checkpointable pipeline instead. When off, nothing changes.
+        /// </summary>
+        bool ProductionBuild { get; set; }
+        #endregion
+
         #region Content pipelines
         /// <summary>
         /// If persistent classes should be built. You almost always want this on.

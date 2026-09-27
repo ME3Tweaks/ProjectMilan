@@ -21,6 +21,7 @@ namespace ProjectMilan.Settings
         public bool RunRedemptionPipeline { get; set; } = false;
         public bool RunConformancePipeline { get; set; } = false;
         public bool IsStaticLightingBuild { get; set; } = false;
+        public bool ProductionBuild { get; set; } = false;
         public bool RunLevelsPipeline { get; set; } = false;
         public bool RunAudioPipeline { get; set; } = true;
         public bool RunUpscalePipeline { get; set; } = true;

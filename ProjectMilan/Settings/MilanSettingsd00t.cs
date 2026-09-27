@@ -20,6 +20,7 @@ namespace ProjectMilan.Settings
         public bool RunRedemptionPipeline { get; set; }
         public bool RunConformancePipeline { get; set; } = false;
         public bool IsStaticLightingBuild { get; set; }
+        public bool ProductionBuild { get; set; } = false;
         public string MilanUDKPath { get; set; } = @"C:\Software\UDK\UDK-2015-01-MILAN";
         public bool RunLevelsPipeline { get; set; } = true;
         public bool RunAudioPipeline { get; set; } = false;

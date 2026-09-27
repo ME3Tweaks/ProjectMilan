@@ -16,6 +16,7 @@
         public bool RunRedemptionPipeline { get; set; }
         public bool RunConformancePipeline { get; set; } = false;
         public bool IsStaticLightingBuild{ get; set; }
+        public bool ProductionBuild { get; set; } = false;
         public string MilanUDKPath { get; set; } // NEEDS TO BE SET!
         public bool RunLevelsPipeline { get; set; } = fullBuild;
         public bool RunAudioPipeline { get; set; } = false;

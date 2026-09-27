@@ -66,6 +66,7 @@ namespace ProjectMilan.Settings
         public bool RunRejectionPipeline { get; set; }
         public bool RunRedemptionPipeline { get; set; }
         public bool IsStaticLightingBuild { get; set; } = true;
+        public bool ProductionBuild { get; set; } = false;
 
         private string _milanUDKPath;
         public string MilanUDKPath
