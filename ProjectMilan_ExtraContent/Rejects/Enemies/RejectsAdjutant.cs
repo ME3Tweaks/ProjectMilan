@@ -14,10 +14,9 @@ namespace ProjectMilan_ExtraContent.Rejects.Enemies
         // Fix off-host issues.
         public static void PrePort(RejectsPipeline.RejectVars vars, IMEPackage package)
         {
-
-            var archetype = package.FindExport("Char_Omega_Enemies.Archetypes.Adjutant_Combat");
-            var pawnClass = package.FindExport($"{MilanPackages.SFXGameContentMilan}.SFXPawn_AdjutantMP");
-            RejectsShared.ChangeoverArchetype(archetype, pawnClass);
+            //var archetype = package.FindExport("Char_Omega_Enemies.Archetypes.Adjutant_Combat");
+            //var pawnClass = package.FindExport($"{MilanPackages.SFXGameContentMilan}.SFXPawn_AdjutantMP");
+            //RejectsShared.ChangeoverArchetype(archetype, pawnClass);
         }
     }
 }
