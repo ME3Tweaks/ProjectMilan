@@ -5,6 +5,7 @@ using LegendaryExplorerCore.UnrealScript;
 using ProjectMilanCore;
 using Serilog;
 using System;
+using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 
 namespace ProjectMilan.Pipelines.Mod.BaseDelta
 {
@@ -128,6 +129,47 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 }
             }
 
+            // Currently only full default property replaces are supported
+            var propFolder = Path.Combine(baseDeltaFolder, "DefaultProperties");
+            if (Directory.Exists(propFolder))
+            {
+                foreach (var prop in Directory.GetFiles(propFolder, "*.uc"))
+                {
+                    var propName = Path.GetFileNameWithoutExtension(prop);
+                    var propExport = package.FindExport(propName);
+
+                    MilanLog.Information($"Compiling property {propName}", customPrefix: logCategory);
+                    var propSource = File.ReadAllText(prop);
+                    var (_, log) = UnrealScriptCompiler.CompileDefaultProperties(propExport, propSource, fileLib, usop);
+                    if (log.HasErrors)
+                    {
+                        MilanLog.LogUSCErrors(log);
+                        MilanLog.Fatal($"Failed to compile {packageName} property {propName} - this is a fatal error.");
+                        Environment.Exit(1);
+                    }
+                }
+            }
+            
+            var atcorFolder = Path.Combine(baseDeltaFolder, "AddToClassOrReplace");
+            if (Directory.Exists(atcorFolder))
+            {
+                foreach (var atcor in Directory.GetFiles(atcorFolder, "*.uc"))
+                {
+                    var atcorName = Path.GetFileNameWithoutExtension(atcor);
+                    var atcorExport = package.FindExport(atcorName.Split(".")[0]);
+
+                    MilanLog.Information($"Compiling class {atcorName}", customPrefix: logCategory);
+                    var atorSource = File.ReadAllText(atcor);
+                    var log = UnrealScriptCompiler.AddOrReplaceInClass(atcorExport, atorSource, fileLib, usop);
+                    if (log.HasErrors)
+                    {
+                        MilanLog.LogUSCErrors(log);
+                        MilanLog.Fatal($"Failed to compile {packageName} class {atcorName} - this is a fatal error.");
+                        Environment.Exit(1);
+                    }
+                }
+            }
+            
             return package.SaveToStream(BaseDeltaHandler.UseCompressedPackages).ToArray();
         }
     }
