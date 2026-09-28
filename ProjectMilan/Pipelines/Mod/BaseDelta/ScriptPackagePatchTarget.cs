@@ -158,7 +158,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                     var atcorName = Path.GetFileNameWithoutExtension(atcor);
                     var atcorExport = package.FindExport(atcorName.Split(".")[0]);
 
-                    MilanLog.Information($"Compiling class {atcorName}", customPrefix: logCategory);
+                    MilanLog.Information($"Compiling class element {atcorName}", customPrefix: logCategory);
                     var atorSource = File.ReadAllText(atcor);
                     var log = UnrealScriptCompiler.AddOrReplaceInClass(atcorExport, atorSource, fileLib, usop);
                     if (log.HasErrors)
