@@ -56,6 +56,12 @@ namespace ProjectMilan.Utility
             /// these that the current settings have since re-enabled, because they still won't run.
             /// </summary>
             public List<string>? SkippedPipelines { get; set; }
+
+            /// <summary>
+            /// If a production build wrote this checkpoint - i.e. every kit, weapon and level entry was forced on,
+            /// regardless of the per-entry Enabled flags. Absent on older checkpoints (treated as false).
+            /// </summary>
+            public bool? ProductionBuild { get; set; }
         }
 
         /// <summary>
@@ -63,7 +69,7 @@ namespace ProjectMilan.Utility
         /// is no readable metadata at all, which makes it fail the version check like any other
         /// outdated checkpoint.
         /// </summary>
-        internal sealed record CheckpointInfo(int Version, ECheckpointStage Stage, DateTime CreatedUtc, IReadOnlyList<string> SkippedPipelines);
+        internal sealed record CheckpointInfo(int Version, ECheckpointStage Stage, DateTime CreatedUtc, IReadOnlyList<string> SkippedPipelines, bool ProductionBuild = false);
 
         /// <summary>
         /// Writes the mod output to the checkpoint folder and records which pipeline it was taken at.
@@ -101,7 +107,8 @@ namespace ProjectMilan.Utility
                     CreatedUtc = DateTime.UtcNow,
                     MinCheckpointVersion = Program.MIN_CHECKPOINT_VERSION,
                     Stage = stage.ToString(),
-                    SkippedPipelines = skippedPipelines?.ToList() ?? []
+                    SkippedPipelines = skippedPipelines?.ToList() ?? [],
+                    ProductionBuild = Program.Settings.ProductionBuild
                 };
 
                 var json = JsonSerializer.Serialize(metadata, new JsonSerializerOptions { WriteIndented = true });
@@ -177,7 +184,7 @@ namespace ProjectMilan.Utility
                     return new CheckpointInfo(0, DEFAULT_STAGE, default, []);
 
                 return new CheckpointInfo(metadata.MinCheckpointVersion, ParseStage(metadata.Stage), metadata.CreatedUtc,
-                    metadata.SkippedPipelines ?? []);
+                    metadata.SkippedPipelines ?? [], metadata.ProductionBuild ?? false);
             }
             catch (Exception ex)
             {
