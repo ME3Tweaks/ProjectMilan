@@ -1,4 +1,4 @@
-﻿// MILANL CHANGE
+﻿// MILAN CHANGE
 // 09/21/2026 - Mgamerz
 // Disable LogInternal calls from this class as it's REALLY spammy. Changes if (TRUE) to if (FALSE) - bioware even though it was annoying.
 Class SFXAccomplishmentManager
