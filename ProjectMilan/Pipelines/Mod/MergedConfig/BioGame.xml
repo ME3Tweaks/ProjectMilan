@@ -2704,13 +2704,7 @@
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_BioticHammerModal",ID=609)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_TechHammerModal",ID=610)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_WarlordMeleePassive",ID=611)</Value>
-				<Value type="3">(ClassName="weekly6",ID=612)</Value>
-				<Value type="3">(ClassName="victory16",ID=613)</Value>
-				<Value type="3">(ClassName="weekly7",ID=614); Operation Detonator</Value>
-				<Value type="3">(ClassName="weekly8",ID=615); Operation Onslaught</Value>
-				<Value type="3">(ClassName="weekly9",ID=616); Operation Alamo</Value>
-				<Value type="3">(ClassName="weekly10",ID=617); Operation Genesis</Value>
-				<Value type="3">(ClassName="weekly11",ID=618); Operation Geronimo!</Value>
+				<!-- Online store pack purchase counters (IDs 612-618, 634, 658, 660-662, 664-669) are registered at build time by NonStartup (OnlineContentRegistration.cs) -->
 				<!-- gap: 619 -->
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_LineStrike",ID=620)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_VenomTippedBlades",ID=621)</Value>
@@ -2726,7 +2720,6 @@
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotCloak",ID=631)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotPassive",ID=632)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_FembotMeleePassive",ID=633)</Value>
-				<Value type="3">(ClassName="prophecy",ID=634); Operation Prophecy</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_TechArmor_Warlord",ID=635)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_WarlordPassive",ID=636)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomAction_DarkSingularity",ID=637)</Value>
@@ -2751,18 +2744,8 @@
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_ShotgunUltraLight_MP5",ID=655)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_PistolPowerDamage_MP5",ID=656)</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXWeaponMod_SMGPowerDamage_MP5",ID=657)</Value>
-				<Value type="3">(ClassName="weekly12",ID=658); Operation Balistic</Value>
 				<Value type="3">(ClassName="SFXGameContentDLC_CON_MP5.SFXPowerCustomActionMP_GethSentryTurret_MP5",ID=659)</Value>
-				<Value type="3">(ClassName="weekly13",ID=660); Operation Firestorm</Value>
-				<Value type="3">(ClassName="weekly14",ID=661); Operation Nightfall</Value>
-				<Value type="3">(ClassName="weekly15",ID=662); Operation Heartbreaker</Value>
 				<Value type="3">(ClassName="conmp5dlctest",ID=663)</Value>
-				<Value type="3">(ClassName="weekly16",ID=664); Operation Tribute</Value>
-				<Value type="3">(ClassName="FreeReckoning",ID=665); Giving a free kit for next week operation</Value>
-				<Value type="3">(ClassName="weekly17",ID=666); Operation Impact</Value>
-				<Value type="3">(ClassName="FreeLodestar",ID=667); Operation Lodestar free pack</Value>
-				<Value type="3">(ClassName="Lodestar1",ID=668); Operation Lodestar (Normal)</Value>
-				<Value type="3">(ClassName="Lodestar2",ID=669); Operation Lodestar (Insanity)</Value>
 				<Value type="3">(ClassName="collectible20",ID=670)</Value>
 				<!-- Milan IDs (start at 700)-->
 				<!-- Chakram Launcher-->
@@ -6678,8 +6661,7 @@
 				<Value type="3">(ID=300500, PackName="goldjumbo")</Value>
 				<Value type="3">(ID=500500, PackName="equipjumbo")</Value>
 				<Value type="3">(ID=650100, PackName="n7equipment")</Value>
-				<Value type="3">(ID=650200, PackName="arsenal")</Value>
-				<Value type="3">(ID=650300, PackName="reserves")</Value>
+				<!-- Online store pack consumable IDs (arsenal, reserves) are registered at build time by NonStartup (OnlineContentRegistration.cs) -->
 			</Property>
 			<Property name="packlist">
 				<Value type="3">(PackName="starter", Quantity=1, Pools=((PoolName="starterammo")))</Value>
@@ -6727,14 +6709,7 @@
 				<Value type="3">(PackName="n7equipment", Quantity=1, Pools=((PoolName="equipshield")), BackupPool="bronzecommon")</Value>
 				<Value type="3">(PackName="n7equipment", Quantity=5, Pools=((PoolName="silvercommon",Weight=0.4),(PoolName="goldcommon",Weight=0.4),(PoolName="goldequipment",Weight=0.1), (PoolName="equiprand",Weight=0.1)), BackupPool="silvercommon")</Value>
 				<Value type="3">(PackName="n7equipment", Quantity=1, Pools=((PoolName="goldcommon",Weight=0.8),(PoolName="goldequipment",Weight=0.125), (PoolName="goldultrarare",Weight=0.075)), BackupPool="goldequipment")</Value>
-				<Value type="3">(PackName="arsenal", Quantity=1, Pools=((PoolName="goldconsumable")), BackupPool="goldcommon")</Value>
-				<Value type="3">(PackName="arsenal", Quantity=1, Pools=((PoolName="goldcommonweapon",Weight=0.5),(PoolName="respec",Weight=0.05),(PoolName="goldcommon",Weight=0.45)), BackupPool="goldcommon")</Value>
-				<Value type="3">(PackName="arsenal", Quantity=1, Pools=((PoolName="goldmod",Weight=0.45),(PoolName="silvergear",Weight=0.2),(PoolName="silvergearmp3",Weight=0.2),(PoolName="goldperm",Weight=0.15)), BackupPool="goldcommon")</Value>
-				<Value type="3">(PackName="arsenal", Quantity=2, Pools=((PoolName="goldgear",Weight=0.2),(PoolName="goldweapon",Weight=0.725),(PoolName="goldultrarare",Weight=0.075)), BackupPool="goldbackup")</Value>
-				<Value type="3">(PackName="reserves", Quantity=1, Pools=((PoolName="goldconsumable")), BackupPool="goldcommon")</Value>
-				<Value type="3">(PackName="reserves", Quantity=1, Pools=((PoolName="respec",Weight=0.05),(PoolName="goldcommon",Weight=0.45),(PoolName="goldxpchar",Weight=0.5)), BackupPool="goldcommon")</Value>
-				<Value type="3">(PackName="reserves", Quantity=1, Pools=((PoolName="goldmod",Weight=0.2),(PoolName="silvergear",Weight=0.15),(PoolName="silvergearmp3",Weight=0.15),(PoolName="silverchar",Weight=0.35),(PoolName="goldperm",Weight=0.15)), BackupPool="goldcommon")</Value>
-				<Value type="3">(PackName="reserves", Quantity=2, Pools=((PoolName="goldgear",Weight=0.2),(PoolName="goldchar",Weight=0.675),(PoolName="goldultrarare",Weight=0.075),(PoolName="ultrararechar",Weight=0.05)), BackupPool="goldbackup")</Value>
+				<!-- Online store pack contents are registered at build time by NonStartup (OnlineContentRegistration.cs) -->
 				<Value type="3">(PackName="conmp5dlctest", Quantity=1, Pools=((PoolName="soldiergethdestroyer")))</Value>
 				<Value type="3">(PackName="conmp5dlctest", Quantity=1, Pools=((PoolName="adeptcollector")))</Value>
 				<Value type="3">(PackName="conmp5dlctest", Quantity=1, Pools=((PoolName="sentinelkroganwarlord")))</Value>
@@ -6770,61 +6745,6 @@
 				<Value type="3">(PackName="weekly5", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
 				<Value type="3">(PackName="weekly5", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
 				<Value type="3">(PackName="weekly5", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly6", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly6", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly6", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="victory16", Quantity=1, Pools=((PoolName="equipammo")), BackupPool="bronzecommon")</Value>
-				<Value type="3">(PackName="victory16", Quantity=1, Pools=((PoolName="equiprevive")), BackupPool="bronzecommon")</Value>
-				<Value type="3">(PackName="victory16", Quantity=1, Pools=((PoolName="equiprocket")), BackupPool="bronzecommon")</Value>
-				<Value type="3">(PackName="victory16", Quantity=1, Pools=((PoolName="equipshield")), BackupPool="bronzecommon")</Value>
-				<Value type="3">(PackName="victory16", Quantity=2, Pools=((PoolName="bronzecommon",Weight=0.2),(PoolName="silvercommon",Weight=0.35),(PoolName="goldcommon",Weight=0.35), (PoolName="equiprand",Weight=0.1)), BackupPool="silvercommon")</Value>
-				<Value type="3">(PackName="victory16", Quantity=1, Pools=((PoolName="goldcommon")), BackupPool="goldbackup")</Value>
-				<Value type="3">(PackName="weekly7", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly7", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly7", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly8", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly8", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly8", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly9", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly9", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly9", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly10", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly10", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly10", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly11", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly11", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly11", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly12", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly12", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly12", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly13", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly13", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly13", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly14", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly14", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly14", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly15", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly15", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly15", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly16", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly16", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly16", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="weekly17", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="weekly17", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="weekly17", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="FreeLodestar", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="FreeLodestar", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="FreeLodestar", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="Lodestar1", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="Lodestar1", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="Lodestar1", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="Lodestar2", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="Lodestar2", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="Lodestar2", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
-				<Value type="3">(PackName="FreeReckoning", Quantity=1, Pools=((PoolName="Freegoldchar")),BackupPool="goldcommon"))</Value>
-				<Value type="3">(PackName="prophecy", Quantity=1, Pools=((PoolName="goldconsumable")))</Value>
-				<Value type="3">(PackName="prophecy", Quantity=1, Pools=((PoolName="goldcommon")))</Value>
-				<Value type="3">(PackName="prophecy", Quantity=1, Pools=((PoolName="n7weapon")))</Value>
 				<Value type="3">(PackName="bf3", Quantity=2, Pools=((PoolName="bronzeconsumable")))</Value>
 				<Value type="3">(PackName="bf3", Quantity=2, Pools=((PoolName="silvercommon")))</Value>
 				<Value type="3">(PackName="bf3", Quantity=1, Pools=((PoolName="bf3char1")), BackupPool="goldbackup")</Value>
@@ -7000,32 +6920,13 @@
 				<Value type="3">(nID=154, PackName="customer2",Title=738450,Description=738451, CreditCost=0,PerPlayerMax=1, Visible=((and=(1300005))), srPromoString=703324, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.box2", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box2Holo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=156, PackName="customer3",Title=738450,Description=738451, CreditCost=0,PerPlayerMax=1, Visible=((and=(1300006))), srPromoString=703324, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.box2", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box2Holo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=655, PackName="n7equipment", Title=752066, OfferId=650100, Description=752067, CreditCost=75000, Visible=((and=(2000001))), ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store005"), RevealIntroTextureRef="GUI_MPImages.Creates.box5", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box5Holo", RevealIntroSound=MPRevealCrate5)</Value>
-				<Value type="3">(nID=656, PackName="arsenal", Title=752068, OfferId=650200, Description=752069, CreditCost=99000, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreBF3.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate5)</Value>
-				<Value type="3">(nID=657, PackName="reserves", Title=752070, OfferId=650300, Description=752071, CreditCost=99000, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreMPMoon.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Geth", RevealIntroHoloTextureRef="GUI_MPImages.Creates.GethHolo", RevealIntroSound=MPRevealCrate5)</Value>
+				<!-- Online store packs (StoreItems.* images) are registered at build time by NonStartup (OnlineContentRegistration.cs) -->
 				<Value type="3">(nID=2004, PackName="conmp5dlctest",Title=768117, Description=747610, CreditCost=0, PerPlayerMax=1, Visible=((and=(1300001))), ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store005"), RevealIntroTextureRef="GUI_MPImages.Creates.box5", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box5Holo")</Value> <!-- Milan - remove DLC requirement -->
 				<Value type="3">(nID=155, PackName="weekly1",Title=731378, Description=809298, Visible=((and=(1500101))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=2, PackName="weekly2",Title=731378, Description=809298, Visible=((and=(1500102))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=3, PackName="weekly3",Title=731378, Description=809298, Visible=((and=(1500104))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=4, PackName="weekly4",Title=731378, Description=809298, Visible=((and=(1500106))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=5, PackName="weekly5",Title=731378, Description=809298, Visible=((and=(1500107))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=6, PackName="weekly6",Title=731378, Description=809298, Visible=((and=(1500108))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=7, PackName="victory16", Title=731380, Description=813920, ExpirationTime=1354643968, CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=8, PackName="weekly7",Title=731378, Description=809298, Visible=((and=(1500109))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=9, PackName="weekly8",Title=731378, Description=809298, Visible=((and=(1500110))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=10, PackName="weekly9",Title=731378, Description=809298, Visible=((and=(1500111))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=11, PackName="weekly10",Title=731378, Description=809298, Visible=((and=(1500112))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=12, PackName="weekly11",Title=731378, Description=809298, Visible=((and=(1500113))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=14, PackName="weekly12",Title=731378, Description=809298, Visible=((and=(1500115))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=15, PackName="weekly13",Title=731378, Description=809298, Visible=((and=(1500116))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=16, PackName="weekly14",Title=731378, Description=809298, Visible=((and=(1500117))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=17, PackName="weekly15",Title=731378, Description=809298, Visible=((and=(1500118))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=18, PackName="weekly16",Title=731378, Description=809298, Visible=((and=(1500119))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=19, PackName="weekly17",Title=731378, Description=809298, Visible=((and=(1500120))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=20, PackName="FreeLodestar",Title=738450, Description=738451, CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=21, PackName="Lodestar1",Title=731378, Description=809298, Visible=((and=(1500121))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=22, PackName="Lodestar2",Title=731378, Description=809298, Visible=((and=(1500122))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
-				<Value type="3">(nID=23, PackName="FreeReckoning",Title=738450, Description=738451, CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value> <!-- Milan - remove DLC requirement -->
-				<Value type="3">(nID=13, PackName="prophecy",Title=731378, Description=809298, Visible=((and=(1500114))), CreditCost=0, srPromoString=703324, PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Remote, ImageReference="StoreAlliance.dds"), RevealIntroTextureRef="GUI_MPImages.Creates.Alliance", RevealIntroHoloTextureRef="GUI_MPImages.Creates.AllianceHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=1, PackName="bf3",Title=723280, Description=723281, CreditCost=0, srPromoString=703324, PerPlayerMax=1, Visible=((and=(1150000))), ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.Camo", RevealIntroHoloTextureRef="GUI_MPImages.Creates.CamoHolo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=51, PackName="loyalty1",Title=724754, Description=724755, CreditCost=0, srPromoString=703324, Visible=((and=(1100001))), PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.box2", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box2Holo", RevealIntroSound=MPRevealCrate1)</Value>
 				<Value type="3">(nID=52, PackName="loyalty2",Title=724754, Description=724755, CreditCost=0, srPromoString=703324, Visible=((and=(1100002))), PerPlayerMax=1, ImageData=(ImageLocation=EStoreImageLocation_Local, ImageReference="GUI_MPImages.StoreItems.Store002"), RevealIntroTextureRef="GUI_MPImages.Creates.box2", RevealIntroHoloTextureRef="GUI_MPImages.Creates.box2Holo", RevealIntroSound=MPRevealCrate1)</Value>
@@ -7284,7 +7185,7 @@
 		</Section>
 		<Section name="sfxgamempcontent.sfxprimp">
 			<Property name="emblemlist">
-				<Value type="3">(ID=100, BackgroundResource="ChallengeBanners/MEMstr.dds", srTitle=778515)</Value>
+				<!-- Online challenge banners (ChallengeBanners.*) are registered at build time by NonStartup (OnlineContentRegistration.cs) -->
 				<Value type="3">(ID=104, BackgroundResource="GUI_MPImages_SMP.Challenge.SqadMstr", srTitle=778533)</Value>
 				<Value type="3">(ID=105, BackgroundResource="GUI_MPImages_SMP.Challenge.SpecMstr", srTitle=778524)</Value>
 				<Value type="3">(ID=106, BackgroundResource="GUI_MPImages_SMP.Challenge.SoloMstr", srTitle=778526)</Value>
@@ -7310,26 +7211,6 @@
 				<Value type="3">(ID=126, BackgroundResource="GUI_MPImages_SMP.Challenge.MapMstr", srTitle=778532)</Value>
 				<Value type="3">(ID=127, BackgroundResource="GUI_MPImages_SMP.Challenge.BioticMstr", srTitle=778516)</Value>
 				<Value type="3">(ID=128, BackgroundResource="GUI_MPImages_SMP.Challenge.TechMstr", srTitle=778529)</Value>
-				<Value type="3">(ID=150, BackgroundResource="ChallengeBanners/Halloween.dds", srTitle=812513)</Value>
-				<Value type="3">(ID=153, BackgroundResource="ChallengeBanners/N7Day.dds", srTitle=813744)</Value>
-				<Value type="3">(ID=154, BackgroundResource="ChallengeBanners/Bioware.dds", srTitle=813603)</Value>
-				<Value type="3">(ID=155, BackgroundResource="ChallengeBanners/Corsair.dds", srTitle=813915)</Value>
-				<Value type="3">(ID=157, BackgroundResource="ChallengeBanners/Prophecy.dds",srTitle=814532)</Value>
-				<Value type="3">(ID=206, BackgroundResource="ChallengeBanners/Punisher.dds",srTitle=814545)</Value>
-				<Value type="3">(ID=207, BackgroundResource="ChallengeBanners/MEMstrF.dds", srTitle=778515)</Value>
-				<Value type="3">(ID=208, BackgroundResource="ChallengeBanners/zaeed.dds", srTitle=817835)</Value>
-				<Value type="3">(ID=209, BackgroundResource="ChallengeBanners/ContestWinner1.dds", srTitle=778529)</Value>
-				<Value type="3">(ID=210, BackgroundResource="ChallengeBanners/ContestWinner2.dds", srTitle=778529)</Value>
-				<Value type="3">(ID=211, BackgroundResource="ChallengeBanners/ContestWinner3.dds", srTitle=778522)</Value>
-				<Value type="3">(ID=212, BackgroundResource="ChallengeBanners/ContestWinner4.dds", srTitle=778522)</Value>
-				<Value type="3">(ID=213, BackgroundResource="ChallengeBanners/ContestWinner5.dds", srTitle=778531)</Value>
-				<Value type="3">(ID=214, BackgroundResource="ChallengeBanners/ContestWinner6.dds", srTitle=778526)</Value>
-				<Value type="3">(ID=215, BackgroundResource="ChallengeBanners/ContestWinner7.dds", srTitle=778516)</Value>
-				<Value type="3">(ID=216, BackgroundResource="ChallengeBanners/ContestWinner8.dds", srTitle=778518)</Value>
-				<Value type="3">(ID=217, BackgroundResource="ChallengeBanners/ContestWinner9.dds", srTitle=778538)</Value>
-				<Value type="3">(ID=218, BackgroundResource="ChallengeBanners/ContestWinner10.dds", srTitle=778539)</Value>
-				<Value type="3">(ID=219, BackgroundResource="ChallengeBanners/VolusLover.dds", srTitle=817851)</Value>
-				<Value type="3">(ID=220, BackgroundResource="ChallengeBanners/FullTeam.dds", srTitle=817847)</Value>
 			</Property>
 			<Property name="mapsettings">
 				<Value type="3">(MapName="BioP_MPCer",XPMultiplier=1.f,CreditsMultiplier=1.f,ZoneID=EGAWZone_Terminus,ZoneIncrease=7)</Value>
