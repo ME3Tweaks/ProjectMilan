@@ -95,7 +95,9 @@ namespace LEDecooker
                     var outPath = Path.Combine(outPathFinal, $"{le3P.FileNameNoExtension}.upk");
                     using var udkP = MEPackageHandler.CreateAndOpenPackage(outPath, MEGame.UDK);
 
-                    le3P.ConvertPackageToUncooked();
+                    // Keep static parameter sets - UDK compiles the permutation itself. Stripping them
+                    // makes every instance render its parent's static switch defaults.
+                    le3P.ConvertPackageToUncooked(stripStaticPermutations: false);
                     TrimExportToUDKProps(le3P);
 
                     // referencer will already exist, this will return it
@@ -156,7 +158,7 @@ namespace LEDecooker
                     var portObj = sourcePackage.FindExport(ifp);
 
                     // Prepare package for exporting from.
-                    sourcePackage.ConvertPackageToUncooked();
+                    sourcePackage.ConvertPackageToUncooked(stripStaticPermutations: false);
 
                     var rop = new RelinkerOptionsPackage()
                     {
@@ -301,7 +303,8 @@ namespace LEDecooker
                 while (tempObj != null)
                 {
                     // Debug.WriteLine($"\t{tempObj.InstancedFullPath} | {tempObj.ClassName}");
-                    if (tempObj.Class.GetLinker() == "SFXGame" && !tempObj.ClassName.StartsWith("BioMaterialExpression"))
+                    // A Class export has no class of its own (Class is null), so there is no linker to test.
+                    if (tempObj.Class?.GetLinker() == "SFXGame" && !tempObj.ClassName.StartsWith("BioMaterialExpression"))
                     {
                         // We convert BioMaterialExpressions, but other SFXGame classes are not supported in UDK,
                         // so we trim the reference
@@ -483,7 +486,104 @@ namespace LEDecooker
                     // Commit result back.
                     exp.WriteBinary(sm);
                 }
+
+                VertexLightIfLightmapUVsOverlap(exp, sm);
             }
+        }
+
+        /// <summary>
+        /// Share of a mesh's lightmap UV coverage that lands on texels another triangle already covers, at or
+        /// above which UDK is made to vertex light it.
+        /// </summary>
+        private const double MaxLightmapUVOverlap = 0.25;
+
+        /// <summary>
+        /// Makes UDK vertex light a mesh whose lightmap UV channel isn't a unique unwrap.
+        /// </summary>
+        /// <remarks>
+        /// <para>Overlapping triangles share lightmap texels, so a texture bake smears one surface's lighting over
+        /// another: bios_arctic.Consolidated.BG_Ramps_01_Con (UV1 sums to 14x the UV square, 94% overlap) came out
+        /// in patches in every copy on BioA_MPCer3_White. The worst cases are "Consolidated" meshes whose merged
+        /// pieces kept identical UVs. BioWare vertex lit most of them, but that was a per-component override,
+        /// which is editor-only and lost at cook, so UDK only sees the mesh's LightMapResolution and texture bakes.</para>
+        ///
+        /// <para>UDK's resolution lookup falls back to DefaultStaticMeshLightingRes when it comes out 0 (UDK.exe
+        /// FUN_7ff64e3e68d0), so no component setting can force vertex lighting. The mesh test can: a texture
+        /// lightmap needs LightMapCoordinateIndex below the vertex buffer's NumTexCoords. Meshes that already
+        /// fail it (e.g. single-UV BioS_Cerberus.CerbJ_Floor5x5_01) bake LMT_1D in UDK and import into LE3 as
+        /// LightMap_1D, so pointing the index past the last channel reuses that path. Only the UDK copy is
+        /// changed; the LE3 mesh keeps its index and just receives a vertex lightmap.</para>
+        ///
+        /// <para>Of 2,068 meshes lit in the ME3 MP maps, 134 cross 25% (1,697 components BioWare vertex lit, 388 it
+        /// texture lit, mostly desert Rail_*_Con), per a 512x512 rasterization of LOD0.</para>
+        /// </remarks>
+        private static void VertexLightIfLightmapUVsOverlap(ExportEntry exp, StaticMesh sm)
+        {
+            if (sm.LODModels.Length == 0)
+                return;
+            var lod = sm.LODModels[0];
+            var coordinateIndex = exp.GetProperty<IntProperty>("LightMapCoordinateIndex")?.Value ?? 0;
+            if (coordinateIndex < 0 || coordinateIndex >= lod.VertexBuffer.NumTexCoords)
+                return; // Already vertex lit
+
+            var overlap = GetUVOverlap(lod, coordinateIndex);
+            if (overlap < MaxLightmapUVOverlap)
+                return;
+
+            DecookerLog.Information($"  {exp.InstancedFullPath}: lightmap UVs overlap {overlap:P0}; setting LightMapCoordinateIndex past its {lod.VertexBuffer.NumTexCoords} UV channels so UDK vertex lights it");
+            exp.WriteProperty(new IntProperty((int)lod.VertexBuffer.NumTexCoords, "LightMapCoordinateIndex"));
+        }
+
+        /// <summary>
+        /// Rasterizes one UV channel of <paramref name="lod"/> and returns the share of covered texels that more
+        /// than one triangle covers (0 for a unique unwrap). Texels outside 0-1 are clipped.
+        /// </summary>
+        private static double GetUVOverlap(StaticMeshRenderData lod, int channel)
+        {
+            const int grid = 512;
+            var vb = lod.VertexBuffer;
+            (float X, float Y) UV(int v) => vb.bUseFullPrecisionUVs
+                ? (vb.VertexData[v].FullPrecisionUVs[channel].X * grid, vb.VertexData[v].FullPrecisionUVs[channel].Y * grid)
+                : (vb.VertexData[v].HalfPrecisionUVs[channel].X * grid, vb.VertexData[v].HalfPrecisionUVs[channel].Y * grid);
+
+            var covered = new bool[grid * grid];
+            long hits = 0, union = 0;
+            for (int i = 0; i + 2 < lod.IndexBuffer.Length; i += 3)
+            {
+                var a = UV(lod.IndexBuffer[i]);
+                var b = UV(lod.IndexBuffer[i + 1]);
+                var c = UV(lod.IndexBuffer[i + 2]);
+                var area = (b.X - a.X) * (c.Y - a.Y) - (c.X - a.X) * (b.Y - a.Y);
+                if (MathF.Abs(area) < 1e-6f)
+                    continue;
+
+                int x0 = Math.Max(0, (int)MathF.Floor(MathF.Min(a.X, MathF.Min(b.X, c.X))));
+                int x1 = Math.Min(grid - 1, (int)MathF.Ceiling(MathF.Max(a.X, MathF.Max(b.X, c.X))));
+                int y0 = Math.Max(0, (int)MathF.Floor(MathF.Min(a.Y, MathF.Min(b.Y, c.Y))));
+                int y1 = Math.Min(grid - 1, (int)MathF.Ceiling(MathF.Max(a.Y, MathF.Max(b.Y, c.Y))));
+                for (int y = y0; y <= y1; y++)
+                {
+                    for (int x = x0; x <= x1; x++)
+                    {
+                        // Texel centre inside the triangle, either winding
+                        float px = x + 0.5f, py = y + 0.5f;
+                        float w0 = (b.X - a.X) * (py - a.Y) - (px - a.X) * (b.Y - a.Y);
+                        float w1 = (c.X - b.X) * (py - b.Y) - (px - b.X) * (c.Y - b.Y);
+                        float w2 = (a.X - c.X) * (py - c.Y) - (px - c.X) * (a.Y - c.Y);
+                        if (area > 0 ? w0 < 0 || w1 < 0 || w2 < 0 : w0 > 0 || w1 > 0 || w2 > 0)
+                            continue;
+
+                        hits++;
+                        if (!covered[y * grid + x])
+                        {
+                            covered[y * grid + x] = true;
+                            union++;
+                        }
+                    }
+                }
+            }
+
+            return hits == 0 ? 0 : 1 - (double)union / hits;
         }
     }
 }

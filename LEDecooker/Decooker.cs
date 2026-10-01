@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
+using System.Text.RegularExpressions;
 using static LegendaryExplorerCore.Unreal.UnrealFlags;
 
 namespace LEDecooker
@@ -40,7 +41,7 @@ namespace LEDecooker
         private static CaseInsensitiveDictionary<ObjectLocation> TextureLookupByName;
         private static CaseInsensitiveDictionary<ObjectLocation> OppositeTextureLookupByName;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> StaticMeshLookupDB;
-        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceConstantLookupDB;
+        private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> MaterialInstanceLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> RvrEffectsMaterialUserLookupDB;
         private static CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> TerrainMaterialLookupDB;
         private static CaseInsensitiveConcurrentDictionary<string> PortingItems = new();
@@ -78,7 +79,28 @@ namespace LEDecooker
         /// game). Add a game here once its T3D batch has been regenerated with nesting info in the
         /// filename; remove it from the old batch's reliance as new batches arrive.
         /// </summary>
-        private static readonly HashSet<MEGame> FilenameNestedGames = new() { MEGame.LE3 };
+        private static readonly HashSet<MEGame> FilenameNestedGames = new() { MEGame.LE3, MEGame.ME3 };
+
+        /// <summary>
+        /// Source games whose T3D batch is in the V3 format: filename nesting as above, plus fully
+        /// qualified object paths inside the files. Textures are written with their complete path
+        /// (Texture2D'BioVFX_Env_Glass.Textures.BrokenGlass_Norm'), and expressions reference their
+        /// siblings through the owning material using UE3's subobject delimiter
+        /// (MaterialExpressionAdd'Pkg.Group.Mat:MaterialExpressionAdd_3').
+        ///
+        /// For these games the texture path is taken as authoritative: no name-based recovery is
+        /// attempted, and a path that does not exist in the game is reported and bound to the
+        /// MissingTextures placeholder rather than guessed. Every game listed here must also be in <see cref="FilenameNestedGames"/>.
+        /// Add a game here once its T3D set is in V3 format.
+        /// </summary>
+        private static readonly HashSet<MEGame> QualifiedPathGames = new() { MEGame.LE3, MEGame.ME3 };
+
+        /// <summary>
+        /// A single-line T3D object literal, e.g. MaterialExpressionAdd'Pkg.Mat:MaterialExpressionAdd_3'.
+        /// Only path characters are allowed between the quotes, so apostrophes inside string values
+        /// (comment text, descriptions) never pair up into a false match.
+        /// </summary>
+        private static readonly Regex ObjectLiteralRegex = new(@"\b(?<class>\w+)'(?<path>[\w.:]+)'", RegexOptions.Compiled);
 
         /// <summary>
         /// Compiles the T3D files for the specified game, generating packages with material expression data. It also generates the 
@@ -276,6 +298,9 @@ namespace LEDecooker
             {
                 allPackageNames[packageName] = packageName;
             }
+            // An instance-only package still needs to be produced even when it contains no T3D material graph.
+            foreach (var packageName in MaterialInstanceLookupDB.Keys)
+                allPackageNames[packageName] = packageName;
 
             //foreach (var p in Directory.GetDirectories(inputFolder).Select(Path.GetFileName))
             //{
@@ -363,7 +388,7 @@ namespace LEDecooker
                 CopyProperties(package, sourceGame, "RvrEffectsMaterialUser", RvrEffectsMaterialUserLookupDB);
                 package.PreparePackageForUDKify(stripStaticPermutations: false);
                 VerifyCombinedEffectParents(package);
-                AddObjects(package, sourceGame, "MaterialInstanceConstant", MaterialInstanceConstantLookupDB);
+                AddObjects(package, sourceGame, "MaterialInstance", MaterialInstanceLookupDB, includeDerivedTypes: true);
                 if (debugPackages) { package.Save(); }
 
                 AddObjects(package, sourceGame, "StaticMesh", StaticMeshLookupDB);
@@ -553,9 +578,10 @@ namespace LEDecooker
             supportData = DecookerShared.ReadSupportFileString(zip, $"staticmeshdb_{game}.json");
             StaticMeshLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
 
-            // Material Instance Constants are very often assigned to static meshes in udk, so we pull them in here
-            supportData = DecookerShared.ReadSupportFileString(zip, $"materialinstanceconstantdb_{game}.json");
-            MaterialInstanceConstantLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData);
+            // Material instances can own shader permutations regardless of whether their parameters vary over time.
+            supportData = DecookerShared.ReadSupportFileString(zip, $"materialinstancedb_{game}.json");
+            MaterialInstanceLookupDB = JsonConvert.DeserializeObject<CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>>>(supportData)
+                ?? throw new InvalidDataException($"Missing material instance support database for {game}; regenerate supportfiles.");
 
             // RVR - Referenced by material instance parents
             supportData = DecookerShared.ReadSupportFileString(zip, $"rvreffectsmaterialuserdb_{game}.json");
@@ -773,7 +799,20 @@ namespace LEDecooker
             return entriesByPackage;
         }
 
-        private static void AddObjects(IMEPackage package, MEGame sourceGame, string classType, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> assetMap)
+        private static bool HasArchetypeOrClassAncestor(ExportEntry export)
+        {
+            for (var parent = export.Parent as ExportEntry; parent != null; parent = parent.Parent as ExportEntry)
+            {
+                if (parent.IsArchetype || parent.IsDefaultObject || parent.ClassName == "Class")
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void AddObjects(IMEPackage package, MEGame sourceGame, string classType, CaseInsensitiveDictionary<CaseInsensitiveDictionary<string>> assetMap, bool includeDerivedTypes = false)
         {
             if (assetMap.TryGetValue(package.FileNameNoExtension, out var assetList))
             {
@@ -782,7 +821,8 @@ namespace LEDecooker
                 foreach (var asset in assetList)
                 {
                     // Does this already exist in the package?
-                    if (package.FindExport(asset.Key, classType) != null)
+                    var existing = package.FindExport(asset.Key);
+                    if (existing != null && (includeDerivedTypes ? existing.IsA(classType) : existing.ClassName.CaseInsensitiveEquals(classType)))
                     {
                         // Already in the package
                         continue;
@@ -806,6 +846,23 @@ namespace LEDecooker
                     if (sourceAsset == null)
                     {
                         DecookerLog.Warning($"\t\t{asset.Key} not found in {Path.GetFileName(path)} - skipping {classType}");
+                        continue;
+                    }
+
+                    if (includeDerivedTypes && (!sourceAsset.IsA(classType) || sourceAsset.IsDefaultObject
+                        || sourceAsset.IsArchetype || sourceAsset.GetRoot().ObjectName == "TheWorld"))
+                    {
+                        DecookerLog.Warning($"\t\tSkipping {asset.Key}: it is not an eligible {classType} asset");
+                        continue;
+                    }
+
+                    // An instance nested inside a pawn archetype (e.g. Archetypes.Reapers.Husk.<MIC>) or a class
+                    // is a component-owned subobject. Porting it would pull in the whole owning archetype, its
+                    // components and modules, and the owning Class definition - which UDK conversion cannot
+                    // handle (a Class export has no class of its own).
+                    if (includeDerivedTypes && HasArchetypeOrClassAncestor(sourceAsset))
+                    {
+                        DecookerLog.Warning($"\t\tSkipping {asset.Key}: it is owned by an archetype or class");
                         continue;
                     }
 
@@ -1076,10 +1133,15 @@ namespace LEDecooker
                     activeMaterialPath = nestedPath != null
                         ? $"{package.FileNameNoExtension}.{nestedPath}"
                         : $"{package.FileNameNoExtension}.{matName}";
+                    var t3dText = string.Join('\n', sourceLines);
+                    if (QualifiedPathGames.Contains(sourceGame))
+                    {
+                        t3dText = NormalizeSubobjectReferences(t3dText, activeMaterialPath, entry.FullName);
+                    }
                     MessageLog log;
                     try
                     {
-                        log = UnrealScriptCompiler.CompileT3D(string.Join('\n', sourceLines), package, parent, usop);
+                        log = UnrealScriptCompiler.CompileT3D(t3dText, package, parent, usop);
                     }
                     finally
                     {
@@ -1127,10 +1189,40 @@ namespace LEDecooker
 
             IEntry MissingObjectResolver(IMEPackage sourcepackage, string instancedfullpath, string classname)
             {
+                bool qualifiedPaths = QualifiedPathGames.Contains(sourceGame);
+
                 // Resolve texture references
                 if (classname != "Texture2D" && classname != "TextureCube" && classname != "TextureFlipBook" && classname != "TextureRenderTarget2D" && classname != "TextureRenderTargetCube")
                 {
+                    // V3 also qualifies references to other objects in this package, such as a
+                    // material's FallbackMaterial sibling. Bind to it when it has already been compiled.
+                    // Nested materials are moved under a package export named after the package as
+                    // they compile, but root-level ones only gain that parent later, in UDK prep, so
+                    // look for both forms.
+                    var packagePrefix = sourcepackage.FileNameNoExtension + ".";
+                    if (qualifiedPaths && instancedfullpath.StartsWith(packagePrefix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var relativePath = instancedfullpath[packagePrefix.Length..];
+                        var existing = sourcepackage.FindExport(instancedfullpath, classname)
+                                       ?? sourcepackage.FindExport(relativePath, classname);
+                        if (existing != null)
+                        {
+                            return existing;
+                        }
+
+                        // Not compiled yet. Importing the full path would create a Package import named
+                        // after this package, which collides with the package's own root export once UDK
+                        // prep adds it. Import the bare name instead, as the V2 format did; FixImports
+                        // repoints that root-level import to the export.
+                        var leafName = relativePath[(relativePath.LastIndexOf('.') + 1)..];
+                        return sourcepackage.GetEntryOrAddImport(leafName, classname, ImportEntry.GetPackageFile(sourcepackage.Game, classname));
+                    }
                     return null;
+                }
+
+                if (qualifiedPaths)
+                {
+                    return ResolveQualifiedTexture(package, sourcepackage, sourceGame, instancedfullpath, classname, activeMaterialPath, cache);
                 }
 
                 var lookupName = instancedfullpath;
@@ -1190,6 +1282,109 @@ namespace LEDecooker
                 }
                 return portedItem;
             }
+        }
+
+        /// <summary>
+        /// Rewrites a V3 T3D's references to its own subobjects back to bare subobject names.
+        /// </summary>
+        /// <remarks>
+        /// V3 writes a sibling expression as MaterialExpressionAdd'Pkg.Group.Mat:MaterialExpressionAdd_3'.
+        /// The T3D compiler links an object literal to a subobject declared in the same file by its
+        /// exact name, so the qualified form misses the subobject and is silently compiled into an
+        /// import of an object that does not exist. Reducing it to MaterialExpressionAdd'MaterialExpressionAdd_3'
+        /// gives exactly the link the V2 format produced.
+        ///
+        /// UE3 places the ':' after the first outer that is not a Package, so a material nested under
+        /// an RvrEffectsMaterialUser comes out as Pkg.Group.X_MAT_USER:CombinedEffect_Foo.MaterialExpressionAdd_3.
+        /// Both separators are therefore treated alike when comparing against the material's path.
+        /// Paths are compared case-insensitively because a T3D set's folder casing need not match the
+        /// output package's.
+        ///
+        /// A ':' literal that does not name a direct child of this material is left as it is and
+        /// reported: it would point at some other object's subobject, which this pass cannot link.
+        /// </remarks>
+        /// <param name="source">T3D text of one material.</param>
+        /// <param name="materialPath">Full path the material will have in the output package.</param>
+        /// <param name="sourceName">Archive entry name, for logging.</param>
+        private static string NormalizeSubobjectReferences(string source, string materialPath, string sourceName)
+        {
+            var selfPrefix = materialPath + ".";
+            return ObjectLiteralRegex.Replace(source, match =>
+            {
+                var path = match.Groups["path"].Value;
+                if (!path.Contains(':'))
+                {
+                    return match.Value;
+                }
+
+                var dottedPath = path.Replace(':', '.');
+                if (dottedPath.StartsWith(selfPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    var subobjectName = dottedPath[selfPrefix.Length..];
+                    if (subobjectName.Length > 0 && !subobjectName.Contains('.'))
+                    {
+                        return $"{match.Groups["class"].Value}'{subobjectName}'";
+                    }
+                }
+
+                DecookerLog.Warning($"\t\tUnresolvable subobject reference in {sourceName}: {match.Value} is not a direct child of {materialPath}");
+                return match.Value;
+            });
+        }
+
+        /// <summary>
+        /// Resolves a V3 texture reference by its exact path. The path names the one texture the
+        /// material uses, so this does no name-based recovery: a path missing from both texture
+        /// databases is reported and bound to the MissingTextures placeholder, never to a same-named
+        /// texture from somewhere else.
+        /// </summary>
+        /// <returns>The texture entry in <paramref name="package"/>; for a path that does not exist, a
+        /// root-level import that UDK prep moves into the MissingTextures package.</returns>
+        private static IEntry ResolveQualifiedTexture(IMEPackage package, IMEPackage sourcepackage, MEGame sourceGame,
+            string texturePath, string classname, string materialPath, PackageCache cache)
+        {
+            if (!texturePath.Contains('.'))
+            {
+                // V3 always writes a package qualified path, so a bare name means the input is not what
+                // QualifiedPathGames says it is. Guessing would hide that.
+                DecookerLog.Warning($"\t\tBare texture reference in a qualified-path T3D: {classname}'{texturePath}' in {materialPath}");
+            }
+            else
+            {
+                if (TextureLookupDB.TryGetValue(texturePath, out var location) && location.classname.CaseInsensitiveEquals(classname))
+                {
+                    return PortTextureFromLocation(package, sourcepackage, sourceGame, location, classname, cache);
+                }
+
+                // The layering pass compiles the opposite generation's materials into this game's
+                // packages; its texture databases are loaded the other way round, so check both.
+                if (OppositeTextureLookupDB != null && OppositeTextureLookupDB.TryGetValue(texturePath, out location) && location.classname.CaseInsensitiveEquals(classname))
+                {
+                    return PortTextureFromLocation(package, sourcepackage, sourceGame.ToOppositeGeneration(), location, classname, cache);
+                }
+            }
+
+            // Whether the miss matters depends on whether the material itself ships, which only the
+            // object database can say -- package names such as *_Trash are no guide to that.
+            var materialShips = DecookerShared.TargetObjectDB?.GetFilesContainingObject(materialPath) is { Count: > 0 };
+            if (materialShips)
+            {
+                // Only expressions reachable from the material's outputs are compiled, so a placeholder
+                // matters only if the sampler is actually wired in. A cooked game lacking the texture
+                // often means it is not.
+                DecookerLog.Warning($"Texture not found, binding the sampler to a MissingTextures placeholder: {classname}'{texturePath}' in shipping material {materialPath}.");
+            }
+            else
+            {
+                DecookerLog.Information($"\t\tTexture not found, binding the sampler to a MissingTextures placeholder: {classname}'{texturePath}' in {materialPath} (material is not in the shipping game)");
+            }
+
+            // Returning null would make the compiler import the full path, which for a texture in this
+            // package creates a Package import named after the package itself -- a duplicate of the
+            // package's root export once UDK prep adds it. A root-level import of the bare name is what
+            // PreparePackageForUDKify collects into the MissingTextures package instead.
+            var leafName = texturePath[(texturePath.LastIndexOf('.') + 1)..];
+            return package.GetEntryOrAddImport(leafName, classname, ImportEntry.GetPackageFile(package.Game, classname));
         }
 
         /// <summary>

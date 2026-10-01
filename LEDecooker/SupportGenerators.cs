@@ -44,11 +44,14 @@ namespace LEDecooker
         }
 
         /// <summary>
-        /// Object types given their own lookup database. All are matched on exact class name.
+        /// Object types given their own lookup database. IsA selectors also include subclasses.
         /// </summary>
         private static readonly (string ObjectType, bool IsA)[] DefaultObjectTypes =
         [
             ("MaterialInstanceConstant", false),
+            // All instance subclasses can own static permutations, including time-varying instances.
+            // Keep the old constant-only database for consumers of older support archives.
+            ("MaterialInstance", true),
             ("StaticMesh", false),
             ("RvrEffectsMaterialUser", false),
             // TerrainMaterial is just a thin wrapper (UV mapping params + a MaterialInterface reference +
@@ -485,7 +488,7 @@ namespace LEDecooker
                 foreach (var (objectType, isA) in objectTypes)
                 {
                     bool matches = isA
-                        ? (obj.Parent == null || obj.Parent.ClassName == "Package") && obj.IsA(objectType)
+                        ? (objectType == "MaterialInstance" || obj.Parent == null || obj.Parent.ClassName == "Package") && obj.IsA(objectType)
                         : obj.ClassName == objectType;
                     if (!matches) continue;
                     if (obj.GetRoot().ObjectName == "TheWorld") continue;

@@ -77,10 +77,11 @@ namespace LEDecooker
         /// Takes a forced-export package and converts it to not-self export, like source side packages are laid out
         /// </summary>
         /// <param name="package"></param>
-        public static void ConvertPackageToUncooked(this IMEPackage package, string packageName = null)
+        /// <param name="stripStaticPermutations">Passed to <see cref="PreparePackageForUDKify"/>.</param>
+        public static void ConvertPackageToUncooked(this IMEPackage package, string packageName = null, bool stripStaticPermutations = true)
         {
             // Strip off extra stuff if we're entering this method out of main order. (development)
-            PreparePackageForUDKify(package, packageName);
+            PreparePackageForUDKify(package, packageName, stripStaticPermutations);
 
             var selfExp = package.FindExport(packageName ?? package.FileNameNoExtension);
 
@@ -153,11 +154,13 @@ namespace LEDecooker
         /// <param name="package"></param>
         /// <param name="packageName"></param>
         /// <param name="stripStaticPermutations">
-        /// True discards each MaterialInstance's static permutation entirely, which is what UDK needs.
+        /// True discards each MaterialInstance's static permutation entirely, so the instance renders
+        /// its parent's static switch defaults.
         /// False keeps the StaticParameterSet and blanks only the compiled resource, so the instance
-        /// still asks the engine for its own permutation and the engine has to compile it. Pass false
-        /// on the decook path: the output there feeds ShaderHost, and UDK conversion runs this again
-        /// through <see cref="ConvertPackageToUncooked"/> with the default, so UDK is unaffected.
+        /// still asks the engine for its own permutation and the engine has to compile it. Both the
+        /// decook path (feeds ShaderHost) and UDK conversion pass false: UDK compiles the permutation
+        /// itself, and without the set it renders e.g. Volumetric_MM planes fully opaque, which also
+        /// makes them cast solid Lightmass shadows.
         /// </param>
         /// <summary>
         /// True when a MaterialInstance's static parameter set actually diverges from its parent's
@@ -317,7 +320,7 @@ namespace LEDecooker
                 return true;
             }
 
-            if (propertyname.CaseInsensitiveEquals("Parent") && relinkingexport.ClassName.CaseInsensitiveEquals("MaterialInstanceConstant"))
+            if (propertyname.CaseInsensitiveEquals("Parent") && relinkingexport.IsA("MaterialInstance"))
             {
                 // Check if the parent is a RvrEffectsMaterialUser - UDK does not support this
                 // We will relink parent up the parent material instead
