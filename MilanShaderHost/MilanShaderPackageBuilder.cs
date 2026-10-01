@@ -59,17 +59,43 @@ namespace MilanShaderHost
         /// </summary>
         private const int MaterialProgressThreshold = 10;
 
+        /// <summary>
+        /// Name of the package the build on this thread is preparing. Two builds can be logging at
+        /// once (see MilanShaderBuilderFlow's long-prepare worker), and the per-material progress
+        /// lines are otherwise impossible to tell apart. A build runs start to finish on one thread.
+        /// </summary>
+        [ThreadStatic] private static string? buildLabel;
+
         private static void ReportMaterialProgress(string phase, int index, int total, ExportEntry mat)
         {
             if (total <= MaterialProgressThreshold)
                 return;
-            Console.WriteLine($"  [{phase} {index}/{total}] {mat.InstancedFullPath}");
+            Console.WriteLine($"  [{buildLabel}] [{phase} {index}/{total}] {mat.InstancedFullPath}");
         }
 
         private static void ReportBuildStage(string stage)
         {
-            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {stage}");
+            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] [{buildLabel}] {stage}");
         }
+
+        /// <summary>
+        /// Labels the calling thread's log lines with <paramref name="label"/> until the returned scope is disposed.
+        /// </summary>
+        private static IDisposable BeginBuildScope(string label)
+        {
+            buildLabel = label;
+            return new BuildScope();
+        }
+
+        private sealed class BuildScope : IDisposable
+        {
+            public void Dispose() => buildLabel = null;
+        }
+
+        /// <summary>
+        /// The diagnostic transient package is saved to one fixed path; serialize concurrent builds' saves.
+        /// </summary>
+        private static readonly Lock TransientDiagnosticSaveLock = new();
 
         /// <summary>
         /// Placeholder textures for unresolvable imports only have to *exist* for shader
@@ -197,6 +223,7 @@ namespace MilanShaderHost
         /// <returns></returns>
         public static IMEPackage BuildMapPackage(string mapName, string sourceStylePath, IMEPackage transientPackage, EShaderLevelMode buildMode)
         {
+            using var buildScope = BeginBuildScope(sourceStylePath != null ? Path.GetFileNameWithoutExtension(sourceStylePath) : mapName);
             var shaderCompilingLevel = MEPackageHandler.CreateMemoryEmptyLevel(mapName, Program.Game);
 
             List<ExportEntry> portedMats = new List<ExportEntry>();
@@ -322,6 +349,14 @@ namespace MilanShaderHost
                 //}
 
 
+                // Parents the game already holds at boot are stripped cooked copies; left under their
+                // own names ours lose the load and permutations compile from the stripped graph. Must
+                // run before the level port so the level and every result export see the same names.
+                if (!Program.ParsedOptions.NoAutoRename)
+                {
+                    BootResidentMaterials.RenameCollisions(transientPackage, captureRoot);
+                }
+
                 // Also port materials into the compiler level. This should be faster to port... I hope
                 if (!compileTerrainOnly)
                 {
@@ -372,7 +407,10 @@ namespace MilanShaderHost
                 }
                 EnableStaticLightingForAllMaterials(shaderCompilingLevel);
                 ReportBuildStage($"Saving transient diagnostic package ({transientPackage.Exports.Count:N0} exports) to C:\\users\\public\\transient.pcc.");
-                transientPackage.Save("C:\\users\\public\\transient.pcc");
+                lock (TransientDiagnosticSaveLock)
+                {
+                    transientPackage.Save("C:\\users\\public\\transient.pcc");
+                }
                 ReportBuildStage("Finished saving transient diagnostic package.");
             }
             else
@@ -784,7 +822,7 @@ namespace MilanShaderHost
             return true;
         }
 
-        private static ExportEntry missingTexturesExport;
+        [ThreadStatic] private static ExportEntry missingTexturesExport; // Per thread: the long-prepare worker builds concurrently with the next-package prefetch
         private static ExportEntry GetMissingTexture(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
@@ -816,7 +854,7 @@ namespace MilanShaderHost
             return missingTexturesExport;
         }
 
-        private static ExportEntry missingTexturesFlipbookExport;
+        [ThreadStatic] private static ExportEntry missingTexturesFlipbookExport; // Per thread: the long-prepare worker builds concurrently with the next-package prefetch
         private static ExportEntry GetMissingTextureFlipbook(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
@@ -861,7 +899,7 @@ namespace MilanShaderHost
             return missingTexturesFlipbookExport;
         }
 
-        private static ExportEntry missingTextureRenderTarget2DExport;
+        [ThreadStatic] private static ExportEntry missingTextureRenderTarget2DExport; // Per thread: the long-prepare worker builds concurrently with the next-package prefetch
         private static ExportEntry GetMissingTextureRenderTarget2D(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
@@ -885,7 +923,7 @@ namespace MilanShaderHost
             return missingTextureRenderTarget2DExport;
         }
 
-        private static ExportEntry missingTextureRenderTargetCube;
+        [ThreadStatic] private static ExportEntry missingTextureRenderTargetCube; // Per thread: the long-prepare worker builds concurrently with the next-package prefetch
         private static ExportEntry GetMissingTextureRenderTargetCube(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
@@ -910,7 +948,7 @@ namespace MilanShaderHost
             return missingTextureRenderTargetCube;
         }
 
-        private static ExportEntry missingTextureCubeExport;
+        [ThreadStatic] private static ExportEntry missingTextureCubeExport; // Per thread: the long-prepare worker builds concurrently with the next-package prefetch
         private static ExportEntry GetMissingTextureCube(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return

@@ -352,6 +352,44 @@ namespace MilanShaderHost
             return new PreparedLevel { TransientPackage = localTransient, MapPackage = package, IsLE1SourcePackage = isLE1SourcePackage };
         }
 
+        /// <summary>
+        /// Starts preparing the compiler levels of every file in <paramref name="files"/> named in
+        /// <see cref="ShaderCompileList.LongPreparePackages"/>, so they are ready (or close to it) by
+        /// the time the compile loop reaches them instead of stalling it with the game idle.
+        /// </summary>
+        /// <remarks>
+        /// One dedicated worker prepares them one at a time in list order, each held in memory until
+        /// its turn: preparing them all at once would hold several large levels and compete with the
+        /// one-ahead prefetch for CPU. The first file is skipped, since the loop builds it immediately
+        /// anyway. A faulted prepare does not stop the ones after it; its exception surfaces when the
+        /// loop reaches that file, as a failed one-ahead prefetch would.
+        /// </remarks>
+        /// <returns>The pending prepares, keyed by file path.</returns>
+        private static Dictionary<string, Task<PreparedLevel?>> StartLongPrepares(List<string> files)
+        {
+            var prepares = new Dictionary<string, Task<PreparedLevel?>>(StringComparer.OrdinalIgnoreCase);
+
+            // Builds resolve textures through this lazily filled, unlocked cache; fill it here, before
+            // two builds can race to.
+            MELoadedFiles.GetFilesLoadedInGame(Program.Game);
+
+            Task previous = Task.CompletedTask;
+            foreach (var file in files.Skip(1).Where(x => ShaderCompileList.LongPreparePackages.Contains(Path.GetFileNameWithoutExtension(x))))
+            {
+                Console.WriteLine($"Preparing long-running package {Path.GetFileNameWithoutExtension(file)} in the background (position {files.IndexOf(file) + 1} of {files.Count}).");
+                var prepare = previous.ContinueWith(_ =>
+                {
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Background prepare started: {Path.GetFileNameWithoutExtension(file)}");
+                    var prepared = BuildShaderLevelInMemory(file, EShaderLevelMode.Compile);
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Background prepare finished: {Path.GetFileNameWithoutExtension(file)}");
+                    return prepared;
+                }, CancellationToken.None, TaskContinuationOptions.LongRunning, TaskScheduler.Default);
+                prepares[file] = prepare;
+                previous = prepare;
+            }
+            return prepares;
+        }
+
         static void SetupShaderCompileFlow()
         {
             var outDir = @"E:\CompiledShaderPackages";
@@ -373,26 +411,32 @@ namespace MilanShaderHost
 
             if (Program.Game == MEGame.LE3)
             {
+                // Commented out - it breaks BaseDelta install MilanBaseInstaller
                 // Ensure SFXOnlineFoundation has Telemetry removed as it significantly slows down compile on game close.
-                var sfxOnlineFoundation = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, "SFXOnlineFoundation.pcc"));
-                var onlineSubsystem = sfxOnlineFoundation.FindExport("Default__SFXOnlineSubsystem");
-                var componentsList = onlineSubsystem.GetProperty<ArrayProperty<StructProperty>>("ComponentClassList");
-                var removed = componentsList.RemoveAll(x =>
-                {
-                    var className = x.GetProp<ObjectProperty>("ClassName");
-                    var resolved = sfxOnlineFoundation.GetEntry(className.Value);
-                    return resolved.ObjectName == "SFXOnlineCOmponentTelemetrySystem";
-                });
-                if (removed)
-                {
-                    onlineSubsystem.WriteProperty(componentsList);
-                    sfxOnlineFoundation.Save();
-                    Console.WriteLine("Patched out telemetry subsystem to improve shader compiling performance");
-                }
+                //var sfxOnlineFoundation = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, "SFXOnlineFoundation.pcc"));
+                //var onlineSubsystem = sfxOnlineFoundation.FindExport("Default__SFXOnlineSubsystem");
+                //var componentsList = onlineSubsystem.GetProperty<ArrayProperty<StructProperty>>("ComponentClassList");
+                //var removed = componentsList.RemoveAll(x =>
+                //{
+                //    var className = x.GetProp<ObjectProperty>("ClassName");
+                //    var resolved = sfxOnlineFoundation.GetEntry(className.Value);
+                //    return resolved.ObjectName == "SFXOnlineCOmponentTelemetrySystem";
+                //});
+                //if (removed)
+                //{
+                //    onlineSubsystem.WriteProperty(componentsList);
+                //    sfxOnlineFoundation.Save();
+                //    Console.WriteLine("Patched out telemetry subsystem to improve shader compiling performance");
+                //}
             }
 
             var files = ShaderCompileList.PackageFilesToProcess;
+
+            // The one-ahead prefetch below, and the file it is for. It is not always files[i + 1]:
+            // a file the long-prepare worker owns is skipped over.
             Task<PreparedLevel?>? nextLevelTask = null;
+            string? nextLevelFile = null;
+            var longPrepares = Program.ParsedOptions.CompileShaders ? StartLongPrepares(files) : new();
 
             // Packages whose compile session produced nothing. A package can run to completion with
             // the game exiting 0 and still capture zero jobs, and every per-package signal looks
@@ -456,11 +500,26 @@ namespace MilanShaderHost
                     Interlocked.Exchange(ref mergedCompileResourceCount, 0);
                     lock (mergedMaterialNamesThisPackage) mergedMaterialNamesThisPackage.Clear();
 
-                    // Use the pre-prepared level from the previous iteration if available, otherwise build now
-                    PreparedLevel? current = nextLevelTask != null
-                        ? nextLevelTask.GetAwaiter().GetResult()
-                        : BuildShaderLevelInMemory(file, EShaderLevelMode.Compile);
-                    nextLevelTask = null;
+                    // Use a level prepared in the background if there is one, otherwise build now
+                    PreparedLevel? current;
+                    if (longPrepares.Remove(file, out var longPrepare))
+                    {
+                        if (!longPrepare.IsCompleted)
+                        {
+                            Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Waiting for the background prepare of {baseName} to finish.");
+                        }
+                        current = longPrepare.GetAwaiter().GetResult();
+                    }
+                    else if (nextLevelTask != null && nextLevelFile == file)
+                    {
+                        current = nextLevelTask.GetAwaiter().GetResult();
+                        nextLevelTask = null;
+                        nextLevelFile = null;
+                    }
+                    else
+                    {
+                        current = BuildShaderLevelInMemory(file, EShaderLevelMode.Compile);
+                    }
 
                     if (current == null)
                     {
@@ -477,12 +536,18 @@ namespace MilanShaderHost
                     current.MapPackage.Save(compilerMapPath);
                     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Saved compiler map in {saveTimer.Elapsed.TotalSeconds:F1}s.");
 
-                    // While the game runs, prepare the next file in the background
-                    if (i + 1 < files.Count)
+                    // While the game runs, prepare the next file in the background -- the next one
+                    // the long-prepare worker isn't already handling. If a prefetch is still in
+                    // flight (this iteration consumed a long prepare), it is already that file.
+                    if (nextLevelTask == null)
                     {
-                        var nextFile = files[i + 1];
-                        Console.WriteLine($"Pre-preparing level for: {Path.GetFileNameWithoutExtension(nextFile)}");
-                        nextLevelTask = Task.Run(() => BuildShaderLevelInMemory(nextFile, EShaderLevelMode.Compile));
+                        var nextFile = files.Skip(i + 1).FirstOrDefault(x => !longPrepares.ContainsKey(x));
+                        if (nextFile != null)
+                        {
+                            Console.WriteLine($"Pre-preparing level for: {Path.GetFileNameWithoutExtension(nextFile)}");
+                            nextLevelFile = nextFile;
+                            nextLevelTask = Task.Run(() => BuildShaderLevelInMemory(nextFile, EShaderLevelMode.Compile));
+                        }
                     }
 
                     // Runs game, which builds shaders and feeds them back to us. The capture root is
@@ -502,6 +567,8 @@ namespace MilanShaderHost
                                     : "ShaderClient returned no material or terrain resources."));
                         }
 
+                        BootResidentMaterials.RestoreNames(scPackage);
+                        ReportBrokenMaterials(scPackage, file);
                         scPackage.Save(file);
                         MilanLicensee.SetGame(file, outputGame);
                         Console.WriteLine($"Wrote {Volatile.Read(ref mergedCompileResourceCount)} compiled resource(s) and shader cache back to {file}");
@@ -534,14 +601,44 @@ namespace MilanShaderHost
                         }
                         else
                         {
+                            // Only claim a boot-package collision when this package is actually one.
+                            //
+                            // The unconditional version of this cost an evening on 2026-09-21:
+                            // BioVFX_MP4_Tur_Jets produced nothing and was reported as "the game's own
+                            // copy of these objects likely loaded first", for a package LE3 does not
+                            // contain at all -- it exists only in ME3's DLC_CON_MP4. The real cause was
+                            // in ShaderClient's own log: its single material failed to compile because
+                            // two TextureSample nodes had no texture, so there was nothing to send.
+                            // A guess stated as a cause is worse than no cause at all, because it is
+                            // the one thing the reader stops looking past.
+                            //
+                            // "Never asked for" is also a legitimate outcome, not only a failure:
+                            // BioApl_Ind_Mining_Drill03's only content is a MIC parented to
+                            // BIOG_APL_MASTER_MATERIAL.Placeable_MM, which LE3 ships in SFXGame. The engine
+                            // keys the permutation by the live (SFXGame) parent's resource ID, finds it in
+                            // RefShaderCache, and compiles nothing (2026-09-23).
                             var collisionHint = currentCaptureRoot != currentSourceRoot
                                 ? $" This ran under the capture rename ('{currentCaptureRoot}'), so a boot-package collision is not the explanation."
                                 : CapturePackageNaming.RequiresRename(baseName)
                                     ? " This package is loaded by the game at boot and the capture rename was disabled (--noautorename), so the game's copy won the load."
-                                    : " The game's own copy of these objects likely loaded first, so ours never compiled.";
+                                    : " This package is not one the game loads at boot, so a name collision is NOT the explanation:" +
+                                      " every material in it either failed to compile, or the game already had its shader map and" +
+                                      " never asked for one. The second is not a fault: typically an instance whose parent ships" +
+                                      " in LE3, whose permutation is already in RefShaderCache.";
+
+                            // ShaderClient writes its log relative to the game process's working
+                            // directory, which it inherits from this host -- not into the game folder,
+                            // where it is natural to look for it and where a stale copy may sit.
+                            var shaderClientLog = Path.Combine(AppContext.BaseDirectory, "Logs", "ShaderClient.log");
+                            // Compile failures are logged at error level, which ShaderClient flushes
+                            // immediately. Info lines are flushed every 5s and the process is killed at
+                            // the load screen, so a log that ends early does not mean the game stopped.
+                            var logHint = File.Exists(shaderClientLog)
+                                ? $" ShaderClient's own log records per-material compile failures (its info lines may be cut short by the exit): {shaderClientLog}"
+                                : " Check ShaderClient's log for per-material compile failures.";
 
                             Console.WriteLine($"*** NO OUTPUT for '{baseName}': ShaderClient returned no material or terrain " +
-                                "resources and captured no debug payloads." + collisionHint +
+                                "resources and captured no debug payloads." + collisionHint + logHint +
                                 (File.Exists(outPath) ? $" Leaving existing {outPath} untouched." : ""));
                         }
                     }
@@ -551,6 +648,8 @@ namespace MilanShaderHost
                         // package that leaves this process must carry the real name, or it is not a
                         // drop-in replacement for the package it was built from.
                         RestoreSourceRootName(scPackage);
+                        BootResidentMaterials.RestoreNames(scPackage);
+                        ReportBrokenMaterials(scPackage, outPath);
                         scPackage.Save(outPath);
                     }
 
@@ -589,10 +688,8 @@ namespace MilanShaderHost
                 }
                 foreach (var p in producedNothing)
                 {
-                    Console.WriteLine($"      {p}  (no resources -- object name likely already loaded by the game)");
+                    Console.WriteLine($"      {p}  (no resources -- see its NO OUTPUT line above for the likely cause)");
                 }
-                Console.WriteLine("    A package whose objects the game loads at boot cannot be captured until the");
-                Console.WriteLine("    shipping object is renamed; see ShaderResearchTool 'plan-capture' rename list.");
                 Console.WriteLine();
                 Console.WriteLine($"Shader compiling finished with {producedNothing.Count + reportedFailure.Count} empty package(s).");
                 Environment.Exit(2);
@@ -782,6 +879,59 @@ namespace MilanShaderHost
         /// </summary>
         /// <param name="parentPath">Instanced full path of the parent UMaterial the resource compiled through.</param>
         /// <param name="permutationKey">The <c>#&lt;16 hex&gt;</c> static parameter set key.</param>
+        /// <summary>
+        /// Reports every material in a package the host is about to write whose shader map cannot be
+        /// found, by the same test the consumers use.
+        /// </summary>
+        /// <remarks>
+        /// A compiled package can be structurally fine and still be useless: a material whose resource
+        /// never arrived keeps an all-zero resource id, and an instance can hold a StaticParameterSet
+        /// that keys into no map in the cache. Neither shows up as an error while compiling -- the
+        /// payloads that did arrive merged cleanly -- so the package looks finished and the damage is
+        /// only discovered much later, as a black material in a built mod or as Project Milan's
+        /// texture pipeline stripping the permutation again.
+        ///
+        /// Both of those cost days to trace back to this point (HANDOFF sections 37 and 38), so say it
+        /// here, where the package is still in hand and the compile that produced it is on screen.
+        /// This reports and does not throw: a package with some broken materials is still worth
+        /// writing, and which ones matter is the caller's call.
+        ///
+        /// <see cref="ShaderCacheManipulator.GetBrokenMaterials"/> is deliberately the same check
+        /// Project Milan's installer and TFCBuild apply, so a package that passes here is one they
+        /// will accept.
+        /// </remarks>
+        private static void ReportBrokenMaterials(IMEPackage package, string destination)
+        {
+            List<ExportEntry> broken;
+            try
+            {
+                broken = ShaderCacheManipulator.GetBrokenMaterials(package, Program.ParsedOptions.GamePath);
+            }
+            catch (Exception e)
+            {
+                // Never let a diagnostic stop a package being written.
+                Console.WriteLine($"Could not check {Path.GetFileName(destination)} for broken materials: {e.Message}");
+                return;
+            }
+
+            if (broken.Count == 0)
+            {
+                Console.WriteLine($"Shader map check: every material in {Path.GetFileName(destination)} resolves.");
+                return;
+            }
+
+            Console.WriteLine($"WARNING: {broken.Count} material(s) in {Path.GetFileName(destination)} have no reachable " +
+                              "shader map. They will render the engine's fallback, and Project Milan will not install them:");
+            foreach (var export in broken.Take(25))
+            {
+                Console.WriteLine($"    {export.ClassName,-25} {export.InstancedFullPath}");
+            }
+            if (broken.Count > 25)
+            {
+                Console.WriteLine($"    ... and {broken.Count - 25} more.");
+            }
+        }
+
         private static void MergeInstancePermutation(CompileResult cr, string parentPath, string permutationKey)
         {
             // Candidates are instances that own a permutation; anything else shares the parent's map
@@ -861,13 +1011,47 @@ namespace MilanShaderHost
                     }
                 }
 
-                // The parameter set is copied from the transient instance rather than rebuilt, so it
-                // stays identical to the key the game filed the shader map under -- BaseMaterialId
-                // included. A set assembled any other way risks keying into nothing.
+                // Use the set the engine actually filed the shader map under, taken from the payload's
+                // own cache, rather than the transient instance's copy.
+                //
+                // This used to copy the transient instance's set on the reasoning that it was already
+                // identical to the map's key. It is not. StaticParameterSet carries BaseMaterialId,
+                // which is the *parent material's resource id*; the transient instance is the decooked
+                // copy, so it holds the id from before this compile, while the game recompiled the
+                // parent and filed the instance's map under the parent's new runtime id. The instance
+                // then asked for a key no map in the package used, and the permutation read as
+                // "no shader map" everywhere downstream -- which is what made Project Milan's texture
+                // pipeline strip it again. Measured 2026-09-21 on BioS_MPJungle: both instances'
+                // BaseMaterialId appeared in none of the package cache's 11 keys.
+                //
+                // RawKey is what routed this payload here and it deliberately ignores BaseMaterialId,
+                // so it identifies the right map without being confused by the very field that is wrong.
                 var sourceSet = ObjectBinary.From<MaterialInstance>(sourceInstance).SM3StaticParameterSet;
+                var compiledSet = sourceSet;
+                bool foundCompiledSet = false;
+                foreach ((StaticParameterSet key, MaterialShaderMap _) in cr.Cache.MaterialShaderMaps)
+                {
+                    if (StaticPermutationNaming.RawKey(key) == permutationKey)
+                    {
+                        compiledSet = key;
+                        foundCompiledSet = true;
+                        break;
+                    }
+                }
+
+                if (!foundCompiledSet)
+                {
+                    // Fall back to the transient set rather than inventing an id. The permutation may
+                    // still be unreachable, so say which one, instead of leaving it to be discovered as
+                    // a missing map in a built mod.
+                    Console.WriteLine($"WARNING: no shader map keyed {permutationKey} in the payload for " +
+                                      $"{targetInstance.InstancedFullPath}; keeping the transient parameter set, " +
+                                      "which may key into nothing.");
+                }
+
                 ObjectBinary.EditBinary<MaterialInstance>(targetInstance, x =>
                 {
-                    x.SM3StaticParameterSet = sourceSet;
+                    x.SM3StaticParameterSet = compiledSet;
                     x.SM3StaticPermutationResource = permutationResource;
                 });
 

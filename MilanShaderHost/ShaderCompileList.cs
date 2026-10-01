@@ -18,6 +18,18 @@ namespace MilanShaderHost
         internal static List<string> PackageFilesToProcess = new List<string>();
 
         /// <summary>
+        /// Packages whose compiler level takes long enough to prepare that waiting for the
+        /// one-ahead prefetch leaves the game idle. Not an install list: a package here is only
+        /// compiled if it is also in <see cref="PackageFilesToProcess"/>, in which case its level
+        /// is prepared by a background worker from the start of the run, at its normal place in
+        /// the order. Matched by package name, case-insensitively.
+        /// </summary>
+        internal static readonly HashSet<string> LongPreparePackages = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "EffectsMaterials", // ~1800 materials, each ported twice; tens of minutes to prepare
+        };
+
+        /// <summary>
         /// Reads the --packagelist file, or null when the option was not supplied.
         /// </summary>
         private static string[] ReadPackageListFile()
@@ -168,9 +180,7 @@ namespace MilanShaderHost
 
                 // MP4
                 "BioVFX_MP4_Volus_Eng",
-                "BioVFX_DLC_MaleQuarian",
                 // "BioVFX_MP4_Tur_Jets", // Produced no materials? Needs investigated. If left on the previous compiler level is leftover  and used
-                "BioVFX_DLC_OmniBlade",
 
                 // MP5
                 "BioVFX_MP5_Prothean", // Collector Adept
@@ -214,11 +224,13 @@ namespace MilanShaderHost
                 "BioS_MPJungle",
                 "BioS_MPJungle_Trash", // Todo: Why does water_tint, Waterfall_Master_lite not compile into something?
                 "BioT_MPJungle",
+                "biot_salarian", // MICs used by BioA_MPJngl
                 "BioT_Tropical",
                 "BioVFX_DLC_Env_MPJngl",
                 
                 //// Thessia:
                 "BioT_MPThes",
+                "BioT_Thessia", // MICs used by BioA_MPThes_100/101/120_Lab
 
                 //// Vancouver
                 "BioVFX_MP3_MPHosp",
@@ -228,9 +240,11 @@ namespace MilanShaderHost
                 //// Rio
                 "BioT_MPOcean",
                 "BioVFX_MP3_MPOcean",
+                "BioApl_Ind_KroHatch01", // MIC used by BioA_MPOcean_100
 
                 //// London
                 "BioS_MPLondon",
+                "biot_london", // MIC used by BioA_MPRoad_vista
 
                 //// Hazard Cer
                 "BioT_MPCer2",
@@ -257,10 +271,15 @@ namespace MilanShaderHost
             // The only visible trace is the single "Building shaders for:" line, which is easy to miss
             // in a run expected to take hours.
 #if DEBUG
-            //if (string.IsNullOrWhiteSpace(Program.ParsedOptions?.PackageListFile))
-            //{
-            //    files = ["BioVFX_FB_RenderSyle"];
-            //}
+            if (string.IsNullOrWhiteSpace(Program.ParsedOptions?.PackageListFile))
+            {
+                //files = [
+                //    "biot_krogru",
+                //    "BioApl_Ind_Mining_Drill03",
+                //    "bioapl_ind_mainframe01",
+                //    "BioApl_Sea_Cake01",
+                //];
+            }
 #endif
 
             Console.WriteLine($"Source folders:");
