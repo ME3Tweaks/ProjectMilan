@@ -94,7 +94,9 @@ namespace ProjectMilan.Pipelines.Startups
                 MilanLog.Fatal($"Failed to compile {MilanShared.MP_STARTUP_NAME}", customPrefix: LOG_CATEGORY);
                 Environment.Exit(1);
             }
-            MPMerge.RunPipeline();
+            
+            // 09/26/2026 - No longer needed; it is now part of BaseDelta
+            //MPMerge.RunPipeline();
         }
 
 
@@ -102,9 +104,6 @@ namespace ProjectMilan.Pipelines.Startups
         {
             return Directory.GetParent(sourceFilePath).Name;
         }
-
-        // These have now been dumped, so the code is no longer run... for now, anyways.
-        // Mgamerz-specific.
 
         /// <summary>
         /// returns true if a class was emitted that was decompiled from ME3

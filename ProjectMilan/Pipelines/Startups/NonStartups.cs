@@ -266,6 +266,13 @@ namespace ProjectMilan.Pipelines.Startups
                     MilanShared.PortLocalizations(packageBaseName, outputFolder, cache, LOG_CATEGORY);
                 });
             MilanLog.LogDonorMessages = true; // Turn off spammy messaging.
+
+            // Our own GUI image packages (e.g. the images ME3 used to download from EA's servers) go alongside
+            // the ported ones
+            var builtImages = ImagePackageBuilder.BuildImagePackages(Path.Combine(vars.OutputPath, NonStartupCategory.Images.ToString()));
+            OnlineContentRegistration.RegisterOnlineBanners(builtImages);
+            OnlineContentRegistration.RegisterOnlineStorePacks(builtImages);
+            MilanPipelinesShared.CommitConfigBundle(); // Flush the image packages' dynamic load mappings and the online content using them
         }
 
         private static void NonStartupPrecorrection(IMEPackage me3File, string logCategory)

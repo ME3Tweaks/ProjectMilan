@@ -21,9 +21,7 @@ namespace ProjectMilanCore.Config
         {
             var mapId = MapIdAllocator.AllocateNext();
 
-            var engine = MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine");
-            engine.GetOrAddSection("sfxgame.sfxengine").AddEntry(new CoalesceProperty("dynamicloadmapping",
-                new CoalesceValue($"(ObjectName=\"{entry.ImageObjectPath}\", SeekFreePackageName=\"{entry.ImageSeekFreePackageName}\")", CoalesceParseAction.AddUnique)));
+            DynamicLoadMappingRegistration.RegisterDynamicLoadMapping(entry.ImageObjectPath, entry.ImageSeekFreePackageName);
 
             var game = MilanPipelinesShared.ConfigBundle.GetAsset("BioGame");
             var onlinegamesettings = game.GetOrAddSection("sfxonlinefoundation.sfxonlinegamesettings");
