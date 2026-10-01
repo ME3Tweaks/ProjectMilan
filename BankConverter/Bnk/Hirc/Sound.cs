@@ -32,10 +32,15 @@ public sealed class Sound
         // 0 - confirmed against reference v134 banks, which omit this prop entirely for non-looping
         // Sounds. Checking != 0 was injecting an explicit Loop=1 prop into nearly every Sound in the
         // game (v56's default value), which is what almost every real-world Sound actually has.
+        //
+        // Assigned directly, NOT via SetInt: SetInt drops zero as "default", but here 0 is the meaningful
+        // value (infinite) and the default is 1. Going through SetInt converted every infinitely-looping
+        // Sound into a play-once one, which the game then re-posts after it ends - an audible gap between
+        // "loops" (MPCer2's insect swarm, the shuttle idle). Native LE3 writes Loop=0 explicitly on 705 Sounds.
         if (Loop != 1)
         {
             NodeBase.ExtraProps ??= new PropBundle();
-            NodeBase.ExtraProps.SetInt(PropIdV134.Loop, Loop);
+            NodeBase.ExtraProps.Props[PropIdV134.Loop] = PropBundle.FromInt(Loop);
         }
         if (LoopModMin != 0 || LoopModMax != 0)
         {

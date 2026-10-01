@@ -22,6 +22,8 @@ public sealed class PropBundle
         if (value != 0f) Props[id] = FromFloat(value);
     }
 
+    /// <summary>Omits zero as "unset". Don't use for a prop whose default is NOT zero (e.g. Loop: default 1,
+    /// 0 = infinite) - assign <see cref="Props"/> directly there.</summary>
     public void SetInt(byte id, int value)
     {
         if (value != 0) Props[id] = FromInt(value);

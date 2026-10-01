@@ -117,7 +117,7 @@ public sealed class MusicTrack
         if (Loop != 1)
         {
             NodeBase.ExtraProps ??= new PropBundle();
-            NodeBase.ExtraProps.SetInt(PropIdV134.Loop, Loop);
+            NodeBase.ExtraProps.Props[PropIdV134.Loop] = PropBundle.FromInt(Loop); // not SetInt - 0 (infinite) must survive, see Sound.WriteV134
         }
         if (LoopModMin != 0 || LoopModMax != 0)
         {
