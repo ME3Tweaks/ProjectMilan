@@ -178,11 +178,13 @@ namespace ProjectMilan.Pipelines.Levels
             using var parent = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "MPLevels pipeline cache");
             foreach (var level in levelVars.LevelPipelines)
             {
-                //if (/*level.BioP != "BioP_MPHosp" &&*/ level.BioP != "BioP_MPJngl")
+#if DEBUG
+                // Uncomment to build a specific level
+                //if (level.BioP != "BioP_MPOcean")
                 //{
                 //    continue;
                 //}
-
+#endif
                 if (!level.ShouldBuild)
                 {
                     // This level is not marked for porting currently.
@@ -208,7 +210,7 @@ namespace ProjectMilan.Pipelines.Levels
                     var defaultStaticMeshLightingRes = (int)(128 * lightmapResolutionMultiplier); // BioWare default is 32
                     if (StaticLightingExport.ExportLevelToUDK(level, lightmapResolutionMultiplier, defaultStaticMeshLightingRes))
                     {
-                        StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes, keepPreBakeMaps: Program.KeepPreBakeMaps);
+                        StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes, keepPreBakeMaps: Program.KeepPreBakeMaps, ue4Lightmass: level.UE4Lightmass);
                         LevelShared.ImportStaticLighting(level, true);
                     }
                     else

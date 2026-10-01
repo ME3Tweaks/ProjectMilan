@@ -27,6 +27,175 @@ namespace ProjectMilan.Pipelines.Levels
         }
 
         /// <summary>
+        /// Multiplies explicitly-authored culling distances on populated StaticMeshComponents and CullDistanceVolumes
+        /// in one package. Components without a serialized distance keep their class/archetype default. Cull-distance
+        /// volume size thresholds and class defaults are left unchanged.
+        /// </summary>
+        /// <param name="package">Level package to adjust. Call once for each level/sublevel package being built.</param>
+        /// <param name="multiplier">Factor applied to explicit component and volume culling distances; must be finite and non-negative.</param>
+        /// <returns>Number of component and volume exports changed.</returns>
+        public static int MultiplyStaticMeshComponentCullingDistances(IMEPackage package, float multiplier)
+        {
+            ArgumentNullException.ThrowIfNull(package);
+            if (!float.IsFinite(multiplier) || multiplier < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(multiplier), "Culling distance multiplier must be a finite, non-negative value.");
+            }
+
+            var updatedComponentCount = 0;
+            var updatedVolumeCount = 0;
+            var updatedVolumeEntryCount = 0;
+            foreach (var export in package.Exports)
+            {
+                if (export.IsA("CullDistanceVolume"))
+                {
+                    var cullDistances = export.GetProperty<ArrayProperty<StructProperty>>("CullDistances");
+                    if (cullDistances == null)
+                    {
+                        continue;
+                    }
+
+                    var changedEntries = 0;
+                    foreach (var entry in cullDistances)
+                    {
+                        var cullDistance = entry.GetProp<FloatProperty>("CullDistance");
+                        if (cullDistance == null)
+                        {
+                            continue;
+                        }
+
+                        var scaledDistance = cullDistance.Value * multiplier;
+                        if (scaledDistance != cullDistance.Value)
+                        {
+                            cullDistance.Value = scaledDistance;
+                            changedEntries++;
+                        }
+                    }
+
+                    if (changedEntries > 0)
+                    {
+                        export.WriteProperty(cullDistances);
+                        updatedVolumeCount++;
+                        updatedVolumeEntryCount += changedEntries;
+                    }
+                    continue;
+                }
+
+                if (!export.IsA("StaticMeshComponent") || export.GetProperty<ObjectProperty>("StaticMesh")?.Value is not > 0)
+                {
+                    continue;
+                }
+
+                var maxDrawDistance = export.GetProperty<FloatProperty>("MaxDrawDistance");
+                var cachedMaxDrawDistance = export.GetProperty<FloatProperty>("CachedMaxDrawDistance");
+                if (maxDrawDistance == null && cachedMaxDrawDistance == null)
+                {
+                    continue;
+                }
+
+                // Update the authored value and its serialized runtime/cache counterpart, but don't create an
+                // override when both are absent: those components inherit the class/archetype default.
+                var componentUpdated = false;
+                if (maxDrawDistance != null)
+                {
+                    var scaledDistance = maxDrawDistance.Value * multiplier;
+                    if (scaledDistance != maxDrawDistance.Value)
+                    {
+                        export.WriteProperty(new FloatProperty(scaledDistance, "MaxDrawDistance"));
+                        componentUpdated = true;
+                    }
+                }
+                if (cachedMaxDrawDistance != null)
+                {
+                    var scaledDistance = cachedMaxDrawDistance.Value * multiplier;
+                    if (scaledDistance != cachedMaxDrawDistance.Value)
+                    {
+                        export.WriteProperty(new FloatProperty(scaledDistance, "CachedMaxDrawDistance"));
+                        componentUpdated = true;
+                    }
+                }
+
+                if (componentUpdated)
+                {
+                    updatedComponentCount++;
+                }
+            }
+
+            MilanLog.Information($"Multiplied culling distances by {multiplier:0.##} on {updatedComponentCount} mesh component(s) and {updatedVolumeEntryCount} CullDistanceVolume table entries across {updatedVolumeCount} volume(s) in {package.FileNameNoExtension}");
+            return updatedComponentCount + updatedVolumeCount;
+        }
+
+        /// <summary>
+        /// Keeps the ported (ME3) lighting on StaticMeshComponents authored with bAcceptsLights=False instead of installing
+        /// the UDK bake. ME3 shipped these with no static lighting (volumetric beams, sky domes, mattes), but the UDK export
+        /// strips bAcceptsLights so Lightmass lights them anyway. In LE3 a lit LOD makes FStaticMeshSceneProxy require
+        /// MATUSAGE_StaticLighting and, for LMET_Vector, MATUSAGE_VectorLightMaps; their materials lack the latter, so the
+        /// engine silently swaps in DefaultMaterial. They are still exported, so any that cast shadows still occlude.
+        /// </summary>
+        private static bool KeepPortedLighting(ExportEntry component) =>
+            component.IsA("StaticMeshComponent") && component.GetProperty<BoolProperty>("bAcceptsLights") is { Value: false };
+
+        /// <summary>
+        /// Warns about StaticMeshComponents still carrying their ported ME3 lighting on a mesh whose geometry is no longer
+        /// ME3's. That happens when porting picks the LE3 (remastered) version of a mesh from the donor DB but the component
+        /// was not relit - its package has no UDK bake, is in IgnoredLightingLevels, or had no UDK match. ME3 vertex
+        /// lightmaps are per-vertex and ME3 texture lightmaps follow ME3's lightmap UVs, so on the new geometry either one
+        /// shows up in game as a scrambled lightmap pattern (e.g. the small cover crates in BioA_MPOcean_100).
+        /// </summary>
+        private static void WarnOnMismatchedPortedLighting(LevelSpecificPipeline levelPipeline, IMEPackage sourcePackage, IMEPackage destPackage, HashSet<ExportEntry> relitComponents)
+        {
+            var vertexCounts = new Dictionary<IEntry, uint?>();
+            uint? GetVertexCount(IEntry meshEntry, Func<string, PackageCache, IMEPackage> resolver)
+            {
+                if (vertexCounts.TryGetValue(meshEntry, out var cached))
+                    return cached;
+
+                ExportEntry mesh = meshEntry as ExportEntry;
+                if (meshEntry is ImportEntry import && !EntryImporter.TryResolveImport(import, out mesh, levelPipeline.Cache, fileResolver: resolver))
+                {
+                    mesh = null;
+                }
+
+                uint? count = mesh == null ? null : ObjectBinary.From<StaticMesh>(mesh).LODModels.FirstOrDefault()?.NumVertices;
+                vertexCounts[meshEntry] = count;
+                return count;
+            }
+
+            // Mesh path -> (components affected, ME3 vertex count, LE3 vertex count)
+            var mismatches = new Dictionary<string, (int Count, uint Me3Vertices, uint Le3Vertices)>();
+            foreach (var destSmc in destPackage.Exports.Where(x => x.IsA("StaticMeshComponent")))
+            {
+                if (relitComponents.Contains(destSmc))
+                    continue;
+
+                var lod = ObjectBinary.From<StaticMeshComponent>(destSmc).LODData.FirstOrDefault();
+                if (lod?.LightMap == null || lod.LightMap.LightMapType == ELightMapType.LMT_None)
+                    continue;
+
+                var sourceSmc = sourcePackage.FindExport(destSmc.InstancedFullPath);
+                var sourceMesh = sourceSmc?.GetProperty<ObjectProperty>("StaticMesh");
+                var destMesh = destSmc.GetProperty<ObjectProperty>("StaticMesh");
+                if (sourceMesh == null || destMesh == null || sourceMesh.Value == 0 || destMesh.Value == 0)
+                    continue;
+
+                var me3Vertices = GetVertexCount(sourcePackage.GetEntry(sourceMesh.Value), MilanShared.ME3PackageResolver);
+                var le3Vertices = GetVertexCount(destPackage.GetEntry(destMesh.Value), MilanShared.LE3PackageResolver);
+                if (me3Vertices == null || le3Vertices == null || me3Vertices == le3Vertices)
+                    continue;
+
+                var meshPath = destPackage.GetEntry(destMesh.Value).InstancedFullPath;
+                mismatches.TryGetValue(meshPath, out var existing);
+                mismatches[meshPath] = (existing.Count + 1, me3Vertices.Value, le3Vertices.Value);
+            }
+
+            foreach (var (meshPath, (count, me3Vertices, le3Vertices)) in mismatches.OrderByDescending(x => x.Value.Count))
+            {
+                MilanLog.Warning($"  {destPackage.FileNameNoExtension}: {count} component(s) of {meshPath} kept ME3 lighting, but the mesh is now LE3's ({me3Vertices} -> {le3Vertices} vertices). The lightmap will render scrambled; relight this package or keep the ME3 mesh.",
+                    customPrefix: levelPipeline.LogCategory);
+            }
+        }
+
+        /// <summary>
         /// Imports static lighting for a BioP and its sublevels
         /// </summary>
         public static void ImportStaticLighting(LevelSpecificPipeline level, bool includeSublevels = false)
@@ -39,7 +208,8 @@ namespace ProjectMilan.Pipelines.Levels
                 {
                     IncludeSubLevels = includeSublevels,
                     UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName,
-                    IgnoredSublevelNames = level.IgnoredLightingLevels
+                    IgnoredSublevelNames = level.IgnoredLightingLevels,
+                    ShouldKeepLightMap = KeepPortedLighting
                 };
 
                 StaticLightingImporter.ImportStaticLighting(level.LE3BioP, setup);
@@ -294,6 +464,7 @@ namespace ProjectMilan.Pipelines.Levels
             // If not static lighting build, see if we have static lighting to import
             if (!Program.BuildStaticLighting)
             {
+                var relitComponents = new HashSet<ExportEntry>();
                 var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", levelPipeline.BioP, $"{destPackage.FileNameNoExtension}.udk");
                 if (File.Exists(staticLightingPath))
                 {
@@ -302,11 +473,16 @@ namespace ProjectMilan.Pipelines.Levels
                     {
                         IncludeSubLevels = false,
                         UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName,
-                        IgnoredSublevelNames = levelPipeline.IgnoredLightingLevels
+                        IgnoredSublevelNames = levelPipeline.IgnoredLightingLevels,
+                        ShouldKeepLightMap = KeepPortedLighting
                     };
 
                     StaticLightingImporter.ImportStaticLighting(destPackage, setup);
+                    relitComponents = setup.RelitComponents;
                 }
+
+                // Only here: a -BuildStaticLighting run imports later, from MPLevels, after this package is saved.
+                WarnOnMismatchedPortedLighting(levelPipeline, sourcePackage, destPackage, relitComponents);
             }
 
             // Calculate a very basic texture to instances map
