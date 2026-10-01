@@ -31,6 +31,7 @@ using static ProjectMilanCore.ConsoleHelpers;
 using Serilog;
 using Timer = System.Timers.Timer;
 using ProjectMilan.Pipelines.Shaders;
+using ProjectMilan.Pipelines.StaticLighting;
 
 // MAKE SURE YOU SET YOUR SETTINGS PATH IN YOUR RUN CONFIGURATION
 // DO NOT EDIT OTHERS! MAKE YOUR OWN AND SET YOUR SETTINGS PATH.
@@ -46,6 +47,15 @@ namespace ProjectMilan
         /// The loaded settings configuration
         /// </summary>
         public static IMilanSettings Settings;
+
+        /// <summary>
+        /// If static lighting should be baked in UDK this run. A production build always bakes, regardless of
+        /// <see cref="IMilanSettings.IsStaticLightingBuild"/>. Check this rather than the setting directly.
+        /// </summary>
+        public static bool BuildStaticLighting => Settings.IsStaticLightingBuild || Settings.ProductionBuild;
+
+        /// <summary>Keep exported UDK maps before Lightmass changes them during a static lighting build.</summary>
+        public static bool KeepPreBakeMaps { get; private set; }
 
         static void Main(string[] args)
         {
@@ -81,13 +91,28 @@ namespace ProjectMilan
         [
             (ECheckpointStage.MPCommon, "MPCommon", () => Settings.RunMPCommonPipeline),
             (ECheckpointStage.NonStartup, "NonStartup", () => Settings.RunNonStartupPipeline),
-            (ECheckpointStage.Kits, "Kits", () => Settings.RunKitsPipeline),
-            (ECheckpointStage.Weapons, "Weapons", () => Settings.RunWeaponsPipeline),
-            (ECheckpointStage.MP4Enemies, "MP4Enemies", () => Settings.RunWeaponsPipeline && Settings.RunMP4EnemiesPipeline),
-            (ECheckpointStage.Levels, "Levels", () => Settings.RunLevelsPipeline),
+            (ECheckpointStage.Kits, "Kits", () => ShouldRunKitsPipeline),
+            (ECheckpointStage.Weapons, "Weapons", () => ShouldRunWeaponsPipeline),
+            (ECheckpointStage.MP4Enemies, "MP4Enemies", () => ShouldRunWeaponsPipeline && Settings.RunMP4EnemiesPipeline),
+            (ECheckpointStage.Levels, "Levels", () => ShouldRunLevelsPipeline),
             (ECheckpointStage.Rejection, "Rejection", () => Settings.RunRejectionPipeline),
             (ECheckpointStage.Redemption, "Redemption", () => Settings.RunRedemptionPipeline),
         ];
+
+        /// <summary>
+        /// A production build always builds kits, regardless of <see cref="IMilanSettings.RunKitsPipeline"/>.
+        /// </summary>
+        private static bool ShouldRunKitsPipeline => Settings.RunKitsPipeline || Settings.ProductionBuild;
+
+        /// <summary>
+        /// A production build always builds weapons, regardless of <see cref="IMilanSettings.RunWeaponsPipeline"/>.
+        /// </summary>
+        private static bool ShouldRunWeaponsPipeline => Settings.RunWeaponsPipeline || Settings.ProductionBuild;
+
+        /// <summary>
+        /// A production build always builds levels, regardless of <see cref="IMilanSettings.RunLevelsPipeline"/>.
+        /// </summary>
+        private static bool ShouldRunLevelsPipeline => Settings.RunLevelsPipeline || Settings.ProductionBuild;
 
         /// <summary>
         /// Pipelines that publish process-global in-memory state which later pipelines depend on. When a
@@ -108,7 +133,7 @@ namespace ProjectMilan
         /// Redemption - see <see cref="ECheckpointStage"/>). It invalidates every existing checkpoint,
         /// regardless of which stage it was taken at, forcing a complete rebuild.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 6; // 6: dynamic MP map-list registration - old checkpoints' Default_<DLC_NAME>.bin predates MapListConfigWriter/MapIdAllocator entirely
+        public const int MIN_CHECKPOINT_VERSION = 7; // 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -121,6 +146,7 @@ namespace ProjectMilan
         /// <param name="obj"></param>
         private static void Init(CLIOptions obj)
         {
+            KeepPreBakeMaps = obj.KeepPreBakeMaps;
 #if DEBUG
             // Change to true to run the research() method, for quick research tasks. Like LEX experiments.
             bool researchMode = obj.ResearchMode;
@@ -134,6 +160,10 @@ namespace ProjectMilan
             MilanLog.Information("Welcome to Project Milan");
             Settings = LoadSettingsConfig(obj);
             VerifySettings();
+            if (KeepPreBakeMaps && !BuildStaticLighting)
+                MilanLog.Warning("--keep-prebake-maps has no effect because IsStaticLightingBuild is disabled in this configuration.");
+            if (Settings.ProductionBuild)
+                MilanLog.Information("PRODUCTION BUILD: all kits, weapons and levels will be built, lighting baked at Production quality");
 
             if (!researchMode)
             {
@@ -155,13 +185,17 @@ namespace ProjectMilan
                 }
 
 
-                if (Settings.UseCheckpointSystem)
+                if (Settings.UseCheckpointSystem || Settings.ProductionBuild)
                 {
                     // Only ask to restore if the checkpoint folder actually exists
                     var checkpointFolder = Program.Settings.CheckpointFolder;
                     var checkpointExists = !string.IsNullOrWhiteSpace(checkpointFolder) && Directory.Exists(checkpointFolder);
 
-                    if (checkpointExists)
+                    if (Settings.ProductionBuild)
+                    {
+                        ConfigureProductionCheckpoint(checkpointExists);
+                    }
+                    else if (checkpointExists)
                     {
                         // Missing or unreadable metadata reads back as version 0, so it fails the check below.
                         var checkpointInfo = Checkpoint.ReadCheckpointMetadata();
@@ -211,7 +245,7 @@ namespace ProjectMilan
 
                     // Always ask whether to create a checkpoint (unless the user already chose to update/restore).
                     // A run either restores or creates, never both.
-                    if (CreateStage == ECheckpointStage.None && RestoreStage == ECheckpointStage.None)
+                    if (!Settings.ProductionBuild && CreateStage == ECheckpointStage.None && RestoreStage == ECheckpointStage.None)
                     {
                         Console.WriteLine("-------------------------------");
                         Console.WriteLine("Create a checkpoint during this run [y/N]? (5 second timeout)");
@@ -223,14 +257,33 @@ namespace ProjectMilan
                         }
                     }
 
-                    // A run that isn't restoring a checkpoint is a from-scratch build, so the converted-WEM cache
-                    // has to go with it. That cache is keyed by source ID alone and records nothing about which
-                    // tools produced each entry, so anything converted under an older toolchain (e.g. the wrong
-                    // ww2ogg codebook pack) otherwise survives every "clean" build forever and ships corrupt audio.
-                    if (RestoreStage == ECheckpointStage.None)
+                    // The converted-WEM cache is keyed by source ID alone and records nothing about which tools
+                    // produced each entry, so anything converted under an older toolchain (e.g. the wrong ww2ogg
+                    // codebook pack) survives every "clean" build forever and ships corrupt audio. Purging it
+                    // forces every WEM to be reconverted, which is slow - so a production build always does it
+                    // (that's the build that would actually ship the bad audio), while a dev build only does it
+                    // on request, since most dev runs aren't touching audio at all.
+                    if (Settings.ProductionBuild)
                     {
-                        MilanLog.Information("Not restoring a checkpoint - purging the converted-WEM cache so audio is regenerated from source");
+                        MilanLog.Information("Production build: purging the converted-WEM cache so audio is regenerated from source");
                         AudioPipeline.Clean();
+                    }
+                    else if (RestoreStage == ECheckpointStage.None)
+                    {
+                        Console.WriteLine("-------------------------------");
+                        Console.WriteLine("Purging the converted-WEM cache reconverts all audio from source. Slow, but it's the");
+                        Console.WriteLine("only way to clear audio that was converted by an older or broken toolchain.");
+                        Console.WriteLine("Purge the converted-WEM cache [y/N]? (5 second timeout)");
+                        var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                        if ("Y".CaseInsensitiveEquals(input))
+                        {
+                            MilanLog.Information("Purging the converted-WEM cache so audio is regenerated from source");
+                            AudioPipeline.Clean();
+                        }
+                        else
+                        {
+                            MilanLog.Information("Keeping the converted-WEM cache for this run");
+                        }
                     }
                 }
             }
@@ -291,6 +344,71 @@ namespace ProjectMilan
                 _keepAwakeTimer.Stop();
                 SystemSleepManager.AllowSleep();
             }
+        }
+
+        /// <summary>
+        /// TEMP - while iterating on the Levels pipeline (lighting bakes). When true, production builds take their
+        /// checkpoint right before Levels instead of at the last stage, and offer to restore an up-to-date
+        /// production checkpoint taken before Levels, so each attempt doesn't rebuild kits/weapons/etc. Set back to
+        /// false for real release builds, which must build everything from scratch.
+        /// </summary>
+        private const bool ProductionCheckpointBeforeLevels = false;
+
+        /// <summary>
+        /// Production builds never restore a checkpoint - they always build from scratch - but they do
+        /// write a fresh one at the last checkpointable pipeline that runs this build, so later dev
+        /// builds can pick up from the release's output. See <see cref="ProductionCheckpointBeforeLevels"/>
+        /// for the temporary exception.
+        /// </summary>
+        /// <param name="checkpointExists">If there is an existing checkpoint folder on disk.</param>
+        private static void ConfigureProductionCheckpoint(bool checkpointExists)
+        {
+            var checkpointInfo = checkpointExists ? Checkpoint.ReadCheckpointMetadata() : null;
+
+            // Same reasoning as the outdated-checkpoint prompt: a stale checkpoint means pipeline code
+            // changed, so the on-disk class caches from before the change can't be trusted either.
+            if (checkpointInfo != null && checkpointInfo.Version < MIN_CHECKPOINT_VERSION)
+            {
+                MilanLog.Information("Production build: existing checkpoint is outdated - cleaning MPCommon/NonStartup caches");
+                MPCommon.Clean();
+                NonStartupPipeline.Clean();
+            }
+
+            // Only reuse a checkpoint a production build wrote: a dev one may be missing kits/weapons/levels that
+            // were disabled per-entry, which production forces on.
+            if (ProductionCheckpointBeforeLevels && checkpointInfo != null && checkpointInfo.Version >= MIN_CHECKPOINT_VERSION
+                && checkpointInfo.ProductionBuild && checkpointInfo.Stage < ECheckpointStage.Levels)
+            {
+                Console.WriteLine("-------------------------------");
+                Console.WriteLine($"Production checkpoint exists at the {checkpointInfo.Stage} pipeline{DescribeCheckpointAge(checkpointInfo.CreatedUtc)}.");
+                Console.WriteLine($"Use it and skip all pipelines through {checkpointInfo.Stage} [Y/n]? (5 second timeout)");
+                var input = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                if (!"N".CaseInsensitiveEquals(input))
+                {
+                    RestoreStage = checkpointInfo.Stage;
+                    MilanLog.Information($"Production build: using checkpoint; skipping all pipelines through {RestoreStage}");
+                    WarnAboutPipelinesMissingFromCheckpoint(checkpointInfo);
+                    return; // A run either restores or creates, never both
+                }
+            }
+
+            MilanLog.Information("Production build: not restoring a checkpoint");
+
+            if (string.IsNullOrWhiteSpace(Settings.CheckpointFolder))
+            {
+                MilanLog.Warning("Production build: CheckpointFolder is not configured, no checkpoint will be created.");
+                return;
+            }
+
+            var lastEnabledStage = CheckpointStages.LastOrDefault(x => x.Enabled() && (!ProductionCheckpointBeforeLevels || x.Stage < ECheckpointStage.Levels));
+            if (lastEnabledStage.Name == null)
+            {
+                MilanLog.Warning("Production build: no checkpointable pipelines are enabled, no checkpoint will be created.");
+                return;
+            }
+
+            CreateStage = lastEnabledStage.Stage;
+            MilanLog.Information($"Production build: will create a new checkpoint at the {CreateStage} pipeline");
         }
 
         /// <summary>
@@ -401,7 +519,7 @@ namespace ProjectMilan
             }
 
             // Set up UDK dependencies here
-            if (Program.Settings.IsStaticLightingBuild)
+            if (BuildStaticLighting)
             {
                 UDKSetup.EnsureUDK();
             }
@@ -486,21 +604,21 @@ namespace ProjectMilan
             //goto levelBuild;
 
         kitsBuild:
-            RunPipeline(ECheckpointStage.Kits, Settings.RunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
+            RunPipeline(ECheckpointStage.Kits, ShouldRunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
         weaponsBuild:
-            RunPipeline(ECheckpointStage.Weapons, Settings.RunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
+            RunPipeline(ECheckpointStage.Weapons, ShouldRunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
 
             // This pipeline must come after weapons as it depends on Collector SMG.
-            if (Settings.RunMP4EnemiesPipeline && !Settings.RunWeaponsPipeline)
+            if (Settings.RunMP4EnemiesPipeline && !ShouldRunWeaponsPipeline)
             {
                 MilanLog.Error(@"MP4Enemies pipeline cannot run without SFXWeapons, pipeline being skipped.");
             }
             // The weapons dependency is folded into the gate rather than wrapped around the call so this
             // stage is always reached - a checkpoint chosen at MP4Enemies still gets written when it's skipped.
-            RunPipeline(ECheckpointStage.MP4Enemies, Settings.RunWeaponsPipeline && Settings.RunMP4EnemiesPipeline, MP4NewEnemiesPipeline.RunPipeline, "MP4Enemies"); // Ports MP4 enemies that need custom code handling
+            RunPipeline(ECheckpointStage.MP4Enemies, ShouldRunWeaponsPipeline && Settings.RunMP4EnemiesPipeline, MP4NewEnemiesPipeline.RunPipeline, "MP4Enemies"); // Ports MP4 enemies that need custom code handling
 
         levelBuild:
-            RunPipeline(ECheckpointStage.Levels, Settings.RunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
+            RunPipeline(ECheckpointStage.Levels, ShouldRunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
 
         rejectionBuild:
             RunPipeline(ECheckpointStage.Rejection, Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
@@ -513,7 +631,6 @@ namespace ProjectMilan
             // checkpoint stage exists at or after Redemption, so this point is never itself skipped.
             SetConsoleTitle(ConsoleTitlePostFix, "Finalizing TLK");
             TLKPipeline.FinalizePipeline();
-
 
         // EVERYTHING AFTER THIS IS NON-CONTENT PORTING AND SHOULD NOT BE CHECKPOINTED ---------
 
@@ -767,26 +884,40 @@ namespace ProjectMilan
                 return;
 
             SetConsoleTitle(ConsoleTitlePostFix, "Creating checkpoint");
+            TLKPipeline.CommitPendingStrings(); // Config is already on disk - the TLK strings it references must be too
             Checkpoint.CreateCheckpoint(completedStage, GetDisabledPipelinesThrough(completedStage));
         }
 
         private static void RunResearch()
         {
 #if DEBUG
+            // MP maps that get a UDK lighting bake (BuildLighting = true in MPLevelsVars)
+            //LightmapResolutionScan.Run([
+            //    "BioP_MPTowr3", "BioP_MPCer3", "BioP_MPNov3", "BioP_MPMoon", "BioP_MPGeth", "BioP_MPJngl", "BioP_MPThes",
+            //    "BioP_MPOcean", "BioP_MPHosp", "BioP_MPRoad", "BioP_MPCer2", "BioP_MPDish2", "BioP_MPNov2", "BioP_MPRctr2",
+            //    "BioP_MPSlum2", "BioP_MPTowr2"
+            //], @"B:\UserProfile\Desktop\LightmapResolutionScan");
+            //return;
 
-            DynamicMixinResearch.RunDynamicMixinInventory(@"B:\UserProfile\Desktop\dynamicmixins.csv", @"B:\UserProfile\Desktop\dynamicmixins_inventory.json");
-            return;
+            //Research.FixWwiseStreamDonors();
+            //return;
 
-            Research.TestBuildLavaTerrainSetup();
-            return;
-            Research.TestBuildTerrainPackage();
-            return;
+            //Research.GetMissingShaderPackages("S:\\SteamLibrary\\steamapps\\common\\Mass Effect Legendary Edition\\Game\\LMP\\BioGame\\DLC\\DLC_MOD_ProjectMilan\\CookedPCConsole");
+            //return;
 
-            TextureResearch.FindUniqueLMPTextures(@"S:\Milan\Textures");
-            return;
+            //DynamicMixinResearch.RunDynamicMixinInventory(@"B:\UserProfile\Desktop\dynamicmixins.csv", @"B:\UserProfile\Desktop\dynamicmixins_inventory.json");
+            //return;
 
-            Research.InstallCompiledShaders(force: false);// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
-            return;
+            //Research.TestBuildLavaTerrainSetup();
+            //return;
+            //Research.TestBuildTerrainPackage();
+            //return;
+
+            //TextureResearch.FindUniqueLMPTextures(@"S:\Milan\Textures");
+            //return;
+
+            //Research.InstallCompiledShaders(force: true);// @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_PMR3\CookedPCConsole\Levels\BioP_MPPSTropical");
+            //return;
 
             //return;
             //Research.SlashShaderCache(MEGame.LE3);
@@ -795,7 +926,7 @@ namespace ProjectMilan
             //return;
             //Research.GenerateLightingForLevel();
             //return;
-            // Research.ImportStaticLightingForLevel();
+            Research.ImportStaticLightingForLevel();
             return;
             // Research.TestTextureToInstancesMap();
             // Research.DumpRefShaderNames();

@@ -12,5 +12,8 @@ namespace ProjectMilan
 
         [Option('r', "researchmode", HelpText = "Runs the research mode code path instead of the build path.", Required = false)]
         public bool ResearchMode { get; internal set; }
+
+        [Option("keep-prebake-maps", HelpText = "Keep copies of exported UDK maps before static lighting is built, for debugging.", Required = false)]
+        public bool KeepPreBakeMaps { get; set; }
     }
 }
