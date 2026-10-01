@@ -16,6 +16,7 @@ using ProjectMilan_ExtraContent.Rejects.Enemies;
 using ProjectMilan_ExtraContent.Shared;
 using ProjectMilanCore;
 using ProjectMilanCore.Config;
+using ProjectMilanCore.Textures;
 using System.Security.AccessControl;
 
 namespace ProjectMilan_ExtraContent.Rejects
@@ -159,12 +160,15 @@ namespace ProjectMilan_ExtraContent.Rejects
             MilanLog.Information($"Generating GUI assets package", customPrefix: LOG_CATEGORY);
             var pccP = Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", "SFXGUIMPImages_Milan_Rejects.pcc");
             var pcc = MEPackageHandler.CreateAndOpenPackage(pccP, MEGame.LE3);
-            var bannerExp = Texture2D.CreateTexture(pcc, "OptEmyRejects", 1024, 256, PixelFormat.BC7, false);
-            var bannerTex = new Texture2D(bannerExp);
-            var imagePath = Path.Combine(PipelineRoot, "Assets", "Textures", "GUI", "factionbanner.png");
-            var image = Image.LoadFromFile(imagePath, PixelFormat.DXT5);
-            bannerTex.Replace(image, bannerExp.GetProperties());
-            bannerExp.WriteProperty(new BoolProperty(false, "sRGB"));
+            var guiTexturesDir = Path.Combine(PipelineRoot, "Assets", "Textures", "GUI");
+            var imagePath = GUITextureImporter.FindImage(guiTexturesDir, "factionbanner");
+            if (imagePath == null)
+            {
+                MilanLog.Error($"No faction banner image found in {guiTexturesDir}", customPrefix: LOG_CATEGORY);
+                return;
+            }
+
+            GUITextureImporter.AddGUITexture(pcc, null, "OptEmyRejects", imagePath, PixelFormat.BC7);
             pcc.Save();
         }
 
