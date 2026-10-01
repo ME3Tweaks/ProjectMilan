@@ -79,26 +79,54 @@ namespace ProjectMilan.Pipelines.TLK
         public static void FinalizePipeline()
         {
             TLKStarterKit.AssignAndAppend(MilanShared.DisplayName, MilanShared.DLC_NAME);
+            CommitPendingStrings("Finalizing");
+
+            MilanPipelinesShared.TLKSet = null;
+            MilanPipelinesShared.TLKStartIndex = 0;
+        }
+
+        /// <summary>
+        /// Writes every string assigned via MilanPipelinesShared.AssignTLK since the last commit into the
+        /// output .tlk files, then clears them from the pending set. TLKStartIndex is moved past them, as
+        /// AssignTLK only looks at pending strings and TLKStartIndex to pick the next ID.
+        /// <para>
+        /// Called before a checkpoint is taken: config referencing these strings is already committed to
+        /// disk by then, so the TLKs have to be too, or the checkpoint holds config pointing at strings it
+        /// doesn't have. ModBuilder.RehydrateFromCheckpoint also derives TLKStartIndex from the highest ID in
+        /// the restored .tlk files - uncommitted strings would be reassigned to later stages' content.
+        /// </para>
+        /// </summary>
+        public static void CommitPendingStrings(string reason = "Committing")
+        {
+            if (MilanPipelinesShared.TLKSet == null)
+                return;
 
             var outDir = Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole");
             foreach (var tlk in Directory.GetFiles(outDir, "*.tlk", SearchOption.TopDirectoryOnly))
             {
                 var loc = tlk.GetUnrealLocalization();
-                var tlkF = new ME2ME3TalkFile(tlk);
+                var pending = MilanPipelinesShared.TLKSet[loc];
+                if (pending.Count == 0)
+                    continue;
 
-                foreach (var str in MilanPipelinesShared.TLKSet[loc])
+                var tlkF = new ME2ME3TalkFile(tlk);
+                foreach (var str in pending)
                 {
                     tlkF.AddString(new TLKStringRef(str.StringID, str.Data + '\0'));
                 }
 
-                MilanLog.Information($"  Finalizing TLK {Path.GetFileName(tlk)}", customPrefix: LOG_CATEGORY);
+                MilanLog.Information($"  {reason} TLK {Path.GetFileName(tlk)} ({pending.Count} strings)", customPrefix: LOG_CATEGORY);
                 var huff = new HuffmanCompression();
                 huff.LoadInputData(tlkF.StringRefs);
                 huff.SaveToFile(tlk);
             }
 
-            MilanPipelinesShared.TLKSet = null;
-            MilanPipelinesShared.TLKStartIndex = 0;
+            MilanPipelinesShared.TLKStartIndex = MilanPipelinesShared.TLKSet.Values.SelectMany(list => list)
+                .Select(x => x.StringID).Append(MilanPipelinesShared.TLKStartIndex).Max();
+            foreach (var pending in MilanPipelinesShared.TLKSet.Values)
+            {
+                pending.Clear();
+            }
         }
     }
 }
