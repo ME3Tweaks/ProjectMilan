@@ -52,7 +52,7 @@ namespace ProjectMilan.MilanUDK
 
             var localCache = (rop?.Cache as TieredPackageCache)?.ChainNewCache();
 
-            if (propertyname.CaseInsensitiveEquals("Parent") && relinkingexport.ClassName.CaseInsensitiveEquals("MaterialInstanceConstant"))
+            if (propertyname.CaseInsensitiveEquals("Parent") && relinkingexport.IsA("MaterialInstance"))
             {
                 // Check if the parent is a RvrEffectsMaterialUser - UDK does not support this
                 // We will relink parent up the parent material instead

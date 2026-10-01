@@ -669,7 +669,8 @@ namespace ProjectMilan.MilanUDK
                 return true;
 
             // Don't want bio version
-            if (x.ClassName.CaseInsensitiveEquals("MaterialInstanceConstant"))
+            if (x.ClassName.CaseInsensitiveEquals("MaterialInstanceConstant")
+                || x.ClassName.CaseInsensitiveEquals("MaterialInstanceTimeVarying"))
                 return true;
 
             // Might be IsA()
