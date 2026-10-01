@@ -44,7 +44,8 @@
         /// (ignoring per-entry Enabled flags, but not entries marked ExcludeFromProduction), static
         /// lighting is always baked (as if <see cref="IsStaticLightingBuild"/> were on) at Production
         /// quality, and no checkpoint is restored - a new one is
-        /// written at the last enabled checkpointable pipeline instead. When off, nothing changes.
+        /// written at the last enabled checkpointable pipeline instead. The converted-WEM cache is also always
+        /// purged, so no audio from an older toolchain can ship. When off, nothing changes.
         /// </summary>
         bool ProductionBuild { get; set; }
         #endregion
@@ -110,6 +111,15 @@
         /// Location of a custom installation of UDK that is used only for Project Milan, to avoid pollution with other things such as materials. Milan will manage the packages in this target, and content WILL be deleted automatically from it.
         /// </summary>
         string MilanUDKPath { get; set; }
+
+        /// <summary>
+        /// UE4.27's UnrealLightmass.exe (Engine\Binaries\Win64), used to solve static lighting through the
+        /// UdkInj Lightmass bridge. Null or empty looks up the Epic launcher's UE_4.27 install. If no
+        /// UnrealLightmass.exe is found, or the UdkInj Shell isn't built on this machine, lighting builds use
+        /// UDK's own UE3 Lightmass. Milan installs the bridge into <see cref="MilanUDKPath"/> for each UE4
+        /// build and restores UE3 Lightmass afterwards. Per-level tuning is <see cref="Pipelines.Levels.LevelSpecificPipeline.UE4Lightmass"/>.
+        /// </summary>
+        string UE4LightmassPath { get; set; }
 
         #endregion
 

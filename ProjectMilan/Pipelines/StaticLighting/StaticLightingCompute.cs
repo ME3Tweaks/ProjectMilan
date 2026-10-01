@@ -23,6 +23,25 @@ namespace ProjectMilan.Pipelines.StaticLighting
     }
 
     /// <summary>
+    /// Which Lightmass solves a lighting build. Either way UDK runs the build and imports the
+    /// result exactly the same - the only difference is which UnrealLightmass.exe UDK's Swarm job
+    /// launches from Binaries\Win64.
+    /// </summary>
+    public enum LightmassSolver
+    {
+        /// <summary>UDK's own UE3 Lightmass.</summary>
+        UE3,
+
+        /// <summary>
+        /// UE4.27 Lightmass through the UdkInj Lightmass bridge (UdkInj docs/LIGHTMASS_BRIDGE.md). The
+        /// bridge translates UDK's exported scene to UE4, solves it at the same quality level, and
+        /// hands the lightmaps back to UDK. Volume samples, mesh area lights, precomputed visibility
+        /// and dominant shadow maps are not produced yet, and BSP/terrain maps fail the build.
+        /// </summary>
+        UE4,
+    }
+
+    /// <summary>
     /// Builds static lighting in UDK in an automated fashion. This process is VERY slow, should only really ever be used on final builds.
     /// </summary>
     public static class StaticLightingCompute
@@ -130,7 +149,9 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// <param name="qualityLevel">Lightmass build quality. See <see cref="LightmassBuildQuality"/>. Forced to
         /// <see cref="LightmassBuildQuality.Production"/> on a production build.</param>
         /// <param name="keepPreBakeMaps">Keep a copy of the exported maps before UDK modifies them.</param>
-        internal static void ComputeLighting(string mapName, bool allowLightmapCompression = false, int? defaultStaticMeshLightingRes = null, LightmassBuildQuality qualityLevel = LightmassBuildQuality.Medium, bool keepPreBakeMaps = false)
+        /// <param name="ue4Lightmass">This level's UE4 Lightmass settings; null uses the defaults. Whether UE4
+        /// Lightmass is used at all is decided before each run, see <see cref="UseLightmass"/>.</param>
+        internal static void ComputeLighting(string mapName, bool allowLightmapCompression = false, int? defaultStaticMeshLightingRes = null, LightmassBuildQuality qualityLevel = LightmassBuildQuality.Medium, bool keepPreBakeMaps = false, UE4LightmassSettings ue4Lightmass = null)
         {
             if (Program.Settings.ProductionBuild && qualityLevel != LightmassBuildQuality.Production)
             {
@@ -161,6 +182,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
                     MilanLog.Warning($"Could not kill stale UDK process {stale.Id}: {ex.Message}", customPrefix: LOG_CATEGORY);
                 }
             }
+
+            // After the stale-UDK kill: a leftover bridge exits once its UDK is gone, and a running
+            // UnrealLightmass.exe can't be replaced. Disposed at method exit, after the finally below
+            // has killed UDK, so the bridge is removed however the build ends.
+            var solver = UseLightmass(ue4Lightmass ?? new UE4LightmassSettings());
+            using var lightmassRestore = new UE3LightmassRestore(solver);
 
             if (keepPreBakeMaps)
                 KeepPreBakeMaps(mapName);
@@ -196,7 +223,8 @@ namespace ProjectMilan.Pipelines.StaticLighting
             {
                 FileName = UDKDirectory.GetExecutablePath(Program.Settings.MilanUDKPath),
                 // Add -unattended if startup messages are getting in the way.
-                Arguments = $"editor -log",
+                // -forcelogflush: Launch.log is otherwise buffered, so a hung or killed UDK loses its last minutes of log.
+                Arguments = $"editor -log -forcelogflush",
                 // Arguments = $"editor {mapName}.udk -log", // commented out; we control map load now.
             };
 
@@ -221,7 +249,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 var mapPath = StaticLightingExport.GetMapOutputPath(mapName);
                 var masterMap = Path.Combine(mapPath, $"{mapName}.udk");
 
-                BakeLighting(masterMap, qualityLevel);
+                BakeLighting(masterMap, qualityLevel, solver);
 
                 MilanLog.Information("UDK lighting build is complete", customPrefix: LOG_CATEGORY);
             }
@@ -301,6 +329,198 @@ namespace ProjectMilan.Pipelines.StaticLighting
             }
         }
 
+        // Once stable, we should bundle this into ProjectMilan (same as the agent module above).
+        private const string UdkInjShellPath = @"B:\UserProfile\source\repos\ME3Tweaks\UdkInj\UDKInj.Shell\bin\Debug\net9.0\UDKInj.Shell.exe";
+
+        /// <summary>
+        /// Milan's UE4 reference bakes, one per quality level (Preview/Medium/High/Production). The
+        /// bridge takes each UE4 solver-quality header from the one matching the UDK build's quality.
+        /// Only each bake's logical scene is kept - UdkInj docs/LIGHTMASS_BRIDGE.md covers re-baking them.
+        /// </summary>
+        private static string UE4ReferencePath => Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "UE4Lightmass", "Reference");
+
+        /// <summary>
+        /// Decides, before each UDK run, which Lightmass solves this build, and puts it in UDK's
+        /// Binaries\Win64 via the UdkInj Shell's install-/uninstall-lightmass-bridge commands. UE4 is used
+        /// unless the level asks for UE3 or anything the bridge needs is missing on this machine (UE4
+        /// Lightmass, the UdkInj Shell, Milan's UE4 reference bakes), in which case the build falls
+        /// back to UE3 with a warning rather than failing. Every UE4 build reinstalls the bridge from
+        /// Milan's reference bakes with this level's tuning (keeping the bridge's own Ue4Threads cap);
+        /// every UE3 build removes a bridge left behind by an interrupted run.
+        /// </summary>
+        /// <returns>The solver UDK now has; UE4 must be undone with <see cref="RestoreUE3Lightmass"/>.</returns>
+        private static LightmassSolver UseLightmass(UE4LightmassSettings settings)
+        {
+            if (settings.UseUE3)
+                MilanLog.Information("Lightmass: UE3 (this level sets UE4Lightmass.UseUE3)", customPrefix: LOG_CATEGORY);
+            else if (FindUE4Lightmass(out var reason) is not { } ue4Lightmass)
+                MilanLog.Warning($"Lightmass: UE3, because UE4 Lightmass can't be used: {reason}", customPrefix: LOG_CATEGORY);
+            else
+            {
+                MilanLog.Information($"Lightmass: UE4 ({ue4Lightmass}; environment color x{settings.EnvironmentColorScale}, " +
+                    $"sun indirect x{settings.DirectionalIndirectLightingScale})", customPrefix: LOG_CATEGORY);
+                var culture = System.Globalization.CultureInfo.InvariantCulture;
+                RunUdkInjShell($"install-lightmass-bridge \"{Program.Settings.MilanUDKPath}\" \"{UE4ReferencePath}\" \"{ue4Lightmass}\" " +
+                    $"--environment-color-scale {settings.EnvironmentColorScale.ToString(culture)} " +
+                    $"--directional-indirect-scale {settings.DirectionalIndirectLightingScale.ToString(culture)}",
+                    "install the UE4 Lightmass bridge");
+                return LightmassSolver.UE4;
+            }
+
+            RestoreUE3Lightmass();
+            return LightmassSolver.UE3;
+        }
+
+        /// <summary>
+        /// Puts UDK's own UE3 Lightmass back if the bridge is installed; a no-op otherwise. Milan does
+        /// this after every UE4 build so a hand-run UDK is never left on the bridge.
+        /// </summary>
+        private static void RestoreUE3Lightmass()
+        {
+            // Without the Shell the bridge can't have been installed here, so UDK already has UE3.
+            if (File.Exists(UdkInjShellPath))
+                RunUdkInjShell($"uninstall-lightmass-bridge \"{Program.Settings.MilanUDKPath}\"", "restore UDK's UE3 Lightmass");
+        }
+
+        /// <summary>Runs <see cref="RestoreUE3Lightmass"/> on dispose after a UE4 build. A failure is only
+        /// logged: the next UE3 build (or the next UE4 install) replaces the bridge anyway.</summary>
+        private sealed class UE3LightmassRestore(LightmassSolver solver) : IDisposable
+        {
+            public void Dispose()
+            {
+                if (solver != LightmassSolver.UE4)
+                    return;
+                try
+                {
+                    RestoreUE3Lightmass();
+                }
+                catch (Exception ex)
+                {
+                    MilanLog.Warning($"Could not restore UDK's UE3 Lightmass: {ex.Message}", customPrefix: LOG_CATEGORY);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether the UE4 bridge solved the lighting build started at <paramref name="buildStartUtc"/>:
+        /// each bridge job keeps a work directory (under WorkRoot in the bridge's config.json) whose
+        /// bridge-job.json is written when the job starts and bridge-result.json only once every
+        /// mapping has been handed back to UDK.
+        /// </summary>
+        private static bool UE4BridgeSucceeded(DateTime buildStartUtc, out string failure)
+        {
+            failure = null;
+            var configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "UdkInj", "LightmassBridge", "config.json");
+            string workRoot;
+            try
+            {
+                using var config = System.Text.Json.JsonDocument.Parse(File.ReadAllText(configPath));
+                workRoot = config.RootElement.GetProperty("WorkRoot").GetString();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException
+                                           or KeyNotFoundException or InvalidOperationException)
+            {
+                failure = $"could not read the bridge's WorkRoot from {configPath}: {ex.Message}";
+                return false;
+            }
+
+            var jobs = Directory.Exists(workRoot)
+                ? new DirectoryInfo(workRoot).EnumerateDirectories()
+                    .Where(d => d.CreationTimeUtc >= buildStartUtc && File.Exists(Path.Combine(d.FullName, "bridge-job.json")))
+                    .ToList()
+                : [];
+            if (jobs.Count == 0)
+                failure = "no bridge job ran";
+            else if (jobs.FirstOrDefault(d => !File.Exists(Path.Combine(d.FullName, "bridge-result.json"))) is { } failed)
+                failure = $"bridge job {failed.FullName} has no result; see its log in UDK's Launch.log ([UdkInj bridge] lines)";
+            else
+                MilanLog.Information($"UE4 Lightmass solved the build ({string.Join(", ", jobs.Select(d => d.Name))})", customPrefix: LOG_CATEGORY);
+            return failure == null;
+        }
+
+        private static void RunUdkInjShell(string arguments, string what)
+        {
+            using var shell = Process.Start(new ProcessStartInfo(UdkInjShellPath, arguments)
+            {
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            }) ?? throw new InvalidOperationException($"Could not start {UdkInjShellPath}");
+            var output = shell.StandardOutput.ReadToEndAsync();
+            var error = shell.StandardError.ReadToEndAsync();
+            shell.WaitForExit();
+            foreach (var line in (output.Result + error.Result).Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                MilanLog.Information($"  [UdkInj] {line}", customPrefix: LOG_CATEGORY);
+            if (shell.ExitCode != 0)
+                throw new InvalidOperationException($"Could not {what} (UdkInj exit code {shell.ExitCode}); see the [UdkInj] lines above.");
+        }
+
+        /// <summary>
+        /// UE4.27's UnrealLightmass.exe if the bridge can use it on this machine, else null with
+        /// <paramref name="reason"/>. <see cref="Settings.IMilanSettings.UE4LightmassPath"/> wins when set;
+        /// otherwise the Epic launcher's UE_4.27 install is looked up (registry, then the launcher's
+        /// install list, then its default Program Files\Epic Games\UE_4.27 layout on each fixed drive,
+        /// since the first two are not always kept up to date).
+        /// </summary>
+        private static string FindUE4Lightmass(out string reason)
+        {
+            reason = null;
+            if (!File.Exists(UdkInjShellPath))
+                reason = $"the UdkInj Shell is not at {UdkInjShellPath}";
+            else if (!Directory.Exists(UE4ReferencePath))
+                reason = $"Milan's UE4 reference bakes are missing ({UE4ReferencePath})";
+            if (reason != null)
+                return null;
+
+            var configured = Program.Settings.UE4LightmassPath;
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                if (File.Exists(configured))
+                    return Path.GetFullPath(configured);
+                reason = $"UE4LightmassPath {configured} does not exist";
+                return null;
+            }
+
+            const string relativeExe = @"Engine\Binaries\Win64\UnrealLightmass.exe";
+            foreach (var root in UE427InstallCandidates())
+            {
+                var exe = Path.Combine(root, relativeExe);
+                if (File.Exists(exe))
+                    return exe;
+            }
+            reason = "UE4LightmassPath is not set and no UE_4.27 install was found";
+            return null;
+        }
+
+        private static IEnumerable<string> UE427InstallCandidates()
+        {
+            if (Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\EpicGames\Unreal Engine\4.27", "InstalledDirectory", null) is string installed)
+                yield return installed;
+
+            var launcherList = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                "Epic", "UnrealEngineLauncher", "LauncherInstalled.dat");
+            var listed = new List<string>();
+            try
+            {
+                using var json = System.Text.Json.JsonDocument.Parse(File.ReadAllText(launcherList));
+                foreach (var app in json.RootElement.GetProperty("InstallationList").EnumerateArray())
+                    if (app.GetProperty("AppName").GetString() == "UE_4.27")
+                        listed.Add(app.GetProperty("InstallLocation").GetString());
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException
+                                           or KeyNotFoundException or InvalidOperationException)
+            {
+                // No launcher, or a list in an unexpected shape: fall through to the default layout.
+            }
+            foreach (var path in listed)
+                yield return path;
+
+            foreach (var drive in DriveInfo.GetDrives().Where(x => x.DriveType == DriveType.Fixed))
+                yield return Path.Combine(drive.RootDirectory.FullName, "Program Files", "Epic Games", "UE_4.27");
+        }
+
         private static void KeepPreBakeMaps(string mapName)
         {
             var mapPath = StaticLightingExport.GetMapOutputPath(mapName);
@@ -359,7 +579,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// suppressed at the hook level instead (UDKAgent's CBDisplayLoadErrors_Hook), and the
         /// journal/browser-pane popups are suppressed via ini in EditorConfigOverride.
         /// </summary>
-        private static void BakeLighting(string masterMapPath, LightmassBuildQuality qualityLevel)
+        private static void BakeLighting(string masterMapPath, LightmassBuildQuality qualityLevel, LightmassSolver solver)
         {
             var loadErrorsBefore = GetLoadErrorCount();
 
@@ -422,8 +642,20 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 }
             }
 
+            var buildStartUtc = DateTime.UtcNow;
             using (new LightmassProgressReporter())
                 RunLightmass(qualityLevel);
+
+            // A failed Lightmass build still returns here, and saving would write the map out
+            // without its lighting. UDK only logs a failed UE4 bridge job, so check the bridge's own
+            // result marker, and rebuild with UE3 in the same editor session if it didn't finish.
+            if (solver == LightmassSolver.UE4 && !UE4BridgeSucceeded(buildStartUtc, out var failure))
+            {
+                MilanLog.Error($"UE4 Lightmass did not finish this build ({failure}); rebuilding it with UE3 Lightmass", customPrefix: LOG_CATEGORY);
+                RestoreUE3Lightmass();
+                using (new LightmassProgressReporter())
+                    RunLightmass(qualityLevel);
+            }
 
             // Sleep for a few seconds.
             // Thread.Sleep(TimeSpan.FromSeconds(60));

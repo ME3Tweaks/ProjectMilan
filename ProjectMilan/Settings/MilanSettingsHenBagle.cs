@@ -9,6 +9,7 @@ namespace ProjectMilan.Settings
         public string InputSyncPath { get; set; } = @"D:\MEModding\ME3TweaksModManager\mods\LE3\Project Milan\MilanSync";
         public string TextureSyncFolder { get; set; } = null;
         public string MilanUDKPath { get; set; } = @"D:\MEModding\UDK";
+        public string UE4LightmassPath { get; set; } // Null: look up the Epic launcher's UE_4.27 install
         public int MaxThreads { get; set; } = 2;
 
         public bool RunMPCommonPipeline { get; set; } = false;

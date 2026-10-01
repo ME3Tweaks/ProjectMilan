@@ -65,8 +65,10 @@ namespace ProjectMilan.Settings
         public bool RunConformancePipeline { get; set; } = true;
         public bool RunRejectionPipeline { get; set; }
         public bool RunRedemptionPipeline { get; set; }
-        public bool IsStaticLightingBuild { get; set; } = true;
+        public bool IsStaticLightingBuild { get; set; } = false;
         public bool ProductionBuild { get; set; } = false;
+
+        public string UE4LightmassPath { get; set; } // Null: look up the Epic launcher's UE_4.27 install
 
         private string _milanUDKPath;
         public string MilanUDKPath

@@ -20,6 +20,7 @@ namespace ProjectMilan.Settings
         public bool IsStaticLightingBuild { get; set; }
         public bool ProductionBuild { get; set; } = false;
         public string MilanUDKPath { get; set; } // NEEDS TO BE SET!
+        public string UE4LightmassPath { get; set; } // Null: look up the Epic launcher's UE_4.27 install
         public bool RunLevelsPipeline { get; set; }
         public bool RunAudioPipeline { get; set; }
         public bool RunUpscalePipeline { get; set; } = true;
