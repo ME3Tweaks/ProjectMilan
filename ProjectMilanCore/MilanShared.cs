@@ -1864,8 +1864,26 @@ namespace ProjectMilanCore
                         continue; // These are never moved to TFC as far as I know...
 
                     var props = tex.GetProperties();
-                    if (props.TryGetProp<BoolProperty>("NeverStream", out var neverStreamProp) && neverStreamProp.Value)
+                    bool isLightMapTexture = tex.ClassName == "LightMapTexture2D";
+                    bool isShadowMapTexture = tex.ClassName == "ShadowMapTexture2D";
+                    if (props.TryGetProp<BoolProperty>("NeverStream", out var neverStreamProp) && neverStreamProp.Value &&
+                        !(rootTextures && isLightMapTexture))
                     {
+                        // LE3 keeps shadow-map textures package-resident, but still records their mip-tail base index.
+                        if (rootTextures && isShadowMapTexture)
+                        {
+                            var shadowMapBin = (UTexture2D)ObjectBinary.From(tex);
+                            if (shadowMapBin.Mips.Count > 0)
+                            {
+                                int tailBaseIndex = shadowMapBin.Mips.Count - 1;
+                                if (props.GetProp<IntProperty>("MipTailBaseIdx")?.Value != tailBaseIndex)
+                                {
+                                    props.AddOrReplaceProp(new IntProperty(tailBaseIndex, "MipTailBaseIdx"));
+                                    tex.WriteProperties(props);
+                                }
+                            }
+                        }
+
                         MilanLog.Information($"  Skipping {tex.InstancedFullPath} because it is marked NeverStream", customPrefix: category);
                         continue; // Never stream textures are never moved to TFC... not sure we want to keep this though.
 
@@ -1875,6 +1893,18 @@ namespace ProjectMilanCore
 
                     var startedMovingTexture = false;
                     var changedMips = bin.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty);
+
+                    // Retail LE3 lightmaps and shadow maps store the index of the final mip here. UDK imports lack
+                    // this property, and Texture2D.Replace only updates it when it already exists.
+                    if (rootTextures && (isLightMapTexture || isShadowMapTexture) && bin.Mips.Count > 0)
+                    {
+                        int tailBaseIndex = bin.Mips.Count - 1;
+                        if (props.GetProp<IntProperty>("MipTailBaseIdx")?.Value != tailBaseIndex)
+                        {
+                            props.AddOrReplaceProp(new IntProperty(tailBaseIndex, "MipTailBaseIdx"));
+                            tex.WriteProperties(props);
+                        }
+                    }
 
                     if (bin.Mips.Count <= 6 && changedMips == 0)
                         continue;
