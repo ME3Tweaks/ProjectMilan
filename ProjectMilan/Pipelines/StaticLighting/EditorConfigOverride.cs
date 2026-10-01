@@ -45,6 +45,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
             ("Docking", "SceneManager_Visible",  "False"),
             ("Docking", "LayerBrowser_Visible",  "False"),
             ("Docking", "Documentation_Visible", "False"),
+
+            // The 10-minute autosave fires during long bakes. After a lighting build it also saves
+            // content packages the build dirtied (material usage flags), and autosaving one of those
+            // (BioT_GthMP) crashed UDK after a BioP_MPGeth bake. The pipeline saves explicitly, so
+            // autosave only adds time and risk.
+            ("UnrealEd.EditorUserSettings", "bAutoSaveEnable", "False"),
         ];
 
         public EditorConfigOverride(string iniPath, IEnumerable<(string Section, string Key, string Value)> overrides)
