@@ -1,7 +1,8 @@
 public simulated function RecoverFromBleedout(optional bool bResetHealth = TRUE)
 {
     // MILAN CHANGE: Do not run bleedout code if the owner is not a human player
-    if (Pawn(ModuleOwner).IsHumanControlled())
+    // 09/30/2026 - Mgamerz - Also add IsLocallyControlled() so clients don't mess with us
+    if (Pawn(ModuleOwner).IsHumanControlled() && Pawn(ModuleOwner).IsLocallyControlled())
     {
         Super.RecoverFromBleedout();
         if (bResetHealth)
