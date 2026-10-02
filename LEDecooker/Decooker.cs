@@ -397,6 +397,8 @@ namespace LEDecooker
 
                 if (debugPackages) { package.Save(); }
                 SpecialFixes(package, sourceGame);
+                // Resolve against the final assembled graph, instances and textures, after dependency porting.
+                NormalCompressionMaintenance.FixPackage(package);
                 if (debugPackages) { package.Save(); }
                 // NestObjects(package);
 
@@ -647,7 +649,11 @@ namespace LEDecooker
 
                 currentPath += part;
 
-                var test = exp.FileRef.FindExport(currentPath, "Package");
+                // Any class: a parent created here as a Package placeholder may since have been promoted
+                // to its real class (e.g. RvrEffectsMaterialUser) -- the layering pass nests the opposite
+                // generation's materials under parents the first pass already promoted. Matching only
+                // Package would create a second object at the same path.
+                var test = exp.FileRef.FindExport(currentPath);
                 if (test == null)
                 {
                     test = ExportCreator.CreatePackageExport(exp.FileRef, part, newParent, forcedExport: true);
@@ -1112,8 +1118,10 @@ namespace LEDecooker
                     // parents in the same package (e.g. two "CombinedEffect_Decoy", one under a stale
                     // "..._old" RvrEffectsMaterialUser and one under the live one), so a bare-name check
                     // would wrongly skip the second one as a duplicate of the first.
+                    // IsA rather than an exact class match: DecalMaterial is a Material too, and the
+                    // layering pass must recognise one the first pass already compiled.
                     var alreadyCompiled = nestedPath != null
-                        ? package.FindExport($"{_package.FileNameNoExtension}.{nestedPath}", "Material") != null
+                        ? package.FindExport($"{_package.FileNameNoExtension}.{nestedPath}") is { } existingMaterial && existingMaterial.IsA("Material")
                         : _package.Exports.FirstOrDefault(x => x.ObjectName.Instanced == matName && x.IsA("Material")) != null;
                     if (alreadyCompiled)
                     {
@@ -1383,8 +1391,11 @@ namespace LEDecooker
             // package creates a Package import named after the package itself -- a duplicate of the
             // package's root export once UDK prep adds it. A root-level import of the bare name is what
             // PreparePackageForUDKify collects into the MissingTextures package instead.
+            // An earlier pass may already have done this and had its import moved there, in which case
+            // a new root import would become a duplicate of it at the next UDK prep.
             var leafName = texturePath[(texturePath.LastIndexOf('.') + 1)..];
-            return package.GetEntryOrAddImport(leafName, classname, ImportEntry.GetPackageFile(package.Game, classname));
+            return package.FindImport($"MissingTextures.{leafName}")
+                   ?? package.GetEntryOrAddImport(leafName, classname, ImportEntry.GetPackageFile(package.Game, classname));
         }
 
         /// <summary>

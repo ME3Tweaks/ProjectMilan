@@ -24,7 +24,7 @@ namespace LEDecooker
         /// decooked it and the shader host silently relinked its textures to MissingTextures.
         /// Supplying this leaves the checked-in filter untouched.
         /// </remarks>
-        [Option("packages", Separator = ',', HelpText = "Only decook these packages (comma separated, no extension). Overrides the built-in filter list. Names are matched case-insensitively.")]
+        [Option("packages", Separator = ',', HelpText = "Only process these packages (comma separated, no extension) during decook, conversion or normal-compression maintenance. Names are matched case-insensitively.")]
         public IEnumerable<string> Packages { get; set; }
 
         /// <summary>
@@ -56,6 +56,24 @@ namespace LEDecooker
 
         [Option('u', "convert", HelpText = "Converts decooked assets to UDK asset packages")]
         public bool ConvertAssetsToUDK { get; set; }
+
+        [Option("auditnormalcompression", HelpText = "Read-only normal-compression audit of existing packages; does not decook.")]
+        public bool AuditNormalCompression { get; set; }
+
+        [Option("fixnormalcompression", HelpText = "Repair verified enabled normal-compression mismatches in existing packages, with backups; does not decook.")]
+        public bool FixNormalCompression { get; set; }
+
+        [Option("normalcompressionpath", HelpText = "Package or flat package folder to audit/repair. Defaults to outputfolder/<game>. Accepts PCC or UPK.")]
+        public string? NormalCompressionPath { get; set; }
+
+        [Option("normalcompressionreport", HelpText = "New JSONL report path for the standalone normal-compression audit/repair.")]
+        public string? NormalCompressionReport { get; set; }
+
+        [Option("normalcompressionbackup", HelpText = "Backup folder for changed packages. Existing backup files are never overwritten.")]
+        public string? NormalCompressionBackup { get; set; }
+
+        [Option("fixnormalsamplers", HelpText = "Re-encode BC5 normal maps bound into three channel normal samplers in an existing UDK folder (normalcompressionpath, or udkoutputfolder/Decooked/<game>); does not convert.")]
+        public bool FixNormalSamplers { get; set; }
 
         [Option('g', "game", HelpText = "Game to run the operation on.", Required = true)]
         public MEGame Game { get; set; }

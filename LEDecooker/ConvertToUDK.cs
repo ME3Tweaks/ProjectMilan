@@ -54,16 +54,22 @@ namespace LEDecooker
         {
             // goto end;
             Directory.CreateDirectory(outPathFinal);
-            DecookerLog.Information("Clearing Final Result UPK packages");
-            foreach (var file in Directory.GetFiles(outPathFinal))
+            var selectedPackages = CLIOptions.ParsedOptions.Packages?.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (selectedPackages is { Count: > 0 })
             {
-                File.Delete(file);
+                DecookerLog.Information("Converting selected packages; retaining other UDK output files");
+            }
+            else
+            {
+                DecookerLog.Information("Clearing Final Result UPK packages");
+                foreach (var file in Directory.GetFiles(outPathFinal)) File.Delete(file);
             }
 
             // Convert each MEGame package to UDK. This is the first pass.
             foreach (var inputFolder in packagePaths)
             {
-                var packages = Directory.GetFiles(inputFolder, "*.pcc");
+                var packages = Directory.GetFiles(inputFolder, "*.pcc")
+                    .Where(f => selectedPackages is not { Count: > 0 } || selectedPackages.Contains(Path.GetFileNameWithoutExtension(f))).ToArray();
                 Parallel.ForEach(packages, packageF =>
                 {
                     //foreach (var packageF in packages)
@@ -117,6 +123,8 @@ namespace LEDecooker
                         UDKExportFixup(exp);
                     }
 
+                    // The importer can change normal encodings (e.g. BC7 -> DXT1). Check the destination.
+                    NormalCompressionMaintenance.FixPackage(udkP);
                     udkP.Save();
 
                     var rcp = new ReferenceCheckPackage();
@@ -134,7 +142,8 @@ namespace LEDecooker
             // Merge in files in the merge paths. These are to add additional objects to the UDK packages - e.g. assets that exist in shipped packages (not MP exclusive), but the assets were only used in MP.
             foreach (var mergePath in mergePaths)
             {
-                var packages = Directory.GetFiles(mergePath, "*.pcc");
+                var packages = Directory.GetFiles(mergePath, "*.pcc")
+                    .Where(f => selectedPackages is not { Count: > 0 } || selectedPackages.Contains(Path.GetFileNameWithoutExtension(f).Split('.')[0])).ToArray();
                 foreach (var packageF in packages)
                 {
                     using var sourcePackage = MEPackageHandler.OpenMEPackage(packageF);
@@ -174,6 +183,7 @@ namespace LEDecooker
                         UDKExportFixup(exp);
                     }
 
+                    NormalCompressionMaintenance.FixPackage(udkP);
                     udkP.Save();
 
                     var rcp = new ReferenceCheckPackage();
@@ -189,6 +199,17 @@ namespace LEDecooker
 
         end:
             GenerateMissingTexturePackage(outPathFinal);
+            // Needs every package converted, since an instance's parent and textures can live in any of them.
+            if (!NormalSamplerMaintenance.FixFolder(outPathFinal))
+                throw new InvalidDataException("UDK normal sampler maintenance failed; see the log.");
+            // Parallel workers may finish an instance before its parent/texture sibling exists.
+            // Recheck after all destination packages and placeholders have been assembled.
+            var normalRunName = DateTime.Now.ToString("yyyyMMdd-HHmmss-fff");
+            var maintenanceRoot = Path.GetDirectoryName(outPathFinal)!;
+            if (!NormalCompressionMaintenance.ProcessPackages(outPathFinal, true,
+                    Path.Combine(maintenanceRoot, "NormalCompressionReports", normalRunName + ".jsonl"),
+                    Path.Combine(maintenanceRoot, "NormalCompressionBackups", normalRunName), selectedPackages))
+                throw new InvalidDataException("UDK normal-compression maintenance failed; see the findings report.");
         }
 
         private static IMEPackage localFileResolver(string packageName, PackageCache cache)

@@ -52,6 +52,28 @@ namespace LEDecooker
         {
             CLIOptions.ParsedOptions = options;
 
+            if (options.AuditNormalCompression || options.FixNormalCompression)
+            {
+                if (options.CompileAssets || options.ConvertAssetsToUDK || options.ClearOutput)
+                    throw new ArgumentException("Run normal-compression maintenance separately from decook/conversion/clearoutput.");
+                var runName = DateTime.Now.ToString("yyyyMMdd-HHmmss-fff");
+                var input = options.NormalCompressionPath ?? DecookerPaths.GetAssetOutputPath();
+                var report = options.NormalCompressionReport ?? Path.Combine(options.CompiledAssetsOutputFolder, "NormalCompressionReports", runName + ".jsonl");
+                var backup = options.NormalCompressionBackup ?? Path.Combine(options.CompiledAssetsOutputFolder, "NormalCompressionBackups", runName);
+                if (!NormalCompressionMaintenance.ProcessPackages(input, options.FixNormalCompression, report, backup, options.Packages))
+                    Environment.ExitCode = 1;
+                return;
+            }
+
+            if (options.FixNormalSamplers)
+            {
+                if (options.CompileAssets || options.ConvertAssetsToUDK || options.ClearOutput)
+                    throw new ArgumentException("Run normal sampler maintenance separately from decook/conversion/clearoutput.");
+                if (!NormalSamplerMaintenance.FixFolder(options.NormalCompressionPath ?? DecookerPaths.GetUDKOutputPath()))
+                    Environment.ExitCode = 1;
+                return;
+            }
+
             // Database generation runs before the LE check: the ME3 database is what supplies the
             // original-generation objects, so this operation is valid for the OT games too.
             if (options.ZipSupportFiles)
