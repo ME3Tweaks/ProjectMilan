@@ -6,6 +6,7 @@ using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Unreal;
 using ProjectMilan.Pipelines.Levels.BioP_MPGeth;
+using ProjectMilan.Pipelines.Levels.BioP_MPDish2;
 using ProjectMilan.Pipelines.Levels.BioP_MPHosp;
 using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
 using ProjectMilan.Pipelines.Levels.BioP_MPOcean;
@@ -104,7 +105,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // new LevelSpecificPipeline() { BioP="BioP_MPTowr", Enabled = true, SpecialPortingDelegate = BasegameMapPorting, BuildLighting = false}, // Giant
 
                 // MP1 Resurgence
-                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled = true, SpecialPrePortingDelegate = MPMoonSpecific.PreCorrect, IgnoredLightingLevels = MPMoonSpecific.IgnoredLightingLevels, // Condor
+                new LevelSpecificPipeline() { BioP="BioP_MPMoon", Enabled = true, SpecialPrePortingDelegate = MPMoonSpecific.PreCorrect, SpecialPostPortingDelegate = MPMoonSpecific.PostCorrect,IgnoredLightingLevels = MPMoonSpecific.IgnoredLightingLevels, // Condor
                     MapListInfo = new MapListEntry { PackageName="BioP_MPMoon", PrettyNameStrRefId=727479, DescriptionStrRefId=null, GAWMapPositionX=170, GAWMapPositionY=420, GAWMapSubtitleStrRefId=506972, ImageObjectPath="DLC_MPImages.Map.OptMapMoon", ImageSeekFreePackageName="MP1Images" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPGeth", Enabled = true, SpecialPrePortingDelegate = MPGethSpecific.PreCorrect, IgnoredLightingLevels = MPGethSpecific.IgnoredLightingLevels, // Hydra
                     MapListInfo = new MapListEntry { PackageName="BioP_MPGeth", PrettyNameStrRefId=728069, DescriptionStrRefId=null, GAWMapPositionX=435, GAWMapPositionY=211, GAWMapSubtitleStrRefId=326824, ImageObjectPath="DLC_MPImages.Map.OptMapGeth", ImageSeekFreePackageName="MP1Images" } },
@@ -126,7 +127,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // MP4 Retaliation
                 new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled = true, SpecialPortingDelegate = null, // Glacier - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPCer2", PrettyNameStrRefId=772398, DescriptionStrRefId=618047, GAWMapPositionX=280, GAWMapPositionY=97, GAWMapSubtitleStrRefId=706333, ImageObjectPath="GUI_MPImages_MP4.OptMapSwarm", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled = true, SpecialPortingDelegate = null, // Dagger - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled = true, SpecialPrePortingDelegate = MPDish2Specific.PreCorrect, SpecialPortingDelegate = null, // Dagger - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPDish2", PrettyNameStrRefId=772393, DescriptionStrRefId=618041, GAWMapPositionX=424, GAWMapPositionY=216, GAWMapSubtitleStrRefId=706337, ImageObjectPath="GUI_MPImages_MP4.OptMapSandstorm", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPNov2", Enabled = true, SpecialPortingDelegate = null, // White - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPNov2", PrettyNameStrRefId=772316, DescriptionStrRefId=618048, GAWMapPositionX=352, GAWMapPositionY=352, GAWMapSubtitleStrRefId=706334, ImageObjectPath="GUI_MPImages_MP4.OptMapSnowstorm", ImageSeekFreePackageName="SFXHazardMapImages" } },

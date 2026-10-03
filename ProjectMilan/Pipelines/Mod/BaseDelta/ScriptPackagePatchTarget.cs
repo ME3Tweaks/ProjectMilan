@@ -16,12 +16,18 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
     {
         private readonly string packageName;
         private readonly string logCategory;
+        private readonly Action<IMEPackage>? postCompile;
 
-        public ScriptPackagePatchTarget(string packageName, string comment)
+        /// <param name="postCompile">
+        /// Optional step run on the package after all UnrealScript has been compiled in, just before it is
+        /// serialized - for edits that depend on the compiled script (e.g. registering new functions in defaults).
+        /// </param>
+        public ScriptPackagePatchTarget(string packageName, string comment, Action<IMEPackage>? postCompile = null)
         {
             this.packageName = packageName;
             logCategory = $"Milan-{packageName}";
             Comment = comment;
+            this.postCompile = postCompile;
         }
 
         public string GameFile => $"{packageName}.pcc";
@@ -116,6 +122,11 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                     var className = Directory.GetParent(func).Name;
                     var functionIFP = $"{className}.{Path.GetFileNameWithoutExtension(func)}";
                     var function = package.FindExport(functionIFP);
+                    if (function == null)
+                    {
+                        MilanLog.Fatal($"{packageName} has no existing function {functionIFP} to replace - new functions go in AddToClassOrReplace/{functionIFP}.uc. This is a fatal error.");
+                        Environment.Exit(1);
+                    }
 
                     MilanLog.Information($"Compiling function {functionIFP}", customPrefix: logCategory);
                     var functionSource = File.ReadAllText(func);
@@ -158,6 +169,17 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                     var atcorName = Path.GetFileNameWithoutExtension(atcor);
                     var atcorExport = package.FindExport(atcorName.Split(".")[0]);
 
+                    // AddOrReplaceInClass decompiles the whole class and recompiles it, reading member bytecode
+                    // through FileLib's object binary cache - which still holds what was there at Initialize.
+                    // Without a re-init, any Functions/ override in this class (or an earlier element added
+                    // here) is silently reverted to its stale cached body.
+                    if (!fileLib.ReInitializeFile(usop))
+                    {
+                        MilanShared.LogFailedFileLibInit(fileLib);
+                        MilanLog.Fatal($"Unable to re-initialize the FileLib for {packageName} before compiling {atcorName} - this is a fatal error.");
+                        Environment.Exit(1);
+                    }
+
                     MilanLog.Information($"Compiling class element {atcorName}", customPrefix: logCategory);
                     var atorSource = File.ReadAllText(atcor);
                     var log = UnrealScriptCompiler.AddOrReplaceInClass(atcorExport, atorSource, fileLib, usop);
@@ -169,7 +191,10 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                     }
                 }
             }
-            
+
+            // Runs last so no class recompile above can undo it.
+            postCompile?.Invoke(package);
+
             return package.SaveToStream(BaseDeltaHandler.UseCompressedPackages).ToArray();
         }
     }

@@ -37,7 +37,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// List of patch classes we are using for transformating.
         /// </summary>
         private static readonly IBasePatchClass[] targets = [
-            new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides (SFXShield_Base, SFXModule_Damage)"),
+            new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides (SFXShield_Base, SFXModule_Damage)", postCompile: CheatProfileRegistry.Apply),
             new ScriptPackagePatchTarget("SFXOnlineFoundation", "Patxhes native MPEnemyInfo structS")
         ];
 
