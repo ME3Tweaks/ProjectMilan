@@ -27,6 +27,13 @@ namespace ProjectMilan.Pipelines.Startups
         public static string SourceRoot => Path.Combine(MilanShared.PipelineRoot, "Startups", "NonStartup", "ImagePackages");
 
         /// <summary>
+        /// Object path of every image our packages contain, whether built this run or loaded back from a
+        /// restored checkpoint by <see cref="RehydrateFromCheckpoint"/>. Empty until one of those has run, so
+        /// anything checking against it must come after the NonStartup stage.
+        /// </summary>
+        public static IReadOnlySet<string> BuiltImages { get; private set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Builds every image package folder into <paramref name="outputFolder"/> and registers the dynamic load
         /// mappings for its images into the active config bundle. The caller commits the bundle.
         /// </summary>
@@ -34,6 +41,7 @@ namespace ProjectMilan.Pipelines.Startups
         public static IReadOnlySet<string> BuildImagePackages(string outputFolder)
         {
             var builtImages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            BuiltImages = builtImages;
             if (!Directory.Exists(SourceRoot))
                 return builtImages;
 
@@ -44,6 +52,52 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             return builtImages;
+        }
+
+        /// <summary>
+        /// Replays the process-global state <see cref="BuildImagePackages"/> publishes, from the packages a restored
+        /// checkpoint already contains. The dynamic load mappings come back with the config bundle (ModBuild's
+        /// rehydration), so only <see cref="BuiltImages"/> is left - read from the packages themselves rather than the
+        /// source folder, since the source may have changed since the checkpoint was taken.
+        /// </summary>
+        public static void RehydrateFromCheckpoint(string outputFolder)
+        {
+            var builtImages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            BuiltImages = builtImages;
+            if (!Directory.Exists(outputFolder))
+            {
+                // Can happen if the checkpoint was built with RunNonStartupPipeline disabled.
+                MilanLog.Warning($"Restored checkpoint has no {Path.GetFileName(outputFolder)} folder; image packages were not rehydrated.", customPrefix: LOG_CATEGORY);
+                return;
+            }
+
+            foreach (var packagePath in Directory.EnumerateFiles(outputFolder, $"{PackageFilePrefix}*.pcc", SearchOption.TopDirectoryOnly))
+            {
+                using var package = MEPackageHandler.OpenMEPackage(packagePath);
+                foreach (var texture in package.Exports.Where(x => x.ClassName == "Texture2D"))
+                {
+                    builtImages.Add(texture.InstancedFullPath);
+                }
+            }
+
+            MilanLog.Information($"Rehydrated {builtImages.Count} checkpointed image(s)", customPrefix: LOG_CATEGORY);
+        }
+
+        /// <summary>
+        /// Returns <paramref name="objectPath"/> unchanged, logging an error if no image package built it - so a
+        /// reference to one of our images fails loudly at build time if the source image is renamed or moved,
+        /// instead of silently pointing at nothing in game.
+        /// </summary>
+        /// <param name="objectPath">Object path of the image, as built: its folders inside the package folder, then its file name.</param>
+        /// <param name="usedBy">What refers to the image, for the error message.</param>
+        public static string Require(string objectPath, string usedBy)
+        {
+            if (!BuiltImages.Contains(objectPath))
+            {
+                MilanLog.Error($"Image {objectPath} for {usedBy} was not built - is it missing from {Path.GetRelativePath(MilanShared.PipelineRoot, SourceRoot)}?", customPrefix: LOG_CATEGORY);
+            }
+
+            return objectPath;
         }
 
         private static void BuildImagePackage(string sourceDir, string outputFolder, HashSet<string> builtImages)

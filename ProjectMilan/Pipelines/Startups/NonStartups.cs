@@ -218,6 +218,17 @@ namespace ProjectMilan.Pipelines.Startups
             { "SFXPawn_Scion", NonStartupCategory.Pawns }
         };
 
+        /// <summary>
+        /// Replays the process-global state this pipeline publishes - the set of GUI images our own image packages
+        /// built, which later pipelines (Levels) check their image references against. Called instead of
+        /// <see cref="RunPipeline"/> when a restored checkpoint already contains the NonStartup output.
+        /// </summary>
+        internal static void RehydrateFromCheckpoint()
+        {
+            var outputPath = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", "NonStartup");
+            ImagePackageBuilder.RehydrateFromCheckpoint(Path.Combine(outputPath, NonStartupCategory.Images.ToString()));
+        }
+
         public static void RunPipeline()
         {
             var vars = new NonStartupPipelineVars()

@@ -11,6 +11,7 @@ using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
 using ProjectMilan.Pipelines.Levels.BioP_MPOcean;
 using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Shared;
+using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
@@ -38,6 +39,11 @@ namespace ProjectMilan.Pipelines.Levels
         private static readonly LocalizedString MixedName = new() { [MELocalization.INT] = "Unified" }; // Mixed
         private static readonly LocalizedString MixedAllCapsName = new() { [MELocalization.INT] = "UNIFIED" };
 
+        /// <summary>
+        /// Folder under ImagePackages\MilanWavelists (built by <see cref="ImagePackageBuilder"/>) holding the faction images.
+        /// </summary>
+        private const string WavelistImages = "Images";
+
         private static readonly LocalizedString DiamondDifficultyName = new() { [MELocalization.INT] = "Diamond" };
         private static readonly LocalizedString DiamondDifficultyAllCapsName = new() { [MELocalization.INT] = "DIAMOND" };
         class MPLevelsVars
@@ -52,7 +58,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // Random (Faction)
                 new EnemyTypeEntry { ID = 0, NameStrRefId = 701523, AllCapsNameStrRefId = 701523, Image = "GUI_MPImages.MatchSettings.OptEmyRandom", WaveClass = "", IsRandomOption = true },
                 // Random (Wave) - MUST STAY AT INDEX 1! Logic depends on it being here
-                new EnemyTypeEntry { ID = 1, NameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveAllCapsName), Image = "GUI_MPImages.MatchSettings.OptEmyRandomWave", WaveClass = "", IsRandomOption = true },
+                new EnemyTypeEntry { ID = 1, NameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveAllCapsName), Image = ImagePackageBuilder.Require($"{WavelistImages}.Coalition", "Coalition faction"), WaveClass = "", IsRandomOption = true },
                 // Random (Enemy)
                 new EnemyTypeEntry { ID = 2, NameStrRefId = MilanPipelinesShared.AssignTLK(MixedName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(MixedAllCapsName), Image = "GUI_MPImages.MatchSettings.OptEmyRandomEnemy", WaveClass = "SFXGameContent_Milan.SFXWave_Horde_RandomEnemies", IsRandomOption = true },
 
