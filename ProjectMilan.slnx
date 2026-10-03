@@ -193,6 +193,12 @@
     <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
+  <Project Path="UDKLoadTest/UDKLoadTest.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
   <Project Path="WwiseTools/WwiseTools_DotNet6/WwiseTools_DotNet6.csproj">
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
