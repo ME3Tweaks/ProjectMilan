@@ -382,6 +382,10 @@ namespace LEDecooker
         {
             result = null;
 
+            // A node a converter already relinked itself: uindex is already a destination reference.
+            if (BioMaterialExpressionConverters.IsPreRelinked(relinkingexport))
+                return true;
+
             var sourceExport = importingpcc.GetEntry(uindex);
             if (sourceExport is ExportEntry exp)
             {

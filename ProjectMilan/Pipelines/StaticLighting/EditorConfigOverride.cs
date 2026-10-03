@@ -53,7 +53,11 @@ namespace ProjectMilan.Pipelines.StaticLighting
             ("UnrealEd.EditorUserSettings", "bAutoSaveEnable", "False"),
         ];
 
-        public EditorConfigOverride(string iniPath, IEnumerable<(string Section, string Key, string Value)> overrides)
+        /// <param name="removeLines">Exact lines to drop from a section, for multi-value keys that
+        /// <see cref="SetValue"/> can't express - e.g. one <c>Suppress=DevShaders</c> out of the
+        /// whole <c>[Core.System]</c> Suppress= list.</param>
+        public EditorConfigOverride(string iniPath, IEnumerable<(string Section, string Key, string Value)> overrides,
+            IEnumerable<(string Section, string Line)> removeLines = null)
         {
             _path = iniPath ?? throw new ArgumentNullException(nameof(iniPath));
             if (!File.Exists(_path))
@@ -68,9 +72,11 @@ namespace ProjectMilan.Pipelines.StaticLighting
             var text = _originalText;
             foreach (var (section, key, value) in overrides)
                 text = SetValue(text, section, key, value);
+            foreach (var (section, line) in removeLines ?? [])
+                text = RemoveLine(text, section, line);
 
             File.WriteAllText(_path, text, _encoding);
-            MilanLog.Information($"Applied {overrides.Count()} automation config override(s) to {_path}", customPrefix: LOG_CATEGORY);
+            MilanLog.Information($"Applied {overrides.Count() + (removeLines?.Count() ?? 0)} automation config override(s) to {_path}", customPrefix: LOG_CATEGORY);
         }
 
         /// <summary>Restores the original file contents. Safe to call more than once.</summary>
@@ -139,6 +145,33 @@ namespace ProjectMilan.Pipelines.StaticLighting
             }
 
             lines.Insert(sectionEnd, $"{key}={value}");
+            return string.Join(newline, lines);
+        }
+
+        /// <summary>
+        /// Removes every line in the section that matches <paramref name="line"/> (trimmed,
+        /// case-insensitive). A missing section or line is left alone. Preserves the file's
+        /// existing line endings.
+        /// </summary>
+        static string RemoveLine(string text, string section, string line)
+        {
+            var newline = text.Contains("\r\n") ? "\r\n" : "\n";
+            var lines = text.Split(["\r\n", "\n"], StringSplitOptions.None).ToList();
+
+            int sectionStart = lines.FindIndex(l =>
+                l.Trim().Equals($"[{section}]", StringComparison.OrdinalIgnoreCase));
+            if (sectionStart < 0)
+                return text;
+
+            int sectionEnd = lines.FindIndex(sectionStart + 1, l => l.TrimStart().StartsWith('['));
+            if (sectionEnd < 0) sectionEnd = lines.Count;
+
+            for (int i = sectionEnd - 1; i > sectionStart; i--)
+            {
+                if (lines[i].Trim().Equals(line.Trim(), StringComparison.OrdinalIgnoreCase))
+                    lines.RemoveAt(i);
+            }
+
             return string.Join(newline, lines);
         }
     }
