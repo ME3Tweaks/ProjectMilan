@@ -4,3 +4,6 @@
 [submodule "WwiseTools"]
 	path = WwiseTools
 	url = https://github.com/ME3Tweaks/WwiseTools.git
+[submodule "UdkInj"]
+	path = UdkInj
+	url = https://github.com/d00telemental/UDKInj.git
