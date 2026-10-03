@@ -130,6 +130,8 @@ namespace ProjectMilan.Pipelines.Mod
                     Environment.Exit(1);
                 }
             }
+
+            CopyLinkerPatches();
         }
 
         /// <summary>
@@ -159,5 +161,35 @@ namespace ProjectMilan.Pipelines.Mod
                 .Select(x => x.StringID).DefaultIfEmpty(0).Max();
             MilanPipelinesShared.InitializeTLKSet();
         }
+
+        private static void CopyLinkerPatches()
+        {
+            // Release builds don't install this
+#if DEBUG
+            var linkerPatchSource = Path.Combine(MilanShared.PipelineRoot, "Mod", "LinkerPatches");
+            var linkerPatchDest = Path.Combine(Program.Settings.OutputModPath, "LinkerPatches");
+            var linkerPatches = Directory.GetFiles(linkerPatchSource, "*.*", SearchOption.TopDirectoryOnly);
+            if (!Directory.Exists(linkerPatchSource))
+            {
+                MilanLog.Warning($"Linker patch source directory does not exist: {linkerPatchSource}", customPrefix: LOG_CATEGORY);
+                return;
+            }
+            if (linkerPatches.Length == 0)
+            {
+                MilanLog.Information($"No linker patches found in source directory: {linkerPatchSource}", customPrefix: LOG_CATEGORY);
+                return;
+            }
+
+            Directory.CreateDirectory(linkerPatchDest);
+            foreach (var file in linkerPatches)
+            {
+                var destFile = Path.Combine(linkerPatchDest, Path.GetFileName(file));
+                MilanLog.Information($"Copying linker patch {Path.GetFileName(file)} to mod", customPrefix: LOG_CATEGORY);
+                File.Copy(file, destFile, true);
+            }
+
+           
+        }
+#endif
     }
 }
