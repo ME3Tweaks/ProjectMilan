@@ -381,6 +381,8 @@ namespace ProjectMilan.Pipelines.Levels
             levelPipeline.LE3BioP.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
 
+            PostcorrectPackages(levelPipeline);
+
             // Unregister donors
             // SharedMaterialDonor.UnregisterLocalDonors(levelPipeline.GetDonorsPath());
 
@@ -533,6 +535,28 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             levelPipeline.SpecialPrePortingDelegate?.Invoke(levelPipeline);
+        }
+
+        /// <summary>
+        /// Makes changes to the ported LE3 packages after the level has been ported and saved, then saves any that were modified
+        /// </summary>
+        /// <param name="levelPipeline"></param>
+        private static void PostcorrectPackages(LevelSpecificPipeline levelPipeline)
+        {
+            if (levelPipeline.SpecialPostPortingDelegate == null)
+                return;
+
+            levelPipeline.SpecialPostPortingDelegate.Invoke(levelPipeline);
+
+            foreach (var package in levelPipeline.LE3Packages.Values)
+            {
+                if (package.IsModified)
+                {
+                    MilanLog.Information($"  Saving postcorrected package {package.FileNameNoExtension}.pcc", customPrefix: levelPipeline.LogCategory);
+                    package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                    MilanShared.RefreshMilanFiles = true;
+                }
+            }
         }
     }
 }

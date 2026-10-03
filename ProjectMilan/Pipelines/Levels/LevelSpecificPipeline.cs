@@ -45,6 +45,12 @@ namespace ProjectMilan.Pipelines.Levels
         public Action<LevelSpecificPipeline> SpecialPrePortingDelegate { get; set; }
 
         /// <summary>
+        /// Which function should run after the level has been ported and saved - for fixing things that only exist after porting.
+        /// Any LE3 package modified by this is saved afterwards.
+        /// </summary>
+        public Action<LevelSpecificPipeline> SpecialPostPortingDelegate { get; set; }
+
+        /// <summary>
         /// Which function should run to port the level
         /// </summary>
         public Action<LevelSpecificPipeline, TieredPackageCache> SpecialPortingDelegate { get; set; }
