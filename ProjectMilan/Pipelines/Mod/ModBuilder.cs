@@ -17,7 +17,7 @@ namespace ProjectMilan.Pipelines.Mod
         /// <summary>
         /// The current moddesc version of the mod. Change this every time moddesc updates are required.
         /// </summary>
-        private static readonly Version CURRENT_VERSION = new Version("1.0.1");
+        private static readonly Version CURRENT_VERSION = new Version("1.0.9");
 
         public static void RunPipeline()
         {
@@ -35,9 +35,9 @@ namespace ProjectMilan.Pipelines.Mod
             {
                 Game = MEGame.LE3,
                 MountFlags =
-                    new MountFlag(EME3MountFileFlag.LoadsInMultiplayer |
-                                  EME3MountFileFlag.LoadsInSingleplayer), // UsedInMatchMaking?
-                MountPriority = 8227, // TODO: Change later
+                    new MountFlag(EME3MountFileFlag.LoadsInMultiplayer | EME3MountFileFlag.UsedInMatchMaking |
+                                  EME3MountFileFlag.LoadsInSingleplayer), // We use LoadsInSingleplayer so it loads outside MP environment
+                MountPriority = 5,
                 TLKID = 49875623 // Random
             };
 
