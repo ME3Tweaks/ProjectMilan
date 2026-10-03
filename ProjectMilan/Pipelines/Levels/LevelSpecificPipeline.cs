@@ -117,7 +117,13 @@ namespace ProjectMilan.Pipelines.Levels
         /// look calibration. See <see cref="StaticLighting.UE4LightmassSettings"/>.
         /// </summary>
         public StaticLighting.UE4LightmassSettings UE4Lightmass { get; set; } = new();
-        
+
+        /// <summary>
+        /// Overrides for the bake's world-level Lightmass settings (environment color, bounces). See
+        /// <see cref="StaticLighting.WorldLightmassSettings"/>.
+        /// </summary>
+        public StaticLighting.WorldLightmassSettings WorldLightmass { get; set; } = new();
+
         /// <summary>
         /// List of level names to not include in a lighting bake. Some levels have unused sublevels that we include but don't want to corrupt our lighting with.
         /// </summary>

@@ -183,6 +183,7 @@ namespace ProjectMilan.Pipelines.Levels
             // hot enough to be in MPCommon) get promoted here instead of reopened per-level. Disposed once
             // every level is done, so nothing here outlives the Levels pipeline (which runs last).
             using var parent = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "MPLevels pipeline cache");
+            var failedLightingBuilds = new List<string>();
             foreach (var level in levelVars.LevelPipelines)
             {
 #if DEBUG
@@ -217,7 +218,19 @@ namespace ProjectMilan.Pipelines.Levels
                     var defaultStaticMeshLightingRes = (int)(128 * lightmapResolutionMultiplier); // BioWare default is 32
                     if (StaticLightingExport.ExportLevelToUDK(level, lightmapResolutionMultiplier, defaultStaticMeshLightingRes))
                     {
-                        StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes, keepPreBakeMaps: Program.KeepPreBakeMaps, ue4Lightmass: level.UE4Lightmass);
+                        try
+                        {
+                            StaticLightingCompute.ComputeLighting(level.LE3BioP.FileNameNoExtension, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes, keepPreBakeMaps: Program.KeepPreBakeMaps, ue4Lightmass: level.UE4Lightmass);
+                        }
+                        catch (Exception ex)
+                        {
+                            // A hung, crashed or killed UDK costs this level its new lighting, not the
+                            // whole build. ComputeLighting only copies a finished bake back, so the
+                            // import below still finds this level's previous lighting.
+                            MilanLog.Exception(ex, $"Static lighting build failed for {level.BioP}; importing its previous lighting from StaticLighting\\Levels instead", customPrefix: LOG_CATEGORY);
+                            MilanLog.ErrorWithSummary($"Static lighting build failed for {level.BioP} (kept its previous lighting): {ex.Message}", customPrefix: LOG_CATEGORY);
+                            failedLightingBuilds.Add(level.BioP);
+                        }
                         LevelShared.ImportStaticLighting(level, true);
                     }
                     else
@@ -233,6 +246,10 @@ namespace ProjectMilan.Pipelines.Levels
 
                 level.ClearReferences();
             }
+
+            if (failedLightingBuilds.Count > 0)
+                MilanLog.Error($"Static lighting builds failed for {failedLightingBuilds.Count} level(s), which kept their previous lighting: " +
+                    string.Join(", ", failedLightingBuilds), customPrefix: LOG_CATEGORY);
 
             foreach (var enemyType in levelVars.EnemyTypes)
             {
