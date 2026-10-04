@@ -124,6 +124,7 @@ namespace ProjectMilan
         {
             [ECheckpointStage.ModBuild] = ModBuilder.RehydrateFromCheckpoint,
             [ECheckpointStage.MPCommon] = MPCommon.RehydrateFromCheckpoint,
+            [ECheckpointStage.NonStartup] = NonStartupPipeline.RehydrateFromCheckpoint,
             [ECheckpointStage.Weapons] = SFXWeapons.RehydrateFromCheckpoint,
         };
 
@@ -133,7 +134,7 @@ namespace ProjectMilan
         /// Redemption - see <see cref="ECheckpointStage"/>). It invalidates every existing checkpoint,
         /// regardless of which stage it was taken at, forcing a complete rebuild.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 7; // 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
+        public const int MIN_CHECKPOINT_VERSION = 8; // 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -157,8 +158,35 @@ namespace ProjectMilan
 
             SetConsoleTitle(ConsoleTitlePostFix, "Starting");
             MilanLog.CreateLogger();
+
+            // An unhandled exception otherwise only reaches the console, which is gone once the window closes.
+            AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            {
+                if (e.ExceptionObject is Exception ex)
+                    MilanLog.Exception(ex, "Unhandled exception - Project Milan is exiting", fatal: true);
+                else
+                    MilanLog.Fatal($"Unhandled exception - Project Milan is exiting: {e.ExceptionObject}");
+                MilanLog.LogSessionSummary();
+                MilanLog.CloseAndFlush();
+            };
+
             MilanLog.Information("Welcome to Project Milan");
             Settings = LoadSettingsConfig(obj);
+
+            // A read-only report. It runs before VerifySettings, which sets up UDK for lighting builds, and
+            // returns before anything below cleans the output folder.
+            if (obj.CompareLighting?.Any() == true)
+            {
+                LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger);
+                MEPackageHandler.GlobalSharedCacheEnabled = false;
+                LightmapComparison.Run(obj.CompareLighting,
+                    obj.CompareLightingLevels ?? Path.Combine(Settings.OutputModPath, "CookedPCConsole", "Levels"),
+                    Path.Combine(Path.GetDirectoryName(Settings.OutputModPath)!, "LightingReports"),
+                    obj.CompareLightingME3);
+                MilanLog.CloseAndFlush();
+                return;
+            }
+
             VerifySettings();
             if (KeepPreBakeMaps && !BuildStaticLighting)
                 MilanLog.Warning("--keep-prebake-maps has no effect because IsStaticLightingBuild is disabled in this configuration.");
@@ -733,6 +761,9 @@ namespace ProjectMilan
 #endif
 
             DumpAliveCacheReport();
+
+            // Last, so errors from hours earlier in a long build end the log where they'll be seen.
+            MilanLog.LogSessionSummary();
         }
 
         /// <summary>

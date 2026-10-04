@@ -30,6 +30,7 @@
     <Folder Include="Pipelines\Levels\NewFolder\" />
     <Folder Include="Pipelines\Mod\BaseDelta\SFXOnlineFoundation\Functions\" />
     <Folder Include="Pipelines\Mod\BaseConfig\" />
+    <Folder Include="Pipelines\Mod\LinkerPatches\" />
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
@@ -43,7 +44,6 @@
   </ItemGroup>
 
   <ItemGroup>
-	<PackageReference Include="Iced" Version="1.21.0" />
     <PackageReference Include="CliWrap" Version="3.8.2" />
     <PackageReference Include="ClosedXML" Version="0.104.2" />
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
@@ -64,6 +64,7 @@
     <ProjectReference Include="..\LegendaryExplorer\LegendaryExplorer\submodules\Wwiser.NET\ME3Tweaks.Wwiser\ME3Tweaks.Wwiser.csproj" />
     <ProjectReference Include="..\ProjectMilanCore\ProjectMilanCore.csproj" />
     <ProjectReference Include="..\ProjectMilan_ExtraContent\ProjectMilan_ExtraContent.csproj" />
+    <ProjectReference Include="..\UdkInj\UDKInj\UDKInj.csproj" />
     <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
   </ItemGroup>
 </Project>
