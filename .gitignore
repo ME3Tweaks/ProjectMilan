@@ -397,3 +397,6 @@ FodyWeavers.xsd
 /scratchpad
 /ProjectMilan/Pipelines/StaticLighting/UE4Lightmass/Reference
 /ProjectMilan/Pipelines/NoCommit
+
+# TEMP
+*.md
