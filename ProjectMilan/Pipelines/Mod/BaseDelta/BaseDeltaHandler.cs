@@ -5,7 +5,9 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using JDiffCS;
+using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using ME3TweaksCore.Helpers;
 using ProjectMilan.Utility;
@@ -38,8 +40,24 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// </summary>
         private static readonly IBasePatchClass[] targets = [
             new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides (SFXShield_Base, SFXModule_Damage)", postCompile: CheatProfileRegistry.Apply),
-            new ScriptPackagePatchTarget("SFXOnlineFoundation", "Patxhes native MPEnemyInfo structS")
+            new ScriptPackagePatchTarget("SFXOnlineFoundation", "Patches native MPEnemyInfo structs"),
+            new CoalescedPatchTarget(),
+            new GuidCachePatchTarget() // Keep last: its contents depend on what the package targets above changed
         ];
+
+        /// <summary>
+        /// Loads the path of a vanilla file in the LE3 CookedPCConsole folder. Prefers the game backup so
+        /// we don't diff against a modded file. Eventually this should hash check.
+        /// </summary>
+        internal static string GetVanillaCookedFilePath(string gameFile)
+        {
+            var backupPath = ME3TweaksBackups.GetGameBackupPath(MEGame.LE3);
+            if (backupPath != null && !Directory.Exists(backupPath))
+            {
+                backupPath = null;
+            }
+            return Path.Combine(LE3Directory.GetCookedPCPath(rootPathOverride: backupPath), gameFile);
+        }
 
         private static bool restoringFromCheckpoint;
         private static bool writeDebugDelta;
@@ -58,6 +76,12 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         private static readonly List<DeltaRecord> deltaRecords = new();
 
         /// <summary>
+        /// Root packages (name -> guid) that the package targets added or re-guided relative to vanilla, for
+        /// <see cref="GuidCachePatchTarget"/> to add to the GuidCache. Filled as each package target records its delta.
+        /// </summary>
+        internal static readonly Dictionary<string, Guid> GuidCacheAdditions = new(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
         /// Prepares for a fresh (non-restored) build: registers this class as the source of patched
         /// vanilla LE3 files, then forces the global package cache to build now (so a compile failure
         /// surfaces immediately, before the rest of the pipeline runs), then builds any non-package
@@ -73,8 +97,9 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             restoringFromCheckpoint = false;
             writeDebugDelta = creatingCheckpoint;
             deltaRecords.Clear();
+            GuidCacheAdditions.Clear();
             RegisterProviderAndBuildCache();
-            BuildNonPackageTargets();
+            BuildNonCacheTargets();
         }
 
         /// <summary>
@@ -86,8 +111,9 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             restoringFromCheckpoint = true;
             writeDebugDelta = false;
             deltaRecords.Clear();
+            GuidCacheAdditions.Clear();
             RegisterProviderAndBuildCache();
-            BuildNonPackageTargets();
+            BuildNonCacheTargets();
         }
 
         private static void RegisterProviderAndBuildCache()
@@ -109,7 +135,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         private static IMEPackage ResolvePatchedPackage(string gameFile)
         {
             var target = FindTarget(gameFile);
-            if (target == null || !IsPackageTarget(target))
+            if (target == null || !IsCacheTarget(target))
                 return null;
 
             var data = restoringFromCheckpoint ? RestoreFromDelta(target) : BuildAndRecordDelta(target);
@@ -117,23 +143,21 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         }
 
         /// <summary>
-        /// Targets that aren't packages (e.g. a future Coalesced.bin target) don't participate in the
-        /// package cache, so they have no build-order dependency on it - just build/restore them directly
-        /// once the cache above is settled.
+        /// Targets that aren't in the LE3 global package cache (Coalesced.bin, GuidCache.pcc, ...) have no
+        /// build-order dependency on it - just build/restore them directly once the cache above is settled.
+        /// Their output only ever ships as a delta in MilanDelta; nothing downstream reads the patched bytes.
         /// </summary>
-        private static void BuildNonPackageTargets()
+        private static void BuildNonCacheTargets()
         {
             foreach (var target in targets)
             {
-                if (IsPackageTarget(target))
+                if (IsCacheTarget(target))
                     continue; // handled via the cache-build hook in ResolvePatchedPackage
 
-                var data = restoringFromCheckpoint ? RestoreFromDelta(target) : BuildAndRecordDelta(target);
-                if (data == null)
-                    continue;
-
-                // TODO: nothing consumes non-package target output yet (e.g. writing a Coalesced.bin
-                // result to its real output path) - wire this up once such a target exists.
+                if (restoringFromCheckpoint)
+                    RestoreFromDelta(target);
+                else
+                    BuildAndRecordDelta(target);
             }
         }
 
@@ -148,7 +172,11 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             return null;
         }
 
-        private static bool IsPackageTarget(IBasePatchClass target) => Path.GetExtension(target.GameFile).CaseInsensitiveEquals(".pcc");
+        /// <summary>
+        /// If the target is a vanilla package in the LE3 global package cache, which later stages import
+        /// from, so it has to be patched as the cache builds. Other targets are standalone.
+        /// </summary>
+        private static bool IsCacheTarget(IBasePatchClass target) => target is ScriptPackagePatchTarget;
 
         /// <summary>
         /// Builds a target fresh from source, diffs vanilla against the result, and records the delta
@@ -276,6 +304,11 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 
         private static void RecordDelta(IBasePatchClass target, byte[] vanilla, byte[] patched, byte[] jsf)
         {
+            if (target is ScriptPackagePatchTarget)
+            {
+                GuidCachePatchTarget.InventoryPackages(target.GameFile, vanilla, patched, GuidCacheAdditions);
+            }
+
             deltaRecords.Add(new DeltaRecord
             {
                 GameFile = target.GameFile,

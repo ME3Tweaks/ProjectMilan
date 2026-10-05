@@ -34,17 +34,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 
         public string Comment { get; }
 
-        private string GetVanillaLoadPath()
-        {
-            // Prefer loading from backup so we don't load a modded one.
-            // Eventually this should hash check.
-            var backupPath = ME3TweaksBackups.GetGameBackupPath(MEGame.LE3);
-            if (backupPath != null && !Directory.Exists(backupPath))
-            {
-                backupPath = null;
-            }
-            return Path.Combine(LE3Directory.GetCookedPCPath(rootPathOverride: backupPath), GameFile);
-        }
+        private string GetVanillaLoadPath() => BaseDeltaHandler.GetVanillaCookedFilePath(GameFile);
 
         public byte[] GetVanillaBytes()
         {

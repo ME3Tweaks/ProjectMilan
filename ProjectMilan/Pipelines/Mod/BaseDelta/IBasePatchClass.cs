@@ -4,7 +4,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
     /// Defines a basegame file that Milan patches before the rest of the pipeline runs, so that
     /// later stages import/relink against the patched version instead of vanilla. Implementations
     /// are not assumed to produce an <see cref="LegendaryExplorerCore.Packages.IMEPackage"/> - a
-    /// target may be a package (.pcc) or some other binary file (e.g. a future Coalesced.bin target).
+    /// target may be a package (.pcc) or some other binary file (e.g. Coalesced.bin).
     /// </summary>
     internal interface IBasePatchClass
     {
