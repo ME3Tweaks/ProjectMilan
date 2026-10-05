@@ -208,4 +208,45 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
     <Platform Project="x64" />
   </Project>
+  <Folder Name="/UdkInj/">
+    <Project Path="UdkInj/MinHook/build/VC17/libMinHook.vcxproj" Id="f142a341-5ee0-442d-a15f-98ae9b48dbae">
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="UdkInj/SDK/SDK.vcxproj" Id="2bcaea70-4935-4b45-8167-4a6f057aef39">
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="UdkInj/UDKAgent/UDKAgent.vcxproj" Id="27c89f9b-68d6-4405-a347-2ff4251978cd">
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+      <Platform Project="x64" />
+  </Project>
+    <Project Path="UdkInj/UDKInj.LightmassBridge/UDKInj.LightmassBridge.csproj">
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+    </Project>
+    <Project Path="UdkInj/UDKInj.Shell/UDKInj.Shell.csproj">
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+    </Project>
+    <Project Path="UdkInj/UDKInj/UDKInj.csproj">
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+    </Project>
+  </Folder>
 </Solution>
