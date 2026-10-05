@@ -51,6 +51,17 @@ namespace ProjectMilan.Pipelines.StaticLighting
         private static Injector injector;
         private static FileInfo module;
 
+        /// <summary>The UDK this build started, so a failed status read can tell "UDK is gone" apart
+        /// from a real memory-access failure.</summary>
+        private static int udkPid;
+
+        /// <summary>
+        /// Longest a single lighting build may take before UDK is treated as hung and killed. Production
+        /// bakes of the largest maps take about 30 minutes; a build has also been seen to finish solving
+        /// and then never return to the editor tick, which used to wait out the old 12-hour limit.
+        /// </summary>
+        private static readonly TimeSpan LightingBuildTimeout = TimeSpan.FromHours(1);
+
         private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(500);
 
         /// <summary>
@@ -157,8 +168,8 @@ namespace ProjectMilan.Pipelines.StaticLighting
             {
                 MilanLog.Information($"Production build: overriding lighting quality {qualityLevel} -> {LightmassBuildQuality.Production} for {mapName}", customPrefix: LOG_CATEGORY);
                 qualityLevel = LightmassBuildQuality.Production;
-                qualityLevel = LightmassBuildQuality.Medium; // For not actual production lighting!
-                MilanLog.Fatal(@"NOTE - BUILDILNG LIGHTING AT MEDIUM QUALITY, NOT ACTUALLY PRODUCTION!----------");
+                // qualityLevel = LightmassBuildQuality.Preview; // For not actual production lighting!
+                //MilanLog.Fatal(@"NOTE - BUILDILNG LIGHTING AT MEDIUM QUALITY, NOT ACTUALLY PRODUCTION!----------");
             }
 
             var path = UDKDirectory.GetUDKGamePath();
@@ -230,12 +241,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
             MilanLog.Information("Starting UDK for lighting build", customPrefix: LOG_CATEGORY);
             var udkProcess = Process.Start(udkInfo);
-            int udkPid = udkProcess.Id;
+            udkPid = udkProcess.Id;
+            var bakeSucceeded = false;
 
             try
             {
-                // Once stable, we should bundle this into ProjectMilan.
-                module ??= new FileInfo(@"B:\UserProfile\source\repos\ME3Tweaks\UdkInj\x64\Debug\UDKAgent.asi");
+                module ??= new FileInfo(UdkAgentPath);
 
                 // AttachWithRetry sets up `injector`. Deliberately not using ProcessHandle in a
                 // `using` here -- disposing it disposes the Process object it wraps, which would
@@ -250,6 +261,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 var masterMap = Path.Combine(mapPath, $"{mapName}.udk");
 
                 BakeLighting(masterMap, qualityLevel, solver);
+                bakeSucceeded = true;
 
                 MilanLog.Information("UDK lighting build is complete", customPrefix: LOG_CATEGORY);
             }
@@ -286,7 +298,24 @@ namespace ProjectMilan.Pipelines.StaticLighting
                     }
 
                     MilanLog.Information($"MilanUDK has exited", customPrefix: LOG_CATEGORY);
+                }
+                catch (ArgumentException) { /* already gone */ }
+                catch (InvalidOperationException) { /* already gone */ }
+                catch (Exception ex)
+                {
+                    MilanLog.Warning($"Could not stop UDK: {ex.Message}", customPrefix: LOG_CATEGORY);
+                }
 
+                // Only a finished, saved bake is worth keeping. After a timeout, a crash or a killed
+                // UDK, the UDK maps are the unbaked export (or a half-saved one), and copying them
+                // over StaticLighting\Levels would throw away the last good lighting for this level.
+                if (!bakeSucceeded)
+                {
+                    MilanLog.Warning($"Not copying {mapName} back from UDK because its lighting build did not finish; " +
+                        @"StaticLighting\Levels keeps its previous lighting", customPrefix: LOG_CATEGORY);
+                }
+                else try
+                {
                     // Wait for other processes that UDK spawns
                     // Would be good to just have a way to test what is holding onto a file. But this hopefully is enough.
                     Thread.Sleep(1000);
@@ -320,17 +349,23 @@ namespace ProjectMilan.Pipelines.StaticLighting
                         MilanLog.Warning($"UDK output folder not found: {staticLightingFolder}");
                     }
                 }
-                catch (ArgumentException) { /* already gone */ }
-                catch (InvalidOperationException) { /* already gone */ }
                 catch (Exception ex)
                 {
-                    MilanLog.Warning($"Could not stop UDK: {ex.Message}", customPrefix: LOG_CATEGORY);
+                    // Only reached after a successful bake, so nothing else is in flight to be replaced.
+                    throw new IOException($"Could not copy the baked {mapName} maps back from UDK: {ex.Message}", ex);
                 }
             }
         }
 
-        // Once stable, we should bundle this into ProjectMilan (same as the agent module above).
-        private const string UdkInjShellPath = @"B:\UserProfile\source\repos\ME3Tweaks\UdkInj\UDKInj.Shell\bin\Debug\net9.0\UDKInj.Shell.exe";
+        // The UdkInj submodule, built alongside ProjectMilan in the same configuration (see ProjectMilan.slnx).
+        private static string UdkInjRoot => Path.GetFullPath(Path.Combine(MilanShared.PipelineRoot, "..", "..", "UdkInj"));
+#if DEBUG
+        private const string UdkInjConfiguration = "Debug";
+#else
+        private const string UdkInjConfiguration = "Release";
+#endif
+        private static string UdkAgentPath => Path.Combine(UdkInjRoot, "x64", UdkInjConfiguration, "UDKAgent.asi");
+        private static string UdkInjShellPath => Path.Combine(UdkInjRoot, "UDKInj.Shell", "bin", UdkInjConfiguration, "net9.0", "UDKInj.Shell.exe");
 
         /// <summary>
         /// Milan's UE4 reference bakes, one per quality level (Preview/Medium/High/Production). The
@@ -651,7 +686,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             // result marker, and rebuild with UE3 in the same editor session if it didn't finish.
             if (solver == LightmassSolver.UE4 && !UE4BridgeSucceeded(buildStartUtc, out var failure))
             {
-                MilanLog.Error($"UE4 Lightmass did not finish this build ({failure}); rebuilding it with UE3 Lightmass", customPrefix: LOG_CATEGORY);
+                MilanLog.ErrorWithSummary($"UE4 Lightmass did not finish the {Path.GetFileNameWithoutExtension(masterMapPath)} build ({failure}); rebuilt it with UE3 Lightmass", customPrefix: LOG_CATEGORY);
                 RestoreUE3Lightmass();
                 using (new LightmassProgressReporter())
                     RunLightmass(qualityLevel);
@@ -702,7 +737,17 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
                 while (!_stop)
                 {
-                    var status = GetLightmassProgress();
+                    LightmassProgressStatus status;
+                    try
+                    {
+                        status = GetLightmassProgress();
+                    }
+                    catch (Exception)
+                    {
+                        // UDK exited or was killed. This is a background thread, so an exception here
+                        // would take the whole process down; the build's own wait reports what happened.
+                        return;
+                    }
 
                     if (!string.IsNullOrEmpty(status.StatusText))
                     {
@@ -792,8 +837,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
         private static void RunLightmass(LightmassBuildQuality qualityLevel) =>
             RunAction(MailboxActionType.BuildLighting,
                 input => input.WriteInt32(0, (int)qualityLevel),
-                // Production bakes on a big level can run for hours.
-                timeout: TimeSpan.FromHours(12),
+                timeout: LightingBuildTimeout,
                 label: $"BuildLighting(quality={qualityLevel})");
 
         private static void SaveMapFiles(bool promptUser = false, bool saveMaps = true, bool saveContent = false) =>
@@ -822,13 +866,13 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// </summary>
         private static void RunAction(MailboxActionType actionType, Action<Allocation> writeInput, TimeSpan timeout, string label)
         {
-            var before = GetStatus();
+            var before = ReadStatus(label);
 
             // Don't queue on top of something already running.
             if (!before.IsIdle)
                 WaitUntil(s => s.IsIdle, TimeSpan.FromMinutes(5), $"agent idle before {label}");
 
-            var completedBefore = GetStatus().CompletedActions;
+            var completedBefore = ReadStatus(label).CompletedActions;
 
             MilanLog.Information($"-> {label}", customPrefix: LOG_CATEGORY);
             var sw = Stopwatch.StartNew();
@@ -1042,12 +1086,45 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
             while (DateTime.UtcNow < deadline)
             {
-                last = GetStatus();
+                last = ReadStatus(label);
                 if (predicate(last)) return;
                 Thread.Sleep(PollInterval);
             }
 
-            throw new TimeoutException($"{label} did not complete within {timeout} (last status: {last})");
+            // The status only refreshes on an engine tick, so a UDK stuck in a modal dialog looks the
+            // same as one still working. Name its windows so the cause is in the log.
+            throw new TimeoutException($"{label} did not complete within {timeout} (last status: {last}; " +
+                $"UDK windows: {UDKWindowProbe.Describe(udkPid)})");
+        }
+
+        /// <summary>
+        /// <see cref="GetStatus"/>, reporting a UDK that has exited (crashed or killed) as such rather
+        /// than as the raw ERROR_PARTIAL_COPY a read of its unmapped memory fails with.
+        /// </summary>
+        private static AgentStatus ReadStatus(string operation)
+        {
+            try
+            {
+                return GetStatus();
+            }
+            catch (Win32Exception ex) when (!IsUDKRunning())
+            {
+                throw new InvalidOperationException($"UDK (PID {udkPid}) exited while {operation}. " +
+                    @"See UDKGame\Logs\Launch.log for how far it got.", ex);
+            }
+        }
+
+        private static bool IsUDKRunning()
+        {
+            try
+            {
+                using var udk = Process.GetProcessById(udkPid);
+                return !udk.HasExited;
+            }
+            catch (ArgumentException)
+            {
+                return false;
+            }
         }
 
         /// <summary>Reads g_AgentStatus directly - refreshed every engine tick, no remote call.</summary>

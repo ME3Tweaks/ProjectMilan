@@ -152,7 +152,10 @@ namespace ProjectMilan.Pipelines.StaticLighting
                     streamingLevelsProp.Add(new ObjectProperty(j));
                 }
 
-                persistentUDK.Exports.First(exp => exp.ClassName == "WorldInfo").WriteProperty(streamingLevelsProp);
+                var worldInfo = persistentUDK.Exports.First(exp => exp.ClassName == "WorldInfo");
+                worldInfo.WriteProperty(streamingLevelsProp);
+                // Lightmass reads the world settings from the persistent level only.
+                level.WorldLightmass?.ApplyTo(worldInfo, LOG_CATEGORY);
                 persistentUDK.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             }
 
