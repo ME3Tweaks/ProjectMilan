@@ -53,6 +53,24 @@
     <String id="49875682">Mouse</String>
     <String id="49875683">Adjust mouse input options</String>
     <!-- New Settings TLKs end -->
+    <!-- MilanHost matchmaking TLKs begin: read by ID from MilanHost/Components/CMatchmaking.cpp (Text::*). {0} is filled in by MilanHost; keep it in translations. -->
+    <String id="49875700">Invite Code: {0}</String>
+    <String id="49875701">Invite Code: {0} (join link copied)</String>
+    <String id="49875702">Invite code unavailable (matchmaker not connected)</String>
+    <String id="49875703">This invite is no longer valid. The host may have left, or the lobby has closed.</String>
+    <String id="49875704">This lobby is full.</String>
+    <String id="49875705">This lobby is not accepting players right now. It may be changing hosts or finishing a match. Try again shortly.</String>
+    <String id="49875706">The host is running a different version of the game. You both need the same version to play together.</String>
+    <String id="49875707">Too many joins from your network are in progress. Wait a minute and try again.</String>
+    <String id="49875708">The matchmaking server is busy. Try again later.</String>
+    <String id="49875709">Could not reach the matchmaking server. Check your connection and try again.</String>
+    <String id="49875710">Could not join this lobby ({0}).</String>
+    <String id="49875711">Could not reach the host of this lobby. Try again shortly.</String>
+    <String id="49875712">Could not connect to the matchmaking server at {0}. Try again later.</String>
+    <String id="49875713">Cannot join this lobby: matchmaking is turned off.</String>
+    <String id="49875714">Another player is the new host. Rejoining...</String>
+    <String id="49875715">Lost the connection to the host. Looking for a new host...</String>
+    <!-- MilanHost matchmaking TLKs end -->
     <!--Male entries section end-->
     <!--Female entries section begin-->
     <String id="49875625">Female</String>
