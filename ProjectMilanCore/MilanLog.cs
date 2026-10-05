@@ -88,6 +88,34 @@ namespace ProjectMilan
             }
         }
 
+        private static readonly List<string> SessionSummaryErrors = new();
+
+        /// <summary>
+        /// Logs an error now and again at the very end of the session (<see cref="LogSessionSummary"/>), for
+        /// failures that would otherwise scroll out of sight in a long build's log.
+        /// </summary>
+        public static void ErrorWithSummary(string message, string customPrefix = InternalLoggingPrefix)
+        {
+            Error(message, customPrefix: customPrefix);
+            lock (SessionSummaryErrors)
+                SessionSummaryErrors.Add($@"[{customPrefix}] {message}");
+        }
+
+        /// <summary>
+        /// Repeats every <see cref="ErrorWithSummary"/> message. Call last, so they end the log.
+        /// </summary>
+        public static void LogSessionSummary()
+        {
+            lock (SessionSummaryErrors)
+            {
+                if (SessionSummaryErrors.Count == 0)
+                    return;
+                Log.Error($@"{SessionSummaryErrors.Count} error(s) this session need attention:");
+                foreach (var message in SessionSummaryErrors)
+                    Log.Error($@"  {message}");
+            }
+        }
+
         /// <summary>
         /// Calls Log.CloseAndFlush().
         /// </summary>
