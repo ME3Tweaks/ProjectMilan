@@ -17,7 +17,7 @@ namespace ProjectMilan.Pipelines.Mod
         /// <summary>
         /// The current moddesc version of the mod. Change this every time moddesc updates are required.
         /// </summary>
-        private static readonly Version CURRENT_VERSION = new Version("1.0.9");
+        private static readonly Version CURRENT_VERSION = new Version("1.0.8");
 
         public static void RunPipeline()
         {
@@ -54,12 +54,8 @@ namespace ProjectMilan.Pipelines.Mod
                 huff.SaveToFile(Path.Combine(outDir, Path.GetFileNameWithoutExtension(tlkXml) + ".tlk"));
             }
 
-            // Compile Coalesced file - goes into BASEGAME folder of mod manager mod
-            var baseOutDir = Directory.CreateDirectory(Path.Combine(Program.Settings.OutputModPath, @"..", @"BASEGAME", @"CookedPCConsole")).FullName;
-            var manifest = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"BaseConfig", $@"Coalesced.xml");
-            var dest = Path.Combine(baseOutDir, $@"Coalesced.bin");
-            MilanLog.Information($"Compiling Coalesced.bin", customPrefix: LOG_CATEGORY);
-            CoalescedConverter.ConvertToBin(manifest, dest);
+            // The basegame Coalesced.bin and GuidCache.pcc are not part of the mod folder: BaseDeltaHandler builds
+            // them as patch targets and ships them as deltas in MilanDelta, which the Milan base installer applies.
 
             // Some notes on multiplayer config files from ME3.
             // Config files mounted in specific order:
@@ -69,8 +65,8 @@ namespace ProjectMilan.Pipelines.Mod
             //     3. When entering MPLobby -> LiveIni is applied while game is running
             // MPLobby is the map name for the MP menu system both in and out of lobbies. It's a persistent level.
 
-            manifest = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"MergedConfig", $@"Default_{MilanShared.DLC_NAME}.xml");
-            dest = Path.Combine(outDir, $@"Default_{MilanShared.DLC_NAME}.bin");
+            var manifest = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"MergedConfig", $@"Default_{MilanShared.DLC_NAME}.xml");
+            var dest = Path.Combine(outDir, $@"Default_{MilanShared.DLC_NAME}.bin");
             MilanLog.Information($"Compiling {MilanShared.DLC_NAME}.bin", customPrefix: LOG_CATEGORY);
             CoalescedConverter.ConvertToBin(manifest, dest);
 
