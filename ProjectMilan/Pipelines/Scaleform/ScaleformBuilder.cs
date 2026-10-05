@@ -79,21 +79,19 @@ public class ScaleformBuilder
     /// <summary>
     /// Compiles the Scaleform XML exports into SWF, updates the scripts, and outputs into BaseDelta 
     /// </summary>
-    private static void Build()
+    public static void Build()
     {
         var sourceDir = Path.Combine(MilanShared.PipelineRoot, "Scaleform", "Packages");
-        var outputDir = Path.Combine(OutputDir, "Shared", "GUI", "Staging");
-        Directory.CreateDirectory(outputDir);
-        // var path = "Y:/WIP/Milan/experiments/SFWPipeline/SFWPipeline/Pipelines/Shared/GUI/Staging/Startup/Startup.pcc";
         foreach (var sourcePackageDir in Directory.GetDirectories(sourceDir))
         {
             var packageName = Directory.CreateDirectory(sourcePackageDir).Name;
-            Directory.CreateDirectory(Path.Combine(outputDir, packageName));
             foreach (var sourceXmlPath in Directory.GetFiles(sourcePackageDir, "*.xml", SearchOption.AllDirectories))
             {
                 var swfName = Path.GetFileNameWithoutExtension(sourceXmlPath);
                 var swfDir = Directory.GetParent(sourceXmlPath);
-                var builtSwfPath = Path.Combine(outputDir, packageName, $"{swfDir.Name}.swf");
+                var builtSwfDir = new DirectoryInfo(Path.Combine(OutputDir, packageName, "PropertyUpdate"));
+                builtSwfDir.Create();
+                var builtSwfPath = Path.Combine(builtSwfDir.FullName, $"{swfName}.swf");
                 Xml2Swf(sourceXmlPath, builtSwfPath);
                 foreach (var scriptPath in swfDir.GetFiles("*.as"))
                 {
@@ -128,7 +126,6 @@ public class ScaleformBuilder
     /// <param name="scriptPath">Name of the script file has to match the internal path of the SWF</param>
     private static void SwfReplaceScript(string swfPath, string scriptPath)
     {
-        // __Packages.screens.options.Options
         MilanLog.Information($"Replacing {Path.GetFileNameWithoutExtension(scriptPath)} in {Path.GetFileName(swfPath)}", customPrefix: LogCategory);
         var internalScriptPath = '\\' + Path.GetFileNameWithoutExtension(scriptPath).Replace(".", @"\");
         var ffdec = FFDecProcessInfo;
@@ -138,10 +135,7 @@ public class ScaleformBuilder
         ffdec.ArgumentList.Add(swfPath); // overriding same file
         ffdec.ArgumentList.Add(internalScriptPath);
         ffdec.ArgumentList.Add(scriptPath);
-        // Console.WriteLine($"{ffdec.FileName} {string.Join(' ', ffdec.ArgumentList)}");
-        // return;
         using var exeProcess = Process.Start(ffdec);
-        // exeProcess?.WaitForExitAsync();
         exeProcess?.WaitForExit();
     }
 }

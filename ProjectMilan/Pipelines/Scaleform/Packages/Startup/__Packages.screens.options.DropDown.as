@@ -1,3 +1,7 @@
+// Milan Change
+// Stumpy 2026/10/04
+// Fix drowpdown menu item selection colors, and add properly expanding background
+
 class screens.options.DropDown extends screens.options.BaseMenuItem
 {
    var _data;
@@ -16,12 +20,14 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
    var scrollBar;
    var selectedMC;
    var swapDepths;
+   var menuItemsBg = []; // Milan Change: Same as menuItems, but for the background
    static var SPACING = 350;
    var DECAY = 4;
    var num_VisibleOptions = 0;
    var num_ScrollIndex = 0;
    var num_HighlightedOption = 0;
    var sz_DropDownLibCellName = "Dropdown Selection list";
+   var sz_DropDownLibBgName = "Dropdown Selection list background"; // Milan Change - repeat for BG items
    var func_onRollOut = undefined;
    var num_RollOutIndex = 0;
    var func_onRollOver = undefined;
@@ -72,6 +78,7 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
          _loc3_ = _loc3_ + 1;
       }
       this.menuItems = [];
+      this.menuItemsBg = []; // Milan Change - repeat for BG items
       this.selectedIndex = this._data.control.defaultValue;
       super.init();
    }
@@ -116,6 +123,7 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
          };
          this.swapDepths(this._parent.getNextHighestDepth());
          this.menuItems = Array(this._data.control.children.length);
+         this.menuItemsBg = Array(this._data.control.children.length); // Milan Change - repeat for BG items
          _loc7_ = {x:this.dropDown.selected._x,y:this.dropDown.selected._y + this.dropDown.selected._height / 2 + this.bufferSpace};
          this.dropDown.selected.localToGlobal(_loc7_);
          _loc11_ = _loc7_.y;
@@ -123,13 +131,23 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
          _loc4_ = 0;
          while(_loc4_ < this._data.control.children.length)
          {
-            _loc3_ = this.dropDown._parent._parent._parent._parent._parent.attachMovie(this.sz_DropDownLibCellName,"SubOption" + _loc4_,_root.getNextHighestDepth());
+            _highestDepthSnapshot = _root.getNextHighestDepth(); 
+            _loc3_ = this.dropDown._parent._parent._parent._parent._parent.attachMovie(this.sz_DropDownLibCellName,"SubOption" + _loc4_,_highestDepthSnapshot + 1);
             _loc3_._xscale = _loc3_._yscale = _loc6_;
             _loc3_._y = _loc5_;
             _loc3_._x = _loc7_.x;
+            
+            // Milan Change - create and position bgItem
+            bgItem = this.dropDown._parent._parent._parent._parent._parent.attachMovie(this.sz_DropDownLibBgName, "SubOptionBg" + _loc4_,_highestDepthSnapshot);
+            bgItem._xscale = bgItem._yscale = _loc6_;
+            bgItem._xscale *= 1.5;
+            bgItem._y = _loc5_;
+            bgItem._x = _loc7_.x - bgItem._width / (1.5 * 2) / 2;
+            //
             _loc3_.optionText.labelTxt.text = this._data.control.children[_loc4_].label;
             this.SetupOptionButtons(_loc3_,_loc4_);
             this.menuItems[_loc4_] = _loc3_;
+            this.menuItemsBg[_loc4_] = bgItem; // Milan Change           
             if(!this.mcHeight)
             {
                this.mcHeight = _loc3_._height;
@@ -164,6 +182,16 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
          while(_loc2_ < this.menuItems.length)
          {
             this.menuItems[_loc2_]._visible = false;
+            _loc2_ = _loc2_ + 1;
+         }
+      }
+      // Milan Change - repeat for BG items
+      if(this.menuItemsBg.length)
+      {
+         _loc2_ = 0;
+         while(_loc2_ < this.menuItemsBg.length)
+         {
+            this.menuItemsBg[_loc2_]._visible = false;
             _loc2_ = _loc2_ + 1;
          }
       }
@@ -286,6 +314,11 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
       {
          return undefined;
       }
+      // Milan Change - repeat for BG items
+      if(index > this.menuItemsBg.length - this.num_VisibleOptions)
+      {
+         return undefined;
+      }
       this.num_ScrollIndex = index;
    }
    function moveToPercent(percent)
@@ -299,6 +332,7 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
          percent = 100;
       }
       this.moveTo(Math.round(percent / 100 * (this.menuItems.length - this.num_VisibleOptions)));
+      this.moveTo(Math.round(percent / 100 * (this.menuItemsBg.length - this.num_VisibleOptions))); // Milan Change - repeat for BG items
    }
    function MoveScrollBar(Dir)
    {
@@ -322,7 +356,7 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
    }
    function CloseDropPanel()
    {
-      this.dropDown.gotoAndStop("normal");
+      this.dropDown.gotoAndStop("fadeOut"); // Milan Change - goto normal -> fadeOut
       this.KillDropOptions();
       this.mcScrollBar._visible = false;
       this.bActive = false;
@@ -336,6 +370,7 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
          while(_loc2_ < this._data.control.children.length)
          {
             this.menuItems[_loc2_]._visible = true;
+            this.menuItemsBg[_loc2_]._visible = true; // Milan Change - repeat for BG items
             _loc2_ = _loc2_ + 1;
          }
          return undefined;
@@ -344,6 +379,7 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
       while(_loc2_ < this._data.control.children.length)
       {
          this.menuItems[_loc2_]._visible = false;
+         this.menuItemsBg[_loc2_]._visible = false; // Milan Change - repeat for BG items
          _loc2_ = _loc2_ + 1;
       }
       var _loc4_ = {x:this.dropDown.selected._x,y:this.dropDown.selected._y + this.dropDown.selected._height / 2 + this.bufferSpace};
@@ -355,6 +391,9 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
       {
          this.menuItems[_loc2_]._y = _loc3_;
          this.menuItems[_loc2_]._visible = true;
+         // Milan Change - repeat for BG items
+         this.menuItemsBg[_loc2_]._y = _loc3_;
+         this.menuItemsBg[_loc2_]._visible = true;
          _loc3_ += this.mcHeight;
          _loc2_ = _loc2_ + 1;
       }
@@ -380,12 +419,9 @@ class screens.options.DropDown extends screens.options.BaseMenuItem
       {
          return;
       }
-      var _loc3_ = new Color(this.dropBtn);
-      _loc3_.setRGB(!p_enabled ? screens.options.BaseMenuItem.INACTIVE_COLOR : screens.options.BaseMenuItem.ACTIVE_COLOR);
-      _loc3_ = new Color(this.selectedMC);
-      _loc3_.setRGB(!p_enabled ? screens.options.BaseMenuItem.INACTIVE_COLOR : screens.options.BaseMenuItem.ACTIVE_COLOR);
-      _loc3_ = new Color(this.optionSelectedText);
-      _loc3_.setRGB(!p_enabled ? screens.options.BaseMenuItem.INACTIVE_COLOR : screens.options.BaseMenuItem.ACTIVE_COLOR);
+      // Milan Change - switch to using a specific frame instead of using setRGB
+      !p_enabled ? this.dropDown.gotoAndStop("normal") : this.dropDown.gotoAndStop("fadeOut");
+      !p_enabled ? this.dropBtn.gotoAndStop("normal") : this.dropBtn.gotoAndStop("selected");
       if(p_enabled)
       {
          this.onSettingChange();

@@ -1,3 +1,7 @@
+// Milan Change
+// Stumpy 2026/10/04
+// Add new dropdown items
+
 class screens.options.Options extends com.SFXScreen
 {
    var HDRWarning;
@@ -28,6 +32,9 @@ class screens.options.Options extends com.SFXScreen
    var srScreenTitle;
    var subTitle;
    static var OPTION_Resolution = 10;
+   // Milan Change - New variables for dropdown IDs (maybe make this into an array instead)
+   static var OPTION_WindowMode = 11;
+   static var OPTION_CappedFramerate = 53;
    static var OPTION_Difficulty = 1;
    static var OPTION_SquadPower = 4;
    static var OPTION_Gamma = 12;
@@ -226,6 +233,16 @@ class screens.options.Options extends com.SFXScreen
                {
                   this.optionsData[_loc4_].children[_loc3_].type = "DropDownScrollLong";
                }
+               // Milan Change - replace more items with dropdowns
+               if(this.optionsData[_loc4_].children[_loc3_].optionId == screens.options.Options.OPTION_WindowMode)
+               {
+                  this.optionsData[_loc4_].children[_loc3_].type = "DropDownScrollLong";
+               }
+               if(this.optionsData[_loc4_].children[_loc3_].optionId == screens.options.Options.OPTION_CappedFramerate)
+               {
+                  this.optionsData[_loc4_].children[_loc3_].type = "DropDownScrollLong";
+               }
+               // Milan Change End
                _loc3_ = _loc3_ + 1;
             }
             _loc4_ = _loc4_ + 1;
@@ -717,6 +734,15 @@ class screens.options.Options extends com.SFXScreen
    function SetSingleOption(optionId, option)
    {
       if(optionId == screens.options.Options.OPTION_Resolution && _global.Platform == com.XPlatform.PC)
+      {
+         option.type = "DropDownScrollLong";
+      }
+      // Milan Change - replace more items with dropdowns
+      if(optionId == screens.options.Options.OPTION_WindowMode && _global.Platform == com.XPlatform.PC)
+      {
+         option.type = "DropDownScrollLong";
+      }
+      if(optionId == screens.options.Options.OPTION_CappedFramerate && _global.Platform == com.XPlatform.PC)
       {
          option.type = "DropDownScrollLong";
       }
