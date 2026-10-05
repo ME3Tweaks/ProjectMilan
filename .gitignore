@@ -402,3 +402,7 @@ FodyWeavers.xsd
 
 # Ignore built scaleform
 /ProjectMilan/Pipelines/Mod/BaseDelta/*/PropertyUpdate/*.swf
+
+# TEMP
+*.md
+/ShaderResearchTool
