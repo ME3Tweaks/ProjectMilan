@@ -1,3 +1,4 @@
+using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
@@ -21,7 +22,7 @@ namespace LEDecooker;
 /// placeholder; White_Panel_Blend01 binds the BC5 White_Panel_Gen_01_Norm), and conversion carries it into
 /// UDK unchanged: the BC7 placeholder becomes DXT1 TC_Normalmap and the BC5 texture stays BC5.
 ///
-/// The fix is on the texture side. A DXT1 copy with Z rebuilt decodes correctly under both kinds of sampler,
+/// The fix is on the texture side. An uncompressed XYZ copy with Z rebuilt decodes correctly under both kinds of sampler,
 /// since the two channel decodes only read XY, so no instance or material has to change.
 /// TextureSampleParameterNormal is not covered here: its decode comes from the instance's static normal
 /// parameter, which <see cref="NormalCompressionMaintenance"/> handles.
@@ -72,7 +73,7 @@ public static class NormalSamplerMaintenance
                             continue;
                         }
                         ConvertToThreeChannel(texture);
-                        DecookerLog.Information($"Normal sampler fix: converted {key} from PF_BC5 to PF_DXT1 with Z rebuilt");
+                        DecookerLog.Information($"Normal sampler fix: converted {key} from PF_BC5 to PF_A8R8G8B8 with Z rebuilt");
                     }
                     // Save beside the original and swap it in, so a failed save cannot leave a truncated package.
                     package.Save(temp);
@@ -161,6 +162,7 @@ public static class NormalSamplerMaintenance
         foreach (var (instance, parameter, bound, defaultTexture) in bindings.OrderBy(x => x.Instance, StringComparer.OrdinalIgnoreCase))
         {
             if (!textures.TryGetValue(bound, out var boundInfo) || boundInfo.Format != "PF_BC5"
+                || !UdkTextureEncodingPolicy.IsNormalCompression(boundInfo.Compression)
                 || !textures.TryGetValue(defaultTexture, out var defaultInfo) || TwoChannelDecodes.Contains(defaultInfo.Compression))
                 continue;
             result.Add(bound);
@@ -216,31 +218,14 @@ public static class NormalSamplerMaintenance
             props.GetProp<EnumProperty>("CompressionSettings")?.Value.Name ?? "TC_Default");
     }
 
-    /// <summary>
-    /// Re-encodes a BC5 normal map as DXT1 with Z rebuilt from XY, flagged as a normal map.
-    /// </summary>
+    /// <summary>Rebuild XYZ without another lossy block encoding for fixed three-channel samplers.</summary>
     private static void ConvertToThreeChannel(ExportEntry export)
     {
+        var decision = UdkTextureEncodingPolicy.Plan(export, requireThreeChannels: true);
         var props = export.GetProperties();
-        var texture = new Texture2D(export);
-        var image = texture.ToImage(PixelFormat.ARGB);
-
-        // BC5 decodes to ARGB with X and Y in lanes 2 and 1 and a constant in lane 0, where a three channel decode
-        // reads Z. Only the top mip needs it: correctMips rebuilds the chain from mip 0.
-        var data = image.mipMaps[0].data;
-        for (var i = 0; i + 3 < data.Length; i += 4)
-        {
-            var x = data[i + 2] / 255d * 2 - 1;
-            var y = data[i + 1] / 255d * 2 - 1;
-            var z = Math.Sqrt(Math.Max(0, 1 - (x * x + y * y)));
-            data[i] = (byte)Math.Clamp(Math.Round((z + 1) / 2 * 255), 0, 255);
-            data[i + 3] = 255;
-        }
-        image.correctMips(PixelFormat.DXT1);
-
-        props.AddOrReplaceProp(new EnumProperty("PF_DXT1", "EPixelFormat", MEGame.UDK, "Format"));
-        props.AddOrReplaceProp(new EnumProperty("TC_Normalmap", "TextureCompressionSettings", MEGame.UDK, "CompressionSettings"));
-        texture.TextureFormat = "PF_DXT1";
+        var image = UdkTextureEncodingPolicy.CreateImage(export, decision);
+        UdkTextureEncodingPolicy.PrepareProperties(props, decision);
+        var texture = new Texture2D(export) { TextureFormat = decision.TargetFormat };
         texture.Replace(image, props, isPackageStored: true);
     }
 

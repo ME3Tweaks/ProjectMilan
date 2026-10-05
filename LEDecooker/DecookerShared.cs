@@ -1,4 +1,4 @@
-﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
@@ -378,6 +378,13 @@ namespace LEDecooker
             {
                 // Inside this package
 
+                var exact = relinkingexport.FileRef.FindExport(sourceEntry.MemoryFullPath, sourceEntry.ClassName);
+                if (exact != null)
+                {
+                    uindex = exact.UIndex;
+                    return true;
+                }
+
                 // Maybe the path is wrong from T3D. Do we have an export with same name and class under teh root, since we don't have path info?
                 var existingDiffLevel = relinkingexport.FileRef.FindExport($"{relinkingexport.FileRef.FileNameNoExtension}.{sourceEntry.ObjectName.Instanced}", sourceEntry.ClassName);
                 if (existingDiffLevel != null)
@@ -402,10 +409,14 @@ namespace LEDecooker
                             var testIFP = $"{parent.InstancedFullPath}.{sourceEntry.ObjectName.Instanced}";
                             var testObj = relinkingexport.FileRef.FindExport(testIFP, sourceEntry.ClassName);
 
-                            if (testObj != null)
+                            if (testObj == null)
                             {
                                 // Nest under correct path.
                                 existingDiffLevel.idxLink = parent.UIndex;
+                            }
+                            else
+                            {
+                                uindex = testObj.UIndex;
                             }
                         }
                     }
