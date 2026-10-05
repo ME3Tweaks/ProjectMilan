@@ -26,6 +26,7 @@ using ProjectMilan.Settings;
 using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Redemption;
 using ProjectMilan_ExtraContent.Rejects;
+using ProjectMilan.Pipelines.Scaleform;
 using ProjectMilanCore;
 using static ProjectMilanCore.ConsoleHelpers;
 using Serilog;
@@ -571,6 +572,7 @@ namespace ProjectMilan
 
             if (RestoreStage == ECheckpointStage.None)
             {
+                ScaleformBuilder.Build(); // Build scaleform properties
                 // Build/cache patch targets (e.g. SFXGame) before anything that might import from them.
                 BaseDeltaHandler.PrepareForFreshBuild(CreateStage != ECheckpointStage.None);
             }

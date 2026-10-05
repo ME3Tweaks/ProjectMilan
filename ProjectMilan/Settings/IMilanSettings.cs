@@ -121,6 +121,12 @@
         /// </summary>
         string UE4LightmassPath { get; set; }
 
+        /// <summary>
+        /// Location of ff-dec.exe (JPEXS Decompiler). Generally you don't need to set this as it should be detected automatically. <br/>
+        /// If null, will attempt to fetch the path from the registry.
+        /// </summary>
+        string CustomFFDecPath { get; set; }
+
         #endregion
 
         #region Content cleanup and optimization

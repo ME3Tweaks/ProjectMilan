@@ -10,6 +10,7 @@ namespace ProjectMilan.Settings
         public string TextureSyncFolder { get; set; } = null;
         public string MilanUDKPath { get; set; } = @"D:\MEModding\UDK";
         public string UE4LightmassPath { get; set; } // Null: look up the Epic launcher's UE_4.27 install
+        public string CustomFFDecPath { get; set; } // Should be picked up automatically
         public int MaxThreads { get; set; } = 2;
 
         public bool RunMPCommonPipeline { get; set; } = false;

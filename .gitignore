@@ -202,6 +202,8 @@ PublishScripts/
 !**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
 #!**/[Pp]ackages/repositories.config
+# Scaleform exception 
+!**/Scaleform/Packages/*
 # NuGet v3's project.json files produces more ignorable files
 *.nuget.props
 *.nuget.targets
@@ -397,3 +399,6 @@ FodyWeavers.xsd
 /scratchpad
 /ProjectMilan/Pipelines/StaticLighting/UE4Lightmass/Reference
 /ProjectMilan/Pipelines/NoCommit
+
+# Ignore built scaleform
+/ProjectMilan/Pipelines/Mod/BaseDelta/*/PropertyUpdate/*.swf
