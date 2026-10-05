@@ -1,4 +1,4 @@
-﻿using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
@@ -100,7 +100,7 @@ namespace LEDecooker
         /// Only path characters are allowed between the quotes, so apostrophes inside string values
         /// (comment text, descriptions) never pair up into a false match.
         /// </summary>
-        private static readonly Regex ObjectLiteralRegex = new(@"\b(?<class>\w+)'(?<path>[\w.:]+)'", RegexOptions.Compiled);
+        private static readonly Regex ObjectLiteralRegex = new(@"\b(?<class>\w+)'(?<path>[^'\r\n]+)'", RegexOptions.Compiled);
 
         /// <summary>
         /// Compiles the T3D files for the specified game, generating packages with material expression data. It also generates the 
@@ -397,8 +397,7 @@ namespace LEDecooker
 
                 if (debugPackages) { package.Save(); }
                 SpecialFixes(package, sourceGame);
-                // Resolve against the final assembled graph, instances and textures, after dependency porting.
-                NormalCompressionMaintenance.FixPackage(package);
+                MaterialGraphValidation.ThrowIfInvalid(package);
                 if (debugPackages) { package.Save(); }
                 // NestObjects(package);
 
@@ -541,6 +540,29 @@ namespace LEDecooker
                     IEntry newTreeRoot = EntryCloner.CloneTree(original, false);
                     newTreeRoot.Parent = targetLink;
                     DecookerLog.Information($"\t\tMade clone of IllusiveManB Face material");
+                }
+            }
+
+            if (package.FileNameNoExtension.Equals("BioApl_Ind_DebrisShip01", StringComparison.OrdinalIgnoreCase)
+                && package.FindExport("BioApl_Ind_DebrisShip01.Meshes.DebrisShip01_C", "StaticMesh") is { } debrisShip)
+            {
+                // LE3's DebrisShip01_C ships with its 4th material slot empty. It needs the same material as the
+                // 3rd slot. Left unfixed it renders wrong in game, and UDK bakes bad lighting from it too.
+                var mesh = ObjectBinary.From<StaticMesh>(debrisShip);
+                bool changed = false;
+                foreach (var lod in mesh.LODModels)
+                {
+                    if (lod.Elements.Length >= 4 && lod.Elements[3].Material == 0 && lod.Elements[2].Material != 0)
+                    {
+                        lod.Elements[3].Material = lod.Elements[2].Material;
+                        changed = true;
+                    }
+                }
+
+                if (changed)
+                {
+                    debrisShip.WriteBinary(mesh);
+                    DecookerLog.Information($"\t\tFixed empty 4th material slot on {debrisShip.InstancedFullPath}");
                 }
             }
         }
