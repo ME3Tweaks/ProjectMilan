@@ -567,10 +567,8 @@ namespace ProjectMilan.Pipelines.Levels
         /// <param name="levelPipeline"></param>
         private static void PostcorrectPackages(LevelSpecificPipeline levelPipeline)
         {
-            if (levelPipeline.SpecialPostPortingDelegate == null)
-                return;
-
-            levelPipeline.SpecialPostPortingDelegate.Invoke(levelPipeline);
+            FogTranslucencySortFix.Apply(levelPipeline);
+            levelPipeline.SpecialPostPortingDelegate?.Invoke(levelPipeline);
 
             foreach (var package in levelPipeline.LE3Packages.Values)
             {
