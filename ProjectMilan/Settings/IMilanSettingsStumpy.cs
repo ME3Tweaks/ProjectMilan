@@ -23,6 +23,7 @@ namespace ProjectMilan.Settings
         public bool ProductionBuild { get; set; } = false;
         public string MilanUDKPath { get; set; } = $@"{MilanHome}\MilanUDK";
         public string UE4LightmassPath { get; set; } // Null: look up the Epic launcher's UE_4.27 install
+        public string CustomFFDecPath { get; set; } // Should be picked up automatically
         public bool RunLevelsPipeline { get; set; } = FullBuild;
         public bool RunAudioPipeline { get; set; } = false;
         public bool RunUpscalePipeline { get; set; } = true;

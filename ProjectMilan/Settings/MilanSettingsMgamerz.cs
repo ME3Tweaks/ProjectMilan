@@ -92,6 +92,7 @@ namespace ProjectMilan.Settings
             set { _milanUDKPath = value; }
         }
 
+        public string CustomFFDecPath { get; set; } // Should be picked up automatically
         public bool RunLevelsPipeline { get; set; } = true;
         public bool RunAudioPipeline { get; set; } = true;
         public bool RunUpscalePipeline { get; set; } = true;

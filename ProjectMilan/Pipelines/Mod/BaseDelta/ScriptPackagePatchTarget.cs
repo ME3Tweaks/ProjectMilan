@@ -5,6 +5,8 @@ using LegendaryExplorerCore.UnrealScript;
 using ProjectMilanCore;
 using Serilog;
 using System;
+using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 
 namespace ProjectMilan.Pipelines.Mod.BaseDelta
@@ -87,7 +89,8 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             var classFolder = Path.Combine(baseDeltaFolder, "Classes");
             if (Directory.Exists(classFolder))
             {
-                foreach (var cls in Directory.GetFiles(classFolder, "*.uc"))
+                // sorting this is a bit hacky, should probably have a manifest
+                foreach (var cls in Directory.GetFiles(classFolder, "*.uc").OrderBy(f => f))
                 {
                     var className = Path.GetFileNameWithoutExtension(cls);
                     var classExport = package.FindExport(className);
@@ -147,6 +150,36 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                         MilanLog.LogUSCErrors(log);
                         MilanLog.Fatal($"Failed to compile {packageName} property {propName} - this is a fatal error.");
                         Environment.Exit(1);
+                    }
+                }
+            }
+
+            // PropertyUpdate - swf and bnk only for now
+            var propUpdateFolder = Path.Combine(baseDeltaFolder, "PropertyUpdate");
+            if (Directory.Exists(propUpdateFolder))
+            {
+                foreach (var prop in Directory.GetFiles(propUpdateFolder, "*"))
+                {
+                    var propExtension = Path.GetExtension(prop); 
+                    var propName = Path.GetFileNameWithoutExtension(prop);
+                    var propExport = package.FindExport(propName);
+                    var propSource = File.ReadAllBytes(prop);
+
+                    switch (propExtension)
+                    {
+                        case ".swf":
+                            MilanLog.Information($"Updating property in {propName}", customPrefix: logCategory);
+                            var data = new ImmutableByteArrayProperty(propSource, "RawData");
+                            propExport.WriteProperty(data);
+                            break;
+                        case ".bnk":
+                            MilanLog.Information($"Updating WwiseBank {propName}", customPrefix: logCategory);
+                            ObjectBinary.EditBinary<WwiseBank>(propExport, binary => { binary.BnkFile = propSource; });
+                            break;
+                        case ".uc": // TODO: property update for individual properties
+                        default:
+                            MilanLog.Warning($"{propExtension} files are not currently supported with property update!", customPrefix: logCategory);
+                            break;
                     }
                 }
             }
