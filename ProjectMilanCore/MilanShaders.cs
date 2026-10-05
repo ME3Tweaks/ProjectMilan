@@ -7,10 +7,6 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using MilanShaderHost;
 using ProjectMilan;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace ProjectMilanCore
 {
