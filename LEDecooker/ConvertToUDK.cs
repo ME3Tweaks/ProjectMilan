@@ -1,4 +1,4 @@
-﻿using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Localization;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
@@ -123,16 +123,18 @@ namespace LEDecooker
                         UDKExportFixup(exp);
                     }
 
-                    // The importer can change normal encodings (e.g. BC7 -> DXT1). Check the destination.
+                    // The importer can change normal encodings (e.g. BC7 -> uncompressed RGBA). Check the destination.
                     NormalCompressionMaintenance.FixPackage(udkP);
-                    udkP.Save();
+                    MaterialGraphValidation.ThrowIfInvalid(udkP);
 
                     var rcp = new ReferenceCheckPackage();
                     EntryChecker.CheckReferences(rcp, udkP, LECLocalizationShim.GetString);
-                    foreach (var v in rcp.GetBlockingErrors().Concat(rcp.GetSignificantIssues()))
-                    {
+                    var issues = rcp.GetBlockingErrors().Concat(rcp.GetSignificantIssues()).ToArray();
+                    foreach (var v in issues)
                         DecookerLog.Error($"{udkP.FileNameNoExtension} - {v.Entry?.InstancedFullPath} {v.Message}");
-                    }
+                    if (issues.Length > 0)
+                        throw new InvalidDataException($"{udkP.FileNameNoExtension}: {issues.Length} reference validation issue(s); export was not saved.");
+                    udkP.Save();
 
                     //}
                 });
@@ -184,14 +186,16 @@ namespace LEDecooker
                     }
 
                     NormalCompressionMaintenance.FixPackage(udkP);
-                    udkP.Save();
+                    MaterialGraphValidation.ThrowIfInvalid(udkP);
 
                     var rcp = new ReferenceCheckPackage();
                     EntryChecker.CheckReferences(rcp, udkP, LECLocalizationShim.GetString);
-                    foreach (var v in rcp.GetBlockingErrors().Concat(rcp.GetSignificantIssues()))
-                    {
+                    var issues = rcp.GetBlockingErrors().Concat(rcp.GetSignificantIssues()).ToArray();
+                    foreach (var v in issues)
                         DecookerLog.Error($"{udkP.FileNameNoExtension} - {v.Entry?.InstancedFullPath} {v.Message}");
-                    }
+                    if (issues.Length > 0)
+                        throw new InvalidDataException($"{udkP.FileNameNoExtension}: {issues.Length} reference validation issue(s); export was not saved.");
+                    udkP.Save();
 
                     //}
                 }
