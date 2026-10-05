@@ -13,6 +13,7 @@ class screens.MPNewLobby.PlayerItem extends screens.MPNewLobby.PageItem
    var isLocalPlayer = false;
    var isLeader = false;
    var m_NumKickVotes = -1;
+   var m_nCustomIcon = -1;
    function PlayerItem()
    {
       super();
@@ -37,6 +38,7 @@ class screens.MPNewLobby.PlayerItem extends screens.MPNewLobby.PageItem
       this.PlayerTitleBar.subtitle.text = oPlayerDetails.ClassData;
       this.PlayerTitleBar.subtitle.textAutoSize = "shrink";
       this.PlayerTitleBar.ready.gotoAndStop(!oPlayerDetails.Ready ? "waiting" : "ready");
+      this.SetCustomIcon(this.m_nCustomIcon);
       this.SetKickVotes(oPlayerDetails.NumKickVotesReceived);
       this.disabled = false;
       this.isLocalPlayer = oPlayerDetails.IsLocalPlayer;
@@ -88,28 +90,13 @@ class screens.MPNewLobby.PlayerItem extends screens.MPNewLobby.PageItem
       this.m_bInteractive = b;
       this.selection._visible = this.m_bInteractive || !this.isOccupied;
    }
-   function SetSpeakerIcon(bEnabled, fVolume)
+   // MILAN CHANGE - 10/04/2026 - Mgamerz
+   // Replaces the speaker icon: the voice clip shows the screen this player is on (see SFXPRIMP.LobbyScreen).
+   // A negative index shows the empty "none" frame. The index is kept because SetOccupied rebuilds the title bar.
+   function SetCustomIcon(nIcon)
    {
-      if(!bEnabled)
-      {
-         this.PlayerTitleBar.voice.gotoAndStop("inactive");
-      }
-      else if(fVolume < 0.25)
-      {
-         this.PlayerTitleBar.voice.gotoAndStop("level0");
-      }
-      else if(fVolume < 0.5)
-      {
-         this.PlayerTitleBar.voice.gotoAndStop("level1");
-      }
-      else if(fVolume < 0.75)
-      {
-         this.PlayerTitleBar.voice.gotoAndStop("level2");
-      }
-      else
-      {
-         this.PlayerTitleBar.voice.gotoAndStop("level3");
-      }
+      this.m_nCustomIcon = nIcon;
+      this.PlayerTitleBar.voice.gotoAndStop(nIcon >= 0 ? "custom" + nIcon : "none");
    }
    function SetEmblemData(nEmblemID)
    {
@@ -172,11 +159,7 @@ class screens.MPNewLobby.PlayerItem extends screens.MPNewLobby.PageItem
    {
       if(this.isOccupied)
       {
-         if(this.PlayerTitleBar.voice.hitTest(_root._xmouse,_root._ymouse))
-         {
-            this.ToggleMute();
-         }
-         else if(this.m_bInteractive)
+         if(this.m_bInteractive)
          {
             super.onRelease();
          }
@@ -190,10 +173,6 @@ class screens.MPNewLobby.PlayerItem extends screens.MPNewLobby.PageItem
       {
          _root.screen.InviteFriends();
       }
-   }
-   function ToggleMute()
-   {
-      flash.external.ExternalInterface.call("ToggleMuteForSlot",this.m_listIndex);
    }
    function SetKickVotes(newKickVotes)
    {

@@ -910,7 +910,10 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
         list.SetInteractive(bInteractive);
     }
-    function RefreshAllSpeakerIcons(VoiceData)
+    // MILAN CHANGE - 10/04/2026 - Mgamerz
+    // The voice icon now shows what screen each player is on. IconData is indexed by lobby slot:
+    // -1 for none, otherwise the index of the custom icon frame (custom0 - custom9).
+    function RefreshAllCustomIcons(IconData)
     {
         var _loc3_ = null;
         if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
@@ -924,9 +927,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         if(_loc3_ != null)
         {
             var _loc4_ = 0;
-            while(_loc4_ < VoiceData.length)
+            while(_loc4_ < IconData.length)
             {
-                _loc3_.SetSlotSpeakerIcon(_loc4_,VoiceData[_loc4_] != -1,VoiceData[_loc4_]);
+                _loc3_.SetSlotCustomIcon(_loc4_,IconData[_loc4_]);
                 _loc4_ += 1;
             }
         }

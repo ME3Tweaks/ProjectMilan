@@ -1,6 +1,10 @@
 ﻿// MILAN CHANGE - Mgamerz
 // Add some null guards
 // Raise map limit to 255, up from 30
+// MILAN CHANGE - 10/04/2026 - Mgamerz
+// Report which lobby screen the local player is on (SFXPRIMP.LobbyScreen), so the lobby can show it on each player's card.
+// 0 = lobby, 1 = store, 2 = weapons, 3 = powers, 4 = appearance, 5 = match consumables, 6 = character,
+// 7 = challenges, 8 = leaderboards, 9 = options, 10 = match settings. The lobby icon index is the value minus 1.
 Class SFXLobbyFlow extends Info
     config(Game);
 
@@ -418,12 +422,18 @@ public final function ShowHostNewMissionScreen()
 public final function ShowLeaderboardScreen()
 {
     Class'SFXGUIInteraction'.static.GetInstance().ShowLeaderboard(GetPC(), FinishLeaderboardScreen);
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(8);
+    // END MILAN CHANGE
     PreviousSubScreen = ELobbySubscreen.LSS_Leaderboards;
 }
 public final function ShowLobbyScreen()
 {
     FadeInFromBlack();
     GetPC().ShowLobbyScreen();
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(0);
+    // END MILAN CHANGE
 }
 public final function ShowLobbyStatusBars()
 {
@@ -432,6 +442,9 @@ public final function ShowLobbyStatusBars()
 public final function ShowMatchConsumablesScreen()
 {
     GetPC().ShowMatchConsumablesScreen();
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(5);
+    // END MILAN CHANGE
     PreviousSubScreen = ELobbySubscreen.LSS_MatchConsumables;
 }
 public final function ShowMatchResultsScreen()
@@ -442,12 +455,18 @@ public final function ShowMatchResultsScreen()
 public final function ShowMatchSettingsScreen()
 {
     GetPC().ShowMatchSettingsScreen();
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(10);
+    // END MILAN CHANGE
     PreviousSubScreen = ELobbySubscreen.LSS_MissionSetup;
 }
 public final function ShowMPAppearanceScreen()
 {
     FadeInFromBlack();
     GetPC().ShowMPAppearanceScreen();
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(4);
+    // END MILAN CHANGE
     PreviousSubScreen = ELobbySubscreen.LSS_Appearance;
 }
 public final function bool ShowMPChallengeScreen()
@@ -476,6 +495,9 @@ private final function bool ShowMPChallengeScreen_Helper(array<bool> Accomplishm
     {
         oMPChallengesMovie.ActionScriptVoid("InitializeData");
         oMPChallengesMovie.AddOnMovieClosedDelegate(OnMPChallengesScreenClosed);
+        // MILAN CHANGE - SET SCREEN VALUE
+        GetPRI().SetLobbyScreen(7);
+        // END MILAN CHANGE
         return TRUE;
     }
     return FALSE;
@@ -483,6 +505,9 @@ private final function bool ShowMPChallengeScreen_Helper(array<bool> Accomplishm
 public final function ShowMPSelectKitScreen()
 {
     GetPC().ShowMPSelectKitScreen();
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(6);
+    // END MILAN CHANGE
     PreviousSubScreen = ELobbySubscreen.LSS_SelectCharacter;
 }
 public final function ShowMultiplayerMenu()
@@ -493,6 +518,9 @@ public final function ShowMultiplayerMenu()
 public final function ShowOptionsScreen()
 {
     GetPC().GetSFXUIController().ShowMPOptions(GetPC(), OnOptionsScreenClosed);
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(9);
+    // END MILAN CHANGE
 }
 public final function ShowPromotionScreen()
 {
@@ -502,6 +530,9 @@ public final function ShowReinforcementsRevealScreeen(bool bManualReveal)
 {
     bManuallyRevealingReinforcements = bManualReveal;
     GetPC().ShowReinforcementsRevealScreeen(OnCloseRevealScreen);
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(1);
+    // END MILAN CHANGE
     PreviousSubScreen = ELobbySubscreen.LSS_Store;
 }
 public final function ShowStoreScreen(optional bool bProcessPurchases = TRUE, optional bool bSendTelemetry = TRUE)
@@ -512,6 +543,9 @@ public final function ShowStoreScreen(optional bool bProcessPurchases = TRUE, op
     }
     GetPC().ShowMPStoreUI(nLastOffer, bProcessPurchases);
     GetPRI().SetStoreIsOpen(TRUE);
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(1);
+    // END MILAN CHANGE
     nLastOffer = -1;
     PreviousSubScreen = ELobbySubscreen.LSS_Store;
 }
@@ -523,12 +557,18 @@ public final function ShowTalentsLevelUpScreen()
 {
     FadeInFromBlack();
     GetPC().ShowLevelUpUI(FinishTalentsLevelUpScreen);
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(3);
+    // END MILAN CHANGE
     PreviousSubScreen = ELobbySubscreen.LSS_TalentsLevelUp;
 }
 public final function ShowWeaponsScreen()
 {
     FadeInFromBlack();
     GetPC().ShowWeaponSelectionUI(FinishWeaponsScreen);
+    // MILAN CHANGE - SET SCREEN VALUE
+    GetPRI().SetLobbyScreen(2);
+    // END MILAN CHANGE
     PreviousSubScreen = ELobbySubscreen.LSS_Weapons;
 }
 public delegate function int SortMapInfoData(MPMapInfo A, MPMapInfo B)
@@ -1112,6 +1152,10 @@ simulated state Lobby
     }
     public function FinishChangingMatchSettings(bool bSuccess)
     {
+        // MILAN CHANGE - SET SCREEN VALUE
+        // Closing match settings does not go through ShowLobbyScreen.
+        GetPRI().SetLobbyScreen(0);
+        // END MILAN CHANGE
         if (bSuccess)
         {
             PlayGuiSound('MPSelectMapSuccess');

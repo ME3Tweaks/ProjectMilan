@@ -2,6 +2,8 @@
 // Decompiled 9/4/2026 7:37:53 AM
 // MILAN CHANGE - 09/06/2026 - Mgamerz
 // Change maximum map count from 30 to 255
+// MILAN CHANGE - 10/04/2026 - Mgamerz
+// Change speaker icons to current UI so players know what others are doing
 Class SFXPRIMP extends SFXPRI
     config(Game);
 
@@ -121,6 +123,12 @@ var byte LocalMapArray[255];
 var byte CombinedMapArray[255];
 // END MILAN CHANGE
 var repnotify byte NumKickVotesReceived;
+
+// MILAN CHANGE - 10/04/2026 - Mgamerz
+// Add byte that represents the lobby screen the player is on
+var byte LobbyScreen;
+// END MILAN CHANGE
+
 
 public simulated function Pawn GetAPawn()
 {
@@ -1291,12 +1299,25 @@ public simulated function bool IsAI()
     return !IsPlayer();
 }
 
+
+public reliable server function ServerSetLobbyScreen(byte NewScreen)
+{
+    LobbyScreen = NewScreen;
+}
+
+public simulated function SetLobbyScreen(byte NewScreen)
+{
+    ServerSetLobbyScreen(NewScreen);
+}
+
+// 10/04/2026 Add LobbyScreen to replication
 replication
 {
     if (bNetDirty && Role == ENetRole.ROLE_Authority)
-        KickVotePlayerId, PlayerMedals, SFXPawn, LobbyListOrder, ReadyInLobby, StoreIsOpen, bReplicationReady, bLocalMapsSent, CombinedMapArray, NumKickVotesReceived;
+        KickVotePlayerId, PlayerMedals, SFXPawn, LobbyListOrder, ReadyInLobby, StoreIsOpen, bReplicationReady, bLocalMapsSent, CombinedMapArray, NumKickVotesReceived, LobbyScreen;
     if (bNetDirty && !bNetOwner && Role == ENetRole.ROLE_Authority)
         CharacterData, ComputerName, DisplayName, CharacterPowers, CharacterWeapons;
+    
 }
 
 //class default properties can be edited in the Properties tab for the class's Default__ object.
