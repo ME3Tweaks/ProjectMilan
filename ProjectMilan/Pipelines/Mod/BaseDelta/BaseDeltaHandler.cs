@@ -10,6 +10,7 @@ using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using ME3TweaksCore.Helpers;
+using ProjectMilan.Pipelines.Scaleform;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
 
@@ -39,7 +40,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// List of patch classes we are using for transformating.
         /// </summary>
         private static readonly IBasePatchClass[] targets = [
-            new ScriptPackagePatchTarget("Startup", "Scaleform UI replacements"),
+            new ScriptPackagePatchTarget("Startup", "Scaleform UI replacements", preBuild: () => ScaleformBuilder.Build("Startup")),
             new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides (SFXShield_Base, SFXModule_Damage)", postCompile: CheatProfileRegistry.Apply),
             new ScriptPackagePatchTarget("SFXOnlineFoundation", "Patches native MPEnemyInfo structs"),
             new CoalescedPatchTarget(),

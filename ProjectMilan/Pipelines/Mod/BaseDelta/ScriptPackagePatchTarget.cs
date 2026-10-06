@@ -18,17 +18,24 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
     {
         private readonly string packageName;
         private readonly string logCategory;
+        private readonly Action? preBuild;
         private readonly Action<IMEPackage>? postCompile;
 
+        /// <param name="preBuild">
+        /// Optional step run before the package is patched - for generating BaseDelta inputs (e.g. Scaleform SWFs).
+        /// Runs whenever this target is built from source, including a checkpoint restore that has no patch for it,
+        /// and is skipped when the target is restored from its checkpointed patch.
+        /// </param>
         /// <param name="postCompile">
         /// Optional step run on the package after all UnrealScript has been compiled in, just before it is
         /// serialized - for edits that depend on the compiled script (e.g. registering new functions in defaults).
         /// </param>
-        public ScriptPackagePatchTarget(string packageName, string comment, Action<IMEPackage>? postCompile = null)
+        public ScriptPackagePatchTarget(string packageName, string comment, Action? preBuild = null, Action<IMEPackage>? postCompile = null)
         {
             this.packageName = packageName;
             logCategory = $"Milan-{packageName}";
             Comment = comment;
+            this.preBuild = preBuild;
             this.postCompile = postCompile;
         }
 
@@ -52,6 +59,8 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// </summary>
         public byte[] BuildPatchTarget()
         {
+            preBuild?.Invoke();
+
             using var package = MEPackageHandler.OpenMEPackage(GetVanillaLoadPath());
 
             var baseDeltaFolder = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"BaseDelta", packageName);
@@ -163,6 +172,12 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                     var propExtension = Path.GetExtension(prop); 
                     var propName = Path.GetFileNameWithoutExtension(prop);
                     var propExport = package.FindExport(propName);
+                    if (propExport == null)
+                    {
+                        MilanLog.Fatal($"{packageName} has no export {propName} to update from PropertyUpdate/{Path.GetFileName(prop)} - this is a fatal error.", customPrefix: logCategory);
+                        Environment.Exit(1);
+                    }
+
                     var propSource = File.ReadAllBytes(prop);
 
                     switch (propExtension)

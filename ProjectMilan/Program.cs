@@ -26,7 +26,6 @@ using ProjectMilan.Settings;
 using ProjectMilan.Utility;
 using ProjectMilan_ExtraContent.Redemption;
 using ProjectMilan_ExtraContent.Rejects;
-using ProjectMilan.Pipelines.Scaleform;
 using ProjectMilanCore;
 using static ProjectMilanCore.ConsoleHelpers;
 using Serilog;
@@ -135,7 +134,7 @@ namespace ProjectMilan
         /// Redemption - see <see cref="ECheckpointStage"/>). It invalidates every existing checkpoint,
         /// regardless of which stage it was taken at, forcing a complete rebuild.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 8; // 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
+        public const int MIN_CHECKPOINT_VERSION = 9; // 9: BaseDelta gained the Startup.pcc target (Scaleform UI) and SFXGame PropertyUpdate (GUI WwiseBank), which older checkpoints' patches don't contain. 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -600,7 +599,6 @@ namespace ProjectMilan
 
             if (RestoreStage == ECheckpointStage.None)
             {
-                ScaleformBuilder.Build(); // Build scaleform properties
                 // Build/cache patch targets (e.g. SFXGame) before anything that might import from them.
                 BaseDeltaHandler.PrepareForFreshBuild(CreateStage != ECheckpointStage.None);
             }
