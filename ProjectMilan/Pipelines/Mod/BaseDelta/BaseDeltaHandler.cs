@@ -43,6 +43,8 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             new ScriptPackagePatchTarget("Startup", "Scaleform UI replacements", preBuild: () => ScaleformBuilder.Build("Startup")),
             new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides (SFXShield_Base, SFXModule_Damage)", postCompile: CheatProfileRegistry.Apply),
             new ScriptPackagePatchTarget("SFXOnlineFoundation", "Patches native MPEnemyInfo structs"),
+            new PropertyUpdatePatchTarget("SFXGUI_Fonts", "Adds the ME3 MP4 U+2623 hazard glyph to both GUI fonts", preBuild: () => FontPatchBuilder.Build("SFXGUI_Fonts", "GUI_SF_Fonts")),
+            new PropertyUpdatePatchTarget("SFXGUI_FontsJPN", "Adds the ME3 MP4 U+2623 hazard glyph to both Japanese GUI fonts", preBuild: () => FontPatchBuilder.Build("SFXGUI_FontsJPN", "GUI_SF_FontsJPN")),
             new CoalescedPatchTarget(),
             new GuidCachePatchTarget() // Keep last: its contents depend on what the package targets above changed
         ];

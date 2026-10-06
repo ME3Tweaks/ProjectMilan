@@ -163,42 +163,8 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 }
             }
 
-            // PropertyUpdate - swf and bnk only for now
-            var propUpdateFolder = Path.Combine(baseDeltaFolder, "PropertyUpdate");
-            if (Directory.Exists(propUpdateFolder))
-            {
-                foreach (var prop in Directory.GetFiles(propUpdateFolder, "*"))
-                {
-                    var propExtension = Path.GetExtension(prop); 
-                    var propName = Path.GetFileNameWithoutExtension(prop);
-                    var propExport = package.FindExport(propName);
-                    if (propExport == null)
-                    {
-                        MilanLog.Fatal($"{packageName} has no export {propName} to update from PropertyUpdate/{Path.GetFileName(prop)} - this is a fatal error.", customPrefix: logCategory);
-                        Environment.Exit(1);
-                    }
+            ApplyPropertyUpdates(package, baseDeltaFolder, packageName, logCategory);
 
-                    var propSource = File.ReadAllBytes(prop);
-
-                    switch (propExtension)
-                    {
-                        case ".swf":
-                            MilanLog.Information($"Updating property in {propName}", customPrefix: logCategory);
-                            var data = new ImmutableByteArrayProperty(propSource, "RawData");
-                            propExport.WriteProperty(data);
-                            break;
-                        case ".bnk":
-                            MilanLog.Information($"Updating WwiseBank {propName}", customPrefix: logCategory);
-                            ObjectBinary.EditBinary<WwiseBank>(propExport, binary => { binary.BnkFile = propSource; });
-                            break;
-                        case ".uc": // TODO: property update for individual properties
-                        default:
-                            MilanLog.Warning($"{propExtension} files are not currently supported with property update!", customPrefix: logCategory);
-                            break;
-                    }
-                }
-            }
-            
             var atcorFolder = Path.Combine(baseDeltaFolder, "AddToClassOrReplace");
             if (Directory.Exists(atcorFolder))
             {
@@ -234,6 +200,48 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             postCompile?.Invoke(package);
 
             return package.SaveToStream(BaseDeltaHandler.UseCompressedPackages).ToArray();
+        }
+
+        /// <summary>
+        /// Applies every file in <paramref name="baseDeltaFolder"/>/PropertyUpdate to the export named by its
+        /// filename (minus extension) - swf and bnk only for now.
+        /// </summary>
+        internal static void ApplyPropertyUpdates(IMEPackage package, string baseDeltaFolder, string packageName, string logCategory)
+        {
+            var propUpdateFolder = Path.Combine(baseDeltaFolder, "PropertyUpdate");
+            if (!Directory.Exists(propUpdateFolder))
+                return;
+
+            foreach (var prop in Directory.GetFiles(propUpdateFolder, "*"))
+            {
+                var propExtension = Path.GetExtension(prop);
+                var propName = Path.GetFileNameWithoutExtension(prop);
+                var propExport = package.FindExport(propName);
+                if (propExport == null)
+                {
+                    MilanLog.Fatal($"{packageName} has no export {propName} to update from PropertyUpdate/{Path.GetFileName(prop)} - this is a fatal error.", customPrefix: logCategory);
+                    Environment.Exit(1);
+                }
+
+                var propSource = File.ReadAllBytes(prop);
+
+                switch (propExtension)
+                {
+                    case ".swf":
+                        MilanLog.Information($"Updating property in {propName}", customPrefix: logCategory);
+                        var data = new ImmutableByteArrayProperty(propSource, "RawData");
+                        propExport.WriteProperty(data);
+                        break;
+                    case ".bnk":
+                        MilanLog.Information($"Updating WwiseBank {propName}", customPrefix: logCategory);
+                        ObjectBinary.EditBinary<WwiseBank>(propExport, binary => { binary.BnkFile = propSource; });
+                        break;
+                    case ".uc": // TODO: property update for individual properties
+                    default:
+                        MilanLog.Warning($"{propExtension} files are not currently supported with property update!", customPrefix: logCategory);
+                        break;
+                }
+            }
         }
     }
 }
