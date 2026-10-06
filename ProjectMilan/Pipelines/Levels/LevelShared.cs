@@ -420,8 +420,33 @@ namespace ProjectMilan.Pipelines.Levels
                 destLevelBin.NavListEnd = dEnd.UIndex;
             }
 
-            // NavRefs, CoverRefs
-            // CrossLevelActors
+            // NavRefs, CoverRefs, CrossLevelActors
+            // CoverSlot/FireLink packed properties (TurnTarget, CoverTurnTarget, Exposed, Danger, FireLinks) are
+            // indices into CoverIndexPairs -> CoverLinkRefs. The slot structs are ported verbatim, so the tables
+            // must be ported in the same order or every packed reference dangles (e.g. cover turns fail).
+            int RemapLevelRef(int sourceUIndex)
+            {
+                if (sourceUIndex == 0)
+                    return 0; // Cross-level placeholder; resolved through the CrossLevel*GuidRefs maps
+                var sourceEntry = sourcePackage.GetEntry(sourceUIndex);
+                var destEntry = sourceEntry == null ? null : destPackage.FindEntry(sourceEntry.InstancedFullPath);
+                if (destEntry == null)
+                {
+                    MilanLog.Warning($"  Could not remap level nav/cover reference {sourceEntry?.InstancedFullPath ?? sourceUIndex.ToString()}",
+                        customPrefix: levelPipeline.LogCategory);
+                    return 0;
+                }
+                return destEntry.UIndex;
+            }
+
+            destLevelBin.CoverLinkRefs = sourcePersistentLevel.CoverLinkRefs.Select(x => RemapLevelRef(x)).ToList();
+            destLevelBin.CoverIndexPairs = sourcePersistentLevel.CoverIndexPairs.ToList();
+            destLevelBin.CrossLevelCoverGuidRefs = sourcePersistentLevel.CrossLevelCoverGuidRefs;
+            destLevelBin.NavRefs = sourcePersistentLevel.NavRefs.Select(x => RemapLevelRef(x)).ToList();
+            destLevelBin.NavRefIndicies = sourcePersistentLevel.NavRefIndicies.ToList();
+            destLevelBin.CrossLevelNavGuidRefs = sourcePersistentLevel.CrossLevelNavGuidRefs;
+            destLevelBin.CrossLevelActors = sourcePersistentLevel.CrossLevelActors.Select(x => RemapLevelRef(x)).ToList();
+
             destPackage.GetLevel().WriteBinary(destLevelBin);
 
             // Port sequence
