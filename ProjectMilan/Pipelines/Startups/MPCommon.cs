@@ -7,6 +7,7 @@ using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ME3TweaksModManager.modmanager.objects.mod.merge;
 using ME3TweaksModManager.modmanager.objects.mod.merge.v1;
 using Newtonsoft.Json;
+using ProjectMilan.Pipelines.Mod.BaseDelta;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
 using System.Diagnostics;
@@ -223,6 +224,11 @@ namespace ProjectMilan.Pipelines.Startups
                     MilanShared.CompileFunctionOverride(pcc, classToUpdate, file, fl, usop, LOG_CATEGORY);
                 }
             }
+
+            // SFXCheatManagerNonNativeMP replaces BioCheatManager's AllProfiles with its own ME3 list, so Milan's
+            // registered cheat profiles have to be appended here as well. Runs after all compilation so nothing
+            // recompiles the defaults afterwards.
+            CheatProfileRegistry.ApplyToMPCommon(pcc);
 
 
             // Inject additional assets via object referencer merge

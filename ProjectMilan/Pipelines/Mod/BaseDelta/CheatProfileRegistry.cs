@@ -21,14 +21,21 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
     internal sealed record CheatProfile(string Keyword, string Function, string Header, string Description, bool NoTarget = false, string? Utility = null);
 
     /// <summary>
-    /// Appends Milan's own cheat profiles to Default__BioCheatManager.AllProfiles in SFXGame. The profile
-    /// functions themselves are BaseDelta UnrealScript (e.g. AddToClassOrReplace/BioCheatManager.DrawModules.uc);
-    /// this only registers them so the profile commands can find them.
+    /// Appends Milan's own cheat profiles to the AllProfiles defaults of every cheat manager that defines its
+    /// own list. The profile functions themselves are BaseDelta UnrealScript on BioCheatManager
+    /// (e.g. AddToClassOrReplace/BioCheatManager.DrawModules.uc); this only registers them so the profile
+    /// commands can find them.
     /// </summary>
+    /// <remarks>
+    /// AllProfiles is not config, and a subclass assigning it in defaultproperties replaces the inherited array
+    /// outright. LMP's SFXPlayerControllerMP uses SFXCheatManagerNonNativeMP (ported from ME3), which carries its
+    /// own full ME3 list, so it never sees BioCheatManager's entries - the registry has to be applied to both.
+    /// </remarks>
     internal static class CheatProfileRegistry
     {
         private const string CheatManagerClass = "BioCheatManager";
-        private const string LogCategory = "Milan-SFXGame";
+        private const string MPCheatManagerClass = "SFXCheatManagerNonNativeMP";
+        private const string LogCategory = "Milan-CheatProfiles";
 
         /// <summary>
         /// Profiles to append, in order, after the vanilla ones.
@@ -44,27 +51,59 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// </summary>
         internal static void Apply(IMEPackage sfxGame)
         {
-            var defaults = sfxGame.FindExport($"Default__{CheatManagerClass}");
-            if (defaults == null)
-                Fail($"Default__{CheatManagerClass} not found");
-
-            var props = defaults.GetProperties();
-            var allProfiles = props.GetProp<ArrayProperty<StructProperty>>("AllProfiles");
-            if (allProfiles == null || allProfiles.Count == 0)
-                Fail($"Default__{CheatManagerClass} has no AllProfiles to append to");
-
-            // Clone a vanilla entry so the new ones keep the native struct's exact property layout.
-            var template = allProfiles[0];
-
             foreach (var profile in AdditionalProfiles)
             {
                 ValidateFunction(sfxGame, profile.Function, profile.Keyword);
                 if (profile.Utility != null)
                     ValidateFunction(sfxGame, profile.Utility, profile.Keyword);
+            }
 
+            AppendTo(sfxGame, CheatManagerClass, required: true);
+        }
+
+        /// <summary>
+        /// Post-compile hook for the MPCommon package, which holds SFXCheatManagerNonNativeMP (the cheat manager
+        /// SFXPlayerControllerMP actually spawns). The profile functions live on BioCheatManager in SFXGame and
+        /// were already validated when that was built, so they aren't checked here.
+        /// </summary>
+        internal static void ApplyToMPCommon(IMEPackage mpCommon) => AppendTo(mpCommon, MPCheatManagerClass, required: false);
+
+        /// <param name="required">
+        /// If false, a class that doesn't assign AllProfiles in its own defaults is skipped - it inherits
+        /// BioCheatManager's list, which already has the entries.
+        /// </param>
+        private static void AppendTo(IMEPackage pcc, string className, bool required)
+        {
+            // Not FindExport: loose-compiled classes nest their defaults under a forced-export package
+            // (e.g. SFXGameMPContent.Default__SFXCheatManagerNonNativeMP), so the full path varies.
+            var defaultsName = $"Default__{className}";
+            var defaults = pcc.Exports.FirstOrDefault(e => e.IsDefaultObject && e.ObjectName.Instanced.CaseInsensitiveEquals(defaultsName));
+            if (defaults == null)
+            {
+                if (required)
+                    Fail($"Default__{className} not found in {pcc.FileNameNoExtension}");
+                MilanLog.Information($"{className} is not in {pcc.FileNameNoExtension}; no cheat profiles to append", customPrefix: LogCategory);
+                return;
+            }
+
+            var props = defaults.GetProperties();
+            var allProfiles = props.GetProp<ArrayProperty<StructProperty>>("AllProfiles");
+            if (allProfiles == null || allProfiles.Count == 0)
+            {
+                if (required)
+                    Fail($"Default__{className} has no AllProfiles to append to");
+                MilanLog.Information($"{className} does not override AllProfiles; it inherits the registered profiles", customPrefix: LogCategory);
+                return;
+            }
+
+            // Clone an existing entry so the new ones keep the native struct's exact property layout.
+            var template = allProfiles[0];
+
+            foreach (var profile in AdditionalProfiles)
+            {
                 // AllProfiles.Find('Keyword', ...) returns the first match, so a duplicate would be unreachable.
                 if (allProfiles.Any(p => p.GetProp<NameProperty>("Keyword")?.Value.Instanced.CaseInsensitiveEquals(profile.Keyword) == true))
-                    Fail($"Cheat profile keyword '{profile.Keyword}' is already in use");
+                    Fail($"Cheat profile keyword '{profile.Keyword}' is already in use in {className}");
 
                 var entry = template.DeepClone();
                 entry.GetProp<StrProperty>("Header").Value = profile.Header;
@@ -75,12 +114,12 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 entry.GetProp<BoolProperty>("bNoTarget").Value = profile.NoTarget;
                 allProfiles.Add(entry);
 
-                MilanLog.Information($"Registered cheat profile '{profile.Keyword}' -> {CheatManagerClass}.{profile.Function} (index {allProfiles.Count - 1})", customPrefix: LogCategory);
+                MilanLog.Information($"Registered cheat profile '{profile.Keyword}' -> {profile.Function} in {className} (index {allProfiles.Count - 1})", customPrefix: LogCategory);
             }
 
             // CurrentProfile is a byte enum holding the AllProfiles index.
             if (allProfiles.Count > 256)
-                Fail($"AllProfiles has {allProfiles.Count} entries; CurrentProfile is a byte and can only index 256");
+                Fail($"{className}.AllProfiles has {allProfiles.Count} entries; CurrentProfile is a byte and can only index 256");
 
             defaults.WriteProperties(props);
         }
