@@ -204,6 +204,11 @@ public event function Update(float fDeltaT)
 }
 public event function OnClose()
 {
+    // MILAN CHANGE - 10/05/2026 - Mgamerz
+    // Tell actionscript to prepare for close so listeners can be uninstalled before movie closes
+    // This prevents GC race condition that crashes on gamepad
+    AS_PrepareForClose();
+    // END MILAN CHANGE
     Class'SFXGame'.static.SetMipFadingValue(m_fPreviousMipLevelFadingValue);
     ChangePawnTint1(CurrModifiableCharacter.Tint1ID);
     ChangePawnTint2(CurrModifiableCharacter.Tint2ID);
@@ -257,7 +262,10 @@ public final function ConfirmButtonPressed()
         SFXPawn_PlayerMP(SourcePlayer).SetMPAppearanceVariables(SelectedPawnTint1ID, SelectedPawnTint2ID, SelectedPawnPatternID, SelectedPawnPatternColorID, SelectedPawnPhongID, SelectedPawnEmissiveID, SelectedPawnSkinToneID);
         Close(TRUE);
         PlayGuiSound('MPAppearanceConfirm');
-        ResetPawn();
+        // MILAN CHANGE - 10/05/2026 - Resetting the pawn after close causes GC race condition and crashes the game on controller when exiting screen, but not consistently due to GC race.
+        // This call doesn't have any any importance anyways, so we're just removing it.
+        //ResetPawn();
+        // END MILAN CHANGE
         MPSaveManager.ClearNewReinforcement(13, string(CurrModifiableCharacter.KitName));
         GetLobbyFlow().FinishMPAppearanceScreen(TRUE, CurrModifiableCharacter);
     }
@@ -419,7 +427,10 @@ public function CancelConfirmCallback(bool bAPressed, int nContext)
     {
         Close(TRUE);
         PlayGuiSound('MPAppearanceBack');
-        ResetPawn();
+        // MILAN CHANGE - 10/05/2026 - Resetting the pawn after close causes GC race condition and crashes the game on controller when exiting screen, but not consistently due to GC race.
+        // This call doesn't have any any importance anyways, so we're just removing it.
+        //ResetPawn();
+        // END MILAN CHANGE
         GetLobbyFlow().FinishMPAppearanceScreen(FALSE, None);
     }
 }
@@ -679,6 +690,16 @@ public function array<TintSwatchData> GetTint2SwatchData()
 {
     return Tint2SwatchMappings;
 }
+
+// MILAN CHANGE - 10/05/2026 - Mgamerz
+// Add handler that can tell AS to uninstall listeners
+// Paired with new function in SWF that uninstalls the listeners
+public function AS_PrepareForClose()
+{
+    ActionScriptVoid("screen.PrepareForClose");
+}
+// END MILAN CHANGE
+
 
 //class default properties can be edited in the Properties tab for the class's Default__ object.
 defaultproperties

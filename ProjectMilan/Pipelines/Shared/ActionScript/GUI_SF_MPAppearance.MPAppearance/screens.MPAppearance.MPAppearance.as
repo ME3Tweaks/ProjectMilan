@@ -997,8 +997,18 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
 				// add the "confirm" item to the end of the list
 				this.confirmMenuItem = this.AppearanceMenu.AddNewItem(this.srConfirm,screens.MPAppearance.AppearanceMenuList.APPEARANCE_ITEM_NORMAL,this.srNew,this.MakeDelegate(this.OnConfirmSelect),this.MakeDelegate(this.OnConfirmActivate));
 			}
-			
         }
+    }
+    // END MILAN
+
+    // MILAN CHANGE Mgamerz 10/05/2026
+    // Invoked by handler to force listeners to unregister to prevent crashing
+    function PrepareForClose()
+    {
+        // Runs onSetFocus -> StopHandlingKeyPresses while the UnrealScript side still exists
+        Selection.setFocus(null);
+        Selection.removeListener(this);
+        Key.removeListener(this);
     }
     // END MILAN
 }
