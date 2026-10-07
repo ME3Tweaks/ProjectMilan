@@ -287,15 +287,24 @@ namespace ProjectMilan.Pipelines.Texture
                 MilanLog.Information($"  Installing upscaled texture {tex.InstancedFullPath}: {t2d.GetTopMip().width}x{t2d.GetTopMip().height} -> {upscale.Width}x{upscale.Height}{(convertV8U8ToBC7 ? " (V8U8 -> BC7)" : "")}", customPrefix: LOG_CATEGORY);
 
                 var props = tex.GetProperties();
+                var isNormalMap = IsNormalMap(props);
                 if (convertV8U8ToBC7)
                 {
                     props.AddOrReplaceProp(new EnumProperty("PF_BC7", "EPixelFormat", MEGame.LE3, "Format"));
-                    props.AddOrReplaceProp(new EnumProperty("TC_NormalmapBC7", "TextureCompressionSettings", MEGame.LE3, "CompressionSettings"));
+                    // Same rule as ConvertTexture: only real normal maps get restamped as one.
+                    if (isNormalMap)
+                        SetBC7NormalMapProperties(props);
                     t2d.TextureFormat = "PF_BC7"; // Required for conversion
                 }
 
                 // Load as ARGB so Replace() re-encodes into the target format (and so its DXT1 alpha check, which only works on ARGB, fires).
                 var image = Image.LoadFromFile(upscale.FilePath, PixelFormat.ARGB);
+                if (convertV8U8ToBC7 && isNormalMap)
+                {
+                    // The upscale was made from a two channel source, so its Z lane may be the constant 255 V8U8ToARGB
+                    // writes rather than real data. BC7 is sampled as XYZ, so rebuild it - harmless if Z was already right.
+                    ReconstructNormalZ(image);
+                }
                 t2d.Replace(image, props, isPackageStored: true);
                 ClearNeverStreamForExternalization(tex);
             }
@@ -313,12 +322,10 @@ namespace ProjectMilan.Pipelines.Texture
             var texture = new Texture2D(tex);
             var sourceFormat = Image.getPixelFormatType(texture.TextureFormat);
 
-            // V8U8 is just "two channels of signed data" - ME3 used it for VFX distortion, flux and grayscale masks as much
-            // as for normal maps. Census of ME3 DLC content: 22488 TC_Default, 661 TC_Grayscale and 102 TC_OneBitAlpha V8U8
-            // textures (none of which sampled as normal maps) against only 2184 TC_Normalmap* ones. So the texture's own
-            // compression setting, not its pixel format, decides whether it is a normal map.
-            var isNormalMap = props.GetProp<EnumProperty>("CompressionSettings")?.Value.Name
-                .Contains("Normal", StringComparison.OrdinalIgnoreCase) == true;
+            // V8U8 is just "two channels of signed data", so the texture's own compression setting, not its pixel format,
+            // decides whether it is a normal map. In practice every V8U8 texture in ME3 (basegame and all DLC, ~29.9k) is
+            // TC_NormalmapUncompressed, so this is a guard rather than a filter.
+            var isNormalMap = IsNormalMap(props);
 
             Image convertedImage;
             if (sourceFormat == PixelFormat.V8U8 && destFormat == PixelFormat.BC7 && isNormalMap)
@@ -348,7 +355,7 @@ namespace ProjectMilan.Pipelines.Texture
             }
             else if (destFormat == PixelFormat.BC7)
             {
-                props.AddOrReplaceProp(new EnumProperty("TC_NormalmapBC7", "TextureCompressionSettings", MEGame.LE3, "CompressionSettings"));
+                SetBC7NormalMapProperties(props);
             }
             else
             {
@@ -359,6 +366,27 @@ namespace ProjectMilan.Pipelines.Texture
             texture.TextureFormat = $"PF_{destFormat}"; // Required for conversion
             texture.Replace(convertedImage, props, isPackageStored: true);
             ClearNeverStreamForExternalization(tex);
+        }
+
+        private static bool IsNormalMap(PropertyCollection props) =>
+            props.GetProp<EnumProperty>("CompressionSettings")?.Value.Name
+                .Contains("Normal", StringComparison.OrdinalIgnoreCase) == true;
+
+        /// <summary>
+        /// Stamps the properties every vanilla LE3 PF_BC7/TC_NormalmapBC7 texture carries. The shader compiler reads
+        /// UnpackMin/Max and SRGB, not just CompressionSettings, so ME3 V8U8 values left behind change the generated
+        /// shader. ~1.3k ME3 V8U8 normals have no SRGB property (default True, which gamma decodes a BC7 normal) and
+        /// ~1.5k have UnpackMin 0 (which adds an affine tail that leaves the normal in 0..1).
+        /// </summary>
+        private static void SetBC7NormalMapProperties(PropertyCollection props)
+        {
+            props.AddOrReplaceProp(new EnumProperty("TC_NormalmapBC7", "TextureCompressionSettings", MEGame.LE3, "CompressionSettings"));
+            props.AddOrReplaceProp(new BoolProperty(false, "SRGB"));
+            for (int lane = 0; lane < 4; lane++)
+            {
+                props.AddOrReplaceProp(new FloatProperty(lane < 3 ? -1f : 0f, "UnpackMin") { StaticArrayIndex = lane });
+                props.AddOrReplaceProp(new FloatProperty(1f, "UnpackMax") { StaticArrayIndex = lane });
+            }
         }
 
         /// <summary>
