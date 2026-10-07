@@ -141,21 +141,6 @@ namespace MilanShaderHost
                 //"BIOA_LAV20_T.pcc"
 
                 
-                // Required normal-compression replacements: these ten packages contain the 18 audited
-                // instances in NormalCompressionReplacements.json. Their stock shader maps decode the
-                // effective normal textures incorrectly, so ShaderHost must compile the private
-                // _MilanNormalFix instances and parent chains used by ProjectMilan's replacement installer.
-                "BioApl_Cra_CrateCargo01_L",
-                "biog_damagedecals",
-                "biot_cerberus",
-                "BioT_Desert",
-                "BioT_Human_Ext",
-                "biot_human_space",
-                "BioT_Thessia", // MICs used by BioA_MPThes_100/101/120_Lab
-                "BioT_Thessia_Monastery",
-                "BioVFX_C_Reaper_Impacts",
-                "biovfx_crt_rpr_can",
-
                 // Contain MICs
                 "biot_krogru",
                 "BioApl_Ind_Mining_Drill03",
@@ -245,6 +230,7 @@ namespace MilanShaderHost
                 
                 //// Thessia:
                 "BioT_MPThes",
+                "BioT_Thessia", // MICs used by BioA_MPThes_100/101/120_Lab
 
                 //// Vancouver
                 "BioVFX_MP3_MPHosp",

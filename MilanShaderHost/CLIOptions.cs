@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 using System.Runtime.InteropServices;
 
 namespace MilanShaderHost
@@ -43,6 +43,9 @@ namespace MilanShaderHost
 
         [Option("capture-root", HelpText = "Root folder for DebugPackages and HLSL capture output. Defaults to E:\\Decooked. When using a temporary --sourcefolder clone, set this to a separate root so the main corpus is never overwritten.")]
         public string CaptureRoot { get; set; }
+
+        [Option("compiled-output", HelpText = "Folder for compiled shader packages. Defaults to E:\\CompiledShaderPackages.")]
+        public string CompiledOutputFolder { get; set; }
 
         [Option("material", HelpText = "Compile only the material with this exact instanced full path from each input package. Intended for focused capture diagnostics; omit for normal package-wide runs.")]
         public string MaterialPath { get; set; }

@@ -36,6 +36,7 @@ namespace MilanShaderHost
 
         public async static Task Main(string[] args)
         {
+            using var diagnostics = ShaderRunDiagnostics.Start();
             Parser.Default.ParseArguments<CLIOptions>(args).WithParsed(Init);
         }
 
@@ -69,6 +70,10 @@ namespace MilanShaderHost
 
             // Eventually make this command line when we support the other games.
             Game = MEGame.LE3;
+            if (!string.IsNullOrWhiteSpace(options.GamePath))
+            {
+                LE3Directory.DefaultGamePath = Path.GetFullPath(options.GamePath);
+            }
 
             // Initialize
             LegendaryExplorerCoreLib.InitLib(null, x => { });

@@ -112,7 +112,7 @@ namespace MilanShaderHost
         internal static void MarkCompileFailure(string errorMessage)
         {
             currentCompileSessionFailed = true;
-            Console.Error.WriteLine($"ShaderClient reported a compile failure; writeback is disabled for this package: {errorMessage}");
+            Console.Error.WriteLine($"ShaderClient reported a compile failure for {currentSourceRoot}; output replacement is disabled for this package: {errorMessage}");
         }
 
         public static void KillGame()
@@ -392,7 +392,8 @@ namespace MilanShaderHost
 
         static void SetupShaderCompileFlow()
         {
-            var outDir = @"E:\CompiledShaderPackages";
+            var outDir = string.IsNullOrWhiteSpace(Program.ParsedOptions.CompiledOutputFolder)
+                ? @"E:\CompiledShaderPackages" : Path.GetFullPath(Program.ParsedOptions.CompiledOutputFolder);
             Directory.CreateDirectory(outDir);
 
             KillGame();
@@ -1313,17 +1314,35 @@ namespace MilanShaderHost
                 ShaderHost.BeginDebugCapture(builtFor);
             }
 
+            var launchedUtc = DateTime.UtcNow;
+            Process? process = null;
             try
             {
-                var process = Process.Start(processPath, $"{bootArg} -NOHOMEDIR");
+                process = Process.Start(processPath, $"{bootArg} -NOHOMEDIR");
                 process.WaitForExit();
                 Console.WriteLine($"Game exited with code {process.ExitCode}{DescribeGameExitCode(process.ExitCode)}");
             }
             finally
             {
-                if (captureDebugPackages)
+                try
                 {
-                    ShaderHost.EndDebugCapture(builtFor);
+                    if (process != null && process.HasExited)
+                    {
+                        var clientLog = Path.Combine(Environment.CurrentDirectory, "Logs", "ShaderClient.log");
+                        var diagnostics = ShaderRunDiagnostics.Current?.ArchiveClientLog(clientLog, displayPackage, buildMode.ToString(), process.Id, launchedUtc);
+                        if (buildMode == EShaderLevelMode.Compile && diagnostics?.MaterialCompileFailed == true && !currentCompileSessionFailed)
+                        {
+                            MarkCompileFailure($"Material translation failed; see archived ShaderClient log: {diagnostics.Path}");
+                        }
+                    }
+                }
+                finally
+                {
+                    if (captureDebugPackages)
+                    {
+                        ShaderHost.EndDebugCapture(builtFor);
+                    }
+                    process?.Dispose();
                 }
             }
         }

@@ -291,6 +291,7 @@ namespace MilanShaderHost
                     {
                         var sourceInstances = sourceStylePackage.Exports
                             .Where(x => x.IsA("MaterialInstance") && HasStaticPermutation(x))
+                            .Where(x => string.IsNullOrWhiteSpace(requestedMaterial) || string.Equals(x.InstancedFullPath, requestedMaterial, StringComparison.OrdinalIgnoreCase))
                             .ToList();
                         for (int i = 0; i < sourceInstances.Count; i++)
                         {
@@ -826,7 +827,7 @@ namespace MilanShaderHost
         private static ExportEntry GetMissingTexture(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
-            var existingMissingTex = targetPackage.FindExport("MissingTexture", "Texture2D");
+            var existingMissingTex = targetPackage.FindExport("MissingTextures.MissingTexture", "Texture2D");
             if (existingMissingTex != null)
             {
                 return existingMissingTex;
@@ -858,7 +859,7 @@ namespace MilanShaderHost
         private static ExportEntry GetMissingTextureFlipbook(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
-            var existingMissingTex = targetPackage.FindExport("MissingTextureFlipbook", "TextureFlipBook");
+            var existingMissingTex = targetPackage.FindExport("MissingTextures.MissingTextureFlipbook", "TextureFlipBook");
             if (existingMissingTex != null)
             {
                 return existingMissingTex;
@@ -903,7 +904,7 @@ namespace MilanShaderHost
         private static ExportEntry GetMissingTextureRenderTarget2D(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
-            var existingMissingTex = targetPackage.FindExport("MissingTextureRenderTarget2D", "TextureRenderTarget2D");
+            var existingMissingTex = targetPackage.FindExport("MissingTextures.MissingTextureRenderTarget2D", "TextureRenderTarget2D");
             if (existingMissingTex != null)
             {
                 return existingMissingTex;
@@ -927,7 +928,7 @@ namespace MilanShaderHost
         private static ExportEntry GetMissingTextureRenderTargetCube(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
-            var existingMissingTex = targetPackage.FindExport("MissingTextureRenderTargetCube", "TextureRenderTargetCube");
+            var existingMissingTex = targetPackage.FindExport("MissingTextures.MissingTextureRenderTargetCube", "TextureRenderTargetCube");
             if (existingMissingTex != null)
             {
                 return existingMissingTex;
@@ -952,7 +953,7 @@ namespace MilanShaderHost
         private static ExportEntry GetMissingTextureCube(ImportEntry imp, IMEPackage targetPackage)
         {
             // Check the fileref on return
-            var existingMissingTex = targetPackage.FindExport("MissingTextureCube", "TextureCube");
+            var existingMissingTex = targetPackage.FindExport("MissingTextures.MissingTextureCube", "TextureCube");
             if (existingMissingTex != null)
             {
                 return existingMissingTex;
