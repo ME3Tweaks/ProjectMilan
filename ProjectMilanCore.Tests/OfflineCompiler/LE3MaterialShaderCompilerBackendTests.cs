@@ -70,7 +70,7 @@ public sealed class LE3MaterialShaderCompilerBackendTests
         using var package = MEPackageHandler.OpenMEPackage(packagePath);
         var material = package.FindExport(materialPath) ?? throw new AssertFailedException($"{materialPath} not found in {packagePath}.");
         string folder = Path.GetDirectoryName(packagePath)!;
-        using var metadata = new PackageTextureMetadataProvider(import => [Path.Combine(folder, import.GetLinker() + ".pcc")]);
+        using var metadata = new PackageTextureMetadataProvider(import => [Path.Combine(folder, ((ImportEntry)import).GetLinker() + ".pcc")]);
         var progress = new ListProgress<MaterialShaderCompileProgress>(p => Console.WriteLine($"{p.CompletedJobs}/{p.TotalJobs} {p.CurrentTarget?.ShaderTypeName}"));
 
         var outcome = new OfflineMaterialShaderCompilerService(Enabled).CompileMaterial(

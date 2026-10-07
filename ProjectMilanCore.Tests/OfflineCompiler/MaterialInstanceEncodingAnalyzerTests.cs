@@ -109,6 +109,26 @@ public sealed class MaterialInstanceEncodingAnalyzerTests
     }
 
     [TestMethod]
+    public void TwoDOverrideOfACubeSamplerIsReportedNotAVariant()
+    {
+        // BioT_Arctic instances of ME3_OPAQUE_MM set its cube parameter to a Texture2D; a 2D placeholder would make the
+        // reflection lookup fail to translate, and no variant can change the sampler type anyway.
+        using var package = Fixtures.Package("CubeMismatch");
+        var parent = Fixtures.Material(package, "Parent");
+        Fixtures.Parameter(parent, "cube", Fixtures.Texture(package, "Default", className: "TextureCube"),
+            "MaterialExpressionTextureSampleParameterCube");
+        var instance = Fixtures.Instance(package, "Inst", parent, ("cube", Fixtures.Texture(package, "Flat")));
+        using var provider = new PackageTextureMetadataProvider();
+
+        var report = Analyze(instance, provider);
+
+        var finding = report.Findings.Single();
+        Assert.AreEqual(TextureEncodingRequirement.DimensionMismatch, finding.Requirement, finding.Reason);
+        Assert.IsTrue(report.IsComplete);
+        Assert.IsFalse(report.NeedsParentVariant);
+    }
+
+    [TestMethod]
     public void AmbiguousOverrideIsUnresolvedAndTheReportIncomplete()
     {
         using var package = Fixtures.Package("Ambiguous");

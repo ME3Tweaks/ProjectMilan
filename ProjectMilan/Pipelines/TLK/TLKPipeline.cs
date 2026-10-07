@@ -86,6 +86,16 @@ namespace ProjectMilan.Pipelines.TLK
         }
 
         /// <summary>
+        /// In place of <see cref="FinalizePipeline"/> when the restored checkpoint was taken after it (Texture,
+        /// dev builds): its .tlk files are already final, so the set is only closed, and nothing appended.
+        /// </summary>
+        public static void CloseForRestoredCheckpoint()
+        {
+            MilanPipelinesShared.TLKSet = null;
+            MilanPipelinesShared.TLKStartIndex = 0;
+        }
+
+        /// <summary>
         /// Writes every string assigned via MilanPipelinesShared.AssignTLK since the last commit into the
         /// output .tlk files, then clears them from the pending set. TLKStartIndex is moved past them, as
         /// AssignTLK only looks at pending strings and TLKStartIndex to pick the next ID.

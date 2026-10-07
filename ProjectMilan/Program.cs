@@ -97,7 +97,15 @@ namespace ProjectMilan
             (ECheckpointStage.Levels, "Levels", () => ShouldRunLevelsPipeline),
             (ECheckpointStage.Rejection, "Rejection", () => Settings.RunRejectionPipeline),
             (ECheckpointStage.Redemption, "Redemption", () => Settings.RunRedemptionPipeline),
+            (ECheckpointStage.Texture, "Texture", () => Settings.RunTexturePipeline),
         ];
+
+        /// <summary>
+        /// The stages a checkpoint may be created at this run: all of <see cref="CheckpointStages"/>, except
+        /// <see cref="ECheckpointStage.Texture"/> for a production build.
+        /// </summary>
+        private static (ECheckpointStage Stage, string Name, Func<bool> Enabled)[] OfferedCheckpointStages =>
+            CheckpointStages.Where(x => x.Stage != ECheckpointStage.Texture || !Settings.ProductionBuild).ToArray();
 
         /// <summary>
         /// A production build always builds kits, regardless of <see cref="IMilanSettings.RunKitsPipeline"/>.
@@ -267,6 +275,20 @@ namespace ProjectMilan
                                 RestoreStage = checkpointInfo.Stage;
                                 MilanLog.Information($"Using checkpoint for this run; skipping all pipelines through {RestoreStage}");
                                 WarnAboutPipelinesMissingFromCheckpoint(checkpointInfo);
+
+                                // The one case where a run restores and creates: retaking the checkpoint after the
+                                // texture pipeline, so it doesn't need a full rebuild to get one.
+                                if (RestoreStage < ECheckpointStage.Texture && Settings.RunTexturePipeline)
+                                {
+                                    Console.WriteLine("-------------------------------");
+                                    Console.WriteLine("Replace the checkpoint with one taken after the Texture pipeline [y/N]? (5 second timeout)");
+                                    var retake = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
+                                    if ("Y".CaseInsensitiveEquals(retake))
+                                    {
+                                        CreateStage = ECheckpointStage.Texture;
+                                        MilanLog.Information("Will replace the checkpoint with one taken after the Texture pipeline");
+                                    }
+                                }
                             }
                         }
                     }
@@ -428,7 +450,7 @@ namespace ProjectMilan
                 return;
             }
 
-            var lastEnabledStage = CheckpointStages.LastOrDefault(x => x.Enabled() && (!ProductionCheckpointBeforeLevels || x.Stage < ECheckpointStage.Levels));
+            var lastEnabledStage = OfferedCheckpointStages.LastOrDefault(x => x.Enabled() && (!ProductionCheckpointBeforeLevels || x.Stage < ECheckpointStage.Levels));
             if (lastEnabledStage.Name == null)
             {
                 MilanLog.Warning("Production build: no checkpointable pipelines are enabled, no checkpoint will be created.");
@@ -448,20 +470,21 @@ namespace ProjectMilan
         /// <param name="defaultStage">Stage selected if the user just presses enter.</param>
         private static ECheckpointStage PromptForCheckpointStage(ECheckpointStage defaultStage)
         {
+            var stages = OfferedCheckpointStages;
             var labels = new List<string>();
-            for (int i = 0; i < CheckpointStages.Length; i++)
+            for (int i = 0; i < stages.Length; i++)
             {
-                var missing = GetDisabledPipelinesThrough(CheckpointStages[i].Stage);
+                var missing = GetDisabledPipelinesThrough(stages[i].Stage);
                 labels.Add(missing.Count == 0
-                    ? CheckpointStages[i].Name
-                    : $"{CheckpointStages[i].Name}  [will not contain: {string.Join(", ", missing)}]");
+                    ? stages[i].Name
+                    : $"{stages[i].Name}  [will not contain: {string.Join(", ", missing)}]");
             }
 
-            var defaultIndex = Array.FindIndex(CheckpointStages, x => x.Stage == defaultStage);
+            var defaultIndex = Array.FindIndex(stages, x => x.Stage == defaultStage);
             var selectedIndex = ConsoleHelpers.PromptForMenuSelection(
                 "Which pipeline should the checkpoint be taken after?", labels, defaultIndex);
 
-            var selected = CheckpointStages[selectedIndex].Stage;
+            var selected = stages[selectedIndex].Stage;
             var disabled = GetDisabledPipelinesThrough(selected);
             if (disabled.Count > 0)
             {
@@ -655,36 +678,34 @@ namespace ProjectMilan
 
             // Finalize the dynamic TLK range: every stage that could call AssignTLK (Kits through
             // Redemption, including Rejection/Redemption running in-process) has now either run, or
-            // been skipped and rehydrated via ModBuilder.RehydrateFromCheckpoint. Unconditional - no
-            // checkpoint stage exists at or after Redemption, so this point is never itself skipped.
+            // been skipped and rehydrated via ModBuilder.RehydrateFromCheckpoint. A (dev-only) Texture
+            // checkpoint was taken after this point and already holds the finalized TLKs; finalizing
+            // again would append the starter kit strings a second time.
             SetConsoleTitle(ConsoleTitlePostFix, "Finalizing TLK");
-            TLKPipeline.FinalizePipeline();
+            if (RestoreStage >= ECheckpointStage.Texture)
+                TLKPipeline.CloseForRestoredCheckpoint();
+            else
+                TLKPipeline.FinalizePipeline();
 
-        // EVERYTHING AFTER THIS IS NON-CONTENT PORTING AND SHOULD NOT BE CHECKPOINTED ---------
+        // EVERYTHING AFTER THIS IS NON-CONTENT PORTING. ONLY TEXTURE MAY BE CHECKPOINTED, IN DEV BUILDS ---------
 
             // MIDWAY POINT - We should no longer be porting content, so we can
             // drop some caches to release memory.
             MilanShared.DropPortingCaches();
 
 
-        shaders:
-            // Shader install.
-            //
-            // This has to run before the texture pipeline. TFCBuild.UpdateTextures strips
-            // bHasStaticPermutationResource from any MaterialInstance whose shader map is missing, and
-            // until the shaders are installed *every* ported permutation looks exactly like that. The
-            // installer only selects instances that still carry the flag, so with the old ordering a
-            // MIC permutation could never be installed: the repair removed the flag, and the absent
-            // flag then hid the instance from the thing that would have supplied the map.
-            //
-            // Running the install first makes that repair what it was meant to be -- a net for
-            // instances that genuinely ended up with no shaders. Resynthesis, which runs later, ports
-            // and compacts the shader cache against the final material set and keeps maps belonging to
-            // flagged instances, so installed permutations survive it.
-            RunPipeline(Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
-
             // Post-build pipelines
-            RunPipeline(Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
+            RunPipeline(ECheckpointStage.Texture, Settings.RunTexturePipeline, TFCBuild.RunPipeline, "Texture"); // Performs TFC compaction and texture upgrades
+
+        shaders:
+            // Shader install, with the offline compiler.
+            //
+            // Runs after the texture pipeline, the last step that changes textures: a texture's compression
+            // and unpack range are compiled into the shaders that sample it, so compiling earlier would bake
+            // in the pre-conversion decode. Runs before the object database is unregistered (imports resolve
+            // through it) and before Resynthesis, which compacts each shader cache against the final
+            // material set. Any material left without shaders fails the build.
+            RunPipeline(Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
 
         audio:
             RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio

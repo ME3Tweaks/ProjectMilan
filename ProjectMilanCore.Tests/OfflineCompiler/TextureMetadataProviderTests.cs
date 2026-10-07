@@ -97,6 +97,33 @@ public sealed class TextureMetadataProviderTests
     }
 
     [TestMethod]
+    public void DecookedExportTexturesReadWhatTheGameLoads()
+    {
+        // The decooked graph's default is the pre-conversion texture; the converted copy in the output decides the decode.
+        string donor = SaveDonor(Path.Combine(tempRoot, "Converted"), "TC_NormalmapBC7");
+        string decookedPath = Path.Combine(tempRoot, "Decooked", "Donor.pcc");
+        Directory.CreateDirectory(Path.GetDirectoryName(decookedPath)!);
+        using (var decooked = MEPackageHandler.CreateAndOpenPackage(decookedPath, MEGame.LE3))
+        {
+            var root = decooked.CreateExport("Donor", "Package", indexed: false);
+            var group = decooked.CreateExport("Textures", "Package", root, indexed: false);
+            Fixtures.Texture(decooked, "Norm", "TC_Normalmap").idxLink = group.UIndex;
+            decooked.Save();
+        }
+        using var decookedPackage = MEPackageHandler.OpenMEPackage(decookedPath, forceLoadFromDisk: true);
+        var texture = decookedPackage.FindExport("Donor.Textures.Norm")!;
+
+        using var byPath = new PackageTextureMetadataProvider(_ => [donor], _ => true);
+        Assert.AreEqual("TC_NormalmapBC7", byPath.GetMetadata(texture)!.CompressionSettings);
+
+        using var noDonor = new PackageTextureMetadataProvider(_ => [], _ => true);
+        Assert.AreEqual("TC_Normalmap", noDonor.GetMetadata(texture)!.CompressionSettings, "falls back to the export itself");
+
+        using var plain = new PackageTextureMetadataProvider(_ => [donor]);
+        Assert.AreEqual("TC_Normalmap", plain.GetMetadata(texture)!.CompressionSettings, "other exports read themselves");
+    }
+
+    [TestMethod]
     public void ImportWithoutADonorFailsInsteadOfGuessing()
     {
         using var package = Fixtures.Package("NoDonor");

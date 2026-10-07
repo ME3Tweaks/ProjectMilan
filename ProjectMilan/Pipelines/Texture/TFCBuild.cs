@@ -216,29 +216,15 @@ namespace ProjectMilan.Pipelines.Texture
             // Convert them all to BC7
 
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
-            using TieredPackageCache cache = TieredPackageCache.GetGlobalPackageCache(MEGame.LE3, debugName: "TFCBuild global LE3 root").ChainNewCache(debugName: "TFCBuild UpdateTextures cache");
             foreach (var pf in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Checking package {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
                 var p = MEPackageHandler.OpenMEPackage(pf);
 
-                foreach (var obj in p.Exports.Where(x => x.IsTexture() || x.IsA("MaterialInstanceConstant")))
+                // Material instances are left alone: the shader pipeline runs after this one, compiles every
+                // permutation against the final textures, and fails the build if any is left without shaders.
+                foreach (var obj in p.Exports.Where(x => x.IsTexture()))
                 {
-                    if (obj.IsA("MaterialInstanceConstant"))
-                    {
-                        if (obj.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true && ShaderCacheManipulator.IsMaterialBroken(obj))
-                        {
-                            var parent = obj.GetProperty<ObjectProperty>("Parent")?.ResolveToExport(p, cache);
-                            if (parent != null && !ShaderCacheManipulator.IsMaterialBroken(parent))
-                            {
-                                MilanLog.Information($"  Fixing broken material due to permutation {obj.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-                                obj.RemoveProperty("bHasStaticPermutationResource");
-                                obj.WriteBinary([]);
-                            }
-                        }
-
-                        continue;
-                    }
                     // ME3 V8U8 norms don't work in LE3 and appear black, so they always end up as BC7.
                     var needsBC7Conversion = obj.GetProperty<EnumProperty>("Format")?.Value == "PF_V8U8";
                     var hasUpscale = TryGetUpscale(obj, out var upscale);

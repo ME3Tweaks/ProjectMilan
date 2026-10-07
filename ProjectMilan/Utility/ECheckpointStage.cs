@@ -10,8 +10,8 @@
     /// between two existing ones without renumbering (which would silently repoint every checkpoint
     /// on disk at the wrong stage).
     /// <para/>
-    /// Nothing past Redemption is checkpointable: after that point the build is no longer porting
-    /// content, and the remaining pipelines (Texture, Audio, Shaders, Conformance, ...) must always run.
+    /// Past Redemption the build is no longer porting content, and the remaining pipelines (Audio, Shaders,
+    /// Conformance, ...) must always run. The one exception is <see cref="Texture"/>, for dev builds only.
     /// </summary>
     internal enum ECheckpointStage
     {
@@ -35,5 +35,13 @@
         Levels = 60,
         Rejection = 70,
         Redemption = 80,
+
+        /// <summary>
+        /// Dev builds only, never offered or restored by a production build. Lets the pipelines after it
+        /// (Shaders, ...) be iterated on without rerunning the slow texture pipeline. The TLK finalize that
+        /// runs before Texture is already in such a checkpoint, so restoring one skips it. Changes to
+        /// <c>TFCBuild</c> make a Texture checkpoint stale without bumping MIN_CHECKPOINT_VERSION; retake it.
+        /// </summary>
+        Texture = 90,
     }
 }

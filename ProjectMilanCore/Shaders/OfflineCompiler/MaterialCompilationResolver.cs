@@ -54,7 +54,7 @@ public sealed class MaterialCompilationResolver(Func<IEntry, ExportEntry?>? reso
     {
         ArgumentNullException.ThrowIfNull(request);
         var requested = request.Material;
-        if (requested.Game != MEGame.LE3)
+        if (!requested.Game.IsLEGame3())
             return MaterialResolutionOutcome.Unsupported($"Only LE3 is supported; {requested.InstancedFullPath} is from {requested.Game}.");
         if (requested.IsDefaultObject)
             return MaterialResolutionOutcome.Unsupported($"{requested.InstancedFullPath} is a class default object.");

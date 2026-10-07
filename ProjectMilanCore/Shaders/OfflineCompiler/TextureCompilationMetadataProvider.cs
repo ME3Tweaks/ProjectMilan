@@ -1,6 +1,7 @@
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Shaders;
+using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using static LegendaryExplorerCore.Shaders.LE3MaterialShaderCompiler;
 
@@ -21,8 +22,8 @@ public interface ITextureCompilationMetadataProvider
 public sealed record TextureMetadataResolution(string Reference, string? SourcePackage,
     TextureCompilationMetadata? Metadata, string? Failure);
 
-/// <summary>Candidate package files that may contain an imported texture, most preferred first.</summary>
-public delegate IEnumerable<string> TextureDonorLocator(ImportEntry import);
+/// <summary>Candidate package files that may contain the texture at this entry's path, most preferred first.</summary>
+public delegate IEnumerable<string> TextureDonorLocator(IEntry entry);
 
 /// <summary>
 /// Request-scoped metadata provider. Exports are read from their already loaded properties; imports are
@@ -30,7 +31,9 @@ public delegate IEnumerable<string> TextureDonorLocator(ImportEntry import);
 /// package tables and texture properties, never mips, bulk data or TFCs. Results are cached per
 /// reference. Not thread-safe. Dispose to close the donor readers.
 /// </summary>
-public sealed class PackageTextureMetadataProvider(TextureDonorLocator? donorLocator = null)
+/// <param name="lookUpByPath">Exports to treat like imports: their metadata comes from the donors by path, the export
+/// itself only when no donor has it. For decooked graphs, whose textures predate the build's conversions.</param>
+public sealed class PackageTextureMetadataProvider(TextureDonorLocator? donorLocator = null, Func<ExportEntry, bool>? lookUpByPath = null)
     : ITextureCompilationMetadataProvider, IDisposable
 {
     private readonly Dictionary<IEntry, TextureCompilationMetadata?> cache = new(ReferenceEqualityComparer.Instance);
@@ -48,8 +51,9 @@ public sealed class PackageTextureMetadataProvider(TextureDonorLocator? donorLoc
 
         var resolution = textureReference switch
         {
+            ExportEntry export when lookUpByPath?.Invoke(export) == true => FromDonors(export, () => FromExport(export)),
             ExportEntry export => FromExport(export),
-            ImportEntry import => FromImport(import),
+            ImportEntry import => FromDonors(import, null),
             _ => Fail(textureReference, null, "Unknown entry type.")
         };
         resolutions.Add(resolution);
@@ -59,15 +63,20 @@ public sealed class PackageTextureMetadataProvider(TextureDonorLocator? donorLoc
 
     private static TextureMetadataResolution FromExport(ExportEntry export)
     {
-        if (export.Game != MEGame.LE3) return Fail(export, export.FileRef.FilePath, $"Texture is from {export.Game}, not LE3.");
-        if (!export.IsA("Texture2D") && !export.IsA("TextureCube"))
-            return Fail(export, export.FileRef.FilePath, $"{export.ClassName} is not a Texture2D or TextureCube.");
+        if (!export.Game.IsLEGame3()) return Fail(export, export.FileRef.FilePath, $"Texture is from {export.Game}, not LE3.");
+        bool dynamic2D = export.IsA("TextureRenderTarget2D") || export.IsA("TextureMovie");
+        if (!export.IsA("Texture2D") && !export.IsA("TextureCube") && !dynamic2D)
+            return Fail(export, export.FileRef.FilePath, $"{export.ClassName} is not a Texture2D, TextureCube, render target or movie.");
         if (!export.IsDataLoaded())
             return Fail(export, export.FileRef.FilePath, "Export data is not loaded; open the package normally or supply a donor.");
         try
         {
             // Properties only. The in-memory package wins over its file, which may be older.
-            return new(export.InstancedFullPath, export.FileRef.FilePath, TextureCompilationMetadata.FromExport(export), null);
+            // Render targets and movies are UTextures sampled as 2D, decoded from the same UTexture properties.
+            var metadata = dynamic2D
+                ? TextureCompilationMetadata.FromProperties(TextureDimension.Texture2D, export.GetProperties())
+                : TextureCompilationMetadata.FromExport(export);
+            return new(export.InstancedFullPath, export.FileRef.FilePath, WithFlipBookScale(metadata, export, () => export.GetProperties()), null);
         }
         catch (Exception ex)
         {
@@ -75,9 +84,9 @@ public sealed class PackageTextureMetadataProvider(TextureDonorLocator? donorLoc
         }
     }
 
-    private TextureMetadataResolution FromImport(ImportEntry import)
+    private TextureMetadataResolution FromDonors(IEntry import, Func<TextureMetadataResolution>? fallback)
     {
-        if (donorLocator == null) return Fail(import, null, "Imported texture and no donor locator was supplied.");
+        if (donorLocator == null) return fallback?.Invoke() ?? Fail(import, null, "Imported texture and no donor locator was supplied.");
         var tried = new List<string>();
         foreach (var path in donorLocator(import))
         {
@@ -91,7 +100,13 @@ public sealed class PackageTextureMetadataProvider(TextureDonorLocator? donorLoc
             }
             try
             {
-                return new(import.InstancedFullPath, path, reader.Read(export), null);
+                return new(import.InstancedFullPath, path, WithFlipBookScale(reader.Read(export), export, () =>
+                {
+                    // Header-only donor: read the stored image counts from the property stream, not the payload.
+                    using var data = reader.Package.OpenExportDataStream(export);
+                    data.Position = export.GetPropertyStart();
+                    return PropertyCollection.ReadProps(export, data, export.ClassName, includeNoneProperty: true, entry: export);
+                }), null);
             }
             catch (Exception ex)
             {
@@ -99,7 +114,7 @@ public sealed class PackageTextureMetadataProvider(TextureDonorLocator? donorLoc
                 return Fail(import, path, ex.Message);
             }
         }
-        return Fail(import, null, tried.Count == 0 ? "No donor candidates." : "Not found in donors: " + string.Join("; ", tried));
+        return fallback?.Invoke() ?? Fail(import, null, tried.Count == 0 ? "No donor candidates." : "Not found in donors: " + string.Join("; ", tried));
     }
 
     private LE3TextureMetadataReader? GetReader(string path, List<string> tried)
@@ -117,6 +132,25 @@ public sealed class PackageTextureMetadataProvider(TextureDonorLocator? donorLoc
         }
         readers[path] = reader;
         return reader;
+    }
+
+    // A flipbook's effective scale is transient (PostLoad: 1/HorizontalImages, 1/VerticalImages, no clamping), so it is
+    // derived from the stored counts, as the shipping parity harness does.
+    private static TextureCompilationMetadata WithFlipBookScale(TextureCompilationMetadata metadata, ExportEntry texture, Func<PropertyCollection> properties)
+    {
+        if (metadata.FlipBookScale != null || !texture.IsA("TextureFlipBook")) return metadata;
+        var props = properties();
+        static float ImageCount(Property? p) => p switch { IntProperty i => i.Value, ByteProperty b => b.Value, FloatProperty f => f.Value, _ => 1 };
+        float h = ImageCount(props.GetProp<Property>("HorizontalImages")), v = ImageCount(props.GetProp<Property>("VerticalImages"));
+        return new TextureCompilationMetadata(metadata.Dimension, metadata.CompressionSettings, metadata.UnpackMin, metadata.UnpackMax,
+            new System.Numerics.Vector2(1f / h, 1f / v));
+    }
+
+    /// <summary>Closes the donor readers (they hold their files open); cached results are kept.</summary>
+    public void CloseReaders()
+    {
+        foreach (var reader in readers.Values) reader?.Dispose();
+        readers.Clear();
     }
 
     private static TextureMetadataResolution Fail(IEntry entry, string? source, string reason)

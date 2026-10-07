@@ -21,6 +21,12 @@ public enum TextureEncodingRequirement
     /// translation comparison first: not every metadata difference changes the generated code.
     /// </summary>
     ParentVariantCandidate,
+    /// <summary>
+    /// The override is a different kind of texture than the sampler (a Texture2D on a cube parameter, or the reverse). The
+    /// sampler type comes from the parameter's own class, so no parent variant can change it: the game binds the
+    /// override as authored. Report only.
+    /// </summary>
+    DimensionMismatch,
     /// <summary>Could not be decided; see the reason. Never treat as None.</summary>
     Unresolved
 }
@@ -83,22 +89,23 @@ public static class MaterialInstanceEncodingAnalyzer
             return Report();
         }
 
-        // Parent chain up to the material that owns the graph.
+        // Parent chain up to the material that owns the graph; effects users are transparent links.
         var current = instance;
         var visited = new HashSet<ExportEntry>(ReferenceEqualityComparer.Instance) { instance };
-        while (current.IsA("MaterialInstance"))
+        while (MaterialChain.IsLink(current))
         {
-            var parentIndex = current.GetProperty<ObjectProperty>("Parent")?.Value ?? 0;
+            var parentIndex = MaterialChain.NextReference(current);
             var parentEntry = parentIndex == 0 ? null : current.FileRef.GetEntry(parentIndex);
             if (parentEntry == null)
             {
                 errors.Add($"{current.InstancedFullPath} has no Parent.");
                 return Report();
             }
-            var parent = parentEntry as ExportEntry ?? resolveEntry(parentEntry);
+            // The resolver sees exports too: it swaps a cooked (stripped) parent for its decooked graph, or refuses it.
+            var parent = resolveEntry(parentEntry);
             if (parent == null)
             {
-                errors.Add($"Could not resolve parent {parentEntry.InstancedFullPath} of {current.InstancedFullPath}.");
+                errors.Add($"Could not resolve parent {parentEntry.InstancedFullPath} of {current.InstancedFullPath} (or it has no decooked graph).");
                 return Report();
             }
             if (!visited.Add(parent) || chain.Count >= MaxChainLength)
@@ -171,7 +178,8 @@ public static class MaterialInstanceEncodingAnalyzer
             name, expression.ClassName, expression.InstancedFullPath, defaultEntry?.InstancedFullPath,
             effective?.InstancedFullPath, overriddenBy, defaultMetadata, effectiveMetadata, stored, requirement, reason);
 
-        if (name.Length == 0) return Finding(TextureEncodingRequirement.Unresolved, "The expression has no ParameterName.");
+        // Parameters are looked up by name, so an unnamed one always samples its compile-time default.
+        if (name.Length == 0) return Finding(TextureEncodingRequirement.None, "Unnamed; nothing can override it.", defaultEntry);
 
         // Nearest override wins, walking from the requested instance up.
         IEntry? overrideEntry = null;
@@ -212,6 +220,11 @@ public static class MaterialInstanceEncodingAnalyzer
         var effectiveMetadata = effectiveEntry == null ? null : metadata.GetMetadata(effectiveEntry);
         if (defaultMetadata == null || effectiveMetadata == null)
             return Finding(TextureEncodingRequirement.Unresolved, Note("Texture metadata unavailable; see the metadata resolutions."),
+                effectiveEntry, overriddenBy, defaultMetadata, effectiveMetadata);
+
+        if (overrideEntry != null && defaultMetadata.Dimension != effectiveMetadata.Dimension)
+            return Finding(TextureEncodingRequirement.DimensionMismatch,
+                Note($"The sampler is a {defaultMetadata.Dimension} but the override is a {effectiveMetadata.Dimension}; bound as authored."),
                 effectiveEntry, overriddenBy, defaultMetadata, effectiveMetadata);
 
         if (isNormal)

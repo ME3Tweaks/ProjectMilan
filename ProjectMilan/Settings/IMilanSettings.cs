@@ -152,9 +152,15 @@
         bool RunResynthesis { get; set; }
 
         /// <summary>
-        /// If compiled shaders should be installed
+        /// If shaders should be compiled with the offline compiler and installed
         /// </summary>
         bool RunShaderPipeline { get; set; }
+
+        /// <summary>
+        /// Folder of decooked LE3 packages. Cooked materials are always stripped, so the shader pipeline compiles
+        /// every material from its decooked copy here (the decooker skips EngineMaterials).
+        /// </summary>
+        string DecookedLE3Path => null;
         #endregion
 
         #region Performance tuning
