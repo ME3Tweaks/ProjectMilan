@@ -387,9 +387,9 @@ namespace ProjectMilanCore
                     var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
                     ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
 
-                    brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
-                    brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
-                    brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
+                    // brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
+                    //brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
+                    //brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
                 }
             }
 

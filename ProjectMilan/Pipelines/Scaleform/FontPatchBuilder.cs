@@ -18,8 +18,7 @@ internal static class FontPatchBuilder
     /// <summary>
     /// Builds the patched movie for <paramref name="packageName"/>.pcc's <paramref name="movieName"/>.gfxfonts, taking
     /// the glyph from ME3's {packageName}_DLC.pcc / {movieName}_DLC.gfxfonts (MP4 and MP5 ship identical copies). LE3's
-    /// library is kept as the base - it has more glyphs than ME3's (thousands more for the non-JPN fonts) - and its fonts share the donor's names
-    /// and metrics.
+    /// library is kept as the base - it has more glyphs than ME3's (thousands more for the non-JPN fonts)
     /// </summary>
     public static void Build(string packageName, string movieName)
     {
