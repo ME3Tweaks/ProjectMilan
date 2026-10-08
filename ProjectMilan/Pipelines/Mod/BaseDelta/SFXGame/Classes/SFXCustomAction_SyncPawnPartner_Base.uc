@@ -104,8 +104,10 @@ public final function CloseInputWindow()
 {
     if (m_oPC != None)
     {
-        BioPlayerInput(m_oPC.PlayerInput).UnregisterInputOverride("PC_Melee", TRUE);
-        BioPlayerInput(m_oPC.PlayerInput).UnregisterInputOverride("Console_Melee", TRUE);
+        // MILAN CHANGE
+        // Revert to Shared_Melee. If you don't do this, the game will hang on mash complete
+        BioPlayerInput(m_oPC.PlayerInput).UnregisterInputOverride("Shared_Melee", TRUE);
+        // END MILAN CHANGE
     }
 }
 public function InteractionStarted()
