@@ -38,6 +38,7 @@ namespace ProjectMilan.Pipelines.Mod
                 Game = MEGame.LE3,
                 MountFlags =
                     new MountFlag(EME3MountFileFlag.LoadsInMultiplayer | EME3MountFileFlag.UsedInMatchMaking |
+                                  EME3MountFileFlag.UsesGoBigFeatures | // This is required to enable MP4 features. It's apparently set via this flag. Challenge progression, extended go big names, etc
                                   EME3MountFileFlag.LoadsInSingleplayer), // We use LoadsInSingleplayer so it loads outside MP environment
                 MountPriority = 5,
                 TLKID = 49875623 // Random
