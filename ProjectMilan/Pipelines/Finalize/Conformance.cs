@@ -22,7 +22,7 @@ namespace ProjectMilan.Pipelines.Finalize
         }
 
         /// <summary>
-        /// Map of count of unique netindices. Maps linker -> unique object count.
+        /// Maps linker -> last assigned zero-based NetIndex for newly inventoried objects.
         /// </summary>
         private static CaseInsensitiveDictionary<int> currentNetIndexes = new();
 
@@ -158,12 +158,12 @@ namespace ProjectMilan.Pipelines.Finalize
                         }
                         else
                         {
-                            // Use the count we calculated
-                            pExp.GenerationNetObjectCount = [netObjCount];
+                            // The stored value is the last zero-based NetIndex, so include that final object.
+                            pExp.GenerationNetObjectCount = [netObjCount + 1];
                             if (pExp.GetLinker() == package.FileNameNoExtension)
                             {
                                 // Set the local linker count var
-                                localLinkerCount = netObjCount;
+                                localLinkerCount = netObjCount + 1;
                             }
                         }
                     }
