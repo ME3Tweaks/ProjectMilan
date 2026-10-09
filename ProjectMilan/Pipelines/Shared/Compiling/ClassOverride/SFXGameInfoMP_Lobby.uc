@@ -387,8 +387,7 @@ public function StartMPMatch(optional SFXOnlineGameSettings GameSettings)
     if (OnlineSub != None)
     {
         GameInterface = OnlineSub.GameInterface;
-        // MILAN CHANGE - The development server has no online component to
-        // answer CanPlayOnline(), so proceed directly to the interface path.
+        // MILAN CHANGE - We don't care about CanPlayOnline, so we remove it
         if (GameInterface != None)
         {
             if (GameSettings == None)
@@ -411,7 +410,8 @@ public function StartMPMatch(optional SFXOnlineGameSettings GameSettings)
                     // MILAN CHANGE - Force-populate BlazeGame GameSettings;
                     // there is no setter outside native code.
                     BG = SFXOnlineComponentBlazeGame(OnlineSub.GameInterface);
-                    if (BG != None && BG.GameSettings == None)
+                    // 10/07/2026 - Mgamerz - Remove BG.GameSettings = None because it meant old settings were continuing to be used
+                    if (BG != None)
                     {
                         BG.GameSettings = MatchMakingGameSettings;
                     }
@@ -613,7 +613,7 @@ public function CheckNatRestriction()
 }
 // MILAN CHANGE
 // Filter on IsRandomOption instead of a hardcoded Id==0 check, so "Random Waves"/"Random
-// Enemies" (and any future meta-option) can never be selected as the resolved faction when
+// Enemies" (and any future not-an-actual-defined-option) can never be selected as the resolved faction when
 // a player picks "Unknown".
 public function MPEnemyInfo ChooseRandomEnemy()
 {
