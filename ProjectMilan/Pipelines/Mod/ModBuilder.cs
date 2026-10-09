@@ -105,10 +105,25 @@ namespace ProjectMilan.Pipelines.Mod
             //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP1\CookedPCConsole", "DLC_CON_MP1").MergeInto(bundle);
             //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP2\CookedPCConsole", "DLC_CON_MP2").MergeInto(bundle);
             //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP3\CookedPCConsole", "DLC_CON_MP3").MergeInto(bundle);
-            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP4\CookedPCConsole", "DLC_CON_MP4").MergeInto(bundle);
-            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP5\CookedPCConsole", "DLC_CON_MP5").MergeInto(bundle);
-            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"B:\UserProfile\source\repos\ME3Tweaks\ProjectMilan\ProjectMilan\Pipelines\Mod\Live\DLC_LiveIni\CookedPCConsole", "DLC_LiveIni").MergeInto(bundle);
-            //bundle.CommitDLCAssets(outDir, "DLC_MOD_ProjectMilan");
+
+            // Add spalsh
+#if SHIPPING_RELEASE
+            var sourceFileName = "ship.png";
+#else
+            var sourceFileName = "milan.png";
+#endif
+
+            // Copy splash over
+
+            var outSplashBMP = Path.Combine(outDir, "..", "..", "MilanSplash", "splash.bmp");
+            Directory.GetParent(outSplashBMP)?.Create(); // Ensure folder exists
+
+            // Load the PNG file and save it to the splash.bmp file in BMP format so M3 can install it
+            using (Image pngImage = Image.FromFile(Path.Combine(MilanShared.PipelineRoot, "Mod", "Splash", sourceFileName)))
+            {
+                // Save it as a BMP file
+                pngImage.Save(outSplashBMP, ImageFormat.Bmp);
+            }
 
             TLKPipeline.RunPipeline();
 
