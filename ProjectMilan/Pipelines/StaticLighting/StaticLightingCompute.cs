@@ -162,9 +162,10 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// <param name="keepPreBakeMaps">Keep a copy of the exported maps before UDK modifies them.</param>
         /// <param name="ue4Lightmass">This level's UE4 Lightmass settings; null uses the defaults. Whether UE4
         /// Lightmass is used at all is decided before each run, see <see cref="UseLightmass"/>.</param>
-        internal static void ComputeLighting(string mapName, bool allowLightmapCompression = false, int? defaultStaticMeshLightingRes = null, LightmassBuildQuality qualityLevel = LightmassBuildQuality.Medium, bool keepPreBakeMaps = false, UE4LightmassSettings ue4Lightmass = null)
+        /// <param name="keepQuality">Use <paramref name="qualityLevel"/> even on a production build (test bakes).</param>
+        internal static void ComputeLighting(string mapName, bool allowLightmapCompression = false, int? defaultStaticMeshLightingRes = null, LightmassBuildQuality qualityLevel = LightmassBuildQuality.Medium, bool keepPreBakeMaps = false, UE4LightmassSettings ue4Lightmass = null, bool keepQuality = false)
         {
-            if (Program.Settings.ProductionBuild && qualityLevel != LightmassBuildQuality.Production)
+            if (Program.Settings.ProductionBuild && qualityLevel != LightmassBuildQuality.Production && !keepQuality)
             {
                 MilanLog.Information($"Production build: overriding lighting quality {qualityLevel} -> {LightmassBuildQuality.Production} for {mapName}", customPrefix: LOG_CATEGORY);
                 qualityLevel = LightmassBuildQuality.Production;
@@ -197,7 +198,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             // After the stale-UDK kill: a leftover bridge exits once its UDK is gone, and a running
             // UnrealLightmass.exe can't be replaced. Disposed at method exit, after the finally below
             // has killed UDK, so the bridge is removed however the build ends.
-            var solver = UseLightmass(ue4Lightmass ?? new UE4LightmassSettings());
+            var solver = UseLightmass(ue4Lightmass ?? new UE4LightmassSettings(), mapName);
             using var lightmassRestore = new UE3LightmassRestore(solver);
 
             if (keepPreBakeMaps)
@@ -384,7 +385,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// every UE3 build removes a bridge left behind by an interrupted run.
         /// </summary>
         /// <returns>The solver UDK now has; UE4 must be undone with <see cref="RestoreUE3Lightmass"/>.</returns>
-        private static LightmassSolver UseLightmass(UE4LightmassSettings settings)
+        private static LightmassSolver UseLightmass(UE4LightmassSettings settings, string mapName)
         {
             if (settings.UseUE3)
                 MilanLog.Information("Lightmass: UE3 (this level sets UE4Lightmass.UseUE3)", customPrefix: LOG_CATEGORY);
@@ -395,9 +396,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 MilanLog.Information($"Lightmass: UE4 ({ue4Lightmass}; environment color x{settings.EnvironmentColorScale}, " +
                     $"sun indirect x{settings.DirectionalIndirectLightingScale})", customPrefix: LOG_CATEGORY);
                 var culture = System.Globalization.CultureInfo.InvariantCulture;
+                var importanceBox = "";
+                if (settings.AddImportanceVolume && GameplayImportanceVolume.Compute(StaticLightingExport.GetMapOutputPath(mapName), settings.ImportanceVolumeMargin) is var (min, max))
+                    importanceBox = " --importance-box " + string.Join(",", new[] { min.X, min.Y, min.Z, max.X, max.Y, max.Z }.Select(v => v.ToString("0.###", culture)));
                 RunUdkInjShell($"install-lightmass-bridge \"{Program.Settings.MilanUDKPath}\" \"{UE4ReferencePath}\" \"{ue4Lightmass}\" " +
                     $"--environment-color-scale {settings.EnvironmentColorScale.ToString(culture)} " +
-                    $"--directional-indirect-scale {settings.DirectionalIndirectLightingScale.ToString(culture)}",
+                    $"--directional-indirect-scale {settings.DirectionalIndirectLightingScale.ToString(culture)}" + importanceBox,
                     "install the UE4 Lightmass bridge");
                 return LightmassSolver.UE4;
             }
@@ -554,6 +558,36 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
             foreach (var drive in DriveInfo.GetDrives().Where(x => x.DriveType == DriveType.Fixed))
                 yield return Path.Combine(drive.RootDirectory.FullName, "Program Files", "Epic Games", "UE_4.27");
+        }
+
+        /// <summary>
+        /// Bakes one map again from the pre-bake UDK maps an earlier build kept (--keep-prebake-maps), without porting
+        /// or exporting anything - for trying solver settings on a single map. The result replaces the map's folder in
+        /// StaticLighting\Levels, which is first copied to StaticLighting\Backup. Nothing is imported into the mod.
+        /// </summary>
+        internal static void BakeFromPreBakeMaps(string mapName, LightmassBuildQuality quality, int defaultStaticMeshLightingRes)
+        {
+            var preBake = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "PreBake", mapName);
+            var maps = Directory.Exists(preBake) ? Directory.GetFiles(preBake, "*.udk") : [];
+            if (!maps.Any(f => Path.GetFileNameWithoutExtension(f).Equals(mapName, StringComparison.OrdinalIgnoreCase)))
+                throw new FileNotFoundException($"No pre-bake maps for {mapName}; run a lighting build with --keep-prebake-maps first", preBake);
+
+            var levels = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", mapName);
+            if (Directory.Exists(levels) && Directory.EnumerateFiles(levels).Any())
+            {
+                var backup = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Backup", $"{mapName}_{DateTime.Now:yyyyMMdd_HHmmss}")).FullName;
+                foreach (var file in Directory.GetFiles(levels))
+                    File.Copy(file, Path.Combine(backup, Path.GetFileName(file)));
+                MilanLog.Information($"Backed up the current {mapName} bake to {backup}", customPrefix: LOG_CATEGORY);
+            }
+
+            var mapOutput = StaticLightingExport.GetMapOutputPath(mapName);
+            Utilities.DeleteFilesAndFoldersRecursively(mapOutput, deleteDirectoryItself: false);
+            foreach (var map in maps)
+                File.Copy(map, Path.Combine(mapOutput, Path.GetFileName(map)));
+            MilanLog.Information($"Baking {mapName} at {quality} from {maps.Length} pre-bake maps", customPrefix: LOG_CATEGORY);
+            ComputeLighting(mapName, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes,
+                qualityLevel: quality, ue4Lightmass: new UE4LightmassSettings(), keepQuality: true);
         }
 
         private static void KeepPreBakeMaps(string mapName)

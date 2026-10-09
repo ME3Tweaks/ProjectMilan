@@ -27,5 +27,14 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// maps, so the default leaves it as UE3 exported it.
         /// </summary>
         public float DirectionalIndirectLightingScale { get; set; } = 1f;
+
+        /// <summary>
+        /// Gives the bake a Lightmass importance volume around the map's gameplay sublevels (see
+        /// <see cref="GameplayImportanceVolume"/>), which the bridge uses when the scene has none of its own.
+        /// </summary>
+        public bool AddImportanceVolume { get; set; } = true;
+
+        /// <summary>Added on every side of the gameplay mesh actors' positions.</summary>
+        public float ImportanceVolumeMargin { get; set; } = 1500f;
     }
 }
