@@ -83,8 +83,11 @@ public sealed class OfflineShaderInstallContext : IDisposable
     }
 
     /// <summary>Output files holding the import's object as an export, in path order.</summary>
-    public IReadOnlyList<string> OutputFilesWith(IEntry import) =>
-        outputExports.TryGetValue(import.InstancedFullPath, out var files) ? files : [];
+    public IReadOnlyList<string> OutputFilesWith(IEntry import) => OutputFilesWith(import.InstancedFullPath);
+
+    /// <summary>Output files holding an export at this instanced full path, in path order.</summary>
+    public IReadOnlyList<string> OutputFilesWith(string instancedFullPath) =>
+        outputExports.TryGetValue(instancedFullPath, out var files) ? files : [];
 
     internal static string RootName(IEntry entry)
     {

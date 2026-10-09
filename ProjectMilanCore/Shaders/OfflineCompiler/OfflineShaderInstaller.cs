@@ -352,14 +352,39 @@ public sealed class OfflineShaderInstaller(OfflineShaderInstallContext context, 
         return r;
     }
 
-    private static int EnsureEntry(IMEPackage package, string path, IMEPackage source, RelinkerOptionsPackage rop)
+    private int EnsureEntry(IMEPackage package, string path, IMEPackage source, RelinkerOptionsPackage rop)
     {
         var existing = PathLookup.FindEntry(package, path, PathLookup.IsTexture);
         if (existing != null) return existing.UIndex;
+        source = OutputTextureSource(path, package, rop) ?? source;
         if (ReferenceEquals(source, package) || source.FilePath == package.FilePath)
             throw new ShaderInstallException($"{path} is missing from {Path.GetFileName(package.FilePath)}");
         return EntryImporter.GetOrAddCrossImportOrPackage(path, source, package, rop)?.UIndex
                ?? throw new ShaderInstallException($"{path} could not be imported into {Path.GetFileName(package.FilePath)}");
+    }
+
+    /// <summary>
+    /// Another output package holding the texture at <paramref name="path"/>, to port it from instead of the graph's
+    /// package, or null when none does.
+    /// </summary>
+    /// <remarks>
+    /// The texture pipeline runs before this one and converts or upscales the output copies (V8U8 normals become BC7,
+    /// which LE3 needs), but a graph package - usually the decooked one - still has the original. Porting from it gave
+    /// Batarian_Sentinel_MP and Batarian_Soldier_MP a V8U8 BioVFX_DLC_MP1_Bat_2.Textures.MP_SOL_BAT_SPK_Norm next to
+    /// Batarian_Vanguard_MP's BC7 one: black in game, and the TFC compactor rejects copies of one path with different
+    /// CRCs. Ported from an output copy, the texture is byte-identical to the others, external mips included.
+    /// </remarks>
+    private IMEPackage? OutputTextureSource(string path, IMEPackage package, RelinkerOptionsPackage rop)
+    {
+        foreach (var file in context.OutputFilesWith(path))
+        {
+            if (string.Equals(Path.GetFullPath(file), Path.GetFullPath(package.FilePath), StringComparison.OrdinalIgnoreCase))
+                continue;
+            var copy = rop.Cache.GetCachedPackage(file);
+            if (copy != null && PathLookup.FindExport(copy, path, PathLookup.IsTexture) != null)
+                return copy;
+        }
+        return null;
     }
 
     /// <summary>Nearest non-null override of a texture parameter up the instance chain; null when none overrides it.</summary>
