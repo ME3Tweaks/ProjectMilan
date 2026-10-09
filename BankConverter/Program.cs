@@ -6,11 +6,28 @@ namespace BankConverter
 {
     // This project (BankConverter) was written by Claude using a mix of binary analysis of ME3, LE3, source code from Wwiser and Wwiser.NET, analysis
     // of the Wwise SDK, as well as in-game tracing for audio-related issues.
-    // It is used solely for the purpose of converting v56 Banks to v134 and should not be used for any other purpose.
+    // The main path is v56 -> v134. The separate, fail-closed Wii U path handles the verified v65 subset.
     internal class Program
     {
         static void Main(string[] args)
         {
+            if (args.Length == 3 && args[0] == "convert-wiiu")
+            {
+                try
+                {
+                    var stats = new HircConversionStats();
+                    var converted = WiiUBankConverter.ConvertToV134(File.ReadAllBytes(args[1]), stats);
+                    // CreateNew protects both the source and an existing converted bank from accidental overwrite.
+                    using var output = new FileStream(args[2], FileMode.CreateNew, FileAccess.Write);
+                    output.Write(converted);
+                    Console.WriteLine($"Converted big-endian v65 -> v134: {stats.Total} objects, {converted.Length:N0} bytes.");
+                    Console.WriteLine("Types: " + string.Join(", ", stats.Converted.Select(x => $"0x{x.Key:X2}={x.Value}")));
+                    Console.WriteLine("Embedded Wwise IMA preserved without re-encoding; no objects dropped or bus fallbacks permitted.");
+                    Console.WriteLine("MIX REVIEW: explicit source Master Audio Bus routing is retained; that bus is loud/unmixed.");
+                }
+                catch (Exception ex) { Console.Error.WriteLine(ex); Environment.ExitCode = 1; }
+                return;
+            }
             if (args.Length > 0 && args[0] == "test-roundtrip")
             {
                 TestRoundTrip(args[1]);
@@ -48,6 +65,7 @@ namespace BankConverter
             }
 
             Console.WriteLine("Usage: BankConverter test-roundtrip <folder>");
+            Console.WriteLine("       BankConverter convert-wiiu <v65BigEndian.bnk> <newV134.bnk>");
             Console.WriteLine("       BankConverter convert <inFolder> <outFolder> [wemReplacementsFolder]");
             Console.WriteLine("       BankConverter extract-wems <inFolder> <outFolder>");
             Console.WriteLine("       BankConverter reencode-wems <inFolder> <outFolder> <wprojPath> [conversionPresetName]");

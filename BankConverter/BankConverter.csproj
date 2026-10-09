@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Tests\**\*.cs" />
     <None Include="Tools\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

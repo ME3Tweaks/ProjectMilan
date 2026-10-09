@@ -182,6 +182,9 @@ public static class BusRemap
     /// Concurrent, since bank conversion (and therefore Remap calls) can run in parallel across multiple banks.</summary>
     public static readonly ConcurrentDictionary<uint, int> FallbackUses = new();
 
+    /// <summary>Lookup without invoking the loud Master Audio Bus fallback.</summary>
+    public static bool TryRemap(uint sourceBusId, out uint targetBusId) => Map.TryGetValue(sourceBusId, out targetBusId);
+
     public static uint Remap(uint me3BusId)
     {
         if (me3BusId == 0) return 0;

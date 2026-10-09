@@ -20,6 +20,8 @@ public sealed class RandomSequenceContainer
     public bool IsUsingWeight, ResetPlayListAtEachPlay, IsRestartBackward, IsContinuous, IsGlobal;
     public List<uint> ChildIds = new();
     public List<PlaylistEntry> Playlist = new();
+    /// <summary>v65 already stores thousandths-of-percent weights; v56 stores percentages.</summary>
+    public bool WeightsAreV134Units;
 
     public static RandomSequenceContainer ReadV56(BankReader r)
     {
@@ -95,7 +97,7 @@ public sealed class RandomSequenceContainer
             // v56's weight is a 0-100 percentage; v134's wire format stores it at 0.001% granularity
             // (percentage * 1000) rather than just widening the raw byte - confirmed empirically against a
             // pristine v134 bank (every sampled playlist entry's real weight equals the v56 value * 1000).
-            w.S32(p.Weight * 1000);
+            w.S32(WeightsAreV134Units ? p.Weight : p.Weight * 1000);
         }
 
         return w.ToArray();

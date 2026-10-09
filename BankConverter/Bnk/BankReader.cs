@@ -1,20 +1,23 @@
 using System.Text;
+using System.Buffers.Binary;
 
 namespace BankConverter.Bnk;
 
 /// <summary>
-/// Little-endian binary reader with the primitive types used by the Wwise SoundBank format
+/// Binary reader (little-endian by default) with the primitive types used by the Wwise SoundBank format
 /// (mirrors wwiser's field types: u8/u16/u32/s8/s16/s32/f32/var/uni/tid/sid).
 /// </summary>
 public sealed class BankReader
 {
     private readonly byte[] _data;
+    private readonly bool _bigEndian;
     public int Position { get; set; }
     public int Length => _data.Length;
 
-    public BankReader(byte[] data)
+    public BankReader(byte[] data, bool bigEndian = false)
     {
         _data = data;
+        _bigEndian = bigEndian;
     }
 
     public bool AtEnd => Position >= _data.Length;
@@ -24,7 +27,8 @@ public sealed class BankReader
 
     public ushort U16()
     {
-        var v = (ushort)(_data[Position] | (_data[Position + 1] << 8));
+        var v = _bigEndian ? BinaryPrimitives.ReadUInt16BigEndian(_data.AsSpan(Position, 2))
+            : BinaryPrimitives.ReadUInt16LittleEndian(_data.AsSpan(Position, 2));
         Position += 2;
         return v;
     }
@@ -33,7 +37,8 @@ public sealed class BankReader
 
     public uint U32()
     {
-        var v = (uint)(_data[Position] | (_data[Position + 1] << 8) | (_data[Position + 2] << 16) | (_data[Position + 3] << 24));
+        var v = _bigEndian ? BinaryPrimitives.ReadUInt32BigEndian(_data.AsSpan(Position, 4))
+            : BinaryPrimitives.ReadUInt32LittleEndian(_data.AsSpan(Position, 4));
         Position += 4;
         return v;
     }
@@ -42,22 +47,19 @@ public sealed class BankReader
 
     public ulong U64()
     {
-        var v = (ulong)U32() | ((ulong)U32() << 32);
-        return v;
+        var first = U32();
+        var second = U32();
+        return _bigEndian ? ((ulong)first << 32) | second : first | ((ulong)second << 32);
     }
 
     public double D64()
     {
-        var v = BitConverter.ToDouble(_data, Position);
-        Position += 8;
-        return v;
+        return BitConverter.Int64BitsToDouble(unchecked((long)U64()));
     }
 
     public float F32()
     {
-        var v = BitConverter.ToSingle(_data, Position);
-        Position += 4;
-        return v;
+        return BitConverter.UInt32BitsToSingle(U32());
     }
 
     /// <summary>Union field: raw 4 bytes that are either a float or an int depending on context. Stored as raw bits.</summary>
