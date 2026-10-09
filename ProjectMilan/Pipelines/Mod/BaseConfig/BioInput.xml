@@ -115,6 +115,36 @@
 				<Value type="2">(Name="XboxTypeS_B",Command="MoreSpeed | OnRelease NormalSpeed")</Value>
 			</Property>
 		</Section>
+		<!-- MILAN CHANGE - Mgamerz - 2026-10-08: Demo playback camera controls and preferences. -->
+		<Section name="sfxgamecontent_milan_demorec.milandemorecinput">
+			<Property name="demomousesensitivity" type="2">40.0</Property>
+			<Property name="bdemoinvertlook" type="2">False</Property>
+			<Property name="bdemoinvertturn" type="2">False</Property>
+			<Property name="bdemomousesmoothing" type="2">False</Property>
+			<Property name="lookrightscale" type="2">250</Property>
+			<Property name="lookupscale" type="2">-175</Property>
+			<Property name="bindings">
+				<Value type="2">(Name="W",Command="Axis aBaseY Speed=1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="S",Command="Axis aBaseY Speed=-1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="A",Command="Axis aStrafe Speed=-1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="D",Command="Axis aStrafe Speed=1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="Q",Command="Axis aUp Speed=-1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="E",Command="Axis aUp Speed=1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="LeftShift",Command="Button bRun",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="MouseX",Command="Count bXAxis | Axis aMouseX",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="MouseY",Command="Count bYAxis | Axis aMouseY",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_LeftX",Command="Axis aStrafe Speed=1.0 DeadZone=0.3",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_LeftY",Command="Axis aBaseY Speed=1.0 DeadZone=0.3",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_RightX",Command="Axis aTurn Speed=1.0 DeadZone=0.2",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_RightY",Command="Axis aLookUp Speed=0.8 DeadZone=0.2",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_LeftTrigger",Command="Axis aUp Speed=-1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_RightTrigger",Command="Axis aUp Speed=1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_LeftShoulder",Command="Axis aUp Speed=-1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_RightShoulder",Command="Axis aUp Speed=1.0",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+				<Value type="2">(Name="XboxTypeS_B",Command="Button bRun",bIgnoreCtrl=True,bIgnoreShift=True,bIgnoreAlt=True)</Value>
+			</Property>
+		</Section>
+		<!-- END MILAN CHANGE -->
 		<Section name="engine.playerinput">
 			<Property name="benablemousesmoothing" type="2">true</Property>
 			<Property name="bindings">

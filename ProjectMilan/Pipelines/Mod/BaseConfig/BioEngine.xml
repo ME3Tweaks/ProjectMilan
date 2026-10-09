@@ -413,7 +413,7 @@
 			<Property name="acktimeout" type="2">1.0</Property>
 			<Property name="allowdownloads" type="2">True</Property>
 			<Property name="connectiontimeout" type="2">15.0</Property>
-			<Property name="demospectatorclass" type="2">Engine.PlayerController</Property>
+			<Property name="demospectatorclass" type="2">SFXGameContent_Milan_DemoRec.MilanDemoRecSpectator</Property>
 			<Property name="initialconnecttimeout" type="2">30.0</Property>
 			<Property name="keepalivetime" type="2">1.0</Property>
 			<Property name="lanservermaxtickrate" type="2">30</Property>
