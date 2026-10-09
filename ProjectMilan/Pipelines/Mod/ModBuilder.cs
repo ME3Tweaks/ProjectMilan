@@ -47,6 +47,9 @@ namespace ProjectMilan.Pipelines.Mod
             var tlkSourceDir = Path.Combine(MilanShared.PipelineRoot, "Mod", "TLK");
             foreach (var tlkXml in Directory.EnumerateFiles(tlkSourceDir, "*.xml", SearchOption.TopDirectoryOnly))
             {
+                // English seed text is the fallback until a language-specific seed exists.
+                var tlkXml = Path.Combine(tlkSourceDir, $"{MilanShared.DLC_NAME}_{language}.xml");
+                if (!File.Exists(tlkXml)) tlkXml = Path.Combine(tlkSourceDir, $"{MilanShared.DLC_NAME}_INT.xml");
                 MilanLog.Information($@"Compiling TLK {Path.GetFileNameWithoutExtension(tlkXml)}",
                     customPrefix: LOG_CATEGORY);
                 var huff = new HuffmanCompression();
@@ -97,7 +100,7 @@ namespace ProjectMilan.Pipelines.Mod
                 }
             }
 
-            // Where does TestPatch go in here? First or last?
+            TLKPipeline.RunPipeline();
             // Build merged config file from vanilla ME3 DLC
             // Patch01/02 is not included here and I am unsure how it will affect the results of this
             // Not sure this is a good idea...
@@ -125,7 +128,6 @@ namespace ProjectMilan.Pipelines.Mod
                 pngImage.Save(outSplashBMP, ImageFormat.Bmp);
             }
 
-            TLKPipeline.RunPipeline();
 
             // This is here as it will be at point where mod should be deployable for templating.
             // Check moddesc version

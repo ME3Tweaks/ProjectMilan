@@ -1931,8 +1931,10 @@
 			<Property name="noparagonscarbiasvalue" type="2">600</Property>
 			<Property name="outofammoswapthreshold" type="2">0.4f</Property>
 			<Property name="paragonscarbias" type="2">1.0f</Property>
+			<!-- MILAN CHANGE - remove these, they generate a ton of spam in the logs-->
 			<Property name="permanentgameeffects">
-				<Value type="2">(ClassName="SFXGameContent.SFXGameEffect_PowerBonus_Damage",UniqueName="Intel_AdvancedBioticAmps_PowerDamage",Value=0.05,Type=PermanentGEType_Player)</Value>
+				<Value type="1"></Value>
+				<!--<Value type="2">(ClassName="SFXGameContent.SFXGameEffect_PowerBonus_Damage",UniqueName="Intel_AdvancedBioticAmps_PowerDamage",Value=0.05,Type=PermanentGEType_Player)</Value>
 				<Value type="2">(ClassName="SFXGameContent.SFXGameEffect_PowerBonus_Cooldown",UniqueName="Intel_AdvancedBioticAmps_PowerCooldown",Value=0.05,Type=PermanentGEType_Player)</Value>
 				<Value type="2">(ClassName="SFXGameContent.SFXGameEffect_PassiveMaxAmmoBonus",UniqueName="Intel_Feron_AmmoCapacity",Value=0.05,Type=PermanentGEType_Player)</Value>
 				<Value type="2">(ClassName="SFXGameContent.SFXGameEffect_ShieldPercentBonus",UniqueName="Intel_Feron_Shields",Value=0.05,Type=PermanentGEType_Player)</Value>
@@ -1955,7 +1957,9 @@
 				<Value type="2">(ClassName="SFXGameContent.SFXGameEffect_PassiveMaxAmmoBonus",UniqueName="Intel_BattleFootage_AmmoCapacity",Value=0.05,Type=PermanentGEType_Player)</Value>
 				<Value type="2">(ClassName="SFXGame.SFXGameEffect_WeaponDamageBonus",UniqueName="Intel_BattleFootage_WeaponDamage",Value=0.05,Type=PermanentGEType_Player)</Value>
 				<Value type="2">(ClassName="SFXGameContent.SFXGameEffect_HealthPercentBonus",UniqueName="Intel_MedicalUpgrade_Health",Value=0.05,Type=PermanentGEType_Player)</Value>
+				-->
 			</Property>
+			<!-- END MILAN CHANGE-->
 			<Property name="popupdamagemultiplier" type="2">(X=-0.80f,Y=-0.20f)</Property>
 			<Property name="popupdamagemultiplierduration" type="2">1.5f</Property>
 		</Section>
