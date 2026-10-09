@@ -34,6 +34,9 @@ namespace ProjectMilan.Pipelines.Levels
         /// </summary>
         private const float ProductionLightmapResolutionMultiplier = 2f;
 
+        /// <summary>UDKLightmass.ini DefaultStaticMeshLightingRes for this build's bakes (BioWare's default is 32).</summary>
+        internal static int DefaultStaticMeshLightingRes => (int)(128 * (Program.Settings.ProductionBuild ? ProductionLightmapResolutionMultiplier : 1f));
+
         // Only "Random waves"/"Mixed" need fresh TLK strings - the rest reuse their existing vanilla StrRef IDs.
         private static readonly LocalizedString RandomWaveName = new() { [MELocalization.INT] = "Coalition" }; // Random Wave
         private static readonly LocalizedString RandomWaveAllCapsName = new() { [MELocalization.INT] = "COALITION" };
@@ -113,7 +116,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled = true, SpecialPortingDelegate = null, // Jade
                     MapListInfo = new MapListEntry { PackageName="BioP_MPJngl", PrettyNameStrRefId=728030, DescriptionStrRefId=null, GAWMapPositionX=231, GAWMapPositionY=362, GAWMapSubtitleStrRefId=500264, ImageObjectPath="GUI_MPImages_MP2.OptMapJade", ImageSeekFreePackageName="MP2Images" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled = true, SpecialPortingDelegate = null, IgnoredLightingLevels = MPThesSpecific.IgnoredLightingLevels, // Goddess
+                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled = true, SpecialPortingDelegate = null, SpecialPostPortingDelegate = MPThesSpecific.PostCorrect, IgnoredLightingLevels = MPThesSpecific.IgnoredLightingLevels, // Goddess
                     MapListInfo = new MapListEntry { PackageName="BioP_MPThes", PrettyNameStrRefId=728031, DescriptionStrRefId=null, GAWMapPositionX=105, GAWMapPositionY=278, GAWMapSubtitleStrRefId=500427, ImageObjectPath="GUI_MPImages_MP2.OptMapGoddess", ImageSeekFreePackageName="MP2Images" } },
 
                 // MP3 Earth
@@ -215,7 +218,7 @@ namespace ProjectMilan.Pipelines.Levels
                     // This significantly delay build time - it runs UDK and imports lighting after bake!
                     // Lightmap texel count - and so bake time and lightmap memory - scales with the square of this.
                     var lightmapResolutionMultiplier = Program.Settings.ProductionBuild ? ProductionLightmapResolutionMultiplier : 1f;
-                    var defaultStaticMeshLightingRes = (int)(128 * lightmapResolutionMultiplier); // BioWare default is 32
+                    var defaultStaticMeshLightingRes = DefaultStaticMeshLightingRes;
                     if (StaticLightingExport.ExportLevelToUDK(level, lightmapResolutionMultiplier, defaultStaticMeshLightingRes))
                     {
                         try
