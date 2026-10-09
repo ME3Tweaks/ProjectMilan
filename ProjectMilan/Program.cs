@@ -195,6 +195,10 @@ namespace ProjectMilan
                 return;
             }
 
+            // Fail before UDK setup, output cleanup, or any pipeline work if lighting cannot start.
+            if ((!researchMode && BuildStaticLighting) || !string.IsNullOrWhiteSpace(obj.BakeLighting))
+                StaticLightingCompute.VerifyBuildDependencies();
+
             VerifySettings();
             if (KeepPreBakeMaps && !BuildStaticLighting)
                 MilanLog.Warning("--keep-prebake-maps has no effect because IsStaticLightingBuild is disabled in this configuration.");
