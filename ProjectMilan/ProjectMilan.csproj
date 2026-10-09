@@ -30,7 +30,7 @@
     <Folder Include="Pipelines\Levels\NewFolder\" />
     <Folder Include="Pipelines\Mod\BaseDelta\SFXOnlineFoundation\Functions\" />
     <Folder Include="Pipelines\Mod\BaseConfig\" />
-    <Folder Include="Pipelines\Mod\LinkerPatches\" />
+    <Folder Include="Pipelines\Mod\Splash\" />
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
