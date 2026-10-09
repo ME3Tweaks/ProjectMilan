@@ -18,5 +18,17 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPOcean
         {
 
         }
+
+        // The waving banners (BioT_MPThes.Waving_Flag/Waving_Flag2) amplify this normal map 5x; ME3 only ever had its
+        // 32x32 mips, and LE3's 2048x2048 copy turns the banners into dark streaks. See TextureMipCap.
+        private const string BannerNormalIFP = "BioT_Thessia.Env_Textures.Gravel_Norm";
+
+        public static void PostCorrect(LevelSpecificPipeline pipeline)
+        {
+            foreach (var package in pipeline.LE3Packages.Values)
+            {
+                TextureMipCap.Apply(package, BannerNormalIFP, 32, pipeline.LogCategory);
+            }
+        }
     }
 }
