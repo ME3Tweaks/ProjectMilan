@@ -368,6 +368,26 @@ namespace ProjectMilan.Pipelines.StaticLighting
         private static string UdkAgentPath => Path.Combine(UdkInjRoot, "x64", UdkInjConfiguration, "UDKAgent.asi");
         private static string UdkInjShellPath => Path.Combine(UdkInjRoot, "UDKInj.Shell", "bin", UdkInjConfiguration, "net9.0", "UDKInj.Shell.exe");
 
+        /// <summary>Checks lighting runtime dependencies before a build changes any output.</summary>
+        internal static void VerifyBuildDependencies()
+        {
+            var requiredFiles = new[]
+            {
+                UdkAgentPath,
+                UdkInjShellPath,
+                Path.Combine(Path.GetDirectoryName(UdkInjShellPath)!, "LightmassBridge", "UnrealLightmass.exe"),
+            };
+            var missingFiles = requiredFiles.Where(path => !File.Exists(path)).ToArray();
+            if (missingFiles.Length > 0)
+                throw new FileNotFoundException(
+                    $"Static lighting cannot start: required {UdkInjConfiguration} UdkInj files are missing:" +
+                    Environment.NewLine + string.Join(Environment.NewLine, missingFiles) +
+                    Environment.NewLine + "Build ProjectMilan.csproj with Visual Studio MSBuild and the C++ toolchain " +
+                    $"in {UdkInjConfiguration}|x64 before running a static lighting build.");
+
+            MilanLog.Information($"Verified {UdkInjConfiguration} UdkInj lighting dependencies", customPrefix: LOG_CATEGORY);
+        }
+
         /// <summary>
         /// Milan's UE4 reference bakes, one per quality level (Preview/Medium/High/Production). The
         /// bridge takes each UE4 solver-quality header from the one matching the UDK build's quality.
