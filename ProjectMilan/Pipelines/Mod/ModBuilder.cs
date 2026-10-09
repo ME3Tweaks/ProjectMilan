@@ -6,6 +6,8 @@ using LegendaryExplorerCore.TLK.ME2ME3;
 using ProjectMilan.Pipelines.TLK;
 using ProjectMilanCore;
 using ProjectMilanCore.Config;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Text.RegularExpressions;
 
 namespace ProjectMilan.Pipelines.Mod
@@ -47,9 +49,6 @@ namespace ProjectMilan.Pipelines.Mod
             var tlkSourceDir = Path.Combine(MilanShared.PipelineRoot, "Mod", "TLK");
             foreach (var tlkXml in Directory.EnumerateFiles(tlkSourceDir, "*.xml", SearchOption.TopDirectoryOnly))
             {
-                // English seed text is the fallback until a language-specific seed exists.
-                var tlkXml = Path.Combine(tlkSourceDir, $"{MilanShared.DLC_NAME}_{language}.xml");
-                if (!File.Exists(tlkXml)) tlkXml = Path.Combine(tlkSourceDir, $"{MilanShared.DLC_NAME}_INT.xml");
                 MilanLog.Information($@"Compiling TLK {Path.GetFileNameWithoutExtension(tlkXml)}",
                     customPrefix: LOG_CATEGORY);
                 var huff = new HuffmanCompression();
@@ -101,13 +100,7 @@ namespace ProjectMilan.Pipelines.Mod
             }
 
             TLKPipeline.RunPipeline();
-            // Build merged config file from vanilla ME3 DLC
-            // Patch01/02 is not included here and I am unsure how it will affect the results of this
-            // Not sure this is a good idea...
-            //ConfigAssetBundle bundle = ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC_TestPatch\CookedPCConsole", "DLC_TestPatch");
-            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP1\CookedPCConsole", "DLC_CON_MP1").MergeInto(bundle);
-            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP2\CookedPCConsole", "DLC_CON_MP2").MergeInto(bundle);
-            //ConfigAssetBundle.FromDLCFolder(MEGame.ME3, @"Z:\Mass Effect Builds\ME3\PC\Retail\BIOGame\DLC\DLC_CON_MP3\CookedPCConsole", "DLC_CON_MP3").MergeInto(bundle);
+
 
             // Add spalsh
 #if SHIPPING_RELEASE
