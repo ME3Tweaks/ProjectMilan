@@ -9,7 +9,8 @@
         return;
     }
     // MILAN CHANGE: Do not update bleedout FX if the owner is not a human.
-    if (!Pawn(ModuleOwner).IsHumanControlled())
+    // 10/07/2026 - Also don't do it if it's not locally controlled as remote players can edit your VFX
+    if (!Pawn(ModuleOwner).IsHumanControlled() || !Pawn(ModuleOwner).IsLocallyControlled())
     {
         return;
     }

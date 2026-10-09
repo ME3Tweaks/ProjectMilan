@@ -1,8 +1,8 @@
+// MILAN CHANGE - Gate VFX changes to local human players only
+// 10/07/2026 Mgamerz - Fixes buggy original version milan had that prevented off-host regen
 public simulated function RecoverFromBleedout(optional bool bResetHealth = TRUE)
 {
-    // MILAN CHANGE: Do not run bleedout code if the owner is not a human player
-    // 09/30/2026 - Mgamerz - Also add IsLocallyControlled() so clients don't mess with us
-    if (Pawn(ModuleOwner).IsHumanControlled() && Pawn(ModuleOwner).IsLocallyControlled())
+    if (Pawn(ModuleOwner).IsHumanControlled())
     {
         Super.RecoverFromBleedout();
         if (bResetHealth)
@@ -13,7 +13,10 @@ public simulated function RecoverFromBleedout(optional bool bResetHealth = TRUE)
         {
             CurrentBleedoutState = EBleedoutState.BleedOutState_None;
         }
-        DisableBleedOutVisualEffects();
-        DisableBleedoutSoundEffects();
+        // MILAN CHANGE - Run recovery for human players; keep bleedout presentation local
+        if (Pawn(ModuleOwner).IsLocallyControlled()) {
+            DisableBleedOutVisualEffects();
+            DisableBleedoutSoundEffects();
+        }
     }
 }
