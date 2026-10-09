@@ -1,5 +1,7 @@
+using LegendaryExplorerCore.Packages;
 using ProjectMilanCore;
 using ProjectMilanCore.Config;
+using ProjectMilanCore.Utility;
 
 namespace ProjectMilan.Pipelines.Startups
 {
@@ -33,6 +35,16 @@ namespace ProjectMilan.Pipelines.Startups
             }
         }
 
+        public static void RegisterMilanBanners(IReadOnlySet<string> builtImages)
+        {
+            MilanLog.Information("Registering Project Milan challenge banners", customPrefix: LOG_CATEGORY);
+            foreach (var banner in GetMilanBanners())
+            {
+                CheckImageBuilt(builtImages, banner.BackgroundResource, $"challenge banner {banner.ID}");
+                ChallengeBannerRegistration.RegisterChallengeBanner(banner);
+            }
+        }
+
         public static void RegisterOnlineStorePacks(IReadOnlySet<string> builtImages)
         {
             MilanLog.Information("Registering online store packs", customPrefix: LOG_CATEGORY);
@@ -47,6 +59,7 @@ namespace ProjectMilan.Pipelines.Startups
         {
             if (!builtImages.Contains(imagePath))
             {
+                // This needs expanded to support the new Milan image package
                 MilanLog.Error($"Image {imagePath} for {usedBy} was not built - is it missing from ImagePackages\\Online?", customPrefix: LOG_CATEGORY);
             }
         }
@@ -59,7 +72,7 @@ namespace ProjectMilan.Pipelines.Startups
             Banner(100, "MEMstr", 778515),
             Banner(150, "Halloween", 812513),
             Banner(153, "N7Day", 813744),
-            Banner(154, "Bioware", 813603),
+            Banner(154, "Bioware", 813603), // No available unlock method - I guess if someone copies their MP profile over though...
             Banner(155, "Corsair", 813915),
             Banner(157, "Prophecy", 814532),
             Banner(206, "Punisher", 814545),
@@ -79,6 +92,24 @@ namespace ProjectMilan.Pipelines.Startups
             Banner(220, "FullTeam", 817847),
         ];
 
+        /// <summary>
+        /// This is a method because we need to dynamically assign TLK entries.
+        /// </summary>
+        /// <returns></returns>
+        private static IReadOnlyList<ChallengeBannerEntry> GetMilanBanners()
+        {
+            var milanBanners = new List<ChallengeBannerEntry>();
+
+            // Add custom Milan banners here.
+            // Note - these all need localized.
+            milanBanners.Add(Banner(221, "ME3Tweaks", MilanPipelinesShared.AssignTLK(new LocalizedString()
+            {
+                { MELocalization.INT, "ME3Tweaks" }
+            })));
+
+            return milanBanners;
+        }
+
         private static StorePackSlot Slot(int quantity, string? backupPool, params (string PoolName, float Weight)[] pools) =>
             new() { Quantity = quantity, BackupPool = backupPool, Pools = pools.ToList() };
 
@@ -89,22 +120,22 @@ namespace ProjectMilan.Pipelines.Startups
         /// </summary>
         private static StorePackEntry OperationPack(int id, string packName, int playerVariableId, int? visibleCondition,
             int titleStrRefId = 731378, int descriptionStrRefId = 809298) => new()
-        {
-            ID = id,
-            PackName = packName,
-            TitleStrRefId = titleStrRefId,
-            DescriptionStrRefId = descriptionStrRefId,
-            Visible = visibleCondition is { } condition ? [[condition]] : [],
-            CreditCost = 0,
-            PromoStrRefId = 703324,
-            PerPlayerMax = 1,
-            PlayerVariableId = playerVariableId,
-            Image = $"{StoreImages}.StoreAlliance",
-            RevealIntroTextureRef = "GUI_MPImages.Creates.Alliance",
-            RevealIntroHoloTextureRef = "GUI_MPImages.Creates.AllianceHolo",
-            RevealIntroSound = "MPRevealCrate1",
-            Contents = [Slot("goldconsumable"), Slot("goldcommon"), Slot("n7weapon")],
-        };
+            {
+                ID = id,
+                PackName = packName,
+                TitleStrRefId = titleStrRefId,
+                DescriptionStrRefId = descriptionStrRefId,
+                Visible = visibleCondition is { } condition ? [[condition]] : [],
+                CreditCost = 0,
+                PromoStrRefId = 703324,
+                PerPlayerMax = 1,
+                PlayerVariableId = playerVariableId,
+                Image = $"{StoreImages}.StoreAlliance",
+                RevealIntroTextureRef = "GUI_MPImages.Creates.Alliance",
+                RevealIntroHoloTextureRef = "GUI_MPImages.Creates.AllianceHolo",
+                RevealIntroSound = "MPRevealCrate1",
+                Contents = [Slot("goldconsumable"), Slot("goldcommon"), Slot("n7weapon")],
+            };
 
         private static readonly List<StorePackEntry> OnlineStorePacks =
         [
