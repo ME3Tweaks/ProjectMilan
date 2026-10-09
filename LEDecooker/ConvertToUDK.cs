@@ -527,7 +527,12 @@ namespace LEDecooker
         private const double MaxLightmapUVOverlap = 0.25;
 
         /// <summary>
-        /// Makes UDK vertex light a mesh whose lightmap UV channel isn't a unique unwrap.
+        /// Share of a mesh's lightmap UV area outside the 0-1 square at or above which UDK is made to vertex light it.
+        /// </summary>
+        private const double MaxLightmapUVOutside = 0.25;
+
+        /// <summary>
+        /// Makes UDK vertex light a mesh whose lightmap UV channel isn't a unique unwrap inside the 0-1 square.
         /// </summary>
         /// <remarks>
         /// <para>Overlapping triangles share lightmap texels, so a texture bake smears one surface's lighting over
@@ -535,6 +540,13 @@ namespace LEDecooker
         /// in patches in every copy on BioA_MPCer3_White. The worst cases are "Consolidated" meshes whose merged
         /// pieces kept identical UVs. BioWare vertex lit most of them, but that was a per-component override,
         /// which is editor-only and lost at cook, so UDK only sees the mesh's LightMapResolution and texture bakes.</para>
+        ///
+        /// <para>UVs outside the square get no texels in the bake, and in game they sample whatever lies next to the
+        /// mesh's region of the lightmap atlas: BioS_MPThes.Font_82 (UV1 is the unit square shifted by half, 75%
+        /// outside) showed another mesh's lighting in stripes across the "82" on BioA_MPThes_110. UVs with no area
+        /// (Font_Elevator and Font_Access collapse UV1 to a point) bake no lightmap at all. Of 8,220 texture lit
+        /// meshes in the decooked packages, 74 have 25% or more of their UV area outside (almost all 90% or more)
+        /// and 83 have none.</para>
         ///
         /// <para>UDK's resolution lookup falls back to DefaultStaticMeshLightingRes when it comes out 0 (UDK.exe
         /// FUN_7ff64e3e68d0), so no component setting can force vertex lighting. The mesh test can: a texture
@@ -555,12 +567,87 @@ namespace LEDecooker
             if (coordinateIndex < 0 || coordinateIndex >= lod.VertexBuffer.NumTexCoords)
                 return; // Already vertex lit
 
-            var overlap = GetUVOverlap(lod, coordinateIndex);
-            if (overlap < MaxLightmapUVOverlap)
-                return;
+            string problem;
+            var (area, outside) = GetUVAreaOutsideUnitSquare(lod, coordinateIndex);
+            if (area < 1e-6)
+            {
+                problem = "have no area";
+            }
+            else if (outside >= MaxLightmapUVOutside)
+            {
+                problem = $"lie {outside:P0} outside the 0-1 square";
+            }
+            else
+            {
+                var overlap = GetUVOverlap(lod, coordinateIndex);
+                if (overlap < MaxLightmapUVOverlap)
+                    return;
+                problem = $"overlap {overlap:P0}";
+            }
 
-            DecookerLog.Information($"  {exp.InstancedFullPath}: lightmap UVs overlap {overlap:P0}; setting LightMapCoordinateIndex past its {lod.VertexBuffer.NumTexCoords} UV channels so UDK vertex lights it");
+            DecookerLog.Information($"  {exp.InstancedFullPath}: lightmap UVs {problem}; setting LightMapCoordinateIndex past its {lod.VertexBuffer.NumTexCoords} UV channels so UDK vertex lights it");
             exp.WriteProperty(new IntProperty((int)lod.VertexBuffer.NumTexCoords, "LightMapCoordinateIndex"));
+        }
+
+        /// <summary>
+        /// Returns the total area of one UV channel of <paramref name="lod"/>'s triangles (in UV squares) and the share
+        /// of it that lies outside the 0-1 square, clipping each triangle against the square exactly.
+        /// </summary>
+        private static (double Area, double OutsideShare) GetUVAreaOutsideUnitSquare(StaticMeshRenderData lod, int channel)
+        {
+            var vb = lod.VertexBuffer;
+            (double X, double Y) UV(int v) => vb.bUseFullPrecisionUVs
+                ? (vb.VertexData[v].FullPrecisionUVs[channel].X, vb.VertexData[v].FullPrecisionUVs[channel].Y)
+                : ((float)vb.VertexData[v].HalfPrecisionUVs[channel].X, (float)vb.VertexData[v].HalfPrecisionUVs[channel].Y);
+
+            double total = 0, inside = 0;
+            for (int i = 0; i + 2 < lod.IndexBuffer.Length; i += 3)
+            {
+                var triangle = new List<(double X, double Y)> { UV(lod.IndexBuffer[i]), UV(lod.IndexBuffer[i + 1]), UV(lod.IndexBuffer[i + 2]) };
+                total += PolygonArea(triangle);
+                inside += PolygonArea(ClipToUnitSquare(triangle));
+            }
+            return (total, total > 0 ? 1 - inside / total : 0);
+        }
+
+        private static double PolygonArea(List<(double X, double Y)> polygon)
+        {
+            double twiceArea = 0;
+            for (int i = 0; i < polygon.Count; i++)
+            {
+                var (x0, y0) = polygon[i];
+                var (x1, y1) = polygon[(i + 1) % polygon.Count];
+                twiceArea += x0 * y1 - x1 * y0;
+            }
+            return Math.Abs(twiceArea) / 2;
+        }
+
+        /// <summary>Sutherland-Hodgman clip of a convex polygon to the 0-1 square.</summary>
+        private static List<(double X, double Y)> ClipToUnitSquare(List<(double X, double Y)> polygon)
+        {
+            foreach (var (useY, bound, keepBelow) in new[] { (false, 0.0, false), (false, 1.0, true), (true, 0.0, false), (true, 1.0, true) })
+            {
+                if (polygon.Count == 0)
+                    break;
+                double Coordinate((double X, double Y) p) => useY ? p.Y : p.X;
+                bool Inside((double X, double Y) p) => keepBelow ? Coordinate(p) <= bound : Coordinate(p) >= bound;
+
+                var clipped = new List<(double X, double Y)>();
+                for (int i = 0; i < polygon.Count; i++)
+                {
+                    var current = polygon[i];
+                    var previous = polygon[(i + polygon.Count - 1) % polygon.Count];
+                    if (Inside(current) != Inside(previous))
+                    {
+                        var t = (bound - Coordinate(previous)) / (Coordinate(current) - Coordinate(previous));
+                        clipped.Add((previous.X + (current.X - previous.X) * t, previous.Y + (current.Y - previous.Y) * t));
+                    }
+                    if (Inside(current))
+                        clipped.Add(current);
+                }
+                polygon = clipped;
+            }
+            return polygon;
         }
 
         /// <summary>
