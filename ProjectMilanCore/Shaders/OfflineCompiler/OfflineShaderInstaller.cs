@@ -20,8 +20,8 @@ public sealed class ShaderInstallException(string message) : Exception(message);
 /// <summary>
 /// The writing half of the shader install. Compiles each unique material, permutation, variant and chain clone
 /// of a <see cref="ShaderInstallPlan"/> once, then applies the plan to every output package: usage flags, static
-/// normal fixes, parent variants with placeholder textures, retargets, rebuilt material resources and the merged
-/// shader cache. Any compile failure, incomplete shader set or material left without shaders throws
+/// normal fixes, parent variants with placeholder textures, retargets (of instances and of lightmapped mesh slots),
+/// rebuilt material resources and the merged shader cache. Any compile failure, incomplete shader set or material left without shaders throws
 /// <see cref="ShaderInstallException"/>, listing every problem found.
 /// </summary>
 public sealed class OfflineShaderInstaller(OfflineShaderInstallContext context, Action<string> log)
@@ -180,6 +180,8 @@ public sealed class OfflineShaderInstaller(OfflineShaderInstallContext context, 
             graph = PathLookup.FindExport(variantPackage!, graph.InstancedFullPath, PathLookup.IsMaterialObject)
                     ?? throw new ShaderInstallException($"{unit.Id}: {graph.InstancedFullPath} is not in {Path.GetFileName(graph.FileRef.FilePath)}");
             foreach (var flag in basePlan?.FlagsToSet ?? []) graph.WriteProperty(new BoolProperty(true, flag));
+            // Flags only the variant gets, because its source is shared with the game: on the private copy alone.
+            foreach (var flag in unit.Variant.UsageFlags ?? []) graph.WriteProperty(new BoolProperty(true, flag));
             foreach (var swap in unit.Variant.Swaps)
             {
                 var expression = variantPackage.Exports.FirstOrDefault(e => e.Parent == graph && e.ObjectName.Instanced == LastSegment(swap.ExpressionPath))
@@ -250,7 +252,8 @@ public sealed class OfflineShaderInstaller(OfflineShaderInstallContext context, 
         var instances = plan.Instances.Where(i => i.Packages.Contains(name)).ToList();
         var variants = plan.Variants.Where(v => v.Packages.Contains(name)).ToList();
         var clones = plan.ChainClones.Where(c => c.Packages.Contains(name)).ToList();
-        if (materials.Count + instances.Count + variants.Count + clones.Count == 0) return;
+        var slots = plan.SlotRetargets.Where(r => r.Package == name).ToList();
+        if (materials.Count + instances.Count + variants.Count + clones.Count + slots.Count == 0) return;
 
         using var package = MEPackageHandler.OpenMEPackage(file, forceLoadFromDisk: true);
         using var cache = new PackageCache { CacheMaxSize = 30 };
@@ -270,6 +273,7 @@ public sealed class OfflineShaderInstaller(OfflineShaderInstallContext context, 
             {
                 var export = FindByIdentity(package, m.Identity) ?? throw new ShaderInstallException($"{m.Identity} is missing");
                 foreach (var flag in m.FlagsToSet) export.WriteProperty(new BoolProperty(true, flag));
+                foreach (var flag in m.FlagsToClear ?? []) export.RemoveProperty(flag);
                 if (compiled.TryGetValue("M:" + m.Identity, out var c))
                     ObjectBinary.EditBinary<Material>(export, b => b.SM3MaterialResource = Resolve(c, package, rop, m.LiveResourceId, null));
                 Merge("M:" + m.Identity);
@@ -293,18 +297,33 @@ public sealed class OfflineShaderInstaller(OfflineShaderInstallContext context, 
                 if (i.Rewrite) ApplyPermutation(export, i.Key, "I:" + i.Identity, package, cache, rop);
                 Merge("I:" + i.Identity);
             }
+            foreach (var slot in slots) RetargetSlot(slot, package);
 
             ShaderCacheManipulator.AddShadersToFile(package, merged, overwrite: true);
             ShaderCacheManipulator.CompactSeekFreeShaderCaches(package, context.GameRoot);
             foreach (var broken in ShaderCacheManipulator.GetBrokenMaterials(package, context.GameRoot).Where(e => !e.IsA("Terrain")).Distinct())
                 failures.Add($"{name}: {broken.InstancedFullPath} has no shader map after the install");
             package.Save();
-            log($"Shader install: {name}: {materials.Count} materials, {instances.Count} instances, {variants.Count} variants, {clones.Count} clones");
+            log($"Shader install: {name}: {materials.Count} materials, {instances.Count} instances, {variants.Count} variants, {clones.Count} clones, {slots.Count} mesh slots moved");
         }
         catch (Exception e)
         {
             failures.Add($"{name}: {e.GetType().Name}: {e.Message} @ {string.Join(" < ", (e.StackTrace ?? "").Split((char)10).Take(3).Select(l => l.Trim()))}");
         }
+    }
+
+    /// <summary>Points one material slot of a mesh component at a variant or chain clone created in this package.</summary>
+    public static void RetargetSlot(MeshSlotRetargetPlan slot, IMEPackage package)
+    {
+        var component = package.GetEntry(slot.ComponentUIndex) as ExportEntry;
+        if (component == null || component.InstancedFullPath != slot.ComponentPath)
+            throw new ShaderInstallException($"{slot.ComponentPath} is not export {slot.ComponentUIndex} any more");
+        var target = FindByIdentity(package, slot.TargetIdentity) ?? throw new ShaderInstallException($"{slot.TargetIdentity} is missing");
+        var overrides = component.GetProperty<ArrayProperty<ObjectProperty>>("Materials") ?? new ArrayProperty<ObjectProperty>("Materials");
+        // A null override draws the mesh's own material, so padding changes nothing.
+        while (overrides.Count <= slot.Slot) overrides.Add(new ObjectProperty(0));
+        overrides[slot.Slot] = new ObjectProperty(target.UIndex);
+        component.WriteProperty(overrides);
     }
 
     private int Depth(string cloneIdentity)
@@ -477,6 +496,7 @@ public sealed class OfflineShaderInstaller(OfflineShaderInstallContext context, 
         var variant = CopyInto(v.SourceIdentity, v.SourcePackagePath, v.ObjectName, package, cache, rop);
         var sourcePlan = plan.Materials.FirstOrDefault(m => m.Identity == v.SourceIdentity);
         foreach (var flag in sourcePlan?.FlagsToSet ?? []) variant.WriteProperty(new BoolProperty(true, flag));
+        foreach (var flag in v.UsageFlags ?? []) variant.WriteProperty(new BoolProperty(true, flag));
         foreach (var swap in v.Swaps)
         {
             var expression = package.Exports.FirstOrDefault(e => e.Parent == variant && e.ObjectName.Instanced == LastSegment(swap.ExpressionPath))

@@ -11,7 +11,8 @@ namespace ProjectMilanCore.Shaders.OfflineCompiler;
 
 /// <summary>
 /// The build-side services the offline shader install needs: import resolution with the mod output first, final
-/// texture metadata, decooked graphs for stripped parents, the RefShaderCache key check and the shader sources.
+/// texture metadata, decooked graphs for stripped parents, the RefShaderCache key check, the game's own copies of
+/// materials the mod also holds, and the shader sources.
 /// One per install run; not thread-safe.
 /// </summary>
 public sealed class OfflineShaderInstallContext : IDisposable
@@ -30,6 +31,11 @@ public sealed class OfflineShaderInstallContext : IDisposable
     private readonly Dictionary<string, IMEPackage?> decooked = new(StringComparer.OrdinalIgnoreCase);
     private readonly TextureDonorLocator donors;
     private readonly string? decookedRoot;
+    private readonly ObjectInstanceDB? objectDatabase;
+    private readonly string outputRoot, gameRoot;
+    private readonly Dictionary<string, VanillaMaterialInfo?> vanillaMaterials = new(StringComparer.Ordinal);
+    // A forced export is in every file that uses it; one of the first few holds a copy at the same memory path.
+    private const int MaxVanillaFilesTried = 16;
 
     /// <summary>A separate provider, for another thread.</summary>
     /// <remarks>Textures of a decooked graph are read from what the game loads (the converted output copy, else the
@@ -45,11 +51,15 @@ public sealed class OfflineShaderInstallContext : IDisposable
     /// runs; the build marks them LMP only at the end).</summary>
     public MEGame PackageGame { get; private set; } = MEGame.LE3;
 
-    /// <param name="objectDatabase">LE3 object database, for texture metadata donors outside the mod.</param>
+    /// <param name="objectDatabase">LE3 object database, for texture metadata donors outside the mod and for finding
+    /// the game's own copy of a material the mod also holds.</param>
     public OfflineShaderInstallContext(string outputFolder, string gameRoot, string? decookedLE3Folder, ObjectInstanceDB? objectDatabase)
     {
         OutputFolder = Path.GetFullPath(outputFolder);
         GameRoot = gameRoot;
+        this.objectDatabase = objectDatabase;
+        outputRoot = OutputFolder.TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+        this.gameRoot = Path.GetFullPath(gameRoot).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
         DecookedLE3Folder = decookedLE3Folder;
         decookedRoot = decookedLE3Folder == null ? null : Path.GetFullPath(decookedLE3Folder).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
         OutputPackages = Directory.GetFiles(OutputFolder, "*.pcc", SearchOption.AllDirectories).Order(StringComparer.OrdinalIgnoreCase).ToList();
@@ -146,6 +156,62 @@ public sealed class OfflineShaderInstallContext : IDisposable
         return decooked?.GetProperty<ArrayProperty<ObjectProperty>>("Expressions") is { Count: > 0 } ? decooked : null;
     }
 
+    /// <summary>A file of the game itself: under the game root, and neither the mod's output nor another mod's DLC.</summary>
+    private bool IsGameFile(string path)
+    {
+        path = Path.GetFullPath(path);
+        return path.StartsWith(gameRoot, StringComparison.OrdinalIgnoreCase) && !path.StartsWith(outputRoot, StringComparison.OrdinalIgnoreCase) &&
+               !path.Contains(Path.DirectorySeparatorChar + "DLC_MOD_", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// The game's own copy of a material: the object the game holds at the same memory path, so the one a copy in the
+    /// mod's packages shares its identity with at runtime. Null when the game has no such object.
+    /// </summary>
+    public VanillaMaterialInfo? VanillaMaterial(ExportEntry material)
+    {
+        string identity = material.MemoryFullPath;
+        if (!vanillaMaterials.TryGetValue(identity, out var info))
+            vanillaMaterials[identity] = info = FindVanillaMaterial(material, identity);
+        return info;
+    }
+
+    private VanillaMaterialInfo? FindVanillaMaterial(ExportEntry material, string identity)
+    {
+        static VanillaMaterialInfo Describe(ExportEntry copy) => new(ObjectBinary.From<Material>(copy).SM3MaterialResource.ID,
+            copy.GetProperties().OfType<BoolProperty>().Where(b => b.Value && b.Name.Name.StartsWith("bUsed", StringComparison.Ordinal))
+                .Select(b => b.Name.Name).ToHashSet(StringComparer.Ordinal));
+
+        if (material.FileRef.FilePath is { } own && IsGameFile(own)) return Describe(material);
+        var files = objectDatabase?.GetFilesContainingObject(material.InstancedFullPath);
+        if (files == null) return null;
+
+        string name = material.ObjectName.Instanced, className = material.ClassName;
+        string fileName = material.FileRef.FileNameNoExtension.StripUnrealLocalization();
+        int tried = 0;
+        // Database paths are relative to the game root; packages registered at runtime (the mod's) may be absolute.
+        foreach (var file in files.Select(f => Path.GetFullPath(Path.Combine(GameRoot, f))).Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            if (!IsGameFile(file) || !File.Exists(file)) continue;
+            // A copy that is not a forced export has its file's name in its memory path: only a same-named file shares it.
+            if (!material.IsForcedExport && !string.Equals(Path.GetFileNameWithoutExtension(file).StripUnrealLocalization(), fileName, StringComparison.OrdinalIgnoreCase))
+                continue;
+            if (++tried > MaxVanillaFilesTried) break;
+            try
+            {
+                using var package = MEPackageHandler.UnsafePartialLoad(file, e => e.ClassName == className && e.ObjectName.Instanced == name);
+                var copy = package.Exports.FirstOrDefault(e => e.ClassName == className && e.ObjectName.Instanced == name &&
+                                                               string.Equals(e.MemoryFullPath, identity, StringComparison.OrdinalIgnoreCase));
+                if (copy != null) return Describe(copy);
+            }
+            catch
+            {
+                // Try the next file.
+            }
+        }
+        return null;
+    }
+
     public ISet<StaticParameterSet> KeysInRefShaderCache(IReadOnlyCollection<StaticParameterSet> keys)
     {
         var missing = keys.ToHashSet();
@@ -187,7 +253,8 @@ public sealed class OfflineShaderInstallContext : IDisposable
         TextureMetadata = TextureMetadata,
         GraphSource = GraphSource,
         KeysInRefShaderCache = KeysInRefShaderCache,
-        ConfirmVariant = ConfirmVariant
+        ConfirmVariant = ConfirmVariant,
+        VanillaMaterial = VanillaMaterial
     };
 
     /// <summary>Plans over every output package, opening each read-only and releasing it after.</summary>
