@@ -96,6 +96,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             }
 
             var classFolder = Path.Combine(baseDeltaFolder, "Classes");
+            bool compiledClasses = false;
             if (Directory.Exists(classFolder))
             {
                 // sorting this is a bit hacky, should probably have a manifest
@@ -113,12 +114,24 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                         MilanLog.Fatal($"Failed to compile {packageName} class {className} - this is a fatal error.");
                         Environment.Exit(1);
                     }
+                    compiledClasses = true;
                 }
             }
 
             var functionFolder = Path.Combine(baseDeltaFolder, "Functions");
             if (Directory.Exists(functionFolder))
             {
+                if (compiledClasses)
+                {
+                    // We need to re-init the FileLib so that any new functions added to classes above are visible to the function compiler.
+                    if (!fileLib.ReInitializeFile(usop))
+                    {
+                        MilanShared.LogFailedFileLibInit(fileLib);
+                        MilanLog.Fatal($"Unable to re-initialize the FileLib for {packageName} before compiling functions - this is a fatal error.");
+                        Environment.Exit(1);
+                    }
+                }
+
                 foreach (var func in Directory.GetFiles(functionFolder, "*.uc", SearchOption.AllDirectories))
                 {
                     var className = Directory.GetParent(func).Name;
