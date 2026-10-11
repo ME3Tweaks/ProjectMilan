@@ -313,7 +313,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 if (!bakeSucceeded)
                 {
                     MilanLog.Warning($"Not copying {mapName} back from UDK because its lighting build did not finish; " +
-                        @"StaticLighting\Levels keeps its previous lighting", customPrefix: LOG_CATEGORY);
+                        $"{StaticLightingCache.GetLevelFolder(mapName)} keeps its previous lighting", customPrefix: LOG_CATEGORY);
                 }
                 else try
                 {
@@ -325,7 +325,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
 
                     // Copy back the .udk files to the static lighting folder
-                    var staticLightingFolder = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", mapName);
+                    var staticLightingFolder = StaticLightingCache.GetLevelFolder(mapName);
                     Utilities.DeleteFilesAndFoldersRecursively(staticLightingFolder, deleteDirectoryItself: false);
                     Directory.CreateDirectory(staticLightingFolder);
 
@@ -400,14 +400,17 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// Binaries\Win64 via the UdkInj Shell's install-/uninstall-lightmass-bridge commands. UE4 is used
         /// unless the level asks for UE3 or anything the bridge needs is missing on this machine (UE4
         /// Lightmass, the UdkInj Shell, Milan's UE4 reference bakes), in which case the build falls
-        /// back to UE3 with a warning rather than failing. Every UE4 build reinstalls the bridge from
+        /// back to UE3 with a warning rather than failing. A UE3 build
+        /// (<see cref="Program.Lightmass"/>) uses UE3 for every level. Every UE4 build reinstalls the bridge from
         /// Milan's reference bakes with this level's tuning (keeping the bridge's own Ue4Threads cap);
         /// every UE3 build removes a bridge left behind by an interrupted run.
         /// </summary>
         /// <returns>The solver UDK now has; UE4 must be undone with <see cref="RestoreUE3Lightmass"/>.</returns>
         private static LightmassSolver UseLightmass(UE4LightmassSettings settings, string mapName)
         {
-            if (settings.UseUE3)
+            if (Program.Lightmass == LightmassSolver.UE3)
+                MilanLog.Information("Lightmass: UE3 (this build bakes with UE3, --lightmass UE3)", customPrefix: LOG_CATEGORY);
+            else if (settings.UseUE3)
                 MilanLog.Information("Lightmass: UE3 (this level sets UE4Lightmass.UseUE3)", customPrefix: LOG_CATEGORY);
             else if (FindUE4Lightmass(out var reason) is not { } ue4Lightmass)
                 MilanLog.Warning($"Lightmass: UE3, because UE4 Lightmass can't be used: {reason}", customPrefix: LOG_CATEGORY);
@@ -583,7 +586,8 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// <summary>
         /// Bakes one map again from the pre-bake UDK maps an earlier build kept (--keep-prebake-maps), without porting
         /// or exporting anything - for trying solver settings on a single map. The result replaces the map's folder in
-        /// StaticLighting\Levels, which is first copied to StaticLighting\Backup. Nothing is imported into the mod.
+        /// this build's Lightmass's bakes (<see cref="StaticLightingCache"/>), which is first copied to StaticLighting\Backup.
+        /// Nothing is imported into the mod.
         /// </summary>
         internal static void BakeFromPreBakeMaps(string mapName, LightmassBuildQuality quality, int defaultStaticMeshLightingRes)
         {
@@ -592,10 +596,10 @@ namespace ProjectMilan.Pipelines.StaticLighting
             if (!maps.Any(f => Path.GetFileNameWithoutExtension(f).Equals(mapName, StringComparison.OrdinalIgnoreCase)))
                 throw new FileNotFoundException($"No pre-bake maps for {mapName}; run a lighting build with --keep-prebake-maps first", preBake);
 
-            var levels = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", mapName);
+            var levels = StaticLightingCache.GetLevelFolder(mapName);
             if (Directory.Exists(levels) && Directory.EnumerateFiles(levels).Any())
             {
-                var backup = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Backup", $"{mapName}_{DateTime.Now:yyyyMMdd_HHmmss}")).FullName;
+                var backup = Directory.CreateDirectory(Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Backup", $"{mapName}_{Program.Lightmass}_{DateTime.Now:yyyyMMdd_HHmmss}")).FullName;
                 foreach (var file in Directory.GetFiles(levels))
                     File.Copy(file, Path.Combine(backup, Path.GetFileName(file)));
                 MilanLog.Information($"Backed up the current {mapName} bake to {backup}", customPrefix: LOG_CATEGORY);
@@ -605,7 +609,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             Utilities.DeleteFilesAndFoldersRecursively(mapOutput, deleteDirectoryItself: false);
             foreach (var map in maps)
                 File.Copy(map, Path.Combine(mapOutput, Path.GetFileName(map)));
-            MilanLog.Information($"Baking {mapName} at {quality} from {maps.Length} pre-bake maps", customPrefix: LOG_CATEGORY);
+            MilanLog.Information($"Baking {mapName} at {quality} from {maps.Length} pre-bake maps into the {Program.Lightmass} bakes", customPrefix: LOG_CATEGORY);
             ComputeLighting(mapName, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes,
                 qualityLevel: quality, ue4Lightmass: new UE4LightmassSettings(), keepQuality: true);
         }
@@ -617,7 +621,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             if (!sourceMaps.Any(file => Path.GetFileNameWithoutExtension(file).Equals(mapName, StringComparison.OrdinalIgnoreCase)))
                 throw new FileNotFoundException($"Cannot preserve pre-bake maps: master map {mapName}.udk was not exported", Path.Combine(mapPath, $"{mapName}.udk"));
 
-            // Keep this outside StaticLighting/Levels: the post-bake copy clears that folder.
+            // Keep this outside StaticLighting/Levels: the post-bake copy clears the level's folder there.
             var snapshotPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "PreBake", mapName);
             Directory.CreateDirectory(snapshotPath);
             foreach (var oldMap in Directory.GetFiles(snapshotPath, "*.udk", SearchOption.TopDirectoryOnly))
