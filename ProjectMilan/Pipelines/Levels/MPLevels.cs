@@ -10,6 +10,7 @@ using ProjectMilan.Pipelines.Levels.BioP_MPDish2;
 using ProjectMilan.Pipelines.Levels.BioP_MPHosp;
 using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
 using ProjectMilan.Pipelines.Levels.BioP_MPOcean;
+using ProjectMilan.Pipelines.Levels.BioP_MPRoad;
 using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
@@ -87,7 +88,13 @@ namespace ProjectMilan.Pipelines.Levels
             /// <summary>
             /// Map of DLC map names and if they should be ported across
             /// </summary>
-            public readonly List<LevelSpecificPipeline> LevelPipelines = new()
+            public readonly List<LevelSpecificPipeline> LevelPipelines = CreateLevelPipelines();
+
+            /// <summary>
+            /// The level list on its own: unlike the lists above it assigns no TLK strings, so it can be built outside
+            /// a pipeline run.
+            /// </summary>
+            public static List<LevelSpecificPipeline> CreateLevelPipelines() => new()
             {
                 // Maps here are laid out in the order they will appear in the map list
                 // Vanilla
@@ -124,7 +131,7 @@ namespace ProjectMilan.Pipelines.Levels
                     MapListInfo = new MapListEntry { PackageName="BioP_MPOcean", PrettyNameStrRefId=731650, DescriptionStrRefId=618054, GAWMapPositionX=290, GAWMapPositionY=410, GAWMapSubtitleStrRefId=345696, ImageObjectPath="GUI_MPImages_MP3.OptMapRio", ImageSeekFreePackageName="MP3Images" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPHosp", Enabled = true, SpecialPortingDelegate = null, IgnoredLightingLevels = MPHospSpecific.IgnoredLightingLevels, // Vancouver
                     MapListInfo = new MapListEntry { PackageName="BioP_MPHosp", PrettyNameStrRefId=728032, DescriptionStrRefId=618054, GAWMapPositionX=290, GAWMapPositionY=410, GAWMapSubtitleStrRefId=345696, ImageObjectPath="GUI_MPImages_MP3.OptMapHosp", ImageSeekFreePackageName="MP3Images" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled = true, SpecialPortingDelegate = null, // London
+                new LevelSpecificPipeline() { BioP="BioP_MPRoad", Enabled = true, SpecialPortingDelegate = null, SpecialPostPortingDelegate = MPRoadSpecific.PostCorrect, // London
                     MapListInfo = new MapListEntry { PackageName="BioP_MPRoad", PrettyNameStrRefId=731651, DescriptionStrRefId=618054, GAWMapPositionX=290, GAWMapPositionY=410, GAWMapSubtitleStrRefId=345696, ImageObjectPath="GUI_MPImages_MP3.OptMapLondon", ImageSeekFreePackageName="MP3Images" } },
 
                 // MP4 Retaliation
@@ -180,6 +187,43 @@ namespace ProjectMilan.Pipelines.Levels
             InternalRunPipeline(vars);
         }
 
+        /// <summary>
+        /// Imports each lit level's cached bake (<see cref="StaticLightingCache"/>, so the --lightmass one) into the level
+        /// packages already in the output mod, replacing the lighting they were built with. Nothing is ported or rebuilt,
+        /// and the new lightmaps stay package stored: the texture pipeline that moves them to the Lighting TFC does not run.
+        /// </summary>
+        internal static void ImportCachedLightingIntoOutputMod()
+        {
+            var imported = 0;
+            foreach (var level in MPLevelsVars.CreateLevelPipelines().Where(x => x.ShouldBuild && x.BuildLighting))
+            {
+                var bioPPath = Path.Combine(level.LevelOutputDir, $"{level.BioP}.pcc");
+                if (!File.Exists(bioPPath))
+                {
+                    MilanLog.ErrorWithSummary($"{level.BioP} is not in the output mod ({bioPPath}); build the mod first", customPrefix: LOG_CATEGORY);
+                    continue;
+                }
+
+                if (!StaticLightingCache.HasLevel(level.BioP))
+                {
+                    MilanLog.ErrorWithSummary($"No cached {Program.Lightmass} lighting for {level.BioP} ({StaticLightingCache.GetLevelFolder(level.BioP)}); left as built", customPrefix: LOG_CATEGORY);
+                    continue;
+                }
+
+                MilanLog.Information($"Importing cached {Program.Lightmass} lighting into {level.BioP}", customPrefix: LOG_CATEGORY);
+                using var bioP = MEPackageHandler.OpenMEPackage(bioPPath);
+                level.LE3BioP = bioP;
+                LevelShared.ImportStaticLighting(level, true);
+                // The importer saves the sublevels it changes, but not the package it was handed.
+                if (bioP.IsModified)
+                    bioP.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                level.LE3BioP = null;
+                imported++;
+            }
+
+            MilanLog.Information($"Imported cached {Program.Lightmass} lighting into {imported} level(s) in {Program.Settings.OutputModPath}", customPrefix: LOG_CATEGORY);
+        }
+
         private static void InternalRunPipeline(MPLevelsVars levelVars)
         {
             // Chained to the long-lived MPCommon tier so files hit repeatedly across levels (but not globally
@@ -201,6 +245,13 @@ namespace ProjectMilan.Pipelines.Levels
                     // This level is not marked for porting currently.
                     MilanLog.Information($"Skipping level {level.BioP}, pipeline is not enabled");
                     continue;
+                }
+
+                // Porting imports the cached bake per package and skips a missing one silently, which a build
+                // that was told to take its lighting from the cache should not do quietly.
+                if (Program.UseCachedLighting && level.BuildLighting && !StaticLightingCache.HasLevel(level.BioP))
+                {
+                    MilanLog.ErrorWithSummary($"No cached {Program.Lightmass} lighting for {level.BioP} ({StaticLightingCache.GetLevelFolder(level.BioP)}); it keeps the lighting ported from ME3", customPrefix: LOG_CATEGORY);
                 }
 
                 if (level.SpecialPortingDelegate != null)
@@ -230,7 +281,7 @@ namespace ProjectMilan.Pipelines.Levels
                             // A hung, crashed or killed UDK costs this level its new lighting, not the
                             // whole build. ComputeLighting only copies a finished bake back, so the
                             // import below still finds this level's previous lighting.
-                            MilanLog.Exception(ex, $"Static lighting build failed for {level.BioP}; importing its previous lighting from StaticLighting\\Levels instead", customPrefix: LOG_CATEGORY);
+                            MilanLog.Exception(ex, $"Static lighting build failed for {level.BioP}; importing its previous {Program.Lightmass} bake instead", customPrefix: LOG_CATEGORY);
                             MilanLog.ErrorWithSummary($"Static lighting build failed for {level.BioP} (kept its previous lighting): {ex.Message}", customPrefix: LOG_CATEGORY);
                             failedLightingBuilds.Add(level.BioP);
                         }

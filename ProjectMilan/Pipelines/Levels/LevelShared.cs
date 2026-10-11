@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilanCore;
+using ProjectMilan.Pipelines.StaticLighting;
 using LegendaryExplorerCore.Kismet;
 
 namespace ProjectMilan.Pipelines.Levels
@@ -200,7 +201,7 @@ namespace ProjectMilan.Pipelines.Levels
         /// </summary>
         public static void ImportStaticLighting(LevelSpecificPipeline level, bool includeSublevels = false)
         {
-            var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", level.BioP, $"{level.BioP}.udk");
+            var staticLightingPath = StaticLightingCache.GetMapPath(level.BioP, level.BioP);
             if (File.Exists(staticLightingPath))
             {
                 // Import static lighting
@@ -490,7 +491,7 @@ namespace ProjectMilan.Pipelines.Levels
             if (!Program.BuildStaticLighting)
             {
                 var relitComponents = new HashSet<ExportEntry>();
-                var staticLightingPath = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "Levels", levelPipeline.BioP, $"{destPackage.FileNameNoExtension}.udk");
+                var staticLightingPath = StaticLightingCache.GetMapPath(levelPipeline.BioP, destPackage.FileNameNoExtension);
                 if (File.Exists(staticLightingPath))
                 {
                     // Import static lighting
