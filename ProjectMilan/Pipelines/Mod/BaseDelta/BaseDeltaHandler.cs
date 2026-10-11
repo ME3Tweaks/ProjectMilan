@@ -26,7 +26,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// </summary>
         internal const bool UseCompressedPackages = false;
 
-        private const double MANIFEST_VERSION = 0.1;
+        private const double MANIFEST_VERSION = 0.2;
         private const string MANIFEST_FILENAME = "manifest.json";
 
         /// <summary>
@@ -76,6 +76,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             public string SourceHash;
             public long DestSize;
             public string DestHash;
+            public string? DeltaFormat;
         }
 
         private static readonly List<DeltaRecord> deltaRecords = new();
@@ -206,7 +207,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 #if DEBUG
             if (writeDebugDelta && !string.IsNullOrWhiteSpace(Program.Settings.CheckpointFolder))
             {
-                WriteDebugDelta(target.GameFile, patched);
+                WriteDebugDelta(target.GameFile, target.RestoreFileBytes(patched));
             }
 #endif
 
@@ -216,11 +217,14 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             if (!string.IsNullOrWhiteSpace(Program.Settings.CheckpointFolder))
             {
                 Directory.CreateDirectory(Checkpoint.DeltaFolder);
-                File.WriteAllBytes(Path.Combine(Checkpoint.DeltaFolder, target.GameFile + ".jsf"), jsf);
+                File.WriteAllBytes(Path.Combine(Checkpoint.DeltaFolder, GetDeltaFileName(target)), jsf);
             }
 
-            return patched;
+            return target.RestoreFileBytes(patched);
         }
+
+        private static string GetDeltaFileName(IBasePatchClass target) =>
+            target.GameFile + (target.DeltaFormat == null ? "" : "." + target.DeltaFormat) + ".jsf";
 
 #if DEBUG
         /// <summary>
@@ -251,7 +255,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 return BuildAndRecordDelta(target);
             }
 
-            var deltaFile = Path.Combine(Checkpoint.DeltaFolder, target.GameFile + ".jsf");
+            var deltaFile = Path.Combine(Checkpoint.DeltaFolder, GetDeltaFileName(target));
             if (!File.Exists(deltaFile))
             {
                 MilanLog.Warning($"No checkpointed patch found for '{target.GameFile}'; falling back to a fresh build.");
@@ -279,7 +283,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             var patched = outStream.ToArray();
 
             RecordDelta(target, vanilla, patched, jsf);
-            return patched;
+            return target.RestoreFileBytes(patched);
         }
 
         /// <summary>
@@ -323,6 +327,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 SourceHash = Utilities.CalculateHash(new MemoryStream(vanilla), "sha256"),
                 DestSize = patched.LongLength,
                 DestHash = Utilities.CalculateHash(new MemoryStream(patched), "sha256"),
+                DeltaFormat = target.DeltaFormat,
             });
         }
 
@@ -344,19 +349,22 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             var manifestDeltas = new List<object>();
             foreach (var record in deltaRecords)
             {
-                var deltaFileName = record.GameFile + ".jsf";
+                var deltaFileName = record.GameFile + (record.DeltaFormat == null ? "" : "." + record.DeltaFormat) + ".jsf";
                 File.WriteAllBytes(Path.Combine(MilanDeltaFolder, deltaFileName), record.JsfBytes);
 
-                manifestDeltas.Add(new
+                var entry = new Dictionary<string, object>
                 {
-                    comment = record.Comment,
-                    filename = record.GameFile,
-                    delta = deltaFileName,
-                    sourcesize = record.SourceSize,
-                    sourcehash = record.SourceHash,
-                    destsize = record.DestSize,
-                    desthash = record.DestHash
-                });
+                    ["comment"] = record.Comment,
+                    ["filename"] = record.GameFile,
+                    ["delta"] = deltaFileName,
+                    ["sourcesize"] = record.SourceSize,
+                    ["sourcehash"] = record.SourceHash,
+                    ["destsize"] = record.DestSize,
+                    ["desthash"] = record.DestHash
+                };
+                if (record.DeltaFormat != null)
+                    entry["format"] = record.DeltaFormat;
+                manifestDeltas.Add(entry);
             }
 
             // Signature covers the manifest body (everything but itself), so a consumer can detect

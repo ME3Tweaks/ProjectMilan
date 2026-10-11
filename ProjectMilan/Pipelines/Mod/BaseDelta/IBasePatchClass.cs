@@ -18,13 +18,20 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// </summary>
         string Comment { get; }
 
+        /// <summary>Optional transform applied before diffing; null means the existing byte format.</summary>
+        string? DeltaFormat => null;
+
+        /// <summary>Converts patched delta data to the final game file (e.g. XML to Huffman TLK).</summary>
+        byte[] RestoreFileBytes(byte[] patched) => patched;
+
         /// <summary>
-        /// Loads the unmodified vanilla bytes of <see cref="GameFile"/>, for diffing/restoring against.
+        /// Loads the unmodified vanilla data of <see cref="GameFile"/> in its delta representation.
         /// </summary>
         byte[] GetVanillaBytes();
 
         /// <summary>
-        /// Applies this target's changes on top of vanilla and returns the serialized result.
+        /// Applies this target's changes on top of vanilla and returns the delta representation.
+        /// Use <see cref="RestoreFileBytes"/> to produce a game-readable file.
         /// </summary>
         byte[] BuildPatchTarget();
     }

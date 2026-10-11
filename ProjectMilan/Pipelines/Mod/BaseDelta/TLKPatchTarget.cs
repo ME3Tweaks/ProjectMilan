@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.TLK.ME2ME3;
 using ProjectMilanCore;
+using MilanDelta;
 
 namespace ProjectMilan.Pipelines.Mod.BaseDelta
 {
@@ -71,11 +72,15 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 
         public string Comment => $"Basegame TLK ({localization}): PC_/Console_ control tokens reverted to Shared_";
 
-        public byte[] GetVanillaBytes() => File.ReadAllBytes(BaseDeltaHandler.GetVanillaCookedFilePath(GameFile));
+        public string DeltaFormat => TlkDeltaXml.Format;
+
+        public byte[] RestoreFileBytes(byte[] patched) => TlkDeltaXml.Compress(patched);
+
+        public byte[] GetVanillaBytes() => TlkDeltaXml.Decompress(File.ReadAllBytes(BaseDeltaHandler.GetVanillaCookedFilePath(GameFile)));
 
         public byte[] BuildPatchTarget()
         {
-            var vanilla = GetVanillaBytes();
+            var vanilla = File.ReadAllBytes(BaseDeltaHandler.GetVanillaCookedFilePath(GameFile));
             using var vanillaStream = new MemoryStream(vanilla);
             var tlk = new ME2ME3TalkFile(vanillaStream, GameFile);
 
@@ -96,11 +101,11 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             MilanLog.Information($"{GameFile}: replaced control tokens in {changed} string(s)", customPrefix: "Milan-TLK");
             if (changed == 0)
             {
-                // Nothing to patch; don't re-encode the Huffman tree just to produce a noisier diff.
-                return vanilla;
+                // Identical XML gives an empty-content delta without diffing a new Huffman tree.
+                return TlkDeltaXml.Serialize(tlk);
             }
 
-            return HuffmanCompression.SaveToTlkStream(tlk.StringRefs).ToArray();
+            return TlkDeltaXml.Serialize(tlk);
         }
     }
 }
