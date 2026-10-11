@@ -201,14 +201,18 @@ internal static class Program
         return scan.Failures.Count > 0 ? 1 : 0;
     }
 
-    /// <summary>Walks up from the executable until the repo's StaticLighting/Levels folder turns up.</summary>
+    /// <summary>
+    /// Walks up from the executable until the repo's StaticLighting/Levels folder turns up, and returns the folder
+    /// to load levels from. Levels\UE4 and Levels\UE3 hold the same maps and materials baked by different Lightmass
+    /// versions, so either does for a shader load test; Levels itself is the layout from before the UE3 bakes were kept.
+    /// </summary>
     private static string FindLevelsRoot()
     {
         for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir != null; dir = dir.Parent)
         {
             var candidate = Path.Combine(dir.FullName, "ProjectMilan", "Pipelines", "StaticLighting", "Levels");
             if (Directory.Exists(candidate))
-                return candidate;
+                return new[] { "UE4", "UE3" }.Select(lightmass => Path.Combine(candidate, lightmass)).FirstOrDefault(Directory.Exists) ?? candidate;
         }
         return null;
     }
