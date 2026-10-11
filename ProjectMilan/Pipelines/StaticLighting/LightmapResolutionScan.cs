@@ -3,6 +3,7 @@ using System.Text;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.UDK;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
@@ -137,9 +138,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             // what actually gets baked.
             foreach (var smc in package.Exports.Where(x => x.ClassName == "StaticMeshComponent"))
             {
-                if (smc.Parent is not ExportEntry parent || !actors.Contains(parent.UIndex) || !parent.IsA("StaticMeshActorBase"))
-                    continue;
-                if ((smc.ObjectFlags & UnrealFlags.EObjectFlags.ArchetypeObject) != 0)
+                if (!ConvertToUDK.IsStaticLightingMeshComponent(smc, actors) || smc.Parent is not ExportEntry parent)
                     continue;
                 if (smc.GetProperty<ObjectProperty>("StaticMesh") is not { } meshProp || meshProp.Value == 0)
                     continue;

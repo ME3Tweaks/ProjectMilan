@@ -1,6 +1,7 @@
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
+using LegendaryExplorerCore.UDK;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
@@ -63,9 +64,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             // Same selection ConvertToUDK.PortStaticMeshActors makes, so the texel budget only counts what gets baked.
             foreach (var smc in package.Exports.Where(x => x.ClassName == "StaticMeshComponent"))
             {
-                if (smc.Parent is not ExportEntry parent || !actors.Contains(parent.UIndex) || !parent.IsA("StaticMeshActorBase"))
-                    continue;
-                if ((smc.ObjectFlags & UnrealFlags.EObjectFlags.ArchetypeObject) != 0)
+                if (!ConvertToUDK.IsStaticLightingMeshComponent(smc, actors))
                     continue;
                 if (smc.GetProperty<ObjectProperty>("StaticMesh") is not { } meshProp || meshProp.Value == 0)
                     continue;
