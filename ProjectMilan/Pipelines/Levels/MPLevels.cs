@@ -65,7 +65,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // Random (Wave) - MUST STAY AT INDEX 1! Logic depends on it being here
                 new EnemyTypeEntry { ID = 1, NameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveAllCapsName), Image = ImagePackageBuilder.Require($"{WavelistImages}.Coalition", "Coalition faction"), WaveClass = "", IsRandomOption = true },
                 // Random (Enemy)
-                new EnemyTypeEntry { ID = 2, NameStrRefId = MilanPipelinesShared.AssignTLK(MixedName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(MixedAllCapsName), Image = "GUI_MPImages.MatchSettings.OptEmyRandomEnemy", WaveClass = "SFXGameContent_Milan.SFXWave_Horde_RandomEnemies", IsRandomOption = true },
+                new EnemyTypeEntry { ID = 2, NameStrRefId = MilanPipelinesShared.AssignTLK(MixedName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(MixedAllCapsName), Image =  ImagePackageBuilder.Require($"{WavelistImages}.Unified", "Unified faction"), WaveClass = "SFXGameContent_Milan.SFXWave_Horde_RandomEnemies", IsRandomOption = true },
 
                 // MP4 Wavelists
                 new EnemyTypeEntry { ID = 3, NameStrRefId = 683914, AllCapsNameStrRefId = 683908, Image = "GUI_MPImages_MP4.OptEmyCerberus", WaveClass = "SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Cerberus2" },
@@ -451,6 +451,9 @@ namespace ProjectMilan.Pipelines.Levels
             {
                 var le3Package = LevelShared.PortLevel(levelPipeline, level.Value);
                 MilanLevelTools.RebuildPersistentLevelChildren(le3Package.GetLevel());
+
+                // Port LOC files
+                MilanShared.PortLocalizations(le3Package.FileNameNoExtension, Directory.GetParent(le3Package.FilePath).FullName, levelPipeline.Cache, levelPipeline.LogCategory);
             }
 
             ConfigureBioP(levelPipeline);
