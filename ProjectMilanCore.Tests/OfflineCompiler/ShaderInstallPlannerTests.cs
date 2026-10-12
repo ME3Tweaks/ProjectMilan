@@ -8,18 +8,166 @@ namespace ProjectMilanCore.Tests.OfflineCompiler;
 [TestClass]
 public sealed class ShaderInstallPlannerTests
 {
-    private static ShaderInstallPlan Plan(params IMEPackage[] packages)
+    private static ShaderInstallPlan Plan(params IMEPackage[] packages) => Plan(null, packages);
+
+    /// <param name="game">The game's copy of each material the game has too. Its shader map counts as in the RefShaderCache.</param>
+    private static ShaderInstallPlan Plan(Func<ExportEntry, VanillaMaterialInfo?>? game, params IMEPackage[] packages)
     {
         using var metadata = new PackageTextureMetadataProvider();
+        var gameIds = new HashSet<Guid>();
         var planner = new ShaderInstallPlanner(new ShaderInstallPlannerOptions
         {
             ModPackagePaths = packages.Select(p => p.FilePath).ToList(),
             ResolveImport = _ => null,
             TextureMetadata = metadata,
-            KeysInRefShaderCache = _ => new HashSet<StaticParameterSet>()
+            KeysInRefShaderCache = keys => keys.Where(k => gameIds.Contains(k.BaseMaterialId) && k.NormalParameters.Length == 0).ToHashSet(),
+            VanillaMaterial = game == null ? null : material =>
+            {
+                var info = game(material);
+                if (info != null) gameIds.Add(info.ResourceId);
+                return info;
+            }
         });
         foreach (var package in packages) planner.AddPackage(package);
         return planner.Build();
+    }
+
+    private static readonly Guid GameId = new("aaaaaaaa-2222-3333-4444-555555555555");
+
+    /// <summary>A material the game has too, with the game's ID and its one usage flag.</summary>
+    private static ExportEntry SharedMaterial(IMEPackage package, Guid? copyId = null)
+    {
+        var material = WithGraph(Fixtures.Material(package, "Mat", copyId ?? GameId));
+        material.WriteProperty(new BoolProperty(true, "bUsedWithSkeletalMesh"));
+        return material;
+    }
+
+    private static VanillaMaterialInfo? GameCopy(ExportEntry material) =>
+        material.ObjectName.Instanced == "Mat" ? new VanillaMaterialInfo(GameId, ["bUsedWithSkeletalMesh"]) : null;
+
+    /// <summary>A static mesh component with a lightmap and these Materials overrides (null leaves a slot to the mesh).</summary>
+    private static ExportEntry LightmappedComponent(IMEPackage package, string name, params IEntry?[] materials)
+    {
+        var component = package.CreateExport(name, "StaticMeshComponent", indexed: false);
+        component.WriteProperty(new ArrayProperty<ObjectProperty>(materials.Select(m => new ObjectProperty(m?.UIndex ?? 0)).ToList(), "Materials"));
+        var binary = StaticMeshComponent.Create();
+        binary.LODData =
+        [
+            new StaticMeshComponentLODInfo
+            {
+                ShadowMaps = [], ShadowVertexBuffers = [],
+                LightMap = new LightMap_2D { LightMapType = ELightMapType.LMT_2D, LightGuids = [] }
+            }
+        ];
+        component.WriteBinary(binary);
+        return component;
+    }
+
+    [TestMethod]
+    public void MaterialTheGameHasTooIsLeftAloneAndLightmappedSlotsMoveToAUsageVariant()
+    {
+        using var package = Fixtures.Package("Shared");
+        var material = SharedMaterial(package);
+        var component = LightmappedComponent(package, "Comp", null, material);
+
+        var plan = Plan(GameCopy, package);
+
+        Assert.IsTrue(plan.CanInstall, string.Join("\n", plan.Errors));
+        var m = plan.Materials.Single();
+        Assert.IsTrue(m.SharedWithGame);
+        Assert.AreEqual(0, m.FlagsToSet.Count, "the game's copies cannot get the flag, so the mod's must not either");
+        Assert.IsNull(m.NewResourceId, "the game's instances are keyed to the game's ID");
+        Assert.AreEqual(GameId, m.LiveResourceId);
+        Assert.IsFalse(m.Compile);
+        Assert.IsFalse(m.Rewrite);
+
+        var variant = plan.Variants.Single();
+        StringAssert.StartsWith(variant.Identity, "MilanMaterialVariants.Mat_MU");
+        Assert.AreEqual(m.Identity, variant.SourceIdentity);
+        Assert.AreEqual(0, variant.Swaps.Count);
+        CollectionAssert.AreEqual(new[] { "bUsedWithStaticLighting", "bUsedWithVectorLightMaps" }, variant.UsageFlags!.ToArray());
+        Assert.AreNotEqual(GameId, variant.ResourceId);
+        CollectionAssert.AreEqual(new[] { "Shared.pcc" }, variant.Packages.ToArray());
+
+        var slot = plan.SlotRetargets.Single();
+        Assert.AreEqual(component.UIndex, slot.ComponentUIndex);
+        Assert.AreEqual(1, slot.Slot);
+        Assert.AreEqual(variant.Identity, slot.TargetIdentity);
+        Assert.IsFalse(plan.Reports.Any(r => r.Contains("lacks", StringComparison.Ordinal)), string.Join("\n", plan.Reports));
+        Assert.AreEqual(plan.Describe(), Plan(GameCopy, package).Describe(), "the plan must be deterministic");
+    }
+
+    [TestMethod]
+    public void LightmappedSlotDrawingAnInstanceOfASharedMaterialGetsAClonedChain()
+    {
+        using var package = Fixtures.Package("SharedChain");
+        var material = SharedMaterial(package);
+        var instance = Fixtures.Instance(package, "Inst", material);
+        LightmappedComponent(package, "Comp", instance);
+
+        var plan = Plan(GameCopy, package);
+
+        Assert.IsTrue(plan.CanInstall, string.Join("\n", plan.Errors));
+        var variant = plan.Variants.Single();
+        var clone = plan.ChainClones.Single();
+        Assert.AreEqual(instance.MemoryFullPath, clone.SourceIdentity);
+        Assert.AreEqual(variant.Identity, clone.ParentIdentity);
+        Assert.AreEqual(clone.Identity, plan.SlotRetargets.Single().TargetIdentity);
+        Assert.IsNull(plan.Instances.Single().RetargetParentTo, "the instance itself still draws the game's material for its other users");
+    }
+
+    [TestMethod]
+    public void CopiesThatDriftedFromTheGamesGoBackToItsIdAndFlags()
+    {
+        // What an earlier install left behind: the copy re-identified and given the flag.
+        using var package = Fixtures.Package("Drifted");
+        var material = SharedMaterial(package, new Guid("bbbbbbbb-2222-3333-4444-555555555555"));
+        material.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
+
+        var plan = Plan(GameCopy, package);
+
+        Assert.IsTrue(plan.CanInstall, string.Join("\n", plan.Errors));
+        var m = plan.Materials.Single();
+        Assert.AreEqual(GameId, m.ResourceId);
+        Assert.IsNull(m.NewResourceId);
+        Assert.IsTrue(m.Rewrite, "its resource carries the wrong ID");
+        Assert.IsFalse(m.Compile, "the game's shader map is the one it uses");
+        CollectionAssert.AreEqual(new[] { "bUsedWithVectorLightMaps" }, m.FlagsToClear!.ToArray());
+        Assert.AreEqual(0, plan.Variants.Count);
+    }
+
+    [TestMethod]
+    public void UsesThatCannotMoveToAVariantAreReportedAndTheSharedMaterialStays()
+    {
+        using var package = Fixtures.Package("SharedParticle");
+        var material = SharedMaterial(package);
+        var decal = package.CreateExport("Decal", "DecalComponent", indexed: false);
+        decal.WriteProperty(new ObjectProperty(material.UIndex, "DecalMaterial"));
+
+        var plan = Plan(GameCopy, package);
+
+        Assert.IsTrue(plan.CanInstall, string.Join("\n", plan.Errors));
+        Assert.AreEqual(0, plan.Materials.Single().FlagsToSet.Count);
+        Assert.AreEqual(0, plan.Variants.Count);
+        StringAssert.Contains(plan.Reports.Single(r => r.Contains("lacks", StringComparison.Ordinal)), "bUsedWithDecals");
+    }
+
+    [TestMethod]
+    public void SlotRetargetPadsTheOverridesAndKeepsTheOtherSlots()
+    {
+        using var package = Fixtures.Package("Slots");
+        var other = Fixtures.Material(package, "Other");
+        var component = LightmappedComponent(package, "Comp", other);
+        var root = ExportCreator.CreatePackageExport(package, OfflineShaderInstaller.VariantRoot, forcedExport: true);
+        var target = package.CreateExport("Mat_MU01234567", "Material", root, indexed: false);
+
+        OfflineShaderInstaller.RetargetSlot(new MeshSlotRetargetPlan("Slots.pcc", component.UIndex, component.InstancedFullPath, 2,
+            target.MemoryFullPath), package);
+
+        var overrides = component.GetProperty<ArrayProperty<ObjectProperty>>("Materials")!.Select(o => o.Value).ToArray();
+        CollectionAssert.AreEqual(new[] { other.UIndex, 0, target.UIndex }, overrides);
+        Assert.ThrowsException<ShaderInstallException>(() => OfflineShaderInstaller.RetargetSlot(
+            new MeshSlotRetargetPlan("Slots.pcc", component.UIndex, "Somewhere.Else", 0, target.MemoryFullPath), package));
     }
 
     private static (IMEPackage Package, ExportEntry Parent, ExportEntry Bc5) NormalSetup(string name)
@@ -46,6 +194,39 @@ public sealed class ShaderInstallPlannerTests
         Assert.AreEqual(m.NewResourceId, Plan(package).Materials.Single().NewResourceId, "new IDs must be deterministic");
         Assert.IsTrue(m.Compile);
         Assert.IsTrue(plan.CanInstall, string.Join("\n", plan.Errors));
+    }
+
+    [TestMethod]
+    public void EditedGraphIsRecompiledUnderANewIdEvenWhenTheGamesCacheHasItsOldId()
+    {
+        using var package = Fixtures.Package("EditedGraph");
+        var material = WithGraph(Fixtures.Material(package, "Mat"));
+
+        ShaderInstallPlan PlanWith(Func<string, bool>? force)
+        {
+            using var metadata = new PackageTextureMetadataProvider();
+            var planner = new ShaderInstallPlanner(new ShaderInstallPlannerOptions
+            {
+                ModPackagePaths = [package.FilePath],
+                ResolveImport = _ => null,
+                TextureMetadata = metadata,
+                KeysInRefShaderCache = keys => keys.ToHashSet(), // the game already has a map under every ID
+                ForceRecompile = force
+            });
+            planner.AddPackage(package);
+            return planner.Build();
+        }
+
+        var untouched = PlanWith(null).Materials.Single();
+        Assert.IsFalse(untouched.Compile, "a map under the material's ID in the RefShaderCache is reused");
+        Assert.IsNull(untouched.NewResourceId);
+
+        var forced = PlanWith(identity => identity.EndsWith("Mat", StringComparison.Ordinal)).Materials.Single();
+        Assert.IsTrue(forced.Compile, "the edited graph needs its own shaders");
+        Assert.IsNotNull(forced.NewResourceId);
+        Assert.AreNotEqual(untouched.ResourceId, forced.NewResourceId);
+        Assert.AreEqual(forced.NewResourceId, PlanWith(identity => true).Materials.Single().NewResourceId, "new IDs must be deterministic");
+        Assert.IsNotNull(material);
     }
 
     [TestMethod]

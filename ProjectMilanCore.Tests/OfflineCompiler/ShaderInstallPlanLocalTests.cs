@@ -34,8 +34,11 @@ public sealed class ShaderInstallPlanLocalTests
         string? filter = Environment.GetEnvironmentVariable("MILAN_SHADER_PLAN_FILTER");
         using var context = new OfflineShaderInstallContext(output, game, decooked, db);
         Console.WriteLine($"Indexed in {sw.Elapsed.TotalSeconds:F0}s");
+        var diagnostics = new List<string>();
         var plan = context.Plan(include: string.IsNullOrEmpty(filter) ? null
-            : f => System.Text.RegularExpressions.Regex.IsMatch(Path.GetFileName(f), filter, System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+            : f => System.Text.RegularExpressions.Regex.IsMatch(Path.GetFileName(f), filter, System.Text.RegularExpressions.RegexOptions.IgnoreCase),
+            diagnostics: diagnostics.Add);
+        File.WriteAllLines(report + ".timings.log", diagnostics);
         File.WriteAllText(report,
             $"{context.OutputPackages.Count} packages, {sw.Elapsed.TotalMinutes:F1} min\n" +
             $"materials {plan.Materials.Count} (compile {plan.Materials.Count(m => m.Compile)}, flags changed {plan.Materials.Count(m => m.FlagsToSet.Count > 0)})\n" +
