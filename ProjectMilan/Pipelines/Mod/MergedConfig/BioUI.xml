@@ -25,6 +25,8 @@
 			<!-- We need to figure out which ones of these we want to use -->
 			<Property name="mpoptionpages">
 				<Value type="1">null</Value>
+				<!-- MILAN CHANGE Mgamerz 10/10/2026: Multiplayer Settings - entering the page opens SFXGUI_MilanNetConfig (see SFXGUI_PCMPOptions.BuildMilanNetConfigPage) -->
+				<Value type="3">(label=49875740, story=49875749, options=(OPTION_MilanNetConfig) )</Value>
 				<!-- MELE added new options: MonitorSelection, MotionBlur, VerticalSync, CappedFramerate, FilmGrain, AmbientOcclusion -->
 				<Value type="3">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_MonitorSelection, OPTION_DynShadows, OPTION_MotionBlur, OPTION_VerticalSync, OPTION_CappedFramerate, OPTION_FilmGrain, OPTION_AntiAliasing, OPTION_AmbientOcclusion) )</Value>
 				<!-- MELE "Calibration" menu -->
@@ -43,6 +45,8 @@
  				<!--<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>-->
 			</Property>
 			
+			<!-- MILAN CHANGE Mgamerz 10/10/2026: the Multiplayer Settings page is built by the MP options handler -->
+			<Property name="gamepopulatedoptionpages" type="3">(id=OPTION_MilanNetConfig, PopulationFunc="BuildMilanNetConfigPage")</Property>
 			<!-- Using the UClass attribute, we can point properties to new option handlers -->
 			<Property name="radiogroupoptions" type="3">(id=OPTION_AAT_ZoomSnap, label=49875626, story=49875627, defaultVal=0, UClass="SFXGame.AATGUI_Option_ZoomSnap")</Property>
 			<Property name="textslideroptions">
@@ -175,6 +179,10 @@
 				<!-- redirecting to a new handler that will scale things correctly; it is hardcoded in the class to NoScale mode. This sets it to showAll instead -->
 				<Value type="4">(Tag=MPScoretags,\t\tZOrder=6,\tMovieClass="SFXGame.SFXGUI_MPScoretags",\t\tGFxResource="GUI_SF_MPScoretags.MPScoretags", HUDTypeToAutoLoadFor="SFXGameMPContent.SFXHUDMP")</Value>
 				<Value type="3">(Tag=MPScoretags,\t\tZOrder=6,\tMovieClass="SFXGameContent_Milan.SFXGUI_MPScoretags_Milan",\t\tGFxResource="GUI_SF_MPScoretags.MPScoretags", HUDTypeToAutoLoadFor="SFXGameMPContent.SFXHUDMP")</Value>
+				<!-- END MILAN -->
+				<!-- MILAN CHANGE Mgamerz 10/10/2026 -->
+				<!-- Multiplayer Settings: the ME3 EA registration UI repurposed for profile name and matchmaking server. Above MPOptions (235), below message boxes (370). -->
+				<Value type="3">(Tag=MilanNetConfig,\tZOrder=270,\tMovieClass="SFXGameContent_Milan.SFXGUI_MilanNetConfig",\tGFxResource="GUI_SF_MilanNetConfig.NetworkRegistration", bRequiresScaling=true)</Value>
 				<!-- END MILAN -->
 			</Property>
 		</Section>
