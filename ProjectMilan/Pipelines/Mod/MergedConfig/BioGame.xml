@@ -6424,6 +6424,8 @@
 		</Section>
 		<Section name="sfxgamempcontent.sfxgameinfomp_lobby">
 			<Property name="matchstartlastmantimerduration" type="0">20.0f</Property>
+			<!-- MILAN CHANGE - 10/09/2026: the largest lobby size a host can pick (1 to a capped 16). The default size is engine.gameinfo maxplayers. -->
+			<Property name="maxlobbysize" type="0">8</Property>
 			<Property name="natwarningshowdelay" type="0">10.0</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgawreinforcementkitunlock">
