@@ -213,6 +213,8 @@ namespace ProjectMilan.Pipelines.Levels
                     ShouldKeepLightMap = KeepPortedLighting
                 };
 
+                // Encoded lightmap mips are cached beside the baked maps, so importing this bake again skips the encoding
+                using var lightmapMipCache = LightmapMipCache.Attach(setup, level.BioP);
                 StaticLightingImporter.ImportStaticLighting(level.LE3BioP, setup);
             }
         }
@@ -503,6 +505,7 @@ namespace ProjectMilan.Pipelines.Levels
                         ShouldKeepLightMap = KeepPortedLighting
                     };
 
+                    using var lightmapMipCache = LightmapMipCache.Attach(setup, levelPipeline.BioP);
                     StaticLightingImporter.ImportStaticLighting(destPackage, setup);
                     relitComponents = setup.RelitComponents;
                 }

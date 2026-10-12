@@ -326,7 +326,8 @@ namespace ProjectMilan.Pipelines.StaticLighting
 
                     // Copy back the .udk files to the static lighting folder
                     var staticLightingFolder = StaticLightingCache.GetLevelFolder(mapName);
-                    Utilities.DeleteFilesAndFoldersRecursively(staticLightingFolder, deleteDirectoryItself: false);
+                    // The previous bake's encoded lightmap mips stay until the new bake is in place (see below)
+                    LightmapMipCache.DeleteBakeKeepingCache(staticLightingFolder);
                     Directory.CreateDirectory(staticLightingFolder);
 
                     var udkOutputFolder = StaticLightingExport.GetMapOutputPath(mapName);
@@ -339,6 +340,10 @@ namespace ProjectMilan.Pipelines.StaticLighting
                             var dest = Path.Combine(staticLightingFolder, Path.GetFileName(file));
                             CopyWithLockRetry(file, dest);
                         }
+
+                        // The new bake is in place, so the encoded lightmap mips made from the previous one are no use any more.
+                        // This folder is this build's Lightmass's (UE3 or UE4); the other one's cache is not touched.
+                        LightmapMipCache.Clear(staticLightingFolder);
 
                         // Now that the baked results are safely copied back to Milan, clear the UDK
                         // output folder - it might result in ambiguous packages on next boot
