@@ -1,4 +1,5 @@
 using LegendaryExplorerCore.GameFilesystem;
+using System.Diagnostics;
 using ProjectMilanCore;
 using ProjectMilanCore.Shaders.OfflineCompiler;
 
@@ -16,16 +17,25 @@ namespace ProjectMilan.Pipelines.Shaders
         public static void RunPipeline()
         {
             string gameRoot = LE3Directory.DefaultGamePath;
+            MilanLog.Information("Preparing shader context: indexing output exports, texture donors and shader sources", customPrefix: LOG_CATEGORY);
+            var preparation = Stopwatch.StartNew();
             using var context = new OfflineShaderInstallContext(Program.Settings.OutputModPath, gameRoot,
                 Program.Settings.DecookedLE3Path, MilanShared.LE3ObjectDB);
+            MilanLog.Information($"Shader context ready in {preparation.Elapsed.TotalSeconds:F2}s; using the existing in-memory LE3 object database", customPrefix: LOG_CATEGORY);
 
             MilanLog.Information($"Planning the shader install over {context.OutputPackages.Count} packages", customPrefix: LOG_CATEGORY);
-            var plan = context.Plan();
+            int packagesStarted = 0;
+            var plan = context.Plan(file =>
+            {
+                int index = Interlocked.Increment(ref packagesStarted);
+                MilanLog.Information($"Planning package {index}/{context.OutputPackages.Count}: {Path.GetFileName(file)}", customPrefix: LOG_CATEGORY);
+            }, diagnostics: message => MilanLog.Information(message, customPrefix: LOG_CATEGORY));
             string planPath = Path.Combine(Path.GetTempPath(), "MilanShaderInstallPlan.txt");
             File.WriteAllText(planPath, plan.Describe());
             MilanLog.Information($"Shader install plan: {plan.Materials.Count} materials ({plan.Materials.Count(m => m.FlagsToSet.Count > 0)} get usage flags), " +
                 $"{plan.Instances.Count} instances ({plan.Instances.Count(i => i.StaticNormalFixes.Count > 0)} normal fixes, " +
                 $"{plan.Instances.Count(i => i.RetargetParentTo != null)} retargeted), {plan.Variants.Count} variants, {plan.ChainClones.Count} chain clones, " +
+                $"{plan.SlotRetargets.Count} lightmapped mesh slots moved off materials the game has too, " +
                 $"{plan.Errors.Count} errors, {plan.Reports.Count} notes. Full plan: {planPath}", customPrefix: LOG_CATEGORY);
             foreach (var report in plan.Reports.Take(50)) MilanLog.Warning(report, customPrefix: LOG_CATEGORY);
 
