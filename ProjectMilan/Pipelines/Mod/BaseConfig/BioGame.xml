@@ -59,7 +59,8 @@
 			<Property name="mindynamicbandwidth" type="2">4000</Property>
 			<Property name="mintimemargin" type="2">-1.0</Property>
 			<Property name="timemarginslack" type="2">+1.35</Property>
-			<Property name="totalnetbandwidth" type="2">32000</Property>
+			<!-- MILAN CHANGE - 10/09/2026: 32000 -> 70000. Per-client speed is Clamp(Total / (Players - 1), MinDynamicBandwidth, MaxDynamicBandwidth), so 70000 keeps the full 10000 per client up to 8 players. -->
+			<Property name="totalnetbandwidth" type="2">70000</Property>
 		</Section>
 		<Section name="engine.gamereplicationinfo">
 			<Property name="messageoftheday" type="2">
@@ -5909,6 +5910,8 @@
 			<!-- Enemy type (faction) list is owned entirely by the mod's own DLC layer, built dynamically during the Levels build -->
 			<Property name="privacytypes">
 				<Value type="2">(ID=0,Name=686083,AllCapsName=683885,Image="GUI_MPImages.MatchSettings.OptTeamPublic")</Value>
+				<!-- MILAN CHANGE - Restore 'Friends' option to gate how invites are generated -->
+				<Value type="2">(ID=2,Name=758480,AllCapsName=758481,Image="GUI_MPImages_MP4.OptTeamFriends")</Value>
 				<Value type="2">(ID=1,Name=686084,AllCapsName=683886,Image="GUI_MPImages.MatchSettings.OptTeamPrivate")</Value>
 			</Property>
 			<Property name="sranychallenge" type="2">722468</Property>
