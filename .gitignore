@@ -406,3 +406,4 @@ FodyWeavers.xsd
 # TEMP
 *.md
 /ShaderResearchTool
+/BankConverter/scripts
