@@ -44,10 +44,10 @@
 			</Property>
 			
 			<!-- Using the UClass attribute, we can point properties to new option handlers -->
-			<Property name="radiogroupoptions" type="3">(id=OPTION_AAT_ZoomSnap, label=49875626, story=49875627, defaultVal=0, UClass="SFXGame.AATGUI_Option_ZoomSnap")</Property>
+			<Property name="radiogroupoptions" type="3">(id=OPTION_AAT_ZoomSnap, label=49875626, story=49875627, defaultVal=0, UClass="SFXGame.AATGUI.AATGUI_Option_ZoomSnap")</Property>
 			<Property name="textslideroptions">
-				<Value type="3">(id=OPTION_AAT_Adhesion, label=49875630, story=49875631, defaultVal=10, UClass="SFXGame.AATGUI_Option_Adhesion")</Value>
-				<Value type="3">(id=OPTION_AAT_Friction, label=49875632, story=49875633, defaultVal=10, UClass="SFXGame.AATGUI_Option_Friction")</Value>
+				<Value type="3">(id=OPTION_AAT_Adhesion, label=49875630, story=49875631, defaultVal=10, UClass="SFXGame.AATGUI.AATGUI_Option_Adhesion")</Value>
+				<Value type="3">(id=OPTION_AAT_Friction, label=49875632, story=49875633, defaultVal=10, UClass="SFXGame.AATGUI.AATGUI_Option_Friction")</Value>
 			</Property>
 			<!-- <Property name="optionpages">
 				<Value type="1">null</Value>

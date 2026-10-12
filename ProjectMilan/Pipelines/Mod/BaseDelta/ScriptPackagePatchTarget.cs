@@ -5,6 +5,7 @@ using LegendaryExplorerCore.UnrealScript;
 using ProjectMilanCore;
 using Serilog;
 using System;
+using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
@@ -99,14 +100,26 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             if (Directory.Exists(classFolder))
             {
                 // sorting this is a bit hacky, should probably have a manifest
-                foreach (var cls in Directory.GetFiles(classFolder, "*.uc").OrderBy(f => f))
+                foreach (var cls in Directory.GetFiles(classFolder, "*.uc", searchOption: SearchOption.AllDirectories).OrderBy(f => f))
                 {
                     var className = Path.GetFileNameWithoutExtension(cls);
                     var classExport = package.FindExport(className);
+                    IEntry classParent = null;
+                    if (!Path.GetDirectoryName(cls).EndsWith(classFolder))
+                    {
+                        var classParentName = Directory.GetParent(cls)?.Name;
+                        classParent = ExportCreator.CreatePackageExport(package, classParentName, forcedExport: true);
+                        var classParentExport = (ExportEntry)classParent;
+                        classParentExport.PackageFlags = (UnrealFlags.EPackageFlags.AllowDownload |
+                                                          UnrealFlags.EPackageFlags.NoExportsData);
+                        classParentExport.PackageGUID = GetAddedPackageGuid(classParentName);
+                        
 
-                    MilanLog.Information($"Compiling class {className}", customPrefix: logCategory);
+                    }
+
+                    MilanLog.Information($"Compiling class {(classParent.IsNull() ? "" : $"{classParent?.ObjectNameString}.")}{className}", customPrefix: logCategory);
                     var classSource = File.ReadAllText(cls);
-                    var (_, log) = UnrealScriptCompiler.CompileClass(package, classSource, fileLib, usop, export: classExport);
+                    var (_, log) = UnrealScriptCompiler.CompileClass(package, classSource, fileLib, usop, export: classExport, parent: classParent);
                     if (log.HasErrors)
                     {
                         MilanLog.LogUSCErrors(log);
@@ -243,5 +256,12 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 }
             }
         }
+
+        private static Guid GetAddedPackageGuid(string name)
+        {
+            return new Guid(System.Security.Cryptography.MD5.HashData(
+                System.Text.Encoding.UTF8.GetBytes($"ProjectMilan.{name.ToUpperInvariant()}")));
+        }
+
     }
 }
