@@ -40,6 +40,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// List of patch classes we are using for transformating.
         /// </summary>
         private static readonly IBasePatchClass[] targets = [
+            new ScriptPackagePatchTarget("Engine", "Restores client cheat-manager creation and debug messages via PlayerController.IsFinalReleaseBuild"),
             new ScriptPackagePatchTarget("Startup", "Scaleform UI replacements", preBuild: () => ScaleformBuilder.Build("Startup")),
             new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides (SFXShield_Base, SFXModule_Damage)", postCompile: CheatProfileRegistry.Apply),
             new ScriptPackagePatchTarget("SFXOnlineFoundation", "Patches native MPEnemyInfo structs"),
