@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
+using ProjectMilan.Pipelines.Startups;
 using ProjectMilan.Utility;
 using ProjectMilanCore;
 
@@ -56,7 +57,10 @@ namespace ProjectMilan.Pipelines.Weapons
         {
             var vars = new MPWeaponVars();
             InternalRunPipeline(vars);
-            PortWeaponDataPackage();
+            var weaponTextures = PortWeaponDataPackage();
+            var modTextures = PortWeaponModDataPackage();
+            CheckBaseWeaponTexturesAreProvided(weaponTextures, modTextures);
+            VerifyWeaponImagesAreConsistent();
         }
 
         private static void InternalRunPipeline(MPWeaponVars vars)
@@ -118,6 +122,39 @@ namespace ProjectMilan.Pipelines.Weapons
         };
 
         /// <summary>
+        /// Name of the package <see cref="PortWeaponDataPackage"/> builds.
+        /// </summary>
+        private const string MergedWeaponPackageName = "SFXGUI_WeaponUIDataDLC_CON_MPMerged";
+
+        /// <summary>
+        /// Name of the package <see cref="PortWeaponModDataPackage"/> builds. Registered in BioUI.xml next to the weapon one.
+        /// </summary>
+        private const string MergedWeaponModPackageName = "SFXGUI_WeaponUIDataDLC_CON_MPMergedMods";
+
+        /// <summary>
+        /// SP donor files whose weapons are kept in the merged weapon package whether or not an MP weapon matches them: the
+        /// vanilla SP data and SharedSF, which used to be registered in BioUI.xml themselves (the base game's, and ours) and are
+        /// replaced by the merged package. The DLC ones are not - their weapon classes aren't shipped, so a weapon with no MP
+        /// counterpart would point at a class that doesn't exist. Order matters: a className already seen wins.
+        /// </summary>
+        private static readonly string[] SPKeptWeaponUIDataFiles =
+        {
+            "SFXGUI_WeaponUIDataSF.pcc",
+            "SFXGUI_WeaponUIDataDLC_SharedSF.pcc",
+        };
+
+        /// <summary>
+        /// SP donor files whose weapon mods (m_aMods) go into the merged weapon mod package, in the order that wins: the vanilla
+        /// SP mods, then SharedSF's (a superset of the MP mods, with the higher resolution art). Anything the MP files have
+        /// that these don't is reported by <see cref="PortWeaponModDataPackage"/>.
+        /// </summary>
+        private static readonly string[] SPWeaponModUIDataFiles =
+        {
+            "SFXGUI_WeaponUIDataSF.pcc",
+            "SFXGUI_WeaponUIDataDLC_SharedSF.pcc",
+        };
+
+        /// <summary>
         /// Fields on a m_aWeapons struct entry that are kept from the matching SP donor entry (higher-res
         /// assets, LE3-era Wwise cook data) rather than the MP entry. Everything else on the struct - ClassPath,
         /// className, LoadoutInfo, Stats, and the TLK refs (Name/Description/ShortDescription) - is kept from
@@ -143,13 +180,14 @@ namespace ProjectMilan.Pipelines.Weapons
         /// there would silently go stale until the checkpoint is invalidated. The Weapons pipeline always runs
         /// after the checkpoint restore point, so this always regenerates fresh.
         /// </summary>
-        private static void PortWeaponDataPackage()
+        /// <returns>The object path of every texture the package holds.</returns>
+        private static HashSet<string> PortWeaponDataPackage()
         {
             using var cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "PortWeaponDataPackage cache");
 
             var outputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", "NonStartup", "GUI");
             Directory.CreateDirectory(outputFolder);
-            const string outPackageName = "SFXGUI_WeaponUIDataDLC_CON_MPMerged";
+            const string outPackageName = MergedWeaponPackageName;
             var outPath = Path.Combine(outputFolder, outPackageName + ".pcc");
 
             var destPackage = MEPackageHandler.CreateAndOpenPackage(outPath, MEGame.LE3);
@@ -160,6 +198,7 @@ namespace ProjectMilan.Pipelines.Weapons
 
             // Port every SP donor file's Data export into the destination and index its weapons by TLK triple.
             var spWeaponsByTlk = new Dictionary<(int Name, int Description, int ShortDescription), StructProperty>();
+            var spKeptWeapons = new List<StructProperty>();
             foreach (var spFile in SPWeaponUIDataFiles)
             {
                 var spPackage = MilanShared.GetLE3Package(spFile);
@@ -190,6 +229,10 @@ namespace ProjectMilan.Pipelines.Weapons
                 foreach (var weapon in portedWeapons)
                 {
                     spWeaponsByTlk[GetWeaponTlkKey(weapon)] = weapon;
+                    if (SPKeptWeaponUIDataFiles.Contains(spFile, StringComparer.OrdinalIgnoreCase))
+                    {
+                        spKeptWeapons.Add(weapon);
+                    }
                 }
             }
 
@@ -256,6 +299,21 @@ namespace ProjectMilan.Pipelines.Weapons
             if (mergedDataExport == null)
                 throw new InvalidOperationException("PortWeaponDataPackage: no MP weapon UI data source packages could be loaded.");
 
+            // The SP weapons that no MP weapon stands in for. The vanilla SP data is no longer installed or registered, so they
+            // come from here (an MP weapon with the same class wins)
+            var mergedClassNames = mergedWeapons.Select(x => x.GetProp<NameProperty>("className")?.Value.Instanced).ToHashSet();
+            int spWeaponsAdded = 0;
+            foreach (var weapon in spKeptWeapons)
+            {
+                var className = weapon.GetProp<NameProperty>("className")?.Value.Instanced;
+                if (className != null && mergedClassNames.Add(className))
+                {
+                    mergedWeapons.Add(weapon.DeepClone());
+                    spWeaponsAdded++;
+                }
+            }
+            MilanLog.Information($"Kept {spWeaponsAdded} SP weapon(s) next to the {mergedWeapons.Count - spWeaponsAdded} MP weapon(s)", customPrefix: LOG_CATEGORY);
+
             mergedDataExport.WriteProperty(mergedWeapons);
 
             // Clean up every temporary donor copy now that we've harvested what we needed from them.
@@ -264,8 +322,183 @@ namespace ProjectMilan.Pipelines.Weapons
                 EntryPruner.TrashEntryAndDescendants(temp);
             }
 
+            // Cloning the donor Data exports' dependencies brought in everything their weapons use, not only the weapons that were
+            // kept (the MP weapons an SP one stood in for, the SP DLC weapons). Those leftovers are not needed
+            PruneUnreachableExports(destPackage, mergedDataExport);
+
+            // The weapon pictures are stored much bigger than they are shown. Give them mips so Scaleform filters them down
+            // instead of point sampling the full size image
+            GUITextureMipper.GenerateMipsForPackage(destPackage);
+
             destPackage.Save();
             MilanLog.Information($"Wrote merged weapon UI data package to {outPath} ({mergedWeapons.Count} weapons)", customPrefix: LOG_CATEGORY);
+            return GetTexturePaths(destPackage);
+        }
+
+        /// <summary>
+        /// Builds the merged SFXWeaponUIData package for weapon mods (m_aMods), the way <see cref="PortWeaponDataPackage"/> does for
+        /// weapons: the SP mods are taken as they are, with their higher resolution art, and replace the vanilla SP data and
+        /// SharedSF, which are no longer registered. An MP mod is only reported, never ported - each of them has an SP
+        /// counterpart - so one that doesn't is noticed and not silently dropped.
+        /// </summary>
+        /// <returns>The object path of every texture the package holds.</returns>
+        private static HashSet<string> PortWeaponModDataPackage()
+        {
+            using var cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(canPromoteInto: true, debugName: "PortWeaponModDataPackage cache");
+
+            var outputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", "NonStartup", "GUI");
+            Directory.CreateDirectory(outputFolder);
+            var outPath = Path.Combine(outputFolder, MergedWeaponModPackageName + ".pcc");
+
+            var destPackage = MEPackageHandler.CreateAndOpenPackage(outPath, MEGame.LE3);
+            destPackage.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME);
+            var rootPackageExport = destPackage.CreatePackageExport(MergedWeaponModPackageName);
+
+            var tempExports = new List<ExportEntry>();
+            var mergedMods = new ArrayProperty<StructProperty>("m_aMods");
+            var modClassNames = new HashSet<string>();
+            ExportEntry mergedDataExport = null;
+            foreach (var spFile in SPWeaponModUIDataFiles)
+            {
+                var spPackage = MilanShared.GetLE3Package(spFile);
+                var spData = spPackage?.Exports.FirstOrDefault(x => x.ClassName == "SFXWeaponUIData");
+                if (spData?.GetProperty<ArrayProperty<StructProperty>>("m_aMods") is not { Count: > 0 })
+                {
+                    MilanLog.Warning($"SP weapon UI data donor {spFile} has no weapon mods", customPrefix: LOG_CATEGORY);
+                    continue;
+                }
+
+                spData.Parent = null; // Port just this export and its dependencies, not the whole donor package tree
+                var spRop = new RelinkerOptionsPackage()
+                {
+                    Cache = cache,
+                    DestinationCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                    SourceCustomImportFileResolver = MilanShared.LE3PackageResolver,
+                };
+                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, spData, destPackage, null, true, spRop, out var portedEntry);
+                var portedExport = (ExportEntry)portedEntry;
+                if (mergedDataExport == null)
+                {
+                    mergedDataExport = portedExport;
+                    mergedDataExport.ObjectName = "Data";
+                    mergedDataExport.Parent = rootPackageExport;
+                }
+                else
+                {
+                    portedExport.ObjectName = $"TempSPData_{tempExports.Count}";
+                    tempExports.Add(portedExport);
+                }
+
+                foreach (var mod in portedExport.GetProperty<ArrayProperty<StructProperty>>("m_aMods"))
+                {
+                    var className = GetModClassName(mod);
+                    if (className == null || modClassNames.Add(className))
+                    {
+                        mergedMods.Add(mod.DeepClone());
+                    }
+                }
+            }
+
+            if (mergedDataExport == null)
+                throw new InvalidOperationException("PortWeaponModDataPackage: no SP weapon UI data donor with weapon mods could be loaded.");
+
+            foreach (var mpFile in MPWeaponUIDataFiles.Append("SFXGUI_WeaponUIDataDLC_SharedSF.pcc"))
+            {
+                var mpMods = MilanShared.GetME3Package(mpFile)?.Exports.FirstOrDefault(x => x.ClassName == "SFXWeaponUIData")?.GetProperty<ArrayProperty<StructProperty>>("m_aMods");
+                if (mpMods == null)
+                    continue;
+
+                foreach (var mod in mpMods)
+                {
+                    var className = GetModClassName(mod);
+                    if (className != null && !modClassNames.Contains(className))
+                    {
+                        MilanLog.Error($"ME3 weapon mod {className} from {mpFile} has no SP counterpart and is not in the merged weapon mod package", customPrefix: LOG_CATEGORY);
+                    }
+                }
+            }
+
+            mergedDataExport.WriteProperty(mergedMods);
+            mergedDataExport.RemoveProperty("m_aWeapons"); // The weapons are in the other package
+
+            foreach (var temp in tempExports)
+            {
+                EntryPruner.TrashEntryAndDescendants(temp);
+            }
+
+            PruneUnreachableExports(destPackage, mergedDataExport);
+            GUITextureMipper.GenerateMipsForPackage(destPackage);
+
+            destPackage.Save();
+            MilanLog.Information($"Wrote merged weapon mod UI data package to {outPath} ({mergedMods.Count} mods)", customPrefix: LOG_CATEGORY);
+            return GetTexturePaths(destPackage);
+        }
+
+        private static string GetModClassName(StructProperty mod) =>
+            mod.GetProp<NameProperty>("className")?.Value.Instanced ?? mod.GetProp<NameProperty>("ModClass")?.Value.Instanced;
+
+        private static HashSet<string> GetTexturePaths(IMEPackage package) =>
+            package.Exports.Where(x => x.ClassName == "Texture2D").Select(x => x.InstancedFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// The vanilla SP weapon UI data (SFXGUI_WeaponUIDataSF) is not installed any more, and some of its textures are loaded by
+        /// path from elsewhere (the weapon image packages the base game maps them to, the codex), so everything it held must
+        /// be in one of the merged packages. Anything that isn't is reported.
+        /// </summary>
+        private static void CheckBaseWeaponTexturesAreProvided(HashSet<string> weaponTextures, HashSet<string> modTextures)
+        {
+            var baseData = MilanShared.GetLE3Package("SFXGUI_WeaponUIDataSF.pcc");
+            if (baseData == null)
+            {
+                MilanLog.Warning("Could not load SFXGUI_WeaponUIDataSF to check its textures are in the merged weapon packages", customPrefix: LOG_CATEGORY);
+                return;
+            }
+
+            var missing = GetTexturePaths(baseData).Where(x => !weaponTextures.Contains(x) && !modTextures.Contains(x)).Order().ToList();
+            foreach (var path in missing)
+            {
+                MilanLog.Error($"{path} was in SFXGUI_WeaponUIDataSF, which is no longer installed, and is in neither merged weapon package", customPrefix: LOG_CATEGORY);
+            }
+        }
+
+        /// <summary>
+        /// A texture's mips and CRC have to be the same wherever its object path is found, because whichever copy the game loads
+        /// first is the one it keeps. Checks the packages NonStartup builds for weapon and mod images, which includes the merged
+        /// weapon packages.
+        /// </summary>
+        private static void VerifyWeaponImagesAreConsistent()
+        {
+            var nonStartup = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", "NonStartup");
+            var packages = new[] { "GUI", "Images" }
+                .Select(x => Path.Combine(nonStartup, x))
+                .Where(Directory.Exists)
+                .SelectMany(x => Directory.EnumerateFiles(x, "*.pcc"))
+                .ToList();
+            GUITextureMipper.VerifyTexturesAreConsistent(packages);
+        }
+
+        /// <summary>
+        /// Removes every export that the merged Data export does not reach (through properties, binary, parents, classes and
+        /// archetypes). ImportAndRelinkEntries with CloneAllDependencies brings in everything the donor Data exports' weapons
+        /// refer to - the images and icon movies of the SP weapons that have no MP counterpart, for example - and trashing the
+        /// donor export afterwards only removes the export and its children, leaving those dependencies behind unreferenced.
+        /// Left in, they are dead weight, and duplicates of textures that the base game and our other packages already hold.
+        /// </summary>
+        private static void PruneUnreachableExports(IMEPackage package, ExportEntry dataExport)
+        {
+            var reachable = package.GetReferencedEntries(true, false, dataExport);
+            for (IEntry entry = dataExport; entry != null; entry = entry.Parent)
+            {
+                reachable.Add(entry.UIndex); // The search starts at the Data export, so it does not add it or the packages above it
+            }
+
+            var unreachable = package.Exports.Where(x => !reachable.Contains(x.UIndex)).ToList();
+            if (unreachable.Count == 0)
+                return;
+
+            var summary = string.Join(", ", unreachable.GroupBy(x => x.ClassName).OrderByDescending(x => x.Count()).Select(x => $"{x.Count()} {x.Key}"));
+            EntryPruner.TrashEntriesAndDescendants(unreachable);
+            MilanLog.Information($"Pruned {unreachable.Count} export(s) the merged weapon UI data does not reach ({summary})", customPrefix: LOG_CATEGORY);
         }
 
         private static (int Name, int Description, int ShortDescription) GetWeaponTlkKey(StructProperty weapon)
