@@ -67,11 +67,8 @@
     <ProjectReference Include="..\UdkInj\UDKInj\UDKInj.csproj" />
     <!-- Lighting requires the native agent and shell, including the shell's Lightmass bridge.
          Build them in the same configuration even when only ProjectMilan.csproj is built. -->
-    <ProjectReference Include="..\UdkInj\UDKAgent\UDKAgent.vcxproj"
-                      ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true"
-                      SetPlatform="Platform=x64" />
-    <ProjectReference Include="..\UdkInj\UDKInj.Shell\UDKInj.Shell.csproj"
-                      ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
+    <ProjectReference Include="..\UdkInj\UDKAgent\UDKAgent.vcxproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetPlatform="Platform=x64" />
+    <ProjectReference Include="..\UdkInj\UDKInj.Shell\UDKInj.Shell.csproj" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
   </ItemGroup>
 </Project>

@@ -50,9 +50,18 @@ namespace ProjectMilan
 
         /// <summary>
         /// If static lighting should be baked in UDK this run. A production build always bakes, regardless of
-        /// <see cref="IMilanSettings.IsStaticLightingBuild"/>. Check this rather than the setting directly.
+        /// <see cref="IMilanSettings.IsStaticLightingBuild"/>, unless it was told to import the cached bakes
+        /// (<see cref="UseCachedLighting"/>). Check this rather than the setting directly.
         /// </summary>
-        public static bool BuildStaticLighting => Settings.IsStaticLightingBuild || Settings.ProductionBuild;
+        public static bool BuildStaticLighting => (Settings.IsStaticLightingBuild || Settings.ProductionBuild) && !UseCachedLighting;
+
+        /// <summary>
+        /// Which Lightmass this build bakes with, and so which cached bakes it writes and imports (--lightmass). See <see cref="StaticLightingCache"/>.
+        /// </summary>
+        public static LightmassSolver Lightmass { get; private set; } = LightmassSolver.UE4;
+
+        /// <summary>Import each level's cached bake from <see cref="Lightmass"/> rather than baking (--cached-lighting).</summary>
+        public static bool UseCachedLighting { get; private set; }
 
         /// <summary>Keep exported UDK maps before Lightmass changes them during a static lighting build.</summary>
         public static bool KeepPreBakeMaps { get; private set; }
@@ -82,6 +91,13 @@ namespace ProjectMilan
         private static ECheckpointStage RestoreStage;
 
         /// <summary>
+        /// Pipelines the restored checkpoint was built without (<see cref="Checkpoint.CheckpointInfo.SkippedPipelines"/>).
+        /// A run that restores and then creates a later checkpoint has to carry these into the new checkpoint's
+        /// metadata, because the pipelines they name are covered by the restore and so never reconsidered.
+        /// </summary>
+        private static IReadOnlyList<string> RestoredSkippedPipelines = [];
+
+        /// <summary>
         /// The pipelines a checkpoint can be taken at, in run order, paired with the setting that decides
         /// whether each one runs. Drives the checkpoint stage menu and the "your checkpoint won't contain X"
         /// warnings; <see cref="RunPipelines"/> still gates each pipeline with the same setting inline, and
@@ -97,15 +113,20 @@ namespace ProjectMilan
             (ECheckpointStage.Levels, "Levels", () => ShouldRunLevelsPipeline),
             (ECheckpointStage.Rejection, "Rejection", () => Settings.RunRejectionPipeline),
             (ECheckpointStage.Redemption, "Redemption", () => Settings.RunRedemptionPipeline),
+            // Everything from Texture on is dev-only (see ECheckpointStageExtensions.IsDevOnly)
             (ECheckpointStage.Texture, "Texture", () => Settings.RunTexturePipeline),
+            (ECheckpointStage.Shaders, "Shaders", () => Settings.RunShaderPipeline),
+            (ECheckpointStage.Audio, "Audio", () => Settings.RunAudioPipeline),
+            (ECheckpointStage.Resynthesis, "Resynthesis", () => Settings.RunResynthesis),
+            (ECheckpointStage.VTables, "VTables", () => true), // Always runs
         ];
 
         /// <summary>
-        /// The stages a checkpoint may be created at this run: all of <see cref="CheckpointStages"/>, except
-        /// <see cref="ECheckpointStage.Texture"/> for a production build.
+        /// The stages a checkpoint may be created at this run: all of <see cref="CheckpointStages"/>, except the
+        /// dev-only ones (<see cref="ECheckpointStageExtensions.IsDevOnly"/>) for a production build.
         /// </summary>
         private static (ECheckpointStage Stage, string Name, Func<bool> Enabled)[] OfferedCheckpointStages =>
-            CheckpointStages.Where(x => x.Stage != ECheckpointStage.Texture || !Settings.ProductionBuild).ToArray();
+            CheckpointStages.Where(x => !x.Stage.IsDevOnly() || !Settings.ProductionBuild).ToArray();
 
         /// <summary>
         /// A production build always builds kits, regardless of <see cref="IMilanSettings.RunKitsPipeline"/>.
@@ -127,6 +148,12 @@ namespace ProjectMilan
         /// restored checkpoint means one of these never runs, its output is on disk but nothing has loaded
         /// it into memory, so the registration has to be replayed instead. Every other pipeline is disk-only
         /// and needs no entry here - if you add a global registration to one, add it here too.
+        /// <para/>
+        /// The dev-only stages after Texture (Shaders, Audio, Resynthesis, VTables) were audited and publish no
+        /// in-memory state that anything after them consumes: they only rewrite packages (and, for Audio, write the
+        /// converted .afc files) inside the mod output, which a checkpoint carries. Their static state (AFCHandler's
+        /// caches and streams, the shader install context) is private to the pipeline and closed or disposed before
+        /// it returns.
         /// </summary>
         private static readonly Dictionary<ECheckpointStage, Action> CheckpointRehydrators = new()
         {
@@ -141,8 +168,12 @@ namespace ProjectMilan
         /// Bump this every time there are changes to a pipeline that can be checkpointed (MPCommon through
         /// Redemption - see <see cref="ECheckpointStage"/>). It invalidates every existing checkpoint,
         /// regardless of which stage it was taken at, forcing a complete rebuild.
+        /// <para/>
+        /// Do NOT bump it for changes to the dev-only stages (Texture, Shaders, Audio, Resynthesis, VTables): those
+        /// checkpoints are never shipped, and a full rebuild is exactly the cost they exist to avoid. A change to one
+        /// of those pipelines just makes a checkpoint taken at or after it stale - retake it.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 9; // 9: BaseDelta gained the Startup.pcc target (Scaleform UI) and SFXGame PropertyUpdate (GUI WwiseBank), which older checkpoints' patches don't contain. 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
+        public const int MIN_CHECKPOINT_VERSION = 11; // 11: BaseDelta net-indexes every patched package append-only against the vanilla net index cache (canonical indexes, new objects after the linker's highest, counts raised to cover them), which older checkpoints' patches don't do. 10: BaseDelta compiles Classes/<Package>/ classes into their own forced-export packages (AAT, SFXGameContent_MilanBase) instead of SFXGame, which older checkpoints' SFXGame patches don't do. 9: BaseDelta gained the Startup.pcc target (Scaleform UI) and SFXGame PropertyUpdate (GUI WwiseBank), which older checkpoints' patches don't contain. 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -156,6 +187,10 @@ namespace ProjectMilan
         private static void Init(CLIOptions obj)
         {
             KeepPreBakeMaps = obj.KeepPreBakeMaps;
+            UseCachedLighting = obj.CachedLighting || obj.ImportCachedLighting;
+            if (!Enum.TryParse<LightmassSolver>(obj.Lightmass, ignoreCase: true, out var lightmass) || !Enum.IsDefined(lightmass))
+                throw new ArgumentException($"Unknown --lightmass {obj.Lightmass}; use UE3 or UE4");
+            Lightmass = lightmass;
 #if DEBUG
             // Change to true to run the research() method, for quick research tasks. Like LEX experiments.
             bool researchMode = obj.ResearchMode;
@@ -181,6 +216,21 @@ namespace ProjectMilan
             MilanLog.Information("Welcome to Project Milan");
             Settings = LoadSettingsConfig(obj);
 
+            // One-off jobs on LE3 itself. They run before anything touches the output mod or sets up UDK.
+            if (obj.BuildVanillaNetIndexCache || obj.CheckVanillaNetIndexCache)
+            {
+                LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger);
+                MEPackageHandler.GlobalSharedCacheEnabled = false;
+                if (obj.BuildVanillaNetIndexCache)
+                    VanillaNetIndexBuilder.Run();
+                else
+                    VanillaNetIndexBuilder.Check();
+                MilanLog.CloseAndFlush();
+                return;
+            }
+
+            StaticLightingCache.MigrateLegacyLayout();
+
             // A read-only report. It runs before VerifySettings, which sets up UDK for lighting builds, and
             // returns before anything below cleans the output folder.
             if (obj.CompareLighting?.Any() == true)
@@ -200,10 +250,39 @@ namespace ProjectMilan
                 StaticLightingCompute.VerifyBuildDependencies();
 
             VerifySettings();
+
+            // Like --compare-lighting, returns before the output folder is cleaned or anything is built.
+            if (!string.IsNullOrWhiteSpace(obj.BakeLighting))
+            {
+                if (!Enum.TryParse<LightmassBuildQuality>(obj.BakeLightingQuality, ignoreCase: true, out var quality))
+                    throw new ArgumentException($"Unknown --bake-lighting-quality {obj.BakeLightingQuality}");
+                LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger);
+                MEPackageHandler.GlobalSharedCacheEnabled = false;
+                StaticLightingCompute.BakeFromPreBakeMaps(obj.BakeLighting, quality, MPLevels.DefaultStaticMeshLightingRes);
+                MilanLog.LogSessionSummary();
+                MilanLog.CloseAndFlush();
+                return;
+            }
+
+            // Also returns before the output folder is cleaned: it only edits the level packages already there.
+            if (obj.ImportCachedLighting)
+            {
+                LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger);
+                MEPackageHandler.GlobalSharedCacheEnabled = false;
+                MPLevels.ImportCachedLightingIntoOutputMod();
+                MilanLog.LogSessionSummary();
+                MilanLog.CloseAndFlush();
+                return;
+            }
+
             if (KeepPreBakeMaps && !BuildStaticLighting)
                 MilanLog.Warning("--keep-prebake-maps has no effect because IsStaticLightingBuild is disabled in this configuration.");
             if (Settings.ProductionBuild)
-                MilanLog.Information("PRODUCTION BUILD: all kits, weapons and levels will be built, lighting baked at Production quality");
+                MilanLog.Information("PRODUCTION BUILD: all kits, weapons and levels will be built, " + (UseCachedLighting
+                    ? $"lighting imported from the cached {Lightmass} bakes"
+                    : $"{Lightmass} lighting baked at Production quality"));
+            else if (UseCachedLighting || Lightmass != LightmassSolver.UE4)
+                MilanLog.Information($"Lightmass: {Lightmass}" + (UseCachedLighting ? " (cached bakes only, nothing is baked)" : ""));
 
             if (!researchMode)
             {
@@ -277,20 +356,41 @@ namespace ProjectMilan
                             else
                             {
                                 RestoreStage = checkpointInfo.Stage;
+                                RestoredSkippedPipelines = checkpointInfo.SkippedPipelines;
                                 MilanLog.Information($"Using checkpoint for this run; skipping all pipelines through {RestoreStage}");
                                 WarnAboutPipelinesMissingFromCheckpoint(checkpointInfo);
 
-                                // The one case where a run restores and creates: retaking the checkpoint after the
-                                // texture pipeline, so it doesn't need a full rebuild to get one.
-                                if (RestoreStage < ECheckpointStage.Texture && Settings.RunTexturePipeline)
+                                // The one case where a run restores and creates: advancing the checkpoint to a later
+                                // dev-only stage (Texture, Shaders, Audio, Resynthesis, VTables), so it doesn't need a
+                                // full rebuild to get one. Only stages after the restored one that will actually run
+                                // are worth offering - and that includes restoring one dev-only checkpoint to take the
+                                // next, which is how a dev walks the checkpoint forward one slow pipeline at a time.
+                                var advanceStages = OfferedCheckpointStages
+                                    .Where(x => x.Stage.IsDevOnly() && x.Stage > RestoreStage && x.Enabled()).ToArray();
+                                if (advanceStages.Length > 0)
                                 {
                                     Console.WriteLine("-------------------------------");
-                                    Console.WriteLine("Replace the checkpoint with one taken after the Texture pipeline [y/N]? (5 second timeout)");
+                                    Console.WriteLine("Replace the checkpoint with one taken after a later pipeline [y/N]? (5 second timeout)");
                                     var retake = ConsoleHelpers.ConsoleReadLineWithTimeout(TimeSpan.FromSeconds(5));
                                     if ("Y".CaseInsensitiveEquals(retake))
                                     {
-                                        CreateStage = ECheckpointStage.Texture;
-                                        MilanLog.Information("Will replace the checkpoint with one taken after the Texture pipeline");
+                                        // A stage after the restored one can still be chosen past a pipeline that is
+                                        // switched off in settings (e.g. VTables with Audio off), so flag those.
+                                        var labels = advanceStages.Select(x =>
+                                        {
+                                            var missing = CheckpointStages
+                                                .Where(y => y.Stage > RestoreStage && y.Stage <= x.Stage && !y.Enabled())
+                                                .Select(y => y.Name).ToList();
+                                            return missing.Count == 0
+                                                ? x.Name
+                                                : $"{x.Name}  [will not contain: {string.Join(", ", missing)}]";
+                                        }).ToList();
+
+                                        // Default to the nearest stage, which is what this prompt did when Texture was the only choice.
+                                        var selectedIndex = ConsoleHelpers.PromptForMenuSelection(
+                                            "Which pipeline should the replacement checkpoint be taken after?", labels, 0);
+                                        CreateStage = advanceStages[selectedIndex].Stage;
+                                        MilanLog.Information($"Will replace the checkpoint with one taken after the {CreateStage} pipeline");
                                     }
                                 }
                             }
@@ -621,6 +721,7 @@ namespace ProjectMilan
                 {
                     MilanLog.Error("Could not use checkpoint; continuing with full pipeline run.");
                     RestoreStage = ECheckpointStage.None;
+                    RestoredSkippedPipelines = [];
                 }
             }
 
@@ -650,7 +751,7 @@ namespace ProjectMilan
             // Content pipelines will use the milan ME3 cache
             MilanShared.EnsureTFCsAvailable();
             MilanShared.EnsureAFCsAvailable();
-            if (Settings.RunAudioPipeline)
+            if (Settings.RunAudioPipeline && RestoreStage < ECheckpointStage.Audio) // A restore past Audio never converts anything, so Wwise isn't needed
             {
                 AudioPipeline.EnsureWwise7110();
             }
@@ -682,16 +783,18 @@ namespace ProjectMilan
 
             // Finalize the dynamic TLK range: every stage that could call AssignTLK (Kits through
             // Redemption, including Rejection/Redemption running in-process) has now either run, or
-            // been skipped and rehydrated via ModBuilder.RehydrateFromCheckpoint. A (dev-only) Texture
-            // checkpoint was taken after this point and already holds the finalized TLKs; finalizing
+            // been skipped and rehydrated via ModBuilder.RehydrateFromCheckpoint. A dev-only checkpoint
+            // (Texture and later) was taken after this point and already holds the finalized TLKs; finalizing
             // again would append the starter kit strings a second time.
             SetConsoleTitle(ConsoleTitlePostFix, "Finalizing TLK");
-            if (RestoreStage >= ECheckpointStage.Texture)
+            if (RestoreStage.IsDevOnly())
                 TLKPipeline.CloseForRestoredCheckpoint();
             else
                 TLKPipeline.FinalizePipeline();
 
-        // EVERYTHING AFTER THIS IS NON-CONTENT PORTING. ONLY TEXTURE MAY BE CHECKPOINTED, IN DEV BUILDS ---------
+        // EVERYTHING AFTER THIS IS NON-CONTENT PORTING. ONLY THE DEV-ONLY STAGES (TEXTURE THROUGH VTABLES) MAY BE
+        // CHECKPOINTED, IN DEV BUILDS. Changes to those pipelines make such a checkpoint stale without bumping
+        // MIN_CHECKPOINT_VERSION - retake it. Conformance onward is never checkpointed. ---------
 
             // MIDWAY POINT - We should no longer be porting content, so we can
             // drop some caches to release memory.
@@ -709,23 +812,26 @@ namespace ProjectMilan
             // in the pre-conversion decode. Runs before the object database is unregistered (imports resolve
             // through it) and before Resynthesis, which compacts each shader cache against the final
             // material set. Any material left without shaders fails the build.
-            RunPipeline(Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
+            RunPipeline(ECheckpointStage.Shaders, Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
 
         audio:
-            RunPipeline(Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
+            RunPipeline(ECheckpointStage.Audio, Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
 
 
 
             // Drop all extra packages from database. Conformance depends on vanilla DB.
+            // Not a stage of its own and runs on a restored checkpoint too, which is safe: it only drops what this
+            // process registered (the global donors from MilanInit, plus whatever skipped pipelines would have added),
+            // so the database is vanilla afterwards either way.
             MilanShared.UnregisterObjectDBPackages();
 
         resynthesis:
             // Package resynthesis
-            RunPipeline(Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
+            RunPipeline(ECheckpointStage.Resynthesis, Settings.RunResynthesis, ModResynthesis.RunPipeline, "Resynthesis");
 
             // Fix up vtables.
         vtables:
-            RunPipeline(true, VTablePipeline.RunPipeline, "VTables");
+            RunPipeline(ECheckpointStage.VTables, true, VTablePipeline.RunPipeline, "VTables");
 
             // Conformance
         conformance:
@@ -941,7 +1047,24 @@ namespace ProjectMilan
 
             SetConsoleTitle(ConsoleTitlePostFix, "Creating checkpoint");
             TLKPipeline.CommitPendingStrings(); // Config is already on disk - the TLK strings it references must be too
-            Checkpoint.CreateCheckpoint(completedStage, GetDisabledPipelinesThrough(completedStage));
+            Checkpoint.CreateCheckpoint(completedStage, GetSkippedPipelinesThrough(completedStage));
+        }
+
+        /// <summary>
+        /// Names of the pipelines at or before <paramref name="stage"/> that contributed nothing to a checkpoint
+        /// taken there, for its metadata. Pipelines covered by a restored checkpoint (a run that restores and then
+        /// creates a later one) keep the restored checkpoint's answer: they did not run this time, whatever the
+        /// settings say now. Everything after the restored stage is judged by the current settings.
+        /// </summary>
+        private static List<string> GetSkippedPipelinesThrough(ECheckpointStage stage)
+        {
+            if (RestoreStage == ECheckpointStage.None)
+                return GetDisabledPipelinesThrough(stage);
+
+            return CheckpointStages.Where(x => x.Stage <= stage && (x.Stage <= RestoreStage
+                    ? RestoredSkippedPipelines.Contains(x.Name, StringComparer.OrdinalIgnoreCase)
+                    : !x.Enabled()))
+                .Select(x => x.Name).ToList();
         }
 
         private static void RunResearch()

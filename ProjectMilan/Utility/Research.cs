@@ -17,6 +17,7 @@ using ME3Tweaks.Wwiser;
 using ME3Tweaks.Wwiser.BankConversion;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines.Audio;
+using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilanCore;
 using System.Diagnostics;
@@ -30,6 +31,31 @@ namespace ProjectMilan.Utility
     internal static class Research
     {
 #if DEBUG
+        public static void FixWwiseStreamDonors()
+        {
+            // No longer needed
+            //MilanShared.LE3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.LE3);
+            //var inputPath = @"B:\UserProfile\source\repos\ME3Tweaks\ProjectMilan\ProjectMilan\Pipelines\Shared\Compiling\MPCommonAddins\BioGlobalResources.pcc";
+            //using var bgr = MEPackageHandler.OpenMEPackage(inputPath);
+            //var parent = bgr.FindExport("Wwise_VO_Exertions");
+            //var cache = new PackageCache();
+            //foreach (var exp in bgr.Exports.Where(x => x.Parent == parent && x.ClassName == "WwiseStream"))
+            //{
+            //    var matches = MilanShared.LE3ObjectDB.GetFilesContainingObject(exp.InstancedFullPath);
+            //    if (matches != null)
+            //    {
+            //        var sourcePackage = cache.GetCachedPackage(Path.Combine(LE3Directory.DefaultGamePath, matches[0]), true);
+            //        var sourceObj = sourcePackage.FindExport(exp.InstancedFullPath, exp.ClassName);
+            //        Console.WriteLine($"Port {exp.InstancedFullPath} from {matches[0]}");
+            //        EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceObj, bgr, exp, true, new RelinkerOptionsPackage() { Cache = cache }, out var _);
+            //    }
+            //    else
+            //    {
+            //        Console.WriteLine($"Object not found: {exp.InstancedFullPath}");
+            //    }
+            //}
+        }
+
         public static void GetMissingShaderPackages(string folder)
         {
             HashSet<string> brokenMaterialPackages = new HashSet<string>();
@@ -565,7 +591,35 @@ namespace ProjectMilan.Utility
 
         internal static void ImportStaticLightingForLevel()
         {
-            var level = @"Z:\ModLibrary\LMP\Project Milan\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
+            var level = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
+            // Only levels with a saved UdkInj bake in MilanUDK: the importer saves each game .pcc, and an
+            // unbaked UDK copy (e.g. BioP_MPCer2 right now) would strip that level's lighting.
+            string[] bakedLevels = ["BioP_MPThes"];
+            foreach (var levelF in Directory.GetDirectories(level).Where(x => bakedLevels.Contains(Path.GetFileName(x), StringComparer.OrdinalIgnoreCase)))
+            {
+                var levelName = Path.GetFileName(levelF);
+                var lmpMasterF = Path.Combine(level, levelName, $"{levelName}.pcc");
+                var lmpMaster = MEPackageHandler.OpenMEPackage(lmpMasterF);
+                // This build's Lightmass's bakes (--lightmass, UE4 by default): see StaticLightingCache.
+                var staticLightingPath = StaticLightingCache.GetMapPath(levelName, levelName);
+                if (File.Exists(staticLightingPath))
+                {
+                    // Import static lighting
+                    LightingImportSetup setup = new LightingImportSetup()
+                    {
+                        IncludeSubLevels = true,
+                        UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName
+                    };
+
+                    StaticLightingImporter.ImportStaticLighting(lmpMaster, setup);
+                }
+            }
+        }
+
+        // Original copy
+        /*internal static void ImportStaticLightingForLevel()
+        {
+            var level = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
             foreach (var levelF in Directory.GetDirectories(level))
             {
                 var levelName = Path.GetFileName(levelF);
@@ -584,7 +638,7 @@ namespace ProjectMilan.Utility
                     StaticLightingImporter.ImportStaticLighting(lmpMaster, setup);
                 }
             }
-        }
+        }*/
 
         internal static void DumpME3WwiseBanks()
         {
