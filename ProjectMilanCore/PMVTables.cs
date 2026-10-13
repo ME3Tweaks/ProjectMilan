@@ -147,9 +147,16 @@ namespace ProjectMilanCore
 
                     (_, string text) = UnrealScriptCompiler.DecompileExport(classExport, lib, usop);
                     text = MilanShared.CleanErrorComments(text, out _);
-                    UnrealScriptCompiler.CompileClass(classExport.FileRef, text, lib, usop, classExport);
+                    var (_, compileLog) = UnrealScriptCompiler.CompileClass(classExport.FileRef, text, lib, usop, classExport);
+                    if (compileLog.HasErrors || compileLog.HasLexErrors)
+                    {
+                        // A failed compile leaves the class untouched. Reporting a change here would make the caller save and retry forever.
+                        MilanLog.Error($"  Failed to recompile {classExport.InstancedFullPath} ({classExport.FileRef.FileNameNoExtension}) to fix its VTable - skipping it", customPrefix: LOG_CATEGORY);
+                        MilanLog.LogUSCErrors(compileLog);
+                        return false;
+                    }
 
-                    return true; // We return false to force another pass
+                    return true; // We return true to force another pass
                 }
                 newVTable.Add(uIdx);
             }
@@ -196,8 +203,16 @@ namespace ProjectMilanCore
                 if (needsRecompile)
                 {
                     MilanLog.Information($" Recompiling {export.InstancedFullPath}", customPrefix: LOG_CATEGORY);
-                    hadRecomp = true;
-                    UnrealScriptCompiler.CompileClass(package, text, lib, usop, export);
+                    var (_, compileLog) = UnrealScriptCompiler.CompileClass(package, text, lib, usop, export);
+                    if (compileLog.HasErrors || compileLog.HasLexErrors)
+                    {
+                        MilanLog.Error($"  Failed to recompile {export.InstancedFullPath} in {package.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+                        MilanLog.LogUSCErrors(compileLog);
+                    }
+                    else
+                    {
+                        hadRecomp = true;
+                    }
                 }
             }
 
