@@ -21,7 +21,7 @@ public sealed class OfflineShaderInstallContext : IDisposable
     public string GameRoot { get; }
     public string? DecookedLE3Folder { get; }
     public IReadOnlyList<string> OutputPackages { get; }
-    public PackageCache Cache { get; } = new() { CacheMaxSize = 200 };
+    public TieredPackageCache Cache { get; } = new(null, "Offline shader shared donors") { CacheMaxSize = 200 };
     public PackageTextureMetadataProvider TextureMetadata { get; }
     public LE3ShaderSourceSnapshot Sources { get; }
     private readonly Dictionary<string, string> outputByName;
@@ -34,6 +34,11 @@ public sealed class OfflineShaderInstallContext : IDisposable
     private readonly ObjectInstanceDB? objectDatabase;
     private readonly string outputRoot, gameRoot;
     private readonly Dictionary<string, VanillaMaterialInfo?> vanillaMaterials = new(StringComparer.Ordinal);
+    private ShaderPlanningDiagnostics? planningDiagnostics;
+    private TieredPackageCache? planningPackageCache;
+    // Scoped to one read-only package scan. Keep importer identity in the key: local import resolution can differ
+    // between packages even when the imported path is identical. Never carry these results into installation.
+    private readonly Dictionary<ImportEntry, ExportEntry?> resolvedPlanningImports = new();
     // A forced export is in every file that uses it; one of the first few holds a copy at the same memory path.
     private const int MaxVanillaFilesTried = 16;
 
@@ -108,12 +113,37 @@ public sealed class OfflineShaderInstallContext : IDisposable
     /// <summary>Opens a package by file name: the mod output first, then the game.</summary>
     public IMEPackage? OpenByFileName(string fileName, PackageCache cache)
     {
-        if (outputByName.TryGetValue(fileName, out var output)) return cache.GetCachedPackage(output);
+        if (outputByName.TryGetValue(fileName, out var output)) return OpenCached(output, cache);
         var loaded = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, gameRootOverride: GameRoot);
-        return loaded.TryGetValue(fileName, out var game) ? cache.GetCachedPackage(game) : null;
+        return loaded.TryGetValue(fileName, out var game) ? OpenCached(game, cache) : null;
     }
 
-    public ExportEntry? ResolveImport(ImportEntry import) => ResolveImport(import, Cache);
+    private IMEPackage? OpenCached(string file, PackageCache cache)
+    {
+        if (cache.GetCachedPackage(file, openIfNotInCache: false) is { } cached)
+        {
+            planningDiagnostics?.Count("resolver-package-cache-hits");
+            return cached;
+        }
+        // The package being scanned lives in the child; donors live in the shared parent across package scans.
+        var owner = ReferenceEquals(cache, planningPackageCache) ? Cache : cache;
+        return owner.GetCachedPackage(file, openPackageMethod: path =>
+        {
+            using var timing = planningDiagnostics?.Measure("resolver-package-open", path);
+            return MEPackageHandler.OpenMEPackage(path, forceLoadFromDisk: true, diskIOSyncLock: owner.DiskIOSyncLock);
+        });
+    }
+
+    public ExportEntry? ResolveImport(ImportEntry import)
+    {
+        if (planningPackageCache == null) return ResolveImport(import, Cache);
+        if (resolvedPlanningImports.TryGetValue(import, out var cached))
+        {
+            planningDiagnostics?.Count("import-result-cache-hits");
+            return cached;
+        }
+        return resolvedPlanningImports[import] = ResolveImport(import, planningPackageCache);
+    }
 
     /// <summary>
     /// An output copy of the object first (it is what the mod loads, and copies are checked to be identical), then the
@@ -121,13 +151,14 @@ public sealed class OfflineShaderInstallContext : IDisposable
     /// </summary>
     public ExportEntry? ResolveImport(ImportEntry import, PackageCache cache)
     {
+        using var timing = planningDiagnostics?.Measure("import-resolution", import.InstancedFullPath);
         var files = OutputFilesWith(import);
         // Prefer a file the cache already holds, so resolving does not open another level package.
-        foreach (var file in files.OrderBy(f => cache.Cache.ContainsKey(f) ? 0 : 1))
+        foreach (var file in files.OrderBy(f => cache.GetCachedPackage(f, openIfNotInCache: false) != null ? 0 : 1))
         {
             try
             {
-                var export = cache.GetCachedPackage(file)?.FindExport(import.InstancedFullPath, import.ClassName);
+                var export = OpenCached(file, cache)?.FindExport(import.InstancedFullPath, import.ClassName);
                 if (export != null) return export;
             }
             catch
@@ -145,11 +176,13 @@ public sealed class OfflineShaderInstallContext : IDisposable
     /// <param name="opened">Decooked packages opened so far by the calling thread.</param>
     public ExportEntry? GraphSource(ExportEntry material, Dictionary<string, IMEPackage?> opened)
     {
+        using var timing = planningDiagnostics?.Measure("graph-source", material.InstancedFullPath);
         if (DecookedLE3Folder == null) return null;
         string root = RootName(material);
         if (!opened.TryGetValue(root, out var package))
         {
             string path = Path.Combine(DecookedLE3Folder, root + ".pcc");
+            using var opening = planningDiagnostics?.Measure("decooked-open", path);
             opened[root] = package = File.Exists(path) ? MEPackageHandler.OpenMEPackage(path) : null;
         }
         var decooked = package == null ? null : PathLookup.FindExport(package, material.InstancedFullPath, PathLookup.IsMaterialObject);
@@ -171,8 +204,14 @@ public sealed class OfflineShaderInstallContext : IDisposable
     public VanillaMaterialInfo? VanillaMaterial(ExportEntry material)
     {
         string identity = material.MemoryFullPath;
-        if (!vanillaMaterials.TryGetValue(identity, out var info))
-            vanillaMaterials[identity] = info = FindVanillaMaterial(material, identity);
+        if (vanillaMaterials.TryGetValue(identity, out var info))
+        {
+            planningDiagnostics?.Count("vanilla-cache-hits");
+            return info;
+        }
+        using var timing = planningDiagnostics?.Measure("vanilla-lookup", identity);
+        vanillaMaterials[identity] = info = FindVanillaMaterial(material, identity);
+        planningDiagnostics?.Count(info == null ? "vanilla-not-found" : "vanilla-found");
         return info;
     }
 
@@ -183,7 +222,9 @@ public sealed class OfflineShaderInstallContext : IDisposable
                 .Select(b => b.Name.Name).ToHashSet(StringComparer.Ordinal));
 
         if (material.FileRef.FilePath is { } own && IsGameFile(own)) return Describe(material);
-        var files = objectDatabase?.GetFilesContainingObject(material.InstancedFullPath);
+        List<string>? files;
+        using (planningDiagnostics?.Measure("object-db-query", material.InstancedFullPath))
+            files = objectDatabase?.GetFilesContainingObject(material.InstancedFullPath);
         if (files == null) return null;
 
         string name = material.ObjectName.Instanced, className = material.ClassName;
@@ -199,6 +240,8 @@ public sealed class OfflineShaderInstallContext : IDisposable
             if (++tried > MaxVanillaFilesTried) break;
             try
             {
+                planningDiagnostics?.CountDistinct("vanilla-donor-files", file);
+                using var reading = planningDiagnostics?.Measure("vanilla-donor-read", file);
                 using var package = MEPackageHandler.UnsafePartialLoad(file, e => e.ClassName == className && e.ObjectName.Instanced == name);
                 var copy = package.Exports.FirstOrDefault(e => e.ClassName == className && e.ObjectName.Instanced == name &&
                                                                string.Equals(e.MemoryFullPath, identity, StringComparison.OrdinalIgnoreCase));
@@ -222,6 +265,7 @@ public sealed class OfflineShaderInstallContext : IDisposable
     /// <summary>Translates the graph as-is and with the swapped samplers; true when the HLSL differs.</summary>
     public bool ConfirmVariant(ExportEntry graph, IReadOnlyList<VariantSamplerSwap> swaps)
     {
+        using var timing = planningDiagnostics?.Measure("variant-confirmation", graph.InstancedFullPath);
         var overrides = new Dictionary<int, TextureCompilationMetadata>();
         foreach (var swap in swaps)
         {
@@ -254,29 +298,68 @@ public sealed class OfflineShaderInstallContext : IDisposable
         GraphSource = GraphSource,
         KeysInRefShaderCache = KeysInRefShaderCache,
         ConfirmVariant = ConfirmVariant,
-        VanillaMaterial = VanillaMaterial
+        VanillaMaterial = VanillaMaterial,
+        ForceRecompile = MaterialGraphOverrides.NeedsRecompile,
+        Diagnostics = planningDiagnostics
     };
 
     /// <summary>Plans over every output package, opening each read-only and releasing it after.</summary>
     /// <param name="include">Optional file filter, for diagnosing a subset; the plan is then partial.</param>
-    public ShaderInstallPlan Plan(Action<string>? progress = null, Func<string, bool>? include = null)
+    /// <param name="diagnostics">Optional phase, slow-operation and aggregate timing/counter log.</param>
+    public ShaderInstallPlan Plan(Action<string>? progress = null, Func<string, bool>? include = null, Action<string>? diagnostics = null)
     {
-        var planner = new ShaderInstallPlanner(PlannerOptions());
-        bool first = true;
-        foreach (var file in OutputPackages.Where(f => include?.Invoke(f) ?? true))
+        planningDiagnostics = diagnostics == null ? null : new ShaderPlanningDiagnostics(diagnostics);
+        try
         {
-            progress?.Invoke(file);
-            using var package = MEPackageHandler.OpenMEPackage(file, forceLoadFromDisk: true);
-            if (first) (PackageGame, first) = (package.Game, false);
-            planner.AddPackage(package);
+            var planner = new ShaderInstallPlanner(PlannerOptions());
+            bool first = true;
+            foreach (var file in OutputPackages.Where(f => include?.Invoke(f) ?? true))
+            {
+                progress?.Invoke(file);
+                planningDiagnostics?.BeginPackage(file);
+                IMEPackage package;
+                using (planningDiagnostics?.Measure("package-open", file))
+                    package = MEPackageHandler.OpenMEPackage(file, forceLoadFromDisk: true);
+                using (package)
+                using (var localCache = Cache.ChainNewCache(debugName: "Offline shader current package"))
+                {
+                    // Use this exact package for local donors, without reopening it through import resolution.
+                    Cache.ReleasePackage(file);
+                    localCache.InsertIntoCache(package);
+                    planningPackageCache = localCache;
+                    try
+                    {
+                        if (first) (PackageGame, first) = (package.Game, false);
+                        planner.AddPackage(package);
+                    }
+                    finally
+                    {
+                        resolvedPlanningImports.Clear();
+                        planningPackageCache = null;
+                        localCache.ReleasePackage(file); // The outer using owns the current package.
+                    }
+                }
+                planningDiagnostics?.CompletePackage();
+            }
+            ShaderInstallPlan plan;
+            planningDiagnostics?.BeginPackage("global plan");
+            using (planningDiagnostics?.Phase("global plan finalization")) plan = planner.Build();
+            planningDiagnostics?.CompletePlan();
+            return plan;
         }
-        return planner.Build();
+        finally
+        {
+            resolvedPlanningImports.Clear();
+            planningPackageCache = null;
+            planningDiagnostics = null;
+        }
     }
 
     /// <summary>Closes everything that holds output files open or caches their old contents, before they are rewritten.</summary>
     public void ReleaseOutputFileHandles()
     {
         TextureMetadata.CloseReaders();
+        resolvedPlanningImports.Clear();
         Cache.ReleasePackages();
     }
 

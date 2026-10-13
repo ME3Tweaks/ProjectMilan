@@ -115,6 +115,12 @@ public sealed class ShaderInstallPlannerOptions
     /// <summary>The game's own copy of a material, when the game has an object at the same memory path; null when the
     /// mod introduces it. Null treats every material in the mod's packages as the mod's alone.</summary>
     public Func<ExportEntry, VanillaMaterialInfo?>? VanillaMaterial { get; init; }
+    /// <summary>Optional package-phase timings and lookup counters; does not affect planning decisions.</summary>
+    public ShaderPlanningDiagnostics? Diagnostics { get; init; }
+    /// <summary>Whether the material's decooked graph differs from what its resource ID was derived from, so any shader
+    /// map filed under that ID (the game's RefShaderCache included) is stale. Such a mod-owned material that the game
+    /// does not have gets a new resource ID and is always compiled. Takes the material's identity; null forces nothing.</summary>
+    public Func<string, bool>? ForceRecompile { get; init; }
 }
 
 /// <summary>
@@ -168,6 +174,9 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
         public bool LightmappedUsesMoved;
         /// <summary>The mod holds copies of an object the game has too: the copies must stay identical to the game's.</summary>
         public bool SharedWithGame => ModOwned && Vanilla != null;
+        /// <summary>Mod-owned graph edited after the game's shader maps were built: needs its own ID and a compile.</summary>
+        public bool Recompile;
+        public bool NeedsNewId => FlagsToSet.Count > 0 || Recompile;
     }
 
     /// <summary>A slot of a lightmapped static mesh component and the chain from what it draws to its base Material.</summary>
@@ -197,8 +206,12 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
     {
         string name = Path.GetFileName(package.FilePath);
         // Maps the package already carries count like RefShaderCache maps: compaction keeps them for its materials.
-        if (package.FindExport("SeekFreeShaderCache") is { } localCache)
-            localKeys[name] = localCache.GetBinaryData<ShaderCache>().MaterialShaderMaps.Keys.ToHashSet();
+        using (options.Diagnostics?.Phase("local shader cache"))
+        {
+            if (package.FindExport("SeekFreeShaderCache") is { } localCache)
+                localKeys[name] = localCache.GetBinaryData<ShaderCache>().MaterialShaderMaps.Keys.ToHashSet();
+        }
+        using (options.Diagnostics?.Phase("usage scan"))
         try
         {
             foreach (var use in LE3MaterialUsageScanner.Collect(package, i => options.ResolveImport(i)))
@@ -215,6 +228,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
         {
             errors.Add($"usage scan of {name} failed: {e.Message}");
         }
+        using (options.Diagnostics?.Phase("lightmapped mesh-slot scan"))
         try
         {
             RecordMeshSlots(package, name);
@@ -224,6 +238,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
             errors.Add($"mesh slot scan of {name} failed: {e.Message}");
         }
 
+        using (options.Diagnostics?.Phase("material/instance export scan"))
         foreach (var export in package.Exports)
         {
             try
@@ -284,6 +299,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
 
     private MaterialRecord RecordMaterial(ExportEntry material, string? package)
     {
+        using var timing = options.Diagnostics?.Measure("record-material", material.MemoryFullPath);
         string identity = Identity(material);
         if (!materials.TryGetValue(identity, out var record))
         {
@@ -319,6 +335,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
 
     private void RecordInstance(ExportEntry instance, string package)
     {
+        using var timing = options.Diagnostics?.Measure("record-instance", instance.MemoryFullPath);
         string identity = Identity(instance);
         bool permutation = instance.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true;
         var stored = permutation ? ObjectBinary.From<MaterialInstance>(instance).SM3StaticParameterSet : null;
@@ -371,7 +388,9 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
             e.GetProperty<BoolProperty>("bHasStaticPermutationResource")?.Value == true);
         if (!overridesOrPermutes) return;
 
-        var report = MaterialInstanceEncodingAnalyzer.Analyze(instance, ResolveForGraph, options.TextureMetadata);
+        MaterialInstanceEncodingReport report;
+        using (options.Diagnostics?.Measure("instance-encoding-analysis", identity))
+            report = MaterialInstanceEncodingAnalyzer.Analyze(instance, ResolveForGraph, options.TextureMetadata);
         if (!report.IsComplete)
         {
             // Lookups are cached, so search every failed resolution for the unresolved findings' textures.
@@ -426,6 +445,9 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
         // too (its copies cannot be rewritten), else the copy in the first package (ordinal).
         foreach (var m in materials.Values.Where(m => m.CopyIds.Count > 0))
             m.ResourceId = m.SharedWithGame ? m.Vanilla!.ResourceId : m.CopyIds[m.Packages.First()];
+        // Edited graphs cannot reuse a shader map filed under the old ID (the game's RefShaderCache has the unedited one).
+        foreach (var m in materials.Values.Where(m => m.ModOwned && !m.SharedWithGame && m.HasGraph))
+            m.Recompile = options.ForceRecompile?.Invoke(m.Identity) ?? false;
         bool InLocal(StaticParameterSet key, IReadOnlyCollection<string> packages) =>
             packages.Count > 0 && packages.All(p => localKeys.TryGetValue(p, out var keys) && keys.Contains(key));
 
@@ -449,7 +471,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
         Guid LiveId(string materialIdentity)
         {
             var m = materials[materialIdentity];
-            return m.FlagsToSet.Count == 0 ? m.ResourceId : NewId(m);
+            return m.NeedsNewId ? NewId(m) : m.ResourceId;
         }
 
         // Variants and chain clones, keyed deterministically by (base, signature).
@@ -583,7 +605,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
 
         var materialPlans = materials.Values.Where(m => m.Packages.Count > 0).Select(m =>
         {
-            Guid? newId = m.FlagsToSet.Count > 0 ? NewId(m) : null;
+            Guid? newId = m.NeedsNewId ? NewId(m) : null;
             bool normalize = m.ModOwned && m.CopyIds.Values.Any(id => id != m.ResourceId);
             // Flags the game's copy lacks are cleared: with them the game's own shader map would count as incomplete.
             List<string>? clear = m.SharedWithGame ? m.SetFlags.Except(m.Vanilla!.UsageFlags).ToList() : null;
@@ -606,7 +628,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
 
     // Deterministic: the same material and added flags give the same ID in every package and build.
     private static Guid NewId(MaterialRecord m) => new(SHA256.HashData(Encoding.UTF8.GetBytes(
-        $"{m.Identity.ToLowerInvariant()}\n{m.ResourceId:D}\n{string.Join(",", m.SetFlags.Union(m.FlagsToSet).Order(StringComparer.Ordinal))}")).AsSpan(0, 16));
+        $"{m.Identity.ToLowerInvariant()}\n{m.ResourceId:D}\n{string.Join(",", m.SetFlags.Union(m.FlagsToSet).Order(StringComparer.Ordinal))}{(m.Recompile ? "|recompile" : "")}")).AsSpan(0, 16));
 
     // Deterministic per (instance, variant): the same clone in every package that needs it.
     private static string CloneName(InstanceRecord instance, Guid variantResourceId) => instance.ObjectName + "_MV" + Convert.ToHexString(
