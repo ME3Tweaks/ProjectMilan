@@ -87,7 +87,7 @@ namespace ProjectMilan.Pipelines.TLK
 
         /// <summary>
         /// In place of <see cref="FinalizePipeline"/> when the restored checkpoint was taken after it (Texture,
-        /// dev builds): its .tlk files are already final, so the set is only closed, and nothing appended.
+        /// or any later dev-only stage, dev builds): its .tlk files are already final, so the set is only closed, and nothing appended.
         /// </summary>
         public static void CloseForRestoredCheckpoint()
         {

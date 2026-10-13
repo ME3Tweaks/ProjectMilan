@@ -13,6 +13,12 @@ namespace ProjectMilan.Pipelines.VTables
     {
         private const string LOG_CATEGORY = @"MILAN-VTables";
 
+        /// <summary>
+        /// Safety cap on Pass 1. Parent/child chains across files need a few iterations to settle; anything
+        /// beyond this means a class keeps reporting a change that never takes effect.
+        /// </summary>
+        private const int MAX_PASS1_ITERATIONS = 10;
+
         public static void RunPipeline()
         {
             InternalRunPipeline();
@@ -82,9 +88,12 @@ namespace ProjectMilan.Pipelines.VTables
                     }
                 }
             }
-            while (anyChangeThisPass);
+            while (anyChangeThisPass && pass1Iteration < MAX_PASS1_ITERATIONS);
 
-            MilanLog.Information($"Pass 1 complete after {pass1Iteration} iteration(s).", customPrefix: LOG_CATEGORY);
+            if (anyChangeThisPass)
+                MilanLog.Error($"Pass 1 did not converge after {MAX_PASS1_ITERATIONS} iterations - some VTables are still being changed every pass. Verification below will list what is wrong.", customPrefix: LOG_CATEGORY);
+            else
+                MilanLog.Information($"Pass 1 complete after {pass1Iteration} iteration(s).", customPrefix: LOG_CATEGORY);
 
             // ---------------------------------------------------------------
             // Verify – confirm all class VTables now match their parent.
