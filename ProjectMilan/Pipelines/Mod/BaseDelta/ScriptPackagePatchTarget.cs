@@ -100,22 +100,37 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             bool compiledClasses = false;
             if (Directory.Exists(classFolder))
             {
+                // Packages this build added for Classes/<Package>/ folders, by name
+                var addedPackages = new Dictionary<string, ExportEntry>(StringComparer.OrdinalIgnoreCase);
+
                 // sorting this is a bit hacky, should probably have a manifest
                 foreach (var cls in Directory.GetFiles(classFolder, "*.uc", searchOption: SearchOption.AllDirectories).OrderBy(f => f))
                 {
                     var className = Path.GetFileNameWithoutExtension(cls);
-                    var classExport = package.FindExport(className);
-                    IEntry classParent = null;
-                    if (!Path.GetDirectoryName(cls).EndsWith(classFolder))
+                    ExportEntry? classExport = null;
+                    IEntry? classParent = null;
+                    var relativeFolder = Path.GetRelativePath(classFolder, Path.GetDirectoryName(cls)!);
+                    if (relativeFolder == ".")
                     {
-                        var classParentName = Directory.GetParent(cls)?.Name;
-                        classParent = ExportCreator.CreatePackageExport(package, classParentName, forcedExport: true);
-                        var classParentExport = (ExportEntry)classParent;
-                        classParentExport.PackageFlags = (UnrealFlags.EPackageFlags.AllowDownload |
-                                                          UnrealFlags.EPackageFlags.NoExportsData);
-                        classParentExport.PackageGUID = GetAddedPackageGuid(classParentName);
-                        
+                        // Classes/<Class>.uc: a class at the root of the file, new or replacing a vanilla one
+                        classExport = package.FindExport(className);
+                    }
+                    else
+                    {
+                        // Classes/<Package>/<Class>.uc: a new class in its own forced-export package
+                        if (relativeFolder.Contains(Path.DirectorySeparatorChar) || relativeFolder.Contains(Path.AltDirectorySeparatorChar))
+                        {
+                            MilanLog.Fatal($"{packageName} class {className} is nested too deep (Classes/{relativeFolder.Replace('\\', '/')}) - classes go in Classes/ or Classes/<Package>/. This is a fatal error.", customPrefix: logCategory);
+                            Environment.Exit(1);
+                        }
 
+                        if (package.FindExport(className) != null)
+                        {
+                            MilanLog.Fatal($"{packageName} already has a class {className}, so it can't also be added to package {relativeFolder} - edit it in Classes/{className}.uc or rename it. This is a fatal error.", customPrefix: logCategory);
+                            Environment.Exit(1);
+                        }
+
+                        classParent = GetOrCreateAddedPackage(package, relativeFolder, addedPackages);
                     }
 
                     MilanLog.Information($"Compiling class {(classParent.IsNull() ? "" : $"{classParent?.ObjectNameString}.")}{className}", customPrefix: logCategory);
@@ -225,6 +240,9 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             // Runs last so no class recompile above can undo it.
             postCompile?.Invoke(package);
 
+            // After every edit: numbers what was added (including the class packages above) past each linker's vanilla indexes.
+            BaseDeltaNetIndexing.Apply(package, GameFile);
+
             return package.SaveToStream(BaseDeltaHandler.UseCompressedPackages).ToArray();
         }
 
@@ -268,6 +286,29 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                         break;
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns the forced-export package a Classes/&lt;Package&gt;/ folder compiles into, creating it the first time. The name
+        /// must be new to the file: reusing a vanilla export would put our classes into (or under) something we don't own.
+        /// </summary>
+        private ExportEntry GetOrCreateAddedPackage(IMEPackage package, string name, Dictionary<string, ExportEntry> addedPackages)
+        {
+            if (addedPackages.TryGetValue(name, out var existing))
+                return existing;
+
+            if (package.FindExport(name) != null)
+            {
+                MilanLog.Fatal($"{packageName} already has an export named {name} - a Classes/<Package>/ folder must name a new package. This is a fatal error.", customPrefix: logCategory);
+                Environment.Exit(1);
+            }
+
+            var packageExport = ExportCreator.CreatePackageExport(package, NameReference.FromInstancedString(name), forcedExport: true, reuseExisting: false);
+            packageExport.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload | UnrealFlags.EPackageFlags.NoExportsData;
+            packageExport.PackageGUID = GetAddedPackageGuid(name);
+            addedPackages[name] = packageExport;
+            MilanLog.Information($"Added package {name}", customPrefix: logCategory);
+            return packageExport;
         }
 
         private static Guid GetAddedPackageGuid(string name)

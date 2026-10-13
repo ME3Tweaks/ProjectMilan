@@ -43,6 +43,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             using var package = MEPackageHandler.OpenMEPackage(BaseDeltaHandler.GetVanillaCookedFilePath(GameFile));
             var baseDeltaFolder = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"BaseDelta", packageName);
             ScriptPackagePatchTarget.ApplyPropertyUpdates(package, baseDeltaFolder, packageName, $"Milan-{packageName}");
+            BaseDeltaNetIndexing.Apply(package, GameFile);
             return package.SaveToStream(BaseDeltaHandler.UseCompressedPackages).ToArray();
         }
     }

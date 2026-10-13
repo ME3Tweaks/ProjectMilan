@@ -105,6 +105,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             writeDebugDelta = creatingCheckpoint;
             deltaRecords.Clear();
             GuidCacheAdditions.Clear();
+            BaseDeltaNetIndexing.PatchedScans.Clear();
             RegisterProviderAndBuildCache();
             BuildNonCacheTargets();
         }
@@ -119,6 +120,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             writeDebugDelta = false;
             deltaRecords.Clear();
             GuidCacheAdditions.Clear();
+            BaseDeltaNetIndexing.PatchedScans.Clear();
             RegisterProviderAndBuildCache();
             BuildNonCacheTargets();
         }
@@ -317,6 +319,13 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             if (target is ScriptPackagePatchTarget)
             {
                 GuidCachePatchTarget.InventoryPackages(target.GameFile, vanilla, patched, GuidCacheAdditions);
+            }
+
+            if (target is ScriptPackagePatchTarget or PropertyUpdatePatchTarget)
+            {
+                // Runs on the patched bytes, so a checkpoint restore (which never calls BuildPatchTarget) sees the same
+                // net indexes a fresh build does. Conformance reads these instead of re-running the build.
+                BaseDeltaNetIndexing.Observe(target.GameFile, patched);
             }
 
             deltaRecords.Add(new DeltaRecord
