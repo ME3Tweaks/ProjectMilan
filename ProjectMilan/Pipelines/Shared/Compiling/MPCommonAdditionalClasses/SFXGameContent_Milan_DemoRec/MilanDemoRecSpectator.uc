@@ -1,4 +1,4 @@
-﻿// MILAN CHANGE - Mgamerz - 2026-10-07
+﻿// MILAN CHANGE - Mgamerz - 2026-10-08
 // Replicate a demo spectator controller, initialize a local playback camera,
 // and close LMP's loading screen after the native player handoff.
 // Export: SFXGAmeContent_Milan_DemoRec.MilanDemoRecSpectator, forced into BIOP_MP_COMMON.
@@ -7,6 +7,7 @@ Class MilanDemoRecSpectator extends PlayerController
     config(Game);
 
 var transient bool bDemoLoadScreenRequested;
+var transient float DemoUpAxis;
 
 public event simulated function PostBeginPlay()
 {
@@ -17,6 +18,13 @@ public event simulated function PostBeginPlay()
 function InitPlayerReplicationInfo()
 {
 }
+// This controller belongs to the demo connection and never logged into the gameplay GameInfo.
+// Keep the base controller cleanup, but prevent it from logging out an unregistered MP player.
+public event function Destroyed()
+{
+    bIsPlayer = FALSE;
+    Super.Destroyed();
+}
 // A footage spectator does not spawn a gameplay HUD.
 function SpawnDefaultHUD()
 {
@@ -25,20 +33,7 @@ function SpawnDefaultHUD()
 function AddCheats()
 {
 }
-// Allow movement bindings to remain active while Shift or another modifier is held.
-function AddDemoBinding(Name Key, string Command)
-{
-    local int Index;
-    
-    Index = PlayerInput.Bindings.Length;
-    PlayerInput.Bindings.Length = Index + 1;
-    PlayerInput.Bindings[Index].Name = Key;
-    PlayerInput.Bindings[Index].Command = Command;
-    PlayerInput.Bindings[Index].bIgnoreCtrl = TRUE;
-    PlayerInput.Bindings[Index].bIgnoreShift = TRUE;
-    PlayerInput.Bindings[Index].bIgnoreAlt = TRUE;
-}
-// Use the generic engine input object with camera bindings on this instance only.
+// MilanDemoRecInput loads the spectator bindings and preferences from BioInput.
 public event function InitInputSystem()
 {
     if (PlayerInput == None)
@@ -49,21 +44,6 @@ public event function InitInputSystem()
     {
         Interactions.AddItem(PlayerInput);
     }
-    // Change only this input instance. SetBind would save the user's input config.
-    PlayerInput.Bindings.Length = 0;
-    AddDemoBinding('W', "Axis aBaseY Speed=1.0");
-    AddDemoBinding('S', "Axis aBaseY Speed=-1.0");
-    AddDemoBinding('A', "Axis aStrafe Speed=-1.0");
-    AddDemoBinding('D', "Axis aStrafe Speed=1.0");
-    AddDemoBinding('E', "Axis aUp Speed=1.0");
-    AddDemoBinding('Q', "Axis aUp Speed=-1.0");
-    AddDemoBinding('LeftShift', "Button bRun");
-    AddDemoBinding('MouseX', "Count bXAxis | Axis aMouseX");
-    AddDemoBinding('MouseY', "Count bYAxis | Axis aMouseY Speed=-1.0");
-    PlayerInput.bEnableMouseSmoothing = FALSE;
-    PlayerInput.MouseSensitivity = 40.0;
-    PlayerInput.bInvertMouse = FALSE;
-    PlayerInput.bInvertTurn = FALSE;
 }
 // Native SetPlayer calls this for both the recording connection and the local playback player.
 public event simulated function ReceivedPlayer()
@@ -121,6 +101,8 @@ public event function PlayerTick(float DeltaTime)
     if (LocalPlayer(Player) != None && PlayerInput != None)
     {
         // A demo camera does not send possession acknowledgements or movement RPCs.
+        // Preserve the vertical axis before the engine scales movement input by frame time.
+        DemoUpAxis = PlayerInput.aUp;
         PlayerInput.PlayerInput(DeltaTime);
         PlayerMove(DeltaTime);
         AdjustFOV(DeltaTime);
@@ -153,18 +135,25 @@ auto state DemoSpectating
         local Vector Z;
         local Vector Direction;
         local float Speed;
+        local float DirectionSize;
         
         UpdateRotation(DeltaTime);
         GetAxes(Rotation, X, Y, Z);
-        Direction = X * PlayerInput.aForward + Y * PlayerInput.aStrafe + vect(0.0, 0.0, 1.0) * PlayerInput.aUp;
+        // Raw stick values preserve partial deflection; cap diagonal movement at the camera speed.
+        Direction = X * PlayerInput.RawJoyUp + Y * PlayerInput.RawJoyRight + vect(0.0, 0.0, 1.0) * DemoUpAxis;
+        DirectionSize = VSize(Direction);
+        if (DirectionSize > 1.0)
+        {
+            Direction /= DirectionSize;
+        }
         Speed = SpectatorCameraSpeed;
         if (int(bRun) != 0)
         {
             Speed *= 4.0;
         }
-        if (VSize(Direction) > 0.0)
+        if (DirectionSize > 0.0)
         {
-            SetLocation(location + Normal(Direction) * Speed * DeltaTime, );
+            SetLocation(location + Direction * Speed * DeltaTime, );
         }
     }
     exec function StartFire(optional byte FireModeNum)
@@ -189,7 +178,7 @@ defaultproperties
     bCollideActors = FALSE
     bBlockActors = FALSE
     bCollideWorld = FALSE
-    InputClass = Class'PlayerInput'
+    InputClass = Class'MilanDemoRecInput'
     CameraClass = Class'Camera'
     CheatClass = None
     ForceFeedbackManagerClassName = ""
