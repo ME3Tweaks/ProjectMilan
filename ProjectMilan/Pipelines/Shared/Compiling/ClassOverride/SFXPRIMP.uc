@@ -1014,7 +1014,15 @@ public final simulated function EndOfMatchScreenFinished()
         ServerSetReadyToTransitionToLobby(TRUE);
     }
 }
-public reliable client function GatherMatchResults(bool bMatchWin, int ExtractedPlayers[4])
+// MILAN CHANGE - 10/09/2026 - Mgamerz
+// ExtractedPlayers holds up to 16 players (SFXGameInfoMP_Lobby.MAX_LOBBY_SIZE), not 4. It must match
+// SFXGameInfoMP.MatchOver.CheckGoToLobby; every peer runs the same package, so the RPC signature can change.
+// END MILAN CHANGE
+// MILAN CHANGE - Mgamerz - 2026-10-12
+// Receive the duration measured on the listen host; remote players' uptimes differ.
+// This signature must match SFXGameInfoMP.MatchOver.CheckGoToLobby on every peer.
+public reliable client function GatherMatchResults(bool bMatchWin, int ExtractedPlayers[16], int MatchDuration)
+// END MILAN CHANGE
 {
     local SFXGameConfigMP ConfigMP;
     local float TeamXP;
@@ -1093,25 +1101,20 @@ public reliable client function GatherMatchResults(bool bMatchWin, int Extracted
     Credits = int(GetTotalCredits());
     GrantCredits(Credits);
     MatchResultsData.SetTotalSquadCredits(Credits);
-    MatchStartTime = GRI.MatchStartTime;
-    OnlineSub = Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem();
-    if (OnlineSub != None)
-    {
-        MatchEndTime = OnlineSub.GetComponentAPI().GetCurrentTime();
-    }
-    if (MatchStartTime == 0 || MatchEndTime == 0)
-    {
-        MatchResultsData.SetMatchTime(0);
-    }
-    else
-    {
-        MatchResultsData.SetMatchTime(MatchEndTime - MatchStartTime);
-    }
+    // MILAN CHANGE - Mgamerz - 2026-10-12
+    // Use the same host duration for the end-of-match and lobby results screens.
+    // Keep an unavailable or invalid duration from reducing saved play time.
+    MatchDuration = Max(0, MatchDuration);
+    MatchResultsData.SetMatchTime(MatchDuration);
+    // END MILAN CHANGE
     MatchResultsData.SetMatchSettings(GRI.MapSetting, MapSettings[MapSettingsIdx].ZoneID, int(ZoneIncrease), int(OverallIncrease), GRI.EnemySetting, GRI.DifficultySetting);
     MatchResultsData.SetMatchWaves(GRI.WaveCoordinator.GetFriendlyCurrentWaveNumber());
     MatchResultsData.SetMatchResult(bMatchWin);
     Engine.MPSaveManager.TotalGamesPlayed++;
-    Engine.MPSaveManager.TotalTimePlayed += MatchEndTime - MatchStartTime;
+    // MILAN CHANGE - Mgamerz - 2026-10-12
+    // Persist exactly the duration shown to the player.
+    Engine.MPSaveManager.TotalTimePlayed += MatchDuration;
+    // END MILAN CHANGE
     bEndOfMatchRecordsSaved = FALSE;
     Engine.MPSaveManager.SaveRecords(FALSE, OnSaveRecordsComplete);
     bEndOfMatchScreenShownForLongEnough = FALSE;
