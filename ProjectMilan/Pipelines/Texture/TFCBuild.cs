@@ -208,7 +208,7 @@ namespace ProjectMilan.Pipelines.Texture
         #endregion
 
         /// <summary>
-        /// Updates texture formats that only work in ME3 to LE3, installs upscales, strip material permutations on broken materials if it will fix them.
+        /// Converts ME3-only texture formats, installs upscales, and removes empty mip placeholders, including cubemap faces.
         /// </summary>
         private static void UpdateTextures()
         {
@@ -216,14 +216,15 @@ namespace ProjectMilan.Pipelines.Texture
             // Convert them all to BC7
 
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
+            int cleanedTextures = 0, removedMips = 0;
             foreach (var pf in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Checking package {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
-                var p = MEPackageHandler.OpenMEPackage(pf);
+                using var p = MEPackageHandler.OpenMEPackage(pf);
 
                 // Material instances are left alone: the shader pipeline runs after this one, compiles every
                 // permutation against the final textures, and fails the build if any is left without shaders.
-                foreach (var obj in p.Exports.Where(x => x.IsTexture()))
+                foreach (var obj in p.Exports.Where(x => x.IsTexture() && !x.IsDefaultObject))
                 {
                     // ME3 V8U8 norms don't work in LE3 and appear black, so they always end up as BC7.
                     var needsBC7Conversion = obj.GetProperty<EnumProperty>("Format")?.Value == "PF_V8U8";
@@ -252,6 +253,12 @@ namespace ProjectMilan.Pipelines.Texture
                     }
                 }
 
+                // Run before the externalizer's Cubemap/NeverStream skips. Cubemap cleanup validates all six
+                // planned face chains together; package-stored payloads and streaming flags are preserved.
+                var cleanup = EmptyMipCleanup.Apply(p, message => MilanLog.Information($"  {message}", customPrefix: LOG_CATEGORY));
+                cleanedTextures += cleanup.Textures;
+                removedMips += cleanup.Mips;
+
                 if (p.IsModified)
                 {
                     MilanLog.Information($"  Saving package", customPrefix: LOG_CATEGORY);
@@ -259,6 +266,7 @@ namespace ProjectMilan.Pipelines.Texture
                     MilanShared.RefreshMilanFiles = true;
                 }
             }
+            MilanLog.Information($"Removed {removedMips} empty mips from {cleanedTextures} textures", customPrefix: LOG_CATEGORY);
         }
 
         /// <summary>
