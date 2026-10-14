@@ -120,12 +120,35 @@ public event function EMatchPrivacySetting GetPrivacy()
 {
     return mPrivacySetting;
 }
+// MILAN CHANGE - 10/09/2026 - Mgamerz
+// The lobby size is NumPublicConnections + NumPrivateConnections, all public or all private by
+// privacy. SetPrivacy keeps the size instead of resetting it to 4, which was the ME3 default.
+// These settings are kept between lobby/match, so SFXGameInfoMP.InitGame reads the size from here.
+// MilanHost writes the counts when it reopens a migrated lobby.
 public event function SetPrivacy(EMatchPrivacySetting privacy)
 {
+    local int LobbySize;
+
+    LobbySize = GetLobbySize();
     mPrivacySetting = privacy;
-    NumPublicConnections = mPrivacySetting == EMatchPrivacySetting.PRIVACY_PRIVATE ? 0 : 4;
-    NumPrivateConnections = 4 - NumPublicConnections;
+    SetLobbySize(LobbySize);
 }
+public function SetLobbySize(int LobbySize)
+{
+    LobbySize = Max(LobbySize, 1);
+    NumPublicConnections = mPrivacySetting == EMatchPrivacySetting.PRIVACY_PRIVATE ? 0 : LobbySize;
+    NumPrivateConnections = LobbySize - NumPublicConnections;
+}
+// 4, the game's original size, for settings that never had one.
+public function int GetLobbySize()
+{
+    if (NumPublicConnections + NumPrivateConnections <= 0)
+    {
+        return 4;
+    }
+    return NumPublicConnections + NumPrivateConnections;
+}
+// END MILAN CHANGE
 public static function bool ValidateMapName(string MapName)
 {
     return default.AvailableMaps.Find(MapName) != -1;
