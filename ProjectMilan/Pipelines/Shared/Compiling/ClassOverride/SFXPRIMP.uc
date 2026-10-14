@@ -639,12 +639,53 @@ public reliable server function ServerSetComputerName(string sComputerName)
 {
     SetComputerName(sComputerName);
 }
+// MILAN CHANGE - Mgamerz - 2026-10-10
+// Validate votes on the host: one vote per participant, no self-votes, and only
+// current lobby players can be targeted. A zero ID withdraws the existing vote.
 public reliable server function ServerSetKickVote(UniqueNetId KickVote)
 {
+    local SFXGameInfoMP_Lobby LobbyGame;
+    local SFXGameInfoMP MatchGame;
+    local PlayerReplicationInfo PRI;
+    local UniqueNetId ZeroId;
+    local bool bValidTarget;
+
+    LobbyGame = SFXGameInfoMP_Lobby(WorldInfo.Game);
+    MatchGame = SFXGameInfoMP(WorldInfo.Game);
+    if (MatchGame == None || WorldInfo.GRI == None || bOnlySpectator || bIsInactive || WorldInfo.GRI.PRIArray.Find(Self) == -1)
+    {
+        return;
+    }
+    if (KickVote != ZeroId)
+    {
+        foreach WorldInfo.GRI.PRIArray(PRI)
+        {
+            if (SFXPRIMP(PRI) != None && PRI != Self && !PRI.bOnlySpectator && !PRI.bIsInactive && PRI.UniqueId == KickVote)
+            {
+                bValidTarget = TRUE;
+                break;
+            }
+        }
+        if (!bValidTarget)
+        {
+            return;
+        }
+    }
     KickVotePlayerId = KickVote;
-    SFXGameInfoMP_Lobby(WorldInfo.Game).UpdateKickVotes();
+    if (LobbyGame != None)
+    {
+        LobbyGame.UpdateKickVotes();
+        if (GetLobbyFlow() != None)
+        {
     GetLobbyFlow().RefreshLobbyScreen();
 }
+    }
+    else
+    {
+        MatchGame.UpdateMatchKickVotes();
+    }
+}
+// END MILAN CHANGE
 
 // MILAN CHANGE - 09/06/2026 - Mgamerz
 // Make this 255 instead of 30
