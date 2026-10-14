@@ -1407,6 +1407,10 @@ state MultiplayerMenu
         CurrentLobbyTab = ELobbySubscreen.LSS_MultiplayerMenu;
         ShowMultiplayerMenu();
         HideLobbyStatusBars();
+        // MILAN CHANGE - Mgamerz - 2026-10-10
+        // Ask a player with no profile name for their multiplayer settings on first arrival
+        Class'SFXGUI_MilanNetConfig'.static.ShowFirstRunIfNeeded(GetPC());
+        // END MILAN CHANGE
     }
     public function ContinueInitialization(int nResult)
     {
