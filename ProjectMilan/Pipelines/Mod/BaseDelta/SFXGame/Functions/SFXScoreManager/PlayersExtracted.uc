@@ -23,6 +23,15 @@ public final function PlayersExtracted(array<SFXPawn_Player> ExtractedPlayers)
         {
             IncrementMedalStanding(ExtractedPlayers[0], 17, 4);
         }
+        // MILAN CHANGE - 10/09/2026 - Mgamerz
+        // The squad extraction medal's tiers are 1, 2 and 4. With more than 4 players, the raw count
+        // would give gold before everyone is out and skip tiers for 3, 5, 6 or 7, so map the share
+        // extracted onto the tiers instead: half or more is silver, fewer is bronze.
+        else if (BioWorldInfo.Game.NumPlayers > 4)
+        {
+            IncrementMedalStanding(ExtractedPlayers[0], 17, ExtractedPlayers.Length * 2 >= BioWorldInfo.Game.NumPlayers ? 2 : 1);
+        }
+        // END MILAN CHANGE
         else
         {
             IncrementMedalStanding(ExtractedPlayers[0], 17, ExtractedPlayers.Length);
