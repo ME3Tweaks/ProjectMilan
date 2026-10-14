@@ -1,5 +1,7 @@
 class screens.MPNewLobby.PlayerItem extends screens.MPNewLobby.PageItem
 {
+   var m_slotIndex = -1;
+
    var slot;
    var PlayerTitleBar;
    var leaderHost;
@@ -165,7 +167,8 @@ class screens.MPNewLobby.PlayerItem extends screens.MPNewLobby.PageItem
          }
          else
          {
-            flash.external.ExternalInterface.call("SetPreviouslySelectedItem",screens.MPNewLobby.MPNewLobby.LSS_Squad,this.m_listIndex);
+            flash.external.ExternalInterface.call("SetPreviouslySelectedItem",screens.MPNewLobby.MPNewLobby.LSS_Squad,this.m_slotIndex);
+            _root.screen.m_SelectedPlayerSlot = this.m_slotIndex;
             _root.screen.ShowSquadScreen();
          }
       }

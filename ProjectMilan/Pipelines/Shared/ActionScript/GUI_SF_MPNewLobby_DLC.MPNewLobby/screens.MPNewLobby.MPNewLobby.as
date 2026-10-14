@@ -1,5 +1,18 @@
 class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
 {
+   // MILAN CHANGE - Mgamerz - 2026-10-10
+   // Four physical cards are rebound to absolute lobby slots. Menu indices remain local.
+   var m_FirstVisibleSlot = 0;
+   var m_SelectedPlayerSlot = -1;
+   var m_PlayerSlotCount = 0;
+   var m_CustomPlayerIcons;
+   var m_BindingPlayerRows = false;
+   var m_ScrollDirection = 0;
+   var m_NextScrollRepeat = 0;
+   var m_ViewStickDirection = 0;
+   var m_PlayerViewPending = false;
+   var m_PlayerInputTimer;
+
     var m_bConnected;
     var leftPage;
     var PreviouslySelectedItem;
@@ -101,16 +114,19 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         super();
     }
     function onLoad()
-    {
-        super.onLoad();
-        this.m_bConnected = false;
-        this.LoadStrings();
-        this.SetupPageArrows();
-        this.SetupButtonLegend();
-        var _loc4_ = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
-        this.LoadTab(_loc4_);
-        _root.gotoAndStop(2);
-    }
+   {
+      Mouse.addListener(this);
+      this.m_PlayerInputTimer = setInterval(this,"TickPlayerInput",50);
+
+      super.onLoad();
+      this.m_bConnected = false;
+      this.LoadStrings();
+      this.SetupPageArrows();
+      this.SetupButtonLegend();
+      var _loc4_ = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
+      this.LoadTab(_loc4_);
+      _root.gotoAndStop(2);
+   }
     function LoadStrings()
     {
         this.srBack = "$" + _global.SFX.GetIniString("srBack");
@@ -165,14 +181,16 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         this.srChallengeTracking = "$" + _global.SFX.GetIniString("srChallengeTracking");
     }
     function SetInitialSelectedItem()
-    {
-        var _loc2_ = this.leftPage.contents.list;
-        if(!_loc2_.IsIndexValid(this.PreviouslySelectedItem))
-        {
-            this.PreviouslySelectedItem = 0;
-        }
-        _loc2_.selectedIndex = this.PreviouslySelectedItem;
-    }
+   {
+      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD) return;
+
+      var _loc2_ = this.leftPage.contents.list;
+      if(!_loc2_.IsIndexValid(this.PreviouslySelectedItem))
+      {
+         this.PreviouslySelectedItem = 0;
+      }
+      _loc2_.selectedIndex = this.PreviouslySelectedItem;
+   }
     function SetupButtonLegend()
     {
         this.m_ControllerLegend = _root.mcControllerButtons;
@@ -245,13 +263,14 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
     }
     function SetupPageArrows()
-    {
-        this.m_ArrowLeft = _root.ArrowLeft;
-        this.m_ArrowRight = _root.ArrowRight;
-        this.leftArrowOriginalX = this.m_ArrowLeft.contents._x;
-        this.rightArrayOriginalX = this.m_ArrowRight.contents._x;
-        this.m_ArrowLeft.addEventListener("ArrowPressed",this.MakeDelegate(this.HideSquadScreen));
-    }
+   {
+      this.m_ArrowLeft = _root.ArrowLeft;
+      this.m_ArrowRight = _root.ArrowRight;
+      this.leftArrowOriginalX = this.m_ArrowLeft.contents._x;
+      this.rightArrayOriginalX = this.m_ArrowRight.contents._x;
+      this.m_ArrowLeft.addEventListener("ArrowPressed",this.MakeDelegate(this.HideSquadScreen));
+      this.m_ArrowRight.addEventListener("ArrowPressed",this.MakeDelegate(this.ShowSquadScreen));
+   }
     function MakeLoadTabDelegate(subscreen)
     {
         return function()
@@ -264,44 +283,48 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         flash.external.ExternalInterface.call("LoadTab",subscreen);
     }
     function OnTabLoaded(subscreen)
-    {
-        this.PreviouslySelectedItem = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",subscreen));
-        this.m_bConnected = Boolean(flash.external.ExternalInterface.call("IsMPGame"));
-        if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_MultiplayerMenu)
-        {
-            this.SetTitle(this.srMultiplayerMenuTitle);
-            this.LoadPage(this.leftPage,this.PAGE_MULTIPLAYER_MENU);
-            this.LoadPage(this.rightPage,this.PAGE_GALAXY_AT_WAR);
-        }
-        else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Character)
-        {
-            this.SetTitle(this.srCharacter);
-            this.LoadPage(this.leftPage,this.PAGE_CHARACTER_MENU);
-            this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
-        }
-        else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_MissionSetup)
-        {
-            this.SetTitle(this.GetMissionSettingsTabTitle());
-            this.LoadPage(this.leftPage,this.PAGE_MISSION_SETUP);
-            this.LoadPage(this.rightPage,this.PAGE_GALAXY_AT_WAR);
-        }
-        else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Lobby)
-        {
-            this.SetTitle(this.srLobbyTitle);
-            this.LoadPage(this.leftPage,this.PAGE_LOBBY_MENU);
-            this.LoadPage(this.rightPage,this.PAGE_SQUAD);
-        }
-        else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Squad)
-        {
-            this.SetTitle(this.srSquad);
-            this.LoadPage(this.leftPage,this.PAGE_SQUAD);
-            this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
-        }
-        if(this.m_PageTransitionType != this.PAGE_TRANSITION_NONE)
-        {
-            this.StartPageTransition();
-        }
-    }
+   {
+      this.m_PlayerViewPending = false;
+      this.m_ScrollDirection = 0;
+      if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Squad) this.m_SelectedPlayerSlot = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",subscreen));
+
+      this.PreviouslySelectedItem = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",subscreen));
+      this.m_bConnected = Boolean(flash.external.ExternalInterface.call("IsMPGame"));
+      if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_MultiplayerMenu)
+      {
+         this.SetTitle(this.srMultiplayerMenuTitle);
+         this.LoadPage(this.leftPage,this.PAGE_MULTIPLAYER_MENU);
+         this.LoadPage(this.rightPage,this.PAGE_GALAXY_AT_WAR);
+      }
+      else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Character)
+      {
+         this.SetTitle(this.srCharacter);
+         this.LoadPage(this.leftPage,this.PAGE_CHARACTER_MENU);
+         this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
+      }
+      else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_MissionSetup)
+      {
+         this.SetTitle(this.GetMissionSettingsTabTitle());
+         this.LoadPage(this.leftPage,this.PAGE_MISSION_SETUP);
+         this.LoadPage(this.rightPage,this.PAGE_GALAXY_AT_WAR);
+      }
+      else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Lobby)
+      {
+         this.SetTitle(this.srLobbyTitle);
+         this.LoadPage(this.leftPage,this.PAGE_LOBBY_MENU);
+         this.LoadPage(this.rightPage,this.PAGE_SQUAD);
+      }
+      else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Squad)
+      {
+         this.SetTitle(this.srSquad);
+         this.LoadPage(this.leftPage,this.PAGE_SQUAD);
+         this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
+      }
+      if(this.m_PageTransitionType != this.PAGE_TRANSITION_NONE)
+      {
+         this.StartPageTransition();
+      }
+   }
     function SetTitle(sTitle)
     {
         this.tabs.mainTab.title.textAutoSize = "shrink";
@@ -492,18 +515,18 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         this.RefreshPageArrows();
     }
     function RefreshPageArrows()
-    {
-        this.m_ArrowLeft._visible = false;
-        this.m_ArrowRight._visible = false;
-        if(this.leftPage.contents.m_symbolName == this.PAGE_LOBBY_MENU && this.bUsingGamepad)
-        {
-            this.m_ArrowRight._visible = true;
-        }
-        else if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
-        {
-            this.m_ArrowLeft._visible = true;
-        }
-    }
+   {
+      this.m_ArrowLeft._visible = false;
+      this.m_ArrowRight._visible = false;
+      if(this.leftPage.contents.m_symbolName == this.PAGE_LOBBY_MENU)
+      {
+         this.m_ArrowRight._visible = true;
+      }
+      else if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
+      {
+         this.m_ArrowLeft._visible = true;
+      }
+   }
     function RefreshGalaxyAtWarMap()
     {
         if(_global.SFX.IsDemo)
@@ -571,21 +594,24 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
     }
     function onListItemSelected(list)
-    {
-        if(this.leftPage.contents.list != list)
-        {
-            this.leftPage.contents.list.selectedIndex = -1;
-        }
-        if(this.rightPage.contents.list != list)
-        {
-            this.rightPage.contents.list.selectedIndex = -1;
-        }
-        if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
-        {
-            this.RefreshCharacterSummary();
-        }
-        this.RefreshButtonLegend();
-    }
+   {
+      if(this.m_BindingPlayerRows) return;
+      if(list == this.GetPlayerWindowList() && list.selectedItem != undefined) this.m_SelectedPlayerSlot = list.selectedItem.m_slotIndex;
+
+      if(this.leftPage.contents.list != list)
+      {
+         this.leftPage.contents.list.selectedIndex = -1;
+      }
+      if(this.rightPage.contents.list != list)
+      {
+         this.rightPage.contents.list.selectedIndex = -1;
+      }
+      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
+      {
+         this.RefreshCharacterSummary();
+      }
+      this.RefreshButtonLegend();
+   }
     function RefreshCharacterSummary()
     {
         var _loc2_ = this.rightPage.contents.summary;
@@ -724,69 +750,62 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
     }
     function RefreshButtonLegend_Squad()
-    {
-        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        var isInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
-        if(!this.bUsingGamepad)
-        {
-            this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
-            var _loc6_ = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
-            if(_loc6_.isOccupied && !_loc6_.isLocalPlayer)
-            {
-                var _loc7_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.leftPage.contents.list.selectedIndex));
-                this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,!_loc7_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,canInteract);
-            }
-            else
-            {
-                this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false);
-            }
-            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
-            // map xbox A/Enter to "select current item"
-            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
-            if(isInParty)
-            {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
-            }
-            else
-            {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
-            }
-            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),canInteract);
-        }
-        else
-        {
-            this.RefreshButton(_root.m_ControlY,0,"",undefined,false, true);
-            _loc6_ = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
-            if(_loc6_.isOccupied && !_loc6_.isLocalPlayer)
-            {
-                _loc7_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.leftPage.contents.list.selectedIndex));
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,!_loc7_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,canInteract, true);
-            }
-            else
-            {
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false, true);
-            }
-            if(isInParty)
-            {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull(), true);
-            }
-            else
-            {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull(), true);
-            }
-            // TODO I should probably figure out what to display/do here
-            // if(_global.SFX.Platform == com.XPlatform.PC)
-            // {
-            //     this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srShowGamercard,this.ShowGamercard,canInteract && _loc6_.isOccupied);
-            // }
-            // else
-            // {
-                this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false, true);
-            // }
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),canInteract, true);
-            this.m_ControllerLegend.ControlB.SetVisible(false);
-        }
-    }
+   {
+      var _loc3_ = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+      var _loc4_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+      var _loc5_;
+      var _loc6_;
+      if(!this.bUsingGamepad)
+      {
+         this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
+         _loc5_ = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
+         if(_loc5_.isOccupied && !_loc5_.isLocalPlayer)
+         {
+            _loc6_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
+            this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,!_loc6_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,_loc3_);
+         }
+         else
+         {
+            this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false);
+         }
+         this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,_loc3_);
+         this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,_loc3_);
+         if(_loc4_)
+         {
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,_loc3_ && !this.IsGameFull());
+         }
+         else
+         {
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,_loc3_ && !this.IsGameFull());
+         }
+         this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),_loc3_);
+      }
+      else
+      {
+         this.RefreshButton(_root.m_ControlY,0,"",undefined,false,true);
+         _loc5_ = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
+         if(_loc5_.isOccupied && !_loc5_.isLocalPlayer)
+         {
+            _loc6_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
+            this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,!_loc6_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,_loc3_,true);
+         }
+         else
+         {
+            this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false,true);
+         }
+         if(_loc4_)
+         {
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,_loc3_ && !this.IsGameFull(),true);
+         }
+         else
+         {
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,_loc3_ && !this.IsGameFull(),true);
+         }
+         this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false,true);
+         this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),_loc3_,true);
+         this.m_ControllerLegend.ControlB.SetVisible(false);
+      }
+   }
     function RefreshButtonLegend_MissionSetup()
     {
         var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
@@ -882,58 +901,62 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
     }
     function RefreshPlayerList(list, bInteractive)
-    {
-        var _loc4_ = Number(flash.external.ExternalInterface.call("GetNumPlayerSlots"));
-        var _loc5_ = Number(flash.external.ExternalInterface.call("GetNumPlayers"));
-        if(list.selectedIndex >= _loc5_)
-        {
-            list.selectedIndex = _loc5_ - 1;
-        }
-        var _loc6_ = 0;
-        while(_loc6_ < _loc4_)
-        {
-            if(_loc6_ < _loc5_)
-            {
-                var _loc7_ = flash.external.ExternalInterface.call("GetPlayerSlotBasicInfo",_loc6_);
-                var _loc8_ = flash.external.ExternalInterface.call("GetPlayerSlotInfo_Patch",_loc6_);
-                _loc7_.NumClassPromotions = _loc8_.NumClassPromotions;
-                _loc7_.EmblemID = _loc8_.EmblemID;
-                _loc7_.NumChallengesComplete = _loc8_.NumChallengesComplete;
-                list.SetSlotPlayer(_loc6_,_loc7_);
-            }
-            else
-            {
-                list.SetSlotEmpty(_loc6_);
-            }
-            list.SetSlotPermission(_loc6_,this.IsPrivateMatch());
-            _loc6_ += 1;
-        }
-        list.SetInteractive(bInteractive);
-    }
+   {
+      this.m_PlayerSlotCount = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
+      this.m_FirstVisibleSlot = Math.max(0,Math.min(this.m_FirstVisibleSlot,Math.max(0,this.m_PlayerSlotCount - 4)));
+      if(this.m_SelectedPlayerSlot < 0) this.m_SelectedPlayerSlot = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",screens.MPNewLobby.MPNewLobby.LSS_Squad));
+      this.m_SelectedPlayerSlot = this.m_PlayerSlotCount == 0 ? -1 : Math.max(this.m_FirstVisibleSlot,Math.min(this.m_SelectedPlayerSlot,Math.min(this.m_PlayerSlotCount - 1,this.m_FirstVisibleSlot + 3)));
+      this.m_BindingPlayerRows = true;
+      // Deactivate before rebinding, even if the selected physical row is unchanged.
+      list.selectedIndex = -1;
+      var privateMatch = this.IsPrivateMatch();
+      for(var row = 0; row < list.numItems; row++)
+      {
+         var slot = this.m_FirstVisibleSlot + row;
+         var card = list.getItem(row);
+         card.m_slotIndex = slot;
+         card._visible = slot < this.m_PlayerSlotCount;
+         card.SetCustomIcon(-1);
+         if(card._visible && Boolean(flash.external.ExternalInterface.call("IsPlayerSlotOccupied",slot)))
+         {
+            var basic = flash.external.ExternalInterface.call("GetPlayerSlotBasicInfo",slot);
+            var patch = flash.external.ExternalInterface.call("GetPlayerSlotInfo_Patch",slot);
+            basic.NumClassPromotions = patch.NumClassPromotions;
+            basic.EmblemID = patch.EmblemID;
+            basic.NumChallengesComplete = patch.NumChallengesComplete;
+            list.SetSlotPlayer(row,basic);
+         }
+         else list.SetSlotEmpty(row);
+         list.SetSlotPermission(row,privateMatch);
+      }
+      list.SetInteractive(bInteractive);
+      this.ApplyPlayerIcons(list);
+      if(bInteractive) list.selectedIndex = this.m_SelectedPlayerSlot - this.m_FirstVisibleSlot;
+      else
+      {
+         for(var i = 0; i < list.numItems; i++)
+         {
+            list.getItem(i).active = false;
+            if(this.bUsingGamepad) list.getItem(i).selection._visible = false;
+         }
+      }
+      this.m_BindingPlayerRows = false;
+      if(this.m_SelectedPlayerSlot >= 0) flash.external.ExternalInterface.call("SetPreviouslySelectedItem",screens.MPNewLobby.MPNewLobby.LSS_Squad,this.m_SelectedPlayerSlot);
+      this.RefreshPlayerScrollArrows();
+      if(bInteractive)
+      {
+         this.RefreshCharacterSummary();
+         this.RefreshButtonLegend();
+      }
+   }
     // MILAN CHANGE - 10/04/2026 - Mgamerz
     // The voice icon now shows what screen each player is on. IconData is indexed by lobby slot:
     // -1 for none, otherwise the index of the custom icon frame (custom0 - custom9).
     function RefreshAllCustomIcons(IconData)
-    {
-        var _loc3_ = null;
-        if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
-        {
-            _loc3_ = this.leftPage.contents.list;
-        }
-        else if(this.rightPage.contents.m_symbolName == this.PAGE_SQUAD)
-        {
-            _loc3_ = this.rightPage.contents.list;
-        }
-        if(_loc3_ != null)
-        {
-            var _loc4_ = 0;
-            while(_loc4_ < IconData.length)
-            {
-                _loc3_.SetSlotCustomIcon(_loc4_,IconData[_loc4_]);
-                _loc4_ += 1;
-            }
-        }
-    }
+   {
+      this.m_CustomPlayerIcons = IconData;
+      this.ApplyPlayerIcons(this.GetPlayerWindowList());
+   }
     function RefreshPlayerInfo(page, bShowLevelUp)
     {
         var _loc4_ = flash.external.ExternalInterface.call("GetLocalPlayerBasicInfo");
@@ -999,39 +1022,45 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
     }
     function onDPadUp()
-    {
-        var _loc3_ = this.leftPage.contents.list;
-        if(_loc3_ != null)
-        {
-            var _loc4_ = _loc3_.selectedIndex - 1;
-            if(_loc3_.IsIndexValid(_loc4_))
-            {
-                _loc3_.selectedIndex = _loc4_;
-                _global.SFX.PlayGUISound("MPLobbyPageItemChange");
-            }
-            else
-            {
-                _global.SFX.PlayGUIError();
-            }
-        }
-    }
+   {
+      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD) { this.MovePlayerSelection(-1); return; }
+
+      var _loc3_ = this.leftPage.contents.list;
+      var _loc4_;
+      if(_loc3_ != null)
+      {
+         _loc4_ = _loc3_.selectedIndex - 1;
+         if(_loc3_.IsIndexValid(_loc4_))
+         {
+            _loc3_.selectedIndex = _loc4_;
+            _global.SFX.PlayGUISound("MPLobbyPageItemChange");
+         }
+         else
+         {
+            _global.SFX.PlayGUIError();
+         }
+      }
+   }
     function onDPadDown()
-    {
-        var _loc3_ = this.leftPage.contents.list;
-        if(_loc3_ != null)
-        {
-            var _loc4_ = _loc3_.selectedIndex + 1;
-            if(_loc3_.IsIndexValid(_loc4_))
-            {
-                _loc3_.selectedIndex = _loc4_;
-                _global.SFX.PlayGUISound("MPLobbyPageItemChange");
-            }
-            else
-            {
-                _global.SFX.PlayGUIError();
-            }
-        }
-    }
+   {
+      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD) { this.MovePlayerSelection(1); return; }
+
+      var _loc3_ = this.leftPage.contents.list;
+      var _loc4_;
+      if(_loc3_ != null)
+      {
+         _loc4_ = _loc3_.selectedIndex + 1;
+         if(_loc3_.IsIndexValid(_loc4_))
+         {
+            _loc3_.selectedIndex = _loc4_;
+            _global.SFX.PlayGUISound("MPLobbyPageItemChange");
+         }
+         else
+         {
+            _global.SFX.PlayGUIError();
+         }
+      }
+   }
     function onInvalidInput(p_event)
     {
         _global.SFX.PlayGUIError();
@@ -1083,9 +1112,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         flash.external.ExternalInterface.call("MakeMatchPublic");
     }
     function ShowGamercard()
-    {
-        flash.external.ExternalInterface.call("ShowGamercard",this.leftPage.contents.list.selectedIndex);
-    }
+   {
+      flash.external.ExternalInterface.call("ShowGamercard",this.GetSelectedPlayerSlot());
+   }
     function CustomMatch()
     {
         _global.SFX.PlayGUISound("MPMissionSettingsStart");
@@ -1147,17 +1176,25 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         flash.external.ExternalInterface.call("ShowOptionsScreen");
     }
     function ShowSquadScreen()
-    {
-        this.m_PageTransitionType = this.PAGE_TRANSITION_SLIDE_LEFT;
-        _global.SFX.PlayGUISound("MPSquadStart");
-        this.LoadTab(screens.MPNewLobby.MPNewLobby.LSS_Squad);
-    }
+   {
+      if(this.rightPage.contents.m_symbolName != this.PAGE_SQUAD || !this.CanScrollPlayers()) return;
+      this.m_PlayerViewPending = true;
+      this.m_ScrollDirection = 0;
+
+      this.m_PageTransitionType = this.PAGE_TRANSITION_SLIDE_LEFT;
+      _global.SFX.PlayGUISound("MPSquadStart");
+      this.LoadTab(screens.MPNewLobby.MPNewLobby.LSS_Squad);
+   }
     function HideSquadScreen()
-    {
-        this.m_PageTransitionType = this.PAGE_TRANSITION_SLIDE_RIGHT;
-        _global.SFX.PlayGUISound("MPSquadExit");
-        this.LoadTab(screens.MPNewLobby.MPNewLobby.LSS_Lobby);
-    }
+   {
+      if(this.leftPage.contents.m_symbolName != this.PAGE_SQUAD || !this.CanScrollPlayers()) return;
+      this.m_PlayerViewPending = true;
+      this.m_ScrollDirection = 0;
+
+      this.m_PageTransitionType = this.PAGE_TRANSITION_SLIDE_RIGHT;
+      _global.SFX.PlayGUISound("MPSquadExit");
+      this.LoadTab(screens.MPNewLobby.MPNewLobby.LSS_Lobby);
+   }
     function SwitchCharacter()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
@@ -1193,11 +1230,11 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         flash.external.ExternalInterface.call("SetReady",!_loc1_);
     }
     function ToggleVoteToKickSelectedPlayer()
-    {
-        var _loc2_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.leftPage.contents.list.selectedIndex));
-        flash.external.ExternalInterface.call("VoteToKickPlayerInSlot",this.leftPage.contents.list.selectedIndex,!_loc2_);
-        this.RefreshButtonLegend();
-    }
+   {
+      var _loc2_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
+      flash.external.ExternalInterface.call("VoteToKickPlayerInSlot",this.GetSelectedPlayerSlot(),!_loc2_);
+      this.RefreshButtonLegend();
+   }
     function GetPrivacySetting()
     {
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP)
@@ -1247,4 +1284,171 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     {
         _root.screen.m_ControllerLegend.InputDisabled = false;
     }
+
+   function GetPlayerWindowList()
+   {
+      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD) return this.leftPage.contents.list;
+      if(this.rightPage.contents.m_symbolName == this.PAGE_SQUAD) return this.rightPage.contents.list;
+      return null;
+   }
+
+   function CanScrollPlayers()
+   {
+      return !this.m_PlayerViewPending && this.m_bConnected && !this.m_ControllerLegend.InputDisabled && this.GetPlayerWindowList().numItems > 0 && Boolean(flash.external.ExternalInterface.call("CanInteract"));
+   }
+
+   function GetSelectedPlayerSlot()
+   {
+      return this.leftPage.contents.list.selectedItem.m_slotIndex;
+   }
+
+   function ApplyPlayerIcons(list)
+   {
+      if(list == null) return;
+      for(var row = 0; row < list.numItems; row++)
+      {
+         var icon = this.m_CustomPlayerIcons[list.getItem(row).m_slotIndex];
+         list.SetSlotCustomIcon(row,icon == undefined ? -1 : icon);
+      }
+   }
+
+   function RefreshPlayerScrollArrows()
+   {
+      var list = this.GetPlayerWindowList();
+      if(list == null || list.numItems == 0) return;
+      var page = list._parent;
+      if(page.playerScrollUp == undefined)
+      {
+         page.attachMovie("MilanPlayerScrollArrow","playerScrollUp",page.getNextHighestDepth());
+         page.attachMovie("MilanPlayerScrollArrow","playerScrollDown",page.getNextHighestDepth());
+         page.playerScrollUp.addEventListener("ArrowPressed",this.MakeDelegate(this.ScrollPlayersUp));
+         page.playerScrollDown.addEventListener("ArrowPressed",this.MakeDelegate(this.ScrollPlayersDown));
+         page.playerScrollUp._rotation = -90;
+         page.playerScrollDown._rotation = 90;
+      }
+      var first = list.getItem(0);
+      var last = list.getItem(list.numItems - 1);
+      // Keep the complete pulse inside the card strip, clear of the footer buttons.
+      // Card pitch excludes selection glows and other decorative bounds.
+      var cardPitch = list.numItems > 1 ? list.getItem(1)._y - first._y : 121.7;
+      page.playerScrollUp._x = list._x + 420;
+      page.playerScrollDown._x = list._x + 420;
+      page.playerScrollUp._y = list._y + first._y + 18;
+      page.playerScrollDown._y = list._y + last._y + cardPitch - 18;
+      page.playerScrollUp.contents._x = 0;
+      page.playerScrollUp.contents._y = 0;
+      page.playerScrollDown.contents._x = 0;
+      page.playerScrollDown.contents._y = 0;
+      page.playerScrollUp.contents._xscale = 35;
+      page.playerScrollUp.contents._yscale = 25;
+      page.playerScrollDown.contents._xscale = 35;
+      page.playerScrollDown.contents._yscale = 25;
+      page.playerScrollUp.ShowStickIcon(false);
+      page.playerScrollDown.ShowStickIcon(false);
+      page.playerScrollUp._visible = this.m_FirstVisibleSlot > 0;
+      page.playerScrollDown._visible = this.m_FirstVisibleSlot + 4 < this.m_PlayerSlotCount;
+   }
+
+   function ShiftPlayerWindow(delta)
+   {
+      if(!this.CanScrollPlayers()) return false;
+      var count = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
+      var next = Math.max(0,Math.min(this.m_FirstVisibleSlot + delta,Math.max(0,count - 4)));
+      if(next == this.m_FirstVisibleSlot) return false;
+      this.m_FirstVisibleSlot = next;
+      this.RefreshPlayerList(this.GetPlayerWindowList(),this.leftPage.contents.m_symbolName == this.PAGE_SQUAD);
+      _global.SFX.PlayGUISound("SaveLoadMove");
+      return true;
+   }
+
+   function ScrollPlayersUp() { this.ShiftPlayerWindow(-1); }
+
+   function ScrollPlayersDown() { this.ShiftPlayerWindow(1); }
+
+   function onMouseWheel(delta, target)
+   {
+      var list = this.GetPlayerWindowList();
+      if(list == null || delta == 0) return;
+      // Target ownership includes nested card clips and the two scroll arrows.
+      var node = target;
+      while(node != undefined && node != list._parent && node != _root) node = node._parent;
+      if(node == list._parent || (target == undefined && this.IsMouseOverPlayers())) this.ShiftPlayerWindow(delta > 0 ? -1 : 1);
+   }
+
+   function IsMouseOverPlayers()
+   {
+      var list = this.GetPlayerWindowList();
+      if(list == null) return false;
+      var bounds = list.getBounds(list);
+      return list._xmouse >= bounds.xMin && list._xmouse <= bounds.xMax && list._ymouse >= bounds.yMin && list._ymouse <= bounds.yMax;
+   }
+
+   function ScrollPlayersWheel(value)
+   {
+      if(!this.CanScrollPlayers() || !this.IsMouseOverPlayers()) return 0;
+      this.ShiftPlayerWindow(value > 0 ? -1 : 1);
+      return 1;
+   }
+
+   function ScrollPlayersAnalog(value)
+   {
+      var direction = Math.abs(value) < 0.35 ? 0 : (value > 0 ? -1 : 1);
+      if(!this.CanScrollPlayers()) direction = 0;
+      if(direction != this.m_ScrollDirection)
+      {
+         this.m_ScrollDirection = direction;
+         if(direction != 0) this.ShiftPlayerWindow(direction);
+         this.m_NextScrollRepeat = getTimer() + 350;
+      }
+   }
+
+   function TickPlayerInput()
+   {
+      if(!this.CanScrollPlayers())
+      {
+         this.m_ScrollDirection = 0;
+         return;
+      }
+      if(this.m_ScrollDirection != 0 && getTimer() >= this.m_NextScrollRepeat)
+      {
+         this.ShiftPlayerWindow(this.m_ScrollDirection);
+         this.m_NextScrollRepeat = getTimer() + 150;
+      }
+      // Keep controller lobby cards unselected while their timelines advance.
+      if(this.bUsingGamepad && this.rightPage.contents.m_symbolName == this.PAGE_SQUAD)
+      {
+         var list = this.GetPlayerWindowList();
+         for(var row = 0; row < list.numItems; row++) list.getItem(row).selection._visible = false;
+      }
+   }
+
+   function SwitchPlayersViewAnalog(value)
+   {
+      var direction = Math.abs(value) < 0.55 ? 0 : (value > 0 ? 1 : -1);
+      if(direction == this.m_ViewStickDirection) return;
+      this.m_ViewStickDirection = direction;
+      if(!this.CanScrollPlayers()) return;
+      if(direction > 0) this.ShowSquadScreen();
+      else if(direction < 0) this.HideSquadScreen();
+   }
+
+   function MovePlayerSelection(delta)
+   {
+      if(!this.CanScrollPlayers()) return;
+      var count = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
+      var next = Math.max(0,Math.min(count - 1,this.m_SelectedPlayerSlot + delta));
+      if(count == 0 || next == this.m_SelectedPlayerSlot) return;
+      this.m_SelectedPlayerSlot = next;
+      if(next < this.m_FirstVisibleSlot) this.m_FirstVisibleSlot = next;
+      if(next >= this.m_FirstVisibleSlot + 4) this.m_FirstVisibleSlot = next - 3;
+      this.RefreshPlayerList(this.GetPlayerWindowList(),true);
+      _global.SFX.PlayGUISound("SaveLoadMove");
+   }
+
+   function onUnload()
+   {
+      clearInterval(this.m_PlayerInputTimer);
+      Mouse.removeListener(this);
+      Key.removeListener(this);
+   }
 }

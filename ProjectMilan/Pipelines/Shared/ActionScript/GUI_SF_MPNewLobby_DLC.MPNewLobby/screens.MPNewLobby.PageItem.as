@@ -76,7 +76,7 @@ class screens.MPNewLobby.PageItem extends com.SFXMovieClip
             if(this._parent == _root.screen.leftPage.contents.list)
             {
                var _loc3_ = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
-               flash.external.ExternalInterface.call("SetPreviouslySelectedItem",_loc3_,this.m_listIndex);
+               flash.external.ExternalInterface.call("SetPreviouslySelectedItem",_loc3_,this.m_slotIndex == undefined ? this.m_listIndex : this.m_slotIndex);
             }
          }
       }
