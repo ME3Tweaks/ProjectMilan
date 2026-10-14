@@ -83,4 +83,6 @@ enum EGuiOptions
     OPTION_AAT_ZoomSnap,
     OPTION_AAT_Adhesion,
     OPTION_AAT_Friction,
+    // MILAN CHANGE - Mgamerz - 2026-10-10: Multiplayer Settings page (SFXGUI_PCMPOptions.BuildMilanNetConfigPage)
+    OPTION_MilanNetConfig,
 };
