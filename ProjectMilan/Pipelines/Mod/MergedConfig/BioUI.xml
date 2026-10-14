@@ -191,13 +191,16 @@
 		</Section>
 		<Section name="sfxgame.sfxweaponuidatamanager">
 			<!-- MILAN CHANGE -->
-			<!-- The 5 MP weapon-data resources (CON_MP1-5) are replaced by a single merged package built by
-			     NonStartupPipeline.PortWeaponDataPackage(), which mixes the shipped LE3 SP weapon assets/Wwise
-			     data with the MP weapons' own ClassPath/LoadoutInfo/Stats. SharedSF is untouched - it only
-			     carries weapon MOD data (m_aMods), not weapons. -->
+			<!-- Weapon UI data comes from two merged packages built by SFXWeapons.PortWeaponDataPackage() and
+			     PortWeaponModDataPackage(), and the vanilla SP data (SFXGUI_WeaponUIDataSF, which MilanBaseInstaller no longer
+			     installs) and SharedSF are replaced by them.
+			     Weapons: the MP weapon-data resources (CON_MP1-5) mixed with the shipped LE3 SP weapon assets/Wwise data
+			     (the MP weapons' own ClassPath/LoadoutInfo/Stats), plus the SP weapons from the vanilla SP data and SharedSF.
+			     Mods: the SP weapon mods (m_aMods) of the vanilla SP data and SharedSF, with the higher resolution art. -->
 			<Property name="weaponuidataresources">
+				<Value type="4">(Package=SFXGUI_WeaponUIDataSF, Resource="SFXGUI_WeaponUIData.Data")</Value>
 				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MPMerged, Resource="SFXGUI_WeaponUIDataDLC_CON_MPMerged.Data")</Value>
-				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_SharedSF, Resource="SFXGUI_WeaponUIDataDLC_Shared.Data")</Value>
+				<Value type="3">(Package=SFXGUI_WeaponUIDataDLC_CON_MPMergedMods, Resource="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods.Data")</Value>
 			</Property>
 			<!-- END MILAN -->
 		</Section>

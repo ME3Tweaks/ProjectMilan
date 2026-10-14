@@ -638,8 +638,20 @@
 				<Value type="3">(Index=641,Name=PROPHECY_3,Title=814442,Incomplete=814449,Complete=814449,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=PROPHECY_1GROUP,GrinderAccomplishmentName=PROPHECY_1GROUP_PROGRESS,bRepeatableChallenge=FALSE)</Value>
 				<Value type="3">(Index=642,Name=PROPHECY_4,Title=814442,Incomplete=814450,Complete=814450,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=PROPHECY_1GROUP,GrinderAccomplishmentName=PROPHECY_1GROUP_PROGRESS,bRepeatableChallenge=FALSE)</Value>
 				<Value type="3">(Index=643,Name=PROPHECY_5,Title=814442,Incomplete=814444,Complete=814444,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=PROPHECY_1GROUP,GrinderAccomplishmentName=PROPHECY_1GROUP_PROGRESS,bRepeatableChallenge=FALSE)</Value>
+				<!-- ME3 map achievements, removed in LE3. ME3 used indices 41/43/44/49, which LE3 now uses for the TRILOGY_* achievements,
+				     and on PC the Index is the platform achievement ID that gets unlocked, so they get free indices here and no LinkedAchievementID.
+				     MP-only so completion goes to online storage rather than the LE3 profile. PointValue=0 because ME3 never awarded challenge points for them. -->
+				<Value type="3">(Index=745,Name=MISSIONSA,Title=660012,Incomplete=660029,Complete=660029,NotificationText=723156,MPNotificationText=723155,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE)</Value>
+				<Value type="3">(Index=746,Name=MISSIONSB,Title=660013,Incomplete=660030,Complete=660030,NotificationText=723158,MPNotificationText=723157,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE)</Value>
+				<Value type="3">(Index=747,Name=PLAYALLMAPS,Title=582585,Incomplete=582600,Complete=582600,NotificationText=723152,MPNotificationText=723151,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE)</Value>
+				<Value type="3">(Index=748,Name=ALLMAPSGOLD,Title=660018,Incomplete=660035,Complete=660035,NotificationText=723166,MPNotificationText=723165,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE)</Value>
 			</Property>
 			<Property name="accomplishmentprogressdata">
+				<!-- From ME3 basegame. LE3 removed these; SFXPlayerControllerMP.UpdateMPMapsCompleted needs them at match end. -->
+				<Value type="3">(Index=13,Name=MPPLAYEDMAPS)</Value>
+				<Value type="3">(Index=14,Name=MPMAPSCOUNT)</Value>
+				<Value type="3">(Index=17,Name=MPPLAYEDMAPSGOLD)</Value>
+				<Value type="3">(Index=18,Name=MPMAPSGOLDCOUNT)</Value>
 				<Value type="3">(Index=100,Name=MASSEFFECT_GOLD_PROGRESS)</Value>
 				<Value type="3">(Index=102,Name=SQUADELITE_GOLD_PROGRESS)</Value>
 				<Value type="3">(Index=103,Name=SPECTREMASTERY_GOLD_PROGRESS)</Value>
@@ -2082,6 +2094,11 @@
 				<Value type="3">(AccomplishmentName=PROPHECY_3,AccomplishmentProgressName=PROPHECY_3_PROGRESS,Goal=1,Interval=1,Title=814442,Description=814449)</Value>
 				<Value type="3">(AccomplishmentName=PROPHECY_4,AccomplishmentProgressName=PROPHECY_4_PROGRESS,Goal=1,Interval=1,Title=814442,Description=814450)</Value>
 				<Value type="3">(AccomplishmentName=PROPHECY_5,AccomplishmentProgressName=PROPHECY_5_PROGRESS,Goal=100000,Interval=10000,Title=814442,Description=814444)</Value>
+				<!-- ME3 map achievements (MP rows only; the SP rows tracked N7 missions/Insanity). -->
+				<Value type="3">(AccomplishmentName=MISSIONSA,AccomplishmentProgressName=MPMAPSCOUNT,Goal=1,Interval=1,Title=660012,Description=660029,MPDescription=723155)</Value>
+				<Value type="3">(AccomplishmentName=MISSIONSB,AccomplishmentProgressName=MPMAPSCOUNT,Goal=3,Interval=1,Title=660013,Description=660030,MPDescription=723157)</Value>
+				<Value type="3">(AccomplishmentName=PLAYALLMAPS,AccomplishmentProgressName=MPMAPSCOUNT,Goal=6,Interval=1,Title=582585,Description=582600,MPDescription=723151)</Value>
+				<Value type="3">(AccomplishmentName=ALLMAPSGOLD,AccomplishmentProgressName=MPMAPSGOLDCOUNT,Goal=6,Interval=1,Title=660018,Description=660035,MPDescription=723165)</Value>
 			</Property>
 			<Property name="rewards">
 				<Value type="3">(RewardIDGranted=100,AccomplishmentName=MASSEFFECT)</Value>
