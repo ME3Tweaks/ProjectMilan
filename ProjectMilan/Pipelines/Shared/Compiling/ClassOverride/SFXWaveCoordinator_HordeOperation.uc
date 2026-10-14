@@ -3,6 +3,7 @@
 // MILAN CHANGE - 09/21/2026 - Mgamerz
 // Change how wave loading works so host pushes archetypes to client
 // so that modding waves is easier and allows us to make dynamic wavelists.
+// 10/13/2026 - Dev-only "None" faction (NO_ENEMIES_SETTING_ID) that never starts waves.
 Class SFXWaveCoordinator_HordeOperation extends SFXWaveCoordinator
     transient
     config(Game);
@@ -46,6 +47,7 @@ var bool bForceOperationWave;
 // MILAN CHANGE ------
 // NEW: Random Waves / Random Enemies additions
 const RANDOM_WAVES_ENEMY_SETTING_ID = 1;   // Must match ID in config for Random Waves
+const NO_ENEMIES_SETTING_ID = 99;          // Must match the dev-only "None" faction ID in MPLevels.cs (not registered in SHIPPING_RELEASE builds)
 var config bool bRandomizeWaveTypePerWave;
 
 // Host-authoritative "what to spawn and what to load" for the CURRENT wave, always populated
@@ -474,7 +476,28 @@ public simulated function StartWaves()
 {
     local SFXPlayerController PC;
     local int EnemyTypesIndex;
-    
+
+    // MILAN CHANGE - Dev-only "None" faction: create the managers other code expects to exist,
+    // but never start a wave, so the level loads with no enemies. EW_StartWaves is never
+    // replicated, and ShouldStartNewWaves stays FALSE, so clients (including join-in-progress) stay idle too.
+    if (SFXGRI(WorldInfo.GRI).GetEnemyWaveTypeID() == NO_ENEMIES_SETTING_ID)
+    {
+        if (Role == ENetRole.ROLE_Authority)
+        {
+            if (HordeManager == None)
+            {
+                HordeManager = Spawn(Class'SFXWaveManager_Horde', Self);
+                HordeManager.GenerateEnemySpawnPointList();
+            }
+            if (OperationManager == None)
+            {
+                OperationManager = Spawn(Class'SFXWaveManager_Operation', Self);
+            }
+        }
+        LogInternal("No Enemies faction selected; waves will not be started");
+        return;
+    }
+    // END MILAN CHANGE
     if (Role == ENetRole.ROLE_Authority)
     {
         if (HordeManager == None)
