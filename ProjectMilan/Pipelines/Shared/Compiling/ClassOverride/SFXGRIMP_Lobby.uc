@@ -15,7 +15,10 @@ var array<Name> aTimerSounds;
 var repnotify LobbyMatchTimerInfo MatchTimerInfo;
 var repnotify Name LobbyState;
 var Name nmCurrentTimerSound;
-var int NumPlayerSlots;
+// MILAN CHANGE - 10/09/2026 - Mgamerz
+// repnotify: the host can change the lobby size while players are in it (SetNumPlayerSlots).
+var repnotify int NumPlayerSlots;
+// END MILAN CHANGE
 var int NumReadyPlayers;
 var SFXPRIMP LeaderPRI;
 var repnotify int PrivacySetting;
@@ -77,6 +80,16 @@ public event simulated function ReplicatedEvent(Name VarName)
             GetPC().LobbyFlow.RefreshLobbyStatusBars();
         }
     }
+    // MILAN CHANGE - 10/09/2026 - Mgamerz
+    // The lobby size changed: redraw the slot list and the invite button.
+    else if (VarName == 'NumPlayerSlots')
+    {
+        if (GetPC().LobbyFlow != None)
+        {
+            GetPC().LobbyFlow.RefreshLobbyScreen();
+        }
+    }
+    // END MILAN CHANGE
 }
 public simulated function Tick(float DeltaTime)
 {
@@ -248,6 +261,18 @@ public final function UpdatePlayerListOrder()
         SFXPRIMP(PRIArray[idx]).LobbyListOrder = idx;
     }
 }
+// MILAN CHANGE - 10/09/2026 - Mgamerz
+// Server only. Sets the lobby size shown to everyone. Clients redraw from ReplicatedEvent; the
+// host's own screen never gets a ReplicatedEvent, so it redraws here.
+public final function SetNumPlayerSlots(int NewNumPlayerSlots)
+{
+    NumPlayerSlots = NewNumPlayerSlots;
+    if (GetPC() != None && GetPC().LobbyFlow != None)
+    {
+        GetPC().LobbyFlow.RefreshLobbyScreen();
+    }
+}
+// END MILAN CHANGE
 public final function BuildCombinedMapArray()
 {
     local int MAX_MAPS;
@@ -270,7 +295,12 @@ public final function BuildCombinedMapArray()
         {
             if (int(SFXPRIMP(PRIArray[PRIIndex]).LocalMapArray[MapId]) != 0)
             {
-                PRI.CombinedMapArray[MapId] = byte(int(PRI.CombinedMapArray[MapId]) + (1 << PRIIndex));
+                // MILAN CHANGE - 10/09/2026 - Mgamerz
+                // Count the players who have the map instead of setting bit PRIIndex: a byte only
+                // holds 8 bits, so from the 9th player on nobody would "have" any map. Compared
+                // against the number of players who sent their map list in SFXLobbyFlow.DoesEveryoneHaveMap.
+                PRI.CombinedMapArray[MapId] = byte(int(PRI.CombinedMapArray[MapId]) + 1);
+                // END MILAN CHANGE
             }
         }
     }
@@ -289,6 +319,14 @@ public function bool CanForceLastManReady()
     local int idx;
     local SFXPRIMP PRIIter;
     
+    // MILAN CHANGE - 10/09/2026 - Mgamerz
+    // A 1-player lobby is always "full with one player not ready", which would start the last-man
+    // countdown and travel to the match on its own.
+    if (NumPlayerSlots <= 1)
+    {
+        return FALSE;
+    }
+    // END MILAN CHANGE
     NumReady = GetNumReadyPlayers();
     NumPlayers = GetNumPlayers();
     if (NumPlayers != NumPlayerSlots || NumPlayers - NumReady != 1)

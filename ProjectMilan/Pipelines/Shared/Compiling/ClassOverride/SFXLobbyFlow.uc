@@ -667,6 +667,10 @@ public function StartCustomMatch()
         GRI = GetLobbyGRI();
         NewMatchSettings = new Class'SFXOnlineGameSettings';
         NewMatchSettings.SetPrivacy(0);
+        // MILAN CHANGE - 10/09/2026 - Mgamerz
+        // A new lobby starts at the default size ([Engine.GameInfo] MaxPlayers).
+        NewMatchSettings.SetLobbySize(Class'SFXGameInfoMP_Lobby'.static.GetDefaultLobbySize());
+        // END MILAN CHANGE
         NewMatchSettings.mME3MapName = NewMatchSettings.GetMapByID(GRI.MapSetting).PackageName;
         NewMatchSettings.EnemyType = GRI.EnemySetting;
         NewMatchSettings.Difficulty = byte(GRI.DifficultySetting);
@@ -722,6 +726,10 @@ public function StartNewMatch()
         GRI = GetLobbyGRI();
         NewMatchSettings = new Class'SFXOnlineGameSettings';
         NewMatchSettings.SetPrivacy(byte(GRI.PrivacySetting));
+        // MILAN CHANGE - 10/09/2026 - Mgamerz
+        // These settings are new, so carry the lobby's size over (it would reset to 4 otherwise).
+        NewMatchSettings.SetLobbySize(GRI.NumPlayerSlots);
+        // END MILAN CHANGE
         NewMatchSettings.mME3MapName = NewMatchSettings.GetMapByID(GRI.MapSetting).PackageName;
         NewMatchSettings.EnemyType = GRI.EnemySetting;
         NewMatchSettings.Difficulty = byte(GRI.DifficultySetting);
@@ -824,15 +832,20 @@ public final function bool DoesEveryoneHaveMap(int MapId)
     else if (MapId >= 0 && MapId < 255)
     // END MILAN CHANGE
     {
+        // MILAN CHANGE - 10/09/2026 - Mgamerz
+        // CombinedMapArray counts the players who have each map (SFXGRIMP_Lobby.BuildCombinedMapArray)
+        // instead of holding a bit per player, which ran out at 8 players. Everyone has the map when
+        // that count equals the number of players who have sent their map list.
         PlayerMask = 0;
         for (idx = 0; idx < GRI.PRIArray.Length; ++idx)
         {
             PRI = SFXPRIMP(GRI.PRIArray[idx]);
             if (PRI.bLocalMapsSent)
             {
-                PlayerMask = PlayerMask + (1 << PRI.LobbyListOrder);
+                ++PlayerMask;
             }
         }
+        // END MILAN CHANGE
         return int(GetPRI().CombinedMapArray[MapId]) == PlayerMask;
     }
     else

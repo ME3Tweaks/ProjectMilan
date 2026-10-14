@@ -22,7 +22,11 @@ public simulated function AddPRI(PlayerReplicationInfo PRI)
         }
         if (PRICount > int(MaxUniquePlayers))
         {
-            MaxUniquePlayers = byte(Min(4, PRICount));
+            // MILAN CHANGE - 10/09/2026 - Mgamerz
+            // Lobbies can hold up to 16 players (SFXGameInfoMP_Lobby.MAX_LOBBY_SIZE), not 4.
+            // This feeds the challenge data's NumPlayers.
+            MaxUniquePlayers = byte(Min(16, PRICount));
+            // END MILAN CHANGE
         }
     }
 }
