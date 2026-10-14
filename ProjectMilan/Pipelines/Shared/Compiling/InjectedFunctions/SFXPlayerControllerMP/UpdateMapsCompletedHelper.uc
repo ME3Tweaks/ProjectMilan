@@ -20,6 +20,14 @@
     if (BitMask > 0)
     {
         MapsPlayed = AccomplishmentManager.GetGrinderAccomplishmentProgress(PlayedMaps, Self);
+        // MILAN CHANGE - Mgamerz - 2026-10-13
+        // -1 means the progress name isn't configured. >> is arithmetic, so the
+        // bit-count loop below never terminates on -1 and the game hangs at match end.
+        if (MapsPlayed < 0)
+        {
+            return;
+        }
+        // END MILAN CHANGE
         if (MapsPlayed > -1 && (MapsPlayed & BitMask) == 0)
         {
             MapsPlayed = MapsPlayed | BitMask;
