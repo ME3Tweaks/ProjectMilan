@@ -66,7 +66,13 @@ struct ReplicatedWaveComposition
     var array<Name> Types;                        // ChooseEnemyToSpawn() selects from this
     var array<ReplicatedArchetypeEntry> Archetypes; // Name -> asset path, for precache/loading
 };
-var transient repnotify ReplicatedWaveComposition ReplicatedComposition;
+// Not replicated: UE3 drops dynamic arrays from replicated structs, so clients only ever saw
+// WaveNumber. The host encodes the composition into ReplicatedCompositionString, and clients
+// rebuild this struct from it in DecodeComposition().
+var transient ReplicatedWaveComposition ReplicatedComposition;
+// "<WaveNumber>|<Type>,<Archetype>,<Min>,<Max>,<MaxPerWave>;..." - one value per wave, so it
+// arrives whole (no partial compositions) and always changes between waves.
+var transient repnotify string ReplicatedCompositionString;
 // END MILAN CHANGE ---
 
 public simulated function PostBeginPlay()
@@ -99,11 +105,10 @@ public event simulated function ReplicatedEvent(Name VarName)
         ReplicatedWaveEventUpdated();
     }
     // MILAN CHANGE
-    // Added the ReplicatedComposition case
-    else if (VarName == 'ReplicatedComposition')
+    // Rebuild the composition SFXWave_Horde reads; BeginWaveLoading() waits for its WaveNumber.
+    else if (VarName == 'ReplicatedCompositionString')
     {
-        // No action needed here
-        // SFXWave_Horde.GetEnemyArray() will read it live.
+        DecodeComposition(ReplicatedCompositionString);
     }
     // END MILAN CHANGE
     else
@@ -951,7 +956,81 @@ public function PublishEnemyComposition(SFXWave_Horde Wave)
         // TEMP WAVEDBG
         LogInternal("[WAVEDBG] PublishEnemyComposition: wave=" $ CurrentWaveNumber $ " waveObj=" $ Wave.Name $ " type=" $ Entry.EnemyType $ " archetype='" $ Entry.EnemyArchetypeName $ "'");
     }
+    ReplicatedCompositionString = EncodeComposition();
+    // TEMP WAVEDBG
+    //LogInternal("[WAVEDBG] PublishEnemyComposition: wave=" $ CurrentWaveNumber $ " encoded " $ Len(ReplicatedCompositionString) $ " chars: " $ ReplicatedCompositionString);
     bForceNetUpdate = TRUE;
+}
+
+// Server-only: Serializes ReplicatedComposition for ReplicatedCompositionString.
+// Types is not encoded; it holds the same EnemyTypes, in the same order, as Archetypes.
+private final function string EncodeComposition()
+{
+    local ReplicatedArchetypeEntry Entry;
+    local string Encoded;
+    local string EntryText;
+
+    Encoded = string(ReplicatedComposition.WaveNumber) $ "|";
+    foreach ReplicatedComposition.Archetypes(Entry, )
+    {
+        EntryText = string(Entry.EnemyType) $ "," $ Entry.EnemyArchetypeName $ "," $ Entry.MinCount $ "," $ Entry.MaxCount $ "," $ Entry.MaxPerWave;
+        if (InStr(EntryText, ";") != -1 || InStr(EntryText, "|") != -1 || Len(EntryText) - Len(Repl(EntryText, ",", "")) != 4)
+        {
+            // A separator inside a name or path would shift every field after it on the client.
+            LogInternal("[WAVEDBG] EncodeComposition: skipping entry with a separator in it: " $ EntryText);
+            continue;
+        }
+        Encoded $= EntryText $ ";";
+    }
+    return Encoded;
+}
+
+// Client: Rebuilds ReplicatedComposition from the host's ReplicatedCompositionString.
+// On a malformed string the WaveNumber stays -1, so BeginWaveLoading() keeps waiting
+// instead of loading a partial wave.
+private final simulated function DecodeComposition(string Encoded)
+{
+    local array<string> Halves;
+    local array<string> Entries;
+    local array<string> Fields;
+    local string EntryText;
+    local ReplicatedArchetypeEntry Entry;
+
+    ReplicatedComposition.WaveNumber = -1;
+    ReplicatedComposition.Types.Length = 0;
+    ReplicatedComposition.Archetypes.Length = 0;
+
+    ParseStringIntoArray(Encoded, Halves, "|", FALSE);
+    if (Halves.Length != 2)
+    {
+        LogInternal("[WAVEDBG] DecodeComposition: malformed composition '" $ Encoded $ "'");
+        return;
+    }
+
+    ParseStringIntoArray(Halves[1], Entries, ";", TRUE);
+    foreach Entries(EntryText, )
+    {
+        ParseStringIntoArray(EntryText, Fields, ",", FALSE);
+        if (Fields.Length != 5)
+        {
+            LogInternal("[WAVEDBG] DecodeComposition: malformed entry '" $ EntryText $ "'");
+            ReplicatedComposition.Types.Length = 0;
+            ReplicatedComposition.Archetypes.Length = 0;
+            return;
+        }
+        Entry.EnemyType = Name(Fields[0]);
+        Entry.EnemyArchetypeName = Fields[1];
+        Entry.MinCount = int(Fields[2]);
+        Entry.MaxCount = int(Fields[3]);
+        Entry.MaxPerWave = int(Fields[4]);
+        ReplicatedComposition.Types.AddItem(Entry.EnemyType);
+        ReplicatedComposition.Archetypes.AddItem(Entry);
+    }
+
+    // Set last: BeginWaveLoading() treats a matching WaveNumber as "composition is ready".
+    ReplicatedComposition.WaveNumber = int(Halves[0]);
+    // TEMP WAVEDBG
+    LogInternal("[WAVEDBG] DecodeComposition: wave=" $ ReplicatedComposition.WaveNumber $ " entries=" $ ReplicatedComposition.Archetypes.Length);
 }
 // END MILAN CHANGE
 
@@ -961,9 +1040,9 @@ replication
         ReplicatedWaveEventInfo;
     if (bNetDirty && Role == ENetRole.ROLE_Authority)
         HordeManager, OperationManager;
-    // MILAN CHANGE - Add new ReplicatedComposition Struct
+    // MILAN CHANGE - Host-pushed wave composition, encoded (see ReplicatedComposition)
     if (bNetDirty && Role == ENetRole.ROLE_Authority)
-        ReplicatedComposition;
+        ReplicatedCompositionString;
     // END MILAN CHANGE
 }
 
