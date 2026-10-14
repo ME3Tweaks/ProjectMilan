@@ -150,6 +150,64 @@ public final function ShowGamercard(int SlotIndex)
         Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentPlatform().ShowGamerCardUI(byte(LocalUserNum), PRI.UniqueId);
     }
 }
+// MILAN CHANGE - Mgamerz - 2026-10-10
+// Forward lobby scrolling and horizontal view input to the four-card movie window.
+// Other lobby tabs retain their existing input routing. The Flash legend continues
+// to handle keyboard arrows and D-pad navigation.
+public event function bool HandleInputEvent(BioGuiEvents Event, optional float fValue = 1.0)
+{
+    local int LobbyTab;
+
+    LobbyTab = GetCurrentLobbyTab();
+    if (LobbyTab == 12 || LobbyTab == 13)
+    {
+        switch (Event)
+        {
+            case BioGuiEvents.BIOGUI_EVENT_AXIS_RSTICK_Y:
+                AS_ScrollPlayersAnalog(fValue);
+                return TRUE;
+            case BioGuiEvents.BIOGUI_EVENT_AXIS_LSTICK_X:
+                AS_SwitchPlayersViewAnalog(fValue);
+                return TRUE;
+            case BioGuiEvents.BIOGUI_EVENT_KEY_WHEEL_UP:
+                if (AS_ScrollPlayersWheel(1.0))
+                {
+                    return TRUE;
+                }
+                break;
+            case BioGuiEvents.BIOGUI_EVENT_KEY_WHEEL_DOWN:
+                if (AS_ScrollPlayersWheel(-1.0))
+                {
+                    return TRUE;
+                }
+                break;
+        }
+    }
+    return Super.HandleInputEvent(Event, fValue);
+}
+
+public function AS_ScrollPlayersAnalog(float fValue)
+{
+    ActionScriptVoid("screen.ScrollPlayersAnalog");
+}
+
+public function AS_SwitchPlayersViewAnalog(float fValue)
+{
+    ActionScriptVoid("screen.SwitchPlayersViewAnalog");
+}
+
+public function bool AS_ScrollPlayersWheel(float fValue)
+{
+    return ActionScriptInt("screen.ScrollPlayersWheel") != 0;
+}
+
+// Sparse lobby slots must not be inferred from the number of occupied slots.
+public final function bool IsPlayerSlotOccupied(int Index)
+{
+    return GetPlayerInSlot(Index) != None;
+}
+// END MILAN CHANGE
+
 public event function Update(float fDeltaT)
 {
     Super(SFXGUIMovie).Update(fDeltaT);
@@ -253,10 +311,24 @@ public final function int GetPreviousSubScreen()
 {
     return int(GetLobbyFlow().PreviousSubScreen);
 }
+// MILAN CHANGE - 10/09/2026 - Mgamerz
+// Only the invite buttons ask this (the lobby SWF's RefreshButtonLegend_*, and InviteFriends), so it
+// answers "can't invite" rather than "full". An invite code still works while the lobby is full,
+// because a player may leave. Invites are off in a 1-player lobby, and for everyone but the host
+// in a Private lobby (PrivacySetting 1); in Public (0) and Friends (2) lobbies anyone can invite.
+// MilanHost and the matchmaker enforce the same rule.
 public final function bool IsGameFull()
 {
-    return GetNumPlayers() >= GetLobbyGRI().NumPlayerSlots;
+    local SFXGRIMP_Lobby GRI;
+
+    GRI = GetLobbyGRI();
+    if (GRI.NumPlayerSlots <= 1)
+    {
+        return TRUE;
+    }
+    return GRI.PrivacySetting == 1 && !IsLobbyHost();
 }
+// END MILAN CHANGE
 public final function bool IsHostingNewMission()
 {
     return GetLobbyFlow().bHostingNewMission;
@@ -377,18 +449,31 @@ public final function Refresh()
 
 // MILAN CHANGE
 // Replace RefreshAllSpeakerIcons to icon version
+// MILAN CHANGE - Mgamerz - 2026-10-10
+// Initialize every absolute slot so departures cannot leave a stale custom icon.
 public final function RefreshAllCustomIcons()
 {
     local array<int> IconData;
     local PlayerReplicationInfo PRI;
+    local SFXPRIMP PlayerPRI;
+    local int SlotIndex;
 
+    IconData.Length = GetNumPlayerSlots();
+    for (SlotIndex = 0; SlotIndex < IconData.Length; SlotIndex++)
+    {
+        IconData[SlotIndex] = -1;
+    }
     foreach GetLobbyGRI().PRIArray(PRI, )
     {
-        IconData[SFXPRIMP(PRI).LobbyListOrder] = int(SFXPRIMP(PRI).LobbyScreen) - 1;
+        PlayerPRI = SFXPRIMP(PRI);
+        if (PlayerPRI != None && PlayerPRI.LobbyListOrder >= 0 && PlayerPRI.LobbyListOrder < IconData.Length)
+        {
+            IconData[PlayerPRI.LobbyListOrder] = int(PlayerPRI.LobbyScreen) - 1;
+        }
     }
     AS_RefreshAllCustomIcons(IconData);
 }
-
+// END MILAN CHANGE
 public final function AS_RefreshAllCustomIcons(array<int> IconData)
 {
     ActionScriptVoid("screen.RefreshAllCustomIcons");
@@ -1181,6 +1266,30 @@ public final function int GetNumPlayerSlots()
 {
     return GetLobbyGRI().NumPlayerSlots;
 }
+// MILAN CHANGE - 10/09/2026 - Mgamerz
+// Lobby size, for the host's size control (not built yet). The size is GetNumPlayerSlots(); the
+// control's range is 1 to GetMaxLobbySize(), and no lower than the players already here.
+public final function int GetMaxLobbySize()
+{
+    return Class'SFXGameInfoMP_Lobby'.static.GetMaxLobbySize();
+}
+public final function bool IsLobbyHost()
+{
+    return SFXGameInfoMP_Lobby(GetPC().WorldInfo.Game) != None;
+}
+// Host only; returns the size in effect, which is clamped (see SFXGameInfoMP_Lobby.SetLobbySize).
+public final function int SetLobbySize(int NewSize)
+{
+    local SFXGameInfoMP_Lobby GameInfo;
+
+    GameInfo = SFXGameInfoMP_Lobby(GetPC().WorldInfo.Game);
+    if (GameInfo == None)
+    {
+        return GetNumPlayerSlots();
+    }
+    return GameInfo.SetLobbySize(NewSize);
+}
+// END MILAN CHANGE
 public final function SFXPRIMP GetPlayerInSlot(int Index)
 {
     local PlayerReplicationInfo PRI;

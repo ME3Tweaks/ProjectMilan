@@ -55,6 +55,12 @@ var config float NatWarningShowDuration;
 var SFXOnlineGameSettings MatchMakingGameSettings;
 var config float MatchStartTimerDuration;
 var config float MatchStartLastManTimerDuration;
+// MILAN CHANGE - 10/09/2026 - Mgamerz
+// The largest lobby size a host can pick (GetMaxLobbySize). Hard coded, cannot be changed without lots of work.
+const MAX_LOBBY_SIZE = 16;
+// Marked config so its just a simple config edit to adjust. 16 is the cap, 8 is the default max, 4 is the default value if not changed.
+var config int MaxLobbySize;
+// END MILAN CHANGE
 var float MatchStartTimer;
 var EMatchTimerState MatchTimerState;
 
@@ -199,7 +205,11 @@ public simulated function DeferredPostBeginPlay()
         SetTimer(0.100000001, FALSE, 'DeferredPostBeginPlay', );
         return;
     }
-    SFXGRIMP_Lobby(GameReplicationInfo).NumPlayerSlots = MaxPlayersAllowed;
+    // MILAN CHANGE - 10/09/2026 - Mgamerz
+    // The lobby shows a slot per player the lobby admits (MaxPlayers, the host's chosen size; see
+    // SFXGameInfoMP.InitGame), not the ceiling (MaxPlayersAllowed).
+    SFXGRIMP_Lobby(GameReplicationInfo).SetNumPlayerSlots(MaxPlayers);
+    // END MILAN CHANGE
     ClearTimer('DeferredPostBeginPlay');
 }
 public function OnMultiplayerGameDestroyed(Name SessionName, bool bWasSuccessful)
@@ -465,42 +475,67 @@ public function UnCommitSettings()
     GetOnlineGameSettings().mMapIsRequired = FALSE;
     ChangeMatchSettings(GRI.PrivacySetting, GRI.MapSetting, GRI.bRandomMap, GRI.EnemySetting, GRI.bRandomEnemy, GRI.DifficultySetting, TRUE, TRUE);
 }
+// MILAN CHANGE - Mgamerz - 2026-10-10
+// Require strictly more than half of the current lobby, including the target in the
+// denominator. Integer multiplication avoids rounding; two-player lobbies cannot kick.
+// Call the game component on the authority so a host kick is handled by the host too.
 public final function UpdateKickVotes()
 {
     local int KickerIdx;
     local int KickeeIdx;
+    local int KickVotes;
     local SFXPRIMP Kicker;
     local SFXPRIMP Kickee;
+    local PlayerReplicationInfo PRI;
     local array<PlayerReplicationInfo> PRIArray;
     local UniqueNetId ZeroId;
+    local ISFXOnlineComponentGame OnlineGame;
 
-    PRIArray = GameReplicationInfo.PRIArray;
+    if (Role != ENetRole.ROLE_Authority || GameReplicationInfo == None)
+    {
+        return;
+    }
+    foreach GameReplicationInfo.PRIArray(PRI)
+    {
+        if (SFXPRIMP(PRI) != None && !PRI.bOnlySpectator && !PRI.bIsInactive)
+        {
+            PRIArray.AddItem(PRI);
+        }
+    }
+    OnlineGame = Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentGame();
     for (KickeeIdx = 0; KickeeIdx < PRIArray.Length; ++KickeeIdx)
     {
         Kickee = SFXPRIMP(PRIArray[KickeeIdx]);
-        Kickee.NumKickVotesReceived = 0;
+        KickVotes = 0;
         for (KickerIdx = 0; KickerIdx < PRIArray.Length; ++KickerIdx)
         {
             Kicker = SFXPRIMP(PRIArray[KickerIdx]);
-            if (Kicker.KickVotePlayerId != ZeroId && Kicker.KickVotePlayerId == Kickee.UniqueId)
+            if (Kicker != Kickee && Kicker.KickVotePlayerId != ZeroId && Kicker.KickVotePlayerId == Kickee.UniqueId)
             {
-                Kickee.NumKickVotesReceived++;
+                KickVotes++;
             }
         }
-        if (int(Kickee.NumKickVotesReceived) > 1 && int(Kickee.NumKickVotesReceived) == PRIArray.Length - 1)
+        Kickee.NumKickVotesReceived = byte(Min(KickVotes, 255));
+        if (PRIArray.Length > 2 && KickVotes * 2 > PRIArray.Length && OnlineGame != None)
         {
-            for (KickerIdx = 0; KickerIdx < PRIArray.Length; ++KickerIdx)
+            // Keep the votes if removal could not be queued; do not report a false success.
+            if (OnlineGame.KickPlayer(Kickee.UniqueId))
             {
-                Kicker = SFXPRIMP(PRIArray[KickerIdx]);
-                if (Kicker.KickVotePlayerId != ZeroId && Kicker.KickVotePlayerId == Kickee.UniqueId)
+                LogInternal("LMP vote kick:" @ Kickee.PlayerName @ "votes" @ KickVotes @ "of" @ PRIArray.Length);
+                for (KickerIdx = 0; KickerIdx < PRIArray.Length; ++KickerIdx)
                 {
-                    Kicker.KickVotePlayerId = ZeroId;
+                    Kicker = SFXPRIMP(PRIArray[KickerIdx]);
+                    if (Kicker.KickVotePlayerId == Kickee.UniqueId)
+                    {
+                        Kicker.KickVotePlayerId = ZeroId;
+                    }
                 }
+                return;
             }
-            GetPC().KickPlayer(Kickee.UniqueId);
         }
     }
 }
+// END MILAN CHANGE
 public function CancelSearch()
 {
     if (OnlineSub != None)
@@ -562,6 +597,14 @@ public function bool ChangeMatchSettings(int privacy, int MapId, bool bRandomMap
     GRI.DifficultySetting = NewDifficulty;
      // MILAN Patched: Remove calls to Engine.Telemetry.GameSession.SetMPMatchSettings()
     GetPC().LobbyFlow.OnMatchSettingsChanged();
+    // MILAN CHANGE - 10/09/2026 - Mgamerz
+    // A 1-player lobby is a private match. Leaving Private (1), for Public or Friends, opens it to
+    // the default size.
+    if (privacy != 1 && MaxPlayers <= 1)
+    {
+        SetLobbySize(GetDefaultLobbySize());
+    }
+    // END MILAN CHANGE
     return bSettingsChanged;
 }
 public function CheckAllPlayersReady()
@@ -730,6 +773,51 @@ public function CommitSettings()
     ChangeMatchSettings(GRI.PrivacySetting, MapSetting, GRI.bRandomMap, EnemySetting, GRI.bRandomEnemy, GRI.DifficultySetting, FALSE, TRUE);
     GetOnlineGameSettings().SetIntProperty(0, MapSetting);
 }
+// MILAN CHANGE - 10/09/2026 - Mgamerz
+// Lobby size: how many players, the host included, the lobby admits. The host's online game
+// settings carry it across travel; SFXGameInfoMP.InitGame applies it to MaxPlayers on every map.
+// The largest size a host can pick: config MaxLobbySize, capped at MAX_LOBBY_SIZE.
+public static function int GetMaxLobbySize()
+{
+    // This class's own section, whichever subclass (SFXGameInfoMP_Lobby_DLC) is asking.
+    return Clamp(Class'SFXGameInfoMP_Lobby'.default.MaxLobbySize, 1, MAX_LOBBY_SIZE);
+}
+// The size a new lobby starts with: [Engine.GameInfo] MaxPlayers.
+public static function int GetDefaultLobbySize()
+{
+    return Clamp(Class'GameInfo'.default.MaxPlayers, 1, Class'SFXGameInfoMP_Lobby'.static.GetMaxLobbySize());
+}
+public function int GetLobbySize()
+{
+    return MaxPlayers;
+}
+// Host only. Clamped to 1..MaxPlayersAllowed and never below the players already here, so a smaller
+// size removes nobody. A size of 1 is a private match with no invites. Returns the size in effect.
+public function int SetLobbySize(int NewSize)
+{
+    local SFXOnlineGameSettings Settings;
+    local SFXGRIMP_Lobby GRI;
+
+    GRI = SFXGRIMP_Lobby(GameReplicationInfo);
+    Settings = GetOnlineGameSettings();
+    if (GRI == None || Settings == None)
+    {
+        return MaxPlayers;
+    }
+    NewSize = Clamp(NewSize, Max(1, GetNumPlayers()), MaxPlayersAllowed);
+    Settings.SetLobbySize(NewSize);
+    MaxPlayers = NewSize;
+    GRI.SetNumPlayerSlots(NewSize);
+    // 1 is PRIVACY_PRIVATE; Public (0) and Friends (2) both take invites.
+    if (NewSize == 1 && GRI.PrivacySetting != 1)
+    {
+        ChangeMatchSettings(1, GRI.MapSetting, GRI.bRandomMap, GRI.EnemySetting, GRI.bRandomEnemy, GRI.DifficultySetting);
+    }
+    // A full lobby can now start on the last-man timer, or no longer can.
+    CheckAllPlayersReady();
+    return MaxPlayers;
+}
+// END MILAN CHANGE
 public final function SFXOnlineGameSettings GetOnlineGameSettings()
 {
     return SFXOnlineGameSettings(OnlineSub.GameInterface.GetGameSettings('Game'));
@@ -772,5 +860,6 @@ defaultproperties
     NatWarningShowDuration = 6.0
     MatchStartTimerDuration = 5.0
     MatchStartLastManTimerDuration = 20.0
+    MaxLobbySize = 8
     GameReplicationInfoClass = Class'SFXGRIMP_Lobby'
 }

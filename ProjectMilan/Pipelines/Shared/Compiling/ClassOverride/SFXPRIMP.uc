@@ -1,4 +1,4 @@
-﻿// Source: ME3, Patch_SFXPRIMP
+// Source: ME3, Patch_SFXPRIMP
 // Decompiled 9/4/2026 7:37:53 AM
 // MILAN CHANGE - 09/06/2026 - Mgamerz
 // Change maximum map count from 30 to 255
@@ -677,8 +677,8 @@ public reliable server function ServerSetKickVote(UniqueNetId KickVote)
         LobbyGame.UpdateKickVotes();
         if (GetLobbyFlow() != None)
         {
-    GetLobbyFlow().RefreshLobbyScreen();
-}
+            GetLobbyFlow().RefreshLobbyScreen();
+        }
     }
     else
     {
@@ -1033,13 +1033,10 @@ public reliable client function GatherMatchResults(bool bMatchWin, int Extracted
     local SFXMatchResultsData MatchResultsData;
     local SFXMPClassRecord ClassRecord;
     local SFXMPCharacterRecord CharacterRecord;
-    local int MatchStartTime;
-    local int MatchEndTime;
     local int MapSettingsIdx;
     local int Credits;
     local int idx;
     local int ZoneID;
-    local SFXOnlineSubsystem OnlineSub;
     local float ZoneIncrease;
     local float OverallIncrease;
     
@@ -1088,7 +1085,7 @@ public reliable client function GatherMatchResults(bool bMatchWin, int Extracted
     {
         MatchResultsData.AddSquadMedal(GRI.SquadMedals[idx]);
     }
-    for (idx = 0; idx < 4; ++idx)
+    for (idx = 0; idx < 16; ++idx) // MILAN CHANGE - 10/09/2026 - Mgamerz: was 4
     {
         if (ExtractedPlayers[idx] != -1)
         {
