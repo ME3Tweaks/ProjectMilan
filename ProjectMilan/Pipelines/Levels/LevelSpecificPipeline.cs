@@ -51,6 +51,13 @@ namespace ProjectMilan.Pipelines.Levels
         public Action<LevelSpecificPipeline> SpecialPostPortingDelegate { get; set; }
 
         /// <summary>
+        /// Corrections to each exported UDK map before a lighting bake, after conversion and common settings.
+        /// Receives the pipeline metadata and the UDK package, not a gameplay package. Modified UDK maps are
+        /// saved afterwards. Also runs on working copies used by --bake-lighting; never runs during reimport.
+        /// </summary>
+        public Action<LevelSpecificPipeline, IMEPackage> SpecialUDKExportDelegate { get; set; }
+
+        /// <summary>
         /// Which function should run to port the level
         /// </summary>
         public Action<LevelSpecificPipeline, TieredPackageCache> SpecialPortingDelegate { get; set; }
