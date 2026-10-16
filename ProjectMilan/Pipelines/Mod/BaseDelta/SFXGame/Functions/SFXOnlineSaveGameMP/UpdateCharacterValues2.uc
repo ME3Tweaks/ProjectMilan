@@ -1,7 +1,7 @@
 // MILAN CHANGE - Mgamerz - 2026-09-24
 // Serialize up to 200 kits into the local profile strings. The original online
-// player storage still owns only setting IDs 9-86; MilanHost stores later kits
-// in its separate extension range.
+// player storage still owns uses setting IDs 9-86; MilanHost stores later kits
+// in its separate extension range
 private final function UpdateCharacterValues2(const out SFXSaveManagerMP MPSaveManager)
 {
     local string NewString;
