@@ -45,6 +45,10 @@
     <Platform Solution="Debug|x64" Project="x64" />
     <Platform Solution="Release|x64" Project="x64" />
   </Project>
+  <Project Path="LegendaryExplorer/LegendaryExplorer/LegendaryExplorerCore.SourceGenerators/LegendaryExplorerCore.SourceGenerators.csproj">
+    <BuildType Solution="WinDebug|*" Project="Release" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
   <Project Path="LegendaryExplorer/LegendaryExplorer/LegendaryExplorerCore/LegendaryExplorerCore.csproj">
     <BuildType Solution="Debug|x64" Project="Debug" />
     <BuildType Solution="Release|x64" Project="Release" />

@@ -6,8 +6,8 @@ namespace ProjectMilan.Settings
     // Settings for d00t's system build
     internal class MilanSettingsd00t : IMilanSettings
     {
-        public string OutputModPath { get; set; } = @$"D:\ME3TM2Library\LE3\ProjectMilan\{MilanShared.DLC_NAME}";
-        public string InputSyncPath { get; set; } = @"D:\ME3TM2Library\LE3\ProjectMilan\MilanSync";
+        public string OutputModPath { get; set; } = @$"E:\Milan\_Library\LE3\ProjectMilan\{MilanShared.DLC_NAME}";
+        public string InputSyncPath { get; set; } = @"E:\Milan\_Library\LE3\ProjectMilan\MilanSync";
         public string TextureSyncFolder { get; set; } = null;
 
         public bool RunMPCommonPipeline { get; set; } = true;
@@ -34,7 +34,7 @@ namespace ProjectMilan.Settings
         public int MaxThreads { get; set; } = 16;
         public bool DontDeleteModFolder { get; set; } = false;
         public bool UseCheckpointSystem { get; set; } = false;
-        public string CheckpointFolder { get; set; } = @"D:\ME3TM2Library\LE3\ProjectMilan\Checkpoint";
+        public string CheckpointFolder { get; set; } = @"E:\Milan\_Library\LE3\ProjectMilan\Checkpoint";
         public EModInstallPreference ModInstallPreference { get; set; } = EModInstallPreference.NoInstall;
 
     }
