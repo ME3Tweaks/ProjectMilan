@@ -206,7 +206,16 @@ public function NavigationPoint FindPlayerStart(Controller Player, optional byte
     }
     if (BestStartLocation != None)
     {
+        // MILAN CHANGE - 10/09/2026 - Mgamerz
+        // Cast-check so it doesn't throw an error in log which can be misleading
+        if (SFXPlayerControllerMP(Player) != None)
+        {
         SFXPlayerControllerMP(Player).BioStartSpot = BestStartLocation;
+        }
+        else {
+            LogInternal("FindPlayerStart: Player is not a SFXPlayerControllerMP, cannot set BioStartSpot", );
+        }
+        // END MILAN CHANGE
         return Spawn(Class'DynamicAnchor', , , BestStartLocation.location, BestStartLocation.Rotation);
     }
     // MILAN CHANGE - 10/09/2026 - Mgamerz
@@ -790,8 +799,17 @@ state MatchInProgress
     }
     public event function BeginState(Name PrevStateName)
     {
+        local SFXGRIMP GRI;
+
         Super(Object).BeginState(PrevStateName);
+        
+        // MILAN CHANGE - 10/09/2026 - Mgamerz
+        // Check cast to GRIMP as game shows evidence this is SFXGRIMP_Lobby which is not subclass of SFXGRIMP.
+        GRI = SFXGRIMP(WorldInfo.GRI);
+        if (GRI != None) {
         SFXGRIMP(GameReplicationInfo).SetGameStatus(2);
+    }
+        // END MILAN CHANGE
     }
     
     stop;
@@ -839,8 +857,17 @@ auto state PendingMatch
     }
     public event function BeginState(Name PrevStateName)
     {
+        local SFXGRIMP GRI;
+
         Super(Object).BeginState(PrevStateName);
+
+        // MILAN CHANGE - 10/09/2026 - Mgamerz
+        // Check cast to GRIMP as game shows evidence this is SFXGRIMP_Lobby which is not subclass of SFXGRIMP.
+        GRI = SFXGRIMP(WorldInfo.GRI);
+        if (GRI != None) {
         SFXGRIMP(GameReplicationInfo).SetGameStatus(1);
+        }
+        // END MILAN CHANGE
         bWaitingToStartMatch = TRUE;
         bWaitingForPlayers = TRUE;
     }
