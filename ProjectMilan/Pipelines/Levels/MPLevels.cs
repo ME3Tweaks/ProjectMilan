@@ -11,6 +11,7 @@ using ProjectMilan.Pipelines.Levels.BioP_MPHosp;
 using ProjectMilan.Pipelines.Levels.BioP_MPMoon;
 using ProjectMilan.Pipelines.Levels.BioP_MPOcean;
 using ProjectMilan.Pipelines.Levels.BioP_MPRoad;
+using ProjectMilan.Pipelines.Levels.BioP_MPRctr2;
 using ProjectMilan.Pipelines.Levels.MPLobby;
 using ProjectMilan.Pipelines.Shared;
 using ProjectMilan.Pipelines.Startups;
@@ -141,7 +142,7 @@ namespace ProjectMilan.Pipelines.Levels
                     MapListInfo = new MapListEntry { PackageName="BioP_MPDish2", PrettyNameStrRefId=772393, DescriptionStrRefId=618041, GAWMapPositionX=424, GAWMapPositionY=216, GAWMapSubtitleStrRefId=706337, ImageObjectPath="GUI_MPImages_MP4.OptMapSandstorm", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPNov2", Enabled = true, SpecialPortingDelegate = null, // White - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPNov2", PrettyNameStrRefId=772316, DescriptionStrRefId=618048, GAWMapPositionX=352, GAWMapPositionY=352, GAWMapSubtitleStrRefId=706334, ImageObjectPath="GUI_MPImages_MP4.OptMapSnowstorm", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled = true, SpecialPortingDelegate = null, // Reactor - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled = true, SpecialPortingDelegate = null, SpecialUDKExportDelegate = MPRctr2Specific.CorrectUDKExport, // Reactor - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPRctr2", PrettyNameStrRefId=772396, DescriptionStrRefId=618044, GAWMapPositionX=111, GAWMapPositionY=333, GAWMapSubtitleStrRefId=706336, ImageObjectPath="GUI_MPImages_MP4.OptMapMeltdown", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled = true, SpecialPortingDelegate = null, // Ghost - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPSlum2", PrettyNameStrRefId=772394, DescriptionStrRefId=618042, GAWMapPositionX=310, GAWMapPositionY=403, GAWMapSubtitleStrRefId=706335, ImageObjectPath="GUI_MPImages_MP4.OptMapAcid", ImageSeekFreePackageName="SFXHazardMapImages" } },
