@@ -179,6 +179,7 @@ namespace ProjectMilan_ExtraContent.Shared
                 GamePath = LE3Directory.DefaultGamePath,
                 TFCsToCompact = sourcePacks.SelectMany(p => new[] { $"Textures_{p}", $"Lighting_{p}" }).ToList(),
                 UseIndexing = false,
+                IncludeNumberedSourceTFCs = true,
                 StagingPath = staging,
                 TFCType = lighting ? "Lighting" : "Textures",
                 RootTexturesOnly = lighting, // Milan-specific: split compaction into separate Lighting/Textures TFCs by root (lightmap) position
@@ -200,7 +201,6 @@ namespace ProjectMilan_ExtraContent.Shared
 
                 }
             });
-            Directory.Delete(staging);
         }
 
         /// <summary>
