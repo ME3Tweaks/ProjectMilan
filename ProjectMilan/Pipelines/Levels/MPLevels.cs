@@ -44,6 +44,10 @@ namespace ProjectMilan.Pipelines.Levels
         private static readonly LocalizedString RandomWaveAllCapsName = new() { [MELocalization.INT] = "COALITION" };
         private static readonly LocalizedString MixedName = new() { [MELocalization.INT] = "Unified" }; // Mixed
         private static readonly LocalizedString MixedAllCapsName = new() { [MELocalization.INT] = "UNIFIED" };
+#if !SHIPPING_RELEASE
+        private static readonly LocalizedString NoEnemiesName = new() { [MELocalization.INT] = "None" };
+        private static readonly LocalizedString NoEnemiesAllCapsName = new() { [MELocalization.INT] = "NONE" };
+#endif
 
         /// <summary>
         /// Folder under ImagePackages\MilanWavelists (built by <see cref="ImagePackageBuilder"/>) holding the faction images.
@@ -74,6 +78,13 @@ namespace ProjectMilan.Pipelines.Levels
                 new EnemyTypeEntry { ID = 5, NameStrRefId = 683916, AllCapsNameStrRefId = 683910, Image = "GUI_MPImages.MatchSettings.OptEmyReapers", WaveClass = "SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Reaper2" },
                 new EnemyTypeEntry { ID = 6, NameStrRefId = 746075, AllCapsNameStrRefId = 746076, Image = "GUI_MPImages_MP4.OptEmyCollector", WaveClass = "SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Collector" },
             
+#if !SHIPPING_RELEASE
+                // Dev-only: loads the level but never starts a wave, for reviewing maps without enemies. ID must match
+                // NO_ENEMIES_SETTING_ID in SFXWaveCoordinator_HordeOperation.uc. IsRandomOption keeps it out of the
+                // Unknown/Coalition random faction pools.
+                new EnemyTypeEntry { ID = 99, NameStrRefId = MilanPipelinesShared.AssignTLK(NoEnemiesName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(NoEnemiesAllCapsName), Image = "GUI_MPImages.MatchSettings.OptEmyRandom", WaveClass = "", IsRandomOption = true },
+#endif
+
                 // Classic Wavelists?
             };
 
