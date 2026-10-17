@@ -970,7 +970,7 @@
 			<Property name="num_servermove_before_reset" type="2">90</Property>
 			<Property name="photomodecameraspeed" type="2">350.0</Property>
 			<Property name="photomodespeedcurve" type="2">(Points=((InVal=0,OutVal=0),(InVal=0.7,OutVal=0.35),(InVal=0.701,OutVal=1.0),(InVal=1.0,OutVal=1.0)))</Property>
-			<Property name="photomodetetherdistance" type="2">1000.0</Property>
+			<Property name="photomodetetherdistance" type="2">30000.0</Property>
 			<Property name="playercovertransitiontime" type="2">0.0</Property>
 			<Property name="remoteplayersrotationinterpolationspeed" type="2">0.15f</Property>
 			<Property name="renderpathtomapnote" type="2">false</Property>
