@@ -159,6 +159,7 @@ public final function array<KitDisplayData> GetKitData(string className)
                 CurrUIKitData.KitDisplayName = GetUIString(CurrKitData.srDisplayName);
                 CurrUIKitData.TextureReference = CurrKitData.KitTextureRef;
                 CurrUIKitData.LockedTextureReference = CurrKitData.LockedKitTextureRef;
+                RetainResource(CurrKitData.PowerIconResource);
                 CurrUIKitData.PowerIconResource = CurrKitData.PowerIconResource;
                 CurrUIKitData.PowerDescription1 = GetUIString(CurrKitData.srPowerName1);
                 CurrUIKitData.PowerDescription2 = GetUIString(CurrKitData.srPowerName2);
