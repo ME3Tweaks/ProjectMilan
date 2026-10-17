@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CoalesceAsset id="BioWeapon" name="bioweapon.ini" source="..\..\biogame\config\bioweapon.ini">
+	<!-- MILAN CHANGE Stumpy 2026/10/16: Tweak Adhesion values to differenciate weapon types -->
 	<Sections>
 		<Section name="configuration">
 			<Property name="basedon" type="0">..\..\BIOGame\DLC\DLC_Shared_MP\Config\DefaultWeapon.ini</Property>
@@ -12,6 +13,9 @@
 				<Value type="3">SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_AssaultRifleUltraLight</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP5.SFXWeaponMod_AssaultRifleUltraLight_MP5</Value>
 			</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: Lower max adhesion distance, increase max adhesion by a bit -->
+			<Property name="maxadhesiondistance" type="0">2500.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=1.5.f)</Property>
 		</Section>
 		<Section name="sfxgame.sfxweapon_pistol_base">
 			<Property name="allowableweaponmods">
@@ -21,6 +25,9 @@
 				<Value type="3">SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_PistolPowerDamage</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP5.SFXWeaponMod_PistolPowerDamage_MP5</Value>
 			</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: Lower max adhesion distance, keep max adhesion as is -->
+			<Property name="maxadhesiondistance" type="0">2500.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=1.f)</Property>
 		</Section>
 		<Section name="sfxgame.sfxweapon_shotgun_base">
 			<Property name="allowableweaponmods">
@@ -29,6 +36,9 @@
 				<Value type="3">SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_ShotgunUltraLight</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP5.SFXWeaponMod_ShotgunUltraLight_MP5</Value>
 			</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: 1/4 max adhesion distance, double max adhesion -->
+			<Property name="maxadhesiondistance" type="0">1500.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=2.f)</Property>
 		</Section>
 		<Section name="sfxgame.sfxweapon_smg_base">
 			<Property name="allowableweaponmods">
@@ -37,6 +47,9 @@
 				<Value type="3">SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_SMGPowerDamage</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP5.SFXWeaponMod_SMGPowerDamage_MP5</Value>
 			</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: 1/3 max adhesion distance, double max adhesion -->
+			<Property name="maxadhesiondistance" type="0">2000.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=2.f)</Property>
 		</Section>
 		<Section name="sfxgame.sfxweapon_sniperrifle_base">
 			<Property name="allowableweaponmods">
@@ -45,6 +58,9 @@
 				<Value type="3">SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_SniperRifleUltraLight</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP5.SFXWeaponMod_SniperRifleUltraLight_MP5</Value>
 			</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: Keep default adhesion values -->
+			<Property name="maxadhesiondistance" type="0">6000.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=0.5f)</Property>
 		</Section>
 		<Section name="sfxgame.sfxweaponmod">
 			<Property name="weaponmodconversions">
@@ -52,7 +68,6 @@
 				<Value type="3">(ModEffectClass=SFXGameEffect_WeaponMod_WeightBonus_Shared, ConversionMultiplier=-1.0f)</Value>
 			</Property>
 		</Section>
-		<!-- Unless we rename all weapons, we will have to ensure our changes ONLY apply when MP DLC is mounted. Otherwise it will affect SP-->
 		<Section name="sfxgamecontent.sfxweapon_assaultrifle_argus">
 			<Property name="damage" type="0">(X=164.8,Y=206.0)</Property>
 			<Property name="statbardamage" type="0">(X=164.8,Y=206.0)</Property>
@@ -102,6 +117,9 @@
 			<Property name="encumbranceweight" type="0">(X=1.7f,Y=1.4f)</Property>
 			<Property name="maxspareammo" type="0">(X=40,Y=56)</Property>
 			<Property name="statbardamage" type="0">(X=460.0,Y=575.0)</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: higher max adhesion distance, but lower max adhesion (compared to most ARs)-->
+			<Property name="maxadhesiondistance" type="0">4000.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=1.f)</Property>
 		</Section>
 		<Section name="sfxgamecontent.sfxweapon_assaultrifle_valkyrie">
 			<Property name="damage" type="0">(X=119.9,Y=149.9)</Property>
@@ -133,6 +151,10 @@
 			<Property name="magsize" type="0">(X=3,Y=3)</Property>
 			<Property name="maxspareammo" type="0">(X=21,Y=33)</Property>
 			<Property name="statbardamage" type="0">(X=424.9,Y=531.1)</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: Remove aim correction, this is the only weapon that uses it and it feels rather jank -->
+			<!-- Increase adhesion strength to somewhat mimic the effect -->
+			<Property name="aimcorrectionamount" type="0">0</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=2.f)</Property>
 		</Section>
 		<Section name="sfxgamecontent.sfxweapon_pistol_scorpion">
 			<Property name="encumbranceweight" type="0">(X=1.1f,Y=0.6f)</Property>
@@ -142,6 +164,9 @@
 			<Property name="encumbranceweight" type="0">(X=0.9f,Y=0.6f)</Property>
 			<Property name="maxspareammo" type="0">(X=24,Y=36)</Property>
 			<Property name="statbardamage" type="0">(X=468.5,Y=585.5)</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: This is basically a shotgun - lower max adhesion distance, but higher max adhesion (compared to most pistols)-->
+			<Property name="maxadhesiondistance" type="0">1500.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=2.f)</Property>
 		</Section>
 		<Section name="sfxgamecontent.sfxweapon_pistol_thor">
 			<Property name="damage" type="0">(X=77.2,Y=96.5)</Property>
@@ -157,6 +182,9 @@
 			<Property name="damage" type="0">(X=630.7,Y=788.4)</Property>
 			<Property name="encumbranceweight" type="0">(X=2.3f,Y=2.0f)</Property>
 			<Property name="statbardamage" type="0">(X=630.7,Y=788.4)</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: Long range slug shotgun - high max adhesion distance, but lower max adhesion (compared to most shotguns) -->
+			<Property name="maxadhesiondistance" type="0">4000.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=0.75f)</Property>
 		</Section>
 		<Section name="sfxgamecontent.sfxweapon_shotgun_disciple">
 			<Property name="damage" type="0">(X=55.6,Y=69.5)</Property>
@@ -171,6 +199,9 @@
 			<Property name="damage" type="0">(X=88.0,Y=110.0)</Property>
 			<Property name="headshotdamagemultiplier" type="0">(X=3.0,Y=3.0)</Property>
 			<Property name="statbardamage" type="0">(X=1056.f,Y=1320.f)</Property>
+			<!-- MILAN CHANGE Stumpy 2026/10/16: Medium range shotgun - higher max adhesion distance, but lower max adhesion (compared to most shotguns)-->
+			<Property name="maxadhesiondistance" type="0">3000.f</Property>
+			<Property name="adhesionstrengthrange" type="0">(X=0.f,Y=1.f)</Property>
 		</Section>
 		<Section name="sfxgamecontent.sfxweapon_shotgun_raider">
 			<Property name="damage" type="0">(X=100.0,Y=125.0)</Property>
