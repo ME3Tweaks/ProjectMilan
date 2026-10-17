@@ -139,6 +139,9 @@ public final function CacheCurrentAimAssistTarget()
 // 09/27/2026 - Stumpy
 // Add debug output for Aim Assist Tweaks, values as text, and a somewhat accurate visualization of Adhesion influence zones.
 public function DebugDraw_Adhesion(BioHUD H)
+// 10/17/2026 - Stumpy
+// Add current weapon info related to Adhesion
+// Disable "influence circles" if the target doesn't cause adhesion
 {
     local Vector XAxis;
     local Vector YAxis;
@@ -210,6 +213,28 @@ public function DebugDraw_Adhesion(BioHUD H)
     H.Canvas.DrawText("Current Soft Margin: " $ CurrentAimAssistSoftMargin);
     Y += 15;
     H.Canvas.SetPos(float(X), float(Y));
+    H.Canvas.DrawColor = MakeColor(61, 240, 213, 255);
+    H.Canvas.DrawText("Weapon.AdhesionStrength: " $ Weapon.AdhesionStrengthRange.X $ "-" $ Weapon.AdhesionStrengthRange.Y);
+    Y += 15;
+    H.Canvas.SetPos(float(X), float(Y));
+    H.Canvas.DrawText("Weapon.AdhesionDistance: " $ Weapon.MinAdhesionDistance $ "-" $ Weapon.MaxAdhesionDistance);
+    Y += 15;
+    H.Canvas.SetPos(float(X), float(Y));
+    H.Canvas.DrawText("Weapon.MinAdhesionVelocity: " $ Weapon.MinAdhesionVelocity);
+    Y += 15;
+    H.Canvas.SetPos(float(X), float(Y));
+    H.Canvas.DrawText("Weapon.MaxLateralAdhesionDist: " $ Weapon.MaxLateralAdhesionDist);
+    Y += 15;
+    H.Canvas.SetPos(float(X), float(Y));
+    H.Canvas.DrawText("Weapon.CamInputAdhesionDamping: " $ Weapon.CamInputAdhesionDamping);
+    Y += 15;
+    H.Canvas.SetPos(float(X), float(Y));
+    H.Canvas.DrawText("Weapon.MaxRange: " $ Weapon.MaxRange());
+    Y += 15;
+    H.Canvas.SetPos(float(X), float(Y));
+    H.Canvas.DrawText("Weapon.AimCorrectionAmount: " $ Weapon.AimCorrectionAmount);
+    Y += 15;
+    H.Canvas.SetPos(float(X), float(Y));
     if (int(LastNodeTarget) == 255)
     {
         H.Canvas.DrawText("Last Targeted Node: None");
@@ -228,7 +253,7 @@ public function DebugDraw_Adhesion(BioHUD H)
         Dir.Z = 0.0;
         GetAxes(Rotator(Dir), XAxis, YAxis, ZAxis);
     }
-    if (CurrentAimAssistTarget != None)
+    if (CurrentAimAssistTarget != None && Weapon.MaxAdhesionDistance >= VSize(CurrentAimAssistTarget.location - Outer.Pawn.location) && VSize(CurrentAimAssistTarget.location - Outer.Pawn.location) >= Weapon.MinAdhesionDistance && CurrentAimAssistSoftMargin > float(0))
     {
         Outer.GetPlayerViewPoint(CamLoc, CamRot);
         GetAxes(Outer.PlayerCamera.CameraCache.POV.Rotation, XAxis, YAxis, ZAxis);
@@ -502,6 +527,10 @@ public function Quat StripRoll(Quat Q)
 // 09/27/2026 - Stumpy
 // Multiply the default adhesion result with the multiplier set by the user
 public function Rotator ViewAdhesion(float DeltaTime, SFXWeapon Weapon)
+// 10/17/2026 - Stumpy
+// Check for max adhesion distance
+// Bias adhesion a bit towards head area
+// Disable adhesion for pitch
 {
     local Pawn AdhesionTarget;
     local float DistToTarget;
@@ -538,13 +567,13 @@ public function Rotator ViewAdhesion(float DeltaTime, SFXWeapon Weapon)
     }
     AdhesionTarget = Pawn(CurrentAimAssistTarget);
     WorldRef = BioWorldInfo(Class'Engine'.static.GetCurrentWorldInfo());
-    if (AdhesionTarget != None && VSize(AdhesionTarget.location - Outer.Pawn.location) >= Weapon.MinAdhesionDistance && CurrentAimAssistSoftMargin > float(0))
+    // avoid applying adhesion to targets outside of adhesion range
+    if (AdhesionTarget != None && Weapon.MaxAdhesionDistance >= VSize(AdhesionTarget.location - Outer.Pawn.location) && VSize(AdhesionTarget.location - Outer.Pawn.location) >= Weapon.MinAdhesionDistance && CurrentAimAssistSoftMargin > float(0))
     {
         TargetMod = CurrentAimAssistTarget.GetModule(Class'SFXModule_AimAssistTarget');
         NodeCover = AdhesionTarget.Mesh.GetBoneLocation(TargetMod.AimNodes[0]);
         NodeHead = AdhesionTarget.Mesh.GetBoneLocation(TargetMod.AimNodes[1]);
         NodeGroin = AdhesionTarget.Mesh.GetBoneLocation(TargetMod.AimNodes[5]);
-        TargetLoc = CurrentAimAssistBoneLocation;
         if (int(NodeCover.X) == int(CurrentAimAssistBoneLocation.X) && int(NodeCover.Y) == int(CurrentAimAssistBoneLocation.Y) && int(NodeCover.Z) == int(CurrentAimAssistBoneLocation.Z))
         {
             AdhesionMultiplierResult = 1.0;
@@ -557,9 +586,12 @@ public function Rotator ViewAdhesion(float DeltaTime, SFXWeapon Weapon)
         }
         else
         {
+            // set aim assist location to between the head and groin when the target node is groin
+            CurrentAimAssistBoneLocation = VLerp(NodeGroin, NodeHead, 0.5);
             AdhesionMultiplierResult = 1.0;
             //CurrentAimAssistSoftMargin = 40.0;
         }
+        TargetLoc = CurrentAimAssistBoneLocation;
         CamLoc = SFXPlayerCamera(Outer.PlayerCamera).CurrentCameraMode.m_pov.location;
         CamRot = SFXPlayerCamera(Outer.PlayerCamera).CurrentCameraMode.m_pov.Rotation;
         CamVec = Vector(CamRot);
@@ -582,6 +614,8 @@ public function Rotator ViewAdhesion(float DeltaTime, SFXWeapon Weapon)
         DebugAdhesion_Combined = Rotator(Normal(Correction - FutureCamLoc));
         Correction = VLerp(CamVec, Normal(Correction - FutureCamLoc), FClamp(AdhesionRot * GlobalAdhesionFactor * (LookMag + MoveMag), 0.0, 1.0));
         NewRotation = Rotator(Correction);
+        // Disable pitch (vertical) adhesion TODO: make toggleable in settings
+        NewRotation.Pitch = CamRot.Pitch;
         DebugAdhesion_Final = NewRotation;
         return NewRotation - CamRot;
     }
