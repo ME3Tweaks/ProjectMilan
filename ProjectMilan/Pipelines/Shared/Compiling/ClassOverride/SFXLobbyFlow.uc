@@ -695,6 +695,10 @@ public final function StartMPFlow()
     
     Engine = SFXEngine(Class'SFXEngine'.static.GetEngine());
     OnlineSub = SFXOnlineSubsystem(Engine.GetOnlineSubsystem());
+    // MILAN CHANGE - Mgamerz - 2026-10-16
+    // A member needs online game settings for MilanHost to fill if host migration makes it the host
+    Class'SFXGameInfoMP_Lobby'.static.EnsureOnlineGameSettings();
+    // END MILAN CHANGE
     Class'SFXGUIInteraction'.static.GetInstance().PlayGuiSound('Play_mus_mp');
     if (OnlineSub != None && !bMPFlowStarted)
     {
