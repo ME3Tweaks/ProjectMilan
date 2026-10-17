@@ -943,7 +943,7 @@
 			<Property name="steamsoundthreshold" type="0">1</Property>
 			<Property name="timetoheatup" type="0">0.25f</Property>
 			<Property name="timetoheatupai" type="0">1.f</Property>
-			<Property name="tracerange" type="0">4000</Property>
+			<Property name="tracerange" type="0">7000</Property>
 			<Property name="weaponmodbodycolours">
 				<Value type="3">(R=1.00f,G=0.24f,B=0.18f,A=0.0f)</Value>
 				<Value type="3">(R=1.00f,G=0.74f,B=0.30f,A=0.0f)</Value>
