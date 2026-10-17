@@ -92,6 +92,13 @@ public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
     ActionScriptVoid("RefreshButtonHelp");
+    // MILAN CHANGE - Mgamerz - 2026-10-15
+    // Refresh spectator prompts when a PC player switches between keyboard and gamepad
+    if (m_bSpectatorHUDVisible && SpectatorModeDescription != None)
+    {
+        RefreshSpectatorDescription(usingGamepad);
+    }
+    // END MILAN CHANGE
 }// END MILAN
 public final function Initialize()
 {
@@ -162,6 +169,13 @@ public event function Update(float fDeltaT)
     bDying = PC.GameModeManager2.IsActive(21); // MILAN Patched: GameMode Enum Index
     bInPauseMenu = PC.GameModeManager2.IsActive(9);
     bShowHUD = !bInPauseMenu && ((PC.GameModeManager2.ShouldShowHUD() || bSpectator == TRUE) || bDying == TRUE);
+    // MILAN CHANGE - Mgamerz - 2026-10-1
+    // Spectator stays active under photo modes - suppress its HUD while composing photographs.
+    if (PC.GameModeManager2.IsActive(14))
+    {
+        bShowHUD = FALSE;
+    }
+    // END MILAN CHANGE
     bUpdateHUD = bShowHUD || bInPauseMenu;
     if (bShowHUD)
     {
@@ -776,9 +790,33 @@ public final function ShowDPadPowerIcons(optional bool bSkipTransition = FALSE)
 }
 public final function ShowSpectatorHUD()
 {
-    SpectatorModeDescription.SetText(string(oWorldInfo.IsConsoleBuild() ? srSpectatorHUDDescriptionConsole : srSpectatorHUDDescriptionPC));
+    // MILAN CHANGE - Mgamerz - 2026-10-15
+    // Update specator text when showing it so it shows correct UI prompts
+    RefreshSpectatorDescription(bUsingGamepad);
+    // END MILAN CHANGE
     AS_ShowSpectatorHUD();
 }
+// MILAN CHANGE - Mgamerz - 2026-10-15
+// Use the standard UI parser. MilanHost will provide the device-aware Shared_* token lookup
+public final function RefreshSpectatorDescription(bool usingGamepad)
+{
+    local string Description;
+
+    if (SpectatorModeDescription == None)
+    {
+        return;
+    }
+    if (usingGamepad || oWorldInfo.IsConsoleBuild())
+    {
+        Description = GetUIString(srSpectatorHUDDescriptionConsole, TRUE);
+    }
+    else
+    {
+        Description = GetUIString(srSpectatorHUDDescriptionPC, TRUE);
+    }
+    SpectatorModeDescription.SetText(Description);
+}
+// END MILAN CHANGE
 public final function StartCountdownTimer(float fTime, float fWarningTime)
 {
     CurrentCountdownTime = fTime;
@@ -902,6 +940,9 @@ defaultproperties
     DPadDisplayTime = 10.0
     TickerEntryDisplayTime = 8.0
     TickerUpdateTime = 0.5
-    srSpectatorHUDDescriptionPC = $618884
-    srSpectatorHUDDescriptionConsole = $618885
+    // MILAN CHANGE - Mgamerz - 2026-10-14
+    // New stringrefs
+    srSpectatorHUDDescriptionPC = $49875770
+    srSpectatorHUDDescriptionConsole = $49875771
+    // END MILAN CHANGE
 }

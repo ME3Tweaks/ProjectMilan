@@ -210,7 +210,7 @@ public function NavigationPoint FindPlayerStart(Controller Player, optional byte
         // Cast-check so it doesn't throw an error in log which can be misleading
         if (SFXPlayerControllerMP(Player) != None)
         {
-        SFXPlayerControllerMP(Player).BioStartSpot = BestStartLocation;
+            SFXPlayerControllerMP(Player).BioStartSpot = BestStartLocation;
         }
         else {
             LogInternal("FindPlayerStart: Player is not a SFXPlayerControllerMP, cannot set BioStartSpot", );
@@ -807,8 +807,8 @@ state MatchInProgress
         // Check cast to GRIMP as game shows evidence this is SFXGRIMP_Lobby which is not subclass of SFXGRIMP.
         GRI = SFXGRIMP(WorldInfo.GRI);
         if (GRI != None) {
-        SFXGRIMP(GameReplicationInfo).SetGameStatus(2);
-    }
+            SFXGRIMP(GameReplicationInfo).SetGameStatus(2);
+        }
         // END MILAN CHANGE
     }
     
@@ -865,7 +865,7 @@ auto state PendingMatch
         // Check cast to GRIMP as game shows evidence this is SFXGRIMP_Lobby which is not subclass of SFXGRIMP.
         GRI = SFXGRIMP(WorldInfo.GRI);
         if (GRI != None) {
-        SFXGRIMP(GameReplicationInfo).SetGameStatus(1);
+            SFXGRIMP(GameReplicationInfo).SetGameStatus(1);
         }
         // END MILAN CHANGE
         bWaitingToStartMatch = TRUE;
