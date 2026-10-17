@@ -124,6 +124,12 @@
     <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
+  <Project Path="NetIndexingChecker/NetIndexingChecker.csproj">
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+  </Project>
   <Project Path="ProjectMilan/ProjectMilan.csproj">
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
