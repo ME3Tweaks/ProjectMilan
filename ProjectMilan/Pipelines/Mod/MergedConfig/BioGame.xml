@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <CoalesceAsset id="BioGame" name="biogame.ini" source="..\..\biogame\config\biogame.ini">
 	<Sections>
+		<!-- MILAN CHANGE - Mgamerz - 2026-10-16: allow free photo camera movement across MP maps. -->
+		<Section name="sfxgame.bioplayercontroller">
+			<Property name="photomodetetherdistance" type="2">30000.0</Property>
+		</Section>
 		<Section name="configuration">
 			<Property name="basedon" type="0">..\..\BIOGame\DLC\DLC_MOD_ProjectMilan\Config\DefaultGame.ini</Property>
 		</Section>
