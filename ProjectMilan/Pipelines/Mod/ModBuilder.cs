@@ -2,6 +2,7 @@
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.NetIndexing;
 using LegendaryExplorerCore.TLK.ME2ME3;
 using ProjectMilan.Pipelines.TLK;
 using ProjectMilanCore;
@@ -171,16 +172,14 @@ namespace ProjectMilan.Pipelines.Mod
 
         private static void CopyLinkerPatches()
         {
-            // Release builds don't install this
-#if DEBUG
             var linkerPatchSource = Path.Combine(MilanShared.PipelineRoot, "Mod", "LinkerPatches");
             var linkerPatchDest = Path.Combine(Program.Settings.OutputModPath, "LinkerPatches");
-            var linkerPatches = Directory.GetFiles(linkerPatchSource, "*.*", SearchOption.TopDirectoryOnly);
             if (!Directory.Exists(linkerPatchSource))
             {
                 MilanLog.Warning($"Linker patch source directory does not exist: {linkerPatchSource}", customPrefix: LOG_CATEGORY);
                 return;
             }
+            var linkerPatches = Directory.GetFiles(linkerPatchSource, "*.*", SearchOption.TopDirectoryOnly);
             if (linkerPatches.Length == 0)
             {
                 MilanLog.Information($"No linker patches found in source directory: {linkerPatchSource}", customPrefix: LOG_CATEGORY);
@@ -192,11 +191,45 @@ namespace ProjectMilan.Pipelines.Mod
             {
                 var destFile = Path.Combine(linkerPatchDest, Path.GetFileName(file));
                 MilanLog.Information($"Copying linker patch {Path.GetFileName(file)} to mod", customPrefix: LOG_CATEGORY);
-                File.Copy(file, destFile, true);
+                if (Path.GetExtension(file).Equals(".pcc", StringComparison.OrdinalIgnoreCase))
+                {
+                    CopyNonNetPackage(file, destFile);
+                }
+                else
+                {
+                    File.Copy(file, destFile, true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Copies a linker patch package, taking it off the network. Patch packages only exist to load objects for MilanHost, and
+        /// Mod Manager's linker patch merge rejects any that declare net objects or number their exports. Forced export roots are
+        /// declarations of other packages, not net objects, so they are left alone.
+        /// </summary>
+        private static void CopyNonNetPackage(string sourceFile, string destFile)
+        {
+            using var package = (MEPackage)MEPackageHandler.OpenMEPackage(sourceFile, forceLoadFromDisk: true);
+            int cleared = 0;
+            foreach (var export in package.Exports)
+            {
+                if (export.NetIndex < 0 || NetIndexKeys.IsForcedExportRoot(export))
+                    continue;
+
+                export.NetIndex = -1;
+                cleared++;
             }
 
-           
-#endif
+            if (package.Gen0NetworkedObjectCount != 0)
+            {
+                MilanLog.Information($"Clearing net object count {package.Gen0NetworkedObjectCount} of linker patch {Path.GetFileName(sourceFile)}", customPrefix: LOG_CATEGORY);
+                package.Gen0NetworkedObjectCount = 0;
+            }
+
+            if (cleared > 0)
+                MilanLog.Information($"Cleared NetIndex of {cleared} export(s) in linker patch {Path.GetFileName(sourceFile)}", customPrefix: LOG_CATEGORY);
+
+            package.Save(destFile, diskIOSyncLock: MilanShared.DiskIOSyncLock);
         }
     }
 }
