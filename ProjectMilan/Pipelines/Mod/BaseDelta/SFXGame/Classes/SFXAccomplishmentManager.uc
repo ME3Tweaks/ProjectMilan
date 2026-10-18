@@ -284,6 +284,13 @@ public final function bool CanUnlockAccomplishment(Name AccomplishmentName)
     i = AccomplishmentData.Find('Name', AccomplishmentName);
     if (i != -1)
     {
+        // MILAN CHANGE - Mgamerz - 2026-10-13
+        // Do not increment SP accomplishment data
+        if (!AccomplishmentData[i].IsMultiplayerOnly)
+        {
+            return FALSE;
+        }
+        // END MILAN CHANGE
         return AccomplishmentIsComplete[AccomplishmentData[i].Index] == 0 || AccomplishmentData[i].bRepeatableChallenge;
     }
     WarnInternal("No Accomplishment matches ID" @ AccomplishmentName);
@@ -642,6 +649,13 @@ public final function bool SetAccomplishmentCompleted(Name AccomplishmentName, B
         WarnInternal("No Accomplishment matches ID" @ AccomplishmentName);
         return FALSE;
     }
+    // MILAN CHANGE - Mgamerz - 2026-10-13
+    // Do not increment SP accomplishment data
+    if (!AccomplishmentData[CurrentIndex].IsMultiplayerOnly)
+    {
+        return FALSE;
+    }
+    // END MILAN CHANGE
     NumCompletions = AccomplishmentIsComplete[AccomplishmentData[CurrentIndex].Index];
     PropagateAccomplishmentCompletion(AccomplishmentData[CurrentIndex].Index, TRUE, PC, TRUE);
     UnlockReward(AccomplishmentName, AccomplishmentData[CurrentIndex].PointValue, AccomplishmentData[CurrentIndex].IsMultiplayerOnly, PC);
@@ -750,17 +764,13 @@ public final function SetGrinderAccomplishmentProgress(Name AccomplishmentProgre
     local EProfileSetting ProfileSettingId;
     
     ProfileSettingId = GetProfileSettingFromAccomplishmentProgress(AccomplishmentProgressName);
+    // MILAN CHANGE - Mgamerz - 2026-10-13
+    // Do not save to MELE profile
     if (ProfileSettingId != EProfileSetting.Setting_Unknown)
     {
-        if (PC != None && PC.ProfileSettings != None && PC.ProfileSettings.SetProfileSettingValueInt(int(ProfileSettingId), Progress))
-        {
-            PC.SaveProfile(TRUE, FALSE);
-        }
-        else
-        {
-            WarnInternal("Failed call to SetProfileSettingValueInt with ProfileSettingID" $ ProfileSettingId);
-        }
+        return;
     }
+    // END MILAN CHANGE
     for (i = 0; i < AccomplishmentProgressData.Length; ++i)
     {
         if (AccomplishmentProgressData[i].Name == AccomplishmentProgressName)
@@ -812,6 +822,13 @@ public final function bool SetGrinderAccomplishmentProgressWithUpdate(Name Accom
             {
                 WarnInternal("Could not match Grinder.AccomplishmentName" @ CurrentGrinder.AccomplishmentName @ "with any Accomplishment in AccomplishmentData.");
             }
+            // MILAN CHANGE - Mgamerz - 2026-10-13
+            // Base-game (non-MP) grinders don't advance in LMP - so show no progress toast, unlock or save for them
+            if (bFound && !AccomplishmentData[CurrentIndex].IsMultiplayerOnly)
+            {
+                continue;
+            }
+            // END MILAN CHANGE
             if (bFound && CanUpdateAccomplishmentProgress(OldProgress, i, CurrentIndex) && AccomplishmentTreeBranchAlreadyNotified.Find(AccomplishmentData[CurrentIndex].Parent) == -1)
             {
                 IsProgressStillUsed = TRUE;
