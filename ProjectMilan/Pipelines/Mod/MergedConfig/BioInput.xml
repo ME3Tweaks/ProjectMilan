@@ -9,6 +9,7 @@
 			<Property name="bindings">
 				<Value type="2">( Name="Shared_ViewPrevPlayer", Command="viewprevplayer true")</Value>
 				<Value type="2">( Name="Shared_ViewNextPlayer", Command="viewnextplayer true")</Value>
+				<Value type="2">( Name="Shared_SpectatorPhotoMode", Command="EnterSpectatorPhotoMode")</Value>
 				<Value type="4">( Name="PC_GalaxyKeyStrafeLeft", Command="Axis aGuiStrafe Speed=-1.0 EventID=2" )</Value>
 				<Value type="4">( Name="PC_GalaxyKeyStrafeRight", Command="Axis aGuiStrafe Speed=+1.0 EventID=2" )</Value>
 				<Value type="4">( Name="PC_GalaxyKeyMoveForward", Command="Axis aGuiBaseY Speed=+1.0 EventID=3" )</Value>
@@ -86,7 +87,11 @@
 				<Value type="4">( Name="SpaceBar", Command="ViewNextPlayer true" )</Value>
 				<Value type="4">( Name="MouseScrollUp", Command="ViewNextPlayer true" )</Value>
 				<Value type="4">( Name="MouseScrollDown", Command="ViewPrevPlayer true" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="4">( Name="SpaceBar", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_SpectatorPhotoMode" )</Value>
+				<Value type="2">( Name="XboxTypeS_X", Command="Shared_SpectatorPhotoMode" )</Value>
+				<Value type="2">( Name="Q", Command="Shared_ViewPrevPlayer" )</Value>
+				<Value type="2">( Name="E", Command="Shared_ViewNextPlayer" )</Value>
 				<Value type="2">( Name="MouseScrollUp", Command="Shared_ViewNextPlayer" )</Value>
 				<Value type="2">( Name="MouseScrollDown", Command="Shared_ViewPrevPlayer" )</Value>
 			</Property>
