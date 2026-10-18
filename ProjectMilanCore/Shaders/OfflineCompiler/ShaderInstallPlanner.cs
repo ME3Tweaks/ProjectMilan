@@ -326,7 +326,9 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
                 (record.Hash, record.FullHash) = (hash, fullHash);
                 var graph = ResolveForGraph(material);
                 record.HasGraph = graph != null;
-                record.EmptyByDesign = graph != null && ReferenceEquals(graph, material);
+                // The material itself is also its graph when the context compiles output graphs in place (OutputMaterialsHoldGraphs)
+                record.EmptyByDesign = graph != null && ReferenceEquals(graph, material)
+                    && material.GetProperty<ArrayProperty<ObjectProperty>>("Expressions") is not { Count: > 0 };
             }
             else CompareCopies(identity, record.Packages, record.Hash, record.FullHash!, hash, fullHash);
         }

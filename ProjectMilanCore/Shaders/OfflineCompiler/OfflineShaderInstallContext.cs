@@ -173,10 +173,24 @@ public sealed class OfflineShaderInstallContext : IDisposable
     /// <summary>The decooked copy of a stripped LE3 material, which still has its expression graph.</summary>
     public ExportEntry? GraphSource(ExportEntry material) => GraphSource(material, decooked);
 
+    /// <summary>
+    /// Compile an output package's material from its own expression graph when it has one, before looking for a decooked
+    /// copy. Only for outputs whose materials were authored or rebuilt uncooked, like the heavy weapon packages: a cooked
+    /// material keeps its parameter expressions, so in the mod's output this would compile stripped graphs.
+    /// </summary>
+    public bool OutputMaterialsHoldGraphs { get; init; }
+
     /// <param name="opened">Decooked packages opened so far by the calling thread.</param>
     public ExportEntry? GraphSource(ExportEntry material, Dictionary<string, IMEPackage?> opened)
     {
         using var timing = planningDiagnostics?.Measure("graph-source", material.InstancedFullPath);
+        if (OutputMaterialsHoldGraphs && material.FileRef.FilePath is { } filePath
+            && outputByName.TryGetValue(Path.GetFileName(filePath), out var outputPath)
+            && string.Equals(Path.GetFullPath(filePath), outputPath, StringComparison.OrdinalIgnoreCase)
+            && material.GetProperty<ArrayProperty<ObjectProperty>>("Expressions") is { Count: > 0 })
+        {
+            return material;
+        }
         if (DecookedLE3Folder == null) return null;
         string root = RootName(material);
         if (!opened.TryGetValue(root, out var package))
@@ -266,14 +280,18 @@ public sealed class OfflineShaderInstallContext : IDisposable
     public bool ConfirmVariant(ExportEntry graph, IReadOnlyList<VariantSamplerSwap> swaps)
     {
         using var timing = planningDiagnostics?.Measure("variant-confirmation", graph.InstancedFullPath);
-        var overrides = new Dictionary<int, TextureCompilationMetadata>();
+        // Default texture -> the distinct metadata its samplers are swapped to. Samplers sharing a default can be swapped to
+        // different textures (WPN_MOD_MASTER_MAT's Diff and Spec stacks), and metadata is keyed by texture, so each
+        // alternative is tried in its own translation. A sampler's code depends only on its texture's metadata, so when
+        // every alternative leaves the HLSL unchanged, any mix of them does too.
+        var alternatives = new Dictionary<int, List<TextureCompilationMetadata>>();
         foreach (var swap in swaps)
         {
             var expression = graph.FileRef.FindExport(swap.ExpressionPath);
             int texture = expression?.GetProperty<ObjectProperty>("Texture")?.Value ?? 0;
             if (texture == 0) return true;
-            if (overrides.TryGetValue(texture, out var other) && other != swap.Metadata) return true; // shared default: cannot tell, keep it
-            overrides[texture] = swap.Metadata;
+            if (!alternatives.TryGetValue(texture, out var list)) alternatives[texture] = list = [];
+            if (!list.Any(m => SameMetadata(m, swap.Metadata))) list.Add(swap.Metadata);
         }
         string? Translate(Func<IEntry, TextureCompilationMetadata?> metadata)
         {
@@ -286,9 +304,20 @@ public sealed class OfflineShaderInstallContext : IDisposable
             catch { return null; }
         }
         string? original = Translate(TextureMetadata.GetMetadata);
-        string? swapped = Translate(e => overrides.TryGetValue(e.UIndex, out var m) ? m : TextureMetadata.GetMetadata(e));
-        return original == null || swapped == null || original != swapped;
+        if (original == null) return true;
+        int rounds = alternatives.Values.Max(l => l.Count);
+        for (int round = 0; round < rounds; round++)
+        {
+            var overrides = alternatives.ToDictionary(a => a.Key, a => a.Value[Math.Min(round, a.Value.Count - 1)]);
+            string? swapped = Translate(e => overrides.TryGetValue(e.UIndex, out var m) ? m : TextureMetadata.GetMetadata(e));
+            if (swapped == null || swapped != original) return true;
+        }
+        return false;
     }
+
+    private static bool SameMetadata(TextureCompilationMetadata a, TextureCompilationMetadata b) =>
+        a.Dimension == b.Dimension && a.CompressionSettings == b.CompressionSettings && a.UnpackMin == b.UnpackMin &&
+        a.UnpackMax == b.UnpackMax && a.FlipBookScale == b.FlipBookScale;
 
     public ShaderInstallPlannerOptions PlannerOptions() => new()
     {
