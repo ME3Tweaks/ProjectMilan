@@ -1,5 +1,6 @@
 using LegendaryExplorerCore.GameFilesystem;
 using System.Diagnostics;
+using System.Text.Json;
 using ProjectMilanCore;
 using ProjectMilanCore.Shaders.OfflineCompiler;
 
@@ -41,6 +42,11 @@ namespace ProjectMilan.Pipelines.Shaders
 
             new OfflineShaderInstaller(context, s => MilanLog.Information(s, customPrefix: LOG_CATEGORY))
                 .Install(plan, Math.Max(1, Environment.ProcessorCount / 2));
+
+            // Keep clone provenance in the output so Shaders checkpoints can resume at PostShaders.
+            var clones = plan.ChainClones.SelectMany(c => c.Packages.Select(p => new MaterialCloneBinding(
+                c.SourceIdentity, c.Identity, Path.GetRelativePath(Program.Settings.OutputModPath, context.OutputPath(p))))).ToList();
+            File.WriteAllText(Path.Combine(Program.Settings.OutputModPath, PostShaderPipeline.CloneManifestName), JsonSerializer.Serialize(clones));
         }
     }
 }

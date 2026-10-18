@@ -116,6 +116,7 @@ namespace ProjectMilan
             // Everything from Texture on is dev-only (see ECheckpointStageExtensions.IsDevOnly)
             (ECheckpointStage.Texture, "Texture", () => Settings.RunTexturePipeline),
             (ECheckpointStage.Shaders, "Shaders", () => Settings.RunShaderPipeline),
+            (ECheckpointStage.PostShaders, "PostShaders", () => true),
             (ECheckpointStage.Audio, "Audio", () => Settings.RunAudioPipeline),
             (ECheckpointStage.Resynthesis, "Resynthesis", () => Settings.RunResynthesis),
             (ECheckpointStage.VTables, "VTables", () => true), // Always runs
@@ -149,9 +150,9 @@ namespace ProjectMilan
         /// it into memory, so the registration has to be replayed instead. Every other pipeline is disk-only
         /// and needs no entry here - if you add a global registration to one, add it here too.
         /// <para/>
-        /// The dev-only stages after Texture (Shaders, Audio, Resynthesis, VTables) were audited and publish no
-        /// in-memory state that anything after them consumes: they only rewrite packages (and, for Audio, write the
-        /// converted .afc files) inside the mod output, which a checkpoint carries. Their static state (AFCHandler's
+        /// The dev-only stages after Texture (Shaders, PostShaders, Audio, Resynthesis, VTables) were audited and publish no
+        /// in-memory state that anything after them consumes: they write packages, shader clone metadata and the
+        /// converted .afc files inside the mod output, which a checkpoint carries. Their static state (AFCHandler's
         /// caches and streams, the shader install context) is private to the pipeline and closed or disposed before
         /// it returns.
         /// </summary>
@@ -169,7 +170,7 @@ namespace ProjectMilan
         /// Redemption - see <see cref="ECheckpointStage"/>). It invalidates every existing checkpoint,
         /// regardless of which stage it was taken at, forcing a complete rebuild.
         /// <para/>
-        /// Do NOT bump it for changes to the dev-only stages (Texture, Shaders, Audio, Resynthesis, VTables): those
+        /// Do NOT bump it for changes to the dev-only stages (Texture, Shaders, PostShaders, Audio, Resynthesis, VTables): those
         /// checkpoints are never shipped, and a full rebuild is exactly the cost they exist to avoid. A change to one
         /// of those pipelines just makes a checkpoint taken at or after it stale - retake it.
         /// </summary>
@@ -361,7 +362,7 @@ namespace ProjectMilan
                                 WarnAboutPipelinesMissingFromCheckpoint(checkpointInfo);
 
                                 // The one case where a run restores and creates: advancing the checkpoint to a later
-                                // dev-only stage (Texture, Shaders, Audio, Resynthesis, VTables), so it doesn't need a
+                                // dev-only stage (Texture, Shaders, PostShaders, Audio, Resynthesis, VTables), so it doesn't need a
                                 // full rebuild to get one. Only stages after the restored one that will actually run
                                 // are worth offering - and that includes restoring one dev-only checkpoint to take the
                                 // next, which is how a dev walks the checkpoint forward one slow pipeline at a time.
@@ -813,6 +814,8 @@ namespace ProjectMilan
             // through it) and before Resynthesis, which compacts each shader cache against the final
             // material set. Any material left without shaders fails the build.
             RunPipeline(ECheckpointStage.Shaders, Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
+
+            RunPipeline(ECheckpointStage.PostShaders, true, PostShaderPipeline.RunPipeline, "PostShaders");
 
         audio:
             RunPipeline(ECheckpointStage.Audio, Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio

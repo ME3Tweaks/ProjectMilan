@@ -54,6 +54,9 @@
         /// </summary>
         Shaders = 100,
 
+        /// <summary>Disk-only material binding repairs; checkpointed with no rehydration required.</summary>
+        PostShaders = 105,
+
         /// <summary>
         /// Dev builds only, never offered or restored by a production build (see <see cref="Texture"/>). Changes to
         /// <c>AudioPipeline</c> make an Audio checkpoint stale without bumping MIN_CHECKPOINT_VERSION; retake it.
