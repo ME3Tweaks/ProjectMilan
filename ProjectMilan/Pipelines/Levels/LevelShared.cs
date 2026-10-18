@@ -10,6 +10,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilanCore;
 using ProjectMilan.Pipelines.StaticLighting;
+using ProjectMilan.Pipelines.Shared;
 using LegendaryExplorerCore.Kismet;
 
 namespace ProjectMilan.Pipelines.Levels
@@ -199,24 +200,32 @@ namespace ProjectMilan.Pipelines.Levels
         /// <summary>
         /// Imports static lighting for a BioP and its sublevels
         /// </summary>
-        public static void ImportStaticLighting(LevelSpecificPipeline level, bool includeSublevels = false)
-        {
-            var staticLightingPath = StaticLightingCache.GetMapPath(level.BioP, level.BioP);
-            if (File.Exists(staticLightingPath))
-            {
-                // Import static lighting
-                LightingImportSetup setup = new LightingImportSetup()
-                {
-                    IncludeSubLevels = includeSublevels,
-                    UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName,
-                    IgnoredSublevelNames = level.IgnoredLightingLevels,
-                    ShouldKeepLightMap = KeepPortedLighting
-                };
+        public static void ImportStaticLighting(LevelSpecificPipeline level, bool includeSublevels = false) =>
+            ImportStaticLighting(level, level.LE3BioP, includeSublevels);
 
-                // Encoded lightmap mips are cached beside the baked maps, so importing this bake again skips the encoding
-                using var lightmapMipCache = LightmapMipCache.Attach(setup, level.BioP);
-                StaticLightingImporter.ImportStaticLighting(level.LE3BioP, setup);
-            }
+        /// <summary>
+        /// Imports <paramref name="level"/>'s bake from <paramref name="lightmass"/> (default: this build's) into <paramref name="bioP"/>,
+        /// which can be a copy outside the pipeline (e.g. the installed game's). Sublevels are saved; <paramref name="bioP"/> is not.
+        /// Returns false if there is no such bake.
+        /// </summary>
+        internal static bool ImportStaticLighting(LevelSpecificPipeline level, IMEPackage bioP, bool includeSublevels, LightmassSolver? lightmass = null)
+        {
+            if (!StaticLightingCache.HasLevel(level.BioP, lightmass))
+                return false;
+
+            // Import static lighting
+            LightingImportSetup setup = new LightingImportSetup()
+            {
+                IncludeSubLevels = includeSublevels,
+                UDKMapsBasePath = StaticLightingCache.GetLevelFolder(level.BioP, lightmass),
+                IgnoredSublevelNames = level.IgnoredLightingLevels,
+                ShouldKeepLightMap = KeepPortedLighting
+            };
+
+            // Encoded lightmap mips are cached beside the baked maps, so importing this bake again skips the encoding
+            using var lightmapMipCache = LightmapMipCache.Attach(setup, level.BioP);
+            StaticLightingImporter.ImportStaticLighting(bioP, setup);
+            return true;
         }
 
         public static IMEPackage PortLevel(LevelSpecificPipeline levelPipeline, IMEPackage sourcePackage)
@@ -475,6 +484,9 @@ namespace ProjectMilan.Pipelines.Levels
 
             MilanLevelTools.RebuildPersistentLevelChildren(destLevel);
 
+            // Before any lighting touches the package: a new vertex count changes what the components' per-vertex data indexes
+            UVFixGraft.Apply(destPackage, levelPipeline.LogCategory);
+
             if (levelPipeline.StripShadowMaps)
             {
                 foreach (var exp in destPackage.Exports.Where(x => x.ClassName == "StaticMeshComponent"))
@@ -545,7 +557,7 @@ namespace ProjectMilan.Pipelines.Levels
         /// </summary>
         /// <param name="main_seq">File main sequence</param>
         /// <param name="levelPipeline">Level pipeline this level is part of</param>
-        private static void FixSequencing(ExportEntry main_seq, LevelSpecificPipeline levelPipeline)
+        internal static void FixSequencing(ExportEntry main_seq, LevelSpecificPipeline levelPipeline)
         {
             // Find SeqCond_IsGameInfo objects
             // They look for SFXGameInfo_SP which no longer exists.
