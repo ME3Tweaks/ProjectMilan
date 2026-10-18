@@ -217,6 +217,9 @@ namespace ProjectMilan.Pipelines.Texture
 
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
             int cleanedTextures = 0, removedMips = 0;
+            // Encoding (BC7 above all) is the slow part, and the same sources usually come back on the next run
+            using var encodeCache = new TextureEncodeCache();
+            var callbacks = encodeCache.Callbacks;
             foreach (var pf in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
             {
                 MilanLog.Information($"Checking package {Path.GetFileName(pf)}", customPrefix: LOG_CATEGORY);
@@ -235,7 +238,7 @@ namespace ProjectMilan.Pipelines.Texture
                         MilanLog.Information($"  Converting texture {obj.InstancedFullPath} from PF_V8U8 to BC7", customPrefix: LOG_CATEGORY);
                         try
                         {
-                            ConvertTexture(obj, PixelFormat.BC7);
+                            ConvertTexture(obj, PixelFormat.BC7, callbacks);
                         }
                         catch (Exception ex)
                         {
@@ -249,7 +252,7 @@ namespace ProjectMilan.Pipelines.Texture
                     {
                         // Converting first would decode the old texture data just to throw it away - the upscale replaces
                         // every mip anyway, so fold the format change into the replace instead.
-                        InstallUpscale(obj, upscale, needsBC7Conversion);
+                        InstallUpscale(obj, upscale, needsBC7Conversion, callbacks);
                     }
                 }
 
@@ -267,39 +270,62 @@ namespace ProjectMilan.Pipelines.Texture
                 }
             }
             MilanLog.Information($"Removed {removedMips} empty mips from {cleanedTextures} textures", customPrefix: LOG_CATEGORY);
+
+            // Every texture was visited, so whatever the cache holds beyond this pass is for sources that changed or are gone
+            encodeCache.PruneUnused();
         }
 
         /// <summary>
         /// Installs an upscale over a texture, package stored - MoveNonLightingTexturesToExternalTFC externalizes and dedupes it later.
         /// </summary>
         /// <param name="convertV8U8ToBC7">If the export is a V8U8 norm, which doesn't render in LE3. The new image is encoded as BC7 directly.</param>
-        private static void InstallUpscale(ExportEntry tex, UpscaleSource upscale, bool convertV8U8ToBC7)
+        /// <remarks>
+        /// A DXT1 texture is upscaled to BC7 too: DXT1's artifacting is at its worst on exactly the detail an upscale adds.
+        /// It is stamped the way vanilla LE3 stamps BC7 - TC_BC7 (same shader decode as TC_Default) with its SRGB kept, or
+        /// TC_NormalmapBC7 for a normal map, whose shaders the shader pipeline then recompiles against the new decode.
+        /// </remarks>
+        /// <param name="callbacks">Encode cache hooks for Replace(), or null.</param>
+        private static void InstallUpscale(ExportEntry tex, UpscaleSource upscale, bool convertV8U8ToBC7, TextureReplaceCallbacks? callbacks)
         {
             try
             {
                 var t2d = new Texture2D(tex);
-                MilanLog.Information($"  Installing upscaled texture {tex.InstancedFullPath}: {t2d.GetTopMip().width}x{t2d.GetTopMip().height} -> {upscale.Width}x{upscale.Height}{(convertV8U8ToBC7 ? " (V8U8 -> BC7)" : "")}", customPrefix: LOG_CATEGORY);
-
                 var props = tex.GetProperties();
                 var isNormalMap = IsNormalMap(props);
-                if (convertV8U8ToBC7)
+                var fromDXT1 = Image.getPixelFormatType(t2d.TextureFormat) == PixelFormat.DXT1;
+                // Decided on the original's data, so before the format changes below.
+                var makeOpaque = fromDXT1 && !UsesDxt1Alpha(t2d, props);
+                var toBC7 = convertV8U8ToBC7 || fromDXT1;
+                MilanLog.Information($"  Installing upscaled texture {tex.InstancedFullPath}: {t2d.GetTopMip().width}x{t2d.GetTopMip().height} -> {upscale.Width}x{upscale.Height}{(convertV8U8ToBC7 ? " (V8U8 -> BC7)" : fromDXT1 ? " (DXT1 -> BC7)" : "")}", customPrefix: LOG_CATEGORY);
+
+                if (toBC7)
                 {
                     props.AddOrReplaceProp(new EnumProperty("PF_BC7", "EPixelFormat", MEGame.LE3, "Format"));
                     // Same rule as ConvertTexture: only real normal maps get restamped as one.
                     if (isNormalMap)
                         SetBC7NormalMapProperties(props);
+                    else if (fromDXT1)
+                        props.AddOrReplaceProp(new EnumProperty("TC_BC7", "TextureCompressionSettings", MEGame.LE3, "CompressionSettings"));
                     t2d.TextureFormat = "PF_BC7"; // Required for conversion
                 }
 
-                // Load as ARGB so Replace() re-encodes into the target format (and so its DXT1 alpha check, which only works on ARGB, fires).
+                // Load as ARGB so Replace() re-encodes into the target format.
                 var image = Image.LoadFromFile(upscale.FilePath, PixelFormat.ARGB);
-                if (convertV8U8ToBC7 && isNormalMap)
+                if (toBC7 && isNormalMap)
                 {
-                    // The upscale was made from a two channel source, so its Z lane may be the constant 255 V8U8ToARGB
-                    // writes rather than real data. BC7 is sampled as XYZ, so rebuild it - harmless if Z was already right.
+                    // A V8U8 upscale was made from a two channel source, so its Z lane may be the constant 255 V8U8ToARGB
+                    // writes rather than real data, and a DXT1 one's Z went through the upscaler. BC7 is sampled as XYZ, so
+                    // rebuild it - harmless if Z was already right.
                     ReconstructNormalZ(image);
                 }
-                t2d.Replace(image, props, isPackageStored: true);
+                if (makeOpaque)
+                {
+                    // Upscale sources can carry an alpha channel the original never had: BioT_GthMP.Textures.ConcreteGround's
+                    // is below 128 almost everywhere, which encoded the whole floor as transparent black when it was kept as
+                    // DXT1's 1-bit alpha. An opaque original stays opaque.
+                    MakeOpaque(image);
+                }
+                t2d.Replace(image, props, isPackageStored: true, callbacks: callbacks);
                 ClearNeverStreamForExternalization(tex);
             }
             catch (Exception ex)
@@ -309,7 +335,44 @@ namespace ProjectMilan.Pipelines.Texture
             }
         }
 
-        private static void ConvertTexture(ExportEntry tex, PixelFormat destFormat)
+        /// <summary>
+        /// If a DXT1 texture uses its 1-bit alpha: never with CompressionNoAlpha, always with TC_OneBitAlpha, otherwise only
+        /// if its current data has a transparent pixel. When that data can't be read the source's alpha is kept, as before.
+        /// </summary>
+        private static bool UsesDxt1Alpha(Texture2D texture, PropertyCollection props)
+        {
+            if (props.GetProp<BoolProperty>("CompressionNoAlpha")?.Value == true)
+                return false;
+            if (props.GetProp<EnumProperty>("CompressionSettings")?.Value == "TC_OneBitAlpha")
+                return true;
+            try
+            {
+                var data = texture.ToImage(PixelFormat.ARGB).mipMaps[0].data;
+                for (int i = 3; i < data.Length; i += 4) // B G R A
+                {
+                    if (data[i] < 128)
+                        return true;
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                MilanLog.Warning($"  Could not read {texture.Export.InstancedFullPath} to check its alpha; keeping the upscale's alpha: {ex.Message}", customPrefix: LOG_CATEGORY);
+                return true;
+            }
+        }
+
+        private static void MakeOpaque(Image argbImage)
+        {
+            foreach (var mip in argbImage.mipMaps)
+            {
+                for (int i = 3; i < mip.data.Length; i += 4) // B G R A
+                    mip.data[i] = 255;
+            }
+        }
+
+        /// <param name="callbacks">Encode cache hooks for Replace(), or null.</param>
+        private static void ConvertTexture(ExportEntry tex, PixelFormat destFormat, TextureReplaceCallbacks? callbacks)
         {
 
             var props = tex.GetProperties();
@@ -321,7 +384,8 @@ namespace ProjectMilan.Pipelines.Texture
             // TC_NormalmapUncompressed, so this is a guard rather than a filter.
             var isNormalMap = IsNormalMap(props);
 
-            Image convertedImage;
+            // Decoded to ARGB only; Replace() encodes it into destFormat, where the encode cache can skip the work
+            var convertedImage = texture.ToImage(PixelFormat.ARGB);
             if (sourceFormat == PixelFormat.V8U8 && destFormat == PixelFormat.BC7 && isNormalMap)
             {
                 // V8U8 physically has no Z channel, and Image.V8U8ToARGB fills that lane with a constant 255 (verified:
@@ -330,13 +394,7 @@ namespace ProjectMilan.Pipelines.Texture
                 // value to a median 1.3/255, the same as DXT1/DXT5, where PF_BC5 does not (median 8.6, only 2 of 20).
                 // Handing the shader a flat Z would flatten every converted normal map, so rebuild it from XY first.
                 // Only for real normal maps: for a distortion map the third channel is meaningless and must be left alone.
-                convertedImage = texture.ToImage(PixelFormat.ARGB);
                 ReconstructNormalZ(convertedImage);
-                convertedImage.correctMips(destFormat);
-            }
-            else
-            {
-                convertedImage = texture.ToImage(destFormat);
             }
 
             props.AddOrReplaceProp(new EnumProperty($"PF_{destFormat}", "EPixelFormat", MEGame.LE3, "Format"));
@@ -358,7 +416,7 @@ namespace ProjectMilan.Pipelines.Texture
             }
 
             texture.TextureFormat = $"PF_{destFormat}"; // Required for conversion
-            texture.Replace(convertedImage, props, isPackageStored: true);
+            texture.Replace(convertedImage, props, isPackageStored: true, callbacks: callbacks);
             ClearNeverStreamForExternalization(tex);
         }
 
@@ -456,6 +514,7 @@ namespace ProjectMilan.Pipelines.Texture
                     "Textures_DLC_METR_Patch01", // We don't ship this either
                 },
                 UseIndexing = false,
+                IncludeNumberedSourceTFCs = true,
                 StagingPath = staging,
                 TFCType = "Textures",
                 RootTexturesOnly = false, // Name says non-lighting: root (lightmap) textures are handled separately below via plain MoveTexturesToTFC, not compacted here.
