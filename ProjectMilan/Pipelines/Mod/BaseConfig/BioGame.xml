@@ -5084,6 +5084,9 @@
 			<Property name="srmatchmakingerror" type="2">591379</Property>
 			<Property name="srok" type="2">152938</Property>
 			<Property name="sronlineprivilegeerror" type="2">652174</Property>
+			<Property name="srquickmatchaccesskeyrejected" type="2">49875718</Property>
+			<Property name="srquickmatchoff" type="2">49875719</Property>
+			<Property name="srquickmatchserverunavailable" type="2">49875720</Property>
 			<Property name="srsearchingforgames" type="2">506693</Property>
 			<Property name="srstrictnaterror" type="2">724659</Property>
 		</Section>

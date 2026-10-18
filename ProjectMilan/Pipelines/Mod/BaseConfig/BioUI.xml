@@ -1751,7 +1751,7 @@
 				<Value type="2">(Tag=AtlasHUD,\t\t\tZOrder=34,\tMovieClass="SFXGameContent.SFXGUI_AtlasHUD",\t\tGFxResource="GUI_SF_HUDatlas.HUDatlas")</Value>
 				<Value type="2">(Tag=HUD,\t\t\tZOrder=35,\tMovieClass="SFXGame.SFXSFHandler_PCHUD",\t\tGFxResource="GUI_SF_ME2_HUD.ME2_HUD", HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
 				<Value type="2">(Tag=MPHUD,\tZOrder=36,\tMovieClass="SFXGameMPContent.SFXGUI_MPHUD",\tGFxResource="GUI_SF_MP_HUD.MP_HUD", HUDTypeToAutoLoadFor="SFXGameMPContent.SFXHUDMP")</Value>
-				<Value type="2">(Tag=PhotoMode,\t\tZOrder=37,\tMovieClass="SFXGame.SFXSFHandler_PhotoMode",\t\tGFxResource="GUI_SF_PhotoMode.PhotoMode", bRequiresScaling=true)</Value>
+				<Value type="2">(Tag=PhotoMode,\t\tZOrder=37,\tMovieClass="SFXGameContent_Milan.SFXSFHandler_PhotoMode_Milan",\t\tGFxResource="GUI_SF_PhotoMode.PhotoMode", bRequiresScaling=true)</Value>
 				<Value type="2">(Tag=Conversation,\tZOrder=45,\tMovieClass="SFXGame.BioSFHandler_PCConversation",\tGFxResource="GUI_SF_ConversationWheel.ConversationWheel", HUDTypeToAutoLoadFor="SFXGame.BioHUD", bRequiresScaling=true)</Value>
 				<Value type="2">(Tag=BlackScreen,\t\tZOrder=50,\tMovieClass="SFXGame.BioSFHandler_BlackScreen",\t\tGFxResource="GUI_SF_BlackScreen.BlackScreen",HUDTypeToAutoLoadFor="SFXGame.BioHUD")</Value>
 				<Value type="2">(Tag=IntroText,\t\tZOrder=90,\tMovieClass="SFXGame.BioSFHandler_IntroText",\t\tGFxResource="GUI_SF_IntroText.IntroText")</Value>
