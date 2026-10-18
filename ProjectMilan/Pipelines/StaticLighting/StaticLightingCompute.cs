@@ -5,6 +5,7 @@ using UDKInj;
 using LegendaryExplorerCore.GameFilesystem;
 using ProjectMilanCore;
 using ProjectMilan.Utility;
+using ProjectMilan.Pipelines.Levels;
 
 namespace ProjectMilan.Pipelines.StaticLighting
 {
@@ -421,15 +422,23 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 MilanLog.Warning($"Lightmass: UE3, because UE4 Lightmass can't be used: {reason}", customPrefix: LOG_CATEGORY);
             else
             {
+                settings = Program.UE4LightmassOverrides.ApplyTo(settings);
                 MilanLog.Information($"Lightmass: UE4 ({ue4Lightmass}; environment color x{settings.EnvironmentColorScale}, " +
-                    $"sun indirect x{settings.DirectionalIndirectLightingScale})", customPrefix: LOG_CATEGORY);
+                    $"sun indirect x{settings.DirectionalIndirectLightingScale}, point/spot indirect x{settings.LocalIndirectLightingScale}, " +
+                    $"point/spot brightness x{settings.LocalLightBrightnessScale}, point/spot radius x{settings.LocalLightRadiusScale}, " +
+                    $"diffuse boost x{settings.DiffuseBoostScale}, bounces {settings.IndirectLightingBounces?.ToString() ?? "as exported"})", customPrefix: LOG_CATEGORY);
                 var culture = System.Globalization.CultureInfo.InvariantCulture;
                 var importanceBox = "";
                 if (settings.AddImportanceVolume && GameplayImportanceVolume.Compute(StaticLightingExport.GetMapOutputPath(mapName), settings.ImportanceVolumeMargin) is var (min, max))
                     importanceBox = " --importance-box " + string.Join(",", new[] { min.X, min.Y, min.Z, max.X, max.Y, max.Z }.Select(v => v.ToString("0.###", culture)));
                 RunUdkInjShell($"install-lightmass-bridge \"{Program.Settings.MilanUDKPath}\" \"{UE4ReferencePath}\" \"{ue4Lightmass}\" " +
                     $"--environment-color-scale {settings.EnvironmentColorScale.ToString(culture)} " +
-                    $"--directional-indirect-scale {settings.DirectionalIndirectLightingScale.ToString(culture)}" + importanceBox,
+                    $"--directional-indirect-scale {settings.DirectionalIndirectLightingScale.ToString(culture)} " +
+                    $"--local-indirect-scale {settings.LocalIndirectLightingScale.ToString(culture)} " +
+                    $"--local-brightness-scale {settings.LocalLightBrightnessScale.ToString(culture)} " +
+                    $"--local-radius-scale {settings.LocalLightRadiusScale.ToString(culture)} " +
+                    $"--diffuse-boost-scale {settings.DiffuseBoostScale.ToString(culture)}" +
+                    (settings.IndirectLightingBounces is { } bounces ? $" --indirect-bounces {bounces.ToString(culture)}" : "") + importanceBox,
                     "install the UE4 Lightmass bridge");
                 return LightmassSolver.UE4;
             }
@@ -596,6 +605,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// </summary>
         internal static void BakeFromPreBakeMaps(string mapName, LightmassBuildQuality quality, int defaultStaticMeshLightingRes)
         {
+            // Standalone bakes bypass ExportLevelToUDK/UDKSetup, which normally select Milan's UDK.
+            // Keep the working maps, config overrides, bridge, and launched editor in the same install.
+            LegendaryExplorerCore.LegendaryExplorerCoreLibSettings.Instance.UDKCustomDirectory = Program.Settings.MilanUDKPath;
+            // Accessing Instance can initialize settings and reload the globally configured paths.
+            UDKDirectory.DefaultGamePath = Program.Settings.MilanUDKPath;
+
             var preBake = Path.Combine(MilanShared.PipelineRoot, "StaticLighting", "PreBake", mapName);
             var maps = Directory.Exists(preBake) ? Directory.GetFiles(preBake, "*.udk") : [];
             if (!maps.Any(f => Path.GetFileNameWithoutExtension(f).Equals(mapName, StringComparison.OrdinalIgnoreCase)))
@@ -614,9 +629,14 @@ namespace ProjectMilan.Pipelines.StaticLighting
             Utilities.DeleteFilesAndFoldersRecursively(mapOutput, deleteDirectoryItself: false);
             foreach (var map in maps)
                 File.Copy(map, Path.Combine(mapOutput, Path.GetFileName(map)));
+            // Older snapshots may predate the correction. Apply it to the working copies, leaving
+            // the preserved snapshot and gameplay packages intact.
+            var pipeline = MPLevels.FindLevelPipeline(mapName);
+            if (pipeline != null)
+                StaticLightingExport.ApplyExportCorrections(pipeline, Directory.GetFiles(mapOutput, "*.udk"));
             MilanLog.Information($"Baking {mapName} at {quality} from {maps.Length} pre-bake maps into the {Program.Lightmass} bakes", customPrefix: LOG_CATEGORY);
             ComputeLighting(mapName, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes,
-                qualityLevel: quality, ue4Lightmass: new UE4LightmassSettings(), keepQuality: true);
+                qualityLevel: quality, ue4Lightmass: pipeline?.UE4Lightmass, keepQuality: true);
         }
 
         private static void KeepPreBakeMaps(string mapName)

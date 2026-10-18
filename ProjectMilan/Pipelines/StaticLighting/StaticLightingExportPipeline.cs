@@ -34,6 +34,21 @@ namespace ProjectMilan.Pipelines.StaticLighting
             return Directory.CreateDirectory(Path.Combine(UDKDirectory.SharedPath, "Assets", mapName)).FullName;
         }
 
+        /// <summary>Applies bake-only corrections to generated maps or copies of saved pre-bake maps.</summary>
+        internal static void ApplyExportCorrections(LevelSpecificPipeline level, IEnumerable<string> mapPaths)
+        {
+            if (level.SpecialFixes == null)
+                return;
+
+            foreach (var path in mapPaths)
+            {
+                using IMEPackage udk = MEPackageHandler.OpenUDKPackage(path);
+                level.SpecialFixes.CorrectUDKExport(level, udk);
+                if (udk.IsModified)
+                    udk.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+            }
+        }
+
         /// <summary>
         /// Converts a level and its sublevels to UDK maps ready for a lighting bake.
         /// </summary>
@@ -158,6 +173,8 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 level.WorldLightmass?.ApplyTo(worldInfo, LOG_CATEGORY);
                 persistentUDK.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
             }
+
+            ApplyExportCorrections(level, new[] { persistentPath }.Concat(levelFiles));
 
             // Enumerate each package and verify imports can resolve.
             MELoadedFiles.InvalidateCaches();
