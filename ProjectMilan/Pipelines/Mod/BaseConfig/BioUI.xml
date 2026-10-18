@@ -3635,8 +3635,8 @@
 		<Section name="sfxgamempcontent.sfxgui_mphud">
 			<Property name="dpaddisplaytime" type="2">10.0</Property>
 			<Property name="dpadfadeout" type="2">false</Property>
-			<Property name="srspectatorhuddescriptionconsole" type="2">618885</Property>
-			<Property name="srspectatorhuddescriptionpc" type="2">738901</Property>
+			<Property name="srspectatorhuddescriptionconsole" type="2">49875771</Property>
+			<Property name="srspectatorhuddescriptionpc" type="2">49875770</Property>
 			<Property name="tickerentrydisplaytime" type="2">8.0</Property>
 			<Property name="tickerupdatetime" type="2">0.5</Property>
 		</Section>
