@@ -99,6 +99,17 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 throw;
             }
 
+            // Some subclasses need a new superclass member to exist before their Classes/ source compiles.
+            if (ApplyClassElements(package, fileLib, usop, Path.Combine(baseDeltaFolder, "EarlyAddToClassOrReplace")))
+            {
+                if (!fileLib.ReInitializeFile(usop))
+                {
+                    MilanShared.LogFailedFileLibInit(fileLib);
+                    MilanLog.Fatal($"Unable to re-initialize the FileLib for {packageName} after early class elements - this is a fatal error.");
+                    Environment.Exit(1);
+                }
+            }
+
             var classFolder = Path.Combine(baseDeltaFolder, "Classes");
             bool compiledClasses = false;
             if (Directory.Exists(classFolder))
@@ -210,36 +221,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             ApplyPropertyUpdates(package, baseDeltaFolder, packageName, logCategory);
             ApplyTextureUpdates(package, baseDeltaFolder, packageName, logCategory);
 
-            var atcorFolder = Path.Combine(baseDeltaFolder, "AddToClassOrReplace");
-            if (Directory.Exists(atcorFolder))
-            {
-                foreach (var atcor in Directory.GetFiles(atcorFolder, "*.uc"))
-                {
-                    var atcorName = Path.GetFileNameWithoutExtension(atcor);
-                    var atcorExport = package.FindExport(atcorName.Split(".")[0]);
-
-                    // AddOrReplaceInClass decompiles the whole class and recompiles it, reading member bytecode
-                    // through FileLib's object binary cache - which still holds what was there at Initialize.
-                    // Without a re-init, any Functions/ override in this class (or an earlier element added
-                    // here) is silently reverted to its stale cached body.
-                    if (!fileLib.ReInitializeFile(usop))
-                    {
-                        MilanShared.LogFailedFileLibInit(fileLib);
-                        MilanLog.Fatal($"Unable to re-initialize the FileLib for {packageName} before compiling {atcorName} - this is a fatal error.");
-                        Environment.Exit(1);
-                    }
-
-                    MilanLog.Information($"Compiling class element {atcorName}", customPrefix: logCategory);
-                    var atorSource = File.ReadAllText(atcor);
-                    var log = UnrealScriptCompiler.AddOrReplaceInClass(atcorExport, atorSource, fileLib, usop);
-                    if (log.HasErrors)
-                    {
-                        MilanLog.LogUSCErrors(log);
-                        MilanLog.Fatal($"Failed to compile {packageName} class {atcorName} - this is a fatal error.");
-                        Environment.Exit(1);
-                    }
-                }
-            }
+            ApplyClassElements(package, fileLib, usop, Path.Combine(baseDeltaFolder, "AddToClassOrReplace"));
 
             // Runs last so no class recompile above can undo it.
             postCompile?.Invoke(package);
@@ -248,6 +230,50 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             BaseDeltaNetIndexing.Apply(package, GameFile);
 
             return package.SaveToStream(BaseDeltaHandler.UseCompressedPackages).ToArray();
+        }
+
+        /// <summary>
+        /// Applies class members from a folder. EarlyAddToClassOrReplace runs before Classes/ so
+        /// subclasses can override new superclass hooks; AddToClassOrReplace keeps its late position.
+        /// </summary>
+        private bool ApplyClassElements(IMEPackage package, FileLib fileLib, UnrealScriptOptionsPackage usop, string folder)
+        {
+            if (!Directory.Exists(folder))
+                return false;
+
+            bool applied = false;
+            foreach (var atcor in Directory.GetFiles(folder, "*.uc"))
+            {
+                var atcorName = Path.GetFileNameWithoutExtension(atcor);
+                var atcorExport = package.FindExport(atcorName.Split(".")[0]);
+                if (atcorExport == null)
+                {
+                    MilanLog.Fatal($"{packageName} has no class for {atcorName} in {folder} - this is a fatal error.");
+                    Environment.Exit(1);
+                    return false;
+                }
+
+                // AddOrReplaceInClass reads the whole class through FileLib's binary cache
+                // Refresh before each member so earlier function overrides and added members are visible
+                if (!fileLib.ReInitializeFile(usop))
+                {
+                    MilanShared.LogFailedFileLibInit(fileLib);
+                    MilanLog.Fatal($"Unable to re-initialize the FileLib for {packageName} before compiling {atcorName} - this is a fatal error.");
+                    Environment.Exit(1);
+                }
+
+                MilanLog.Information($"Compiling class element {atcorName}", customPrefix: logCategory);
+                var source = File.ReadAllText(atcor);
+                var log = UnrealScriptCompiler.AddOrReplaceInClass(atcorExport, source, fileLib, usop);
+                if (log.HasErrors)
+                {
+                    MilanLog.LogUSCErrors(log);
+                    MilanLog.Fatal($"Failed to compile {packageName} class {atcorName} - this is a fatal error.");
+                    Environment.Exit(1);
+                }
+                applied = true;
+            }
+            return applied;
         }
 
         /// <summary>
