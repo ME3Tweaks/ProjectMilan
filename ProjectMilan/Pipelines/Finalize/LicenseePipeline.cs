@@ -1,6 +1,7 @@
 ﻿using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using ProjectMilanCore;
+using ProjectMilan.Pipelines.Shaders;
 
 namespace ProjectMilan.Pipelines.Finalize
 {
@@ -14,6 +15,7 @@ namespace ProjectMilan.Pipelines.Finalize
         private const string LOG_CATEGORY = @"MILAN-Licensee";
         public static void RunPipeline()
         {
+            File.Delete(Path.Combine(Program.Settings.OutputModPath, PostShaderPipeline.CloneManifestName));
             InternalRunPipeline();
         }
 

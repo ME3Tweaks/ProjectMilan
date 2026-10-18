@@ -46,6 +46,7 @@ namespace ProjectMilan.Pipelines.Init
 
             WriteDonorOutputPath(); // For development
             SharedMaterialDonor.RegisterSharedDonors();
+            UVFixGraft.LoadFixedMeshes();
         }
 
         /// <summary>

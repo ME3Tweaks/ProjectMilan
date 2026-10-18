@@ -102,9 +102,12 @@ namespace ProjectMilan.Pipelines.Finalize
                                 ?? throw new InvalidDataException("GuidMap.json is empty.");
 
                 // GuidCache files are the guid map, not content; they are never inventoried or conformed.
+                // Linker patch packages are never networked so ignore them
                 var root = Program.Settings.OutputModPath;
+                var linkerPatchFolder = "LinkerPatches" + Path.DirectorySeparatorChar;
                 files = Directory.GetFiles(root, "*.pcc", SearchOption.AllDirectories)
                     .Where(p => !Path.GetFileNameWithoutExtension(p).StartsWith("GuidCache", StringComparison.OrdinalIgnoreCase))
+                    .Where(p => !Path.GetRelativePath(root, p).StartsWith(linkerPatchFolder, StringComparison.OrdinalIgnoreCase))
                     .OrderBy(p => Path.GetRelativePath(root, p), StringComparer.OrdinalIgnoreCase)
                     .ToList();
 
