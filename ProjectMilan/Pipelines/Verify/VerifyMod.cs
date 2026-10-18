@@ -26,6 +26,14 @@ namespace ProjectMilan.Pipelines.Verify
         private static void InternalRunPipeline()
         {
             var afcFilesReferenced = new HashSet<string>();
+            var tfcFiles = new Dictionary<string, string>(MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, includeTFCs: true), StringComparer.OrdinalIgnoreCase);
+            // Milan TFCs must be in this build; don't look at installed LMP
+            foreach (var name in tfcFiles.Keys.Where(x => x.EndsWith(".tfc", StringComparison.OrdinalIgnoreCase) &&
+                         x.Contains("_" + MilanShared.DLC_NAME, StringComparison.OrdinalIgnoreCase)).ToList())
+                tfcFiles.Remove(name);
+            foreach (var file in Directory.GetFiles(Program.Settings.OutputModPath, "*.tfc", SearchOption.AllDirectories))
+                tfcFiles[Path.GetFileName(file)] = file;
+            using var textureVerifier = new TextureReferenceVerifier(tfcFiles);
 
             // Map of Package -> Map of IFP -> NetIndex
             var netIndexes = new CaseInsensitiveDictionary<CaseInsensitiveDictionary<int>>();
@@ -35,12 +43,14 @@ namespace ProjectMilan.Pipelines.Verify
                 if (f.RepresentsPackageFilePath())
                 {
                     // Package file checks
-                    var package = MEPackageHandler.OpenMEPackage(f);
+                    using var package = MEPackageHandler.OpenMEPackage(f);
                     VerifyVTables(package);
                     RunEntryChecks(package);
                     if (Program.Settings.RunConformancePipeline) // If we didn't run conformance this is pointless to check
                         NetIndexCheck(package, netIndexes);
                     CollectAFCFileNames(package, afcFilesReferenced);
+                    foreach (var error in textureVerifier.VerifyPackage(package))
+                        MilanLog.ErrorWithSummary(error, customPrefix: LOG_CATEGORY);
                 }
             }
 
