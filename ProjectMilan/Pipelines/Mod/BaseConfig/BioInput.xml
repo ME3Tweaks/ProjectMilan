@@ -349,6 +349,7 @@
 				<Value type="2">( Name="Shared_MPToggleReady", Command="MPToggleReady" )</Value>
 				<Value type="2">( Name="Shared_ViewPrevPlayer", Command="viewprevplayer true")</Value>
 				<Value type="2">( Name="Shared_ViewNextPlayer", Command="viewnextplayer true")</Value>
+				<Value type="2">( Name="Shared_SpectatorPhotoMode", Command="EnterSpectatorPhotoMode")</Value>
 				<Value type="2">( Name="Console_UsePower3", Command="OnRelease TryUsePower 2" )</Value>
 				<Value type="2">( Name="Console_NavAssistanceOrCoverTurn", Command="Exclusive TryCoverTurn | Exclusive ActivatePOI | OnRelease DeactivatePOI | ShowAreaMap " )</Value>
 				<Value type="2">( Name="Shared_TogglePhotoOptions", Command="ToggleOptions")</Value>
@@ -648,13 +649,8 @@
 				<Value type="2">( Name="XboxTypeS_LeftY", Command="Console_Movement" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightX", Command="Console_LookX" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
-				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Shared_ViewPrevPlayer" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Shared_ViewNextPlayer" )</Value>
 				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="Shared_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="MouseScrollUp", Command="Shared_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="MouseScrollDown", Command="Shared_ViewPrevPlayer" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
 				<Value type="2">( Name="A", Command="PC_StrafeLeft" )</Value>
@@ -1046,9 +1042,12 @@
 				<Value type="2">( Name="XboxTypeS_RightY", Command="Console_LookY" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftShoulder", Command="Shared_ViewPrevPlayer" )</Value>
 				<Value type="2">( Name="XboxTypeS_RightShoulder", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="XboxTypeS_X", Command="Shared_SpectatorPhotoMode" )</Value>
 				<Value type="2">( Name="XboxTypeS_Start", Command="Shared_Menu" )</Value>
 				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="Shared_ViewNextPlayer" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="Shared_SpectatorPhotoMode" )</Value>
+				<Value type="2">( Name="Q", Command="Shared_ViewPrevPlayer" )</Value>
+				<Value type="2">( Name="E", Command="Shared_ViewNextPlayer" )</Value>
 				<Value type="2">( Name="MouseScrollUp", Command="Shared_ViewNextPlayer" )</Value>
 				<Value type="2">( Name="MouseScrollDown", Command="Shared_ViewPrevPlayer" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
