@@ -13,6 +13,7 @@ using System.Threading;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Pathing;
+using LegendaryExplorerCore.Textures;
 using ProjectMilan.Utility;
 
 namespace ProjectMilanCore
@@ -1844,7 +1845,7 @@ namespace ProjectMilanCore
         {
             string category = logCategoryBase + "-" + tfcType;
             var inputFolder = Path.Combine(MilanPipelinesShared.OutputModPath, @"CookedPCConsole");
-            const long MaxTFCSize = 2L * 1024 * 1024 * 1024; // 2 GiB
+            const long MaxTFCSize = int.MaxValue; // Mip offsets are signed 32-bit values.
             int tfcIndex = 1; // Increments every 2GiB
             var tfcName = $"{tfcType}_{dlcName}";
             var tfcPath = Path.Combine(inputFolder, $"{tfcName}.tfc");
@@ -1910,25 +1911,32 @@ namespace ProjectMilanCore
                         continue;
 
                     bool updateTFCName = false;
+                    // Reserve the whole texture's mips before writing: all external mips share one TFC name.
+                    var preparedMips = bin.Mips.Take(Math.Max(0, bin.Mips.Count - 6))
+                        .Where(mip => mip.StorageType == StorageTypes.pccUnc)
+                        .Select(mip => (Mip: mip, Data: TextureCompression.CompressTexture(mip.Mip, StorageTypes.extOodle)))
+                        .ToList();
+                    long requiredSize = preparedMips.Sum(x => (long)x.Data.Length);
+                    if (requiredSize > MaxTFCSize - 16)
+                        throw new InvalidDataException($"Texture {tex.InstancedFullPath} cannot fit in a TFC ({requiredSize} bytes)");
+                    if (requiredSize > 0 && tfcStream.Position + requiredSize > MaxTFCSize)
+                    {
+                        tfcStream.Dispose();
+                        tfcIndex++;
+                        tfcName = TFCTools.GetIndexedTFCName(tfcType, dlcName, tfcIndex);
+                        tfcPath = Path.Combine(inputFolder, $"{tfcName}.tfc");
+                        tfcStream = File.Open(tfcPath, FileMode.CreateNew, FileAccess.ReadWrite);
+                        guid = Guid.NewGuid();
+                        tfcStream.WriteGuid(guid);
+                        MilanLog.Information($"TFC size limit reached, switching to {tfcName}.tfc", customPrefix: category);
+                    }
                     for (int i = 0; i < bin.Mips.Count - 6; i++)
                     {
                         // Move data to external
                         var mip = bin.Mips[i];
                         if (mip.StorageType == StorageTypes.pccUnc)
                         {
-                            var compressed = TextureCompression.CompressTexture(mip.Mip, StorageTypes.extOodle);
-
-                            if (!startedMovingTexture && tfcStream.Position + compressed.Length > MaxTFCSize)
-                            {
-                                tfcStream.Dispose();
-                                tfcIndex++;
-                                tfcName = tfcIndex >= 2 ? $"{tfcType}_{dlcName}{tfcIndex}" : $"{tfcType}_{dlcName}";
-                                tfcPath = Path.Combine(inputFolder, $"{tfcName}.tfc");
-                                tfcStream = File.Open(tfcPath, FileMode.CreateNew, FileAccess.ReadWrite);
-                                guid = Guid.NewGuid();
-                                tfcStream.WriteGuid(guid);
-                                MilanLog.Information($"TFC size limit reached, switching to {tfcName}.tfc", customPrefix: category);
-                            }
+                            var compressed = preparedMips.First(x => ReferenceEquals(x.Mip, mip)).Data;
 
                             MilanLog.Information($"  Moving texture to external TFC: {tex.InstancedFullPath}",
                                 !startedMovingTexture, customPrefix: category);
