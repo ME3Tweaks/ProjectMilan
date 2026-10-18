@@ -6574,7 +6574,7 @@
 				<Value type="4">(UniqueName="MPCapacity_Shield", MaxCount = 10, Rarity=Rarity_Rare, GUIName=723383, GUIDescription=723379, GUIType="capacity", GUITextureRef="GUI_MPImages.Cards.AddShield")</Value>
 				<Value type="3">(UniqueName="MPCapacity_Shield", MaxCount = 6, Rarity=Rarity_Rare, GUIName=723383, GUIDescription=723379, GUIType="capacity", GUITextureRef="GUI_MPImages.Cards.AddShield")</Value>
 				<Value type="4">(UniqueName="MPRespec", Rarity=Rarity_Rare, GUIName=708848, GUIType="respec", GUITextureRef="GUI_MPImages.Cards.Talent")</Value>
-				<Value type="3">(UniqueName="MPRespec", Rarity=Rarity_Uncommon, MaxCount = 3, GUIName=708848, GUIType="respec", GUITextureRef="GUI_MPImages.Cards.Talent")</Value>
+				<Value type="3">(UniqueName="MPRespec", Rarity=Rarity_Uncommon, MaxCount = 8, GUIName=708848, GUIType="respec", GUITextureRef="GUI_MPImages.Cards.Talent")</Value>
 				<Value type="3">(UniqueName="SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Ammo", MaxCount = 255, Rarity=Rarity_Common, GUIName=661162, GUIDescription=661163, GUIType="consumable", GUITextureRef="GUI_MPImages.Cards.EquipAmmo")</Value>
 				<Value type="3">(UniqueName="SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Revive", MaxCount = 255, Rarity=Rarity_Common, GUIName=661168, GUIDescription=661169, GUIType="consumable", GUITextureRef="GUI_MPImages.Cards.EquipRevive")</Value>
 				<Value type="3">(UniqueName="SFXGameMPContent.SFXPowerCustomActionMP_Consumable_Rocket", MaxCount = 255, Rarity=Rarity_Common, GUIName=661166, GUIDescription=661167, GUIType="consumable", GUITextureRef="GUI_MPImages.Cards.EquipRocket")</Value>
