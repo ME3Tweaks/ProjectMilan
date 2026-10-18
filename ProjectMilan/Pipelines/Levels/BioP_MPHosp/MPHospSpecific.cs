@@ -1,15 +1,10 @@
 ﻿namespace ProjectMilan.Pipelines.Levels.BioP_MPHosp
 {
-    internal class MPHospSpecific
+    internal class MPHospSpecific : LevelSpecificFixesBase
     {
         // Map has some extra levels we don't want to include in the lighting bake.
-        public static string[] IgnoredLightingLevels => [
+        public override string[] IgnoredLightingLevels => [
             "BioA_MPHosp" // Empty file
         ];
-
-        public static void PreCorrect(LevelSpecificPipeline pipeline)
-        {
-
-        }
     }
 }

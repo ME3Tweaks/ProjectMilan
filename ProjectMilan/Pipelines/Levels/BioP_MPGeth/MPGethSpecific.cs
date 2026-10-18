@@ -8,14 +8,14 @@ using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Levels.BioP_MPGeth
 {
-    internal class MPGethSpecific
+    internal class MPGethSpecific : LevelSpecificFixesBase
     {
         // Map has some extra levels we don't want to include in the lighting bake.
-        public static string[] IgnoredLightingLevels => [
+        public override string[] IgnoredLightingLevels => [
             "BioA_MPGeth_200WBjos"
         ];
 
-        public static void PreCorrect(LevelSpecificPipeline pipeline)
+        public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
             // Fix Dread walkway 04 not having a rigid body by porting one from identical mesh in SP.
             var mp100 = pipeline.ME3Packages.FirstOrDefault(x => x.Key.CaseInsensitiveEquals("BioA_MPGeth_100"));

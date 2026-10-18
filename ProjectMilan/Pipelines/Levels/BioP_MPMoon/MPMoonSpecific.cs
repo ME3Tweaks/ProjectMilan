@@ -6,17 +6,17 @@ using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 {
-    internal class MPMoonSpecific
+    internal class MPMoonSpecific : LevelSpecificFixesBase
     {
         // Map has some extra levels we don't want to include in the lighting bake.
-        public static string[] IgnoredLightingLevels => [
+        public override string[] IgnoredLightingLevels => [
             "BioA_MPMoon_Bas1",
             "BioA_MPMoon_bsp",
         ];
 
 
         // Condor ammo boxes don't have the correct respawn time set which makes it SUCK to get ammo
-        public static void PreCorrect(LevelSpecificPipeline pipeline)
+        public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
             foreach (var package in pipeline.ME3Packages.Values)
             {
@@ -40,7 +40,7 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
         // DebrisShip01_C's 4th material is empty after porting and needs to be set to the same as the third slot
         private const string DebrisShipMeshIFP = "BioApl_Ind_DebrisShip01.Meshes.DebrisShip01_C";
 
-        public static void PostCorrect(LevelSpecificPipeline pipeline)
+        public override void PostCorrect(LevelSpecificPipeline pipeline)
         {
             foreach (var package in pipeline.LE3Packages.Values)
             {

@@ -10,7 +10,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 
 namespace ProjectMilan.Pipelines.Levels.BioP_MPDish2;
 
-internal static class MPDish2Specific
+internal class MPDish2Specific : LevelSpecificFixesBase
 {
     // Dish2's sandstorm lamp light cones are unlit meshes with no corresponding spotlights in ME3.
     // Add static lights before porting so the fixtures illuminate both the game and the UDK bake.
@@ -27,7 +27,7 @@ internal static class MPDish2Specific
     private static readonly Vector3 ConeStart2 = new(-11.748095f, 18.35111f, -11.867665f);
     private static readonly Vector3 ConeEnd2 = new(-615.899225f, 21.67406f, -674.71179f);
 
-    public static void PreCorrect(LevelSpecificPipeline pipeline)
+    public override void PreCorrect(LevelSpecificPipeline pipeline)
     {
         var lamps = RequirePackage(pipeline, "BioA_MPDish2_300");
         var background = RequirePackage(pipeline, "BioA_MPDish2_000_BG");

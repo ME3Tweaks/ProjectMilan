@@ -8,7 +8,7 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPRctr2;
 /// <summary>
 /// Rctr2's doors need fixed when exporting to UDK for light baking because they by default are in the up position which can't get light in the wall
 /// </summary>
-internal static class MPRctr2Specific
+internal class MPRctr2Specific : LevelSpecificFixesBase
 {
     // Position to place SMC's for the doors so they get light. These are the end positions of them if the interp was in the door closed position.
     private static readonly (string ComponentPath, float ClosedZ)[] DoorBakePositions =
@@ -18,7 +18,7 @@ internal static class MPRctr2Specific
         ("TheWorld.PersistentLevel.InterpActor_14.StaticMeshComponent_6", -295f)
     ];
 
-    public static void CorrectUDKExport(LevelSpecificPipeline pipeline, IMEPackage udk)
+    public override void CorrectUDKExport(LevelSpecificPipeline pipeline, IMEPackage udk)
     {
         // Only apply to BioD_MPRctr2
         if (!udk.FileNameNoExtension.Equals("BioD_MPRctr2", StringComparison.OrdinalIgnoreCase))
