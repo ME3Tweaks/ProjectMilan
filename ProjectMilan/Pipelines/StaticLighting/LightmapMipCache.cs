@@ -4,6 +4,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.UDK;
 using LegendaryExplorerCore.Unreal.Classes;
+using ProjectMilan.Pipelines.Texture;
 using ProjectMilan.Utility;
 
 namespace ProjectMilan.Pipelines.StaticLighting
@@ -46,10 +47,6 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// atlas are black; Lanczos-3 weights colour by alpha, where a box filter averages that black into the edge of every chart.
         /// </summary>
         public const MipFilter DefaultMipFilter = MipFilter.Lanczos3;
-
-        private const uint FileMagic = 0x3743424D; // "MBC7"
-        private const int FileVersion = 1;
-        private const int MaxMips = 16;
 
         public static MipGenerationOptions MipOptions
         {
@@ -123,7 +120,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
         private readonly uint optionsFingerprint;
         private readonly string logName;
         private readonly Stopwatch clock = Stopwatch.StartNew();
-        private readonly Dictionary<ExportEntry, Key> pending = new();
+        private readonly Dictionary<ExportEntry, EncodedMipCacheKey> pending = new();
         private int hits;
         private int misses;
         private int stored;
@@ -136,10 +133,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             optionsFingerprint = LegendaryExplorerCore.Textures.TextureCRC.Compute(Encoding.UTF8.GetBytes(description));
         }
 
-        private readonly record struct Key(uint SourceCrc, int Width, int Height, int SourceLength, string SourceFormat, PixelFormat Destination, uint Options)
-        {
-            public string FileName => $"{SourceCrc:X8}_{Width}x{Height}_{Options:X8}.bc7mips";
-        }
+        private static string GetFileName(EncodedMipCacheKey key) => $"{key.SourceCrc:X8}_{key.Width}x{key.Height}_{key.Options:X8}.bc7mips";
 
         /// <summary>Called before a ported lightmap gets its mips: installs the cached chain, or remembers the key for <see cref="Store"/>.</summary>
         private bool TryUse(ExportEntry export)
@@ -151,14 +145,14 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 if (top == null)
                     return false;
 
-                var key = new Key(Texture2D.GetMipCRC(top, texture.TextureFormat), top.width, top.height, top.uncompressedSize,
+                var key = new EncodedMipCacheKey(Texture2D.GetMipCRC(top, texture.TextureFormat), top.width, top.height, top.uncompressedSize,
                     texture.TextureFormat, export.Game.IsLEGame() ? PixelFormat.BC7 : PixelFormat.DXT1, optionsFingerprint);
                 lock (pending)
                 {
                     pending[export] = key;
                 }
 
-                if (!TryRead(Path.Combine(cacheFolder, key.FileName), key, out var mips))
+                if (!EncodedMipCacheFile.TryRead(Path.Combine(cacheFolder, GetFileName(key)), key, out var mips))
                 {
                     Interlocked.Increment(ref misses);
                     return false;
@@ -185,7 +179,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// <summary>Called after a ported lightmap got its mips generated: keeps the chain for the next import.</summary>
         private void Store(ExportEntry export)
         {
-            Key key;
+            EncodedMipCacheKey key;
             lock (pending)
             {
                 if (!pending.Remove(export, out key))
@@ -198,121 +192,13 @@ namespace ProjectMilan.Pipelines.StaticLighting
                     return;
 
                 Directory.CreateDirectory(cacheFolder);
-                var path = Path.Combine(cacheFolder, key.FileName);
-                var temporary = $"{path}.{Guid.NewGuid():N}.tmp";
-                try
-                {
-                    Write(temporary, key, format, mips);
-                    File.Move(temporary, path, overwrite: true);
-                    Interlocked.Increment(ref stored);
-                }
-                finally
-                {
-                    if (File.Exists(temporary))
-                        File.Delete(temporary);
-                }
+                EncodedMipCacheFile.WriteAtomic(Path.Combine(cacheFolder, GetFileName(key)), key, format, mips, Program.Lightmass.ToString()); // note: the Lightmass it was made for
+                Interlocked.Increment(ref stored);
             }
             catch (Exception ex)
             {
                 // A cache that cannot be written is only a missed speed up
                 MilanLog.Warning($"Could not cache the mips of {export.InstancedFullPath}: {ex.Message}", customPrefix: LOG_CATEGORY);
-            }
-        }
-
-        private static void Write(string path, Key key, PixelFormat format, List<EncodedMip> mips)
-        {
-            var payload = new byte[mips.Sum(m => m.Data.Length)];
-            int at = 0;
-            foreach (var mip in mips)
-            {
-                mip.Data.CopyTo(payload, at);
-                at += mip.Data.Length;
-            }
-
-            using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None);
-            using var writer = new BinaryWriter(stream, Encoding.UTF8);
-            writer.Write(FileMagic);
-            writer.Write(FileVersion);
-            writer.Write((int)format);
-            writer.Write(key.SourceCrc);
-            writer.Write(key.Width);
-            writer.Write(key.Height);
-            writer.Write(key.SourceLength);
-            writer.Write(key.SourceFormat);
-            writer.Write(key.Options);
-            writer.Write(Program.Lightmass.ToString()); // for whoever looks at the file; not part of the key
-            writer.Write(mips.Count);
-            foreach (var mip in mips)
-            {
-                writer.Write(mip.Width);
-                writer.Write(mip.Height);
-                writer.Write(mip.Data.Length);
-            }
-
-            writer.Write(TextureCRC.Compute(payload));
-            writer.Write(payload);
-        }
-
-        private static bool TryRead(string path, Key key, out List<EncodedMip> mips)
-        {
-            mips = null!;
-            if (!File.Exists(path))
-                return false;
-
-            try
-            {
-                using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-                using var reader = new BinaryReader(stream, Encoding.UTF8);
-                if (reader.ReadUInt32() != FileMagic || reader.ReadInt32() != FileVersion)
-                    return false;
-
-                var format = (PixelFormat)reader.ReadInt32();
-                if (format != key.Destination
-                    || reader.ReadUInt32() != key.SourceCrc
-                    || reader.ReadInt32() != key.Width
-                    || reader.ReadInt32() != key.Height
-                    || reader.ReadInt32() != key.SourceLength
-                    || reader.ReadString() != key.SourceFormat
-                    || reader.ReadUInt32() != key.Options)
-                    return false;
-
-                reader.ReadString(); // the Lightmass it was made for
-                int count = reader.ReadInt32();
-                if (count is < 2 or > MaxMips)
-                    return false;
-
-                var sizes = new (int Width, int Height, int Length)[count];
-                long total = 0;
-                for (int i = 0; i < count; i++)
-                {
-                    sizes[i] = (reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());
-                    if (sizes[i].Width < 1 || sizes[i].Height < 1 || sizes[i].Length < 1)
-                        return false;
-                    total += sizes[i].Length;
-                }
-
-                uint expectedCrc = reader.ReadUInt32();
-                if (total > int.MaxValue || stream.Length - stream.Position != total)
-                    return false;
-
-                var payload = reader.ReadBytes((int)total);
-                if (payload.Length != total || TextureCRC.Compute(payload) != expectedCrc)
-                    return false;
-
-                var result = new List<EncodedMip>(count);
-                int at = 0;
-                foreach (var (width, height, length) in sizes)
-                {
-                    result.Add(new EncodedMip(width, height, payload.AsSpan(at, length).ToArray()));
-                    at += length;
-                }
-
-                mips = result;
-                return true;
-            }
-            catch (Exception ex) when (ex is IOException or EndOfStreamException or InvalidDataException or ArgumentException)
-            {
-                return false;
             }
         }
 
