@@ -314,6 +314,7 @@ namespace ProjectMilan.Pipelines.Weapons
             }
             MilanLog.Information($"Kept {spWeaponsAdded} SP weapon(s) next to the {mergedWeapons.Count - spWeaponsAdded} MP weapon(s)", customPrefix: LOG_CATEGORY);
 
+            OrderUIDataLikeME3(mergedWeapons);
             mergedDataExport.WriteProperty(mergedWeapons);
 
             // Clean up every temporary donor copy now that we've harvested what we needed from them.
@@ -418,6 +419,7 @@ namespace ProjectMilan.Pipelines.Weapons
                 }
             }
 
+            OrderUIDataLikeME3(mergedMods);
             mergedDataExport.WriteProperty(mergedMods);
             mergedDataExport.RemoveProperty("m_aWeapons"); // The weapons are in the other package
 
@@ -432,6 +434,58 @@ namespace ProjectMilan.Pipelines.Weapons
             destPackage.Save();
             MilanLog.Information($"Wrote merged weapon mod UI data package to {outPath} ({mergedMods.Count} mods)", customPrefix: LOG_CATEGORY);
             return GetTexturePaths(destPackage);
+        }
+
+        // Keep ME3 ordering. Since we port from SP the order is messed up as they released different order
+        private static void OrderUIDataLikeME3(ArrayProperty<StructProperty> entries)
+        {
+            string[] sourceFiles =
+            {
+                "SFXGUI_WeaponUIDataSF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP1SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP2SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP3SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_SharedSF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP4SF.pcc",
+                "SFXGUI_WeaponUIDataDLC_CON_MP5SF.pcc",
+            };
+            var classOrder = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var modNameOrder = new Dictionary<int, int>();
+            int rank = 0;
+            foreach (var sourceFile in sourceFiles)
+            {
+                var package = MilanShared.GetME3Package(sourceFile)
+                    ?? throw new InvalidOperationException($"Cannot preserve ME3 weapon UI order: missing {sourceFile}");
+                var sourceEntries = package.Exports.FirstOrDefault(x => x.ClassName == "SFXWeaponUIData")
+                    ?.GetProperty<ArrayProperty<StructProperty>>(entries.Name);
+                if (sourceEntries == null)
+                    continue; // Most MP donors carry only weapons, not mods.
+
+                foreach (var entry in sourceEntries)
+                {
+                    var classPath = entry.GetProp<StrProperty>("ClassPath")?.Value;
+                    if (classPath != null)
+                        classOrder.TryAdd(classPath, rank);
+                    // MP5's mods use different class paths in LE3, but retain the same name TLK IDs.
+                    if (entries.Name == "m_aMods" && entry.GetProp<StringRefProperty>("Name") is { Value: > 0 } name)
+                        modNameOrder.TryAdd(name.Value, rank);
+                    rank++;
+                }
+            }
+
+            // Unmatched LMP additions and equal-ranked entries keep their relative order.
+            var ordered = entries.OrderBy(entry =>
+            {
+                var classPath = entry.GetProp<StrProperty>("ClassPath")?.Value;
+                if (classPath != null && classOrder.TryGetValue(classPath, out int classRank))
+                    return classRank;
+                if (entry.GetProp<StringRefProperty>("Name") is { } name && modNameOrder.TryGetValue(name.Value, out int modRank))
+                    return modRank;
+                return int.MaxValue;
+            }).ToArray();
+            entries.Clear();
+            foreach (var entry in ordered)
+                entries.Add(entry);
         }
 
         private static string GetModClassName(StructProperty mod) =>
