@@ -40,27 +40,9 @@ namespace ProjectMilan.Pipelines.Levels
         public MapListEntry MapListInfo { get; set; }
 
         /// <summary>
-        /// Which function should run before porting the level - after default precorrections
+        /// Contains fixes specific for the level, or null if it has none and uses the generic port
         /// </summary>
-        public Action<LevelSpecificPipeline> SpecialPrePortingDelegate { get; set; }
-
-        /// <summary>
-        /// Which function should run after the level has been ported and saved - for fixing things that only exist after porting.
-        /// Any LE3 package modified by this is saved afterwards.
-        /// </summary>
-        public Action<LevelSpecificPipeline> SpecialPostPortingDelegate { get; set; }
-
-        /// <summary>
-        /// Corrections to each exported UDK map before a lighting bake, after conversion and common settings.
-        /// Receives the pipeline metadata and the UDK package, not a gameplay package. Modified UDK maps are
-        /// saved afterwards. Also runs on working copies used by --bake-lighting; never runs during reimport.
-        /// </summary>
-        public Action<LevelSpecificPipeline, IMEPackage> SpecialUDKExportDelegate { get; set; }
-
-        /// <summary>
-        /// Which function should run to port the level
-        /// </summary>
-        public Action<LevelSpecificPipeline, TieredPackageCache> SpecialPortingDelegate { get; set; }
+        public LevelSpecificFixesBase SpecialFixes { get; set; }
 
         /// <summary>
         /// Map of filename -> loaded ME3 packages
@@ -132,9 +114,9 @@ namespace ProjectMilan.Pipelines.Levels
         public StaticLighting.WorldLightmassSettings WorldLightmass { get; set; } = new();
 
         /// <summary>
-        /// List of level names to not include in a lighting bake. Some levels have unused sublevels that we include but don't want to corrupt our lighting with.
+        /// List of level names to not include in a lighting bake. See <see cref="LevelSpecificFixesBase.IgnoredLightingLevels"/>.
         /// </summary>
-        public string[] IgnoredLightingLevels { get; set; }
+        public string[] IgnoredLightingLevels => SpecialFixes?.IgnoredLightingLevels;
 
         /// <summary>
         /// Gets the path that holds donors specific for this level
