@@ -8298,6 +8298,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", VersionIdx = 0)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", VersionIdx = 0)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", VersionIdx = 0)</Value>
+				<!-- MILAN CHANGE - Add Polonium Rounds to drop pool -->
+				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium", VersionIdx = 0)</Value>
 			</Property>
 			<Property name="poolname" type="0">bronzecommon</Property>
 			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
@@ -8306,6 +8308,7 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", Custom0Token=0.1f, Custom1Token=50.f, Custom3Token=1.5f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", Custom0Token=0.05f, Custom2Token=1.f, Custom5Token=15.f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", Custom0Token=0.1f, Custom1Token=1.f, Custom2Token=0.1f)</Value>
+				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium", Custom0Token=0.2f, Custom1Token=10.f)</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_gear_goldgear sfxgawreinforcementmatchconsumable_gear">
@@ -8511,6 +8514,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", VersionIdx = 2, Rarity=Rarity_Uncommon)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", VersionIdx = 2, Rarity=Rarity_Uncommon)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", VersionIdx = 2, Rarity=Rarity_Uncommon)</Value>
+				<!-- MILAN CHANGE - Add Polonium Rounds to drop pool -->
+				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium", VersionIdx = 2, Rarity=Rarity_Uncommon)</Value>
 			</Property>
 			<Property name="poolname" type="0">goldcommon</Property>
 			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
@@ -8519,6 +8524,7 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", Custom0Token=0.3f, Custom1Token=250.f, Custom3Token=2.5f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", Custom0Token=0.15f, Custom2Token=1.f, Custom5Token=15.f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", Custom0Token=0.3f, Custom1Token=2.5f, Custom2Token=0.4f)</Value>
+				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium", Custom0Token=0.4f, Custom1Token=10.f)</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgawreinforcementmatchconsumable_goldequipment sfxgawreinforcementmatchconsumable">
@@ -8649,6 +8655,8 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", VersionIdx = 1)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", VersionIdx = 1)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", VersionIdx = 1)</Value>
+				<!-- MILAN CHANGE - Add Polonium Rounds to drop pool -->
+				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium", VersionIdx = 1)</Value>
 			</Property>
 			<Property name="poolname" type="0">silvercommon</Property>
 			<!-- Milan - remove DLC requirement (including from UPD01/UPD02) -->
@@ -8657,6 +8665,7 @@
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Needler", Custom0Token=0.2f, Custom1Token=150.f, Custom3Token=2.f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Phasic", Custom0Token=0.1f, Custom2Token=1.f, Custom5Token=15.f)</Value>
 				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Eraser", Custom0Token=0.2f, Custom1Token=1.5f, Custom2Token=0.25f)</Value>
+				<Value type="3">(UniqueName="SFXGameContentDLC_CON_MP4.SFXGameEffect_MatchConsumable_AmmoPower_Polonium", Custom0Token=0.3f, Custom1Token=10.f)</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgawreinforcementpermanentupgrade_goldupgrades sfxgawreinforcementpermanentupgrade">
