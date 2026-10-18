@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <tlkFile TLKToolVersion="4.0.0.0">
     <!--Male entries section begin-->
 	<!-- Project Milan Strings -->
@@ -70,7 +70,56 @@
     <String id="49875713">Cannot join this lobby: matchmaking is turned off.</String>
     <String id="49875714">Another player is the new host. Rejoining...</String>
     <String id="49875715">Lost the connection to the host. Looking for a new host...</String>
+    <String id="49875716">Invites are disabled when the lobby size set to 1</String>
+    <String id="49875717">Only the host can invite players to a private lobby.</String>
+    <String id="49875718">The matchmaking server's password is missing or wrong. Check it in Options &gt; Multiplayer Settings.</String>
+    <String id="49875719">Quick match is unavailable when matchmaking is off.</String>
+    <String id="49875720">Quick match is unavailable because the matchmaking server is unavailable.</String>
     <!-- MilanHost matchmaking TLKs end -->
+    <!-- Multiplayer Settings (SFXGUI_MilanNetConfig) TLKs begin. On/Off, Accept/Cancel and OK reuse the stock LE3 strings. -->
+    <String id="49875740">Multiplayer Settings</String>
+    <String id="49875741">Choose the name other players see and how this game finds matches.</String>
+    <String id="49875742">Profile Name</String>
+    <String id="49875743">Matchmaking</String>
+    <String id="49875744">Server Address</String>
+    <String id="49875745">Server Password</String>
+    <String id="49875746">Enter a profile name.</String>
+    <String id="49875747">The server address must start with http:// or https://.</String>
+    <String id="49875748">Your multiplayer settings could not be saved.</String>
+    <String id="49875749">Change your profile name and matchmaking server.</String>
+    <String id="49875750">Matchmaking Server</String>
+    <String id="49875751">Default</String>
+    <String id="49875752">Custom</String>
+    <String id="49875753">The server password can only use letters, numbers and symbols, with no spaces.</String>
+    <String id="49875754">These settings can only be changed from the multiplayer menu, not from a lobby or a match.</String>
+    <!-- Multiplayer Settings TLKs end -->
+    <!-- In-match pause menu: localizable column labels, ping units, and controls. -->
+    <String id="49875760">NAME</String>
+    <String id="49875761">SCORE</String>
+    <String id="49875762">PING</String>
+    <String id="49875763">Host</String>
+    <String id="49875764">ms</String>
+    <String id="49875765">X: Vote to kick</String>
+    <String id="49875766">X: Remove vote</String>
+    <String id="49875767">Invite Player</String>
+    <String id="49875768">Up/Down: Scroll</String>
+    <String id="49875769">Y: Invite Player</String>
+    <!-- Spectator controls and the entry point for the future MP photo mode. -->
+    <String id="49875770">[spectator:Shared_ViewPrevPlayer] / [spectator:Shared_ViewNextPlayer]: Change player   [spectator:Shared_SpectatorPhotoMode]: Photo Mode</String>
+    <String id="49875771">[XBoxB_Btn_LB] / [XBoxB_Btn_RB]: Change player   [XBoxB_Btn_X]: Photo Mode</String>
+    <String id="49875772">Photo mode is not available yet.</String>
+    <!-- Multiplayer Photo Mode player selector. -->
+    <String id="49875780">Followed Player</String>
+    <String id="49875781">No players available</String>
+    <String id="49875782">Downed</String>
+    <String id="49875783">Follow</String>
+    <String id="49875784">Player Markers</String>
+    <String id="49875785">Free Camera Speed</String>
+    <String id="49875786">Free Turn Smoothing</String>
+    <String id="49875787">Camera Collision</String>
+    <String id="49875788">Low</String>
+    <String id="49875789">Medium</String>
+    <String id="49875790">High</String>
     <!--Male entries section end-->
     <!--Female entries section begin-->
     <String id="49875625">Female</String>
