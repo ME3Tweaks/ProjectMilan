@@ -62,9 +62,6 @@
 				<Value type="4">( Name="SpaceBar", Command="ViewNextPlayer true" )</Value>
 				<Value type="4">( Name="MouseScrollUp", Command="ViewNextPlayer true" )</Value>
 				<Value type="4">( Name="MouseScrollDown", Command="ViewPrevPlayer true" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="Shared_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="MouseScrollUp", Command="Shared_ViewNextPlayer" )</Value>
-				<Value type="2">( Name="MouseScrollDown", Command="Shared_ViewPrevPlayer" )</Value>
 			</Property>
 		</Section>
 		<!-- Don't care about in MP -->
