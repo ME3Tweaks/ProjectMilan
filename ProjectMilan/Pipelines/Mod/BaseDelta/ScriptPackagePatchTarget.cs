@@ -8,6 +8,9 @@ using System;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.Classes;
+using LegendaryExplorerCore.Textures;
+using Image = LegendaryExplorerCore.Textures.Image;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 
 namespace ProjectMilan.Pipelines.Mod.BaseDelta
@@ -205,6 +208,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             }
 
             ApplyPropertyUpdates(package, baseDeltaFolder, packageName, logCategory);
+            ApplyTextureUpdates(package, baseDeltaFolder, packageName, logCategory);
 
             var atcorFolder = Path.Combine(baseDeltaFolder, "AddToClassOrReplace");
             if (Directory.Exists(atcorFolder))
@@ -285,6 +289,33 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                         MilanLog.Warning($"{propExtension} files are not currently supported with property update!", customPrefix: logCategory);
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Replaces the texture named by each file's name (minus extension) in <paramref name="baseDeltaFolder"/>/TextureUpdate
+        /// with that image, package stored and in the texture's existing format.
+        /// </summary>
+        internal static void ApplyTextureUpdates(IMEPackage package, string baseDeltaFolder, string packageName, string logCategory)
+        {
+            var textureUpdateFolder = Path.Combine(baseDeltaFolder, "TextureUpdate");
+            if (!Directory.Exists(textureUpdateFolder))
+                return;
+
+            foreach (var file in Directory.GetFiles(textureUpdateFolder, "*"))
+            {
+                var texName = Path.GetFileNameWithoutExtension(file);
+                var texExport = package.FindExport(texName);
+                if (texExport?.ClassName != "Texture2D")
+                {
+                    MilanLog.Fatal($"{packageName} has no Texture2D {texName} to replace from TextureUpdate/{Path.GetFileName(file)} - this is a fatal error.", customPrefix: logCategory);
+                    Environment.Exit(1);
+                }
+
+                MilanLog.Information($"Replacing texture {texName}", customPrefix: logCategory);
+                var messages = new Texture2D(texExport).Replace(Image.LoadFromFile(file, PixelFormat.ARGB), texExport.GetProperties(), isPackageStored: true);
+                foreach (var message in messages)
+                    MilanLog.Warning($"{texName}: {message}", customPrefix: logCategory);
             }
         }
 
