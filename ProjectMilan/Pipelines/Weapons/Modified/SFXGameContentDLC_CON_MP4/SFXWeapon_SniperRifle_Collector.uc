@@ -33,8 +33,102 @@ var float RechargeSoundDelay;
 var bool bFireSoundPlaying;
 var bool bIsHot;
 var bool bCanPlayRechargeSound;
+// MILAN Change - Smoothed beam visuals. The beam end point used to snap once per shot (~13 Hz).
+// We now aim the beam visual along a smoothed direction and trace each tick so it always lands on real geometry.
+var transient Rotator rBeamVisualAim;
+var transient bool bBeamVisualAimValid;
+var float BeamVisualInterpSpeed;
+var float BeamVisualConvergedDot;
 
 // Functions
+// MILAN Change - Smoothed beam visuals
+public simulated function UpdateBeam(float DeltaTime)
+{
+    local Vector MuzzleLoc;
+    local Vector TargetLoc;
+    local Vector ToTarget;
+    local Vector VisualDir;
+    local Vector VisualEnd;
+    local Vector HitLocation;
+    local Vector HitNormal;
+    local bool bLocalHuman;
+
+    // Sets Impact params to the last shot's hit location and runs AI aim precalc
+    Super.UpdateBeam(DeltaTime);
+    if (PSC_MuzFlashEmitter == None || Instigator == None)
+    {
+        return;
+    }
+    MuzzleLoc = GetMuzzleLoc();
+    bLocalHuman = Instigator.IsLocallyControlled() && PlayerController(Instigator.Controller) != None;
+    if (bLocalHuman)
+    {
+        // Our own aim is known every frame - no smoothing needed
+        TargetLoc = GetLocalBeamAimTarget();
+    }
+    else
+    {
+        // Remote players and AI only learn the end point once per shot
+        TargetLoc = vLastHitLocation;
+    }
+    ToTarget = TargetLoc - MuzzleLoc;
+    if (bLocalHuman || !bBeamVisualAimValid)
+    {
+        rBeamVisualAim = Rotator(ToTarget);
+        bBeamVisualAimValid = TRUE;
+    }
+    else
+    {
+        rBeamVisualAim = RInterpTo(rBeamVisualAim, Rotator(ToTarget), DeltaTime, BeamVisualInterpSpeed);
+    }
+    VisualDir = Vector(rBeamVisualAim);
+    if (VisualDir Dot Normal(ToTarget) >= BeamVisualConvergedDot)
+    {
+        VisualEnd = TargetLoc;
+    }
+    else
+    {
+        // Sweeping between hits
+        VisualEnd = MuzzleLoc + VisualDir * GetTraceRange();
+        if (GetTraceOwner().Trace(HitLocation, HitNormal, VisualEnd, MuzzleLoc, TRUE, , , 1) != None)
+        {
+            VisualEnd = HitLocation;
+        }
+    }
+    PSC_MuzFlashEmitter.SetVectorParameter('Impact', VisualEnd);
+    PSC_MuzFlashEmitter.SetVectorParameter('Impact_lag', VisualEnd);
+}
+
+private final simulated function Vector GetLocalBeamAimTarget()
+{
+    local Vector StartTrace;
+    local Vector EndTrace;
+    local Vector CamDir;
+    local Vector HitLocation;
+    local Vector HitNormal;
+    local SFXPlayerCamera Camera;
+
+    StartTrace = Instigator.GetWeaponStartTraceLocation();
+    Camera = SFXPlayerCamera(PlayerController(Instigator.Controller).PlayerCamera);
+    if (Camera != None)
+    {
+        // Same as CalcWeaponFire: start level with the pawn so we don't hit things between camera and pawn
+        CamDir = Vector(Camera.CameraCache.POV.Rotation);
+        StartTrace += CamDir * ((Instigator.Location - StartTrace) Dot CamDir);
+    }
+    EndTrace = StartTrace + Vector(Instigator.GetBaseAimRotation()) * GetTraceRange();
+    if (GetTraceOwner().Trace(HitLocation, HitNormal, EndTrace, StartTrace, TRUE, , , 1) != None)
+    {
+        return HitLocation;
+    }
+    return EndTrace;
+}
+
+public simulated function StopMuzzleFlashEffect()
+{
+    Super.StopMuzzleFlashEffect();
+    bBeamVisualAimValid = FALSE;
+}
 public event simulated function ReplicatedEvent(Name VarName)
 {
     if (VarName == 'ClientDoReloadTrigger')
@@ -729,6 +823,8 @@ defaultproperties
     DecalFrequency = 5
     BeamInterpTime = 0.5
     VFXUpdateInterval = 0.00999999978
+    BeamVisualInterpSpeed = 20.0
+    BeamVisualConvergedDot = 0.99999
     ActivateSniperZoomWwiseEvent = WwiseEvent'Wwise_Weapons_S_ColSniper.Play_wep_p_colsniper_zoom_in'
     DeActivateSniperZoomWwiseEvent = WwiseEvent'Wwise_Weapons_S_ColSniper.Play_wep_p_colsniper_zoom_out'
     SniperRifleDamagePenalty = 0.75
