@@ -129,6 +129,10 @@
 				<Value type="3">(Locale="*", FontExportName="AeroLight Shared",\tSubstituteFont="Myriad Pro+DFGGothicP-W5",\tFontGFxResource="GUI_SF_Fonts_DLC.gfxfonts")</Value>
 			</Property>-->
 			<Property name="movielibrary">
+				<!-- MILAN CHANGE - Mgamerz - 2026-10-14: live player selection in the Photo Mode UI. -->
+				<Value type="4">(Tag=PhotoMode,\t\tZOrder=37,\tMovieClass="SFXGame.SFXSFHandler_PhotoMode",\t\tGFxResource="GUI_SF_PhotoMode.PhotoMode", bRequiresScaling=true)</Value>
+				<Value type="3">(Tag=PhotoMode,\t\tZOrder=37,\tMovieClass="SFXGameContent_Milan.SFXSFHandler_PhotoMode_Milan",\t\tGFxResource="GUI_SF_PhotoMode.PhotoMode", bRequiresScaling=true)</Value>
+				<!-- END MILAN CHANGE -->
 				<!-- MILAN CHANGE Custom UI libraries-->
 				<Value type="4">(Tag=MPSelectKit,\t\t\tZOrder=32,\tMovieClass="SFXGameMPContent.SFXGUI_MPSelectKit",\t\t\tGFxResource="GUI_SF_MPSelectKit.MPSelectKit")</Value>
 				<Value type="4">(Tag=MPMatchConsumables,\tZOrder=32, MovieClass="SFXGameMPContent.SFXGUI_MPMatchConsumables",\tGFxResource="GUI_SF_MPMatchConsumables.MPMatchConsumables")</Value>
@@ -232,7 +236,8 @@
 			<Property name="srtitle" type="0">135823</Property>
 		</Section>-->
 		<Section name="sfxgamempcontent.sfxgui_mphud">
-			<Property name="srspectatorhuddescriptionpc" type="0">738901</Property>
+			<Property name="srspectatorhuddescriptionpc" type="0">49875770</Property>
+			<Property name="srspectatorhuddescriptionconsole" type="0">49875771</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mplobby">
 			<Property name="maxonlineimages" type="0">20</Property>
