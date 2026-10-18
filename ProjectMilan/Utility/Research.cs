@@ -18,6 +18,7 @@ using ME3Tweaks.Wwiser.BankConversion;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Init;
+using ProjectMilan.Pipelines.Levels;
 using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilanCore;
 using System.Diagnostics;
@@ -594,24 +595,155 @@ namespace ProjectMilan.Utility
             var level = @"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Levels";
             // Only levels with a saved UdkInj bake in MilanUDK: the importer saves each game .pcc, and an
             // unbaked UDK copy (e.g. BioP_MPCer2 right now) would strip that level's lighting.
-            string[] bakedLevels = ["BioP_MPThes"];
+            string[] bakedLevels = ["BioP_MPTowr2"];
+            // Which Lightmass's bakes to import: StaticLighting\Levels\<UE3|UE4>\<BioP>, see StaticLightingCache.
+            var bakeType = LightmassSolver.UE4;
             foreach (var levelF in Directory.GetDirectories(level).Where(x => bakedLevels.Contains(Path.GetFileName(x), StringComparer.OrdinalIgnoreCase)))
             {
                 var levelName = Path.GetFileName(levelF);
-                var lmpMasterF = Path.Combine(level, levelName, $"{levelName}.pcc");
-                var lmpMaster = MEPackageHandler.OpenMEPackage(lmpMasterF);
-                // This build's Lightmass's bakes (--lightmass, UE4 by default): see StaticLightingCache.
-                var staticLightingPath = StaticLightingCache.GetMapPath(levelName, levelName);
-                if (File.Exists(staticLightingPath))
+                var bakeFolder = StaticLightingCache.GetLevelFolder(levelName, bakeType);
+                // Same setup as the pipeline's import (ignored sublevels, kept ME3 lighting, lightmap mip cache)
+                var levelPipeline = MPLevels.FindLevelPipeline(levelName);
+                if (levelPipeline == null)
                 {
-                    // Import static lighting
-                    LightingImportSetup setup = new LightingImportSetup()
-                    {
-                        IncludeSubLevels = true,
-                        UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName
-                    };
+                    MilanLog.Warning($"{levelName} is not in the MPLevels list, skipping");
+                    continue;
+                }
 
-                    StaticLightingImporter.ImportStaticLighting(lmpMaster, setup);
+                var lmpMasterF = Path.Combine(level, levelName, $"{levelName}.pcc");
+                using var lmpMaster = MEPackageHandler.OpenMEPackage(lmpMasterF);
+                MilanLog.Information($"Importing {bakeType} static lighting for {levelName} from {bakeFolder}");
+                if (!LevelShared.ImportStaticLighting(levelPipeline, lmpMaster, includeSublevels: true, bakeType))
+                {
+                    MilanLog.Warning($"No {bakeType} bake for {levelName} in {bakeFolder}, skipping");
+                    continue;
+                }
+
+                // The importer saves the sublevels but not the BioP itself
+                MakeLightingPackageResident(lmpMaster);
+                if (lmpMaster.IsModified)
+                    lmpMaster.Save();
+
+                foreach (var subLevel in ((MEPackage)lmpMaster).AdditionalPackagesToCook.Distinct(StringComparer.OrdinalIgnoreCase)
+                             .Where(x => !x.Equals(levelName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    var subLevelPath = Path.Combine(levelF, $"{subLevel}.pcc");
+                    if (!File.Exists(subLevelPath))
+                        continue;
+
+                    using var subLevelPackage = MEPackageHandler.OpenMEPackage(subLevelPath);
+                    MakeLightingPackageResident(subLevelPackage);
+                    if (subLevelPackage.IsModified)
+                        subLevelPackage.Save();
+                }
+            }
+        }
+
+        /// <summary>
+        /// A research import skips the TFC build, so its lightmaps stay package stored with UDK's settings. Makes every package stored
+        /// lightmap and shadow map a non-streamed texture: NeverStream, LMF_Streamed cleared, and MipTailBaseIdx on the last mip, which
+        /// the TFC build otherwise sets (retail LE3 has it, UDK imports don't). Textures with mips in a TFC (lighting kept from the last
+        /// build) are left alone.
+        /// </summary>
+        private static void MakeLightingPackageResident(IMEPackage package)
+        {
+            int changed = 0;
+            foreach (var tex in package.Exports.Where(x => x.ClassName is "LightMapTexture2D" or "ShadowMapTexture2D" && !x.IsTrash()))
+            {
+                var bin = (UTexture2D)ObjectBinary.From(tex);
+                if (bin.Mips.Any(x => x.StorageType != StorageTypes.empty && !x.IsLocallyStored))
+                    continue;
+
+                bool binaryChanged = bin.Mips.RemoveAll(x => x.StorageType == StorageTypes.empty) > 0;
+                if (bin is LightMapTexture2D lightMap && lightMap.LightMapFlags.HasFlag(ELightMapFlags.LMF_Streamed))
+                {
+                    lightMap.LightMapFlags &= ~ELightMapFlags.LMF_Streamed;
+                    binaryChanged = true;
+                }
+
+                var props = tex.GetProperties();
+                bool propsChanged = false;
+                if (props.GetProp<BoolProperty>("NeverStream") is not { Value: true })
+                {
+                    props.AddOrReplaceProp(new BoolProperty(true, "NeverStream"));
+                    propsChanged = true;
+                }
+
+                if (bin.Mips.Count > 0 && props.GetProp<IntProperty>("MipTailBaseIdx")?.Value != bin.Mips.Count - 1)
+                {
+                    props.AddOrReplaceProp(new IntProperty(bin.Mips.Count - 1, "MipTailBaseIdx"));
+                    propsChanged = true;
+                }
+
+                if (propsChanged)
+                    tex.WriteProperties(props);
+                if (binaryChanged)
+                    tex.WriteBinary(bin);
+                if (propsChanged || binaryChanged)
+                    changed++;
+            }
+
+            if (changed > 0)
+                MilanLog.Information($"  {package.FileNameNoExtension}: set {changed} package stored lightmaps/shadow maps to not stream");
+        }
+
+        /// <summary>
+        /// Test edit of how brightly an installed level's lights light characters. Characters are not lightmapped: each one's
+        /// DynamicLightEnvironment re-lights it from the level's light components, so a bake that dims the level leaves them as
+        /// bright as before. Scales, on every point and spot light, Brightness and Radius (to match a bake made with
+        /// --ue4-local-brightness-scale/--ue4-local-radius-scale) and LightEnv_BouncedLightBrightness (the light environment's
+        /// stand-in for bounced light); and the Brightness of character-only lights (lighting channels with BSP, Static and Dynamic
+        /// off, so they light nothing but light environments). The *_UI_Lights sublevel is left alone.
+        /// Values are read from each package's &lt;name&gt;_ORIGINAL.pcc test backup when it has one, so running this again
+        /// replaces the previous scaling instead of compounding it.
+        /// </summary>
+        internal static void TuneCharacterLightingForLevel(string levelName, float localLightScale, float bouncedLightScale, float characterLightScale)
+        {
+            var levelFolder = Path.Combine(@"S:\SteamLibrary\steamapps\common\Mass Effect Legendary Edition\Game\LMP\BioGame\DLC\DLC_MOD_ProjectMilan\CookedPCConsole\Levels", levelName);
+            foreach (var packagePath in Directory.GetFiles(levelFolder, "*.pcc"))
+            {
+                var name = Path.GetFileNameWithoutExtension(packagePath);
+                if (name.EndsWith("_ORIGINAL", StringComparison.OrdinalIgnoreCase) || name.EndsWith("_UI_Lights", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                var originalPath = Path.Combine(levelFolder, $"{name}_ORIGINAL.pcc");
+                using var original = File.Exists(originalPath) ? MEPackageHandler.OpenMEPackage(originalPath) : null;
+                if (original == null)
+                    MilanLog.Warning($"  {name}: no {name}_ORIGINAL.pcc, scaling the current values (running this again compounds)");
+                using var package = MEPackageHandler.OpenMEPackage(packagePath);
+                int local = 0, character = 0;
+                foreach (var light in package.Exports.Where(x => x.IsA("LightComponent") && !x.IsTrash()))
+                {
+                    var source = original?.FindExport(light.InstancedFullPath, light.ClassName) ?? light;
+                    var sourceProps = source.GetProperties();
+                    var props = light.GetProperties();
+                    var channels = sourceProps.GetProp<StructProperty>("LightingChannels")?.Properties;
+                    bool ChannelOff(string channel) => channels?.GetProp<BoolProperty>(channel) is { Value: false };
+                    var brightness = sourceProps.GetProp<FloatProperty>("Brightness")?.Value ?? 1f;
+
+                    if (ChannelOff("BSP") && ChannelOff("Static") && ChannelOff("Dynamic"))
+                {
+                        props.AddOrReplaceProp(new FloatProperty(brightness * characterLightScale, "Brightness"));
+                        character++;
+                    }
+                    else if (light.IsA("PointLightComponent")) // spot lights are point lights too
+                    {
+                        props.AddOrReplaceProp(new FloatProperty(brightness * localLightScale, "Brightness"));
+                        props.AddOrReplaceProp(new FloatProperty((sourceProps.GetProp<FloatProperty>("Radius")?.Value ?? 1024f) * localLightScale, "Radius"));
+                        props.AddOrReplaceProp(new FloatProperty((sourceProps.GetProp<FloatProperty>("LightEnv_BouncedLightBrightness")?.Value ?? 1f) * bouncedLightScale,
+                            "LightEnv_BouncedLightBrightness"));
+                        local++;
+                    }
+                    else
+                        continue;
+                    light.WriteProperties(props);
+                }
+
+                if (package.IsModified)
+                {
+                    package.Save();
+                    MilanLog.Information($"  {name}: scaled {local} point/spot lights (brightness/radius x{localLightScale}, bounced x{bouncedLightScale}) " +
+                        $"and {character} character-only lights (brightness x{characterLightScale})");
                 }
             }
         }

@@ -1,7 +1,7 @@
 namespace ProjectMilanCore.Config
 {
     /// <summary>
-    /// Multiplayer map-select-UI registration data for a single map. Deliberately has no map ID or music
+    /// Multiplayer map registration data, including map-select UI and optional gameplay features. Deliberately has no map ID or music
     /// event field - IDs are assigned automatically by <see cref="MapIdAllocator"/> and music events by
     /// <see cref="MapMusicEventRotation"/> when the entry is registered via
     /// <see cref="MapListConfigWriter.RegisterMap"/>, so levels can be freely reordered/added/removed
@@ -13,6 +13,11 @@ namespace ProjectMilanCore.Config
         /// Map package name, e.g. "BioP_MPDish"
         /// </summary>
         public string PackageName { get; set; }
+
+        /// <summary>
+        /// Setting to true makes the level turn on flashlights for all player pawns
+        /// </summary>
+        public bool UseWeaponFlashlight { get; set; }
 
         /// <summary>
         /// TLK String ID of the map name

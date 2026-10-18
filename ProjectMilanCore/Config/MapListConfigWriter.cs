@@ -4,7 +4,7 @@ using ProjectMilanCore;
 namespace ProjectMilanCore.Config
 {
     /// <summary>
-    /// Writes a multiplayer map's map-select-UI registration (icon, availablemaps, mastermaplist) into
+    /// Writes a multiplayer map's UI registration and optional gameplay settings into
     /// whichever <see cref="MilanPipelinesShared.ConfigBundle"/> is currently active. Used by both
     /// ProjectMilan's own levels and ProjectMilan_ExtraContent's ported levels - the caller never needs to
     /// know or care which project it's running in, or which output file that ends up being, since
@@ -27,6 +27,21 @@ namespace ProjectMilanCore.Config
             var onlinegamesettings = game.GetOrAddSection("sfxonlinefoundation.sfxonlinegamesettings");
             onlinegamesettings.AddEntry(new CoalesceProperty("availablemaps", new CoalesceValue(entry.PackageName, CoalesceParseAction.AddUnique)));
             onlinegamesettings.AddEntry(new CoalesceProperty("mastermaplist", new CoalesceValue(BuildMasterMapEntry(mapId, entry), CoalesceParseAction.AddUnique)));
+
+            // 10/18/2026 - Add weapon flashlight code for PRC
+            if (entry.UseWeaponFlashlight) { 
+                RegisterFlashlightMap(entry.PackageName);
+            }
+        }
+
+        /// <summary>
+        /// Lists a map in MilanWeaponFlashlight.FlashlightMaps, so weapon flashlights are automatically turned on in that map
+        /// </summary>
+        /// <param name="packageName">The map's BioP package name</param>
+        public static void RegisterFlashlightMap(string packageName)
+        {
+            var flashlights = MilanPipelinesShared.ConfigBundle.GetAsset("BioGame").GetOrAddSection("sfxgamecontent_milan.milanweaponflashlight");
+            flashlights.AddEntry(new CoalesceProperty("flashlightmaps", new CoalesceValue(packageName, CoalesceParseAction.AddUnique)));
         }
 
         private static string BuildMasterMapEntry(int mapId, MapListEntry entry)

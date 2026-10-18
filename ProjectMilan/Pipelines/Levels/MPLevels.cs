@@ -193,6 +193,10 @@ namespace ProjectMilan.Pipelines.Levels
 
         }
 
+        /// <summary>Gets registered map settings for standalone lighting work without starting a port.</summary>
+        internal static LevelSpecificPipeline FindLevelPipeline(string bioP) => MPLevelsVars.CreateLevelPipelines()
+            .FirstOrDefault(level => level.BioP.Equals(bioP, StringComparison.OrdinalIgnoreCase));
+
         public static void RunPipeline()
         {
             var vars = new MPLevelsVars();
@@ -204,8 +208,17 @@ namespace ProjectMilan.Pipelines.Levels
         /// packages already in the output mod, replacing the lighting they were built with. Nothing is ported or rebuilt,
         /// and the new lightmaps stay package stored: the texture pipeline that moves them to the Lighting TFC does not run.
         /// </summary>
-        internal static void ImportCachedLightingIntoOutputMod()
+        /// <param name="onlyLevels">BioP names to import; null or empty imports every lit level.</param>
+        internal static void ImportCachedLightingIntoOutputMod(IReadOnlyCollection<string> onlyLevels = null)
         {
+            var levels = MPLevelsVars.CreateLevelPipelines().Where(x => x.ShouldBuild && x.BuildLighting).ToList();
+            if (onlyLevels is { Count: > 0 })
+        {
+                foreach (var unknown in onlyLevels.Where(x => !levels.Any(l => l.BioP.Equals(x, StringComparison.OrdinalIgnoreCase))))
+                    MilanLog.ErrorWithSummary($"{unknown} is not a lit level; nothing imported for it", customPrefix: LOG_CATEGORY);
+                levels = levels.Where(l => onlyLevels.Contains(l.BioP, StringComparer.OrdinalIgnoreCase)).ToList();
+            }
+
             var imported = 0;
             foreach (var level in MPLevelsVars.CreateLevelPipelines().Where(x => x.ShouldBuild && x.BuildLighting))
             {
@@ -266,11 +279,7 @@ namespace ProjectMilan.Pipelines.Levels
                     MilanLog.ErrorWithSummary($"No cached {Program.Lightmass} lighting for {level.BioP} ({StaticLightingCache.GetLevelFolder(level.BioP)}); it keeps the lighting ported from ME3", customPrefix: LOG_CATEGORY);
                 }
 
-                if (level.SpecialPortingDelegate != null)
-                {
-                    level.SpecialPortingDelegate?.Invoke(level, parent);
-                }
-                else
+                if (level.SpecialFixes?.PortLevel(level, parent) != true)
                 {
                     BeginPortingGeneric(level, parent);
                 }
