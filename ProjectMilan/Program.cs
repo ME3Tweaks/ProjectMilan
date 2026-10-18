@@ -11,6 +11,7 @@ using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.Finalize;
+using ProjectMilan.Pipelines.HeavyWeapons;
 using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
 using ProjectMilan.Pipelines.Levels;
@@ -65,6 +66,9 @@ namespace ProjectMilan
 
         /// <summary>Keep exported UDK maps before Lightmass changes them during a static lighting build.</summary>
         public static bool KeepPreBakeMaps { get; private set; }
+
+        /// <summary>UE4 Lightmass look tuning from the command line (--ue4-*), applied on top of every level's own.</summary>
+        public static UE4LightmassOverrides UE4LightmassOverrides { get; private set; } = new();
 
         static void Main(string[] args)
         {
@@ -188,6 +192,11 @@ namespace ProjectMilan
         private static void Init(CLIOptions obj)
         {
             KeepPreBakeMaps = obj.KeepPreBakeMaps;
+            if (obj.UE4IndirectBounces < 0 || new[] { obj.UE4DiffuseBoostScale, obj.UE4LocalIndirectScale, obj.UE4DirectionalIndirectScale,
+                    obj.UE4EnvironmentColorScale, obj.UE4LocalBrightnessScale, obj.UE4LocalRadiusScale }.Any(x => x < 0))
+                throw new ArgumentException("--ue4-* lighting tuning values can't be negative");
+            UE4LightmassOverrides = new UE4LightmassOverrides(obj.UE4EnvironmentColorScale, obj.UE4DirectionalIndirectScale,
+                obj.UE4LocalIndirectScale, obj.UE4DiffuseBoostScale, obj.UE4IndirectBounces, obj.UE4LocalBrightnessScale, obj.UE4LocalRadiusScale);
             UseCachedLighting = obj.CachedLighting || obj.ImportCachedLighting;
             if (!Enum.TryParse<LightmassSolver>(obj.Lightmass, ignoreCase: true, out var lightmass) || !Enum.IsDefined(lightmass))
                 throw new ArgumentException($"Unknown --lightmass {obj.Lightmass}; use UE3 or UE4");
@@ -270,7 +279,7 @@ namespace ProjectMilan
             {
                 LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger);
                 MEPackageHandler.GlobalSharedCacheEnabled = false;
-                MPLevels.ImportCachedLightingIntoOutputMod();
+                MPLevels.ImportCachedLightingIntoOutputMod(obj.ImportCachedLightingLevels?.ToList());
                 MilanLog.LogSessionSummary();
                 MilanLog.CloseAndFlush();
                 return;
@@ -930,7 +939,9 @@ namespace ProjectMilan
                 MilanLog.Information($"\t[{(info.IsDisposed ? "DISPOSED" : "ALIVE")}] {info.DebugName} ({info.TypeName}, {info.Guid}) - {info.PackageCount} packages cached");
             }
 
-            var outPath = Path.Combine(Settings.OutputModPath, "AliveCacheReport.json");
+            // 10/16/2026
+            // Don't store in mod dlc folder or it will ship.
+            var outPath = Path.Combine(Settings.OutputModPath, "..", "AliveCacheReport.json");
             File.WriteAllText(outPath, JsonConvert.SerializeObject(report, Formatting.Indented));
             MilanLog.Information($"Wrote full PackageCache alive/disposed report to {outPath}");
         }
@@ -1107,6 +1118,8 @@ namespace ProjectMilan
             //Research.TestSFARTextureDecompression();
             //return;
             //Research.GenerateLightingForLevel();
+            //return;
+            //Research.TuneCharacterLightingForLevel("BioP_MPTowr2", localLightScale: 0.65f, bouncedLightScale: 0.2f, characterLightScale: 0.5f);
             //return;
             Research.ImportStaticLightingForLevel();
             return;
