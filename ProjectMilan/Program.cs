@@ -831,8 +831,14 @@ namespace ProjectMilan
             // material set. Any material left without shaders fails the build.
             RunPipeline(ECheckpointStage.Shaders, Settings.RunShaderPipeline, ShaderPipeline.RunPipeline, "Shaders");
 
+            if (Settings.RunShaderPipeline)
+            {
             RunPipeline(ECheckpointStage.PostShaders, true, PostShaderPipeline.RunPipeline, "PostShaders");
-
+            }
+            else
+            {
+                MilanLog.Information("Skipping PostShaders pipeline");
+            }
         audio:
             RunPipeline(ECheckpointStage.Audio, Settings.RunAudioPipeline, AudioPipeline.RunPipeline, "Audio"); // Converts audio
 
