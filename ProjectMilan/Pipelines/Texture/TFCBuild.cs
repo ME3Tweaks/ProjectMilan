@@ -462,7 +462,6 @@ namespace ProjectMilan.Pipelines.Texture
             if (nonEmptyMips <= 6)
                 return;
 
-            var props = tex.GetProperties();
             if (props.RemoveNamedProperty("NeverStream"))
             {
                 tex.WriteProperties(props);
