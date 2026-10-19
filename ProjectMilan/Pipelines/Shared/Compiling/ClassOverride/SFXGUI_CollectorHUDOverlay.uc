@@ -34,6 +34,13 @@ var config float PositionPowerIconOverlaysPeriod;
 var GFxMovieInfo CollectorHUDOverlayResource;
 var bool m_bInitialized;
 var bool m_bCooldownOverrideOn;
+// MILAN CHANGE - Mgamerz - 2026-10-17
+// The center cooldown clips live here, but the native HUD owns their updates.
+var transient GFxValue MilanOriginalPowerLeft;
+var transient GFxValue MilanOriginalPowerRight;
+var transient BioPawn MilanPowerHUDPawn;
+var transient bool MilanPowerHUDVisible;
+// END MILAN CHANGE
 
 // Functions
 // MILAN CHANGE DropTheSquid 1/10/2024
@@ -55,16 +62,50 @@ public event function HandleButtonRefresh(bool usingGamepad)
 public event function Update(float fDeltaT)
 {
 	super.Update(fDeltaT);
-	UpdateCooldownOverride();
+    // MILAN CHANGE - Mgamerz - 2026-10-17
+    // Synchronize relocated HUD clips even across downed/camera transitions.
+    MilanSynchronizePowerHUD();
+    // END MILAN CHANGE
 }
 // END MILAN
 public event function OnStart()
 {
     Super.OnStart();
     InternalOnStart();
+    // MILAN CHANGE - Mgamerz - 2026-10-17
+    // A hidden movie will stop updating. The controller timer also handles reopening it.
+    GetPC().SetTimer(0.05, TRUE, 'MilanSynchronizePowerHUD', Self);
+    MilanSynchronizePowerHUD();
+    // END MILAN CHANGE
 }
 public function OnClose()
 {
+    // MILAN CHANGE - Mgamerz - 2026-10-17
+    if (GetPC() != None)
+    {
+        GetPC().ClearTimer('MilanSynchronizePowerHUD', Self);
+        GetPC().ClearTimer('InternalOnStart', Self);
+        GetPC().ClearTimer('PositionPowerIconOverlays', Self);
+    }
+    // Restore only references still owned by this movie.
+    if (m_oSPHUD != None)
+    {
+        if (m_oSPHUD.PlayerPowerLeft == GetVariableObject("PlayerPower1"))
+        {
+            m_oSPHUD.PlayerPowerLeft = MilanOriginalPowerLeft;
+        }
+        if (m_oSPHUD.PlayerPowerRight == GetVariableObject("PlayerPower2"))
+        {
+            m_oSPHUD.PlayerPowerRight = MilanOriginalPowerRight;
+        }
+    }
+    MilanOriginalPowerLeft = None;
+    MilanOriginalPowerRight = None;
+    MilanPowerHUDPawn = None;
+    MilanPowerHUDVisible = FALSE;
+    m_bInitialized = FALSE;
+    m_bCooldownOverrideOn = FALSE;
+    // END MILAN CHANGE
     m_oSPHUD = None;
     m_oPCPowerWheel = None;
     m_oMPHUD = None;
@@ -102,6 +143,11 @@ private final function CheckInitialize()
     m_oPCPowerWheel = SFXSFHandler_PCPowerWheel(oGUIs.GetMovie(GetPC(), oGUIs.MovieTag_PowerWheel));
 	m_oMPHUD = SFXGUI_MPHUD(oGUIs.GetMovie(GetPC(), oGUIs.MovieTag_MPHUD));
 	// END MILAN
+    // MILAN CHANGE - Mgamerz - 2026-10-17
+    // Save native HUD ownership for movie close/reopen.
+    MilanOriginalPowerLeft = m_oSPHUD.PlayerPowerLeft;
+    MilanOriginalPowerRight = m_oSPHUD.PlayerPowerRight;
+    // END MILAN CHANGE
     m_oSPHUD.PlayerPowerLeft = GetVariableObject("PlayerPower1");
     m_oSPHUD.PlayerPowerRight = GetVariableObject("PlayerPower2");
     ClearSwarmOverlays();
@@ -220,6 +266,59 @@ public final function PositionPowerIconOverlays()
         }
     }
 }
+// MILAN CHANGE - Mgamerz - 2026-10-17
+// Keep the separate movie in step with the native HUD which normally drives its clips.
+public final function MilanSynchronizePowerHUD()
+{
+    local BioPlayerController PC;
+    local BioPawn PlayerPawn;
+    local bool bShowPowerHUD;
+
+    PC = GetPC();
+    if (PC == None)
+    {
+        return;
+    }
+    if (!m_bInitialized)
+    {
+        CheckInitialize();
+    }
+    PlayerPawn = BioPawn(PC.Pawn);
+    bShowPowerHUD = m_bInitialized && PlayerPawn != None;
+    if (bShowPowerHUD)
+    {
+        // Always use our own pawn: spectator view targets must not supply cooldowns.
+        bShowPowerHUD = !PlayerPawn.bIsDowned && !PlayerPawn.bIsDead
+            && PC.myHUD != None && PC.myHUD.bShowHUD
+            && m_oSPHUD.GetVisible()
+            && PC.GameModeManager2.ShouldShowHUD()
+            && !PC.GameModeManager2.IsActive(20)
+            && !PC.GameModeManager2.IsActive(21)
+            && !PC.GameModeManager2.IsActive(14)
+            && CameraActor(PC.ViewTarget) == None;
+    }
+    if (PlayerPawn != None && PlayerPawn.PowerManager != None)
+    {
+        m_bCooldownOverrideOn = PlayerPawn.PowerManager.IsInForcedCooldown();
+    }
+    else
+    {
+        m_bCooldownOverrideOn = FALSE;
+    }
+    if (bShowPowerHUD && (!MilanPowerHUDVisible || PlayerPawn != MilanPowerHUDPawn))
+    {
+        // Refresh before exposing the movie, including when cooldown expired while hidden.
+        m_oSPHUD.MilanRefreshPlayerPowerCooldown(PlayerPawn);
+    }
+    MilanPowerHUDPawn = PlayerPawn;
+    MilanPowerHUDVisible = bShowPowerHUD;
+    UpdateCooldownOverride();
+    if (GetVisible() != bShowPowerHUD)
+    {
+        SetVisible(bShowPowerHUD);
+    }
+}
+// END MILAN CHANGE
 public final function ResetForcedCooldown()
 {
     if (m_bCooldownOverrideOn)
@@ -257,11 +356,14 @@ public final function UpdateCooldownOverride()
     for (nOverlayIndex = 0; nOverlayIndex < m_aSwarmOverlays.Length; ++nOverlayIndex)
     {
         icon = m_aSwarmOverlays[nOverlayIndex].PowerIcon;
-        if (m_bCooldownOverrideOn && icon.pPower != None && icon.pPower.UsesSharedCooldown && icon.pPower.IsEnabled() && icon.pPower.Rank > 0)
+        // MILAN CHANGE - Mgamerz - 2026-10-17
+        // Extra icons share the relocated center clips' visibility lifecycle
+        if (MilanPowerHUDVisible && m_bCooldownOverrideOn && icon != None && icon.pPower != None && icon.pPower.UsesSharedCooldown && icon.pPower.IsEnabled() && icon.pPower.Rank > 0)
         {
             m_aSwarmOverlays[nOverlayIndex].Overlay.SetVisible(m_aSwarmOverlays[nOverlayIndex].gamepad == bUsingGamepad);
             continue;
         }
+        // END MILAN CHANGE
         m_aSwarmOverlays[nOverlayIndex].Overlay.SetVisible(false);
     }
     if (m_bCooldownOverrideOn)
