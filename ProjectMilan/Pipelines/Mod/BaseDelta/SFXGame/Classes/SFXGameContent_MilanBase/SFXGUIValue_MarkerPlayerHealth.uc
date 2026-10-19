@@ -10,7 +10,17 @@ var float HealthTintAtCritical;
 var float PulseAngularSpeed;
 var float PulseMinimumRed;
 
-public function Update(const out SFXGUISceneView SceneView)
+// MILAN CHANGE - Mgamerz - 2026-10-16
+// Hide only the player marker's visuals during local photo mode, preserving native updates.
+var bool bPhotoMarkerHidden;
+var bool bPhotoMarkerWasVisible;
+// The class default is a local process preference shared by newly created player markers.
+var bool bHideInPhotoMode;
+// END MILAN CHANGE
+
+// MILAN CHANGE - Mgamerz - 2026-10-17
+// The movie's script Update event dispatches this hook; native marker Update bypasses script overrides.
+public function UpdateAppearance(float DeltaSeconds)
 {
     local BioPawn MarkerPawn;
     local SFXModule_MarkerPlayer MarkerModule;
@@ -20,8 +30,7 @@ public function Update(const out SFXGUISceneView SceneView)
     local float GreenBlue;
     local float TimeNow;
 
-    // Preserve the built-in marker positioning, visibility, title and icon behavior.
-    Super.Update(SceneView);
+    Super.UpdateAppearance(DeltaSeconds);
 
     MarkerPawn = Player;
     if (MarkerPawn == None || MarkerTitleTextClipAnim == None)
@@ -88,6 +97,37 @@ public function Update(const out SFXGUISceneView SceneView)
     GreenBlue = 1.0 - ((1.0 - HealthTintAtCritical) * HealthBlend);
     SetMarkerTint(1.0, GreenBlue, GreenBlue, 1.0);
 }
+
+// END MILAN CHANGE
+
+// MILAN CHANGE - Mgamerz - 2026-10-17
+// Called explicitly by the photo handler: the native marker loop bypasses script Update.
+public final function SetPhotoMarkerHidden(bool bHide)
+{
+    local ASDisplayInfo DisplayInfo;
+
+    if (MarkerClip == None)
+    {
+        return;
+    }
+    if (bHide)
+    {
+        if (!bPhotoMarkerHidden)
+        {
+            DisplayInfo = MarkerClip.GetDisplayInfo();
+            bPhotoMarkerWasVisible = DisplayInfo.visible;
+            bPhotoMarkerHidden = TRUE;
+        }
+        // The root's native visibility/position cache remains owned by the native update.
+        MarkerClip.SetVisible(FALSE);
+    }
+    else if (bPhotoMarkerHidden)
+    {
+        MarkerClip.SetVisible(bPhotoMarkerWasVisible);
+        bPhotoMarkerHidden = FALSE;
+    }
+}
+// END MILAN CHANGE
 
 private final function SetMarkerTint(
     float Red,
