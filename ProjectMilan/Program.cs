@@ -117,6 +117,7 @@ namespace ProjectMilan
             (ECheckpointStage.Levels, "Levels", () => ShouldRunLevelsPipeline),
             (ECheckpointStage.Rejection, "Rejection", () => Settings.RunRejectionPipeline),
             (ECheckpointStage.Redemption, "Redemption", () => Settings.RunRedemptionPipeline),
+            (ECheckpointStage.AssetFixes, "AssetFix", () => Settings.RunAssetFixPipeline),
             // Everything from Texture on is dev-only (see ECheckpointStageExtensions.IsDevOnly)
             (ECheckpointStage.Texture, "Texture", () => Settings.RunTexturePipeline),
             (ECheckpointStage.Shaders, "Shaders", () => Settings.RunShaderPipeline),
@@ -790,6 +791,10 @@ namespace ProjectMilan
             RunPipeline(ECheckpointStage.Rejection, Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
         redemptionBuild:
             RunPipeline(ECheckpointStage.Redemption, Settings.RunRedemptionPipeline, RedemptionPipeline.RunPipeline, "Redemption"); // Builds Redemption Maps
+
+
+        assetFixes:
+            RunPipeline(ECheckpointStage.AssetFixes, Settings.RunAssetFixPipeline, AssetFixPipeline.RunPipeline, "AssetFix");
 
             // Finalize the dynamic TLK range: every stage that could call AssignTLK (Kits through
             // Redemption, including Rejection/Redemption running in-process) has now either run, or

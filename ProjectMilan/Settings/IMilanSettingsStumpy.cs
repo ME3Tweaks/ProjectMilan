@@ -18,6 +18,7 @@ namespace ProjectMilan.Settings
         public bool RunWeaponsPipeline { get; set; } = FullBuild;
         public bool RunRejectionPipeline { get; set; } = false;
         public bool RunRedemptionPipeline { get; set; } = false;
+        public bool RunAssetFixPipeline { get; set; } = false;
         public bool RunConformancePipeline { get; set; } = false;
         public bool IsStaticLightingBuild { get; set; } = false;
         public bool ProductionBuild { get; set; } = false;

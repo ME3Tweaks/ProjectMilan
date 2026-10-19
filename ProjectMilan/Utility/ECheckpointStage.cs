@@ -10,7 +10,7 @@
     /// between two existing ones without renumbering (which would silently repoint every checkpoint
     /// on disk at the wrong stage).
     /// <para/>
-    /// Past Redemption the build is no longer porting content, and the remaining pipelines (Texture, Shaders,
+    /// Past AssetFixes the build is no longer porting content, and the remaining pipelines (Texture, Shaders,
     /// Audio, Conformance, ...) must always run in a production build. The exceptions are the dev-only stages
     /// from <see cref="Texture"/> through <see cref="VTables"/> (see <see cref="ECheckpointStageExtensions.IsDevOnly"/>),
     /// which dev builds can checkpoint so that the pipelines after them can be iterated on without rerunning
@@ -38,6 +38,9 @@
         Levels = 60,
         Rejection = 70,
         Redemption = 80,
+
+        /// <summary>Complete asset property replacements across generated packages; no rehydration required.</summary>
+        AssetFixes = 85,
 
         /// <summary>
         /// Dev builds only, never offered or restored by a production build. Lets the pipelines after it

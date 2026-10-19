@@ -96,6 +96,9 @@
         /// </summary>
         bool RunRedemptionPipeline { get; set; }
 
+        /// <summary>Apply property-only fixes from Pipelines/AssetFixes to generated packages.</summary>
+        bool RunAssetFixPipeline { get; set; }
+
         /// <summary>
         /// If the Conformance pipeline should be run. This doesn't matter that much in local play; but is mandatory for network play
         /// </summary>

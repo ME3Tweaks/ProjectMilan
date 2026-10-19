@@ -14,6 +14,7 @@
         public bool RunWeaponsPipeline { get; set; } = fullBuild;
         public bool RunRejectionPipeline { get; set; }
         public bool RunRedemptionPipeline { get; set; }
+        public bool RunAssetFixPipeline { get; set; } = false;
         public bool RunConformancePipeline { get; set; } = false;
         public bool IsStaticLightingBuild{ get; set; }
         public bool ProductionBuild { get; set; } = false;

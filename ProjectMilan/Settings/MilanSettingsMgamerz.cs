@@ -65,6 +65,7 @@ namespace ProjectMilan.Settings
         public bool RunConformancePipeline { get; set; } = true;
         public bool RunRejectionPipeline { get; set; }
         public bool RunRedemptionPipeline { get; set; }
+        public bool RunAssetFixPipeline { get; set; } = true;
         public bool IsStaticLightingBuild { get; set; } = false;
         public bool ProductionBuild { get; set; } = false;
 
