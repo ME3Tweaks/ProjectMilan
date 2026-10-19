@@ -6,6 +6,9 @@ var transient SFXPRIMP SelectedPhotoPlayer;
 var transient bool bFollowPhotoPlayer;
 var transient float RosterRefreshCountdown;
 var transient string LastRosterSignature;
+// MILAN CHANGE - Mgamerz - 2026-10-17
+var transient bool bLoggedPhotoMarkerUpdate;
+// END MILAN CHANGE
 
 public function bool HandleInputEvent(BioGuiEvents Event, optional float fValue = 1.0)
 {
@@ -57,21 +60,112 @@ public function MovieLoaded()
     Param.bVar = !Class'SFXGUIValue_MarkerPlayerHealth'.default.bHideInPhotoMode;
     Params.AddItem(Param);
     oPanel.InvokeMethodArgs("PhotoMode.setPlayerMarkerOptions", Params);
+    // MILAN CHANGE - Mgamerz - 2026-10-17
+    Params.Length = 0;
+    Param.Type = ASParamTypes.ASParam_String;
+    Param.sVar = string($49875785);
+    Params.AddItem(Param);
+    Param.sVar = string($49875786);
+    Params.AddItem(Param);
+    Param.sVar = string($49875787);
+    Params.AddItem(Param);
+    Param.sVar = string($49875788);
+    Params.AddItem(Param);
+    Param.sVar = string($49875789);
+    Params.AddItem(Param);
+    Param.sVar = string($49875790);
+    Params.AddItem(Param);
+    Param.Type = ASParamTypes.ASParam_Float;
+    Param.fVar = float(PhotoMode.MPPhotoSpeedIndex);
+    Params.AddItem(Param);
+    Param.fVar = float(PhotoMode.MPPhotoSmoothingIndex);
+    Params.AddItem(Param);
+    Param.Type = ASParamTypes.ASParam_Boolean;
+    Param.bVar = !PhotoMode.bMPPhotoNoCollision;
+    Params.AddItem(Param);
+    oPanel.InvokeMethodArgs("PhotoMode.setCameraControlOptions", Params);
+    // END MILAN CHANGE
     RefreshPhotoPlayers(TRUE);
 }
+
+// MILAN CHANGE - Mgamerz - 2026-10-17
+public function SetMPPhotoCameraOptions(int SpeedIndex, int SmoothingIndex, bool bCollision)
+{
+    if (PhotoMode != None && PhotoMode.bMPSpectatorPhoto)
+    {
+        PhotoMode.MPPhotoSpeedIndex = Clamp(SpeedIndex, 0, 6);
+        if (PhotoMode.MPPhotoSmoothingIndex != SmoothingIndex)
+        {
+            PhotoMode.MPPhotoDesiredRotation = PhotoMode.MPPhotoRotation;
+        }
+        PhotoMode.MPPhotoSmoothingIndex = Clamp(SmoothingIndex, 0, 3);
+        PhotoMode.bMPPhotoNoCollision = !bCollision;
+    }
+}
+// END MILAN CHANGE
 
 // Show/hide player markers
 public function SetPhotoPlayerMarkers(bool bShow)
 {
+    local int UpdatedMarkers;
+
     if (PhotoMode != None && PhotoMode.bMPSpectatorPhoto)
     {
         Class'SFXGUIValue_MarkerPlayerHealth'.default.bHideInPhotoMode = !bShow;
+        // MILAN CHANGE - Mgamerz - 2026-10-17
+        UpdatedMarkers = ApplyPhotoPlayerMarkers(FALSE);
+        LogInternal("MilanPhoto: player markers shown" @ bShow @ "updated" @ UpdatedMarkers);
+        // END MILAN CHANGE
     }
 }
+
+// MILAN CHANGE - Mgamerz - 2026-10-17
+// The native marker movie calls its C++ value update directly, not the script override.
+public function int ApplyPhotoPlayerMarkers(bool bRestore)
+{
+    local SFXGUIInteraction GUI;
+    local SFXGUI_Markers MarkerMovie;
+    local SFXGUIValue_Marker Marker;
+    local SFXGUIValue_MarkerPlayerHealth PlayerMarker;
+    local bool bHide;
+    local int Count;
+
+    GUI = Class'SFXGUIInteraction'.static.GetInstance();
+    if (GUI == None || GetPC() == None)
+    {
+        return 0;
+    }
+    MarkerMovie = SFXGUI_Markers(GUI.GetMovie(GetPC(), 'Markers'));
+    if (MarkerMovie == None)
+    {
+        return 0;
+    }
+    bHide = !bRestore && PhotoMode != None && PhotoMode.bMPSpectatorPhoto
+        && PhotoMode.bIsActive && Class'SFXGUIValue_MarkerPlayerHealth'.default.bHideInPhotoMode;
+    foreach MarkerMovie.Markers(Marker)
+    {
+        PlayerMarker = SFXGUIValue_MarkerPlayerHealth(Marker);
+        if (PlayerMarker != None)
+        {
+            PlayerMarker.SetPhotoMarkerHidden(bHide && PlayerMarker.Player != None);
+            Count++;
+        }
+    }
+    if (!bRestore && Count > 0 && !bLoggedPhotoMarkerUpdate)
+    {
+        bLoggedPhotoMarkerUpdate = TRUE;
+        LogInternal("MilanPhoto: explicit marker update connected" @ Count);
+    }
+    return Count;
+}
+// END MILAN CHANGE
 
 public event function Update(float fDeltaT)
 {
     Super.Update(fDeltaT);
+    // MILAN CHANGE - Mgamerz - 2026-10-17
+    ApplyPhotoPlayerMarkers(FALSE);
+    // END MILAN CHANGE
     if (!bInitialized || oPanel == None)
     {
         return;
@@ -236,6 +330,10 @@ public function OnPanelRemoved()
     local BioPlayerController PC;
 
     PC = BioPlayerController(GetPC());
+    // MILAN CHANGE - Mgamerz - 2026-10-17
+    ApplyPhotoPlayerMarkers(TRUE);
+    bLoggedPhotoMarkerUpdate = FALSE;
+    // END MILAN CHANGE
     // Also clean up when a higher-priority screen removes the movie without ShowMenu.
     if (PhotoMode != None && PhotoMode.bMPSpectatorPhoto && PC != None)
     {
