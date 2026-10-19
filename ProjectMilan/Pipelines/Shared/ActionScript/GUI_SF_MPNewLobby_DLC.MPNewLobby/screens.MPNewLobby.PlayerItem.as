@@ -75,16 +75,15 @@ class screens.MPNewLobby.PlayerItem extends screens.MPNewLobby.PageItem
       this.isPrivate = bPrivate;
       if(this.isOccupied == false)
       {
-         if(this.isPrivate)
-         {
-            this.slot.gotoAndStop("private");
-            this.slot.slotText.text = _root.screen.srPrivateSlot;
-         }
-         else
-         {
-            this.slot.gotoAndStop("public");
-            this.slot.slotText.text = _root.screen.srPublicSlot;
-         }
+         this.slot.gotoAndStop(bPrivate ? "private" : "public");
+         var label = this.slot.slotText;
+         // Resolve the existing stringref first, then append an untranslated index.
+         // Never concatenate a suffix onto the "$12345" translation key.
+         label.noTranslate = false;
+         label.text = bPrivate ? _root.screen.srPrivateSlot : _root.screen.srPublicSlot;
+         label.noTranslate = true;
+         if(this.m_slotIndex >= 0) label.appendText(" " + (this.m_slotIndex + 1));
+         label.textAutoSize = "shrink";
       }
    }
    function SetInteractive(b)

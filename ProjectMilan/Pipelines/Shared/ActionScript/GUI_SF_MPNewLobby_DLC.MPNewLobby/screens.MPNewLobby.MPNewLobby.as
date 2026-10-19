@@ -556,14 +556,18 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
                 _loc3_.SetZoneReadiness(_loc4_[_loc5_].ZoneID,_loc4_[_loc5_].CurrentRating);
                 _loc5_ += 1;
             }
-            if(_global.SFX.IsDemo)
-            {
-                _loc3_.SetPercentagesVisible(false);
-            }
+            // MILAN CHANGE - Mgamerz - 2026-10-16
+            // Hide readiness percentages while retaining their fields and updates.
+            _loc3_.SetPercentagesVisible(false);
+            // END MILAN CHANGE
         }
     }
     function RefreshGalaxyAtWarMapPositionMarker()
     {
+        // MILAN CHANGE - Mgamerz - 2026-10-16
+        // Retain the readiness bonus text and updates, but hide its display.
+        this.rightPage.contents.GAWBonusText._visible = false;
+        // END MILAN CHANGE
         var _loc2_ = this.rightPage.contents.map;
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP && this.rightPage.contents.m_symbolName == this.PAGE_GALAXY_AT_WAR)
         {
@@ -937,7 +941,8 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
          for(var i = 0; i < list.numItems; i++)
          {
             list.getItem(i).active = false;
-            if(this.bUsingGamepad) list.getItem(i).selection._visible = false;
+            // Empty cards use selection for their outline, not just a highlight.
+            if(this.bUsingGamepad) list.getItem(i).selection._visible = !list.getItem(i).isOccupied;
          }
       }
       this.m_BindingPlayerRows = false;
@@ -1345,8 +1350,10 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
       page.playerScrollDown.contents._yscale = 25;
       page.playerScrollUp.ShowStickIcon(false);
       page.playerScrollDown.ShowStickIcon(false);
-      page.playerScrollUp._visible = this.m_FirstVisibleSlot > 0;
-      page.playerScrollDown._visible = this.m_FirstVisibleSlot + 4 < this.m_PlayerSlotCount;
+      page.playerScrollUp.m_ScrollAvailable = this.m_FirstVisibleSlot > 0;
+      page.playerScrollDown.m_ScrollAvailable = this.m_FirstVisibleSlot + 4 < this.m_PlayerSlotCount;
+      page.playerScrollUp._visible = page.playerScrollUp.m_ScrollAvailable || page.playerScrollUp.m_ScrollFlashStart != undefined;
+      page.playerScrollDown._visible = page.playerScrollDown.m_ScrollAvailable || page.playerScrollDown.m_ScrollFlashStart != undefined;
    }
 
    function ShiftPlayerWindow(delta)
@@ -1357,6 +1364,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
       if(next == this.m_FirstVisibleSlot) return false;
       this.m_FirstVisibleSlot = next;
       this.RefreshPlayerList(this.GetPlayerWindowList(),this.leftPage.contents.m_symbolName == this.PAGE_SQUAD);
+      this.FlashPlayerScrollArrow(delta);
       _global.SFX.PlayGUISound("SaveLoadMove");
       return true;
    }
@@ -1392,7 +1400,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
 
    function ScrollPlayersAnalog(value)
    {
-      var direction = Math.abs(value) < 0.35 ? 0 : (value > 0 ? -1 : 1);
+      // BioGUI Y follows content movement: positive scrolls content up (later slots).
+      // Match the game's MPStore DetailsScrollMarquee.ScrollPanel convention.
+      var direction = Math.abs(value) < 0.35 ? 0 : (value > 0 ? 1 : -1);
       if(!this.CanScrollPlayers()) direction = 0;
       if(direction != this.m_ScrollDirection)
       {
@@ -1404,6 +1414,14 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
 
    function TickPlayerInput()
    {
+      this.UpdatePlayerScrollFeedback();
+      // Keep occupied lobby cards unhighlighted without hiding empty-card borders.
+      // Run while input is gated too: card timelines can replace selection clips.
+      if(this.bUsingGamepad && this.rightPage.contents.m_symbolName == this.PAGE_SQUAD)
+      {
+         var list = this.GetPlayerWindowList();
+         for(var row = 0; row < list.numItems; row++) list.getItem(row).selection._visible = !list.getItem(row).isOccupied;
+      }
       if(!this.CanScrollPlayers())
       {
          this.m_ScrollDirection = 0;
@@ -1413,12 +1431,6 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
       {
          this.ShiftPlayerWindow(this.m_ScrollDirection);
          this.m_NextScrollRepeat = getTimer() + 150;
-      }
-      // Keep controller lobby cards unselected while their timelines advance.
-      if(this.bUsingGamepad && this.rightPage.contents.m_symbolName == this.PAGE_SQUAD)
-      {
-         var list = this.GetPlayerWindowList();
-         for(var row = 0; row < list.numItems; row++) list.getItem(row).selection._visible = false;
       }
    }
 
@@ -1438,10 +1450,12 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
       var count = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
       var next = Math.max(0,Math.min(count - 1,this.m_SelectedPlayerSlot + delta));
       if(count == 0 || next == this.m_SelectedPlayerSlot) return;
+      var previousWindow = this.m_FirstVisibleSlot;
       this.m_SelectedPlayerSlot = next;
       if(next < this.m_FirstVisibleSlot) this.m_FirstVisibleSlot = next;
       if(next >= this.m_FirstVisibleSlot + 4) this.m_FirstVisibleSlot = next - 3;
       this.RefreshPlayerList(this.GetPlayerWindowList(),true);
+      if(this.m_FirstVisibleSlot != previousWindow) this.FlashPlayerScrollArrow(this.m_FirstVisibleSlot - previousWindow);
       _global.SFX.PlayGUISound("SaveLoadMove");
    }
 
@@ -1450,5 +1464,45 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
       clearInterval(this.m_PlayerInputTimer);
       Mouse.removeListener(this);
       Key.removeListener(this);
+   }
+function FlashPlayerScrollArrow(delta)
+   {
+      var list = this.GetPlayerWindowList();
+      if(list == null) return;
+      var arrow = delta < 0 ? list._parent.playerScrollUp : list._parent.playerScrollDown;
+      if(arrow == undefined) return;
+      if(arrow.m_ScrollColor == undefined)
+      {
+         arrow.m_ScrollColor = new Color(arrow);
+         arrow.m_NormalScrollColor = arrow.m_ScrollColor.getTransform();
+      }
+      arrow.m_ScrollFlashStart = getTimer();
+      // Hold the pulse at its fully visible frame while the activation tint fades.
+      arrow.contents.gotoAndStop(39);
+      arrow._visible = true;
+      this.UpdatePlayerScrollArrowFeedback(arrow);
+   }
+function UpdatePlayerScrollArrowFeedback(arrow)
+   {
+      if(arrow == undefined || arrow.m_ScrollFlashStart == undefined) return;
+      var elapsed = getTimer() - arrow.m_ScrollFlashStart;
+      var normal = arrow.m_NormalScrollColor;
+      if(elapsed >= 600)
+      {
+         arrow.m_ScrollColor.setTransform(normal);
+         delete arrow.m_ScrollFlashStart;
+         arrow.contents.play();
+         arrow._visible = arrow.m_ScrollAvailable;
+         return;
+      }
+      var amount = 1 - Math.max(0,elapsed - 120) / 480;
+      arrow.m_ScrollColor.setTransform({ra:normal.ra * (1 - amount),ga:normal.ga * (1 - amount),ba:normal.ba * (1 - amount),rb:normal.rb * (1 - amount) + 255 * amount,gb:normal.gb * (1 - amount) + 180 * amount,bb:normal.bb * (1 - amount) + 64 * amount,aa:normal.aa,ab:normal.ab});
+   }
+function UpdatePlayerScrollFeedback()
+   {
+      var list = this.GetPlayerWindowList();
+      if(list == null) return;
+      this.UpdatePlayerScrollArrowFeedback(list._parent.playerScrollUp);
+      this.UpdatePlayerScrollArrowFeedback(list._parent.playerScrollDown);
    }
 }
