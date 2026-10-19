@@ -12,11 +12,15 @@ namespace ProjectMilanCore.Config
     /// </summary>
     public static class DynamicLoadMappingRegistration
     {
-        public static void RegisterDynamicLoadMapping(string objectPath, string seekFreePackageName)
+        /// <param name="objectPath">Object path to map.</param>
+        /// <param name="seekFreePackageName">Package file name the object is in, without its extension.</param>
+        /// <param name="replicate">Sets bReplicate, as vanilla does for the classes and archetypes multiplayer players spawn with (weapons, characters).</param>
+        public static void RegisterDynamicLoadMapping(string objectPath, string seekFreePackageName, bool replicate = false)
         {
             var engine = MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine");
+            var replicateValue = replicate ? ", bReplicate=true" : "";
             engine.GetOrAddSection("sfxgame.sfxengine").AddEntry(new CoalesceProperty("dynamicloadmapping",
-                new CoalesceValue($"(ObjectName=\"{objectPath}\", SeekFreePackageName=\"{seekFreePackageName}\")", CoalesceParseAction.AddUnique)));
+                new CoalesceValue($"(ObjectName=\"{objectPath}\", SeekFreePackageName=\"{seekFreePackageName}\"{replicateValue})", CoalesceParseAction.AddUnique)));
         }
     }
 }
