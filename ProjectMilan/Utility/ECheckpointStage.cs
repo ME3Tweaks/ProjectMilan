@@ -34,6 +34,12 @@
         NonStartup = 20,
         Kits = 30,
         Weapons = 40,
+
+        /// <summary>
+        /// Installs the prebuilt heavy weapon packages. Its config and TLK strings are in the checkpoint, so it has nothing
+        /// to rehydrate.
+        /// </summary>
+        HeavyWeapons = 45,
         MP4Enemies = 50,
         Levels = 60,
         Rejection = 70,

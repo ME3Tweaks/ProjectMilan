@@ -113,6 +113,7 @@ namespace ProjectMilan
             (ECheckpointStage.NonStartup, "NonStartup", () => Settings.RunNonStartupPipeline),
             (ECheckpointStage.Kits, "Kits", () => ShouldRunKitsPipeline),
             (ECheckpointStage.Weapons, "Weapons", () => ShouldRunWeaponsPipeline),
+            (ECheckpointStage.HeavyWeapons, "HeavyWeapons", () => true), // Always runs
             (ECheckpointStage.MP4Enemies, "MP4Enemies", () => ShouldRunWeaponsPipeline && Settings.RunMP4EnemiesPipeline),
             (ECheckpointStage.Levels, "Levels", () => ShouldRunLevelsPipeline),
             (ECheckpointStage.Rejection, "Rejection", () => Settings.RunRejectionPipeline),
@@ -179,7 +180,7 @@ namespace ProjectMilan
         /// checkpoints are never shipped, and a full rebuild is exactly the cost they exist to avoid. A change to one
         /// of those pipelines just makes a checkpoint taken at or after it stale - retake it.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 11; // 11: BaseDelta net-indexes every patched package append-only against the vanilla net index cache (canonical indexes, new objects after the linker's highest, counts raised to cover them), which older checkpoints' patches don't do. 10: BaseDelta compiles Classes/<Package>/ classes into their own forced-export packages (AAT, SFXGameContent_MilanBase) instead of SFXGame, which older checkpoints' SFXGame patches don't do. 9: BaseDelta gained the Startup.pcc target (Scaleform UI) and SFXGame PropertyUpdate (GUI WwiseBank), which older checkpoints' patches don't contain. 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
+        public const int MIN_CHECKPOINT_VERSION = 12; // 12: HeavyWeapons stage after Weapons installs the heavy weapon packages and registers their config/TLK strings, which checkpoints taken after it don't contain. 11:BaseDelta net-indexes every patched package append-only against the vanilla net index cache (canonical indexes, new objects after the linker's highest, counts raised to cover them), which older checkpoints' patches don't do. 10: BaseDelta compiles Classes/<Package>/ classes into their own forced-export packages (AAT, SFXGameContent_MilanBase) instead of SFXGame, which older checkpoints' SFXGame patches don't do. 9: BaseDelta gained the Startup.pcc target (Scaleform UI) and SFXGame PropertyUpdate (GUI WwiseBank), which older checkpoints' patches don't contain. 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -774,6 +775,7 @@ namespace ProjectMilan
             RunPipeline(ECheckpointStage.Kits, ShouldRunKitsPipeline, MPKits.RunPipeline, "Kits"); // Builds character packages
         weaponsBuild:
             RunPipeline(ECheckpointStage.Weapons, ShouldRunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
+            RunPipeline(ECheckpointStage.HeavyWeapons, true, HeavyWeaponsPipeline.RunPipeline, "HeavyWeapons"); // Installs the prebuilt heavy weapon packages and registers their consumable classes
 
             // This pipeline must come after weapons as it depends on Collector SMG.
             if (Settings.RunMP4EnemiesPipeline && !ShouldRunWeaponsPipeline)
