@@ -45,6 +45,10 @@ var export SFXCustomizationInstance_PlayerMP CustomizationMP;
 var bool bValidExecutionTarget;
 var bool bDisplayedKilledMessage;
 var transient bool bIsProcessingFellOutOfWorld;
+// MILAN CHANGE - Mgamerz - 2026-10-16
+// Local light actors belong to this pawn, while its inventory manager handles weapon transfers.
+var transient MilanWeaponFlashlight MapFlashlight;
+// END MILAN CHANGE
 
 // Functions
 public simulated function BioBaseRemovedFromWorld();
@@ -82,7 +86,11 @@ public simulated function Destroyed()
     local SFXPowerCustomAction_Decoy Power_Decoy;
     local string PlayerLeftMessage;
     local SFXMPEventTicker EventTicker;
-    
+
+    // MILAN CHANGE - Mgamerz - 2026-10-16
+    // Detach while the pawn's mesh and inventory are still available.
+    ShutdownMapFlashlight();
+    // END MILAN CHANGE
     if (Role == ENetRole.ROLE_Authority)
     {
         Power_Drone = SFXPowerCustomAction_CombatDrone(PowerCustomActions[31]);
@@ -171,7 +179,11 @@ public simulated function PreClientTravel()
 {
     local SFXModule_DamagePlayer DmgPlayer;
     local SFXModule_GameEffectManager Manager;
-    
+
+    // MILAN CHANGE - Mgamerz - 2026-10-16
+    // Local light actors must not survive travel with references to the old weapon meshes.
+    ShutdownMapFlashlight();
+    // END MILAN CHANGE
     DmgPlayer = GetModule(Class'SFXModule_DamagePlayer');
     DmgPlayer.RecoverFromBleedout();
     Manager = GetModule(Class'SFXModule_GameEffectManager');
@@ -223,10 +235,6 @@ public simulated function StopLoadingMovie()
     PC = SFXPlayerControllerMP(Controller);
     PC.GameModeManager2.DisableMode(9);
     PC.StopLoadingMovie();
-    if ((Class'WorldInfo'.static.IsConsoleBuild() && PC.ProfileSettings != None) && PC.ForceFeedbackManager != None)
-    {
-        PC.ForceFeedbackManager.bAllowsForceFeedback = PC.ProfileSettings.GetControllerVibrationOption();
-    }
     ClearTimer('StopLoadingMovie');
     if (PC != None)
     {
@@ -531,12 +539,67 @@ public simulated function DeferredPostBeginPlay()
             SetTimer(1.0, TRUE, 'RagdollFailsafe', );
         }
         bFullyInitializedMP = TRUE;
+        // MILAN CHANGE - Mgamerz - 2026-10-16
+        // Every rendering peer initializes its own lights after replicated inventory and appearance are ready.
+        EnsureMapFlashlight();
+        // END MILAN CHANGE
     }
     else
     {
         SetTimer(0.100000001, FALSE, 'DeferredPostBeginPlay', );
     }
 }
+// MILAN CHANGE - Mgamerz - 2026-10-16
+// Use the actual loaded map, including on simulated proxies and join-in-progress clients.
+public simulated function EnsureMapFlashlight()
+{
+    local MilanWeaponFlashlight NewFlashlight;
+    local SFXInventoryManager Manager;
+
+    if (MapFlashlight != None && !MapFlashlight.bDeleteMe)
+    {
+        return;
+    }
+    if (WorldInfo == None || WorldInfo.bIsLobbyLevel || WorldInfo.NetMode == ENetMode.NM_DedicatedServer || Mesh == None || Weapon == None || bIsDead)
+    {
+        return;
+    }
+    if (!Class'MilanWeaponFlashlight'.static.IsEnabledForMap(name(WorldInfo.GetMapName())))
+    {
+        return;
+    }
+    Manager = SFXInventoryManager(InvManager);
+    if (Manager == None || Manager.bFlashlightAttached)
+    {
+        return;
+    }
+    NewFlashlight = Spawn(Class'MilanWeaponFlashlight', Self, , Location, Rotation, , TRUE, FALSE);
+    if (NewFlashlight != None)
+    {
+        if (NewFlashlight.InitializeForPawn(Self))
+        {
+            MapFlashlight = NewFlashlight;
+        }
+        else
+        {
+            NewFlashlight.Destroy();
+        }
+    }
+}
+
+public simulated function ShutdownMapFlashlight()
+{
+    local MilanWeaponFlashlight OldFlashlight;
+
+    OldFlashlight = MapFlashlight;
+    MapFlashlight = None;
+    if (OldFlashlight != None && !OldFlashlight.bDeleteMe)
+    {
+        OldFlashlight.Destroy();
+    }
+}
+// END MILAN CHANGE
+
 public simulated function string GetFullName()
 {
     return firstName;
@@ -830,6 +893,10 @@ public simulated function PermaDeadChanged()
             bIsDead = FALSE;
             return;
         }
+        // MILAN CHANGE - Mgamerz - 2026-10-16
+        // Permanent-death presentation runs on clients too
+        ShutdownMapFlashlight();
+        // END MILAN CHANGE
         if (IsLocallyControlled())
         {
             SetTimer(3.0, FALSE, 'StartSpectatorCam', );
@@ -859,6 +926,13 @@ public simulated function PermaDeadChanged()
     {
         Controller.GotoState('PlayerWalking', , , );
     }
+    // MILAN CHANGE - Mgamerz - 2026-10-16
+    // Resurrection needs to reuse this pawn without calling PostBeginPlay again
+    if (!bIsDead && bFullyInitializedMP)
+    {
+        EnsureMapFlashlight();
+    }
+    // END MILAN CHANGE
     GetModule(Class'SFXModule_MarkerPlayer').PlayerIsDead = bIsDead;
 }
 public simulated function PlayerKilledMessage()
