@@ -1124,7 +1124,6 @@
 				<Value type="3">SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_PowerBonus_Cooldown</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_ShieldStrength</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_ShieldRegen</Value>
-				<Value type="3">SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_Stability</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponStability</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_AssaultRifle</Value>
 				<Value type="3">SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponDamage_SniperRifle</Value>
