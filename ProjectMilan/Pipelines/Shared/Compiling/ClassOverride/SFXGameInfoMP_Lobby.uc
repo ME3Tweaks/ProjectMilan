@@ -53,6 +53,13 @@ var config stringref srStrictNatError;
 var config float NatWarningShowDelay;
 var config float NatWarningShowDuration;
 var SFXOnlineGameSettings MatchMakingGameSettings;
+// MILAN CHANGE - Mgamerz - 2026-10-15
+// Quick Match failures need their own reasons, and the 'searching' box has to be closed when a search fails.
+var config stringref srQuickMatchOff;
+var config stringref srQuickMatchServerUnavailable;
+var config stringref srQuickMatchAccessKeyRejected;
+var BioSFHandler_MessageBox SearchMsgBox;
+// END MILAN CHANGE
 var config float MatchStartTimerDuration;
 var config float MatchStartLastManTimerDuration;
 // MILAN CHANGE - 10/09/2026 - Mgamerz
@@ -66,8 +73,34 @@ var EMatchTimerState MatchTimerState;
 
 public function CancelSearchInput(bool bAPressed, int nContext)
 {
+    // MILAN CHANGE - Mgamerz - 2026-10-15
+    // The box dismisses itself when its button is pressed; don't hide it a second time.
+    SearchMsgBox = None;
+    // END MILAN CHANGE
     CancelSearch();
 }
+// MILAN CHANGE - Mgamerz - 2026-10-15
+public function ShowSearchMsgBox()
+{
+    local SFXGUIInteraction oGuiMgr;
+    local BioMessageBoxOptionalParams stParams;
+
+    oGuiMgr = GetPC().GetSFXUIController();
+    SearchMsgBox = oGuiMgr.CreateMessageBox(GetPC());
+    stParams.bModal = TRUE;
+    SearchMsgBox.SetInputDelegate(CancelSearchInput);
+    stParams.srBText = srCancel;
+    SearchMsgBox.DisplayMessageBox(MatchMakingGameSettings.mCreateNewMatch ? srCreatingGame : srSearchingForGames, stParams);
+}
+public function HideSearchMsgBox()
+{
+    if (SearchMsgBox != None)
+    {
+        SearchMsgBox.HideMessageBox(TRUE);
+        SearchMsgBox = None;
+    }
+}
+// END MILAN CHANGE
 public function bool CreateOnlineGame(SFXOnlineGameSettings GameSettings)
 {
     local bool bMatchRequestSent;
@@ -121,6 +154,7 @@ public function OnQuickMatchComplete(byte Result)
         }
         else
         {
+            HideSearchMsgBox();
             ShowNetworkErrorPrompt(srMatchMakingError);
         }
     }
@@ -130,7 +164,25 @@ public function OnQuickMatchComplete(byte Result)
     }
     else
     {
-        ShowNetworkErrorPrompt(srMatchMakingError);
+        // The search is over, so close its 'searching' box before showing why it failed.
+        // Results come from MilanHost's CMatchmaking: 5 = matchmaking off, 6 = matchmaker unavailable,
+        // 7 = matchmaker refused the access key, anything else is a plain failure.
+        HideSearchMsgBox();
+        switch (int(Result))
+        {
+            case 5:
+                ShowNetworkErrorPrompt(srQuickMatchOff);
+                break;
+            case 6:
+                ShowNetworkErrorPrompt(srQuickMatchServerUnavailable);
+                break;
+            case 7:
+                ShowNetworkErrorPrompt(srQuickMatchAccessKeyRejected);
+                break;
+            default:
+                ShowNetworkErrorPrompt(srMatchMakingError);
+                break;
+        }
     }
     // END MILAN CHANGE
 }
@@ -388,10 +440,8 @@ public function ShowStrictNatWarning()
 }
 public function StartMPMatch(optional SFXOnlineGameSettings GameSettings)
 {
-    local SFXGUIInteraction oGuiMgr;
-    local BioSFHandler_MessageBox oMsgBox;
-    local BioMessageBoxOptionalParams stParams;
     local bool bMatchRequestSent;
+    local bool bQuickMatch;
     local SFXOnlineComponentBlazeGame BG;
 
     if (OnlineSub != None)
@@ -409,6 +459,9 @@ public function StartMPMatch(optional SFXOnlineGameSettings GameSettings)
                 MatchMakingGameSettings.EnemyType = 127;
                 MatchMakingGameSettings.Difficulty = 127;
                 MatchMakingGameSettings.mCreateNewMatch = FALSE;
+                // 2026-10-15: MilanHost can fail a search before QuickMatch returns, so the box must already be up to be closed.
+                bQuickMatch = TRUE;
+                ShowSearchMsgBox();
                 bMatchRequestSent = QuickMatch(MatchMakingGameSettings);
                 // END MILAN CHANGE
             }
@@ -429,20 +482,26 @@ public function StartMPMatch(optional SFXOnlineGameSettings GameSettings)
                 }
                 else
                 {
+                    // MILAN CHANGE - Mgamerz - 2026-10-15
+                    bQuickMatch = TRUE;
+                    ShowSearchMsgBox();
+                    // END MILAN CHANGE
                     bMatchRequestSent = QuickMatch(MatchMakingGameSettings);
                 }
             }
             if (bMatchRequestSent)
             {
-                oGuiMgr = GetPC().GetSFXUIController();
-                oMsgBox = oGuiMgr.CreateMessageBox(GetPC());
-                stParams.bModal = TRUE;
-                oMsgBox.SetInputDelegate(CancelSearchInput);
-                stParams.srBText = srCancel;
-                oMsgBox.DisplayMessageBox(MatchMakingGameSettings.mCreateNewMatch ? srCreatingGame : srSearchingForGames, stParams);
+                // MILAN CHANGE - Mgamerz - 2026-10-15
+                // Quick Match already showed its box before the request; it may have been closed since.
+                if (!bQuickMatch)
+                {
+                    ShowSearchMsgBox();
+                }
+                // END MILAN CHANGE
             }
             else
             {
+                HideSearchMsgBox(); // MILAN CHANGE - Mgamerz - 2026-10-15
                 GameInterface.ClearDestroyOnlineGameCompleteDelegate(OnMultiplayerGameDestroyed);
                 OnMPFatalError(Self @ GetFuncName());
             }
@@ -463,8 +522,18 @@ public function TravelToNextMap()
     local SFXGRIMP_Lobby GRI;
 
     GRI = SFXGRIMP_Lobby(GameReplicationInfo);
+    // MILAN CHANGE - Mgamerz - 2026-10-16
+    // GetMapByID is static, so it needs no settings instance. An empty name would make servertravel
+    // keep the current map and reload the lobby, so refuse and send the players back to readying.
+    mapPackageName = Class'SFXOnlineGameSettings'.static.GetMapByID(GRI.MapSetting).PackageName;
+    if (mapPackageName == "")
+    {
+        LogInternal("TravelToNextMap: no map package for MapSetting" @ GRI.MapSetting $ "; not traveling", );
+        GRI.UnreadyAllPlayers();
+        return;
+    }
     GRI.GotoState('StartingMatch', , , );
-    mapPackageName = GetOnlineGameSettings().GetMapByID(GRI.MapSetting).PackageName;
+    // END MILAN CHANGE
     ConsoleCommand("servertravel " $ mapPackageName);
 }
 public function UnCommitSettings()
@@ -548,6 +617,7 @@ public function CancelSearch()
             GameInterface.ClearDestroyOnlineGameCompleteDelegate(OnMultiplayerGameDestroyed);
             GameInterface.ClearJoinOnlineGameCompleteDelegate(OnQuickMatchJoined);
             GameInterface.CancelFindOnlineGames();
+            HideSearchMsgBox(); // MILAN CHANGE - Mgamerz - 2026-10-15
             GetPC().LobbyFlow.OnSearchGameCancelled();
         }
         else
@@ -820,8 +890,35 @@ public function int SetLobbySize(int NewSize)
 // END MILAN CHANGE
 public final function SFXOnlineGameSettings GetOnlineGameSettings()
 {
-    return SFXOnlineGameSettings(OnlineSub.GameInterface.GetGameSettings('Game'));
+    return EnsureOnlineGameSettings(); // MILAN CHANGE - Mgamerz - 2026-10-16
 }
+// MILAN CHANGE - Mgamerz - 2026-10-16
+// Only a game that created its match got online game settings (StartMPMatch); a game that joined had
+// none. When host migration made such a game the host, MilanHost had nowhere to put the lobby's settings
+// and every lookup through them read None, so TravelToNextMap traveled to an empty map: the lobby again.
+// SFXLobbyFlow.StartMPFlow calls this on every MP level so a member has settings before it is adopted.
+public static final function SFXOnlineGameSettings EnsureOnlineGameSettings()
+{
+    local SFXOnlineSubsystem OnlineSubsystem;
+    local SFXOnlineComponentBlazeGame BG;
+
+    OnlineSubsystem = Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem();
+    if (OnlineSubsystem != None)
+    {
+        BG = SFXOnlineComponentBlazeGame(OnlineSubsystem.GameInterface);
+    }
+    if (BG == None)
+    {
+        return None;
+    }
+    if (BG.GameSettings == None)
+    {
+        BG.GameSettings = new Class'SFXOnlineGameSettings';
+        BG.GameSettings.SetLobbySize(GetDefaultLobbySize());
+    }
+    return BG.GameSettings;
+}
+// END MILAN CHANGE
 
 //class default properties can be edited in the Properties tab for the class's Default__ object.
 defaultproperties
@@ -854,6 +951,9 @@ defaultproperties
     srSearchingForGames = $506693
     srCreatingGame = $626902
     srMatchMakingError = $591379
+    srQuickMatchOff = $49875719
+    srQuickMatchServerUnavailable = $49875720
+    srQuickMatchAccessKeyRejected = $49875718
     srOnlinePrivilegeError = $652174
     srStrictNatError = $724659
     NatWarningShowDelay = 30.0

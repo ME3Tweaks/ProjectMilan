@@ -257,6 +257,23 @@ public final function int GetCredits()
 }
 public function array<GAWZoneGUIData> GetGAWRatings()
 {
+    local int ZoneIndex;
+    local GAWZoneGUIData ZoneData;
+
+    // MILAN CHANGE - Mgamerz - 2026-10-16
+    // Populate localized region names without the disabled online ratings request.
+    // Keep real ratings supplied by OnGAWRequestFinished available for future use.
+    if (GAWRatings.Length == 0)
+    {
+        for (ZoneIndex = 0; ZoneIndex < Class'SFXGAWAssetsHandler'.default.GAWTheatreData.Length; ++ZoneIndex)
+        {
+            ZoneData.ZoneID = Class'SFXGAWAssetsHandler'.default.GAWTheatreData[ZoneIndex].ZoneID;
+            ZoneData.ZoneName = GetUIString(Class'SFXGAWAssetsHandler'.default.GAWTheatreData[ZoneIndex].srZoneName);
+            ZoneData.ZoneDisplayNumber = Class'SFXGAWAssetsHandler'.default.GAWTheatreData[ZoneIndex].ZoneDisplayNumber;
+            GAWRatings.AddItem(ZoneData);
+        }
+    }
+    // END MILAN CHANGE
     return GAWRatings;
 }
 public function bool HasGAWRatingsError()
@@ -1043,6 +1060,7 @@ public final function array<PowerDisplayInfo> GetCharacterPowerInfo(SFXPRIMP PRI
     
     MPSaveManager = SFXEngine(Class'Engine'.static.GetEngine()).MPSaveManager;
     KitData = MPSaveManager.GetKitData(PRI.GetCharacterKit());
+    RetainResource(KitData.PowerIconResource);
     CurrPowerData.PowerIconResource = KitData.PowerIconResource;
     CurrPowerData.PowerIconIndex = KitData.PowerIconIndex1;
     CurrPowerData.PowerName = GetUIString(KitData.srPowerName1);
