@@ -24,11 +24,11 @@ public exec function RestartWithDifficulty(string Difficulty)
             NewDifficulty = 4;
             break;
         default:
-            Outer.ClientMessage(GetFuncName() @ "could not find valid difficulty for specified name '" $ Difficulty $ "'");
+            LogInternal(GetFuncName() @ "could not find valid difficulty for specified name '" $ Difficulty $ "'");
             return;
     }
     GRIMP = SFXGRIMP(Outer.WorldInfo.GRI);
-    Outer.ClientMessage("Switching active difficulty to " $ Difficulty);
+    LogInternal("Switching active difficulty to " $ Difficulty);
     GRIMP.DifficultySetting = NewDifficulty;
     GRIMP.DifficultyHandler.CurrentDifficulty = byte(NewDifficulty);
     GRIMP.DifficultyHandler.bNeedsUpdate = TRUE;
