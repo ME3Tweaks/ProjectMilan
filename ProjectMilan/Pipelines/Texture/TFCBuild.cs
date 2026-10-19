@@ -453,6 +453,11 @@ namespace ProjectMilan.Pipelines.Texture
         /// </summary>
         private static void ClearNeverStreamForExternalization(ExportEntry tex)
         {
+            var props = tex.GetProperties();
+            // UI textures must stay package-resident, including after upscaling or format conversion.
+            if (props.GetProp<EnumProperty>("LODGroup") is { Value.Name: "TEXTUREGROUP_UI" })
+                return;
+
             var nonEmptyMips = tex.GetBinaryData<UTexture2D>().Mips.Count(x => x.StorageType != StorageTypes.empty);
             if (nonEmptyMips <= 6)
                 return;
