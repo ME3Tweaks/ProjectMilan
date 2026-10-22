@@ -33,7 +33,7 @@ public function UpdateAppearance(float DeltaSeconds)
     Super.UpdateAppearance(DeltaSeconds);
 
     MarkerPawn = Player;
-    if (MarkerPawn == None || MarkerTitleTextClipAnim == None)
+    if (MarkerPawn == None || MarkerMiscTextClipAnim == None)
     {
         return;
     }
@@ -137,7 +137,7 @@ private final function SetMarkerTint(
 {
     local ASColorTransform Tint;
 
-    if (MarkerTitleTextClipAnim == None)
+    if (MarkerMiscTextClipAnim == None)
     {
         return;
     }
@@ -152,7 +152,10 @@ private final function SetMarkerTint(
     Tint.Add.B = 0.0;
     Tint.Add.A = 0.0;
 
-    MarkerTitleTextClipAnim.SetColorTransform(Tint);
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    // SetText uses miscTextAnim for the player name; TitleAnim holds the challenge title.
+    MarkerMiscTextClipAnim.SetColorTransform(Tint);
+    // END MILAN CHANGE
 }
 
 defaultproperties
