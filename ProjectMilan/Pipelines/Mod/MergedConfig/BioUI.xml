@@ -187,6 +187,8 @@
 				<!-- MILAN CHANGE Mgamerz 10/10/2026 -->
 				<!-- Multiplayer Settings: the ME3 EA registration UI repurposed for profile name and matchmaking server. Above MPOptions (235), below message boxes (370). -->
 				<Value type="3">(Tag=MilanNetConfig,\tZOrder=270,\tMovieClass="SFXGameContent_Milan.SFXGUI_MilanNetConfig",\tGFxResource="GUI_SF_MilanNetConfig.NetworkRegistration", bRequiresScaling=true)</Value>
+				<!-- MILAN CHANGE - Mgamerz - 2026-10-21: Banner selector UI -->
+				<Value type="3">(Tag=MilanBannerSelect,\tZOrder=275,\tMovieClass="SFXGameContent_Milan.SFXGUI_MilanBannerSelect",\tGFxResource="GUI_SF_MilanBannerSelect.LoadSave", bRequiresScaling=true)</Value>
 				<!-- END MILAN -->
 			</Property>
 		</Section>
@@ -240,6 +242,8 @@
 			<Property name="srspectatorhuddescriptionconsole" type="0">49875771</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mplobby">
+			<!-- MILAN CHANGE - Mgamerz - 2026-10-21: Leaderboards is now banner selection -->
+			<Property name="srleaderboards" type="0">49875800</Property>
 			<Property name="maxonlineimages" type="0">20</Property>
 			<Property name="srchallengetracking" type="0">769618</Property>
 			<Property name="srmatchsettingcreditmodifier" type="0">770265</Property>
