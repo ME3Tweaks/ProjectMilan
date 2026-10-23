@@ -9,6 +9,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
 using ProjectMilanCore;
+using ProjectMilan.Pipelines.Startups;
 using Image = LegendaryExplorerCore.Textures.Image;
 
 namespace ProjectMilan.Pipelines.Texture
@@ -217,7 +218,10 @@ namespace ProjectMilan.Pipelines.Texture
 
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
             int cleanedTextures = 0, removedMips = 0;
+            var guiTextures = GUITextureMipper.DiscoverTexturePaths(Program.Settings.OutputModPath);
+            var guiPackages = new List<string>();
             // Encoding (BC7 above all) is the slow part, and the same sources usually come back on the next run
+            var importOverrides = TextureImportOverridePolicy.Load(Path.Combine(MilanShared.PipelineRoot, "Texture", "TextureImportOverrides.json"));
             using var encodeCache = new TextureEncodeCache();
             var callbacks = encodeCache.Callbacks;
             foreach (var pf in Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories))
@@ -230,6 +234,7 @@ namespace ProjectMilan.Pipelines.Texture
                 foreach (var obj in p.Exports.Where(x => x.IsTexture() && !x.IsDefaultObject))
                 {
                     // ME3 V8U8 norms don't work in LE3 and appear black, so they always end up as BC7.
+                    bool guiMipped = guiTextures.Contains(obj.InstancedFullPath);
                     var needsBC7Conversion = obj.GetProperty<EnumProperty>("Format")?.Value == "PF_V8U8";
                     var hasUpscale = TryGetUpscale(obj, out var upscale);
 
@@ -238,7 +243,7 @@ namespace ProjectMilan.Pipelines.Texture
                         MilanLog.Information($"  Converting texture {obj.InstancedFullPath} from PF_V8U8 to BC7", customPrefix: LOG_CATEGORY);
                         try
                         {
-                            ConvertTexture(obj, PixelFormat.BC7, callbacks);
+                            ConvertTexture(obj, PixelFormat.BC7, callbacks, guiMipped);
                         }
                         catch (Exception ex)
                         {
@@ -252,8 +257,14 @@ namespace ProjectMilan.Pipelines.Texture
                     {
                         // Converting first would decode the old texture data just to throw it away - the upscale replaces
                         // every mip anyway, so fold the format change into the replace instead.
-                        InstallUpscale(obj, upscale, needsBC7Conversion, callbacks);
+                        InstallUpscale(obj, upscale, needsBC7Conversion, callbacks, importOverrides.GetOverrides(obj.InstancedFullPath), guiMipped);
                     }
+                }
+
+                if (p.Exports.Any(e => e.ClassName == "Texture2D" && guiTextures.Contains(e.InstancedFullPath)))
+                {
+                    guiPackages.Add(pf);
+                    GUITextureMipper.GenerateMipsForPackage(p, guiTextures);
                 }
 
                 // Run before the externalizer's Cubemap/NeverStream skips. Cubemap cleanup validates all six
@@ -271,6 +282,8 @@ namespace ProjectMilan.Pipelines.Texture
             }
             MilanLog.Information($"Removed {removedMips} empty mips from {cleanedTextures} textures", customPrefix: LOG_CATEGORY);
 
+            GUITextureMipper.VerifyTexturesAreConsistent(guiPackages, guiTextures);
+
             // Every texture was visited, so whatever the cache holds beyond this pass is for sources that changed or are gone
             encodeCache.PruneUnused();
         }
@@ -285,7 +298,7 @@ namespace ProjectMilan.Pipelines.Texture
         /// TC_NormalmapBC7 for a normal map, whose shaders the shader pipeline then recompiles against the new decode.
         /// </remarks>
         /// <param name="callbacks">Encode cache hooks for Replace(), or null.</param>
-        private static void InstallUpscale(ExportEntry tex, UpscaleSource upscale, bool convertV8U8ToBC7, TextureReplaceCallbacks? callbacks)
+        private static void InstallUpscale(ExportEntry tex, UpscaleSource upscale, bool convertV8U8ToBC7, TextureReplaceCallbacks? callbacks, TextureLoadOverrides loadOverrides, bool guiMipped)
         {
             try
             {
@@ -310,7 +323,13 @@ namespace ProjectMilan.Pipelines.Texture
                 }
 
                 // Load as ARGB so Replace() re-encodes into the target format.
-                var image = Image.LoadFromFile(upscale.FilePath, PixelFormat.ARGB);
+                var image = loadOverrides == TextureLoadOverrides.None
+                    ? Image.LoadFromFile(upscale.FilePath, PixelFormat.ARGB)
+                    : Image.LoadFromFileWithOverrides(upscale.FilePath, PixelFormat.ARGB, loadOverrides);
+                if (loadOverrides != TextureLoadOverrides.None)
+                {
+                    MilanLog.Information($"  Texture import overrides for {tex.InstancedFullPath}: {loadOverrides}", customPrefix: LOG_CATEGORY);
+                }
                 if (toBC7 && isNormalMap)
                 {
                     // A V8U8 upscale was made from a two channel source, so its Z lane may be the constant 255 V8U8ToARGB
@@ -325,8 +344,12 @@ namespace ProjectMilan.Pipelines.Texture
                     // DXT1's 1-bit alpha. An opaque original stays opaque.
                     MakeOpaque(image);
                 }
-                t2d.Replace(image, props, isPackageStored: true, callbacks: callbacks);
-                ClearNeverStreamForExternalization(tex);
+                t2d.Replace(image, props, isPackageStored: true, callbacks: callbacks,
+                    forceMipping: guiMipped, mipOptions: guiMipped ? MipGenerationOptions.HighQuality : null);
+                if (!guiMipped)
+                {
+                    ClearNeverStreamForExternalization(tex);
+                }
             }
             catch (Exception ex)
             {
@@ -372,7 +395,7 @@ namespace ProjectMilan.Pipelines.Texture
         }
 
         /// <param name="callbacks">Encode cache hooks for Replace(), or null.</param>
-        private static void ConvertTexture(ExportEntry tex, PixelFormat destFormat, TextureReplaceCallbacks? callbacks)
+        private static void ConvertTexture(ExportEntry tex, PixelFormat destFormat, TextureReplaceCallbacks? callbacks, bool guiMipped)
         {
 
             var props = tex.GetProperties();
@@ -416,8 +439,12 @@ namespace ProjectMilan.Pipelines.Texture
             }
 
             texture.TextureFormat = $"PF_{destFormat}"; // Required for conversion
-            texture.Replace(convertedImage, props, isPackageStored: true, callbacks: callbacks);
-            ClearNeverStreamForExternalization(tex);
+            texture.Replace(convertedImage, props, isPackageStored: true, callbacks: callbacks,
+                forceMipping: guiMipped, mipOptions: guiMipped ? MipGenerationOptions.HighQuality : null);
+            if (!guiMipped)
+            {
+                ClearNeverStreamForExternalization(tex);
+            }
         }
 
         private static bool IsNormalMap(PropertyCollection props) =>
@@ -447,7 +474,8 @@ namespace ProjectMilan.Pipelines.Texture
         /// externalized and would stay baked into the package. Strip the flag back off so externalization picks it up;
         /// it removes it itself once the mips are out, so this just gets us past the skip.
         ///
-        /// Only for textures externalization will actually move. It externalizes Mips.Count - 6 mips and bails outright at
+        /// UI textures retain NeverStream. For other textures, only clear it when externalization will actually move mips.
+        /// It externalizes Mips.Count - 6 mips and bails outright at
         /// 6 or fewer, so a texture sitting at exactly 6 keeps the flag - nothing would move out of it, and it does need
         /// NeverStream while it stays package stored (streaming only works for external mips).
         /// </summary>
