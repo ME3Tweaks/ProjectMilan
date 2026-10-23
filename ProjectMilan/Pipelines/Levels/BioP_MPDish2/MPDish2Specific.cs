@@ -154,7 +154,8 @@ internal class MPDish2Specific : LevelSpecificFixesBase
     private static string? GetMeshPath(ExportEntry component) =>
         component.GetProperty<ObjectProperty>("StaticMesh")?.ResolveToEntry(component.FileRef)?.InstancedFullPath;
 
-    private static Matrix4x4 GetMeshWorldTransform(ExportEntry component)
+    // Also used by MPRctr2Specific to place the reactor button hitboxes
+    internal static Matrix4x4 GetMeshWorldTransform(ExportEntry component)
     {
         Matrix4x4 parentTransform;
         if (StaticCollectionActor.TryGetStaticCollectionActorAndIndex(component, out var collection, out int index))
@@ -162,7 +163,7 @@ internal class MPDish2Specific : LevelSpecificFixesBase
         else if (component.Parent is ExportEntry actor)
             parentTransform = ActorUtils.GetLocalToWorld(actor);
         else
-            throw new InvalidOperationException($"Dish2 floodlights: {component.InstancedFullPath} has no actor transform.");
+            throw new InvalidOperationException($"{component.InstancedFullPath} has no actor transform.");
 
         // Component transforms remain separate from collection matrices. One cone has Scale3D.X=-1;
         // retain that mirror so its light points along the visible beam rather than the opposite way.
