@@ -127,7 +127,7 @@ namespace ProjectMilan.Pipelines.Levels
                     if (isPlacedDecal)
                         updatedDecalCount++;
                     else
-                    updatedComponentCount++;
+                        updatedComponentCount++;
                 }
             }
 

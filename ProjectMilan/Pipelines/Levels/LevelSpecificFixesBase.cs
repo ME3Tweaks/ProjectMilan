@@ -50,6 +50,15 @@ namespace ProjectMilan.Pipelines.Levels
         public virtual void CorrectUDKExport(LevelSpecificPipeline pipeline, IMEPackage udk) { }
 
         /// <summary>
+        /// Run after the level's static lighting is in its saved LE3 packages: baked and imported, or imported from the cache
+        /// during the port. Changes here reach the game but not the bake, e.g. how brightly lights light characters
+        /// (<see cref="CharacterLightingTuning"/>). Open the packages from <see cref="LevelSpecificPipeline.LevelOutputDir"/>:
+        /// the lighting import saved them, so the pipeline's open copies are out of date.
+        /// </summary>
+        /// <param name="pipeline"></param>
+        public virtual void PostLightingCorrect(LevelSpecificPipeline pipeline) { }
+
+        /// <summary>
         /// Run after shader installation has completed, in case the pipeline needs to make further corrections to the level
         /// </summary>
         /// <param name="pipeline"></param>
