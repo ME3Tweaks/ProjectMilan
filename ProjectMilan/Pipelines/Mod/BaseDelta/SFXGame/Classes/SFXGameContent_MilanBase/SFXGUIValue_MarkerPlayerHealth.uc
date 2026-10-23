@@ -153,7 +153,7 @@ private final function SetMarkerTint(
     Tint.Add.A = 0.0;
 
     // MILAN CHANGE - Mgamerz - 2026-10-20
-    // SetText uses miscTextAnim for the player name; TitleAnim holds the challenge title.
+    // SetText uses miscTextAnim for the player name
     MarkerMiscTextClipAnim.SetColorTransform(Tint);
     // END MILAN CHANGE
 }

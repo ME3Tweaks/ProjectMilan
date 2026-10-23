@@ -3671,7 +3671,8 @@
 			<Property name="evolve_radiusbonus" type="0">0.3f</Property>
 			<Property name="evolve_shielddamagebonus" type="0">0.75f</Property>
 			<Property name="force" type="0">(BaseValue=1000.0f)</Property>
-			<Property name="impactradius" type="0">(BaseValue=800.0f)</Property>
+			<!-- MILAN CHANGE - Make 7m to average the difference from quarian and N7 engineer (1m nerf) -->
+			<Property name="impactradius" type="0">(BaseValue=700.0f)</Property>
 			<Property name="maxgrenadebonus" type="0">(BaseValue=0,Formula=BonusIsHardValue,RankBonuses[1]=1)</Property>
 			<Property name="maximumrange" type="0">(BaseValue=6000.0f)</Property>
 			<Property name="rank2grenadeupgrade" type="0">1</Property>
@@ -4259,7 +4260,8 @@
 			<Property name="evolve_radiusbonus" type="0">0.3f</Property>
 			<Property name="evolve_shielddamagebonus" type="0">0.75f</Property>
 			<Property name="force" type="0">(BaseValue=1000.0f)</Property>
-			<Property name="impactradius" type="0">(BaseValue=600.0f)</Property>
+			<!-- MILAN CHANGE - Make 7m to average the difference from quarian and N7 engineer (1m buff - yeah I know, he doesn't need a buff) -->
+			<Property name="impactradius" type="0">(BaseValue=700.0f)</Property>
 			<Property name="maxgrenadebonus" type="0">(BaseValue=0,Formula=BonusIsHardValue,RankBonuses[1]=1)</Property>
 			<Property name="maximumrange" type="0">(BaseValue=6000.0f)</Property>
 			<Property name="rank2grenadeupgrade" type="0">1</Property>
