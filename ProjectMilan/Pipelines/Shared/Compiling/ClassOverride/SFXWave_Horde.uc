@@ -245,8 +245,18 @@ public function FinishWave()
 {
     local BioPawn Enemy;
     local SFXGRI GRI;
-    
+    local SFXWaveCoordinator_HordeOperation Coord;
+
     GRI = SFXGRI(BioWorldInfo.GRI);
+    // MILAN CHANGE - Mgamerz - 2026-10-21
+    // Only PawnDied/SpawnHorde fire the wave end event, so cheat wave changes don't trigger wave updates
+    // So we fire it here so anyone listening actually gets it
+    Coord = SFXWaveCoordinator_HordeOperation(WaveCoordinator);
+    if (IsActive && BioWorldInfo != None && BioWorldInfo.Role == ENetRole.ROLE_Authority && Coord != None && Coord.ShouldStartNewWaves)
+    {
+        TriggerWaveEndEvent(CurrentWave);
+    }
+    // END MILAN CHANGE
     EndlessWave = FALSE;
     if (BioWorldInfo != None && BioWorldInfo.Role == ENetRole.ROLE_Authority && GRI != None && GRI.NumLivingPlayers() > 0 && !GRI.IsGameOver())
     {
@@ -897,7 +907,15 @@ public function TriggerWaveEndEvent(int Wave)
     local array<SequenceObject> WaveEndEvents;
     local int Index;
     local SFXSeqEvt_HordeWaveEnd Event;
-    
+
+    // MILAN CHANGE - Mgamerz - 2026-10-21
+    // Fire if wave is actually over so counters are actually accurate.
+    if (bWaveIsOver)
+    {
+        return;
+    }
+    bWaveIsOver = TRUE;
+    // END MILAN CHANGE
     if (BioWorldInfo != None)
     {
         PlayerController = BioWorldInfo.GetLocalPlayerController();
