@@ -159,7 +159,7 @@ namespace ProjectMilan.Pipelines.Levels
                     MapListInfo = new MapListEntry { PackageName="BioP_MPRctr2", PrettyNameStrRefId=772396, DescriptionStrRefId=618044, GAWMapPositionX=111, GAWMapPositionY=333, GAWMapSubtitleStrRefId=706336, ImageObjectPath="GUI_MPImages_MP4.OptMapMeltdown", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled = true, // Ghost - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPSlum2", PrettyNameStrRefId=772394, DescriptionStrRefId=618042, GAWMapPositionX=310, GAWMapPositionY=403, GAWMapSubtitleStrRefId=706335, ImageObjectPath="GUI_MPImages_MP4.OptMapAcid", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled = true, SpecialFixes = new MPTowr2Specific(), // Giant - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled = true, SpecialFixes = new MPTowr2Specific(), UE4Lightmass = MPTowr2Specific.BakeTuning, // Giant - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPTowr2", PrettyNameStrRefId=772399, DescriptionStrRefId=618043, GAWMapPositionX=195, GAWMapPositionY=358, GAWMapSubtitleStrRefId=706332, ImageObjectPath="GUI_MPImages_MP4.OptMapTower", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 
                 // MP5 Reckoning
@@ -316,6 +316,9 @@ namespace ProjectMilan.Pipelines.Levels
                     }
                 }
 
+                // After the bake's export, so these changes only reach the game
+                level.SpecialFixes?.PostLightingCorrect(level);
+
                 if (level.MapListInfo != null)
                 {
                     MapListConfigWriter.RegisterMap(level.MapListInfo);
@@ -399,9 +402,20 @@ namespace ProjectMilan.Pipelines.Levels
         }
 
         /// <summary>
+        /// Classes of SP auto persistent objects that are ported: the assets the level itself needs loaded. The SP lists also
+        /// carry content for SP-only scenes (BioP_SPRctr's has characters, animations and an ambient performance that drags
+        /// in a whole copy of the Avenger's class), which the MP map has no use for.
+        /// </summary>
+        private static readonly HashSet<string> PortedSPAutoPersistentClasses = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "Texture2D", "TextureCube", "Material", "MaterialInstanceConstant", "StaticMesh", "WwiseBank", "WwiseEvent"
+        };
+
+        /// <summary>
         /// The basegame MP maps are our own copies with nothing in them, they are missing content from their SP counterparts.
         /// the SP map's m_AutoPersistentObjects (textures, materials, etc that must always be loaded with
-        /// the level). Ports the local content (skipping imports) from BioP_SP[mapname] into the MP BioP.
+        /// the level). Ports the local content (skipping imports) from BioP_SP[mapname] into the MP BioP,
+        /// limited to <see cref="PortedSPAutoPersistentClasses"/>.
         /// </summary>
         private static void PortSPAutoPersistentObjects(LevelSpecificPipeline levelPipeline)
         {
@@ -427,6 +441,12 @@ namespace ProjectMilan.Pipelines.Levels
                 // imports are shared assets that don't need to be explicitly re-added.
                 if (objProp.ResolveToEntry(spBioP) is not ExportEntry sourceExport)
                     continue;
+
+                if (!PortedSPAutoPersistentClasses.Contains(sourceExport.ClassName))
+                {
+                    MilanLog.Information($"Not porting persistent object {sourceExport.InstancedFullPath} ({sourceExport.ClassName}) from {spBioPName}: not a level asset", customPrefix: levelPipeline.LogCategory);
+                    continue;
+                }
 
                 MilanLog.Information($"Porting persistent object {sourceExport.InstancedFullPath} from {spBioPName}", customPrefix: levelPipeline.LogCategory);
                 EntryExporter.ExportExportToPackage(sourceExport, target, out var newObj, levelPipeline.Cache);

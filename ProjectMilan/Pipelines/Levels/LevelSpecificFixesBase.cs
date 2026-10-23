@@ -15,6 +15,13 @@ namespace ProjectMilan.Pipelines.Levels
         public virtual string[] IgnoredLightingLevels => null;
 
         /// <summary>
+        /// Return true to keep a component's ported ME3 lighting (lightmap, shadow maps and IrrelevantLights) instead of
+        /// installing the UDK bake on it. For components the bake lights in a way ME3 never did.
+        /// </summary>
+        /// <param name="component">Component in the LE3 level package being relit</param>
+        public virtual bool KeepPortedLighting(ExportEntry component) => false;
+
+        /// <summary>
         /// Ports the level in place of the generic level port. Return false to use the generic port, which is the one that runs
         /// <see cref="PreCorrect"/> and <see cref="PostCorrect"/>.
         /// </summary>

@@ -19,9 +19,10 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
     /// <see cref="ConsumablePowerClass"/> property, like SFXWeapon_Heavy_ConsumableRocketLauncher's Power - is dynamic load
     /// mapped to its package and preloaded by every player, so the rocket consumable power can create it by class path, and
     /// gets its name, descriptions and icons set in its BioWeapon section. Every consumable class needs an entry in <see cref="HeavyWeapons"/> for those.
+    /// Each consumable also gets a generated _Hidden subclass with bHiddenVariant set. The built-in Cobra
+    /// gets the same treatment in BIOP_MP_COMMON. Hidden classes share the original tuning and UI overrides.
     /// <para/>
-    /// Not done yet: the rocket consumable in BIOP_MP_COMMON only creates the class it names itself. It will read the
-    /// registered weapons once there is a heavy weapon selection and an identifier to select by.
+    /// Emits the shared stable-ID selector/spawn catalog. Visible and hidden choices have separate permanent IDs.
     /// </summary>
     internal static class HeavyWeaponsPipeline
     {

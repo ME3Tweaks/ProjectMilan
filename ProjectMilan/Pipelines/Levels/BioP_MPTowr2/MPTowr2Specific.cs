@@ -1,7 +1,8 @@
-﻿using LegendaryExplorerCore.Gammtek.Extensions;
+using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
+using ProjectMilan.Pipelines.StaticLighting;
 using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
@@ -11,12 +12,32 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
     /// </summary>
     internal class MPTowr2Specific : LevelSpecificFixesBase
     {
-        // Independent absolute brightness values for the broad outdoor lighting. Rebuild and rebake
-        // MPTowr2 after tuning these; cached lightmaps retain the previous lighting.
+        // Independent absolute brightness values for the broad outdoor lighting.
         // Original ME3 values: directional = 1, PointLight_LC_105 = 0.1, PointLight_LC_33 = 0.03.
         private const float DirectionalLightBrightness = 0.05f;
         private const float PointLight105Brightness = 0.02f;
         private const float PointLight33Brightness = 0.006f;
+
+        // A dark map for flashlights (tested 2026-10-17). The point/spot lights are dimmed and shrunk by the same factor in
+        // the bake and on the light components that light characters, so characters don't stand out from the lightmaps
+        private const float LocalLightScale = 0.65f;
+
+        /// <summary>
+        /// Reduce lighting bounce and reduce light radius/brightness so the level gets significantly darker
+        /// </summary>
+        public static UE4LightmassSettings BakeTuning => new()
+        {
+            DiffuseBoostScale = 0.2f,
+            IndirectLightingBounces = 1,
+            LocalLightBrightnessScale = LocalLightScale,
+            LocalLightRadiusScale = LocalLightScale,
+        };
+
+        /// <summary>
+        /// How brightly lights light characters, to match <see cref="BakeTuning"/>: point/spot lights as in the bake, their
+        /// light-environment bounce cut like the bake's (x0.2), and the six character-only directional fill lights halved.
+        /// </summary>
+        private static readonly CharacterLightingTuning CharacterLighting = new(LocalLightScale: LocalLightScale, BouncedLightScale: 0.2f, CharacterLightScale: 0.5f);
 
         private const string LightingPackageName = "BioA_MPTowr2_200";
         private const string LightCollectionPath = "TheWorld.PersistentLevel.StaticLightCollectionActor_44";
@@ -27,12 +48,154 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
             ("PointLight_LC_33", "PointLightComponent", PointLight33Brightness)
         ];
 
+        // These need StaticLighting channels enabled or flashlights don't affect them
+        // Why does dynamic lights need static? No idea
+        private static readonly string[] StructuralLightingTargets =
+        [
+            "TheWorld.PersistentLevel.StaticMeshActor_495.StaticMeshComponent_317",
+            "TheWorld.PersistentLevel.StaticMeshActor_513.StaticMeshComponent_317",
+            "TheWorld.PersistentLevel.StaticMeshActor_550.StaticMeshComponent_317",
+            "TheWorld.PersistentLevel.StaticMeshActor_898.StaticMeshComponent_317",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_183.StaticMeshActor_SMC_470",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_183.StaticMeshActor_SMC_511",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_184.StaticMeshActor_SMC_1229",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_184.StaticMeshActor_SMC_518",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_184.StaticMeshActor_SMC_908",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_1076",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_1214",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_1275",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_1277",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_1668",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_1670",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_1856",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_358",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_368",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_432",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_458",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_472",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_474",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_508",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_188.StaticMeshActor_SMC_1227",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_188.StaticMeshActor_SMC_1503",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_188.StaticMeshActor_SMC_1673",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_189.StaticMeshActor_SMC_1026",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_189.StaticMeshActor_SMC_1223",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_189.StaticMeshActor_SMC_1235",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_189.StaticMeshActor_SMC_1286",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_189.StaticMeshActor_SMC_1904",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_189.StaticMeshActor_SMC_617",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_1875",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_656",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_925",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_1049",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_1375",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_1408",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_1413",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_1414",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_1415",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_1416",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_1417",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_501",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_192.StaticMeshActor_SMC_963",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_1151",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_1492",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_1833",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_1850",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_1885",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_1941",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_49",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_533",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_763",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_196.StaticMeshActor_SMC_775",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_1677",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_1791",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_1832",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_1909",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_1910",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_1911",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_48",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_650",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_197.StaticMeshActor_SMC_747",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_198.StaticMeshActor_SMC_578",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_198.StaticMeshActor_SMC_651",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_198.StaticMeshActor_SMC_746",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_199.StaticMeshActor_SMC_461",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_199.StaticMeshActor_SMC_473",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_199.StaticMeshActor_SMC_838",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1045",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1089",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1150",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1236",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_125",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1364",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1372",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1391",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1746",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1748",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1757",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1779",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1792",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1806",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1808",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1817",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1820",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1821",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1827",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1876",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_1924",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_545",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_632",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_65",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1437",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1809",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1886",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1902",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1917",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1918",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1919",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1942",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1943",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_1951",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_242",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_782",
+        ];
+
+        private static void EnableStructuralStaticLighting(LevelSpecificPipeline pipeline, IMEPackage package)
+        {
+            // Validate the entire list before modifying any component
+            var components = StructuralLightingTargets.Select(path =>
+            {
+                var component = package.FindExport(path);
+                if (component?.ClassName != "StaticMeshComponent" || component.GetProperty<StructProperty>("LightingChannels") == null)
+                {
+                    throw new InvalidOperationException($"MPTowr2 lighting: expected StaticMeshComponent with LightingChannels at {package.FileNameNoExtension}.{path}.");
+                }
+                return component;
+            }).ToArray();
+
+            var changed = 0;
+            foreach (var component in components)
+            {
+                var channels = component.GetProperty<StructProperty>("LightingChannels");
+                if (channels.Properties.GetProp<BoolProperty>("Static")?.Value == true)
+                {
+                    continue;
+                }
+                channels.Properties.AddOrReplaceProp(new BoolProperty(true, "Static"));
+                component.WriteProperty(channels);
+                changed++;
+            }
+            MilanLog.Information($"MPTowr2 structural lighting: enabled Static on {changed} of {components.Length} components", customPrefix: pipeline.LogCategory);
+        }
+
         public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
             if (!pipeline.ME3Packages.TryGetValue(LightingPackageName, out var package))
                 throw new InvalidOperationException($"MPTowr2 lighting: required package {LightingPackageName} was not loaded.");
 
             ApplyLightBrightness(pipeline, path => package.FindExport(path));
+
+            EnableStructuralStaticLighting(pipeline, package);
         }
 
         public override void CorrectUDKExport(LevelSpecificPipeline pipeline, IMEPackage udk)
@@ -90,6 +253,18 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
             smcToFix.WriteProperty(new ObjectProperty(newVolumetricFog, "StaticMesh"));
 
             UseFlashlightsForLevel(pipeline);
+        }
+
+        public override void PostLightingCorrect(LevelSpecificPipeline pipeline)
+        {
+            // The *_UI_Lights sublevel's lights are left as they are; every other light is in this package
+            var packagePath = Path.Combine(pipeline.LevelOutputDir, $"{LightingPackageName}.pcc");
+            using var package = MEPackageHandler.OpenMEPackage(packagePath);
+            var (local, character) = CharacterLighting.Apply(package);
+            if (package.IsModified)
+                package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+            MilanLog.Information($"MPTowr2 character lighting: scaled {local} point/spot lights and {character} character-only lights " +
+                $"({CharacterLighting})", customPrefix: pipeline.LogCategory);
         }
     }
 }
