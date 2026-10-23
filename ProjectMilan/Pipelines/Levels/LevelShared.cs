@@ -29,14 +29,14 @@ namespace ProjectMilan.Pipelines.Levels
         }
 
         /// <summary>
-        /// Multiplies explicitly-authored culling distances on populated StaticMeshComponents and CullDistanceVolumes
+        /// Multiplies explicitly-authored culling distances on populated StaticMeshComponents, placed DecalComponents and CullDistanceVolumes
         /// in one package. Components without a serialized distance keep their class/archetype default. Cull-distance
         /// volume size thresholds and class defaults are left unchanged.
         /// </summary>
         /// <param name="package">Level package to adjust. Call once for each level/sublevel package being built.</param>
         /// <param name="multiplier">Factor applied to explicit component and volume culling distances; must be finite and non-negative.</param>
         /// <returns>Number of component and volume exports changed.</returns>
-        public static int MultiplyStaticMeshComponentCullingDistances(IMEPackage package, float multiplier)
+        public static int MultiplyLevelCullingDistances(IMEPackage package, float multiplier)
         {
             ArgumentNullException.ThrowIfNull(package);
             if (!float.IsFinite(multiplier) || multiplier < 0)
@@ -45,6 +45,7 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             var updatedComponentCount = 0;
+            var updatedDecalCount = 0;
             var updatedVolumeCount = 0;
             var updatedVolumeEntryCount = 0;
             foreach (var export in package.Exports)
@@ -83,7 +84,12 @@ namespace ProjectMilan.Pipelines.Levels
                     continue;
                 }
 
-                if (!export.IsA("StaticMeshComponent") || export.GetProperty<ObjectProperty>("StaticMesh")?.Value is not > 0)
+                // Wall decals need the extra distance too; impact templates don't.
+                var isPlacedDecal = export.IsA("DecalComponent") &&
+                                    export.InstancedFullPath.StartsWith("TheWorld.PersistentLevel.", StringComparison.OrdinalIgnoreCase);
+                var isPopulatedMesh = export.IsA("StaticMeshComponent") &&
+                                      export.GetProperty<ObjectProperty>("StaticMesh")?.Value is > 0;
+                if (!isPopulatedMesh && !isPlacedDecal)
                 {
                     continue;
                 }
@@ -95,8 +101,7 @@ namespace ProjectMilan.Pipelines.Levels
                     continue;
                 }
 
-                // Update the authored value and its serialized runtime/cache counterpart, but don't create an
-                // override when both are absent: those components inherit the class/archetype default.
+                // Keep inherited distances and unlimited (zero) distances as they are.
                 var componentUpdated = false;
                 if (maxDrawDistance != null)
                 {
@@ -119,23 +124,33 @@ namespace ProjectMilan.Pipelines.Levels
 
                 if (componentUpdated)
                 {
+                    if (isPlacedDecal)
+                        updatedDecalCount++;
+                    else
                     updatedComponentCount++;
                 }
             }
 
-            MilanLog.Information($"Multiplied culling distances by {multiplier:0.##} on {updatedComponentCount} mesh component(s) and {updatedVolumeEntryCount} CullDistanceVolume table entries across {updatedVolumeCount} volume(s) in {package.FileNameNoExtension}");
-            return updatedComponentCount + updatedVolumeCount;
+            MilanLog.Information($"Multiplied culling distances by {multiplier:0.##} on {updatedComponentCount} mesh component(s), {updatedDecalCount} placed decal(s) and {updatedVolumeEntryCount} CullDistanceVolume table entries across {updatedVolumeCount} volume(s) in {package.FileNameNoExtension}");
+            return updatedComponentCount + updatedDecalCount + updatedVolumeCount;
         }
 
         /// <summary>
-        /// Keeps the ported (ME3) lighting on StaticMeshComponents authored with bAcceptsLights=False instead of installing
+        /// Whether to keep the ported (ME3) lighting on a StaticMeshComponent authored with bAcceptsLights=False instead of installing
         /// the UDK bake. ME3 shipped these with no static lighting (volumetric beams, sky domes, mattes), but the UDK export
         /// strips bAcceptsLights so Lightmass lights them anyway. In LE3 a lit LOD makes FStaticMeshSceneProxy require
         /// MATUSAGE_StaticLighting and, for LMET_Vector, MATUSAGE_VectorLightMaps; their materials lack the latter, so the
         /// engine silently swaps in DefaultMaterial. They are still exported, so any that cast shadows still occlude.
         /// </summary>
-        private static bool KeepPortedLighting(ExportEntry component) =>
+        private static bool IsOriginallyUnlit(ExportEntry component) =>
             component.IsA("StaticMeshComponent") && component.GetProperty<BoolProperty>("bAcceptsLights") is { Value: false };
+
+        /// <summary>
+        /// Components that keep their ported (ME3) lighting when importing <paramref name="level"/>'s bake: authored-unlit
+        /// ones (<see cref="IsOriginallyUnlit"/>) and any the level picks (<see cref="LevelSpecificFixesBase.KeepPortedLighting"/>).
+        /// </summary>
+        private static Func<ExportEntry, bool> KeepPortedLighting(LevelSpecificPipeline level) =>
+            component => IsOriginallyUnlit(component) || (level.SpecialFixes?.KeepPortedLighting(component) ?? false);
 
         /// <summary>
         /// Warns about StaticMeshComponents still carrying their ported ME3 lighting on a mesh whose geometry is no longer
@@ -219,7 +234,7 @@ namespace ProjectMilan.Pipelines.Levels
                 IncludeSubLevels = includeSublevels,
                 UDKMapsBasePath = StaticLightingCache.GetLevelFolder(level.BioP, lightmass),
                 IgnoredSublevelNames = level.IgnoredLightingLevels,
-                ShouldKeepLightMap = KeepPortedLighting
+                ShouldKeepLightMap = KeepPortedLighting(level)
             };
 
             // Encoded lightmap mips are cached beside the baked maps, so importing this bake again skips the encoding
@@ -514,7 +529,7 @@ namespace ProjectMilan.Pipelines.Levels
                         IncludeSubLevels = false,
                         UDKMapsBasePath = Directory.GetParent(staticLightingPath).FullName,
                         IgnoredSublevelNames = levelPipeline.IgnoredLightingLevels,
-                        ShouldKeepLightMap = KeepPortedLighting
+                        ShouldKeepLightMap = KeepPortedLighting(levelPipeline)
                     };
 
                     using var lightmapMipCache = LightmapMipCache.Attach(setup, levelPipeline.BioP);
@@ -525,6 +540,10 @@ namespace ProjectMilan.Pipelines.Levels
                 // Only here: a -BuildStaticLighting run imports later, from MPLevels, after this package is saved.
                 WarnOnMismatchedPortedLighting(levelPipeline, sourcePackage, destPackage, relitComponents);
             }
+
+            // ME3's short draw distances are pretty noticeable on walls and decals.
+            // Fresh ports only, so rebuilding doesn't keep doubling the distances.
+            MultiplyLevelCullingDistances(destPackage, 2f);
 
             // Calculate a very basic texture to instances map
             LevelTools.CalculateTextureToInstancesMap(destPackage, levelPipeline.Cache);
