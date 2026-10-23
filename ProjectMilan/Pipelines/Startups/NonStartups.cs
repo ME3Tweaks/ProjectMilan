@@ -62,7 +62,7 @@ namespace ProjectMilan.Pipelines.Startups
         /// <summary>
         /// AmmoPowers
         /// </summary>
-        Ammo,
+        Consumables,
 
         /// <summary>
         /// Enemy pawns
@@ -202,8 +202,10 @@ namespace ProjectMilan.Pipelines.Startups
             { "SFXMP5Gear", NonStartupCategory.Gear },
             { "SFXSharedGear", NonStartupCategory.Gear },
 
-            // --- Ammo ---
-            { "SFXMP4AmmoPowers", NonStartupCategory.Ammo },
+            // --- Consumables ---
+            { "SFXGE_MatchConsumables", NonStartupCategory.Consumables },
+            { "SFXGE_MP1_MatchConsumables", NonStartupCategory.Consumables },
+            { "SFXMP4AmmoPowers", NonStartupCategory.Consumables },
 
             // --- Pawns ---
             { "SFXPawn_Abomination", NonStartupCategory.Pawns },
