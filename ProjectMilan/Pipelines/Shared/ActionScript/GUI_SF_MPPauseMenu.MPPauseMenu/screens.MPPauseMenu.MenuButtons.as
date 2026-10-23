@@ -547,11 +547,11 @@ class screens.MPPauseMenu.MenuButtons extends com.SFXMovieClip
          if(this.ScrollOffset + _loc2_ < _loc3_.length)
          {
             var entry = _loc3_[this.ScrollOffset + _loc2_];
-            this.Buttons[_loc2_].SetLineInfo(true,entry.DisplayName,entry.Score,entry.Ping,entry.IsLocal);
+            this.Buttons[_loc2_].SetLineInfo(true,entry.DisplayName,entry.Score,entry.Ping,entry.IsLocal,entry.IsDead);
          }
          else
          {
-            this.Buttons[_loc2_].SetLineInfo(false,"","","",false);
+            this.Buttons[_loc2_].SetLineInfo(false,"","","",false,false);
          }
          _loc2_ = _loc2_ + 1;
       }
