@@ -3057,6 +3057,23 @@
 		<Section name="sfxgamecontent.sfxprojectile_powercustomaction_proximitymine">
 			<Property name="bignoremultiplayerwaveendcleanup" type="0">true</Property>
 		</Section>
+		<Section name="sfxgamecontent_milan.milanscreenoverlaysettings">
+			<Property name="overlays">
+				<Value type="3">(Overlay=GethVision,ProfileIndex=0,DefaultLevel=1,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=Bloodlust,ProfileIndex=1,DefaultLevel=1,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=RepairMatrix,ProfileIndex=2,DefaultLevel=1,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=KroganRage,ProfileIndex=3,DefaultLevel=1,bAllowNone=true)</Value>
+			</Property>
+			<Property name="targets">
+				<Value type="3">(Overlay=GethVision,Type=OTT_DistributionOutput,ObjectPath="BioVFX_DLC_MP1_Geth.Particles.GethVision_Gui.ParticleModuleColorOverLife_0.DistributionFloatParticleParameter_2310",Field=MaxOutput,Normal=20.0,Reduced=7.0,Off=0.0)</Value>
+				<Value type="3">(Overlay=GethVision,Type=OTT_DistributionOutput,ObjectPath="BioVFX_MP5_Gear.Particles.GethVision_Gui_MP5.ParticleModuleColorOverLife_0.DistributionFloatParticleParameter_2310",Field=MaxOutput,Normal=20.0,Reduced=7.0,Off=0.0)</Value>
+				<Value type="3">(Overlay=Bloodlust,Type=OTT_DistributionOutput,ObjectPath="BioVFX_DLC_MP2_Vorcha.Particles.BloodLustVision_01.ParticleModuleColorOverLife_0.DistributionFloatParticleParameter_2310",Field=MaxOutput,Normal=20.0,Reduced=7.0,Off=0.0)</Value>
+				<Value type="3">(Overlay=Bloodlust,Type=OTT_DistributionOutput,ObjectPath="BioVFX_DLC_MP2_Vorcha.Particles.BloodLustVision_02.ParticleModuleColorOverLife_0.DistributionFloatParticleParameter_2310",Field=MaxOutput,Normal=20.0,Reduced=7.0,Off=0.0)</Value>
+				<Value type="3">(Overlay=Bloodlust,Type=OTT_DistributionOutput,ObjectPath="BioVFX_DLC_MP2_Vorcha.Particles.BloodLustVision_03.ParticleModuleColorOverLife_0.DistributionFloatParticleParameter_2310",Field=MaxOutput,Normal=20.0,Reduced=7.0,Off=0.0)</Value>
+				<Value type="3">(Overlay=RepairMatrix,Type=OTT_DistributionOutput,ObjectPath="BioVFX_MP5_Fembot.Particles.RepairMatrix_FB.ParticleModuleColorOverLife_0.DistributionFloatParticleParameter_2310",Field=MaxOutput,Normal=20.0,Reduced=7.0,Off=0.0)</Value>
+				<Value type="3">(Overlay=KroganRage,Type=OTT_ScalarParameter,ObjectPath="BioVFX_C_KroganBerserk.FrameBuffer.KroganBerserk_FB_INST",Field=Intensity,Normal=1.0,Reduced=0.4,Off=0.0)</Value>
+			</Property>
+		</Section>
 		<Section name="sfxgamecontentdlc_con_mp1.sfxcharacterclassmp_adept_asaricommando">
 			<Property name="mappedpowers">
 				<Value type="3">SFXPowerCustomActionMP_BubbleShield</Value>
