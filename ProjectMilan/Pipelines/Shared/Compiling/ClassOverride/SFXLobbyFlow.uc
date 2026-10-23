@@ -421,7 +421,9 @@ public final function ShowHostNewMissionScreen()
 }
 public final function ShowLeaderboardScreen()
 {
-    Class'SFXGUIInteraction'.static.GetInstance().ShowLeaderboard(GetPC(), FinishLeaderboardScreen);
+    // MILAN CHANGE - Mgamerz - 2026-10-21: Leaderboards is replaced by the banner picker
+    Class'SFXGUI_MilanBannerSelect'.static.ShowBannerSelect(GetPC(), FinishLeaderboardScreen);
+    // END MILAN CHANGE
     // MILAN CHANGE - SET SCREEN VALUE
     GetPRI().SetLobbyScreen(8);
     // END MILAN CHANGE
