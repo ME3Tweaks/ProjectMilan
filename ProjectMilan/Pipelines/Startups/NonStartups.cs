@@ -294,38 +294,6 @@ namespace ProjectMilan.Pipelines.Startups
             MilanPipelinesShared.CommitConfigBundle(); // Flush the image packages' dynamic load mappings and the online content using them
         }
 
-        /// <summary>
-        /// Ported packages that hold weapon and weapon mod images. Their textures are also in the merged weapon packages
-        /// (built later, by the Weapons pipeline), and a texture needs the same mips wherever its object path is found, so they
-        /// are mipped the same way.
-        /// </summary>
-        private static readonly (NonStartupCategory Category, string Package)[] WeaponImagePackages =
-        [
-            (NonStartupCategory.GUI, "SFXGUI_WeaponUIDataDLC_SharedSF"),
-            (NonStartupCategory.Images, "SFXSharedModImages"),
-            (NonStartupCategory.Images, "SFXMP5WeaponImages"),
-            (NonStartupCategory.Images, "SFXMP5ModImages"),
-        ];
-
-        private static void MipWeaponImagePackages(string outputPath)
-        {
-            foreach (var (category, packageName) in WeaponImagePackages)
-            {
-                var path = Path.Combine(outputPath, category.ToString(), $"{packageName}.pcc");
-                if (!File.Exists(path))
-                {
-                    MilanLog.Warning($"Weapon image package {packageName} was not built, so its textures were not mipped", customPrefix: LOG_CATEGORY);
-                    continue;
-                }
-
-                using var package = MEPackageHandler.OpenMEPackage(path, forceLoadFromDisk: true);
-                if (GUITextureMipper.GenerateMipsForPackage(package) > 0)
-                {
-                    package.Save();
-                }
-            }
-        }
-
         private static void NonStartupPrecorrection(IMEPackage me3File, string logCategory)
         {
             // Precorrection logic specific to NonStartup files can be implemented here.

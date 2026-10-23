@@ -1,6 +1,7 @@
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
 using ProjectMilanCore;
 using System.Numerics;
@@ -29,13 +30,43 @@ namespace ProjectMilan.Pipelines.Startups
         public const string MippedTextureGroup = "TEXTUREGROUP_Promotional";
 
         /// <summary>
-        /// Gives every single mip TEXTUREGROUP_UI texture in a package a full mip chain (see <see cref="GenerateMipsForGUITexture"/>).
-        /// Textures in any other group are left alone, as are ones that already have a chain.
+        /// Rebuilds the selection from output packages, including after a checkpoint restore. These are the
+        /// packages previously mipped by Weapons/NonStartup; every copy of their UI texture paths is selected.
+        /// The editable registry and pre-upscale inventory are deliberately separate future work.
+        /// </summary>
+        public static HashSet<string> DiscoverTexturePaths(string outputPath)
+        {
+            var sources = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "SFXGUI_WeaponUIDataDLC_CON_MPMerged", "SFXGUI_WeaponUIDataDLC_CON_MPMergedMods",
+                "SFXGUI_WeaponUIDataDLC_SharedSF", "SFXSharedModImages",
+                "SFXMP5WeaponImages", "SFXMP5ModImages",
+            };
+            var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var file in Directory.EnumerateFiles(outputPath, "*.pcc", SearchOption.AllDirectories)
+                         .Where(file => sources.Contains(Path.GetFileNameWithoutExtension(file))))
+            {
+                using var package = MEPackageHandler.UnsafePartialLoad(file, export => export.ClassName == "Texture2D");
+                foreach (var texture in package.Exports.Where(export => export.ClassName == "Texture2D" && !export.IsDefaultObject))
+                {
+                    var group = texture.GetProperty<EnumProperty>("LODGroup")?.Value.Name;
+                    if (group is "TEXTUREGROUP_UI" or MippedTextureGroup)
+                    {
+                        paths.Add(texture.InstancedFullPath);
+                    }
+                }
+            }
+            return paths;
+        }
+
+        /// <summary>
+        /// Applies the selected GUI texture policy to every matching copy in a package.
+        /// Existing chains are kept, with package residency enforced.
         /// </summary>
         /// <param name="package">The package to mip the textures of. Not saved.</param>
         /// <param name="options">How the lower mips are filtered; null for <see cref="MipGenerationOptions.HighQuality"/>.</param>
         /// <returns>How many textures were given mips.</returns>
-        public static int GenerateMipsForPackage(IMEPackage package, MipGenerationOptions? options = null)
+        public static int GenerateMipsForPackage(IMEPackage package, IReadOnlySet<string> texturePaths, MipGenerationOptions? options = null)
         {
             int mipped = 0;
             long bytesBefore = 0;
@@ -45,8 +76,10 @@ namespace ProjectMilan.Pipelines.Startups
             // Mipping rewrites the export's data, so take the list first
             foreach (var exp in package.Exports.Where(x => x.ClassName == "Texture2D").ToList())
             {
-                if (exp.GetProperty<EnumProperty>("LODGroup") is not { Value.Name: "TEXTUREGROUP_UI" })
+                if (!texturePaths.Contains(exp.InstancedFullPath))
+                {
                     continue;
+                }
 
                 var before = new Texture2D(exp).Mips.Where(x => x.storageType != StorageTypes.empty).Sum(x => (long)x.uncompressedSize);
                 if (GenerateMipsForGUITexture(exp, options))
@@ -57,7 +90,7 @@ namespace ProjectMilan.Pipelines.Startups
                 }
             }
 
-            MilanLog.Information($"Generated mips for {mipped} GUI texture(s) in {package.FileNameNoExtension} in {stopwatch.Elapsed.TotalSeconds:0.#}s " +
+            MilanLog.Information($"Applied GUI mip/residency policy to {mipped} GUI texture(s) in {package.FileNameNoExtension} in {stopwatch.Elapsed.TotalSeconds:0.#}s " +
                                  $"(texture data {bytesBefore / 1048576.0:0.#} MiB -> {bytesAfter / 1048576.0:0.#} MiB)", customPrefix: LOG_CATEGORY);
             return mipped;
         }
@@ -70,14 +103,14 @@ namespace ProjectMilan.Pipelines.Startups
         /// </summary>
         /// <param name="packagePaths">The packages to compare.</param>
         /// <returns>How many object paths had copies that differ.</returns>
-        public static int VerifyTexturesAreConsistent(IReadOnlyCollection<string> packagePaths)
+        public static int VerifyTexturesAreConsistent(IReadOnlyCollection<string> packagePaths, IReadOnlySet<string> texturePaths)
         {
             // Opening a package is cheap, decoding its textures is not: find the shared paths first
             var packagesByTexture = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
             foreach (var path in packagePaths)
             {
                 using var package = MEPackageHandler.OpenMEPackage(path, forceLoadFromDisk: true);
-                foreach (var exp in package.Exports.Where(x => x.ClassName == "Texture2D"))
+                foreach (var exp in package.Exports.Where(x => x.ClassName == "Texture2D" && texturePaths.Contains(x.InstancedFullPath)))
                 {
                     if (!packagesByTexture.TryGetValue(exp.InstancedFullPath, out var packages))
                     {
@@ -132,13 +165,14 @@ namespace ProjectMilan.Pipelines.Startups
                 all.AddRange(Texture2D.GetTextureData(mip, exp.Game));
             }
 
-            return $"{mips[0].width}x{mips[0].height}, {mips.Count} mips, {texture.TextureFormat}, top {Texture2D.GetTextureCRC(exp):X8}, all {TextureCRC.Compute(all.ToArray()):X8}";
+            var props = exp.GetProperties();
+            return $"{props.GetProp<EnumProperty>("LODGroup")?.Value.Name}, NeverStream={props.GetProp<BoolProperty>("NeverStream")?.Value == true}, local={mips.All(mip => mip.IsPackageStored)}, {mips[0].width}x{mips[0].height}, {mips.Count} mips, {texture.TextureFormat}, top {Texture2D.GetTextureCRC(exp):X8}, all {TextureCRC.Compute(all.ToArray()):X8}";
         }
 
         /// <summary>
         /// Moves a GUI texture out of TEXTUREGROUP_UI and gives it a full mip chain, so that Scaleform filters it down
-        /// when it is shown smaller than it is stored. A texture that already has a chain only has its group changed.
-        /// A texture that can't be mipped (stored in a TFC, or not a power of two) is left exactly as it was, in UI.
+        /// when it is shown smaller than it is stored. Existing chains are retained and made package-resident.
+        /// Non-power-of-two textures are left unchanged.
         /// </summary>
         /// <param name="exp">A Texture2D export, as a single mip UI texture. The top mip is kept exactly as it is.</param>
         /// <param name="options">How the lower mips are filtered; null for <see cref="MipGenerationOptions.HighQuality"/> (Lanczos, a mild sharpen, and
@@ -160,32 +194,44 @@ namespace ProjectMilan.Pipelines.Startups
                 return false;
             }
 
-            bool hasChain = texture.Mips.Count(x => x.storageType != StorageTypes.empty) > 1;
-            if (!hasChain)
+            if (!BitOperations.IsPow2(topMip.width) || !BitOperations.IsPow2(topMip.height))
             {
-                if (!topMip.IsPackageStored)
-                {
-                    // The engine can't read a TFC mip of a texture that doesn't stream, and a GUI texture never does
-                    MilanLog.Warning($"GUI texture {exp.InstancedFullPath} is stored in a TFC; mips were not generated", customPrefix: LOG_CATEGORY);
-                    return false;
-                }
+                MilanLog.Warning($"GUI texture {exp.InstancedFullPath} is {topMip.width}x{topMip.height}, which is not a power of two; mips were not generated", customPrefix: LOG_CATEGORY);
+                return false;
+            }
 
-                if (!BitOperations.IsPow2(topMip.width) || !BitOperations.IsPow2(topMip.height))
-                {
-                    // Mips of a non power of two texture are not a chain the engine can use
-                    MilanLog.Warning($"GUI texture {exp.InstancedFullPath} is {topMip.width}x{topMip.height}, which is not a power of two; mips were not generated", customPrefix: LOG_CATEGORY);
-                    return false;
-                }
+            bool hasChain = texture.Mips.Count(x => x.storageType != StorageTypes.empty) > 1;
+            bool changed = false;
+            if (texture.Mips.Any(mip => mip.storageType != StorageTypes.empty && !mip.IsPackageStored))
+            {
+                // Read every payload before mutating the export. Never mark an external chain NeverStream:
+                // first bring its encoded bytes back into the package, without recompressing the artwork.
+                var residentMips = texture.Mips.Where(mip => mip.storageType != StorageTypes.empty)
+                    .Select(mip => new UTexture2D.Texture2DMipMap(Texture2D.GetTextureData(mip, exp.Game), mip.width, mip.height))
+                    .ToList();
+                var binary = exp.GetBinaryData<UTexture2D>();
+                binary.Mips = residentMips;
+                exp.WriteBinary(binary);
+                texture = new Texture2D(exp);
+                changed = true;
             }
 
             // Change the texture group to "Promotional" so that it will be mipped by engine
             var props = exp.GetProperties();
-            bool changed = false;
             if (props.GetProp<EnumProperty>("LODGroup") is not { Value.Name: MippedTextureGroup })
             {
                 props.AddOrReplaceProp(new EnumProperty(MippedTextureGroup, "TextureGroup", exp.Game, "LODGroup"));
                 changed = true;
             }
+
+            if (props.GetProp<BoolProperty>("NeverStream") is not { Value: true })
+            {
+                props.AddOrReplaceProp(new BoolProperty(true, "NeverStream"));
+                changed = true;
+            }
+            changed |= props.RemoveNamedProperty("TextureFileCacheName");
+            changed |= props.RemoveNamedProperty("TFCFileGuid");
+            changed |= props.RemoveNamedProperty("TFCFileGuidHiRes");
 
             // The importer marks single mip GUI textures like this; it would be wrong now, and the editor would regenerate over the chain
             changed |= props.RemoveNamedProperty("CompressionNoMipmaps");
