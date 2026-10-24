@@ -30,6 +30,10 @@ var config float JoinInProgressReplicationDelay;
 var config float BackToLobbyFailSafeDelay;
 var bool bTriggeredLoad;
 var bool bWaitingForPlayers;
+// MILAN CHANGE - Mgamerz - 2026-10-22
+// When value is above zero, actions checking no valid path to target should be suppressed
+var transient int TemporaryNavBlockCount;
+// END MILAN CHANGE
 
 public event function GetSeamlessTravelActorList(bool bToEntry, out array<Actor> ActorList)
 {
@@ -129,6 +133,17 @@ public final function UpdateMatchKickVotes()
             return;
         }
     }
+}
+// END MILAN CHANGE
+// MILAN CHANGE - Mgamerz - 2026-10-22
+// Add or remove a temporary nav block in a level
+public final function AddTemporaryNavBlock(bool bAdd)
+{
+    TemporaryNavBlockCount = Max(0, TemporaryNavBlockCount + (bAdd ? 1 : -1));
+}
+public final function bool HasTemporaryNavBlocks()
+{
+    return TemporaryNavBlockCount > 0;
 }
 // END MILAN CHANGE
 public event function PostBeginPlay()
