@@ -120,6 +120,10 @@
     <String id="49875788">Low</String>
     <String id="49875789">Medium</String>
     <String id="49875790">High</String>
+    <String id="49875791">Photo Overlays</String>
+    <String id="49875792">Hint Popups</String>
+    <String id="49875793">Grenade Indicators</String>
+    <String id="49875794">Movement Smoothing</String>
     <!--Male entries section end-->
     <!--Female entries section begin-->
     <String id="49875625">Female</String>
