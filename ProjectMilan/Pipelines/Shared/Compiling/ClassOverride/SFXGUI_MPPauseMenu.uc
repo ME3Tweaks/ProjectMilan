@@ -17,7 +17,7 @@ struct PauseMenuScoreData
     var bool CanVote;
     var bool IsLocal;
     // MILAN CHANGE - Mgamerz - 2026-10-22
-    // Carry replicated permanent-death state to the pause-menu name column.
+    // Track dead players
     var bool IsDead;
     // END MILAN CHANGE
     // END MILAN CHANGE
@@ -328,8 +328,7 @@ public final function array<PauseMenuScoreData> GetScoreData()
             CurrData.CanVote = ActivePlayers > 2 && LocalPRI != None && LocalPRI != PRI && !PRI.bOnlySpectator && !PRI.bIsInactive;
             CurrData.IsLocal = LocalPRI != None && LocalPRI == PRI;
             // MILAN CHANGE - Mgamerz - 2026-10-22
-            // The PRI pawn is replicated to clients; downed players are not dead.
-            // Missing pawns during travel/initial replication do not imply death.
+            // Pass through IsDead data
             CurrData.IsDead = PRI.SFXPawn != None && PRI.SFXPawn.bIsDead;
             // END MILAN CHANGE
             AllScoreData.AddItem(CurrData);
