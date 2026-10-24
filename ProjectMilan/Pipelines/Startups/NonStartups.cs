@@ -88,7 +88,6 @@ namespace ProjectMilan.Pipelines.Startups
             // --- GUI ---
             { "GUI_CollectorHUDOverlay", NonStartupCategory.GUI },
             { "MP_DLC_SFResources_Cooked", NonStartupCategory.GUI },
-            { "SFXGE_MP1_MatchConsumables", NonStartupCategory.GUI },
             // SFXGUI_WeaponUIDataDLC_CON_MP{1-5}SF are NOT ported generically here - their weapon (m_aWeapons)
             // data is merged with the shipped LE3 SP data by PortWeaponDataPackage() instead. SharedSF is still ported
             // generically, but is no longer registered in BioUI: its weapons and mods are merged into the packages built by
@@ -219,7 +218,7 @@ namespace ProjectMilan.Pipelines.Startups
             { "SFXPawn_Marauder2", NonStartupCategory.Pawns },
             { "SFXPawn_Phoenix", NonStartupCategory.Pawns },
             { "SFXPawn_Praetorian", NonStartupCategory.Pawns },
-            { "SFXPawn_Scion", NonStartupCategory.Pawns }
+            { "SFXPawn_Scion", NonStartupCategory.Pawns },
         };
 
         /// <summary>
@@ -289,7 +288,6 @@ namespace ProjectMilan.Pipelines.Startups
             // Our own GUI image packages (e.g. the images ME3 used to download from EA's servers) go alongside
             // the ported ones
             var builtImages = ImagePackageBuilder.BuildImagePackages(Path.Combine(vars.OutputPath, NonStartupCategory.Images.ToString()));
-            MipWeaponImagePackages(vars.OutputPath);
             OnlineContentRegistration.RegisterOnlineBanners(builtImages);
             OnlineContentRegistration.RegisterMilanBanners(builtImages); // This is technically not 'Online' content, but it fits right here anyways.
             OnlineContentRegistration.RegisterOnlineStorePacks(builtImages);
