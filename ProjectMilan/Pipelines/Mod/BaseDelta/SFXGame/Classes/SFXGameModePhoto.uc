@@ -68,7 +68,26 @@ var transient int MPPhotoSpeedIndex;
 var transient int MPPhotoSmoothingIndex;
 var transient bool bMPPhotoNoCollision;
 var transient Rotator MPPhotoDesiredRotation;
-// END MILAN CHANGE
+// MILAN CHANGE - Mgamerz - 2026-10-19
+var transient bool bMPPhotoOverlaysHidden;
+var transient bool bMPPhotoHintsHidden;
+var transient bool bMPPhotoGrenadesHidden;
+var transient BioSFHandler_MessageBox MPPhotoHiddenHint;
+var transient int MPPhotoMovementSmoothingIndex;
+struct MPPhotoSavedOption
+{
+    var int Id;
+    var float Value;
+};
+var transient array<MPPhotoSavedOption> MPPhotoSavedOptions;
+var transient WorldInfo MPPhotoSettingsWorld;
+var transient GameReplicationInfo MPPhotoSettingsGRI;
+var transient int MPPhotoSavedPlayerID;
+var transient bool bMPPhotoHasSavedFraming;
+var transient Rotator MPPhotoSavedRotation;
+// X is follow distance velocity
+// Y is follow height velocity
+var transient Vector MPPhotoFollowMoveVelocity;
 // END MILAN CHANGE
 public function Activated()
 {
@@ -692,6 +711,9 @@ public function ActivateMPPhoto()
     local LocalPlayer LP;
     local BioPlayerInput Input;
 
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    EnsureMPPhotoMatchSettings();
+    // END MILAN CHANGE
     bIsActive = TRUE;
     LP = LocalPlayer(Outer.Player);
     MPPhotoOldCameraStyle = Outer.PlayerCamera.CameraStyle;
@@ -699,7 +721,17 @@ public function ActivateMPPhoto()
     MPPhotoPOV = Outer.PlayerCamera.CameraCache.POV;
     MPPhotoTetherOrigin = MPPhotoPOV.Location;
     MPPhotoRotation = MPPhotoPOV.Rotation;
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    if (bMPPhotoHasSavedFraming) 
+    {
+        MPPhotoRotation = MPPhotoSavedRotation;
+    }
+    // Must keep here so it passes through, 
+    // don't try to optimize like I did... :)
     MPPhotoRotation.Roll = 0;
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    MPPhotoPOV.Rotation = MPPhotoRotation;
+    // END MILAN CHANGE
     MPPhotoDesiredRotation = MPPhotoRotation;
     MPPhotoEntryTime = Outer.WorldInfo.TimeSeconds;
     bMPPhotoLoggedDispatch = FALSE;
@@ -707,10 +739,8 @@ public function ActivateMPPhoto()
     bMPPhotoLoggedUIInput = FALSE;
     bMPPhotoLoggedAxes = FALSE;
     bMPPhotoStateExiting = FALSE;
-    MPPhotoVelocity = vect(0,0,0);
+    ResetMPPhotoMovement();
     MPPhotoBlendRemaining = 0.0;
-    MPPhotoFollowDistance = 300.0;
-    MPPhotoFollowHeight = 50.0;
     bMPPhotoFollow = FALSE;
     Outer.PlayerCamera.CameraStyle = 'Default';
     Outer.bPhotoModeCameraUnlocked = FALSE;
@@ -779,6 +809,11 @@ public function DeactivateMPPhoto()
     local BioPlayerInput Input;
     local bool bReturnToSpectator;
 
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    MPPhotoSavedRotation = MPPhotoRotation;
+    bMPPhotoHasSavedFraming = TRUE;
+    // END MILAN CHANGE
+
     // MILAN CHANGE - Mgamerz - 2026-10-17
     // Revive can already have reset movement and entered PlayerWalking. Do not put the
     // old spectator/death input locks or camera style back over the resumed game state.
@@ -788,6 +823,9 @@ public function DeactivateMPPhoto()
     // Disable first: UI removal and mode changes can both request cleanup.
     bIsActive = FALSE;
     bMPSpectatorPhoto = FALSE;
+    // MILAN CHANGE - Mgamerz - 2026-10-19
+    ApplyMPPhotoHintVisibility(TRUE);
+    // END MILAN CHANGE
     ClearTimer('ValidateMPPhoto');
     LP = LocalPlayer(Outer.Player);
     if (LP != None)
@@ -837,7 +875,7 @@ public function DeactivateMPPhoto()
         Outer.PopState();
     }
     MPPhotoSubject = None;
-    MPPhotoVelocity = vect(0,0,0);
+    ResetMPPhotoMovement();
     bMPPhotoFollow = FALSE;
     // MILAN CHANGE - Mgamerz - 2026-10-17
     bMPPhotoStateExiting = FALSE;
@@ -891,7 +929,7 @@ public function SetMPPhotoSubject(Pawn Subject, bool bFollow)
     if (Subject != MPPhotoSubject || bFollow != bMPPhotoFollow)
     {
         MPPhotoBlendRemaining = 0.35;
-        MPPhotoVelocity = vect(0,0,0);
+        ResetMPPhotoMovement();
         MPPhotoDesiredRotation = MPPhotoRotation;
     }
     MPPhotoSubject = Subject;
@@ -984,7 +1022,9 @@ public function ProcessMPPhotoInput(float DeltaTime)
     {
         if (bCameraInput)
         {
-            MPPhotoFollowDistance = FClamp(MPPhotoFollowDistance - FClamp(Input.aForward, -1.0, 1.0) * 300.0 * DeltaTime, 40.0, 1500.0);
+            // MILAN CHANGE - Mgamerz - 2026-10-20
+            Movement.X = -FClamp(Input.aForward, -1.0, 1.0) * 300.0;
+            // END MILAN CHANGE
             // MILAN CHANGE - Mgamerz - 2026-10-17
             // Follow: the left stick only changes distance; the right stick handles orbit.
             // Retain the keyboard's existing A/D orbit controls.
@@ -997,9 +1037,24 @@ public function ProcessMPPhotoInput(float DeltaTime)
             PhotoHandler = Class'SFXGUIInteraction'.static.GetInstance().GetPhotoModeHandler(Outer);
             if (Input.bUsingGamepad || PhotoHandler == None || !PhotoHandler.bOptionsHidden)
             {
-                MPPhotoFollowHeight = FClamp(MPPhotoFollowHeight + FClamp(Input.aUp, -1.0, 1.0) * 300.0 * DeltaTime, -100.0, 500.0);
+                Movement.Y = FClamp(Input.aUp, -1.0, 1.0) * 300.0;
             }
         }
+        // MILAN CHANGE - Mgamerz
+        // Ease zoom/height input and release, using the same movement setting as free cam mode
+        MPPhotoFollowMoveVelocity = SmoothMPPhotoMovement(MPPhotoFollowMoveVelocity, Movement, DeltaTime);
+        MPPhotoFollowDistance = FClamp(MPPhotoFollowDistance + MPPhotoFollowMoveVelocity.X * DeltaTime, 40.0, 1500.0);
+        MPPhotoFollowHeight = FClamp(MPPhotoFollowHeight + MPPhotoFollowMoveVelocity.Y * DeltaTime, -100.0, 500.0);
+        // Do not keep pushing into a limit or carry that momentum into the next reversal.
+        if (MPPhotoFollowDistance == 40.0 || MPPhotoFollowDistance == 1500.0) 
+        {
+            MPPhotoFollowMoveVelocity.X = 0.0;
+        }
+        if (MPPhotoFollowHeight == -100.0 || MPPhotoFollowHeight == 500.0) 
+        {
+            MPPhotoFollowMoveVelocity.Y = 0.0;
+        }
+        // END MILAN CHANGE
     }
     else
     {
@@ -1009,7 +1064,9 @@ public function ProcessMPPhotoInput(float DeltaTime)
             MoveScale = FMin(VSize(Movement), 1.0);
             Movement = Normal(Movement) * MoveScale * Outer.PhotoModeCameraSpeed * GetMPPhotoSpeedScale();
         }
-        MPPhotoVelocity = VLerp(MPPhotoVelocity, Movement, FMin(DeltaTime * 8.0, 1.0));
+        // MILAN CHANGE - Mgamerz - 2026-10-20
+        MPPhotoVelocity = SmoothMPPhotoMovement(MPPhotoVelocity, Movement, DeltaTime);
+        // END MILAN CHANGE
     }
 }
 
@@ -1029,6 +1086,38 @@ public final function float GetMPPhotoSmoothingTime()
     }
     return 0.0;
 }
+
+// MILAN CHANGE
+// Smoothing functions
+public final function float GetMPPhotoMovementSmoothingTime()
+{
+    switch (MPPhotoMovementSmoothingIndex)
+    {
+        case 1: return 0.08;
+        case 2: return 0.125;
+        case 3: return 0.32;
+    }
+    return 0.0;
+}
+
+public final function Vector SmoothMPPhotoMovement(Vector CurrentVelocity, Vector DesiredVelocity, float DeltaTime)
+{
+    local float SmoothingTime;
+
+    if (Outer.GameModeManager2.CurrentMode != 14) return vect(0,0,0);
+    SmoothingTime = GetMPPhotoMovementSmoothingTime();
+    if (SmoothingTime <= 0.0) return DesiredVelocity;
+    CurrentVelocity = VLerp(CurrentVelocity, DesiredVelocity, 1.0 - Exp(-DeltaTime / SmoothingTime));
+    if (VSizeSq(CurrentVelocity - DesiredVelocity) < 0.01) return DesiredVelocity;
+    return CurrentVelocity;
+}
+
+public final function ResetMPPhotoMovement()
+{
+    MPPhotoVelocity = vect(0,0,0);
+    MPPhotoFollowMoveVelocity = vect(0,0,0);
+}
+// END MILAN CHANGE
 
 public final exec function MPPhotoCyclePlayer(int Direction)
 {
@@ -1114,10 +1203,78 @@ public function UpdateMPPhoto(float DeltaTime)
     PhotoCamFree.UpdateRollAndFOV(DeltaTime);
     MPPhotoPOV = PhotoCamFree.m_pov;
 }
+
+public final function ApplyMPPhotoHintVisibility(optional bool bRestore = FALSE)
+{
+    local SFXGUIInteraction GUI;
+    local BioSFHandler_MessageBox Hint;
+
+    GUI = Class'SFXGUIInteraction'.static.GetInstance();
+    if (GUI != None && GUI.m_aHintStack.Length > 0)
+    {
+        Hint = GUI.m_aHintStack[0];
+    }
+    if (!bRestore && bMPSpectatorPhoto && bIsActive && (bMPPhotoOverlaysHidden || bMPPhotoHintsHidden))
+    {
+        if (Hint != None && Hint.GetPC() == Outer && Hint.GetVisible())
+        {
+            MPPhotoHiddenHint = Hint;
+            Hint.SetVisible(FALSE);
+        }
+    }
+    else
+    {
+        if (Hint != None && Hint == MPPhotoHiddenHint)
+        {
+            Hint.SetVisible(TRUE);
+        }
+        MPPhotoHiddenHint = None;
+    }
+}
+
+public final function EnsureMPPhotoMatchSettings()
+{
+    if (MPPhotoSettingsWorld == Outer.WorldInfo && MPPhotoSettingsGRI == Outer.WorldInfo.GRI) return;
+    MPPhotoSettingsWorld = Outer.WorldInfo;
+    MPPhotoSettingsGRI = Outer.WorldInfo.GRI;
+    MPPhotoSavedOptions.Length = 0;
+    MPPhotoSavedPlayerID = -1;
+    bMPPhotoHasSavedFraming = FALSE;
+    MPPhotoFollowDistance = 300.0;
+    MPPhotoFollowHeight = 50.0;
+    MPPhotoSpeedIndex = default.MPPhotoSpeedIndex;
+    MPPhotoSmoothingIndex = default.MPPhotoSmoothingIndex;
+    MPPhotoMovementSmoothingIndex = default.MPPhotoMovementSmoothingIndex;
+    bMPPhotoNoCollision = default.bMPPhotoNoCollision;
+    bMPPhotoOverlaysHidden = default.bMPPhotoOverlaysHidden;
+    bMPPhotoHintsHidden = default.bMPPhotoHintsHidden;
+    bMPPhotoGrenadesHidden = default.bMPPhotoGrenadesHidden;
+    Class'SFXGUIValue_MarkerPlayerHealth'.default.bHideInPhotoMode = FALSE;
+    LogInternal("MilanPhoto: initialized settings for match" @ MPPhotoSettingsGRI);
+}
+
+public final function SaveMPPhotoOption(int Id, float Value)
+{
+    local int Index;
+    local MPPhotoSavedOption Entry;
+
+    if (Id < 0 || Id >= 16) return;
+    Index = MPPhotoSavedOptions.Find('Id', Id);
+    if (Index == -1)
+    {
+        Entry.Id = Id;
+        Entry.Value = Value;
+        MPPhotoSavedOptions.AddItem(Entry);
+    }
+    else MPPhotoSavedOptions[Index].Value = Value;
+}
 // END MILAN CHANGE
 
 defaultproperties
 {
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    MPPhotoMovementSmoothingIndex = 2
+    // END MILAN CHANGE
     // MILAN CHANGE - Mgamerz - 2026-10-17
     MPPhotoSpeedIndex = 3
     // END MILAN CHANGE
