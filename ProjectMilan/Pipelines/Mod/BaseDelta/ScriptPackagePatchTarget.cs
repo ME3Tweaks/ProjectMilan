@@ -1,6 +1,9 @@
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
+using LegendaryExplorerCore.Unreal.Collections;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore.UnrealScript;
 using ProjectMilanCore;
 using Serilog;
@@ -66,6 +69,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             preBuild?.Invoke();
 
             using var package = MEPackageHandler.OpenMEPackage(GetVanillaLoadPath());
+            var vanillaVTables = VTableCascade.ReadAllSlots(package);
 
             var baseDeltaFolder = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"BaseDelta", packageName);
 
@@ -222,6 +226,9 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             ApplyTextureUpdates(package, baseDeltaFolder, packageName, logCategory);
 
             ApplyClassElements(package, fileLib, usop, Path.Combine(baseDeltaFolder, "AddToClassOrReplace"));
+
+            // After all script: subclasses of a class that gained functions need their vtables and the calls into them updated.
+            BaseDeltaVTables.Apply(package, fileLib, usop, vanillaVTables, logCategory);
 
             // Runs last so no class recompile above can undo it.
             postCompile?.Invoke(package);

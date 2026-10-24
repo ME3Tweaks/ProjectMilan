@@ -42,7 +42,12 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         private static readonly IBasePatchClass[] targets = [
             new ScriptPackagePatchTarget("Engine", "Restores client cheat-manager creation and debug messages via PlayerController.IsFinalReleaseBuild"),
             new ScriptPackagePatchTarget("Startup", "Scaleform UI replacements", preBuild: () => ScaleformBuilder.Build("Startup")),
-            new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides (SFXShield_Base, SFXModule_Damage)", postCompile: CheatProfileRegistry.Apply),
+            new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides and Scaleform UI replacements", preBuild: () => ScaleformBuilder.Build("SFXGame"), postCompile: package =>
+            {
+                CheatProfileRegistry.Apply(package);
+                using var vanilla = MEPackageHandler.OpenMEPackage(GetVanillaCookedFilePath("SFXGame.pcc"));
+                PhotoModeRuntimeMetadata.Apply(package, vanilla);
+            }),
             new ScriptPackagePatchTarget("SFXOnlineFoundation", "Patches native MPEnemyInfo structs"),
             new PropertyUpdatePatchTarget("SFXGUI_Fonts", "Adds the ME3 MP4 U+2623 hazard glyph to both GUI fonts", preBuild: () => FontPatchBuilder.Build("SFXGUI_Fonts", "GUI_SF_Fonts")),
             new PropertyUpdatePatchTarget("SFXGUI_FontsJPN", "Adds the ME3 MP4 U+2623 hazard glyph to both Japanese GUI fonts", preBuild: () => FontPatchBuilder.Build("SFXGUI_FontsJPN", "GUI_SF_FontsJPN")),
@@ -106,6 +111,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             deltaRecords.Clear();
             GuidCacheAdditions.Clear();
             BaseDeltaNetIndexing.PatchedScans.Clear();
+            BaseDeltaVTables.ChangedClasses.Clear();
             RegisterProviderAndBuildCache();
             BuildNonCacheTargets();
         }
@@ -121,6 +127,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             deltaRecords.Clear();
             GuidCacheAdditions.Clear();
             BaseDeltaNetIndexing.PatchedScans.Clear();
+            BaseDeltaVTables.ChangedClasses.Clear();
             RegisterProviderAndBuildCache();
             BuildNonCacheTargets();
         }
@@ -132,6 +139,9 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             // Force the cache to build now (rather than lazily, whenever something first asks for an
             // LE3 package) so BaseDelta targets are ready before anything downstream might need them.
             MilanShared.GetLE3GlobalPackages();
+
+            // Every patched package is built now, so the vtable changes they make are known.
+            BaseDeltaVTables.CheckUnpatchedPackages(targets.Where(IsCacheTarget).Select(x => x.GameFile));
         }
 
         /// <summary>
@@ -326,6 +336,12 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 // Runs on the patched bytes, so a checkpoint restore (which never calls BuildPatchTarget) sees the same
                 // net indexes a fresh build does. Conformance reads these instead of re-running the build.
                 BaseDeltaNetIndexing.Observe(target.GameFile, patched);
+            }
+
+            if (target is ScriptPackagePatchTarget)
+            {
+                // Same for vtables: later packages and the unpatched-package check need to know what this one changed.
+                BaseDeltaVTables.Observe(target.GameFile, vanilla, patched);
             }
 
             deltaRecords.Add(new DeltaRecord
