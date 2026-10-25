@@ -81,6 +81,42 @@ namespace ProjectMilan.Pipelines.Startups
 
         };
 
+        /// <summary>
+        /// GUI textures that are replaced by a preferred master, keyed by the master's InstancedFullPath. Every copy of each target gets
+        /// the master's final image, mips and texture properties, so the same art looks the same in every movie. Masters and targets are
+        /// always mipped. Picked from the BIOP_MP_COMMON GUI texture audit (2026-10-25).
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, string[]> TextureMasters = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            // Xbox controller prompts
+            { "GUI_SF_MessageBox_Milan.Xbox_ControllerIcons_ABtn", ["GUI_SF_GalaxyAtWar.Xbox_ControllerIcons_ABtn", "GUI_SF_MilanNetConfig.Xbox_ControllerIcons_ABtn"] },
+            { "GUI_SF_MessageBox_Milan.Xbox_ControllerIcons_BBtn", ["GUI_SF_GalaxyAtWar.Xbox_ControllerIcons_BBtn", "GUI_SF_MilanNetConfig.Xbox_ControllerIcons_BBtn"] },
+            { "GUI_SF_MessageBox_Milan.Xbox_ControllerIcons_XBtn", ["GUI_SF_GalaxyAtWar.Xbox_ControllerIcons_XBtn"] },
+            { "GUI_SF_MessageBox_Milan.Xbox_ControllerIcons_YBtn", ["GUI_SF_GalaxyAtWar.Xbox_ControllerIcons_YBtn", "GUI_SF_MP_HUD.Xbox_ControllerIcons_YBtn"] },
+            { "GUI_SF_MessageBox_Milan.Xbox_ControllerIcons_LStickUpDown", ["GUI_SF_GalaxyAtWar.Xbox_ControllerIcons_LStickUpDown", "GUI_SF_MilanBannerSelect.Xbox_ControllerIcons_LStickUpDown"] },
+            { "GUI_SF_MessageBox_Milan.Xbox_ControllerIcons_RStickUpDown", ["GUI_SF_GalaxyAtWar.Xbox_ControllerIcons_RStickUpDown", "GUI_SF_MilanBannerSelect.Xbox_ControllerIcons_RStickUpDown"] },
+            { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_LBumper", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_LBumper", "GUI_SF_MPNewLobby_DLC.Xbox_ControllerIcons_LBumper", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_LBumper"] },
+            { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_RBumper", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_RBumper", "GUI_SF_MPNewLobby_DLC.Xbox_ControllerIcons_RBumper", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_RBumper"] },
+            { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_LTrigger", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_LTrigger", "GUI_SF_MPChallenges_DLC.Xbox_ControllerIcons_LTrigger", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_LTrigger"] },
+            { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_RTrigger", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_RTrigger", "GUI_SF_MPChallenges_DLC.Xbox_ControllerIcons_RTrigger", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_RTrigger"] },
+
+            // Shared Scaleform images
+            { "GUI_SF_MessageBox_Milan.messageBox_I22", ["GUI_SF_WarAssets.warAssets_I33"] },
+            { "GUI_SF_MPSelectKit_DLC.MPSelectKit_I92", ["GUI_SF_MP_HUD.MP_HUD_I5C", "GUI_SF_MPNewLobby_DLC.MPNewLobby_I3B", "GUI_SF_WarAssets.WarAssets_IAA"] },
+            { "GUI_SF_MPSelectKit_DLC.MPSelectKit_I95", ["GUI_SF_MPNewLobby_DLC.MPNewLobby_I3E"] },
+            { "GUI_SF_MP_HUD.MP_HUD_I5E", ["GUI_SF_WarAssets.warAssets_IAF"] },
+            { "GUI_SF_WarAssets.warAssets_I94", ["GUI_SF_MPChallenges_DLC.MPChallenges_I2B"] },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I2E", ["GUI_SF_WarAssets.warAssets_I97"] },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I96", ["GUI_SF_WarAssets.warAssets_I1"] },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_IC2", ["GUI_SF_WarAssets.WarAssets_IA0"] },
+            { "GUI_SF_MPMatchResults.MPMatchResults_I22", ["GUI_SF_MPMatchResults.MPMatchResults_I77"] },
+            { "GUI_SF_MPMatchResults.MPMatchResults_I25", ["GUI_SF_MPMatchResults.MPMatchResults_I7B", "GUI_SF_MPNewLobby_DLC.MPNewLobby_I83"] }, // Coins
+            { "GUI_SF_MPMatchResults.MPMatchResults_I64", ["GUI_SF_MPSelectKit_DLC.MPSelectKit_I3B", "GUI_SF_MPStore_DLC.MPStore_ID"] }, // Blue row border
+            { "GUI_SF_MPMatchResults.MPMatchResults_I71", ["GUI_SF_MPNewLobby_DLC.MPNewLobby_I54"] },
+            { "GUI_SF_MPNewLobby_DLC.MPNewLobby_I6F", ["GUI_SF_MPSelectKit_DLC.MPSelectKit_I51", "GUI_SF_MPStore_DLC.MPStore_I10"] }, // Red card fill
+            { "GUI_SF_MPStore_DLC.MPStore_I45", ["GUI_SF_MPStore_DLC.MPStore_I4B"] }, // PlayStation Store banner
+        };
+
         /// <summary>Paths requiring either mip filtering or a size cap, for package scans and duplicate checks.</summary>
         public static HashSet<string> GetPolicyTexturePaths(IReadOnlySet<string> texturePaths, IReadOnlyDictionary<string, int>? sizeCaps = null)
         {
@@ -98,7 +134,7 @@ namespace ProjectMilan.Pipelines.Startups
         /// <summary>
         /// Rebuilds the selection from output packages, including after a checkpoint restore. These are the
         /// packages previously mipped by Weapons/NonStartup; every copy of their UI texture paths is selected,
-        /// plus every path in <see cref="ExplicitTexturePaths"/>.
+        /// plus every path in <see cref="ExplicitTexturePaths"/> and every master and target in <see cref="TextureMasters"/>.
         /// </summary>
         public static HashSet<string> DiscoverTexturePaths(string outputPath)
         {
@@ -109,6 +145,8 @@ namespace ProjectMilan.Pipelines.Startups
                 "SFXMP5WeaponImages", "SFXMP5ModImages",
             };
             var paths = new HashSet<string>(ExplicitTexturePaths, StringComparer.OrdinalIgnoreCase);
+            paths.UnionWith(TextureMasters.Keys);
+            paths.UnionWith(TextureMasters.Values.SelectMany(targets => targets));
             foreach (var file in Directory.EnumerateFiles(outputPath, "*.pcc", SearchOption.AllDirectories)
                          .Where(file => sources.Contains(Path.GetFileNameWithoutExtension(file))))
             {
@@ -166,6 +204,176 @@ namespace ProjectMilan.Pipelines.Startups
             MilanLog.Information($"Applied GUI mip/size/residency policy to {mipped} GUI texture(s) in {package.FileNameNoExtension} in {stopwatch.Elapsed.TotalSeconds:0.#}s " +
                                  $"(texture data {bytesBefore / 1048576.0:0.#} MiB -> {bytesAfter / 1048576.0:0.#} MiB)", customPrefix: LOG_CATEGORY);
             return mipped;
+        }
+
+        /// <summary>
+        /// Maps each target path to its master, rejecting a config that cannot be applied in one pass.
+        /// </summary>
+        public static Dictionary<string, string> GetMasterByTarget(IReadOnlyDictionary<string, string[]>? masters = null, IReadOnlyDictionary<string, int>? sizeCaps = null)
+        {
+            masters ??= TextureMasters;
+            sizeCaps ??= TextureSizeCaps;
+            var byTarget = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var (master, targets) in masters)
+            {
+                foreach (var target in targets)
+                {
+                    if (target.Equals(master, StringComparison.OrdinalIgnoreCase))
+                        throw new InvalidDataException($"GUI texture master {master} lists itself as a target.");
+                    if (!byTarget.TryAdd(target, master))
+                        throw new InvalidDataException($"GUI texture {target} has two masters: {byTarget[target]} and {master}.");
+                }
+            }
+            foreach (var (target, master) in byTarget)
+            {
+                if (masters.ContainsKey(target))
+                    throw new InvalidDataException($"GUI texture {target} is a target of {master} and a master itself; point its targets at {master}.");
+                if (sizeCaps.ContainsKey(target))
+                    throw new InvalidDataException($"GUI texture {target} has a size cap but is cloned from {master}; put the cap on the master.");
+            }
+            return byTarget;
+        }
+
+        /// <summary>A master's final image, read once and written over each of its targets.</summary>
+        private sealed record MasterTexture(string Path, PropertyCollection Properties, List<(byte[] Data, int Width, int Height)> Mips, string Fingerprint);
+
+        /// <summary>
+        /// Replaces every copy of each target with its master's image, mips and texture properties. Run once the masters are final
+        /// (upscaled, mipped and capped). A master is read from the first package, by path, that has it; <see cref="VerifyTexturesAreConsistent"/>
+        /// checks its other copies.
+        /// </summary>
+        /// <returns>The packages that hold a master or a target, and how many target copies were changed.</returns>
+        public static (List<string> Packages, int Changed) CloneTexturesFromMasters(IEnumerable<string> packageFiles, IReadOnlyDictionary<string, string[]>? masters = null)
+        {
+            masters ??= TextureMasters;
+            var masterByTarget = GetMasterByTarget(masters);
+            if (masterByTarget.Count == 0)
+                return ([], 0);
+
+            var masterFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var targetFiles = new List<string>();
+            var packages = new List<string>();
+            foreach (var file in packageFiles.Order(StringComparer.OrdinalIgnoreCase))
+            {
+                using var header = MEPackageHandler.UnsafePartialLoad(file, _ => false);
+                bool hasMaster = false, hasTarget = false;
+                foreach (var exp in header.Exports.Where(e => e.ClassName == "Texture2D"))
+                {
+                    if (masters.ContainsKey(exp.InstancedFullPath))
+                    {
+                        masterFiles.TryAdd(exp.InstancedFullPath, file);
+                        hasMaster = true;
+                    }
+                    hasTarget |= masterByTarget.ContainsKey(exp.InstancedFullPath);
+                }
+                if (hasTarget)
+                    targetFiles.Add(file);
+                if (hasMaster || hasTarget)
+                    packages.Add(file);
+            }
+
+            var sources = new Dictionary<string, MasterTexture>(StringComparer.OrdinalIgnoreCase);
+            foreach (var group in masterFiles.GroupBy(x => x.Value, StringComparer.OrdinalIgnoreCase))
+            {
+                using var package = MEPackageHandler.OpenMEPackage(group.Key, forceLoadFromDisk: true);
+                foreach (var (path, _) in group)
+                {
+                    var exp = package.Exports.First(e => e.ClassName == "Texture2D" && e.InstancedFullPath.Equals(path, StringComparison.OrdinalIgnoreCase));
+                    sources[path] = ReadMaster(exp);
+                }
+            }
+            foreach (var master in masters.Keys.Where(master => !sources.ContainsKey(master)))
+            {
+                MilanLog.Warning($"GUI texture master {master} matched no Texture2D exports; its targets keep their own image", customPrefix: LOG_CATEGORY);
+            }
+
+            int changed = 0;
+            var matchedTargets = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var file in targetFiles)
+            {
+                using var package = MEPackageHandler.OpenMEPackage(file, forceLoadFromDisk: true);
+                int packageChanged = 0;
+                foreach (var exp in package.Exports.Where(e => e.ClassName == "Texture2D" && masterByTarget.ContainsKey(e.InstancedFullPath)).ToList())
+                {
+                    matchedTargets.Add(exp.InstancedFullPath);
+                    if (sources.TryGetValue(masterByTarget[exp.InstancedFullPath], out var source) && CloneFromMaster(exp, source))
+                        packageChanged++;
+                }
+                // A failure above leaves this package unsaved
+                if (packageChanged > 0)
+                {
+                    package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                    changed += packageChanged;
+                }
+            }
+            foreach (var target in masterByTarget.Keys.Where(target => !matchedTargets.Contains(target)))
+            {
+                MilanLog.Warning($"GUI texture clone target {target} matched no Texture2D exports", customPrefix: LOG_CATEGORY);
+            }
+
+            MilanLog.Information($"Cloned {changed} GUI texture copies from {sources.Count} master(s) ({matchedTargets.Count}/{masterByTarget.Count} target paths matched)", customPrefix: LOG_CATEGORY);
+            return (packages, changed);
+        }
+
+        private static MasterTexture ReadMaster(ExportEntry exp)
+        {
+            var texture = new Texture2D(exp);
+            var live = texture.Mips.Where(mip => mip.storageType != StorageTypes.empty).ToList();
+            if (live.Count == 0)
+                throw new InvalidDataException($"GUI texture master {exp.InstancedFullPath} has no mip payloads.");
+            if (live.Any(mip => !mip.IsPackageStored))
+                throw new InvalidDataException($"GUI texture master {exp.InstancedFullPath} has mips in a TFC; masters must be package stored, so select them for GUI mipping.");
+
+            var props = exp.GetProperties();
+            if (props.OfType<ObjectProperty>().Any(prop => prop.Value != 0))
+                throw new InvalidDataException($"GUI texture master {exp.InstancedFullPath} has object references, which cannot be copied to another package.");
+            var mips = live.Select(mip => (Texture2D.GetTextureData(mip, exp.Game), mip.width, mip.height)).ToList();
+            return new MasterTexture(exp.InstancedFullPath, props, mips, GetFingerprint(exp));
+        }
+
+        /// <summary>
+        /// Writes a master's properties and mips over a target. The aspect ratio must match, as the movie stretches the image over the
+        /// target's original shape. Other binary data stays the target's.
+        /// </summary>
+        /// <returns>True if the target changed.</returns>
+        private static bool CloneFromMaster(ExportEntry exp, MasterTexture master)
+        {
+            var top = new Texture2D(exp).GetTopMip()
+                      ?? throw new InvalidDataException($"GUI texture clone target {exp.InstancedFullPath} has no mips.");
+            var (_, masterWidth, masterHeight) = master.Mips[0];
+            if ((long)top.width * masterHeight != (long)top.height * masterWidth)
+                throw new InvalidDataException($"GUI texture {exp.InstancedFullPath} is {top.width}x{top.height} but its master {master.Path} is {masterWidth}x{masterHeight}; their aspect ratios must match.");
+
+            // Package-stored mips record their file offset, so compare properties and pixels rather than the whole export
+            var live = new Texture2D(exp).Mips.Where(mip => mip.storageType != StorageTypes.empty).ToList();
+            bool sameMips = live.Count == master.Mips.Count && live.All(mip => mip.IsPackageStored) &&
+                            live.Zip(master.Mips).All(x => x.First.width == x.Second.Width && x.First.height == x.Second.Height &&
+                                                           Texture2D.GetTextureData(x.First, exp.Game).AsSpan().SequenceEqual(x.Second.Data));
+            var originalData = exp.Data.ToArray();
+            int originalPropsEnd = exp.propsEnd();
+            try
+            {
+                exp.WriteProperties(master.Properties);
+                if (sameMips && exp.Data.AsSpan(0, exp.propsEnd()).SequenceEqual(originalData.AsSpan(0, originalPropsEnd)))
+                {
+                    exp.Data = originalData;
+                    return false;
+                }
+                var binary = exp.GetBinaryData<UTexture2D>();
+                binary.Mips = master.Mips.Select(mip => new UTexture2D.Texture2DMipMap(mip.Data, mip.Width, mip.Height)).ToList();
+                exp.WriteBinary(binary);
+                var fingerprint = GetFingerprint(exp);
+                if (fingerprint != master.Fingerprint)
+                    throw new InvalidDataException($"GUI texture {exp.InstancedFullPath} does not match its master {master.Path} after cloning: {fingerprint} vs {master.Fingerprint}");
+            }
+            catch
+            {
+                exp.Data = originalData;
+                throw;
+            }
+
+            MilanLog.Information($"Cloned GUI texture {exp.InstancedFullPath} in {exp.FileRef.FileNameNoExtension} from {master.Path}: {top.width}x{top.height} -> {masterWidth}x{masterHeight}", customPrefix: LOG_CATEGORY);
+            return true;
         }
 
         /// <summary>

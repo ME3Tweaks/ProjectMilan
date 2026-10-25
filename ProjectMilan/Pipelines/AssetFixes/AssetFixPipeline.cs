@@ -21,6 +21,7 @@ internal static class AssetFixPipeline
         }
 
         var guiTextures = GUITextureMipper.DiscoverTexturePaths(Program.Settings.OutputModPath);
+        var guiPolicyTextures = GUITextureMipper.GetPolicyTexturePaths(guiTextures);
         var guiPackages = new List<string>();
 
         // A filename is the complete memory path of the export, independent of the containing package.
@@ -35,7 +36,7 @@ internal static class AssetFixPipeline
             }
         }
         var meshFixes = AssetMeshFixes.DiscoverFixes(FixFolder);
-        if (fixes.Count == 0 && meshFixes.Count == 0 && guiTextures.Count == 0)
+        if (fixes.Count == 0 && meshFixes.Count == 0 && guiPolicyTextures.Count == 0)
         {
             // Do nothing.
             return;
@@ -43,6 +44,7 @@ internal static class AssetFixPipeline
 
         var matched = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var matchedMeshes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var matchedGui = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         int changedPackages = 0, changedExports = 0;
         MilanShared.RefreshMilanFiles = true;
         // Reuse resolved dependencies across the entire scan, with the existing global/MPCommon
@@ -55,7 +57,7 @@ internal static class AssetFixPipeline
             using (var header = MEPackageHandler.UnsafePartialLoad(file, _ => false))
             {
                 if (!header.Exports.Any(e => fixes.ContainsKey(e.InstancedFullPath) || meshFixes.ContainsKey(e.InstancedFullPath) ||
-                    (e.ClassName == "Texture2D" && guiTextures.Contains(e.InstancedFullPath))))
+                    (e.ClassName == "Texture2D" && guiPolicyTextures.Contains(e.InstancedFullPath))))
                 {
                     // Nothing in this file, skip
                     continue;
@@ -105,9 +107,10 @@ internal static class AssetFixPipeline
                     }
                 }
             }
-            if (package.Exports.Any(e => e.ClassName == "Texture2D" && guiTextures.Contains(e.InstancedFullPath)))
+            if (package.Exports.Any(e => e.ClassName == "Texture2D" && guiPolicyTextures.Contains(e.InstancedFullPath)))
             {
                 guiPackages.Add(file);
+                matchedGui.UnionWith(package.Exports.Where(e => e.ClassName == "Texture2D").Select(e => e.InstancedFullPath));
                 changed += GUITextureMipper.GenerateMipsForPackage(package, guiTextures);
             }
             // A failure above leaves this package unsaved. Save only packages with changed export data.
@@ -119,7 +122,7 @@ internal static class AssetFixPipeline
             }
         }
 
-        GUITextureMipper.VerifyTexturesAreConsistent(guiPackages, guiTextures);
+        GUITextureMipper.VerifyTexturesAreConsistent(guiPackages, guiPolicyTextures);
         foreach (var path in fixes.Keys.Where(path => !matched.Contains(path)))
         {
             MilanLog.Warning($"Asset fix matched no exports: {path}", customPrefix: LogCategory);
@@ -127,6 +130,10 @@ internal static class AssetFixPipeline
         foreach (var path in meshFixes.Keys.Where(path => !matchedMeshes.Contains(path)))
         {
             MilanLog.Warning($"Mesh asset fix matched no exports: {path}", customPrefix: LogCategory);
+        }
+        foreach (var path in GUITextureMipper.ExplicitTexturePaths.Concat(GUITextureMipper.TextureSizeCaps.Keys).Distinct(StringComparer.OrdinalIgnoreCase).Where(path => !matchedGui.Contains(path)))
+        {
+            MilanLog.Warning($"GUI texture policy path matched no Texture2D exports: {path}", customPrefix: LogCategory);
         }
         MilanLog.Information($"Fixed {changedExports} exports in {changedPackages} packages ({matched.Count}/{fixes.Count} property fix paths, {matchedMeshes.Count}/{meshFixes.Count} mesh fix paths matched)", customPrefix: LogCategory);
     }

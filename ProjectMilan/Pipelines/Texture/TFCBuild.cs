@@ -219,6 +219,7 @@ namespace ProjectMilan.Pipelines.Texture
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
             int cleanedTextures = 0, removedMips = 0;
             var guiTextures = GUITextureMipper.DiscoverTexturePaths(Program.Settings.OutputModPath);
+            var guiPolicyTextures = GUITextureMipper.GetPolicyTexturePaths(guiTextures);
             var guiPackages = new List<string>();
             // Encoding (BC7 above all) is the slow part, and the same sources usually come back on the next run
             var importOverrides = TextureImportOverridePolicy.Load(Path.Combine(MilanShared.PipelineRoot, "Texture", "TextureImportOverrides.json"));
@@ -261,7 +262,7 @@ namespace ProjectMilan.Pipelines.Texture
                     }
                 }
 
-                if (p.Exports.Any(e => e.ClassName == "Texture2D" && guiTextures.Contains(e.InstancedFullPath)))
+                if (p.Exports.Any(e => e.ClassName == "Texture2D" && guiPolicyTextures.Contains(e.InstancedFullPath)))
                 {
                     guiPackages.Add(pf);
                     GUITextureMipper.GenerateMipsForPackage(p, guiTextures);
@@ -282,7 +283,15 @@ namespace ProjectMilan.Pipelines.Texture
             }
             MilanLog.Information($"Removed {removedMips} empty mips from {cleanedTextures} textures", customPrefix: LOG_CATEGORY);
 
-            GUITextureMipper.VerifyTexturesAreConsistent(guiPackages, guiTextures);
+            // Masters are final only after every package above has had its upscales, mips and caps
+            var (clonePackages, cloned) = GUITextureMipper.CloneTexturesFromMasters(Directory.GetFiles(inputFolder, "*.pcc", SearchOption.AllDirectories));
+            if (cloned > 0)
+            {
+                MilanShared.RefreshMilanFiles = true;
+            }
+            guiPackages = guiPackages.Union(clonePackages, StringComparer.OrdinalIgnoreCase).ToList();
+
+            GUITextureMipper.VerifyTexturesAreConsistent(guiPackages, guiPolicyTextures);
 
             // Every texture was visited, so whatever the cache holds beyond this pass is for sources that changed or are gone
             encodeCache.PruneUnused();
