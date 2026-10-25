@@ -849,6 +849,7 @@
 				<Value type="3">(KitName="InfiltratorFembot",ClassString=812764,IPNameString=0,IPEntryString=812766,GameplayEntryString=812767,StatsString1=728004,StatsString2=728006,StatsString3=728023,StatsString4=0,StatsString5=0)</Value>
 				<Value type="4">(KitName="SoldierMQuarian",ClassString=768115,IPNameString=0,IPEntryString=727976,GameplayEntryString=771246,StatsString1=728003,StatsString2=728010,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
 				<Value type="3">(KitName="SoldierMQuarian",ClassString=768115,IPNameString=0,IPEntryString=727976,GameplayEntryString=771246,StatsString1=728002,StatsString2=728010,StatsString3=728019,StatsString4=0,StatsString5=0)</Value>
+				<Value type="3">(KitName="InfiltratorHumanFemaleBF3",ClassString=727967,IPNameString=0,IPEntryString=727970,GameplayEntryString=727982,StatsString1=728002,StatsString2=728011,StatsString3=728014,StatsString4=0,StatsString5=0)</Value>
 			</Property>
 			<Property name="srcharacterinfo" type="0">728029</Property>
 			<Property name="srformattedclasspromotion" type="0">770262</Property>
