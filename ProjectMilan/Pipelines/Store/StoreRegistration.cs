@@ -70,7 +70,7 @@ namespace ProjectMilan.Pipelines.Store
         /// <summary>
         /// Every object with a dynamicloadmapping, from the basegame config (vanilla weapons are mapped there) and this DLC's.
         /// </summary>
-        private static IReadOnlySet<string> GetDynamicLoadObjects()
+        internal static IReadOnlySet<string> GetDynamicLoadObjects()
         {
             var objects = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var baseEngineXml = Path.Combine(MilanShared.PipelineRoot, "Mod", "BaseConfig", "BioEngine.xml");
