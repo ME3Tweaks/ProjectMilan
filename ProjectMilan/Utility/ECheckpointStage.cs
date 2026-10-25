@@ -32,6 +32,8 @@
         ModBuild = 5,
         MPCommon = 10,
         NonStartup = 20,
+        /// <summary>Branded EntryMenu package and resident logo mip chain; no rehydration required.</summary>
+        EntryMenu = 25,
         Kits = 30,
         Weapons = 40,
 

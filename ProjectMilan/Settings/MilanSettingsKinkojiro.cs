@@ -18,6 +18,7 @@ namespace ProjectMilan.Settings
         public bool RunRedemptionPipeline { get; set; }
         public bool RunAssetFixPipeline { get; set; } = false;
         public bool RunConformancePipeline { get; set; } = false;
+        public bool RunSlashPipeline { get; set; } = false;
         public bool IsStaticLightingBuild { get; set; }
         public bool ProductionBuild { get; set; } = false;
         public string MilanUDKPath { get; set; } // NEEDS TO BE SET!

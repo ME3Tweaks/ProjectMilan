@@ -104,6 +104,12 @@
         /// </summary>
         bool RunConformancePipeline { get; }
 
+        /// <summary>
+        /// If Mod Manager (a debug build) should be driven at the end of the build to make a base install and generate the
+        /// slash manifest for it. Production builds always do this.
+        /// </summary>
+        bool RunSlashPipeline { get; set; }
+
 
         /// <summary>
         /// If this build is for producing static lighting in UDK, not for normal gameplay - don't import lightmaps, etc.
