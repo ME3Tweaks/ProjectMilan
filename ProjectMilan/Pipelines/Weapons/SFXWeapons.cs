@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Gammtek.Extensions.Collections.Generic;
 using LegendaryExplorerCore.Helpers;
@@ -60,7 +60,6 @@ namespace ProjectMilan.Pipelines.Weapons
             var weaponTextures = PortWeaponDataPackage();
             var modTextures = PortWeaponModDataPackage();
             CheckBaseWeaponTexturesAreProvided(weaponTextures, modTextures);
-            VerifyWeaponImagesAreConsistent();
         }
 
         private static void InternalRunPipeline(MPWeaponVars vars)
@@ -145,8 +144,8 @@ namespace ProjectMilan.Pipelines.Weapons
 
         /// <summary>
         /// SP donor files whose weapon mods (m_aMods) go into the merged weapon mod package, in the order that wins: the vanilla
-        /// SP mods, then SharedSF's (a superset of the MP mods, with the higher resolution art). Anything the MP files have
-        /// that these don't is reported by <see cref="PortWeaponModDataPackage"/>.
+        /// SP mods, then SharedSF's, with higher resolution art. MP5 identities and metadata are restored from MP
+        /// donors by <see cref="MergeMPWeaponModData"/> before validating MP catalog coverage.
         /// </summary>
         private static readonly string[] SPWeaponModUIDataFiles =
         {
@@ -327,9 +326,7 @@ namespace ProjectMilan.Pipelines.Weapons
             // kept (the MP weapons an SP one stood in for, the SP DLC weapons). Those leftovers are not needed
             PruneUnreachableExports(destPackage, mergedDataExport);
 
-            // The weapon pictures are stored much bigger than they are shown. Give them mips so Scaleform filters them down
-            // instead of point sampling the full size image
-            GUITextureMipper.GenerateMipsForPackage(destPackage);
+            // GUI mips are applied to every copy together by AssetFix, before texture processing.
 
             destPackage.Save();
             MilanLog.Information($"Wrote merged weapon UI data package to {outPath} ({mergedWeapons.Count} weapons)", customPrefix: LOG_CATEGORY);
@@ -338,9 +335,9 @@ namespace ProjectMilan.Pipelines.Weapons
 
         /// <summary>
         /// Builds the merged SFXWeaponUIData package for weapon mods (m_aMods), the way <see cref="PortWeaponDataPackage"/> does for
-        /// weapons: the SP mods are taken as they are, with their higher resolution art, and replace the vanilla SP data and
-        /// SharedSF, which are no longer registered. An MP mod is only reported, never ported - each of them has an SP
-        /// counterpart - so one that doesn't is noticed and not silently dropped.
+        /// weapons: SP donors provide higher resolution art, while the five MP5 mods retain their MP identities and
+        /// metadata. Replaces the vanilla SP data and SharedSF, which are no longer registered. Missing or duplicate
+        /// MP entries fail the build before the package is saved.
         /// </summary>
         /// <returns>The object path of every texture the package holds.</returns>
         private static HashSet<string> PortWeaponModDataPackage()
@@ -403,21 +400,28 @@ namespace ProjectMilan.Pipelines.Weapons
             if (mergedDataExport == null)
                 throw new InvalidOperationException("PortWeaponModDataPackage: no SP weapon UI data donor with weapon mods could be loaded.");
 
-            foreach (var mpFile in MPWeaponUIDataFiles.Append("SFXGUI_WeaponUIDataDLC_SharedSF.pcc"))
+            var mpMods = new List<StructProperty>();
+            foreach (var mpFile in MPWeaponUIDataFiles.Prepend("SFXGUI_WeaponUIDataSF.pcc").Append("SFXGUI_WeaponUIDataDLC_SharedSF.pcc"))
             {
-                var mpMods = MilanShared.GetME3Package(mpFile)?.Exports.FirstOrDefault(x => x.ClassName == "SFXWeaponUIData")?.GetProperty<ArrayProperty<StructProperty>>("m_aMods");
-                if (mpMods == null)
-                    continue;
-
-                foreach (var mod in mpMods)
-                {
-                    var className = GetModClassName(mod);
-                    if (className != null && !modClassNames.Contains(className))
-                    {
-                        MilanLog.Error($"ME3 weapon mod {className} from {mpFile} has no SP counterpart and is not in the merged weapon mod package", customPrefix: LOG_CATEGORY);
-                    }
-                }
+                var mpPackage = MilanShared.GetME3Package(mpFile)
+                    ?? throw new InvalidOperationException($"Cannot validate MP weapon mods: missing {mpFile}");
+                var mpData = mpPackage.Exports.FirstOrDefault(x => x.ClassName == "SFXWeaponUIData")
+                    ?? throw new InvalidOperationException($"Cannot validate MP weapon mods: {mpFile} has no UI data");
+                if (mpData.GetProperty<ArrayProperty<StructProperty>>("m_aMods") is { } sourceMods)
+                    mpMods.AddRange(sourceMods);
             }
+            MergeMPWeaponModData(mergedMods, mpMods);
+            var builtPackages = Directory.EnumerateFiles(Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole"), "*.pcc", SearchOption.AllDirectories)
+                .ToLookup(Path.GetFileNameWithoutExtension, StringComparer.OrdinalIgnoreCase);
+            ValidateWeaponModPreviews(mergedMods, packageName =>
+            {
+                var builtPath = builtPackages[packageName].FirstOrDefault();
+                if (builtPath != null)
+                    return MEPackageHandler.OpenMEPackage(builtPath);
+                return MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, packageName + ".pcc", out var basePath)
+                    ? MEPackageHandler.OpenMEPackage(basePath)
+                    : null;
+            });
 
             OrderUIDataLikeME3(mergedMods);
             mergedDataExport.WriteProperty(mergedMods);
@@ -429,11 +433,85 @@ namespace ProjectMilan.Pipelines.Weapons
             }
 
             PruneUnreachableExports(destPackage, mergedDataExport);
-            GUITextureMipper.GenerateMipsForPackage(destPackage);
 
             destPackage.Save();
             MilanLog.Information($"Wrote merged weapon mod UI data package to {outPath} ({mergedMods.Count} mods)", customPrefix: LOG_CATEGORY);
             return GetTexturePaths(destPackage);
+        }
+
+        // Explicit pairs: these SP presentation donors use different identities from the MP unlocks.
+        private static readonly Dictionary<string, string> MPWeaponModPresentationDonors = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["SFXGameContentDLC_CON_MP5.SFXWeaponMod_AssaultRifleUltraLight_MP5"] = "SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_AssaultRifleUltraLight",
+            ["SFXGameContentDLC_CON_MP5.SFXWeaponMod_ShotgunUltraLight_MP5"] = "SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_ShotgunUltraLight",
+            ["SFXGameContentDLC_CON_MP5.SFXWeaponMod_SniperRifleUltraLight_MP5"] = "SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_SniperRifleUltraLight",
+            ["SFXGameContentDLC_CON_MP5.SFXWeaponMod_PistolPowerDamage_MP5"] = "SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_PistolPowerDamage",
+            ["SFXGameContentDLC_CON_MP5.SFXWeaponMod_SMGPowerDamage_MP5"] = "SFXGameContentDLC_EXP_Pack003.SFXWeaponMod_SMGPowerDamage",
+        };
+
+        /// <summary>
+        /// Replace SP substitutes with MP entries, retaining only already-relinked SP UI images.
+        /// MP Image/LargeImage references belong to their source packages and must never be copied directly.
+        /// Keep the MP CookedPackage/Meshes pair: only the MP preview packages are shipped by NonStartups.
+        /// </summary>
+        internal static void MergeMPWeaponModData(ArrayProperty<StructProperty> mergedMods, IEnumerable<StructProperty> sourceMods)
+        {
+            var mpMods = sourceMods.ToArray();
+            foreach (var (mpPath, spPath) in MPWeaponModPresentationDonors)
+            {
+                var sources = mpMods.Where(x => string.Equals(x.GetProp<StrProperty>("ClassPath")?.Value, mpPath, StringComparison.OrdinalIgnoreCase)).ToArray();
+                var donors = mergedMods.Where(x => string.Equals(x.GetProp<StrProperty>("ClassPath")?.Value, spPath, StringComparison.OrdinalIgnoreCase)).ToArray();
+                if (sources.Length != 1 || donors.Length != 1)
+                    throw new InvalidOperationException($"Weapon mod {mpPath} requires exactly one MP source and SP presentation donor {spPath}; found {sources.Length} and {donors.Length}.");
+
+                var merged = sources[0].DeepClone();
+                foreach (var field in new[] { "Image", "LargeImage" })
+                {
+                    var presentation = donors[0].GetProp<Property>(field)
+                        ?? throw new InvalidOperationException($"Weapon mod presentation donor {spPath} is missing {field}.");
+                    merged.Properties.AddOrReplaceProp(presentation.DeepClone());
+                }
+                mergedMods[mergedMods.IndexOf(donors[0])] = merged;
+            }
+
+            var catalogPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var mod in mergedMods)
+            {
+                var path = mod.GetProp<StrProperty>("ClassPath")?.Value;
+                if (string.IsNullOrWhiteSpace(path) || !catalogPaths.Add(path))
+                    throw new InvalidOperationException($"Merged weapon mod catalog has a missing or duplicate ClassPath: {path}");
+            }
+            foreach (var mod in mpMods)
+            {
+                var path = mod.GetProp<StrProperty>("ClassPath")?.Value;
+                if (string.IsNullOrWhiteSpace(path) || !catalogPaths.Contains(path))
+                    throw new InvalidOperationException($"MP weapon mod {path} is missing from the merged weapon mod catalog.");
+            }
+        }
+
+        /// <summary>
+        /// The bench asynchronously loads CookedPackage for every nonempty preview mesh. Check the actual
+        /// built/base packages and mesh exports, so an unshipped SP preview cannot pass catalog validation.
+        /// Mods without meshes (including ultralights) do not request a preview package.
+        /// </summary>
+        internal static void ValidateWeaponModPreviews(IEnumerable<StructProperty> mods, Func<string, IMEPackage?> openPackage)
+        {
+            foreach (var group in mods.Where(x => x.GetProp<ArrayProperty<StrProperty>>("Meshes")?.Any(m => !string.IsNullOrEmpty(m.Value)) == true)
+                         .GroupBy(x => x.GetProp<StrProperty>("CookedPackage")?.Value, StringComparer.OrdinalIgnoreCase))
+            {
+                if (string.IsNullOrWhiteSpace(group.Key))
+                    throw new InvalidOperationException("Weapon mod with preview meshes has no CookedPackage.");
+                using var preview = openPackage(group.Key)
+                    ?? throw new InvalidOperationException($"Weapon mod preview package {group.Key} is not shipped by the build or LE3.");
+                foreach (var mod in group)
+                {
+                    foreach (var mesh in mod.GetProp<ArrayProperty<StrProperty>>("Meshes").Where(x => !string.IsNullOrEmpty(x.Value)))
+                    {
+                        if (preview.FindExport(mesh.Value)?.ClassName != "StaticMesh")
+                            throw new InvalidOperationException($"Weapon mod {mod.GetProp<StrProperty>("ClassPath")?.Value} preview {group.Key} is missing StaticMesh {mesh.Value}.");
+                    }
+                }
+            }
         }
 
         // Keep ME3 ordering. Since we port from SP the order is messed up as they released different order
@@ -513,22 +591,6 @@ namespace ProjectMilan.Pipelines.Weapons
             {
                 MilanLog.Error($"{path} was in SFXGUI_WeaponUIDataSF, which is no longer installed, and is in neither merged weapon package", customPrefix: LOG_CATEGORY);
             }
-        }
-
-        /// <summary>
-        /// A texture's mips and CRC have to be the same wherever its object path is found, because whichever copy the game loads
-        /// first is the one it keeps. Checks the packages NonStartup builds for weapon and mod images, which includes the merged
-        /// weapon packages.
-        /// </summary>
-        private static void VerifyWeaponImagesAreConsistent()
-        {
-            var nonStartup = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole", "NonStartup");
-            var packages = new[] { "GUI", "Images" }
-                .Select(x => Path.Combine(nonStartup, x))
-                .Where(Directory.Exists)
-                .SelectMany(x => Directory.EnumerateFiles(x, "*.pcc"))
-                .ToList();
-            GUITextureMipper.VerifyTexturesAreConsistent(packages);
         }
 
         /// <summary>
