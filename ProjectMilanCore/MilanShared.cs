@@ -1183,9 +1183,20 @@ namespace ProjectMilanCore
 
         public static IEnumerable<IMEPackage> GetLE3GlobalPackages()
         {
+            return GetLE3GlobalCache().GetPackages();
+        }
+
+        /// <summary>
+        /// The LE3 global package cache. It holds the BaseDelta-patched packages, which are only in memory (opened from a stream
+        /// under their bare file name, e.g. Engine.pcc), and the class info LEC generates for their classes points at that bare
+        /// name. Pass this cache to LEC methods that load a class's package from its class info, such as
+        /// SequenceObjectCreator.CreateSequenceObject, or they can't find those classes' packages.
+        /// </summary>
+        public static PackageCache GetLE3GlobalCache()
+        {
             if (le3GlobalCache == null)
                 le3GlobalCache = InitGlobalPackages(MEGame.LE3);
-            return le3GlobalCache.GetPackages();
+            return le3GlobalCache;
         }
 
         private static MilanPackageCache InitGlobalPackages(MEGame game)
@@ -1417,19 +1428,22 @@ namespace ProjectMilanCore
                 string path = Path.Combine(MEDirectories.GetBioGamePath(MEGame.LE3), classInfo.pccPath);
                 if (File.Exists(path))
                 {
-                    IMEPackage partialLoad = MEPackageHandler.UnsafePartialLoad(path, exp => exp.IsClass && exp.ObjectName == className);
-                    foreach (ExportEntry export in partialLoad.Exports)
+                    lock (DiskIOSyncLock)
                     {
-                        if (export.IsClass && export.ObjectName == className)
+                        using var partialLoad = MEPackageHandler.UnsafePartialLoad(path, exp => exp.IsClass && exp.ObjectName == className);
+                        foreach (ExportEntry export in partialLoad.Exports)
                         {
-                            var obj = export.GetBinaryData<UClass>();
-                            var list = obj.VirtualFunctionTable.Select(uIdx => partialLoad.GetEntry(uIdx).ObjectName.Name).ToList();
-                            if (className == "SFXProjectile_PowerCustomAction_SuperSeeking")
+                            if (export.IsClass && export.ObjectName == className)
                             {
-                                // Debugger.Break();
-                            }
+                                var obj = export.GetBinaryData<UClass>();
+                                var list = obj.VirtualFunctionTable.Select(uIdx => partialLoad.GetEntry(uIdx).ObjectName.Name).ToList();
+                                if (className == "SFXProjectile_PowerCustomAction_SuperSeeking")
+                                {
+                                    // Debugger.Break();
+                                }
 
-                            return list;
+                                return list;
+                            }
                         }
                     }
                 }
@@ -1865,6 +1879,13 @@ namespace ProjectMilanCore
                         continue; // These are never moved to TFC as far as I know...
 
                     var props = tex.GetProperties();
+                    // UI textures cannot rely on streaming, even when NeverStream is absent.
+                    if (props.GetProp<EnumProperty>("LODGroup") is { Value.Name: "TEXTUREGROUP_UI" })
+                    {
+                        MilanLog.Information($"  Skipping {tex.InstancedFullPath} because it is in TEXTUREGROUP_UI", customPrefix: category);
+                        continue;
+                    }
+
                     bool isLightMapTexture = tex.ClassName == "LightMapTexture2D";
                     bool isShadowMapTexture = tex.ClassName == "ShadowMapTexture2D";
                     if (props.TryGetProp<BoolProperty>("NeverStream", out var neverStreamProp) && neverStreamProp.Value &&
