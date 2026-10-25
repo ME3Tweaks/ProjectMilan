@@ -17,6 +17,7 @@ const MAX_POWERS = 6;
 const MAX_MP_WEAPONS = 2;
 
 // Variables
+var transient bool bHeavyLoadoutReady;
 var LinearColor RegularNametagColor;
 var LinearColor PermaDeadNametagColor;
 var LinearColor DownedNametagColor;
@@ -488,6 +489,8 @@ public simulated function DeferredPostBeginPlay()
             UseModule.m_GameName = GetHumanReadableName();
         }
         LoadWeaponModData();
+        bHeavyLoadoutReady = TRUE;
+        ReconcileHeavyWeaponSelection();
         Manager = Weapon.GetModule(Class'SFXModule_WeaponModManager');
         Manager.SetWeaponModHidden(FALSE);
         if (!WorldInfo.bIsLobbyLevel)
@@ -644,6 +647,7 @@ public function LoadWeapons()
         SetTimer(0.100000001, FALSE, 'LoadWeapons', );
         return;
     }
+    bHeavyLoadoutReady = FALSE;
     foreach InvManager.InventoryActors(Class'SFXWeapon', W)
     {
         InvManager.RemoveFromInventory(W);
@@ -683,6 +687,19 @@ public function LoadWeapons()
     SFXInventoryManager(InvManager).SetWeaponBySelected();
     UpdateWeaponEncumbrance();
     PowerManager.OnPawnLoadedWeapons();
+    bHeavyLoadoutReady = TRUE;
+    ReconcileHeavyWeaponSelection(TRUE);
+}
+public simulated function ReconcileHeavyWeaponSelection(optional bool bFillNewWeapons)
+{
+    local SFXPRIMP PRI;
+
+    PRI = SFXPRIMP(PlayerReplicationInfo);
+    if (!bHeavyLoadoutReady || PRI == None || InvManager == None)
+    {
+        return;
+    }
+    Class'SFXMilanHeavyWeaponLoadout'.static.Apply(Self, PRI.HeavyWeaponId, bFillNewWeapons);
 }
 public function PermaDeath()
 {
