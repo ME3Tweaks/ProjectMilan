@@ -720,25 +720,38 @@ public final function ViewInvitations()
         }
     }
 }
+// MILAN CHANGE - Mgamerz - 2026-10-20
+// Client side PRI is used for kicking
 private final function VoteToKickPlayerInSlot(int SlotIndex, bool bKick)
 {
+    local SFXPRIMP LocalPRI;
     local SFXPRIMP OtherPRI;
     local UniqueNetId ZeroId;
     
+    LocalPRI = GetPRIMP();
+    if (LocalPRI == None)
+    {
+        return;
+    }
     if (bKick)
     {
         OtherPRI = GetPlayerInSlot(SlotIndex);
-        if (!OtherPRI.IsLocalPlayerPRI())
+        if (OtherPRI == None || OtherPRI == LocalPRI)
         {
-            GetPRIMP().SetKickVote(OtherPRI.UniqueId);
-             // MILAN Patched: Remove calls to SFXTelemetry
+            return;
         }
+        if (OtherPRI.UniqueId == ZeroId)
+        {
+            return;
+        }
+        LocalPRI.SetKickVote(OtherPRI.UniqueId);
     }
     else
     {
-        GetPRIMP().SetKickVote(ZeroId);
+        LocalPRI.SetKickVote(ZeroId);
     }
 }
+// END MILAN CHANGE
 public function ApplyTinting(Object InSettings)
 {
     local Actor TargetActor;
@@ -1398,6 +1411,12 @@ private final function bool HasVotedToKickPlayerInSlot(int SlotIndex)
     local UniqueNetId ZeroId;
     
     OtherPRI = GetPlayerInSlot(SlotIndex);
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    if (OtherPRI == None || GetPRIMP() == None)
+    {
+        return FALSE;
+    }
+    // END MILAN CHANGE
     return GetPRIMP().KickVotePlayerId != ZeroId && GetPRIMP().KickVotePlayerId == OtherPRI.UniqueId;
 }
 public final function HostNewMission()
