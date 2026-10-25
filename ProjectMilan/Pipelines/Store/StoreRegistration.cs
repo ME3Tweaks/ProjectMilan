@@ -3,6 +3,7 @@ using LegendaryExplorerCore.Packages;
 using ProjectMilanCore.Utility;
 using ProjectMilanCore;
 using ProjectMilanCore.Config.Store;
+using ProjectMilan.Pipelines.HeavyWeapons;
 
 namespace ProjectMilan.Pipelines.Store
 {
@@ -22,6 +23,7 @@ namespace ProjectMilan.Pipelines.Store
             MilanLog.Information("Registering the multiplayer store", customPrefix: LOG_CATEGORY);
             var catalog = new StoreCatalog();
             catalog.Cards.AddRange(StoreCards.All);
+            HeavyWeaponStoreRegistration.Configure(catalog);
             catalog.Packs.AddRange(StorePacks.GetAll());
 
             foreach (var pack in catalog.Packs)
