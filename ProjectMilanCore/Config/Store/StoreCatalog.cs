@@ -67,6 +67,26 @@ namespace ProjectMilanCore.Config.Store
                     warnings.Add($"Card {card.UniqueName} has no dynamicloadmapping, so its class may not load");
             }
 
+            var byName = Cards.GroupBy(c => c.UniqueName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+            foreach (var card in Cards.Where(c => c.RequiresCard != null))
+            {
+                var visited = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { card.UniqueName };
+                var current = card;
+                while (current.RequiresCard is { } required)
+                {
+                    if (!visited.Add(required))
+                    {
+                        errors.Add($"Card {card.UniqueName} has a prerequisite cycle");
+                        break;
+                    }
+                    if (!byName.TryGetValue(required, out current) || current.IsVersioned || current.PlayerVariableIds.Count != 1)
+                    {
+                        errors.Add($"Card {card.UniqueName} requires an unknown or untracked card {required}");
+                        break;
+                    }
+                }
+            }
             errors.AddRange(ValidateBanners([]).Errors);
 
             // Pools
@@ -140,6 +160,10 @@ namespace ProjectMilanCore.Config.Store
             ReplaceArray(manager, "consumableidpacknamemap", Packs.Where(p => p.OfferId != null).Select(p => $"(ID={p.OfferId}, PackName=\"{p.PackName}\")"));
             ReplaceArray(manager, "milanachievementpacks", Packs.Where(p => p.UnlockInfo != null)
                 .Select(p => $"(PackName=\"{p.PackName}\", AchievementId={p.UnlockInfo!.AchievementId}, UnlockVariable={p.UnlockInfo.UnlockVariableName})"));
+
+            var requirements = bioGame.GetOrAddSection("sfxgamecontent_milan.sfxmilanstoreprerequisites");
+            ReplaceArray(requirements, "requirements", Cards.Where(c => c.RequiresCard != null).Select(c =>
+                $"(CardName=\"{c.UniqueName}\",RequiredVariable={Cards.Single(p => p.UniqueName.Equals(c.RequiresCard, StringComparison.OrdinalIgnoreCase)).PlayerVariables.Single().Name})"));
 
             foreach (var (name, id, _) in GetPlayerVariables())
             {

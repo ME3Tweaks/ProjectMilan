@@ -68,6 +68,9 @@ namespace ProjectMilanCore.Config.Store
 
         public required ReinforcementKind Kind { get; init; }
 
+        /// <summary>Another permanent ownership card required before this card can drop.</summary>
+        public string? RequiresCard { get; init; }
+
         public required CardRarity Rarity { get; init; }
 
         /// <summary>

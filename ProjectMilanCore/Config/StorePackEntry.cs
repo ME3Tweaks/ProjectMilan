@@ -1,9 +1,11 @@
+using ProjectMilanCore.Config.Store;
+
 namespace ProjectMilanCore.Config
 {
     /// <summary>
     /// A supply pack in the multiplayer store - its SFXGAWReinforcementManager StoreInfoArray entry plus the
     /// PackList slots that define what it awards. Mirrors StoreInfoEntry/CardPackEntry in
-    /// SFXGAWReinforcementManager.uc. IDs are not auto-assigned: nID and PlayerVariableId end up in player saves
+    /// SFXGAWReinforcementManager.uc. Registered through <see cref="StoreCatalog"/>. IDs are not auto-assigned: nID and PlayerVariableId end up in player saves
     /// (purchase counts), so they have to stay the same from build to build.
     /// </summary>
     public class StorePackEntry
@@ -52,9 +54,19 @@ namespace ProjectMilanCore.Config
 
         /// <summary>
         /// mpplayervariablemappings ID for this pack's per-player purchase counter (ClassName=PackName). Vanilla
-        /// packs use up to 670; Milan IDs start at 700 and are shared with weapons/gear, so pick one that's free.
+        /// and online packs use IDs up to 670 (online ones fill the 612-669 gaps); Milan IDs start at 700 and are
+        /// shared with weapons/gear, so pick one that's free.
         /// </summary>
         public int? PlayerVariableId { get; set; }
+
+        /// <summary>
+        /// If set, the pack is only listed once the player has this achievement. Requires <see cref="PerPlayerMax"/>
+        /// of 1 so it can only be claimed once.
+        /// </summary>
+        public AchievementUnlockInfo? UnlockInfo { get; set; }
+
+        /// <summary>Authoring-only assertion: this achievement pack must award exactly this banner and nothing else.</summary>
+        public int? BannerRewardID { get; set; }
 
         /// <summary>
         /// Platform offer / consumable ID, if the pack can also be granted by one. Adds a
@@ -74,7 +86,8 @@ namespace ProjectMilanCore.Config
         public List<int[]> Visible { get; set; } = new();
 
         /// <summary>
-        /// Store image object path, e.g. "StoreItems.StoreAlliance". Must be dynamic load mapped.
+        /// Store image object path, e.g. "StoreItems.StoreAlliance" (built by ImagePackageBuilder) or
+        /// "GUI_MPImages.StoreItems.Store001" (vanilla). Must be dynamic load mapped.
         /// </summary>
         public string Image { get; set; }
 
@@ -107,13 +120,13 @@ namespace ProjectMilanCore.Config
         public int Quantity { get; set; } = 1;
 
         /// <summary>
-        /// Pools to draw from with their relative weights, e.g. ("goldweapon", 0.55f). A single pool can use weight 1.
+        /// Pools to draw from with their relative weights, e.g. (StorePools.GoldWeapon, 0.55f). A single pool can use weight 1.
         /// </summary>
-        public List<(string PoolName, float Weight)> Pools { get; set; } = new();
+        public List<(StorePool Pool, float Weight)> Pools { get; set; } = new();
 
         /// <summary>
         /// Pool to draw from if the chosen pool has nothing left to award, if any.
         /// </summary>
-        public string? BackupPool { get; set; }
+        public StorePool? BackupPool { get; set; }
     }
 }
