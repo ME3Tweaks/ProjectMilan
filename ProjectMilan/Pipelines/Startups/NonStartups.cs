@@ -1,6 +1,7 @@
 ﻿using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Packages;
 using ProjectMilanCore;
+using ProjectMilan.Pipelines.Store;
 
 namespace ProjectMilan.Pipelines.Startups
 {
@@ -290,7 +291,7 @@ namespace ProjectMilan.Pipelines.Startups
             var builtImages = ImagePackageBuilder.BuildImagePackages(Path.Combine(vars.OutputPath, NonStartupCategory.Images.ToString()));
             OnlineContentRegistration.RegisterOnlineBanners(builtImages);
             OnlineContentRegistration.RegisterMilanBanners(builtImages); // This is technically not 'Online' content, but it fits right here anyways.
-            OnlineContentRegistration.RegisterOnlineStorePacks(builtImages);
+            StoreRegistration.Register(builtImages); // The whole MP store: cards, pools and packs
             MilanPipelinesShared.CommitConfigBundle(); // Flush the image packages' dynamic load mappings and the online content using them
         }
 
