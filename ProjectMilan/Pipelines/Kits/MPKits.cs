@@ -4,6 +4,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Pipelines.Kits.KitSpecificFixes;
 using ProjectMilanCore;
 using System.Diagnostics;
 
@@ -62,6 +63,8 @@ namespace ProjectMilan.Pipelines.Kits
 
             var finalPackagePath = Path.Combine(outputPath, kitPipeline.PackageName + ".pcc");
             var kitDestPackage = MEPackageHandler.CreateAndOpenPackage(finalPackagePath, MEGame.LE3);
+            kitPipeline.PortedPackage = kitDestPackage;
+            
             kitDestPackage.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this for importing.
             kitDestPackage.LECLTagData.IsPostLoadFile = false; // Do not allow using BIO_COMMON
 
@@ -74,6 +77,11 @@ namespace ProjectMilan.Pipelines.Kits
             MilanShared.PortObjectReferencer(kitSourcePackage, kitDestPackage, kitPipeline.Cache, kitPipeline.LogCategory, postPortModifier: ApplyKitChanges);
             MilanShared.PortLocalizations(kitPipeline.PackageName, outputPath, kitPipeline.Cache, kitPipeline.LogCategory);
 
+            // Apply post corrections
+            kitPipeline.PostCorrections?.Invoke(kitPipeline);
+
+            // Lose refernce
+            kitPipeline.PortedPackage = null;
             kitPipeline.Cache.Dispose();
         }
 
@@ -217,7 +225,7 @@ namespace ProjectMilan.Pipelines.Kits
 
 
             // This kit is broken and will require manual fixes. BioWare chickened out of making a female BF3 soldier
-            new KitSpecificPipeline() { PackageName = "HumanFemale_InfBF3_MP", Enabled = false, ExcludeFromProduction = true},
+            new KitSpecificPipeline() { PackageName = "HumanFemale_InfBF3_MP", Enabled = false, ExcludeFromProduction = true, PostCorrections = BF3Infiltrator.ApplyPostFixes },
 
         };
     }

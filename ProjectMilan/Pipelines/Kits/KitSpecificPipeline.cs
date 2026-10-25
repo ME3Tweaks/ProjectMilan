@@ -33,5 +33,15 @@ namespace ProjectMilan.Pipelines.Kits
         /// Cache for this pipeline
         /// </summary>
         public PackageCache Cache { get; set; }
+
+        /// <summary>
+        /// The ported package. Null once the pipeline for this kit has finished to prevent reference keeping
+        /// </summary>
+        public IMEPackage PortedPackage { get; set; }
+
+        /// <summary>
+        /// Delegate for making fixes after porting
+        /// </summary>
+        public Action<KitSpecificPipeline> PostCorrections { get; internal set; }
     }
 }
