@@ -35,6 +35,8 @@ namespace ProjectMilan.Pipelines.Verify
                 tfcFiles[Path.GetFileName(file)] = file;
             using var textureVerifier = new TextureReferenceVerifier(tfcFiles);
 
+            var modClassFiles = GetModClassFiles();
+
             // Map of Package -> Map of IFP -> NetIndex
             var netIndexes = new CaseInsensitiveDictionary<CaseInsensitiveDictionary<int>>();
             foreach (var f in Directory.GetFiles(Program.Settings.OutputModPath, "*", SearchOption.AllDirectories))
@@ -44,7 +46,7 @@ namespace ProjectMilan.Pipelines.Verify
                 {
                     // Package file checks
                     using var package = MEPackageHandler.OpenMEPackage(f);
-                    VerifyVTables(package);
+                    VerifyVTables(package, modClassFiles);
                     RunEntryChecks(package);
                     if (Program.Settings.RunConformancePipeline) // If we didn't run conformance this is pointless to check
                         NetIndexCheck(package, netIndexes);
@@ -134,12 +136,39 @@ namespace ProjectMilan.Pipelines.Verify
             }
         }
 
-        private static void VerifyVTables(IMEPackage package)
+        /// <summary>
+        /// The file each class in the mod is in, by memory path. A class in several files (a forced export) maps to the file
+        /// that sorts first, which puts BIOP_MP_COMMON's copy first: that's the copy the game loads, and the one the VTables
+        /// pipeline rebuilt the class's subclasses against.
+        /// </summary>
+        private static Dictionary<string, string> GetModClassFiles()
+        {
+            var classFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var files = Directory.GetFiles(Program.Settings.OutputModPath, "*.pcc", SearchOption.AllDirectories)
+                .OrderBy(f => !Path.GetFileNameWithoutExtension(f).Equals(MilanShared.MP_STARTUP_NAME, StringComparison.OrdinalIgnoreCase))
+                .ThenBy(f => f);
+            foreach (var file in files)
+            {
+                using var package = MEPackageHandler.UnsafePartialLoad(file, _ => false);
+                foreach (var classExport in package.Exports.Where(x => x.IsClass))
+                    classFiles.TryAdd(classExport.MemoryFullPath, file);
+            }
+            return classFiles;
+        }
+
+        private static void VerifyVTables(IMEPackage package, Dictionary<string, string> modClassFiles)
         {
             // Chains onto the base Global -> MPCommon tier, not the warm cache - verification doesn't hit the warm
             // tier's hot files enough to be worth pulling them in; anything it does need beyond SFXGame/Engine/MPCommon
             // (e.g. direct parents of what's being checked) is opened into this chained cache as normal.
             using var tpc = MilanShared.GetMPCommonBaseTieredPackageCache().ChainNewCache(debugName: $"VerifyMod VerifyVTables cache ({package.FileNameNoExtension})");
+
+            // A parent the mod has a copy of is checked against that copy, rather than whichever one an import search finds
+            // (for a forced export, possibly LE3's own copy, which Mod Manager's slash brings in line).
+            ExportEntry? ResolveModClass(ImportEntry import) =>
+                modClassFiles.TryGetValue(import.InstancedFullPath, out var file)
+                    ? tpc.GetCachedPackage(file)?.Exports.FirstOrDefault(x => x.IsClass && x.MemoryFullPath.Equals(import.InstancedFullPath, StringComparison.OrdinalIgnoreCase))
+                    : null;
 
             // This should:
             // Check vtable matching
@@ -184,7 +213,7 @@ namespace ProjectMilan.Pipelines.Verify
                     }
                 }
 
-                CoreVTables.VerifyVTable(f, tpc, true);
+                CoreVTables.VerifyVTable(f, tpc, true, ResolveModClass);
             }
         }
     }
