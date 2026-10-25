@@ -21,5 +21,10 @@ namespace ProjectMilanCore.Config
         /// Banner image object path, e.g. "GUI_MPImages_SMP.Challenge.SoloMstr". Must be dynamic load mapped.
         /// </summary>
         public string BackgroundResource { get; set; }
+
+        /// <summary>
+        /// Info for how to unlock a banner. If none is provided, the banner can't be unlocked through normal means.
+        /// </summary>
+        public AchievementUnlockInfo UnlockInfo { get; set; }
     }
 }
