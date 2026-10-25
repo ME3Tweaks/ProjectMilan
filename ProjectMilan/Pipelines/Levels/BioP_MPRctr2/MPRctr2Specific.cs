@@ -163,7 +163,8 @@ internal class MPRctr2Specific : LevelSpecificFixesBase
     private const string ButtonMeshIFP = "BioApl_Ind_Button01.Button01";
     private const string HitboxMeshIFP = "BioG_Ladders.PrefabBox_01";
     private const string HitboxName = "MilanRctr2ButtonHitbox";
-
+    // Power-impactable object
+    private const string PowerTargetClassPath = "SFXGameContent_Milan.MilanPowerTargetInterpActor";
 
 
     // How far the hitbox extends past the button on every side, so it is hit before the button mesh is
@@ -244,6 +245,9 @@ internal class MPRctr2Specific : LevelSpecificFixesBase
             var hitbox = EntryCloner.CloneTree(template);
             hitbox.ObjectName = new NameReference(HitboxName, index);
             var component = (ExportEntry)hitbox.GetProperty<ObjectProperty>("StaticMeshComponent")!.ResolveToEntry(package)!;
+            // Make hitbox take damage from powers
+            hitbox.Class = MilanLevelTools.GetOrAddForcedExportClassImport(package, PowerTargetClassPath);
+            component.Archetype = MilanLevelTools.GetOrAddForcedExportComponentTemplateImport(package, PowerTargetClassPath, component.Archetype!.ObjectName.Instanced, component.ClassName);
             component.WriteProperties(new PropertyCollection
             {
                 new ObjectProperty(hitboxMesh, "StaticMesh"),
