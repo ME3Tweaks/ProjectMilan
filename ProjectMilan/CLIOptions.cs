@@ -67,6 +67,9 @@ namespace ProjectMilan
         [Option("check-vanilla-netindex-cache", HelpText = "Only load Pipelines\\Finalize\\VanillaNetIndex.bin, validate it against the LE3 source, and print its load time and size, then exit.", Required = false)]
         public bool CheckVanillaNetIndexCache { get; set; }
 
+        [Option("slash-only", HelpText = "Only run the slash stage (Mod Manager builds a base install, we generate the slash manifest) against the existing output mod, then exit. For when slash generation failed and the build has already exited.", Required = false)]
+        public bool SlashOnly { get; set; }
+
         [Option("compare-lighting-me3",HelpText = "Unpacked ME3 folder to read ME3's levels from for --compare-lighting. Defaults to the installed game.", Required = false)]
         public string CompareLightingME3 { get; set; }
     }

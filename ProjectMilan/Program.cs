@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
+using ProjectMilan.Pipelines.EntryMenu;
 using ProjectMilan.Pipelines.Finalize;
 using ProjectMilan.Pipelines.HeavyWeapons;
 using ProjectMilan.Pipelines.Init;
@@ -32,6 +33,7 @@ using static ProjectMilanCore.ConsoleHelpers;
 using Serilog;
 using Timer = System.Timers.Timer;
 using ProjectMilan.Pipelines.Shaders;
+using ProjectMilan.Pipelines.Slash;
 using ProjectMilan.Pipelines.StaticLighting;
 
 // MAKE SURE YOU SET YOUR SETTINGS PATH IN YOUR RUN CONFIGURATION
@@ -111,6 +113,7 @@ namespace ProjectMilan
         [
             (ECheckpointStage.MPCommon, "MPCommon", () => Settings.RunMPCommonPipeline),
             (ECheckpointStage.NonStartup, "NonStartup", () => Settings.RunNonStartupPipeline),
+            (ECheckpointStage.EntryMenu, "EntryMenu", () => true),
             (ECheckpointStage.Kits, "Kits", () => ShouldRunKitsPipeline),
             (ECheckpointStage.Weapons, "Weapons", () => ShouldRunWeaponsPipeline),
             (ECheckpointStage.HeavyWeapons, "HeavyWeapons", () => true), // Always runs
@@ -151,6 +154,11 @@ namespace ProjectMilan
         private static bool ShouldRunLevelsPipeline => Settings.RunLevelsPipeline || Settings.ProductionBuild;
 
         /// <summary>
+        /// A production build always generates the slash manifest, regardless of <see cref="IMilanSettings.RunSlashPipeline"/>.
+        /// </summary>
+        private static bool ShouldRunSlashPipeline => Settings.RunSlashPipeline || Settings.ProductionBuild;
+
+        /// <summary>
         /// Pipelines that publish process-global in-memory state which later pipelines depend on. When a
         /// restored checkpoint means one of these never runs, its output is on disk but nothing has loaded
         /// it into memory, so the registration has to be replayed instead. Every other pipeline is disk-only
@@ -180,7 +188,7 @@ namespace ProjectMilan
         /// checkpoints are never shipped, and a full rebuild is exactly the cost they exist to avoid. A change to one
         /// of those pipelines just makes a checkpoint taken at or after it stale - retake it.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 12; // 12: HeavyWeapons stage after Weapons installs the heavy weapon packages and registers their config/TLK strings, which checkpoints taken after it don't contain. 11:BaseDelta net-indexes every patched package append-only against the vanilla net index cache (canonical indexes, new objects after the linker's highest, counts raised to cover them), which older checkpoints' patches don't do. 10: BaseDelta compiles Classes/<Package>/ classes into their own forced-export packages (AAT, SFXGameContent_MilanBase) instead of SFXGame, which older checkpoints' SFXGame patches don't do. 9: BaseDelta gained the Startup.pcc target (Scaleform UI) and SFXGame PropertyUpdate (GUI WwiseBank), which older checkpoints' patches don't contain. 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
+        public const int MIN_CHECKPOINT_VERSION = 24; // 24: Heavy unlock ownership, prerequisites and generic ammo text. 23: Achievement packs now award their registered banner, with ownership mappings 716-722. 22: Store banner ownership config and reveal structs/movie must be rebuilt together. 21: Restore the local heavy choice after PRI replacement. 20: Heavy selection confirms on Back and slot handoff. 19: Heavy loadout reconciliation and None bonuses. 18: Heavy catalog rarity independent of store drops. 17: Explicit None heavy choice and Cobra Titan artwork. 16: Indexed heavy icons and authored label. 15: Heavy catalog, PRI ID, handler and six-slot movie must be built together. 14: Hidden heavy weapon subclasses and their SFXHeavyWeapon base fields must be built together. 13: AssetFix applies GUI mips/residency to every copy; older checkpoints may have mismatched or streamed GUI images. 12: HeavyWeapons stage after Weapons installs the heavy weapon packages and registers their config/TLK strings, which checkpoints taken after it don't contain. 11:BaseDelta net-indexes every patched package append-only against the vanilla net index cache (canonical indexes, new objects after the linker's highest, counts raised to cover them), which older checkpoints' patches don't do. 10: BaseDelta compiles Classes/<Package>/ classes into their own forced-export packages (AAT, SFXGameContent_MilanBase) instead of SFXGame, which older checkpoints' SFXGame patches don't do. 9: BaseDelta gained the Startup.pcc target (Scaleform UI) and SFXGame PropertyUpdate (GUI WwiseBank), which older checkpoints' patches don't contain. 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -271,6 +279,18 @@ namespace ProjectMilan
                 LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger);
                 MEPackageHandler.GlobalSharedCacheEnabled = false;
                 StaticLightingCompute.BakeFromPreBakeMaps(obj.BakeLighting, quality, MPLevels.DefaultStaticMeshLightingRes);
+                MilanLog.LogSessionSummary();
+                MilanLog.CloseAndFlush();
+                return;
+            }
+
+            // Just the slash stage, against what the last build left in the output folder (e.g. it failed and the build has
+            // since exited). Returns before the output folder is cleaned.
+            if (obj.SlashOnly)
+            {
+                LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.LE3]);
+                MEPackageHandler.GlobalSharedCacheEnabled = false;
+                ModManagerSession.RunSlashStage();
                 MilanLog.LogSessionSummary();
                 MilanLog.CloseAndFlush();
                 return;
@@ -712,6 +732,10 @@ namespace ProjectMilan
         {
             MilanInit.Init(); // Initialize shared pipeline data
 
+            // Boots Mod Manager now so it's ready for the slash stage at the end
+            if (ShouldRunSlashPipeline)
+                ModManagerSession.StartEarly();
+
             // You can uncomment these (along with DontDeleteModFolder) to skip to a specific step.
             //goto licensee;
 
@@ -751,6 +775,7 @@ namespace ProjectMilan
             // state it publishes), and write the checkpoint once it's done when it's the chosen stage.
             RunPipeline(ECheckpointStage.MPCommon, Settings.RunMPCommonPipeline, MPCommon.RunPipeline, "MPCommon"); // Builds the BIOP_MP_COMMON package that is used by all BioP_MP files
             RunPipeline(ECheckpointStage.NonStartup, Settings.RunNonStartupPipeline, NonStartupPipeline.RunPipeline, "NonStartup"); // Ports packages that are not kits, levels, BIOP_MP_COMMON, etc. Things like images, objectives
+            RunPipeline(ECheckpointStage.EntryMenu, true, EntryMenuPipeline.RunPipeline, "EntryMenu");
             // goto end;
 
             // Content build pipelines
@@ -880,6 +905,9 @@ namespace ProjectMilan
         end:
             // The build succeeded end-to-end - safe to publish the BaseDelta patches + manifest now.
             BaseDeltaHandler.WriteMilanDeltaOutput();
+
+            // Mod Manager builds a base install from what we just built, and we generate the slash manifest for it
+            RunPipeline(ShouldRunSlashPipeline, ModManagerSession.RunSlashStage, "Slash");
 
             PrintSummaryInformation();
 
