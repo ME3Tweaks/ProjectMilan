@@ -30,9 +30,75 @@ namespace ProjectMilan.Pipelines.Startups
         public const string MippedTextureGroup = "TEXTUREGROUP_Promotional";
 
         /// <summary>
+        /// Individual GUI textures to mip, by InstancedFullPath, whatever package they are in and whatever their LODGroup.
+        /// Every copy of each path is mipped.
+        /// </summary>
+        public static readonly IReadOnlySet<string> ExplicitTexturePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal_I32", // Red crate
+            "GUI_SF_MPMatchResults.MPMatchResults_I25", // Match results coins
+            "GUI_SF_MPMatchResults.MPMatchResults_I64", // Match results row blue border
+            "GUI_SF_MPMatchResults.MPMatchResults_I67", // Match results row red border
+            "GUI_SF_MPNewLobby_DLC.MPNewLobby_I49", // Lobby card border
+            
+            // Consumables UI
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_IF", // Row
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I22", // Selected row 
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I28", // Consumables item border blue
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I36", // Consumables item border white
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I3A", // Consumables item border red
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I56", // Ops Survival Pack
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I57", // Cobra
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I58", // Medigel
+            "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I59", // Thermal Clips
+
+
+
+        };
+
+        /// <summary>
+        /// Optional maximum dimension for every copy of a GUI texture. Independent of mip selection:
+        /// cap-only textures keep their group and single-mip/chain behavior. OriginalSize retains the full source size.
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, int> TextureSizeCaps = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase)
+        {
+            // We manually disabled some upscales so this is likely pretty lightly used
+            { "GUI_SF_MPMatchResults.MPMatchResults_I25", 1024 }, // Match results coins - We have 2K but widest this shows is about 600
+            { "GUI_SF_MPNewLobby_DLC.MPNewLobby_I49", 2048 }, // Lobby card border - We have 4K but max size is less than half so 2K should be OK
+            { "GUI_SF_MPNewLobby_DLC.MPNewLobby_I6F", 2048 }, // Lobby card red fill - We have 4K but max size is less than half so 2K should be OK
+            { "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I58", 512 }, // + Up arrow power, 300 units required
+            { "GUI_SF_MPSelectKit_DLC.MPSelectKit_I22", 512 }, // Kit Select Alliance Logo - needs around 260 units
+            { "GUI_SF_MPPlayerCountdown_Milan.MPPlayerCountdown_I20", 256 }, // Player Countdown needs ~256 units
+            // Medals need 96x96
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I1A", 128 },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I1C", 128 },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I1E", 128 },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I20", 128 },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I22", 128 },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I24", 128 },
+            { "GUI_SF_MPChallenges_DLC.MPChallenges_I32", 128 },
+
+
+        };
+
+        /// <summary>Paths requiring either mip filtering or a size cap, for package scans and duplicate checks.</summary>
+        public static HashSet<string> GetPolicyTexturePaths(IReadOnlySet<string> texturePaths, IReadOnlyDictionary<string, int>? sizeCaps = null)
+        {
+            sizeCaps ??= TextureSizeCaps;
+            foreach (var (path, maxSize) in sizeCaps)
+            {
+                if (maxSize <= 0)
+                    throw new ArgumentOutOfRangeException(nameof(sizeCaps), $"GUI size cap for {path} must be positive.");
+            }
+            var paths = new HashSet<string>(texturePaths, StringComparer.OrdinalIgnoreCase);
+            paths.UnionWith(sizeCaps.Keys);
+            return paths;
+        }
+
+        /// <summary>
         /// Rebuilds the selection from output packages, including after a checkpoint restore. These are the
-        /// packages previously mipped by Weapons/NonStartup; every copy of their UI texture paths is selected.
-        /// The editable registry and pre-upscale inventory are deliberately separate future work.
+        /// packages previously mipped by Weapons/NonStartup; every copy of their UI texture paths is selected,
+        /// plus every path in <see cref="ExplicitTexturePaths"/>.
         /// </summary>
         public static HashSet<string> DiscoverTexturePaths(string outputPath)
         {
@@ -42,7 +108,7 @@ namespace ProjectMilan.Pipelines.Startups
                 "SFXGUI_WeaponUIDataDLC_SharedSF", "SFXSharedModImages",
                 "SFXMP5WeaponImages", "SFXMP5ModImages",
             };
-            var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var paths = new HashSet<string>(ExplicitTexturePaths, StringComparer.OrdinalIgnoreCase);
             foreach (var file in Directory.EnumerateFiles(outputPath, "*.pcc", SearchOption.AllDirectories)
                          .Where(file => sources.Contains(Path.GetFileNameWithoutExtension(file))))
             {
@@ -61,13 +127,15 @@ namespace ProjectMilan.Pipelines.Startups
 
         /// <summary>
         /// Applies the selected GUI texture policy to every matching copy in a package.
-        /// Existing chains are kept, with package residency enforced.
+        /// Existing chains are kept, with package residency enforced; independent size caps are applied afterward.
         /// </summary>
         /// <param name="package">The package to mip the textures of. Not saved.</param>
         /// <param name="options">How the lower mips are filtered; null for <see cref="MipGenerationOptions.HighQuality"/>.</param>
-        /// <returns>How many textures were given mips.</returns>
-        public static int GenerateMipsForPackage(IMEPackage package, IReadOnlySet<string> texturePaths, MipGenerationOptions? options = null)
+        /// <returns>How many textures were changed by mip generation, residency repair, or a size cap.</returns>
+        public static int GenerateMipsForPackage(IMEPackage package, IReadOnlySet<string> texturePaths, MipGenerationOptions? options = null,
+            IReadOnlyDictionary<string, int>? sizeCaps = null)
         {
+            sizeCaps ??= TextureSizeCaps;
             int mipped = 0;
             long bytesBefore = 0;
             long bytesAfter = 0;
@@ -76,13 +144,18 @@ namespace ProjectMilan.Pipelines.Startups
             // Mipping rewrites the export's data, so take the list first
             foreach (var exp in package.Exports.Where(x => x.ClassName == "Texture2D").ToList())
             {
-                if (!texturePaths.Contains(exp.InstancedFullPath))
+                bool mipSelected = texturePaths.Contains(exp.InstancedFullPath);
+                bool capSelected = sizeCaps.TryGetValue(exp.InstancedFullPath, out int maxSize);
+                if (!mipSelected && !capSelected)
                 {
                     continue;
                 }
 
                 var before = new Texture2D(exp).Mips.Where(x => x.storageType != StorageTypes.empty).Sum(x => (long)x.uncompressedSize);
-                if (GenerateMipsForGUITexture(exp, options))
+                bool changed = mipSelected && GenerateMipsForGUITexture(exp, options);
+                if (capSelected)
+                    changed |= CapGUITexture(exp, maxSize, options);
+                if (changed)
                 {
                     mipped++;
                     bytesBefore += before;
@@ -90,7 +163,7 @@ namespace ProjectMilan.Pipelines.Startups
                 }
             }
 
-            MilanLog.Information($"Applied GUI mip/residency policy to {mipped} GUI texture(s) in {package.FileNameNoExtension} in {stopwatch.Elapsed.TotalSeconds:0.#}s " +
+            MilanLog.Information($"Applied GUI mip/size/residency policy to {mipped} GUI texture(s) in {package.FileNameNoExtension} in {stopwatch.Elapsed.TotalSeconds:0.#}s " +
                                  $"(texture data {bytesBefore / 1048576.0:0.#} MiB -> {bytesAfter / 1048576.0:0.#} MiB)", customPrefix: LOG_CATEGORY);
             return mipped;
         }
@@ -166,7 +239,89 @@ namespace ProjectMilan.Pipelines.Startups
             }
 
             var props = exp.GetProperties();
-            return $"{props.GetProp<EnumProperty>("LODGroup")?.Value.Name}, NeverStream={props.GetProp<BoolProperty>("NeverStream")?.Value == true}, local={mips.All(mip => mip.IsPackageStored)}, {mips[0].width}x{mips[0].height}, {mips.Count} mips, {texture.TextureFormat}, top {Texture2D.GetTextureCRC(exp):X8}, all {TextureCRC.Compute(all.ToArray()):X8}";
+            return $"{props.GetProp<EnumProperty>("LODGroup")?.Value.Name}, NeverStream={props.GetProp<BoolProperty>("NeverStream")?.Value == true}, local={mips.All(mip => mip.IsPackageStored)}, {mips[0].width}x{mips[0].height}, original={props.GetProp<IntProperty>("OriginalSizeX")?.Value}x{props.GetProp<IntProperty>("OriginalSizeY")?.Value}, {mips.Count} mips, {texture.TextureFormat}, top {Texture2D.GetTextureCRC(exp):X8}, all {TextureCRC.Compute(all.ToArray()):X8}";
+        }
+
+        /// <summary>
+        /// Drops oversized levels, generating a missing target level if necessary. A single-mip texture stays single-mip;
+        /// an existing chain keeps its lower levels. Encoded levels already present are not recompressed.
+        /// </summary>
+        public static bool CapGUITexture(ExportEntry exp, int maxSize, MipGenerationOptions? options = null)
+        {
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxSize);
+            if (exp.ClassName != "Texture2D")
+                throw new ArgumentException($"{exp.InstancedFullPath} is not a Texture2D.", nameof(exp));
+
+            var texture = new Texture2D(exp);
+            var live = texture.Mips.Where(mip => mip.storageType != StorageTypes.empty).ToList();
+            if (live.Count == 0)
+                throw new InvalidDataException($"GUI texture {exp.InstancedFullPath} has no mip payloads to cap.");
+            var sourceTop = live[0];
+            if (sourceTop.width <= maxSize && sourceTop.height <= maxSize)
+                return false;
+
+            int width = sourceTop.width, height = sourceTop.height;
+            while (width > maxSize || height > maxSize)
+            {
+                width = Math.Max(1, width >> 1);
+                height = Math.Max(1, height >> 1);
+            }
+
+            var props = exp.GetProperties();
+            List<UTexture2D.Texture2DMipMap> retained;
+            if (live.Any(mip => mip.width == width && mip.height == height))
+            {
+                // Read retained external payloads before changing the export or its TFC references.
+                retained = live.Where(mip => mip.width <= width && mip.height <= height)
+                    .Select(mip => new UTexture2D.Texture2DMipMap(Texture2D.GetTextureData(mip, exp.Game), mip.width, mip.height)).ToList();
+            }
+            else
+            {
+                var format = Image.getPixelFormatType(texture.TextureFormat);
+                var image = new Image(new List<MipMap> { new(Texture2D.GetTextureData(sourceTop, exp.Game), sourceTop.width, sourceTop.height, format) }, format);
+                bool dxt1Alpha = false;
+                if (format == PixelFormat.DXT1 && props.GetProp<BoolProperty>("CompressionNoAlpha")?.Value != true)
+                {
+                    int decodedWidth = sourceTop.width, decodedHeight = sourceTop.height;
+                    var argb = Image.convertRawToARGB(image.mipMaps[0].data, ref decodedWidth, ref decodedHeight, format);
+                    dxt1Alpha = props.GetProp<EnumProperty>("CompressionSettings")?.Value.Name == "TC_OneBitAlpha";
+                    for (int i = 3; !dxt1Alpha && i < argb.Length; i += 4)
+                        dxt1Alpha = argb[i] < 255;
+                }
+                image.correctMips(format, dxt1Alpha, options: options ?? MipGenerationOptions.HighQuality);
+                var levels = image.mipMaps.Where(mip => mip.origWidth <= width && mip.origHeight <= height);
+                if (live.Count == 1)
+                    levels = levels.Take(1);
+                retained = levels.Select(mip => new UTexture2D.Texture2DMipMap(mip.data, mip.origWidth, mip.origHeight)).ToList();
+            }
+
+            if (retained.Count == 0)
+                throw new InvalidDataException($"GUI texture {exp.InstancedFullPath} has no usable mip at or below {maxSize}.");
+            var binary = exp.GetBinaryData<UTexture2D>();
+            binary.Mips = retained;
+            props.AddOrReplaceProp(new IntProperty(retained[0].SizeX, "SizeX"));
+            props.AddOrReplaceProp(new IntProperty(retained[0].SizeY, "SizeY"));
+            props.AddOrReplaceProp(new IntProperty(Math.Max(props.GetProp<IntProperty>("OriginalSizeX")?.Value ?? 0, sourceTop.width), "OriginalSizeX"));
+            props.AddOrReplaceProp(new IntProperty(Math.Max(props.GetProp<IntProperty>("OriginalSizeY")?.Value ?? 0, sourceTop.height), "OriginalSizeY"));
+            props.AddOrReplaceProp(new IntProperty(retained.Count - 1, "MipTailBaseIdx"));
+            props.AddOrReplaceProp(new BoolProperty(true, "NeverStream"));
+            props.RemoveNamedProperty("TextureFileCacheName");
+            props.RemoveNamedProperty("TFCFileGuid");
+            props.RemoveNamedProperty("TFCFileGuidHiRes");
+            var originalData = exp.Data.ToArray();
+            try
+            {
+                exp.WriteProperties(props);
+                exp.WriteBinary(binary);
+                Texture2D.UpdateLODBiasForTexture(exp);
+            }
+            catch
+            {
+                exp.Data = originalData;
+                throw;
+            }
+            MilanLog.Information($"Capped GUI texture {exp.InstancedFullPath} in {exp.FileRef.FileNameNoExtension}: {sourceTop.width}x{sourceTop.height} -> {retained[0].SizeX}x{retained[0].SizeY}", customPrefix: LOG_CATEGORY);
+            return true;
         }
 
         /// <summary>
