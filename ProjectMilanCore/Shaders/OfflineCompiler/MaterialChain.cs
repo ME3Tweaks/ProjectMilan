@@ -46,6 +46,19 @@ public static class MaterialChain
     }
 
     /// <summary>
+    /// True for a material that still holds the graph it was authored with. It has expressions, none of them null, and a
+    /// material input connected to one. Cooking strips a graph either by
+    /// removing expressions and nulling the inputs' Expression (LE3), or by nulling the stripped Expressions entries in
+    /// place
+    /// </summary>
+    public static bool HoldsCompleteGraph(ExportEntry material)
+    {
+        var props = material.GetProperties();
+        if (props.GetProp<ArrayProperty<ObjectProperty>>("Expressions") is not { Count: > 0 } expressions || expressions.Any(e => e.Value == 0)) return false;
+        return props.OfType<StructProperty>().Any(s => s.Properties.GetProp<ObjectProperty>("Expression") is { Value: not 0 });
+    }
+
+    /// <summary>
     /// True when the game's own compile of this cooked copy was empty: no material input is connected and the shipped
     /// resource reads nothing (no uniform expressions or textures, no texture coordinates, vertex color, dynamic parameter,
     /// scene color or depth, offsets or transforms). BioVFX_MP4_Tur_Jets.Materials.FakeTurian_01 ships this way although

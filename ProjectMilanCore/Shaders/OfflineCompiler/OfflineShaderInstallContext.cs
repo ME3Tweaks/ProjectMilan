@@ -174,34 +174,51 @@ public sealed class OfflineShaderInstallContext : IDisposable
     public ExportEntry? GraphSource(ExportEntry material) => GraphSource(material, decooked);
 
     /// <summary>
-    /// Compile an output package's material from its own expression graph when it has one, before looking for a decooked
-    /// copy. Only for outputs whose materials were authored or rebuilt uncooked, like the heavy weapon packages: a cooked
-    /// material keeps its parameter expressions, so in the mod's output this would compile stripped graphs.
+    /// Output materials (instanced full paths) compiled from their own expression graphs, before any decooked copy: those
+    /// authored or rebuilt uncooked, like the LE2 materials a heavy weapon package rebuilds from T3D. Every other output
+    /// material is treated as cooked. A cooked material keeps its parameter expressions and sometimes an input wired to one
+    /// (Strings_Glow's EmissiveColor to its Color parameter), so it can look complete while its graph is stripped.
     /// </summary>
-    public bool OutputMaterialsHoldGraphs { get; init; }
+    public IReadOnlySet<string>? OutputMaterialsWithOwnGraphs { get; init; }
+
+    /// <summary>
+    /// Output material path to the path of the decooked material whose graph it compiles from: for a cooked copy of a
+    /// game material under a new name (a standalone port's usage copy, <c>X_LE2</c> of <c>X</c>), whose own expressions
+    /// are stripped and whose path the decooked corpus doesn't have.
+    /// </summary>
+    public IReadOnlyDictionary<string, string>? GraphAliases { get; init; }
 
     /// <param name="opened">Decooked packages opened so far by the calling thread.</param>
     public ExportEntry? GraphSource(ExportEntry material, Dictionary<string, IMEPackage?> opened)
     {
         using var timing = planningDiagnostics?.Measure("graph-source", material.InstancedFullPath);
-        if (OutputMaterialsHoldGraphs && material.FileRef.FilePath is { } filePath
-            && outputByName.TryGetValue(Path.GetFileName(filePath), out var outputPath)
-            && string.Equals(Path.GetFullPath(filePath), outputPath, StringComparison.OrdinalIgnoreCase)
-            && material.GetProperty<ArrayProperty<ObjectProperty>>("Expressions") is { Count: > 0 })
+        string? alias = GraphAliases?.GetValueOrDefault(material.InstancedFullPath);
+        if (alias == null && OutputMaterialsWithOwnGraphs?.Contains(material.InstancedFullPath) == true && IsOutputFile(material.FileRef.FilePath))
         {
             return material;
         }
-        if (DecookedLE3Folder == null) return null;
-        string root = RootName(material);
-        if (!opened.TryGetValue(root, out var package))
+        if (DecookedLE3Folder != null)
         {
-            string path = Path.Combine(DecookedLE3Folder, root + ".pcc");
-            using var opening = planningDiagnostics?.Measure("decooked-open", path);
-            opened[root] = package = File.Exists(path) ? MEPackageHandler.OpenMEPackage(path) : null;
+            string graphPath = alias ?? material.InstancedFullPath;
+            string root = alias != null ? graphPath.Split('.')[0] : RootName(material);
+            if (!opened.TryGetValue(root, out var package))
+            {
+                string path = Path.Combine(DecookedLE3Folder, root + ".pcc");
+                using var opening = planningDiagnostics?.Measure("decooked-open", path);
+                opened[root] = package = File.Exists(path) ? MEPackageHandler.OpenMEPackage(path) : null;
+                if (package != null) MaterialGraphOverrides.AddTuningParameters(package);
+            }
+            var decooked = package == null ? null : PathLookup.FindExport(package, graphPath, PathLookup.IsMaterialObject);
+            if (decooked?.GetProperty<ArrayProperty<ObjectProperty>>("Expressions") is { Count: > 0 }) return decooked;
         }
-        var decooked = package == null ? null : PathLookup.FindExport(package, material.InstancedFullPath, PathLookup.IsMaterialObject);
-        return decooked?.GetProperty<ArrayProperty<ObjectProperty>>("Expressions") is { Count: > 0 } ? decooked : null;
+        if (alias != null) return null;
+        // No decooked copy: an output material LE3 never had may still hold its authored graph, like the LE2 materials a
+        // standalone port (SFXHeavyWeapon_Blackstorm) rebuilt from T3D
+        return IsOutputFile(material.FileRef.FilePath) && MaterialChain.HoldsCompleteGraph(material) ? material : null;
     }
+
+    private bool IsOutputFile(string? filePath) => filePath != null && outputByName.TryGetValue(Path.GetFileName(filePath), out var outputPath)
+        && string.Equals(Path.GetFullPath(filePath), outputPath, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>A file of the game itself: under the game root, and neither the mod's output nor another mod's DLC.</summary>
     private bool IsGameFile(string path)
@@ -269,14 +286,23 @@ public sealed class OfflineShaderInstallContext : IDisposable
         return null;
     }
 
+    /// <summary>
+    /// Compile every output material and permutation into its package's own cache, and keep those maps through
+    /// compaction, even when the game's RefShaderCache has them. For standalone packages that must not depend on a
+    /// RefShaderCache (a slashed one, or another game's, such as LMP running an LE3-built package).
+    /// </summary>
+    public bool IgnoreRefShaderCache { get; init; }
+
     public ISet<StaticParameterSet> KeysInRefShaderCache(IReadOnlyCollection<StaticParameterSet> keys)
     {
+        if (IgnoreRefShaderCache) return new HashSet<StaticParameterSet>();
         var missing = keys.ToHashSet();
         RefShaderCacheReader.RemoveStaticParameterSetsThatAreInTheGlobalCache(missing, PackageGame, GameRoot);
         return keys.Where(k => !missing.Contains(k)).ToHashSet();
     }
 
-    /// <summary>Translates the graph as-is and with the swapped samplers; true when the HLSL differs.</summary>
+    /// <summary>Translates the graph as-is and with the swapped samplers; true when the HLSL differs and so do the
+    /// compiled shaders.</summary>
     public bool ConfirmVariant(ExportEntry graph, IReadOnlyList<VariantSamplerSwap> swaps)
     {
         using var timing = planningDiagnostics?.Measure("variant-confirmation", graph.InstancedFullPath);
@@ -293,26 +319,52 @@ public sealed class OfflineShaderInstallContext : IDisposable
             if (!alternatives.TryGetValue(texture, out var list)) alternatives[texture] = list = [];
             if (!list.Any(m => SameMetadata(m, swap.Metadata))) list.Add(swap.Metadata);
         }
-        string? Translate(Func<IEntry, TextureCompilationMetadata?> metadata)
+        Translation? Translate(Func<IEntry, TextureCompilationMetadata?> metadata)
         {
             try
             {
-                var result = new LE3MaterialShaderCompiler(new ResolvedMaterialCompilationInput(graph), getTextureMetadata: e => metadata(e)!)
-                    .TranslateMaterialResourceHlsl(Sources);
-                return result.Success ? result.MaterialHlsl : null;
+                var compiler = new LE3MaterialShaderCompiler(new ResolvedMaterialCompilationInput(graph), getTextureMetadata: e => metadata(e)!);
+                var result = compiler.TranslateMaterialResourceHlsl(Sources);
+                return result.Success ? new Translation(compiler, result) : null;
             }
             catch { return null; }
         }
-        string? original = Translate(TextureMetadata.GetMetadata);
+        var original = Translate(TextureMetadata.GetMetadata);
         if (original == null) return true;
         int rounds = alternatives.Values.Max(l => l.Count);
         for (int round = 0; round < rounds; round++)
         {
             var overrides = alternatives.ToDictionary(a => a.Key, a => a.Value[Math.Min(round, a.Value.Count - 1)]);
-            string? swapped = Translate(e => overrides.TryGetValue(e.UIndex, out var m) ? m : TextureMetadata.GetMetadata(e));
-            if (swapped == null || swapped != original) return true;
+            var swapped = Translate(e => overrides.TryGetValue(e.UIndex, out var m) ? m : TextureMetadata.GetMetadata(e));
+            if (swapped == null) return true;
+            if (swapped.Result.MaterialHlsl != original.Result.MaterialHlsl && !SameBytecode(graph, original, swapped)) return true;
         }
         return false;
+    }
+
+    private sealed record Translation(LE3MaterialShaderCompiler Compiler, TranslationResult Result);
+
+    // HLSL can differ in spelling only: a BC7 normal goes through Common.usf's BiasNormalizeNormalMap_BC7, the same *2-1
+    // bias a TC_NormalmapHQ default gets inline, and MultiPlayer_MASTER_MAT compiles byte-identical either way. So compile
+    // every planned job of both; any failure counts as a difference.
+    private bool SameBytecode(ExportEntry graph, Translation a, Translation b)
+    {
+        try
+        {
+            var resource = ObjectBinary.From<Material>(graph).SM3MaterialResource;
+            var planA = a.Compiler.BuildKnownSubsetCompilePlan(a.Result, resource);
+            var planB = b.Compiler.BuildKnownSubsetCompilePlan(b.Result, resource);
+            if (!planA.Success || !planB.Success || planA.Jobs.Count != planB.Jobs.Count) return false;
+            for (int i = 0; i < planA.Jobs.Count; i++)
+            {
+                if (planA.Jobs[i].Target != planB.Jobs[i].Target) return false;
+                var compiledA = a.Compiler.CompileShader(planA.Jobs[i], Sources);
+                var compiledB = b.Compiler.CompileShader(planB.Jobs[i], Sources);
+                if (!compiledA.Success || !compiledB.Success || !compiledA.Bytecode.AsSpan().SequenceEqual(compiledB.Bytecode)) return false;
+            }
+            return true;
+        }
+        catch { return false; }
     }
 
     private static bool SameMetadata(TextureCompilationMetadata a, TextureCompilationMetadata b) =>

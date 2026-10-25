@@ -11,32 +11,43 @@ namespace ProjectMilanCore.Shaders.OfflineCompiler;
 
 public sealed record MaterialCloneBinding(string SourceIdentity, string CloneIdentity, string PackagePath);
 
-/// <summary>Extends Matinee material bindings to the instances cloned during shader installation.</summary>
+/// <summary>
+/// Extends Kismet material bindings to the instances cloned during shader installation: Matinee material parameter groups, and the
+/// Target link of Milan's material parameter actions
+/// </summary>
 public static class MatineeMaterialCloneRepair
 {
-    // Yikes dude! 
+    // Yikes dude!
     // Who else hates doing kismet edits in code?
+
+    // SFXGameContent_Milan Kismet actions that set material parameters on their Target MaterialInstanceActors
+    private static readonly HashSet<string> MaterialParamActionClasses = ["SFXSeqAct_SetMaterialParam", "SFXSeqAct_BlinkMaterialParam"];
 
     public static int Repair(IMEPackage package, Func<string, IReadOnlyList<ExportEntry>> findClones,
         PackageCache cache)
     {
         int added = 0;
-        foreach (var interp in package.Exports.Where(e => e.ClassName == "SeqAct_Interp").ToArray())
+        foreach (var op in package.Exports.Where(e => e.ClassName == "SeqAct_Interp" || MaterialParamActionClasses.Contains(e.ClassName)).ToArray())
         {
-            var links = KismetHelper.GetVariableLinksOfNode(interp);
-            var data = links.FirstOrDefault(l => l.LinkDesc == "Data")?.LinkedNodes.OfType<ExportEntry>().FirstOrDefault();
-            if (data == null)
-                continue;
-            bool changed = false;
-            foreach (var link in links)
+            var links = KismetHelper.GetVariableLinksOfNode(op);
+            List<VarLinkInfo> materialLinks;
+            if (op.ClassName == "SeqAct_Interp")
             {
-                // Check we have a matinee track we care about
-                if (!MatineeHelper.TryGetInterpGroup(data, link.LinkDesc, out var group)
-                    || !(MatineeHelper.TryGetInterpTrack(group, "InterpTrackFloatMaterialParam", out _)
-                        || MatineeHelper.TryGetInterpTrack(group, "InterpTrackVectorMaterialParam", out _)))
+                var data = links.FirstOrDefault(l => l.LinkDesc == "Data")?.LinkedNodes.OfType<ExportEntry>().FirstOrDefault();
+                if (data == null)
                     continue;
-
-
+                // Check we have a matinee track we care about
+                materialLinks = links.Where(link => MatineeHelper.TryGetInterpGroup(data, link.LinkDesc, out var group)
+                    && (MatineeHelper.TryGetInterpTrack(group, "InterpTrackFloatMaterialParam", out _)
+                        || MatineeHelper.TryGetInterpTrack(group, "InterpTrackVectorMaterialParam", out _))).ToList();
+            }
+            else
+            {
+                materialLinks = links.Where(link => link.LinkDesc == "Target").ToList();
+            }
+            bool changed = false;
+            foreach (var link in materialLinks)
+            {
                 foreach (var variable in link.LinkedNodes.OfType<ExportEntry>().Where(v => v.ClassName == "SeqVar_Object").ToArray())
                 {
                     var actor = KismetHelper.ResolveObjectVarValue(variable) as ExportEntry;
@@ -65,8 +76,8 @@ public static class MatineeMaterialCloneRepair
                             controller.WriteProperty(new ObjectProperty(material, "MatInst"));
                             package.AddToLevelActorsIfNotThere(controller);
                         }
-                        var sequence = KismetHelper.GetParentSequence(interp)
-                            ?? throw new InvalidDataException($"{interp.InstancedFullPath} has no parent sequence.");
+                        var sequence = KismetHelper.GetParentSequence(op)
+                            ?? throw new InvalidDataException($"{op.InstancedFullPath} has no parent sequence.");
                         var cloneVar = KismetHelper.GetSequenceObjects(sequence).OfType<ExportEntry>()
                             .FirstOrDefault(e => e.ClassName == "SeqVar_Object" && KismetHelper.ResolveObjectVarValue(e) == controller);
                         if (cloneVar == null)
@@ -81,13 +92,13 @@ public static class MatineeMaterialCloneRepair
                 }
             }
             if (!changed) continue;
-            var props = interp.GetProperties();
+            var props = op.GetProperties();
             KismetHelper.WriteVariableLinksToProperties(links, props);
             // MaxVars must be raised separately when adding bindings.
             foreach (var (raw, link) in props.GetProp<ArrayProperty<StructProperty>>("VariableLinks")!.Zip(links))
                 if (link.LinkedNodes.Count > (raw.GetProp<IntProperty>("MaxVars")?.Value ?? 255))
                     raw.Properties.AddOrReplaceProp(new IntProperty(link.LinkedNodes.Count, "MaxVars"));
-            interp.WriteProperties(props);
+            op.WriteProperties(props);
         }
         return added;
     }

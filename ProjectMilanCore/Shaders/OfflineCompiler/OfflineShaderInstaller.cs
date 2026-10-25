@@ -300,8 +300,8 @@ public sealed class OfflineShaderInstaller(OfflineShaderInstallContext context, 
             foreach (var slot in slots) RetargetSlot(slot, package);
 
             ShaderCacheManipulator.AddShadersToFile(package, merged, overwrite: true);
-            ShaderCacheManipulator.CompactSeekFreeShaderCaches(package, context.GameRoot);
-            foreach (var broken in ShaderCacheManipulator.GetBrokenMaterials(package, context.GameRoot).Where(e => !e.IsA("Terrain")).Distinct())
+            ShaderCacheManipulator.CompactSeekFreeShaderCaches(package, context.GameRoot, localOnly: context.IgnoreRefShaderCache);
+            foreach (var broken in ShaderCacheManipulator.GetBrokenMaterials(package, context.GameRoot, localOnly: context.IgnoreRefShaderCache).Where(e => !e.IsA("Terrain")).Distinct())
                 failures.Add($"{name}: {broken.InstancedFullPath} has no shader map after the install");
             package.Save();
             log($"Shader install: {name}: {materials.Count} materials, {instances.Count} instances, {variants.Count} variants, {clones.Count} clones, {slots.Count} mesh slots moved");
