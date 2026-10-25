@@ -88,6 +88,7 @@ var config array<MapConfigData> MapSettings;
 var config array<EmblemDisplayInfo> EmblemList;
 var repnotify MPPowerData CharacterPowers[6];
 var repnotify MPWeaponData CharacterWeapons[2];
+var repnotify int HeavyWeaponId;
 var transient repnotify int PlayerMedals[10];
 var transient int PlayerMedalsCache[10];
 var LinearColor NametagColor;
@@ -203,11 +204,16 @@ public event simulated function ReplicatedEvent(Name VarName)
             OnCharacterChanged();
         }
     }
+    else if (VarName == 'HeavyWeaponId')
+    {
+        ReconcileHeavyWeaponSelection();
+    }
     else if (VarName == 'SFXPawn')
     {
         if (SFXPawn != None)
         {
             bWaitingForPawn = FALSE;
+            ReconcileHeavyWeaponSelection();
         }
     }
     else if (VarName == 'ReadyInLobby')
@@ -264,6 +270,7 @@ public function CopyProperties(PlayerReplicationInfo PRI)
     NewPRI = SFXPRIMP(PRI);
     NewPRI.ComputerName = ComputerName;
     NewPRI.CharacterData = CharacterData;
+    NewPRI.HeavyWeaponId = HeavyWeaponId;
     for (idx = 0; idx < 2; ++idx)
     {
         NewPRI.CharacterWeapons[idx] = CharacterWeapons[idx];
@@ -494,6 +501,7 @@ public simulated function LoadDataFromSave(SFXMPCharacterRecord Character)
     {
         return;
     }
+    RestoreLocalHeavyWeaponSelection();
     MPSaveManager = SFXEngine(Class'Engine'.static.GetEngine()).MPSaveManager;
     ClassRecord = MPSaveManager.GetClassRecord(Character.className);
     AccManager = SFXEngine(Class'Engine'.static.GetEngine()).AccomplishmentManager;
@@ -617,6 +625,12 @@ public delegate function int PRITotalPointSort(SFXPRIMP A, SFXPRIMP B)
 }
 public final simulated function SendCharacterDataToServer(optional bool bCharacter = TRUE, optional bool bWeapon = TRUE, optional bool bPower = TRUE)
 {
+    // Character changes can create the pawn immediately so we have to restore it first
+    if (bWeapon)
+    {
+        RestoreLocalHeavyWeaponSelection();
+        ServerSetHeavyWeaponSelection(HeavyWeaponId);
+    }
     if (bCharacter)
     {
         ServerSetCharacterSelection(CharacterData);
@@ -1351,11 +1365,60 @@ public simulated function SetLobbyScreen(byte NewScreen)
     ServerSetLobbyScreen(NewScreen);
 }
 
+public simulated function SetHeavyWeaponSelection(int Id)
+{
+    HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeId(Id);
+    RememberLocalHeavyWeaponSelection();
+    ServerSetHeavyWeaponSelection(HeavyWeaponId);
+}
+public reliable server function ServerSetHeavyWeaponSelection(int Id)
+{
+    HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeId(Id);
+    ReconcileHeavyWeaponSelection();
+    ClientHeavyWeaponSelection(HeavyWeaponId);
+}
+public reliable client function ClientHeavyWeaponSelection(int Id)
+{
+    HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeId(Id);
+    RememberLocalHeavyWeaponSelection();
+    ReconcileHeavyWeaponSelection();
+}
+private simulated function RememberLocalHeavyWeaponSelection()
+{
+    local PlayerController PC;
+
+    PC = PlayerController(Owner);
+    if (PC != None && PC.IsLocalPlayerController())
+    {
+        Class'SFXMilanHeavyWeaponCatalog'.static.RememberLocalSelection(HeavyWeaponId);
+    }
+}
+private simulated function RestoreLocalHeavyWeaponSelection()
+{
+    local PlayerController PC;
+
+    PC = PlayerController(Owner);
+    if (PC != None && PC.IsLocalPlayerController())
+    {
+        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.GetLocalSelection(HeavyWeaponId);
+    }
+}
+private simulated function ReconcileHeavyWeaponSelection()
+{
+    local SFXPawn_PlayerMP PlayerPawn;
+
+    PlayerPawn = SFXPawn_PlayerMP(SFXPawn);
+    if (PlayerPawn != None)
+    {
+        PlayerPawn.ReconcileHeavyWeaponSelection();
+    }
+}
+
 // 10/04/2026 Add LobbyScreen to replication
 replication
 {
     if (bNetDirty && Role == ENetRole.ROLE_Authority)
-        KickVotePlayerId, PlayerMedals, SFXPawn, LobbyListOrder, ReadyInLobby, StoreIsOpen, bReplicationReady, bLocalMapsSent, CombinedMapArray, NumKickVotesReceived, LobbyScreen;
+        HeavyWeaponId, KickVotePlayerId, PlayerMedals, SFXPawn, LobbyListOrder, ReadyInLobby, StoreIsOpen, bReplicationReady, bLocalMapsSent, CombinedMapArray, NumKickVotesReceived, LobbyScreen;
     if (bNetDirty && !bNetOwner && Role == ENetRole.ROLE_Authority)
         CharacterData, ComputerName, DisplayName, CharacterPowers, CharacterWeapons;
     
