@@ -175,7 +175,7 @@ public sealed class OfflineShaderInstallContext : IDisposable
 
     /// <summary>
     /// Output materials (instanced full paths) compiled from their own expression graphs, before any decooked copy: those
-    /// authored or rebuilt uncooked, like the LE2 materials a heavy weapon package rebuilds from T3D. Every other output
+    /// authored or rebuilt uncooked, like the LE2 materials a heavy weapon package rebuilds. Every other output
     /// material is treated as cooked. A cooked material keeps its parameter expressions and sometimes an input wired to one
     /// (Strings_Glow's EmissiveColor to its Color parameter), so it can look complete while its graph is stripped.
     /// </summary>

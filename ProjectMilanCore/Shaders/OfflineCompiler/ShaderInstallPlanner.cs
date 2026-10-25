@@ -109,8 +109,8 @@ public sealed class ShaderInstallPlannerOptions
     public Func<ExportEntry, ExportEntry?>? GraphSource { get; init; }
     /// <summary>Returns the subset of the keys that the game's RefShaderCache already has.</summary>
     public required Func<IReadOnlyCollection<StaticParameterSet>, ISet<StaticParameterSet>> KeysInRefShaderCache { get; init; }
-    /// <summary>True when compiling <paramref name="graph"/> with the swapped samplers changes its HLSL. Null treats
-    /// every candidate as real.</summary>
+    /// <summary>True when compiling <paramref name="graph"/> with the swapped samplers changes its HLSL. Decides parent
+    /// variants and static normal fixes alike. Null treats every candidate as real.</summary>
     public Func<ExportEntry, IReadOnlyList<VariantSamplerSwap>, bool>? ConfirmVariant { get; init; }
     /// <summary>The game's own copy of a material, when the game has an object at the same memory path; null when the
     /// mod introduces it. Null treats every material in the mod's packages as the mod's alone.</summary>
@@ -326,7 +326,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
                 (record.Hash, record.FullHash) = (hash, fullHash);
                 var graph = ResolveForGraph(material);
                 record.HasGraph = graph != null;
-                // The material itself is also its graph when the context compiles output graphs in place (OutputMaterialsHoldGraphs)
+                // The material itself is also its graph when the context compiles output graphs in place (OutputMaterialsWithOwnGraphs)
                 record.EmptyByDesign = graph != null && ReferenceEquals(graph, material)
                     && material.GetProperty<ArrayProperty<ObjectProperty>>("Expressions") is not { Count: > 0 };
             }
@@ -405,11 +405,22 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
             return;
         }
         var names = GlobalUnrealObjectInfo.GetEnumValues(MEGame.LE3, "TextureCompressionSettings");
+        bool underEffectsUser = chain.Any(MaterialChain.IsEffectsLink);
         foreach (var finding in report.Findings.Where(f => f.Requirement == TextureEncodingRequirement.StaticNormalCompression))
         {
             string compression = finding.EffectiveMetadata!.CompressionSettings;
+            // With no static entry the instance decodes through the base's default texture. When the effective texture
+            // translates to the same HLSL (BC7 and DXT1 normals both sample .xyz) a permutation only duplicates the base's
+            // shaders, and under an effects user it costs every effect: the permutation is keyed to the multiplexor's
+            // default material, never its CombinedEffect parents (MP kit bodies lost the cloak's hex look).
+            if (finding.StoredNormalCompression == null &&
+                !ChangesHlsl(chain[^1], [new VariantSamplerSwap(finding.ExpressionPath, finding.ParameterName, finding.EffectiveMetadata)]))
+                continue;
             int index = names.FindIndex(n => string.Equals(n.Instanced, compression, StringComparison.OrdinalIgnoreCase));
             if (index < 0) { errors.Add($"{identity}: {compression} is not an LE3 compression setting"); continue; }
+            if (underEffectsUser && record.StoredKey == null)
+                reports.Add($"{identity}: {finding.ParameterName} needs its own permutation for {compression}, so the effect materials " +
+                    "of its effects user (cloak, cryo, ...) will not show on it");
             record.NormalFixes.Add(new StaticNormalFix(finding.ParameterName, (byte)index, compression));
         }
         foreach (var finding in report.Findings.Where(f => f.Requirement == TextureEncodingRequirement.DimensionMismatch))
@@ -420,12 +431,17 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
         {
             var swaps = candidates.Select(f => new VariantSamplerSwap(f.ExpressionPath, f.ParameterName, f.EffectiveMetadata!))
                 .OrderBy(s => s.Parameter, StringComparer.OrdinalIgnoreCase).ToList();
-            var graph = ResolveForGraph(chain[^1])!;
-            string confirmKey = Identity(chain[^1]) + "\n" + string.Join("\n", swaps.Select(s => s.ExpressionPath + "=" + Describe(s.Metadata)));
-            if (!confirmed.TryGetValue(confirmKey, out bool real))
-                confirmed[confirmKey] = real = options.ConfirmVariant?.Invoke(graph, swaps) ?? true;
-            if (real) record.OwnedVariant = swaps;
+            if (ChangesHlsl(chain[^1], swaps)) record.OwnedVariant = swaps;
         }
+    }
+
+    // Whether the base's graph translates differently with the swapped samplers; cached per (base, swaps).
+    private bool ChangesHlsl(ExportEntry baseMaterial, IReadOnlyList<VariantSamplerSwap> swaps)
+    {
+        string confirmKey = Identity(baseMaterial) + "\n" + string.Join("\n", swaps.Select(s => s.ExpressionPath + "=" + Describe(s.Metadata)));
+        if (!confirmed.TryGetValue(confirmKey, out bool real))
+            confirmed[confirmKey] = real = options.ConfirmVariant?.Invoke(ResolveForGraph(baseMaterial)!, swaps) ?? true;
+        return real;
     }
 
     // Parents for analysis: imports resolved, stripped materials swapped for a compilable graph.
@@ -697,6 +713,9 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
                 {
                     case ObjectProperty o: sb.Append(o.Value == 0 ? "null" : package.GetEntry(o.Value)?.InstancedFullPath ?? "?"); break;
                     case StructProperty s: sb.Append('{'); Append(s.Properties, package, sb); sb.Append('}'); break;
+                    // LE2 cooking nulls stripped expressions in place where LE3 removes them; the empty slots change nothing
+                    case ArrayProperty<ObjectProperty> { Name.Name: "Expressions" } a:
+                        sb.Append('('); Append(a.Where(o => o.Value != 0), package, sb); sb.Append(')'); break;
                     case ArrayPropertyBase a: sb.Append('('); Append(a.Properties, package, sb); sb.Append(')'); break;
                     case IntProperty i: sb.Append(i.Value); break;
                     case FloatProperty f: sb.Append(f.Value.ToString("R", System.Globalization.CultureInfo.InvariantCulture)); break;
