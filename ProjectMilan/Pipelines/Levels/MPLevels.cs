@@ -5,6 +5,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Pathing;
 using LegendaryExplorerCore.Unreal;
+using ProjectMilan.Pipelines.Levels.BioP_MPCer2;
 using ProjectMilan.Pipelines.Levels.BioP_MPGeth;
 using ProjectMilan.Pipelines.Levels.BioP_MPDish2;
 using ProjectMilan.Pipelines.Levels.BioP_MPHosp;
@@ -149,7 +150,7 @@ namespace ProjectMilan.Pipelines.Levels
                     MapListInfo = new MapListEntry { PackageName="BioP_MPRoad", PrettyNameStrRefId=731651, DescriptionStrRefId=618054, GAWMapPositionX=290, GAWMapPositionY=410, GAWMapSubtitleStrRefId=345696, ImageObjectPath="GUI_MPImages_MP3.OptMapLondon", ImageSeekFreePackageName="MP3Images" } },
 
                 // MP4 Retaliation
-                new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled = true, // Glacier - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPCer2", Enabled = true, SpecialFixes = new MPCer2Specific(), // Glacier - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPCer2", PrettyNameStrRefId=772398, DescriptionStrRefId=618047, GAWMapPositionX=280, GAWMapPositionY=97, GAWMapSubtitleStrRefId=706333, ImageObjectPath="GUI_MPImages_MP4.OptMapSwarm", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPDish2", Enabled = true, SpecialFixes = new MPDish2Specific(), // Dagger - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPDish2", PrettyNameStrRefId=772393, DescriptionStrRefId=618041, GAWMapPositionX=424, GAWMapPositionY=216, GAWMapSubtitleStrRefId=706337, ImageObjectPath="GUI_MPImages_MP4.OptMapSandstorm", ImageSeekFreePackageName="SFXHazardMapImages" } },
