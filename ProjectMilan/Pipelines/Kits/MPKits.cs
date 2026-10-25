@@ -171,6 +171,8 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "Salar_Engineer_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "Turian_Sentinel_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "Turian_Soldier_MP", Enabled = true},
+            // BioWare chickened out of making a female BF3 soldier
+            new KitSpecificPipeline() { PackageName = "HumanFemale_InfBF3_MP", Enabled = true, PostCorrections = BF3Infiltrator.ApplyPostFixes},
 
             // MP1
             new KitSpecificPipeline() { PackageName = "AsariCommando_Adept_MP", Enabled = true},
@@ -222,10 +224,6 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "GethDest_Soldier_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "KroganWarlord_Sentinel_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "TurianFemale_Vanguard_MP", Enabled = true},
-
-
-            // This kit is broken and will require manual fixes. BioWare chickened out of making a female BF3 soldier
-            new KitSpecificPipeline() { PackageName = "HumanFemale_InfBF3_MP", Enabled = false, ExcludeFromProduction = true, PostCorrections = BF3Infiltrator.ApplyPostFixes },
 
         };
     }
