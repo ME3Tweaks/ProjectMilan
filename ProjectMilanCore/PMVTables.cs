@@ -20,8 +20,10 @@ namespace ProjectMilanCore
         /// <param name="classExport"></param>
         /// <param name="cache"></param>
         /// <param name="logIfBad"></param>
+        /// <param name="resolveParent">Optional: resolves an imported parent class before LE3's files are searched, e.g. to the
+        /// mod's own copy of a forced export class.</param>
         /// <returns></returns>
-        public static bool VerifyVTable(ExportEntry classExport, PackageCache cache, bool logIfBad = true)
+        public static bool VerifyVTable(ExportEntry classExport, PackageCache cache, bool logIfBad = true, Func<ImportEntry, ExportEntry?>? resolveParent = null)
         {
             if (classExport.SuperClass == null)
             {
@@ -30,7 +32,7 @@ namespace ProjectMilanCore
             ExportEntry parent = null;
             if (classExport.SuperClass is ImportEntry imp)
             {
-                parent = EntryImporter.ResolveImport(imp, cache, fileResolver: MilanShared.LE3PackageResolver);
+                parent = resolveParent?.Invoke(imp) ?? EntryImporter.ResolveImport(imp, cache, fileResolver: MilanShared.LE3PackageResolver);
             }
             else
             {
