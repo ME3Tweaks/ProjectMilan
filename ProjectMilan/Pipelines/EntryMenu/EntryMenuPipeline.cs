@@ -23,18 +23,15 @@ namespace ProjectMilan.Pipelines.EntryMenu
 
         public static void RunPipeline()
         {
-            BuildPackage(Path.Combine(SourceRoot, "EntryMenu.pcc"),
+            using var entryMenuPackage = MilanShared.GetLE3Package("EntryMenu.pcc");
+            BuildPackage(entryMenuPackage,
                 Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole", "EntryMenu", "EntryMenu.pcc"),
                 Path.Combine(SourceRoot, "Assets"));
         }
 
         /// <summary>Builds a separate output from the given package, retaining its other assets.</summary>
-        public static void BuildPackage(string sourcePath, string outputPath, string assetsDirectory)
+        public static void BuildPackage(IMEPackage package, string outputPath, string assetsDirectory)
         {
-            if (Path.GetFullPath(sourcePath).Equals(Path.GetFullPath(outputPath), StringComparison.OrdinalIgnoreCase))
-                throw new ArgumentException("EntryMenu output must be separate from the pipeline source package.");
-
-            using var package = MEPackageHandler.OpenMEPackage(sourcePath, forceLoadFromDisk: true);
             PatchPackage(package, assetsDirectory);
             Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(outputPath))!);
             package.Save(outputPath);
