@@ -228,6 +228,63 @@ namespace ProjectMilanCore
         /// Sets the game modes on BioWorldInfo
         /// </summary>
         /// <param name="bioP"></param>
+        /// <summary>
+        /// Imports a class from a forced export package another file has already loaded (BIOP_MP_COMMON's SFXGameContent_Milan,
+        /// SFXGame's packages), the way cooked levels import them: the class under an import of its package. The game can't
+        /// resolve an import whose outer is a Package export, so the class would be missing in game.
+        /// </summary>
+        /// <param name="package">File that needs the class</param>
+        /// <param name="classPath">Class's memory path, e.g. SFXGameContent_Milan.MilanPowerTargetInterpActor</param>
+        public static ImportEntry GetOrAddForcedExportClassImport(IMEPackage package, string classPath)
+        {
+            var (packageName, className) = SplitForcedExportPath(classPath);
+            return GetOrAddImport(package, GetOrAddImport(package, null, packageName, "Package", "Core"), className, "Class", "Core");
+        }
+
+        /// <summary>
+        /// Imports a component template of a class's defaults (its Default__ object), for use as a placed actor's component archetype.
+        /// The class is imported as with <see cref="GetOrAddForcedExportClassImport"/>.
+        /// </summary>
+        /// <param name="package">File that needs the template</param>
+        /// <param name="classPath">Class's memory path, e.g. SFXGameContent_Milan.MilanPowerTargetInterpActor</param>
+        /// <param name="templateName">Template's name, e.g. StaticMeshComponent0</param>
+        /// <param name="templateClassName">Template's class, e.g. StaticMeshComponent</param>
+        public static ImportEntry GetOrAddForcedExportComponentTemplateImport(IMEPackage package, string classPath, string templateName, string templateClassName)
+        {
+            var (packageName, className) = SplitForcedExportPath(classPath);
+            var packageImport = GetOrAddForcedExportClassImport(package, classPath).Parent!;
+            // A Default__ object's PackageFile is its class's package; a component's is the file its class is in (Engine)
+            var defaults = GetOrAddImport(package, packageImport, $"Default__{className}", className, packageName);
+            return GetOrAddImport(package, defaults, templateName, templateClassName, ImportEntry.GetPackageFile(package.Game, templateClassName));
+        }
+
+        private static (string PackageName, string ClassName) SplitForcedExportPath(string classPath)
+        {
+            var parts = classPath.Split('.');
+            if (parts.Length != 2)
+                throw new ArgumentException($"{classPath} is not <Package>.<Class>", nameof(classPath));
+            return (parts[0], parts[1]);
+        }
+
+        private static ImportEntry GetOrAddImport(IMEPackage package, IEntry? parent, string objectName, string className, string packageFile)
+        {
+            var path = parent == null ? objectName : $"{parent.InstancedFullPath}.{objectName}";
+            if (package.FindImport(path) is { } existing)
+                return existing;
+            if (package.FindExport(path) != null)
+                throw new InvalidOperationException($"{package.FileNameNoExtension} has an export at {path}; an import of it there would not resolve in game.");
+
+            var import = new ImportEntry(package)
+            {
+                ObjectName = NameReference.FromInstancedString(objectName),
+                idxLink = parent?.UIndex ?? 0,
+                ClassName = className,
+                PackageFile = packageFile
+            };
+            package.AddImport(import);
+            return import;
+        }
+
         public static void SetupHordeModes(IMEPackage bioP, bool isLobby)
         {
             if (isLobby)
