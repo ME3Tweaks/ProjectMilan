@@ -1367,7 +1367,7 @@ public simulated function SetLobbyScreen(byte NewScreen)
 
 public simulated function SetHeavyWeaponSelection(int Id)
 {
-    HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeId(Id);
+    HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Id);
     RememberLocalHeavyWeaponSelection();
     ServerSetHeavyWeaponSelection(HeavyWeaponId);
 }
@@ -1390,6 +1390,7 @@ private simulated function RememberLocalHeavyWeaponSelection()
     PC = PlayerController(Owner);
     if (PC != None && PC.IsLocalPlayerController())
     {
+        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(HeavyWeaponId);
         Class'SFXMilanHeavyWeaponCatalog'.static.RememberLocalSelection(HeavyWeaponId);
     }
 }
@@ -1400,7 +1401,7 @@ private simulated function RestoreLocalHeavyWeaponSelection()
     PC = PlayerController(Owner);
     if (PC != None && PC.IsLocalPlayerController())
     {
-        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.GetLocalSelection(HeavyWeaponId);
+        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Class'SFXMilanHeavyWeaponCatalog'.static.GetLocalSelection(HeavyWeaponId));
     }
 }
 private simulated function ReconcileHeavyWeaponSelection()
