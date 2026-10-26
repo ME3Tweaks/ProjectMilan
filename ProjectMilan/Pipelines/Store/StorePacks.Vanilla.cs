@@ -148,8 +148,10 @@ namespace ProjectMilan.Pipelines.Store
             // Milan - was only listed with entitlement 2000001, which nothing grants
             new()
             {
-                ID = 475, PackName = "goldjumbo", TitleStrRefId = 727820, DescriptionStrRefId = 727821, OfferId = 300500, CreditCost = 100000,
-                PromoStrRefId = 703323,
+                // MILAN CHANGE - Change cost from 100000 to 160000
+                // This pack was unused I think.
+                ID = 475, PackName = "goldjumbo", TitleStrRefId = 727820, DescriptionStrRefId = 727821, OfferId = 300500, CreditCost = 160000,
+                //PromoStrRefId = 703323, // Remove PROMO text
                 Image = "GUI_MPImages.StoreItems.Store003",
                 RevealIntroTextureRef = "GUI_MPImages.Creates.box3", RevealIntroHoloTextureRef = "GUI_MPImages.Creates.box3Holo", RevealIntroSound = "MPRevealCrate3",
                 Contents =
@@ -176,6 +178,7 @@ namespace ProjectMilan.Pipelines.Store
                 ],
             },
             // Milan - was only listed with entitlement 2000001, which nothing grants
+            // This pack seems to just be all consumables.
             new()
             {
                 ID = 655, PackName = "n7equipment", TitleStrRefId = 752066, DescriptionStrRefId = 752067, OfferId = 650100, CreditCost = 75000,
