@@ -15,10 +15,14 @@ struct HeavyWeaponEntry
     var bool bHidden;
     var bool bNoWeapon;
     var string Rarity;
+    var name UnlockVariable;
 };
 var config array<HeavyWeaponEntry> Weapons;
 var config stringref CategoryLabel;
 var config stringref HiddenLabel;
+var config stringref HiddenDescriptionSuffix;
+var config stringref AmmoName;
+var config stringref AmmoDescription;
 var transient bool bHasLocalSelection;
 var transient int LocalSelectionId;
 
@@ -39,6 +43,27 @@ public static final function int FindIndex(int Id)
 public static final function int NormalizeId(int Id)
 {
     return FindIndex(Id) != -1 ? Id : 0;
+}
+public static final function bool IsUnlocked(int Id)
+{
+    local int Index;
+    local SFXEngine Engine;
+
+    Index = FindIndex(Id);
+    if (Index == -1)
+    {
+        return FALSE;
+    }
+    if (default.Weapons[Index].UnlockVariable == 'None')
+    {
+        return TRUE;
+    }
+    Engine = Class'SFXEngine'.static.GetSFXEngine();
+    return Engine != None && Engine.GetPlayerVariable(default.Weapons[Index].UnlockVariable) > 0;
+}
+public static final function int NormalizeOwnedId(int Id)
+{
+    return IsUnlocked(Id) ? Id : 0;
 }
 // HeavyWeapons regenerates this body from the validated UI catalog.
 public static final function class<SFXHeavyWeapon> ResolveClass(int Id)
