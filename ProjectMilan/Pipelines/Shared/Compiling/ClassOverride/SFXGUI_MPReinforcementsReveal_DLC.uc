@@ -124,6 +124,9 @@ public function CardDisplayData GetCardDisplayData_DLC(const out CardInfoData Ca
         }
     }
     ClearCustomTokens();
+    // MILAN CHANGE
+    NewCard.IsBanner = CardData.GUIType == "banner";
+    // END MILAN CHANGE
     NewCard.TextureReference = CardData.GUITextureRef;
     NewCard.CardType = int(CardData.Rarity);
     return NewCard;
