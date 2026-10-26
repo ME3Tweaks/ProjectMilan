@@ -225,10 +225,38 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
     /// </summary>
     internal class HeavyWeaponEntry
     {
+        /// <summary>Permanent visible/hidden selection IDs; never assign from collection order.</summary>
+        public required int Id { get; init; }
+        public required int HiddenId { get; init; }
+        public required string UnlockName { get; init; }
+        public string HiddenUnlockName => UnlockName + "_Hidden";
+        /// <summary>Title of the hidden variant's store unlock card.</summary>
+        public required HeavyWeaponString HiddenUnlockTitle { get; init; }
+        public required int UnlockPlayerVariableId { get; init; }
+        public required int HiddenUnlockPlayerVariableId { get; init; }
+        public int DisplayOrder { get; init; }
+
+        /// <summary>Indexed Scaleform weapon icon, separate from the notification texture.</summary>
+        public required string IconResource { get; init; }
+
+        /// <summary>Frame in <see cref="IconResource"/>. <see cref="InheritFrom"/>'s IconRef if not set.</summary>
+        public int? IconIndex { get; init; }
+        public string Rarity { get; init; } = "common";
+
+        /// <summary>
+        /// Class path of a vanilla weapon, e.g. SFXGameContent.SFXWeapon_Heavy_Blackstar, whose basegame BioWeapon section
+        /// supplies every name, description, image and <see cref="IconIndex"/> not set here. In game, a consumable class
+        /// that extends that weapon also inherits the rest of its config (tuning) from that section.
+        /// </summary>
+        public string? InheritFrom { get; init; }
+
         /// <summary>
         /// Full path of the consumable weapon class, e.g. SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstorm.
         /// </summary>
         public required string ClassPath { get; init; }
+
+        /// <summary>The generated concealed version, for the heavy weapon selector.</summary>
+        public string HiddenClassPath => HiddenHeavyWeaponVariants.GetClassPath(ClassPath);
 
         /// <summary>
         /// Full path of the weapon's ordinary heavy weapon class, which <see cref="ClassPath"/> usually extends, e.g.
@@ -238,35 +266,85 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
         public string? NonConsumableClassPath { get; init; }
 
         /// <summary>
-        /// PrettyName.
+        /// PrettyName. <see cref="InheritFrom"/>'s if not set.
         /// </summary>
-        public required HeavyWeaponString Name { get; init; }
+        public HeavyWeaponString? Name { get; init; }
 
         /// <summary>
-        /// ShortPrettyName. <see cref="Name"/> if not set.
+        /// ShortPrettyName. <see cref="InheritFrom"/>'s, then <see cref="Name"/>, if not set.
         /// </summary>
         public HeavyWeaponString? ShortName { get; init; }
 
         /// <summary>
-        /// GeneralDescription.
+        /// GeneralDescription. <see cref="InheritFrom"/>'s if not set.
         /// </summary>
-        public required HeavyWeaponString Description { get; init; }
+        public HeavyWeaponString? Description { get; init; }
 
         /// <summary>
-        /// ShortDescription. <see cref="Description"/> if not set.
+        /// ShortDescription. <see cref="InheritFrom"/>'s, then <see cref="Description"/>, if not set.
         /// </summary>
         public HeavyWeaponString? ShortDescription { get; init; }
 
         /// <summary>
-        /// GUIImage: the 512x256 weapon image. Object path of an image built from Startups\NonStartup\ImagePackages.
+        /// GUIImage: the 512x256 weapon image. Object path of an image built from Startups\NonStartup\ImagePackages, or
+        /// a dynamic load mapped vanilla one. <see cref="InheritFrom"/>'s if not set.
         /// </summary>
-        public required string Image { get; init; }
+        public string? Image { get; init; }
 
         /// <summary>
-        /// NotificationImage: the 256x128 weapon image. Object path of an image built from
-        /// Startups\NonStartup\ImagePackages.
+        /// NotificationImage: the 256x128 weapon image, from the same places as <see cref="Image"/>.
+        /// <see cref="InheritFrom"/>'s if not set.
         /// </summary>
-        public required string NotificationImage { get; init; }
+        public string? NotificationImage { get; init; }
+
+        // Each call with new text assigns a new TLK ID, as HeavyWeaponString.Resolve does
+        public int ResolveName() => Name?.Resolve() ?? InheritedInt("prettyname") ?? throw Missing(nameof(Name));
+        public int ResolveShortName(int name) => ShortName?.Resolve() ?? InheritedInt("shortprettyname") ?? name;
+        public int ResolveDescription() => Description?.Resolve() ?? InheritedInt("generaldescription") ?? throw Missing(nameof(Description));
+        public int ResolveShortDescription(int description) => ShortDescription?.Resolve() ?? InheritedInt("shortdescription") ?? description;
+        public string GetImage() => Image ?? Inherited("guiimage") ?? throw Missing(nameof(Image));
+        public string GetNotificationImage() => NotificationImage ?? Inherited("notificationimage") ?? throw Missing(nameof(NotificationImage));
+        public int GetIconIndex() => IconIndex ?? InheritedInt("iconref") ?? throw Missing(nameof(IconIndex));
+
+        private string? Inherited(string property) => InheritFrom == null ? null : VanillaWeaponConfig.Get(InheritFrom, property);
+        private int? InheritedInt(string property) => Inherited(property) is { } value ? int.Parse(value) : null;
+
+        private InvalidOperationException Missing(string field) => new(InheritFrom == null
+            ? $"Heavy weapon {ClassPath} has no {field}"
+            : $"Heavy weapon {ClassPath} has no {field}, and {InheritFrom}'s basegame BioWeapon section doesn't have one either");
+    }
+
+        /// <summary>
+    /// The basegame BioWeapon config (Mod\BaseConfig\BioWeapon.xml), which the DLC config bundle doesn't hold.
+        /// </summary>
+    internal static class VanillaWeaponConfig
+    {
+        // Section (class path) -> property -> first value
+        private static readonly Lazy<Dictionary<string, Dictionary<string, string>>> Sections = new(Load);
+
+        /// <returns>The first value of <paramref name="property"/> in <paramref name="classPath"/>'s section, or null.</returns>
+        public static string? Get(string classPath, string property)
+        {
+            if (!Sections.Value.TryGetValue(classPath, out var section))
+            {
+                throw new InvalidOperationException($"The basegame BioWeapon config has no {classPath} section");
+            }
+            return section.GetValueOrDefault(property);
+        }
+
+        private static Dictionary<string, Dictionary<string, string>> Load()
+        {
+            var path = Path.Combine(MilanShared.PipelineRoot, "Mod", "BaseConfig", "BioWeapon.xml");
+            var sections = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+            foreach (var section in System.Xml.Linq.XDocument.Load(path).Descendants("Section"))
+            {
+                var properties = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var property in section.Elements("Property"))
+                    properties.TryAdd(property.Attribute("name")!.Value, property.Value);
+                sections[section.Attribute("name")!.Value] = properties;
+            }
+            return sections;
+        }
     }
 
     /// <summary>
