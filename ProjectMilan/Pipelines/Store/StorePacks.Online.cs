@@ -64,6 +64,7 @@ namespace ProjectMilan.Pipelines.Store
                     Slot(2, StorePools.GoldBackup, (StorePools.GoldGear, 0.2f), (StorePools.GoldChar, 0.675f), (StorePools.GoldUltraRare, 0.075f), (StorePools.UltraRareChar, 0.05f)),
                 ],
             },
+
             OperationPack(6, "weekly6", 612, 1500108),
             new()
             {
@@ -97,7 +98,8 @@ namespace ProjectMilan.Pipelines.Store
             OperationPack(22, "Lodestar2", 669, 1500122), // Operation Lodestar (Insanity)
             new()
             {
-                // Giving a free kit for next week operation. Milan - DLC requirement removed
+                // Giving a free kit for next week operation.
+                // Milan - DLC requirement removed
                 ID = 23, PackName = "FreeReckoning", TitleStrRefId = 738450, DescriptionStrRefId = 738451, CreditCost = 0,
                 PromoStrRefId = 703324, PerPlayerMax = 1, PlayerVariableId = 665,
                 Image = $"{StoreImages}.StoreAlliance",
