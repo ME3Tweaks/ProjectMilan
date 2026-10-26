@@ -69,11 +69,11 @@ public function MovieLoaded()
     Params.AddItem(Param);
     Param.sVar = string($49875787);
     Params.AddItem(Param);
-    Param.sVar = string($49875788);
+    Param.sVar = string($817903);
     Params.AddItem(Param);
-    Param.sVar = string($49875789);
+    Param.sVar = string($817904);
     Params.AddItem(Param);
-    Param.sVar = string($49875790);
+    Param.sVar = string($817905);
     Params.AddItem(Param);
     Param.Type = ASParamTypes.ASParam_Float;
     Param.fVar = float(PhotoMode.MPPhotoSpeedIndex);

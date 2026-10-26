@@ -35,7 +35,7 @@
 				<!-- OPTION_AAT_* are added by Aim Assist Tweaks -->
 				<!-- OPTION_InvertYAxis and OPTION_MouseInvert do the same thing (likely also have the same BioSFHandler) -->
 				<Value type="3">(label=49875680, story=49875681, options=(OPTION_InvertYAxis, OPTION_ControllerSensitivity, OPTION_StickConfig, OPTION_TriggerConfig, OPTION_AAT_ZoomSnap, OPTION_AAT_Adhesion, OPTION_AAT_Friction) )</Value>
-				<Value type="3">(label=49875682, story=49875683, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
+				<Value type="3">(label=293550, story=49875683, options=(OPTION_MouseInvert, OPTION_MouseSmooth, OPTION_MouseSensitivity) )</Value>
 				<Value type="3">(label=282879, story=282880, options=(OPTION_ControlBindings) )</Value>
 
 				<!-- Disabled VOIP related settings -->
@@ -243,15 +243,13 @@
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mplobby">
 			<!-- MILAN CHANGE - Mgamerz - 2026-10-21: Leaderboards is now banner selection -->
-			<Property name="srleaderboards" type="0">49875800</Property>
+			<Property name="srleaderboards" type="0">49875811</Property>
 			<Property name="maxonlineimages" type="0">20</Property>
 			<Property name="srchallengetracking" type="0">769618</Property>
 			<Property name="srmatchsettingcreditmodifier" type="0">770265</Property>
 			<Property name="srmatchsettingxpmodifier" type="0">770264</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mpmatchconsumables">
-			<!-- Set to true to swap things over for things like singularity-->
-			<!-- We may want to investigate singularity for its patch4 changes, they might not have come to LE... -->
 			<Property name="bliveiniforpatch4arelive" type="0">true</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mpreinforcementsreveal">

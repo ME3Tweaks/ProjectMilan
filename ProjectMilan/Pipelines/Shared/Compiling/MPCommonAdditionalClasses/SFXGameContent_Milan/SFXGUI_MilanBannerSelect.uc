@@ -91,15 +91,15 @@ public final function BannerLabels GetBannerLabels()
     local BannerLabels Labels;
     Labels.Title = GetUIString($49875800);
     Labels.Subtitle = GetUIString($49875801);
-    Labels.NoneLabel = GetUIString($49875802);
-    Labels.Equip = GetUIString($49875803);
-    Labels.Back = GetUIString($49875804);
+    Labels.NoneLabel = GetUIString($706892);
+    Labels.Equip = GetUIString($371717);
+    Labels.Back = GetUIString($598887);
     Labels.Equipped = GetUIString($49875805);
     Labels.Loading = GetUIString($49875806);
     Labels.Unavailable = GetUIString($49875807);
     Labels.SaveFailed = GetUIString($49875808);
-    Labels.Select = GetUIString($49875809);
-    Labels.Cancel = GetUIString($49875810);
+    Labels.Select = GetUIString($598888);
+    Labels.Cancel = GetUIString($315182);
     return Labels;
 }
 public final function array<BannerItem> GetBanners()
@@ -109,7 +109,7 @@ public final function array<BannerItem> GetBanners()
     local BannerItem Item;
 
     Item.Id = 0;
-    Item.Title = GetUIString($49875802);
+    Item.Title = GetUIString($706892);
     Items.AddItem(Item);
     foreach Class'SFXPRIMP'.default.EmblemList(Emblem)
     {

@@ -386,13 +386,13 @@ defaultproperties
     srMessage = $49875741
     srReadOnlyMessage = $49875754
     srProfileName = $49875742
-    srMatchmaking = $49875743
+    srMatchmaking = $723770
     srMatchmakingServer = $49875750
     srServerAddress = $49875744
     srServerPassword = $49875745
     srOn = $653225
     srOff = $653223
-    srDefault = $49875751
+    srDefault = $163476
     srCustom = $49875752
     srAccept = $315178
     srCancel = $315182
