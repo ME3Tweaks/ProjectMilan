@@ -1,9 +1,10 @@
-﻿using LegendaryExplorerCore.Coalesced;
+using LegendaryExplorerCore.Coalesced;
 using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan.Pipelines.Startups;
 using ProjectMilanCore;
 using ProjectMilanCore.Config;
@@ -13,16 +14,6 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
 {
     /// <summary>
     /// The heavy weapons pipeline copies our pregenerated heavy weapon packages and links them into the game for use.
-    /// <para/>
-    /// Every .pcc directly in Pipelines\HeavyWeapons is copied to CookedPCConsole\HeavyWeapons. Each consumable heavy
-    /// weapon class in them - a concrete <see cref="SFXHeavyWeaponClass"/> subclass whose own classes in the package hold a
-    /// <see cref="ConsumablePowerClass"/> property, like SFXWeapon_Heavy_ConsumableRocketLauncher's Power - is dynamic load
-    /// mapped to its package and preloaded by every player, so the rocket consumable power can create it by class path, and
-    /// gets its name, descriptions and icons set in its BioWeapon section. Every consumable class needs an entry in <see cref="HeavyWeapons"/> for those.
-    /// Each consumable also gets a generated _Hidden subclass with bHiddenVariant set. The built-in Cobra
-    /// gets the same treatment in BIOP_MP_COMMON. Hidden classes share the original tuning and UI overrides.
-    /// <para/>
-    /// Emits the shared stable-ID selector/spawn catalog. Visible and hidden choices have separate permanent IDs.
     /// </summary>
     internal static class HeavyWeaponsPipeline
     {
@@ -48,77 +39,252 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
         /// </summary>
         private const string IconPackage = "MilanHeavyWeapons";
 
+        private static readonly LocalizedString NoneName = new() { [MELocalization.INT] = "None" };
+        // Might consider seeing if this can be done via config instead.
+        private static readonly LocalizedString NoneDescription = new() { [MELocalization.INT] = "No heavy weapon equipped. Grants +5% movement speed and +10% reserve ammo capacity." };
+        private static readonly LocalizedString CategoryName = new() { [MELocalization.INT] = "Heavy Weapons" };
+        private static readonly LocalizedString HiddenCategoryName = new() { [MELocalization.INT] = "Hidden" };
+
         internal static readonly List<HeavyWeaponEntry> HeavyWeapons =
         [
+            // IDs aren't consistent for the first two entries due to development order
+            // IDs:
+            // 0 Cobra
+            // 1 Blackstorm
+            // 2 Hidden Cobra
+            // 3 Hidden blackstorm
+            // 4 None (reserved, not an entry)
+            // 5 Blackstar
+            // 6 Hidden Blackstar
+            // 7 Cain
+            // 8 Hidden
+
+            // M-490 Blackstorm
             new()
             {
-                // M-490 Blackstorm
+                Id = 1,
+                HiddenId = 3,
+                UnlockName = "MilanHeavy_Blackstorm",
+                HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "M-490 Blackstorm (Hidden)" },
+                UnlockPlayerVariableId = 801,
+                HiddenUnlockPlayerVariableId = 802,
+                Rarity = "rare",
+                DisplayOrder = 10,
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstorm",
                 NonConsumableClassPath = "SFXGameContent_Milan.SFXHeavyWeapon_Blackstorm",
                 Name = 361364, // M-490 Blackstorm
                 ShortName = new LocalizedString { [MELocalization.INT] = "Blackstorm" },
                 Description = 361363,
                 ShortDescription = 344479,
-                Image = $"{IconPackage}.Blackstorm_512x256", // Needs a source
-                NotificationImage = $"{IconPackage}.Blackstorm_256x128", // Needs a source
+                Image = $"{IconPackage}.Blackstorm_512x256",
+                NotificationImage = $"{IconPackage}.Blackstorm_256x128",
+                IconResource = "GUI_SF_DLC_PRE_Terminus.ME2_Weap_Blackstorm",
+                IconIndex = 2,
+            },
+            // Reaper Blackstar
+            new()
+            {
+                Id = 5,
+                HiddenId = 6,
+                UnlockName = "MilanHeavy_Blackstar",
+                HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "Reaper Blackstar (Hidden)" },
+                UnlockPlayerVariableId = 803,
+                HiddenUnlockPlayerVariableId = 804,
+                Rarity = "rare",
+                DisplayOrder = 20,
+                ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstar",
+                InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Blackstar",
+                // Vanilla has no ShortPrettyName for it
+                ShortName = new LocalizedString { [MELocalization.INT] = "Blackstar" },
+                IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
+                // TODO: We need an actual short text or move hidden to the top.
             },
         ];
+
+        /// <summary>
+        /// Takes an open IMEPackage and prepares it for install into Project Milan
+        /// </summary>
+        /// <param name="package"></param>
+        /// <param name="foundClasses"></param>
+        /// <param name="nonConsumableClasses"></param>
+        private static void InstallHeavyWeaponPackage(IMEPackage package, Dictionary<string, string> foundClasses, Dictionary<string, string> nonConsumableClasses)
+        {
+            bool hasConsumable = false;
+
+            var consumableClasses = new List<ExportEntry>();
+            foreach (var classExport in package.Exports.Where(x => x.IsClass && !HiddenHeavyWeaponVariants.IsHiddenVariant(x)))
+            {
+                var kind = GetHeavyWeaponKind(classExport);
+                if (kind == HeavyWeaponKind.Consumable)
+                {
+                    hasConsumable = true;
+                    consumableClasses.Add(classExport);
+                    AddFoundClass(foundClasses, classExport.InstancedFullPath, package.FileNameNoExtension);
+                }
+                else if (kind == HeavyWeaponKind.NonConsumable)
+                {
+                    AddFoundClass(nonConsumableClasses, classExport.InstancedFullPath, package.FileNameNoExtension);
+                }
+            }
+
+            if (!hasConsumable)
+            {
+                // Add consumable class
+                
+            }
+
+            GenerateHiddenVariants(package, consumableClasses);
+
+            // Change its licensee to LE3 so TFC compaction doesn't die on it
+            var outFile = Path.Combine(OutputFolder, package.FileNameNoExtension + ".pcc");
+            package.Save(outFile);
+            MilanLicensee.SetGame(outFile, MEGame.LE3);
+            MilanLog.Information($"Installed {package.FileNameNoExtension}", customPrefix: LOG_CATEGORY);
+        }
 
         public static void RunPipeline()
         {
             Directory.CreateDirectory(OutputFolder);
+            var ids = new HashSet<int> { 0, 2, 4 };
+            var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var entry in HeavyWeapons)
+            {
+                if (entry.Id < 0 || entry.HiddenId < 0 || !ids.Add(entry.Id) || !ids.Add(entry.HiddenId)
+                    || !paths.Add(entry.ClassPath) || entry.ClassPath.CaseInsensitiveEquals(CobraClassPath))
+                    throw new InvalidOperationException($"Invalid/duplicate heavy weapon registration: {entry.ClassPath}");
+            }
+            var noneName = MilanPipelinesShared.AssignTLK(NoneName);
+            var catalog = new List<HeavyWeaponCatalogEntry>
+            {
+                new() { Id = 4, ClassPath = "", Name = noneName, ShortName = noneName,
+                    Description = MilanPipelinesShared.AssignTLK(NoneDescription),
+                    Image = "", Icon = "", IconResource = "", IconIndex = 0, NoWeapon = true, Rarity = "", DisplayOrder = -10 }
+            };
 
+            // Cobra lives in MPCommon rather than a standalone heavy weapon package.
+            var mpCommon = MilanShared.GetMPCommonPackage();
+            HeavyWeaponStoreRegistration.ApplyPowerDefaults(mpCommon);
+            var cobra = mpCommon.FindExport(CobraClassPath);
+            GenerateHiddenVariants(mpCommon, [cobra]);
+            RegisterHiddenVariant(CobraClassPath, MilanShared.MP_STARTUP_NAME);
+            var cobraDefaults = mpCommon.GetUExport(ObjectBinary.From<UClass>(cobra).Defaults);
+            var cobraEntry = new HeavyWeaponCatalogEntry
+            {
+                Id = 0,
+                ClassPath = CobraClassPath,
+                DisplayOrder = 0,
+                Name = cobraDefaults.GetProperty<StringRefProperty>("PrettyName").Value,
+                ShortName = cobraDefaults.GetProperty<StringRefProperty>("ShortPrettyName").Value,
+                Description = cobraDefaults.GetProperty<StringRefProperty>("GeneralDescription").Value,
+                Image = "GUI_Codex_Weapons_Images.Weapons.hvy_titan_512x256",
+                Icon = "GUI_Icons.Weapons.hvy_titan_256x128",
+                // Native SFXWeaponUIData: SFXWeapon_Heavy_TitanMissileLauncher uses frame 49.
+                IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
+                IconIndex = 49,
+            };
+            catalog.Add(cobraEntry);
+            catalog.Add(cobraEntry with { Id = 2, ClassPath = HiddenHeavyWeaponVariants.GetClassPath(CobraClassPath), DisplayOrder = 1, Hidden = true, Rarity = "rare", UnlockVariable = HeavyWeaponStoreRegistration.HiddenCobraUnlock });
+
+            // INSTALL PRECOMPILED PACKAGES ----------
             // Class path to the package it is in
             var foundClasses = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             var nonConsumableClasses = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var sourcePath in Directory.GetFiles(SourceFolder, "*.pcc", SearchOption.TopDirectoryOnly))
             {
-                var packageName = Path.GetFileNameWithoutExtension(sourcePath);
-                bool hasConsumable = false;
-                using (var package = MEPackageHandler.OpenMEPackage(sourcePath))
-                {
-                    foreach (var classExport in package.Exports.Where(x => x.IsClass))
-                    {
-                        var kind = GetHeavyWeaponKind(classExport);
-                        if (kind == HeavyWeaponKind.Consumable)
-                        {
-                            hasConsumable = true;
-                            AddFoundClass(foundClasses, classExport.InstancedFullPath, packageName);
-                        }
-                        else if (kind == HeavyWeaponKind.NonConsumable)
-                        {
-                            AddFoundClass(nonConsumableClasses, classExport.InstancedFullPath, packageName);
-                        }
-                    }
-                }
-
-                if (!hasConsumable)
-                {
-                    MilanLog.Warning($"{packageName} has no consumable heavy weapon class, not installing it", customPrefix: LOG_CATEGORY);
-                    continue;
-                }
-
-                File.Copy(sourcePath, Path.Combine(OutputFolder, Path.GetFileName(sourcePath)), true);
-                MilanLog.Information($"Installed {packageName}", customPrefix: LOG_CATEGORY);
+                using var package = MEPackageHandler.OpenMEPackage(sourcePath, forceLoadFromDisk: true);
+                InstallHeavyWeaponPackage(package, foundClasses, nonConsumableClasses);
             }
+            // END PRECOMPILED PACKAGES ----------
 
+            // GAME SOURCED PACKAGES -------------
+            foreach (var entry in HeavyWeapons.Where(x => x.SourcePackage != null && !foundClasses.ContainsKey(x.ClassPath)))
+            {
+                using var package = MilanShared.GetLE3Package(entry.SourcePackage);
+                InstallHeavyWeaponPackage(package, foundClasses, nonConsumableClasses);
+            }
+            // END GAME SOURCED PACKAGES ---------
+
+            // Our images, plus the game's own mapped ones (vanilla weapon art)
+            var loadableImages = new HashSet<string>(ImagePackageBuilder.BuiltImages, StringComparer.OrdinalIgnoreCase);
+            loadableImages.UnionWith(Store.StoreRegistration.GetDynamicLoadObjects());
             foreach (var (classPath, packageName) in foundClasses)
             {
                 var entry = HeavyWeapons.FirstOrDefault(x => x.ClassPath.CaseInsensitiveEquals(classPath));
                 if (entry == null)
                 {
-                    MilanLog.Error($"Consumable heavy weapon {classPath} in {packageName} has no entry in {nameof(HeavyWeaponsPipeline)}.{nameof(HeavyWeapons)} for its strings and icons, so it was not registered", customPrefix: LOG_CATEGORY);
+                    MilanLog.Warning($"Consumable heavy weapon {classPath} in {packageName} has no registration.");
                     continue;
                 }
-                RegisterHeavyWeapon(entry, packageName, nonConsumableClasses);
+                var resolved = RegisterHeavyWeapon(entry, packageName, nonConsumableClasses, loadableImages);
+                catalog.Add(resolved);
+                catalog.Add(resolved with { Id = entry.HiddenId, ClassPath = entry.HiddenClassPath, DisplayOrder = entry.DisplayOrder + 1, Hidden = true, UnlockVariable = entry.HiddenUnlockName });
             }
 
             foreach (var entry in HeavyWeapons.Where(x => !foundClasses.ContainsKey(x.ClassPath)))
             {
-                MilanLog.Error($"No package in {Path.GetRelativePath(MilanShared.PipelineRoot, SourceFolder)} has the consumable heavy weapon {entry.ClassPath}", customPrefix: LOG_CATEGORY);
+                throw new InvalidOperationException($"Registered consumable class {entry.ClassPath} has no package in {SourceFolder}.");
             }
 
+            CompileResolver(mpCommon, catalog);
+            mpCommon.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+            HeavyWeaponCatalogRegistration.Register(catalog,
+                MilanPipelinesShared.AssignTLK(CategoryName),
+                MilanPipelinesShared.AssignTLK(HiddenCategoryName));
+            MilanShared.RefreshMilanFiles = true;
             MilanPipelinesShared.CommitConfigBundle();
+        }
+
+        internal const string CobraClassPath = "SFXGameMPContent.SFXWeapon_Heavy_ConsumableRocketLauncher";
+
+        internal static void CompileResolver(IMEPackage package, IEnumerable<HeavyWeaponCatalogEntry> catalog)
+        {
+            var source = HeavyWeaponResolverSource.Build(catalog);
+            var function = package.FindExport("SFXGameContent_Milan.SFXMilanHeavyWeaponCatalog.ResolveClass")
+                ?? throw new InvalidOperationException("MPCommon is missing the heavy resolver; rebuild its checkpoint.");
+            using var cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(debugName: "Heavy resolver");
+            var options = new UnrealScriptOptionsPackage { Cache = cache, CustomFileResolver = MilanShared.LE3PackageResolver };
+            using var library = new FileLib(package);
+            if (!library.Initialize(options))
+                throw new InvalidOperationException($"Cannot initialize heavy resolver: {string.Join(Environment.NewLine, library.InitializationLog.AllErrors)}");
+            var (_, log) = UnrealScriptCompiler.CompileFunction(function, source, library, options);
+            if (log.HasErrors)
+                throw new InvalidOperationException($"Cannot compile heavy resolver: {string.Join(Environment.NewLine, log.AllErrors)}");
+        }
+
+        private static void GenerateHiddenVariants(IMEPackage package, IEnumerable<ExportEntry> consumables)
+        {
+            using var cache = MilanShared.GetMPCommonTieredPackageCache()
+                .ChainNewCache(debugName: $"Hidden heavy weapons ({package.FileNameNoExtension})");
+            var options = new UnrealScriptOptionsPackage
+            {
+                Cache = cache,
+                CustomFileResolver = MilanShared.LE3PackageResolver,
+                MissingObjectResolver = MilanShared.MissingObjectResolver,
+                GetVTableFromDonor = MilanShared.GetVTableFromDonor,
+            };
+            foreach (var (original, variant) in HiddenHeavyWeaponVariants.Generate(package, consumables, options))
+            {
+                MilanLog.Information($"Generated {variant.InstancedFullPath} from {original}", customPrefix: LOG_CATEGORY);
+            }
+        }
+
+        private static void RegisterHiddenVariant(string originalClassPath, string packageName)
+        {
+            var hiddenClassPath = HiddenHeavyWeaponVariants.GetClassPath(originalClassPath);
+            DynamicLoadMappingRegistration.RegisterDynamicLoadMapping(hiddenClassPath, packageName, replicate: true);
+            MilanPipelinesShared.ConfigBundle.GetAsset("BioGame").GetOrAddSection("sfxgamempcontent.sfxprimp")
+                .AddEntry(new CoalesceProperty("defaultloadclasses", new CoalesceValue(hiddenClassPath, CoalesceParseAction.AddUnique)));
+
+            // Copy the registered tuning and UI overrides; the subclass inherits the weapon's other defaults.
+            var asset = MilanPipelinesShared.ConfigBundle.GetAsset("BioWeapon");
+            var original = asset.GetOrAddSection(originalClassPath.ToLowerInvariant());
+            var hidden = asset.GetOrAddSection(hiddenClassPath.ToLowerInvariant());
+            hidden.Clear();
+            foreach (var (name, property) in original)
+            {
+                hidden.Add(name, new CoalesceProperty(name, property.ToList()));
+            }
+            MilanLog.Information($"Registered {hiddenClassPath} in {packageName}", customPrefix: LOG_CATEGORY);
         }
 
         private static void AddFoundClass(Dictionary<string, string> foundClasses, string classPath, string packageName)
@@ -132,7 +298,8 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
         }
 
         /// <param name="nonConsumableClasses">Every non-consumable heavy weapon class found, to the package it is in.</param>
-        private static void RegisterHeavyWeapon(HeavyWeaponEntry entry, string packageName, Dictionary<string, string> nonConsumableClasses)
+        /// <param name="loadableImages">Images we built, and every object a dynamic load mapping covers.</param>
+        private static HeavyWeaponCatalogEntry RegisterHeavyWeapon(HeavyWeaponEntry entry, string packageName, Dictionary<string, string> nonConsumableClasses, IReadOnlySet<string> loadableImages)
         {
             // Weapon classes are replicated, as every MP weapon's mapping is in vanilla
             DynamicLoadMappingRegistration.RegisterDynamicLoadMapping(entry.ClassPath, packageName, replicate: true);
@@ -151,17 +318,41 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             MilanPipelinesShared.ConfigBundle.GetAsset("BioGame").GetOrAddSection("sfxgamempcontent.sfxprimp")
                 .AddEntry(new CoalesceProperty("defaultloadclasses", new CoalesceValue(entry.ClassPath, CoalesceParseAction.AddUnique)));
 
-            var name = entry.Name.Resolve();
-            var description = entry.Description.Resolve();
+            var image = entry.GetImage();
+            var icon = entry.GetNotificationImage();
+            if (!loadableImages.Contains(image) || !loadableImages.Contains(icon))
+            {
+                throw new InvalidOperationException($"{entry.ClassPath}'s images {image} / {icon} aren't built or dynamic load mapped.");
+            }
+            var name = entry.ResolveName();
+            var description = entry.ResolveDescription();
+            var shortName = entry.ResolveShortName(name);
+            // Written even when inherited, as the catalog and hidden variant copy them from here
             var section = MilanPipelinesShared.ConfigBundle.GetAsset("BioWeapon").GetOrAddSection(entry.ClassPath.ToLowerInvariant());
             SetConfigValue(section, "prettyname", name.ToString());
-            SetConfigValue(section, "shortprettyname", (entry.ShortName?.Resolve() ?? name).ToString());
+            SetConfigValue(section, "shortprettyname", shortName.ToString());
             SetConfigValue(section, "generaldescription", description.ToString());
-            SetConfigValue(section, "shortdescription", (entry.ShortDescription?.Resolve() ?? description).ToString());
-            SetConfigValue(section, "guiimage", ImagePackageBuilder.Require(entry.Image, $"{entry.ClassPath} GUIImage"));
-            SetConfigValue(section, "notificationimage", ImagePackageBuilder.Require(entry.NotificationImage, $"{entry.ClassPath} NotificationImage"));
+            SetConfigValue(section, "shortdescription", entry.ResolveShortDescription(description).ToString());
+            SetConfigValue(section, "guiimage", image);
+            SetConfigValue(section, "notificationimage", icon);
 
+            RegisterHiddenVariant(entry.ClassPath, packageName);
             MilanLog.Information($"Registered {entry.ClassPath} in {packageName}", customPrefix: LOG_CATEGORY);
+            return new HeavyWeaponCatalogEntry
+            {
+                Id = entry.Id,
+                ClassPath = entry.ClassPath,
+                DisplayOrder = entry.DisplayOrder,
+                Name = name,
+                ShortName = shortName,
+                Description = description,
+                Image = image,
+                Icon = icon,
+                IconResource = entry.IconResource,
+                IconIndex = entry.GetIconIndex(),
+                Rarity = entry.Rarity,
+                UnlockVariable = entry.UnlockName
+            };
         }
 
         private static void SetConfigValue(CoalesceSection section, string propertyName, string value)
@@ -314,9 +505,9 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             : $"Heavy weapon {ClassPath} has no {field}, and {InheritFrom}'s basegame BioWeapon section doesn't have one either");
     }
 
-        /// <summary>
+    /// <summary>
     /// The basegame BioWeapon config (Mod\BaseConfig\BioWeapon.xml), which the DLC config bundle doesn't hold.
-        /// </summary>
+    /// </summary>
     internal static class VanillaWeaponConfig
     {
         // Section (class path) -> property -> first value
