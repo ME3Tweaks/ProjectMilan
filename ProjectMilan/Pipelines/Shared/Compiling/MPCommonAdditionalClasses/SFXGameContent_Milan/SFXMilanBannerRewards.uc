@@ -13,6 +13,24 @@ struct BannerUnlockRule
 };
 var config array<BannerUnlockRule> UnlockRules;
 
+struct StoreBannerUnlock
+{
+    var int EmblemID;
+    var Name PlayerVariable;
+};
+var config array<StoreBannerUnlock> StoreUnlocks;
+
+public static final function Name GetStorePlayerVariable(int EmblemID)
+{
+    local int Index;
+    Index = default.StoreUnlocks.Find('EmblemID', EmblemID);
+    if (Index >= 0)
+    {
+        return default.StoreUnlocks[Index].PlayerVariable;
+    }
+    return 'None';
+}
+
 public static final function SFXAccomplishmentManager GetManager()
 {
     return SFXEngine(Class'Engine'.static.GetEngine()).AccomplishmentManager;
@@ -25,13 +43,25 @@ public static final function bool IsUnlocked(int EmblemID)
 {
     local SFXAccomplishmentManager Manager;
     local BannerUnlockRule Rule;
+    local Name StoreVariable;
+    local SFXEngine GameEngine;
 
     if (EmblemID == 0)
     {
         return TRUE;
     }
+    if (!IsDefined(EmblemID))
+    {
+        return FALSE;
+    }
+    StoreVariable = GetStorePlayerVariable(EmblemID);
+    if (StoreVariable != 'None')
+    {
+        GameEngine = Class'SFXEngine'.static.GetSFXEngine();
+        return GameEngine != None && GameEngine.GetPlayerVariable(StoreVariable) > 0;
+    }
     Manager = GetManager();
-    if (!IsDefined(EmblemID) || Manager == None || Manager.AccomplishmentStorage == None)
+    if (Manager == None || Manager.AccomplishmentStorage == None)
     {
         return FALSE;
     }
@@ -54,9 +84,30 @@ public static final function bool IsUnlocked(int EmblemID)
 public static final function bool GrantBanner(int EmblemID)
 {
     local SFXAccomplishmentManager Manager;
+    local SFXEngine GameEngine;
+    local Name StoreVariable;
 
+    if (!IsDefined(EmblemID))
+    {
+        return FALSE;
+    }
+    StoreVariable = GetStorePlayerVariable(EmblemID);
+    if (StoreVariable != 'None')
+    {
+        GameEngine = Class'SFXEngine'.static.GetSFXEngine();
+        if (GameEngine == None || GameEngine.MPSaveManager == None)
+        {
+            return FALSE;
+        }
+        if (GameEngine.GetPlayerVariable(StoreVariable) <= 0)
+        {
+            GameEngine.SetPlayerVariable(StoreVariable, 1);
+        }
+        GameEngine.MPSaveManager.SaveRecords();
+        return IsUnlocked(EmblemID);
+    }
     Manager = GetManager();
-    if (!IsDefined(EmblemID) || Manager == None || Manager.AccomplishmentStorage == None)
+    if (Manager == None || Manager.AccomplishmentStorage == None)
     {
         return FALSE;
     }
