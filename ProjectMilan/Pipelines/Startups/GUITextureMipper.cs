@@ -77,7 +77,13 @@ namespace ProjectMilan.Pipelines.Startups
             { "GUI_SF_MPChallenges_DLC.MPChallenges_I22", 128 },
             { "GUI_SF_MPChallenges_DLC.MPChallenges_I24", 128 },
             { "GUI_SF_MPChallenges_DLC.MPChallenges_I32", 128 },
-
+            // Controller prompt masters: 1024 adds about 12MB to BIOP_MP_COMMON and adds 80MB of texture memory, one level down to 512 cuts it to 3MB/20MB
+            { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_LBumper", 512 },
+            { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_RBumper", 512 },
+            { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_LTrigger", 512 },
+            { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_RTrigger", 512 },
+            { "GUI_SF_MessageBox_Milan.Xbox_ControllerIcons_XBtn", 512 },
+            { "GUI_SF_MessageBox_Milan.Xbox_ControllerIcons_YBtn", 512 },
 
         };
 
@@ -113,7 +119,6 @@ namespace ProjectMilan.Pipelines.Startups
             { "GUI_SF_MPMatchResults.MPMatchResults_I25", ["GUI_SF_MPMatchResults.MPMatchResults_I7B", "GUI_SF_MPNewLobby_DLC.MPNewLobby_I83"] }, // Coins
             { "GUI_SF_MPMatchResults.MPMatchResults_I64", ["GUI_SF_MPSelectKit_DLC.MPSelectKit_I3B", "GUI_SF_MPStore_DLC.MPStore_ID"] }, // Blue row border
             { "GUI_SF_MPMatchResults.MPMatchResults_I71", ["GUI_SF_MPNewLobby_DLC.MPNewLobby_I54"] },
-            { "GUI_SF_MPNewLobby_DLC.MPNewLobby_I6F", ["GUI_SF_MPSelectKit_DLC.MPSelectKit_I51", "GUI_SF_MPStore_DLC.MPStore_I10"] }, // Red card fill
             { "GUI_SF_MPStore_DLC.MPStore_I45", ["GUI_SF_MPStore_DLC.MPStore_I4B"] }, // PlayStation Store banner
         };
 
