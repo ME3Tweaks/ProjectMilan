@@ -79,10 +79,19 @@ struct StoreImageData
         ImageLocation = EStoreImageLocation.EStoreImageLocation_Default
     }
 };
-struct VisibleCondition 
+struct VisibleCondition
 {
     var array<int> and;
 };
+// MILAN CHANGE - Mgamerz - 2026-10-22
+// Store pack that is only listed once the player has an LE achievement
+struct MilanAchievementPack
+{
+    var string PackName;
+    var int AchievementId;
+    var Name UnlockVariable;
+};
+// END MILAN CHANGE
 enum EPurchaseType
 {
     EPurchaseType_CreditsOnly,
@@ -124,6 +133,66 @@ var bool bFetchingProductDetails;
 var bool bRetryProcessConsumables;
 var bool bProcessConsumableCriticalError;
 var bool m_bCreditPurchaseRetry;
+// MILAN CHANGE
+var config array<MilanAchievementPack> MilanAchievementPacks;
+var transient bool bMilanAchievementPacksChecked;
+// END MILAN CHANGE
+
+// MILAN CHANGE - Mgamerz - 2026-10-21
+// Prevents unlocking an acheivement pack twice
+private final function RefreshMilanAchievementPacks()
+{
+    local SFXOnlineComponentOrigin Origin;
+    local SFXEngine Engine;
+    local MilanAchievementPack AchPack;
+    local int StoreInfoIdx;
+    local bool bChanged;
+
+    if (bMilanAchievementPacksChecked || MilanAchievementPacks.Length == 0)
+    {
+        return;
+    }
+    Origin = Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentOrigin();
+    if (Origin == None)
+    {
+        return;
+    }
+    bMilanAchievementPacksChecked = TRUE;
+    Engine = Class'SFXEngine'.static.GetSFXEngine();
+    foreach MilanAchievementPacks(AchPack, )
+    {
+        if (Engine.GetPlayerVariable(AchPack.UnlockVariable) > 0)
+        {
+            continue;
+        }
+        StoreInfoIdx = StoreInfoArray.Find('PackName', AchPack.PackName);
+        if (StoreInfoIdx >= 0 && StoreInfoArray[StoreInfoIdx].PerPlayerMax > 0 && Engine.GetPlayerVariable(Name(AchPack.PackName)) >= StoreInfoArray[StoreInfoIdx].PerPlayerMax)
+        {
+            continue;
+        }
+        if (Origin.IsAchievementGranted(AchPack.AchievementId))
+        {
+            Engine.SetPlayerVariable(AchPack.UnlockVariable, 1);
+            bChanged = TRUE;
+        }
+    }
+    if (bChanged && Engine.MPSaveManager != None)
+    {
+        Engine.MPSaveManager.SaveRecords();
+    }
+}
+private final function bool IsMilanAchievementPackUnlocked(string PackName)
+{
+    local int idx;
+
+    idx = MilanAchievementPacks.Find('PackName', PackName);
+    if (idx == -1)
+    {
+        return TRUE;
+    }
+    return Class'SFXEngine'.static.GetSFXEngine().GetPlayerVariable(MilanAchievementPacks[idx].UnlockVariable) > 0;
+}
+// END MILAN CHANGE
 
 public function bool CanAffordNewStoreItems(int OldCredits, int NewCredits)
 {
@@ -983,6 +1052,9 @@ public final function array<StoreGUIData> GetStoreItems()
     nCurrentTime = Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentAPI().GetCurrentTime();
     Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentCommerce().GetOffersList(Offers);
     Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentCommerce().GetEntitlementsList(Entitlements);
+    // MILAN CHANGE
+    RefreshMilanAchievementPacks(); 
+    // END MILAN CHANGE
     for (idx = 0; idx < StoreInfoArray.Length; ++idx)
     {
         CurrStoreItem = StoreInfoArray[idx];
@@ -995,6 +1067,12 @@ public final function array<StoreGUIData> GetStoreItems()
             continue;
         }
         if (CurrStoreItem.PerPlayerMax > 0 && Engine.GetPlayerVariable(Name(CurrStoreItem.PackName)) >= CurrStoreItem.PerPlayerMax)
+        {
+            continue;
+        }
+        // MILAN CHANGE
+        // Achievement packs stay hidden until earned
+        if (!IsMilanAchievementPackUnlocked(CurrStoreItem.PackName))
         {
             continue;
         }
