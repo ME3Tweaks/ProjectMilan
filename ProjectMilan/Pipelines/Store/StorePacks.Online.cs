@@ -65,6 +65,8 @@ namespace ProjectMilan.Pipelines.Store
                 ],
             },
 
+            // Packs you might still have if you did a weekend challenge and never
+            // opened ME3 again. Wouldn't that be something
             OperationPack(6, "weekly6", 612, 1500108),
             new()
             {
