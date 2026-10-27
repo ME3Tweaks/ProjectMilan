@@ -10,6 +10,13 @@ public function SetTarget()
     PC = BioPlayerController(GetViewTargetAsController());
     if (PC != None && PC.Pawn != None && PC.Pawn.IsLocallyControlled())
     {
+        // MILAN CHANGE - Mgamerz - 2026-10-26
+        // Clone input so it doesn't modify the original
+        if (Input != None && Input.Outer != Self)
+        {
+            Input = new (Self) Input.Class (Input);
+        }
+        // END MILAN CHANGE
         PInput = BioPlayerInput(PC.PlayerInput);
         if (!PC.WorldInfo.IsConsoleBuild() && !PInput.bUsingGamepad)
         {
