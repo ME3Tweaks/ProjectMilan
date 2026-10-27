@@ -85,7 +85,7 @@ namespace ProjectMilan.Pipelines.Kits
                 kitPipeline.PortedPackage.Save();
             }
 
-            // Lose refernce
+            // Lose reference
             kitPipeline.PortedPackage = null;
             kitPipeline.Cache.Dispose();
         }
