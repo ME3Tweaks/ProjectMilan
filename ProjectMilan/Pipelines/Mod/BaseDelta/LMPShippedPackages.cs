@@ -194,6 +194,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             "SFXNotificationImages_SniperRifles.pcc",
             "SFXNotification_ModLarge.pcc",
             "SFXNotification_WeaponUpgrades.pcc",
+            "SFXWeaponImages_HeavyWeapons.pcc",
             "SFXPawn_Atlas.pcc",
             "SFXPawn_Banshee.pcc",
             "SFXPawn_Brute.pcc",
