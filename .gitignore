@@ -384,6 +384,7 @@ FodyWeavers.xsd
 /ProjectMilan/Pipelines/StaticLighting/PreBake/
 /ProjectMilan/Pipelines/Shared/ClassLibrary/LooseClasses
 /ProjectMilan/Pipelines/Audio/ConvertedCache
+/ProjectMilan/Pipelines/Texture/EncodedCache
 /ProjectMilan/Pipelines/Mod/MergedConfig/Default_DLC_MOD_ProjectMilan.bin
 /ProjectMilan/Pipelines/Audio/ConversionReview
 /LEDecooker/supportfiles/LE1.bin
@@ -407,3 +408,4 @@ FodyWeavers.xsd
 *.md
 /ShaderResearchTool
 /BankConverter/scripts
+/ProjectMilan/Pipelines/Mod/BaseDelta/SFXGame/EarlyAddToClassOrReplace/BioPlayerController.MilanSampleWeaponAnimDiag.uc

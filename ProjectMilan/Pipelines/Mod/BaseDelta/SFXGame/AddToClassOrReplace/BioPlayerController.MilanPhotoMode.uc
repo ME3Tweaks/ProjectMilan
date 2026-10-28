@@ -2,6 +2,16 @@
 // Consume photo input locally; do not run spectating movement, pawn movement or movement RPCs.
 state MilanPhotoMode extends BaseSpectating
 {
+    // MILAN CHANGE - Mgamerz - 2026-10-25
+    // When hiding UI make it so we can still go to the next player
+    public exec function MPPhotoCyclePlayer(int Direction, optional bool bReleased = FALSE)
+    {
+        if (GameModeManager2 != None && GameModeManager2.GetPhotoMode() != None)
+        {
+            GameModeManager2.GetPhotoMode().MPPhotoCyclePlayer(Direction, bReleased);
+        }
+    }
+    // END MILAN CHANGE
     public function PlayerMove(float DeltaTime)
     {
         // PlayerTick has just populated PlayerInput. Consume camera axes here, before the

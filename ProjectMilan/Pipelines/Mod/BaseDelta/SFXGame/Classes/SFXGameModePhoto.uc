@@ -89,6 +89,26 @@ var transient Rotator MPPhotoSavedRotation;
 // Y is follow height velocity
 var transient Vector MPPhotoFollowMoveVelocity;
 // END MILAN CHANGE
+// MILAN CHANGE - Mgamerz - 2026-10-25
+// New photo mode options for multiplayer
+var transient bool bMPPhotoOutlinesHidden;
+var transient array<Actor> MPPhotoHiddenOutlines;
+struct MPPhotoHiddenVisionEffect
+{
+    var RvrClientEffectComponent Component;
+    var RvrClientEffectInterface Template;
+    var Guid EffectId;
+    var bool bWasHidden;
+};
+var transient array<MPPhotoHiddenVisionEffect> MPPhotoHiddenVisionEffects;
+var transient bool bMPPhotoLoggedOutlineSuppression;
+var transient bool bMPPhotoLoggedVisionSuppression;
+var transient delegate<MPPhotoCycleRequested> MPPhotoCycleCallback;
+var transient bool bMPPhotoPrevButtonHeld;
+var transient bool bMPPhotoNextButtonHeld;
+var transient bool bMPPhotoPrevKeyHeld;
+var transient bool bMPPhotoNextKeyHeld;
+// END MILAN CHANGE
 public function Activated()
 {
     local float LocalDefaultFOV;
@@ -256,6 +276,14 @@ public function SFXCameraMode GetCameraMode(SFXCameraMode OldCameraMode, out int
 public exec function GuiKey(BioGuiEvents Event)
 {
     local float ButtonCooldown;
+
+    // MILAN CHANGE - Mgamerz - 2026-10-25
+    // Handle inputs before Gfx input filtering
+    if (HandleMPPhotoPlayerButton(Event)) 
+    {
+        return;
+    }
+    // END MILAN CHANGE
 
     // MILAN CHANGE - Mgamerz - 2026-10-16
     if (bMPSpectatorPhoto && !bMPPhotoLoggedUIInput)
@@ -738,6 +766,14 @@ public function ActivateMPPhoto()
     bMPPhotoLoggedCamera = FALSE;
     bMPPhotoLoggedUIInput = FALSE;
     bMPPhotoLoggedAxes = FALSE;
+    // MILAN CHANGE - Mgamerz - 2026-10-25
+    bMPPhotoLoggedOutlineSuppression = FALSE;
+    bMPPhotoLoggedVisionSuppression = FALSE;
+    bMPPhotoPrevButtonHeld = FALSE;
+    bMPPhotoNextButtonHeld = FALSE;
+    bMPPhotoPrevKeyHeld = FALSE;
+    bMPPhotoNextKeyHeld = FALSE;
+    // END MILAN CHANGE
     bMPPhotoStateExiting = FALSE;
     ResetMPPhotoMovement();
     MPPhotoBlendRemaining = 0.0;
@@ -761,8 +797,11 @@ public function ActivateMPPhoto()
         Outer.GameModeManager2.Helper_SetStaticPCBinding('S', "Axis aBaseY Speed=-1.0");
         Outer.GameModeManager2.Helper_SetStaticPCBinding('A', "Axis aStrafe Speed=-1.0");
         Outer.GameModeManager2.Helper_SetStaticPCBinding('D', "Axis aStrafe Speed=1.0");
-        Outer.GameModeManager2.Helper_SetStaticPCBinding('E', "MPPhotoCyclePlayer 1 | Axis aUp Speed=1.0");
-        Outer.GameModeManager2.Helper_SetStaticPCBinding('Q', "MPPhotoCyclePlayer -1 | Axis aUp Speed=-1.0");
+        // MILAN CHANGE - Mgamerz - 2026-10-25
+        // Add Q/E bindings for changing players
+        Outer.GameModeManager2.Helper_SetStaticPCBinding('E', "MPPhotoCyclePlayer 1 | Axis aUp Speed=1.0 | OnRelease MPPhotoCyclePlayer 1 TRUE");
+        Outer.GameModeManager2.Helper_SetStaticPCBinding('Q', "MPPhotoCyclePlayer -1 | Axis aUp Speed=-1.0 | OnRelease MPPhotoCyclePlayer -1 TRUE");
+        // END MILAN CHANGE
         Outer.GameModeManager2.Helper_SetStaticPCBinding('MouseX', "Count bXAxis | Axis aMouseX");
         Outer.GameModeManager2.Helper_SetStaticPCBinding('MouseY', "Count bYAxis | Axis aMouseY");
         Outer.GameModeManager2.Helper_SetStaticPCBinding('RightMouseButton', "EnableCamera | OnRelease DisableCamera");
@@ -772,6 +811,11 @@ public function ActivateMPPhoto()
         Outer.GameModeManager2.Helper_SetStaticConsoleBinding('XboxTypeS_RightY', "Axis aLookUp Speed=1.0 DeadZone=0.2");
         Outer.GameModeManager2.Helper_SetStaticConsoleBinding('XboxTypeS_RightTrigger', "Axis aUp Speed=1.0 DeadZone=0.2");
         Outer.GameModeManager2.Helper_SetStaticConsoleBinding('XboxTypeS_LeftTrigger', "Axis aUp Speed=-1.0 DeadZone=0.2");
+        // MILAN CHANGE - Mgamerz - 2026-10-25
+        // Add LB/RB bindings for changing players
+        Outer.GameModeManager2.Helper_SetStaticConsoleBinding('XboxTypeS_LeftShoulder', "GuiKey BIOGUI_EVENT_BUTTON_LB | OnRelease GuiKey BIOGUI_EVENT_BUTTON_LB_RELEASE");
+        Outer.GameModeManager2.Helper_SetStaticConsoleBinding('XboxTypeS_RightShoulder', "GuiKey BIOGUI_EVENT_BUTTON_RB | OnRelease GuiKey BIOGUI_EVENT_BUTTON_RB_RELEASE");
+        // END MILAN CHANGE
         // Route D-pad navigation to the native photo handler instead of gameplay/squad binds.
         Outer.GameModeManager2.Helper_SetStaticConsoleBinding('XboxTypeS_DPad_Up', "Repeat GuiKey BIOGUI_EVENT_CONTROL_UP | OnRelease GuiKey BIOGUI_EVENT_CONTROL_UP_RELEASE");
         Outer.GameModeManager2.Helper_SetStaticConsoleBinding('XboxTypeS_DPad_Down', "Repeat GuiKey BIOGUI_EVENT_CONTROL_DOWN | OnRelease GuiKey BIOGUI_EVENT_CONTROL_DOWN_RELEASE");
@@ -800,6 +844,9 @@ public function ActivateMPPhoto()
     SetContrast(Class'SFXSFHandler_PhotoMode'.static.GetDefaultFloatOption(9));
     ButtonPressTimes.Length = 53;
     SetTimer(0.25, TRUE, 'ValidateMPPhoto');
+    // MILAN CHANGE - Mgamerz - 2026-10-25
+    ApplyMPPhotoVisuals(FALSE);
+    // END MILAN CHANGE
     LogInternal("MilanPhoto: entered local, unpaused spectator photo mode");
 }
 
@@ -823,6 +870,14 @@ public function DeactivateMPPhoto()
     // Disable first: UI removal and mode changes can both request cleanup.
     bIsActive = FALSE;
     bMPSpectatorPhoto = FALSE;
+    // MILAN CHANGE - Mgamerz - 2026-10-25
+    MPPhotoCycleCallback = None;
+    bMPPhotoPrevButtonHeld = FALSE;
+    bMPPhotoNextButtonHeld = FALSE;
+    bMPPhotoPrevKeyHeld = FALSE;
+    bMPPhotoNextKeyHeld = FALSE;
+    ApplyMPPhotoVisuals(TRUE);
+    // END MILAN CHANGE
     // MILAN CHANGE - Mgamerz - 2026-10-19
     ApplyMPPhotoHintVisibility(TRUE);
     // END MILAN CHANGE
@@ -972,7 +1027,6 @@ public function ProcessMPPhotoInput(float DeltaTime)
     local Rotator TurnDelta;
     local float TurnAlpha;
     local float SmoothingTime;
-    local SFXSFHandler_PhotoMode PhotoHandler;
 
     Input = Outer.PlayerInput;
     if (Input == None || !bIsActive || !bMPSpectatorPhoto)
@@ -1033,12 +1087,10 @@ public function ProcessMPPhotoInput(float DeltaTime)
                 MPPhotoRotation.Yaw += int(FClamp(Input.aStrafe, -1.0, 1.0) * 12000.0 * DeltaTime);
             }
             // END MILAN CHANGE
-            // Hidden Follow uses Q/E for subjects; controller triggers still adjust height.
-            PhotoHandler = Class'SFXGUIInteraction'.static.GetInstance().GetPhotoModeHandler(Outer);
-            if (Input.bUsingGamepad || PhotoHandler == None || !PhotoHandler.bOptionsHidden)
-            {
-                Movement.Y = FClamp(Input.aUp, -1.0, 1.0) * 300.0;
-            }
+            // MILAN CHANGE - Mgamerz - 2026-10-27
+            // When using right mouse button Q/E can still raise or lower the camera rather than change players
+            Movement.Y = FClamp(Input.aUp, -1.0, 1.0) * 300.0;
+            // END MILAN CHANGE
         }
         // MILAN CHANGE - Mgamerz
         // Ease zoom/height input and release, using the same movement setting as free cam mode
@@ -1119,25 +1171,89 @@ public final function ResetMPPhotoMovement()
 }
 // END MILAN CHANGE
 
-public final exec function MPPhotoCyclePlayer(int Direction)
+// MILAN CHANGE - Mgamerz - 2026-10-25
+public final delegate function MPPhotoCycleRequested(int Direction);
+
+public final exec function MPPhotoCyclePlayer(int Direction, optional bool bReleased = FALSE)
+{
+    if (Direction < 0)
+    {
+        if (bReleased) { bMPPhotoPrevKeyHeld = FALSE; return; }
+        if (bMPPhotoPrevKeyHeld) return;
+        bMPPhotoPrevKeyHeld = TRUE;
+    }
+    else
+    {
+        if (bReleased) { bMPPhotoNextKeyHeld = FALSE; return; }
+        if (bMPPhotoNextKeyHeld) return;
+        bMPPhotoNextKeyHeld = TRUE;
+    }
+    // If camera is unlocked (right mouse) don't cycle players
+    if (Outer.bPhotoModeCameraUnlocked) 
+    {
+        return;
+    }
+    RequestMPPhotoPlayerCycle(Direction);
+}
+
+public final function RequestMPPhotoPlayerCycle(int Direction)
 {
     local SFXSFHandler_PhotoMode PhotoHandler;
-    local ASParams Param;
-    local array<ASParams> Params;
 
     if (!bMPSpectatorPhoto || !bIsActive || !bMPPhotoFollow || Outer.GameModeManager2.CurrentMode != 14)
     {
         return;
     }
     PhotoHandler = Class'SFXGUIInteraction'.static.GetInstance().GetPhotoModeHandler(Outer);
-    if (PhotoHandler == None || !PhotoHandler.bOptionsHidden || PhotoHandler.oPanel == None)
+    if (PhotoHandler == None || !PhotoHandler.bOptionsHidden || MPPhotoCycleCallback == None)
     {
         return;
     }
-    Param.Type = ASParamTypes.ASParam_Float;
-    Param.fVar = float(Direction);
-    Params.AddItem(Param);
-    PhotoHandler.oPanel.InvokeMethodArgs("PhotoMode.cycleHiddenPlayer", Params);
+    MPPhotoCycleCallback(Direction < 0 ? -1 : 1);
+}
+
+public final function bool HandleMPPhotoPlayerButton(BioGuiEvents Event)
+{
+    local SFXSFHandler_PhotoMode PhotoHandler;
+    local bool bWasHeld;
+    local int Direction;
+
+    switch (Event)
+    {
+        case BioGuiEvents.BIOGUI_EVENT_BUTTON_LB_RELEASE:
+            bMPPhotoPrevButtonHeld = FALSE;
+            return FALSE;
+        case BioGuiEvents.BIOGUI_EVENT_BUTTON_RB_RELEASE:
+            bMPPhotoNextButtonHeld = FALSE;
+            return FALSE;
+        case BioGuiEvents.BIOGUI_EVENT_BUTTON_LB:
+            bWasHeld = bMPPhotoPrevButtonHeld;
+            bMPPhotoPrevButtonHeld = TRUE;
+            Direction = -1;
+            break;
+        case BioGuiEvents.BIOGUI_EVENT_BUTTON_RB:
+            bWasHeld = bMPPhotoNextButtonHeld;
+            bMPPhotoNextButtonHeld = TRUE;
+            Direction = 1;
+            break;
+        default:
+            return FALSE;
+    }
+    if (!bMPSpectatorPhoto || !bIsActive || !bMPPhotoFollow || Outer.GameModeManager2.CurrentMode != 14) 
+    {
+        return FALSE;
+    }
+    PhotoHandler = Class'SFXGUIInteraction'.static.GetInstance().GetPhotoModeHandler(Outer);
+    if (PhotoHandler == None || !PhotoHandler.bOptionsHidden) 
+    {
+        return FALSE;
+    }
+    // A press can arrive as both a raw GUI event and a temporary input binding
+    if (!bWasHeld) 
+    {
+        RequestMPPhotoPlayerCycle(Direction);
+    }
+    return TRUE;
 }
 // END MILAN CHANGE
 
@@ -1151,6 +1267,7 @@ public function UpdateMPPhoto(float DeltaTime)
     {
         return;
     }
+    ApplyMPPhotoVisuals(FALSE);
     if (!bMPPhotoLoggedCamera)
     {
         bMPPhotoLoggedCamera = TRUE;
@@ -1249,6 +1366,7 @@ public final function EnsureMPPhotoMatchSettings()
     bMPPhotoOverlaysHidden = default.bMPPhotoOverlaysHidden;
     bMPPhotoHintsHidden = default.bMPPhotoHintsHidden;
     bMPPhotoGrenadesHidden = default.bMPPhotoGrenadesHidden;
+    bMPPhotoOutlinesHidden = default.bMPPhotoOutlinesHidden;
     Class'SFXGUIValue_MarkerPlayerHealth'.default.bHideInPhotoMode = FALSE;
     LogInternal("MilanPhoto: initialized settings for match" @ MPPhotoSettingsGRI);
 }
@@ -1267,6 +1385,144 @@ public final function SaveMPPhotoOption(int Id, float Value)
         MPPhotoSavedOptions.AddItem(Entry);
     }
     else MPPhotoSavedOptions[Index].Value = Value;
+}
+// END MILAN CHANGE
+
+// Turn off glow effects on targets when you're viewing a pawn that has that feature enabled
+// This makes it so following a geth with hunter mode on doesn't make your camera show that
+public final function bool IsMPPhotoVisionOutline(SFXOutlineGlowActorBase Glow)
+{
+    return Glow.IsA('SFXOutlineGlowActorMP_Supercharge')
+        || Glow.IsA('SFXOutlineGlowActorMP_Supercharge_Shared')
+        || Glow.IsA('SFXOutlineGlowActorMP_Supercharge_MP5');
+}
+
+public final function bool ShouldHideMPPhotoOutline(SFXOutlineGlowActorBase Glow)
+{
+    if (Glow == None || Glow.bDeleteMe) return FALSE;
+    if (IsMPPhotoVisionOutline(Glow)) return TRUE;
+    return (bMPPhotoOverlaysHidden || bMPPhotoOutlinesHidden)
+        && Glow.Source != None && Glow.Source.IsA('SFXPawn_PlayerMP');
+}
+
+public final function bool IsMPPhotoVisionTemplate(RvrClientEffectInterface Template)
+{
+    local int Depth;
+    local RvrClientEffectInstanceConstant Instance;
+
+    // Recursively see if we're the geth vision vfx
+    for (Depth = 0; Template != None && Depth < 8; Depth++)
+    {
+        if (Template.Name == 'Geth_Vision_VCFX') 
+        {
+            return TRUE;
+        }
+        Instance = RvrClientEffectInstanceConstant(Template);
+        if (Instance == None) 
+        {
+            return FALSE;
+        }
+        Template = Instance.m_pClientEffect;
+    }
+    return FALSE;
+}
+
+public final function bool IsCurrentMPPhotoVisionEffect(MPPhotoHiddenVisionEffect Entry)
+{
+    return Entry.Component != None && Entry.Component.m_bActive
+        && Entry.Component.m_pClientEffect == Entry.Template
+        && Entry.Component.m_oTarget.Id.A == Entry.EffectId.A
+        && Entry.Component.m_oTarget.Id.B == Entry.EffectId.B
+        && Entry.Component.m_oTarget.Id.C == Entry.EffectId.C
+        && Entry.Component.m_oTarget.Id.D == Entry.EffectId.D;
+}
+
+public final function ApplyMPPhotoVisuals(bool bRestore)
+{
+    local bool bActive;
+    local int i;
+    local int StackIndex;
+    local int EffectIndex;
+    local SFXOutlineGlowActorBase Glow;
+    local RvrClientEffectManager Manager;
+    local RvrClientEffectComponent Component;
+    local MPPhotoHiddenVisionEffect Entry;
+
+    bActive = !bRestore && bMPSpectatorPhoto && bIsActive;
+    for (i = MPPhotoHiddenOutlines.Length - 1; i >= 0; i--)
+    {
+        Glow = SFXOutlineGlowActorBase(MPPhotoHiddenOutlines[i]);
+        if (!bActive || !ShouldHideMPPhotoOutline(Glow))
+        {
+            Outer.HiddenActors.RemoveItem(MPPhotoHiddenOutlines[i]);
+            MPPhotoHiddenOutlines.Remove(i, 1);
+        }
+    }
+    for (i = MPPhotoHiddenVisionEffects.Length - 1; i >= 0; i--)
+    {
+        if (!bActive || !IsCurrentMPPhotoVisionEffect(MPPhotoHiddenVisionEffects[i]))
+        {
+            if (!bActive && IsCurrentMPPhotoVisionEffect(MPPhotoHiddenVisionEffects[i]))
+            {
+                MPPhotoHiddenVisionEffects[i].Component.Hide(MPPhotoHiddenVisionEffects[i].bWasHidden);
+            }
+            MPPhotoHiddenVisionEffects.Remove(i, 1);
+        }
+    }
+    if (!bActive) 
+    {
+        return;
+    }
+    foreach Outer.WorldInfo.DynamicActors(Class'SFXOutlineGlowActorBase', Glow)
+    {
+        if (ShouldHideMPPhotoOutline(Glow) && Outer.HiddenActors.Find(Glow) == -1)
+        {
+            Outer.HiddenActors.AddItem(Glow);
+            if (MPPhotoHiddenOutlines.Find(Glow) == -1) 
+            {
+                MPPhotoHiddenOutlines.AddItem(Glow);
+            }
+        }
+    }
+    if (MPPhotoHiddenOutlines.Length > 0 && !bMPPhotoLoggedOutlineSuppression)
+    {
+        bMPPhotoLoggedOutlineSuppression = TRUE;
+        LogInternal("MilanPhoto: local outline suppression connected" @ MPPhotoHiddenOutlines.Length);
+    }
+    Manager = Class'RvrClientEffectManager'.static.GetClientEffectManager();
+    if (Manager == None) 
+    {
+        return;
+    }
+    for (StackIndex = 0; StackIndex < Manager.m_aStacks.Length; StackIndex++)
+    {
+        for (EffectIndex = 0; EffectIndex < Manager.m_aStacks[StackIndex].Elements.Length; EffectIndex++)
+        {
+            Component = Manager.m_aStacks[StackIndex].Elements[EffectIndex];
+            if (Component == None || !Component.m_bActive || !IsMPPhotoVisionTemplate(Component.m_pClientEffect)) 
+            {
+                continue;
+            }
+            i = MPPhotoHiddenVisionEffects.Find('Component', Component);
+            if (i == -1)
+            {
+                Entry.Component = Component;
+                Entry.Template = Component.m_pClientEffect;
+                Entry.EffectId = Component.m_oTarget.Id;
+                Entry.bWasHidden = Component.m_bHidden;
+                MPPhotoHiddenVisionEffects.AddItem(Entry);
+            }
+            if (!Component.m_bHidden) 
+            {
+                Component.Hide(TRUE);
+            }
+        }
+    }
+    if (MPPhotoHiddenVisionEffects.Length > 0 && !bMPPhotoLoggedVisionSuppression)
+    {
+        bMPPhotoLoggedVisionSuppression = TRUE;
+        LogInternal("MilanPhoto: Hunter/Scanner vision suppression connected" @ MPPhotoHiddenVisionEffects.Length);
+    }
 }
 // END MILAN CHANGE
 
