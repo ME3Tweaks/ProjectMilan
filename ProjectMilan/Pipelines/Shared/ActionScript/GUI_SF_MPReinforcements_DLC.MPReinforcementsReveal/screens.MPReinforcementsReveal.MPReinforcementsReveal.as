@@ -108,7 +108,7 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
             var _loc4_ = screens.MPReinforcementsReveal.CardAnimation(this.CardHolder.attachMovie("CardAnimation","CardAnimation" + _loc2_,_loc6_));
             _loc4_._x = 0;
             _loc4_._y = 0;
-            _loc4_.SetCardData(CardData[_loc2_].DisplayName,CardData[_loc2_].DisplayDescription,CardData[_loc2_].TextureReference,CardData[_loc2_].CardTypeText,CardData[_loc2_].CardType,CardData[_loc2_].IsNew,_loc5_);
+            _loc4_.SetCardData(CardData[_loc2_].DisplayName,CardData[_loc2_].DisplayDescription,CardData[_loc2_].TextureReference,CardData[_loc2_].CardTypeText,CardData[_loc2_].CardType,CardData[_loc2_].IsNew,_loc5_,CardData[_loc2_].IsBanner);
             _loc4_.SetFinishAnimationCallback(_loc8_);
             this.CardClips.push(_loc4_);
             _loc2_ = _loc2_ + 1;
