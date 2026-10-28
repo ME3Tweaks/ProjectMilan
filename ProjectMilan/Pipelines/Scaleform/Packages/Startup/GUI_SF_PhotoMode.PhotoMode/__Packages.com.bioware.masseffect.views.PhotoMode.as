@@ -39,6 +39,41 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
    var markersOnLabel = "$653225";
    var showPlayerMarkers = true;
    var markerPageIndex = -1;
+   // MILAN CHANGE - Mgamerz - 2026-10-17
+   static var OPTION_FREE_SPEED = 1002;
+   static var OPTION_TURN_SMOOTHING = 1003;
+   static var OPTION_CAMERA_COLLISION = 1004;
+   var freeSpeedLabel = "$49875785";
+   var smoothingLabel = "$49875786";
+   var collisionLabel = "$49875787";
+   var smoothingLowLabel = "$817903";
+   var smoothingMediumLabel = "$817904";
+   var smoothingHighLabel = "$817905";
+   var freeSpeedIndex = 3;
+   var turnSmoothingIndex = 0;
+   var cameraCollision = true;
+   // MILAN CHANGE - Mgamerz - 2026-10-20
+   static var OPTION_MOVEMENT_SMOOTHING = 1008;
+   var movementSmoothingLabel = "$49875794";
+   var movementSmoothingIndex = 2;
+   // END MILAN CHANGE
+   // MILAN CHANGE - Mgamerz - 2026-10-19
+   static var OPTION_PHOTO_OVERLAYS = 1005;
+   static var OPTION_HINT_POPUPS = 1006;
+   static var OPTION_GRENADE_INDICATORS = 1007;
+   var overlaysLabel = "$49875791";
+   var hintPopupsLabel = "$49875792";
+   var grenadeIndicatorsLabel = "$49875793";
+   var showPhotoOverlays = true;
+   var showHintPopups = true;
+   var showGrenadeIndicators = true;
+   // MILAN CHANGE - Mgamerz - 2026-10-25
+   static var OPTION_PLAYER_OUTLINES = 1009;
+   var playerOutlinesLabel = "$49875795";
+   var showPlayerOutlines = true;
+   // END MILAN CHANGE
+   // END MILAN CHANGE
+   // END MILAN CHANGE
    // END MILAN CHANGE
    // END MILAN CHANGE
    function PhotoMode()
@@ -235,6 +270,13 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
    }
    function onLBPressed()
    {
+      // MILAN CHANGE - Mgamerz - 2026-10-17
+      if(!this._visible)
+      {
+         this.cycleHiddenPlayer(-1);
+         return;
+      }
+      // END MILAN CHANGE
       if(_root.PhotoMode.activeHeaderIndex - 1 >= 0)
       {
          _root.PhotoMode.adjustingControl = false;
@@ -248,6 +290,13 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
    }
    function onRBPressed()
    {
+      // MILAN CHANGE - Mgamerz - 2026-10-17
+      if(!this._visible)
+      {
+         this.cycleHiddenPlayer(1);
+         return;
+      }
+      // END MILAN CHANGE
       if(_root.PhotoMode.activeHeaderIndex + 1 < _root.PhotoMode.headerClips.length)
       {
          _root.PhotoMode.adjustingControl = false;
@@ -268,10 +317,40 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
       // MILAN CHANGE - Mgamerz - 2026-10-14
       // Roster refreshes must not select a different player merely by recreating a slider.
       if(this.suppressPlayerCallbacks) return;
+      // MILAN CHANGE - Mgamerz - 2026-10-19
+      if((p_event.optionId >= com.bioware.masseffect.views.PhotoMode.OPTION_PHOTO_OVERLAYS && p_event.optionId <= com.bioware.masseffect.views.PhotoMode.OPTION_GRENADE_INDICATORS) || p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_OUTLINES)
+      {
+         if(this.adjustingControl && (this.showPhotoOverlays || p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PHOTO_OVERLAYS))
+         {
+            if(p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PHOTO_OVERLAYS) this.showPhotoOverlays = p_event.numerator == 1;
+            else if(p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_HINT_POPUPS) this.showHintPopups = p_event.numerator == 1;
+            else if(p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_OUTLINES) this.showPlayerOutlines = p_event.numerator == 1;
+            else this.showGrenadeIndicators = p_event.numerator == 1;
+            this.updatePhotoOverlayControls();
+            flash.external.ExternalInterface.call("SetPhotoOverlayOptions",this.showPhotoOverlays,this.showHintPopups,this.showGrenadeIndicators,this.showPlayerOutlines);
+         }
+         return;
+      }
+      // END MILAN CHANGE
+      // MILAN CHANGE - Mgamerz - 2026-10-17
+      if(p_event.optionId == 0) this.updatePlayerControlEnabled();
+      if((p_event.optionId >= com.bioware.masseffect.views.PhotoMode.OPTION_FREE_SPEED && p_event.optionId <= com.bioware.masseffect.views.PhotoMode.OPTION_CAMERA_COLLISION) || p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_MOVEMENT_SMOOTHING)
+      {
+         if(this.adjustingControl)
+         {
+            if(p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_FREE_SPEED) this.freeSpeedIndex = p_event.numerator;
+            else if(p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_TURN_SMOOTHING) this.turnSmoothingIndex = p_event.numerator;
+            else if(p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_MOVEMENT_SMOOTHING) this.movementSmoothingIndex = p_event.numerator;
+            else this.cameraCollision = p_event.numerator == 1;
+            flash.external.ExternalInterface.call("SetMPPhotoCameraOptions",this.freeSpeedIndex,this.turnSmoothingIndex,this.cameraCollision,this.movementSmoothingIndex);
+         }
+         return;
+      }
+      // END MILAN CHANGE
       // MILAN CHANGE - Mgamerz - 2026-10-16
       if(p_event.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_MARKERS)
       {
-         if(this.adjustingControl)
+         if(this.adjustingControl && this.showPhotoOverlays)
          {
             this.showPlayerMarkers = p_event.numerator == 1;
             flash.external.ExternalInterface.call("SetPhotoPlayerMarkers",this.showPlayerMarkers);
@@ -287,6 +366,7 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
             if(player != undefined)
             {
                this.selectedPlayerKey = player.key;
+               this.syncPlayerSelection();
                flash.external.ExternalInterface.call("SelectPhotoPlayer",player.key);
             }
          }
@@ -336,6 +416,88 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
          this.configurePlayerControl();
       }
    }
+   // MILAN CHANGE - Mgamerz - 2026-10-17
+   function setCameraControlOptions(speedLabel, turnLabel, collisionLabel, lowLabel, mediumLabel, highLabel, speedIndex, smoothingIndex, collision, movementLabel, movementIndex)
+   {
+      this.freeSpeedLabel = speedLabel;
+      this.smoothingLabel = turnLabel;
+      this.collisionLabel = collisionLabel;
+      this.smoothingLowLabel = lowLabel;
+      this.smoothingMediumLabel = mediumLabel;
+      this.smoothingHighLabel = highLabel;
+      this.freeSpeedIndex = speedIndex;
+      this.turnSmoothingIndex = smoothingIndex;
+      this.cameraCollision = collision;
+      // MILAN CHANGE - Mgamerz - 2026-10-20
+      if(movementLabel != undefined) this.movementSmoothingLabel = movementLabel;
+      if(movementIndex != undefined) this.movementSmoothingIndex = movementIndex;
+      // END MILAN CHANGE
+      this.rebuildPlayerOption();
+      if(this.activeHeaderIndex == 0)
+      {
+         this.list.dataProvider = this.optionData[0].children;
+         this.configurePlayerControl();
+      }
+   }
+   // MILAN CHANGE - Mgamerz - 2026-10-19
+   function setPhotoOverlayOptions(allLabel, hintLabel, grenadeLabel, showAll, showHints, showGrenades, outlineLabel, showOutlines)
+   {
+      this.overlaysLabel = allLabel;
+      this.hintPopupsLabel = hintLabel;
+      this.grenadeIndicatorsLabel = grenadeLabel;
+      this.showPhotoOverlays = showAll;
+      this.showHintPopups = showHints;
+      this.showGrenadeIndicators = showGrenades;
+      // MILAN CHANGE - Mgamerz - 2026-10-25
+      if(outlineLabel != undefined) this.playerOutlinesLabel = outlineLabel;
+      if(showOutlines != undefined) this.showPlayerOutlines = showOutlines;
+      // END MILAN CHANGE
+      this.rebuildMarkerOption();
+      if(this.activeHeaderIndex == this.markerPageIndex)
+      {
+         this.list.dataProvider = this.optionData[this.markerPageIndex].children;
+         this.configurePlayerControl();
+      }
+   }
+   // MILAN CHANGE - Mgamerz - 2026-10-20
+   // Initial roster setup briefly has no players; restore the saved mode after its snapshot.
+   function setMultiplayerCameraMode(following)
+   {
+      var value = following && this.multiplayerPlayers.length > 0 ? 1 : 0;
+      this.optionData[0].children[0].control.defaultValue = value;
+      if(this.activeHeaderIndex != 0 || !this.list.rawChildren[0].loaded) return;
+      var item = this.list.rawChildren[0];
+      item.selectedIndex = value;
+      item.menuHolder._x = item.endX;
+      this.updatePlayerControlEnabled();
+      item = this.list.rawChildren[1];
+      if(item.photoPlayerLabel != undefined) item.onEnterFrame();
+   }
+   // END MILAN CHANGE
+   function updatePhotoOverlayControls()
+   {
+      if(this.activeHeaderIndex != this.markerPageIndex) return;
+      for(var i = 0; i < this.list.rawChildren.length; i++)
+      {
+         var item = this.list.rawChildren[i];
+         if(item.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_MARKERS || item.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_HINT_POPUPS || item.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_GRENADE_INDICATORS || item.optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_OUTLINES) item.setEnabled(this.showPhotoOverlays);
+      }
+   }
+   // END MILAN CHANGE
+   function cycleHiddenPlayer(direction)
+   {
+      if(this._visible || this.optionData[0].children[0].control.defaultValue != 1 || this.multiplayerPlayers.length < 2) return;
+      var index = 0;
+      for(var i = 0; i < this.multiplayerPlayers.length; i++)
+      {
+         if(this.multiplayerPlayers[i].key == this.selectedPlayerKey) index = i;
+      }
+      index = (index + (direction < 0 ? -1 : 1) + this.multiplayerPlayers.length) % this.multiplayerPlayers.length;
+      this.selectedPlayerKey = this.multiplayerPlayers[index].key;
+      this.syncPlayerSelection();
+      flash.external.ExternalInterface.call("SelectPhotoPlayer",this.selectedPlayerKey);
+   }
+   // END MILAN CHANGE
    // END MILAN CHANGE
    function beginMultiplayerPlayers(playerKey)
    {
@@ -351,26 +513,70 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
       this.multiplayerPlayers = this.pendingMultiplayerPlayers;
       this.selectedPlayerKey = this.pendingPlayerKey;
       this.pendingMultiplayerPlayers = undefined;
+      // MILAN CHANGE - Mgamerz - 2026-10-17
+      // Keep live row instances and focus: dataProvider rebuilds briefly expose stock labels
+      // before onLoad restores the shared widths and the custom player-name field.
+      var wasSuppressing = this.suppressPlayerCallbacks;
       this.suppressPlayerCallbacks = true;
-      this.adjustingControl = false;
-      this.rebuildPlayerOption();
+      var rows = this.optionData[0].children;
+      var mode = rows[0];
+      var modeChoicesChanged = mode.control.children.length != (this.multiplayerPlayers.length > 0 ? 2 : 1);
+      if(modeChoicesChanged)
+      {
+         mode.control.children = [{label:mode.control.children[0].label}];
+         if(this.multiplayerPlayers.length > 0) mode.control.children.push({label:this.followLabel});
+         else mode.control.defaultValue = 0;
+      }
+      var choices = new Array();
+      for(var i = 0; i < this.multiplayerPlayers.length; i++) choices.push({label:this.multiplayerPlayers[i].name});
+      if(choices.length == 0) choices.push({label:this.noPlayersLabel});
+      rows[1].control.children = choices;
+      rows[1].enabled = this.multiplayerPlayers.length > 0 && mode.control.defaultValue == 1;
+      this.syncPlayerSelection();
       if(this.activeHeaderIndex == 0)
       {
-         var oldPosition = this.position;
-         this.list.dataProvider = this.optionData[0].children;
-         this.position = Math.max(0,Math.min(oldPosition,this.list.dataProvider.length - 1));
-         this.list.selectedIndex = this.position;
-         this.configurePlayerControl();
+         var item = this.list.rawChildren[0];
+         if(modeChoicesChanged && item.loaded)
+         {
+            // Only the Free/Follow choice list changes when the roster becomes empty/nonempty.
+            var wasActive = item.active;
+            for(i = 0; i < item.menuItems.length; i++) item.menuItems[i].removeMovieClip();
+            item.init();
+            item.active = wasActive;
+            this.configureMenuWidth();
+         }
+         this.updatePlayerControlEnabled();
+         var playerItem = this.list.rawChildren[1];
+         if(playerItem.photoPlayerLabel != undefined) playerItem.onEnterFrame();
       }
-      this.suppressPlayerCallbacks = false;
+      this.suppressPlayerCallbacks = wasSuppressing;
+      // END MILAN CHANGE
    }
+   // MILAN CHANGE - Mgamerz - 2026-10-17
+   // Both local cycling and native acknowledgments update the existing selector atomically.
+   function syncPlayerSelection()
+   {
+      var selectedIndex = 0;
+      for(var i = 0; i < this.multiplayerPlayers.length; i++)
+      {
+         if(this.multiplayerPlayers[i].key == this.selectedPlayerKey) selectedIndex = i;
+      }
+      this.optionData[0].children[1].control.defaultValue = selectedIndex;
+      if(this.activeHeaderIndex != 0) return;
+      var item = this.list.rawChildren[1];
+      if(!item.loaded) return;
+      item.selectedIndex = selectedIndex;
+      item.menuHolder._x = item.endX;
+      if(item.photoPlayerLabel != undefined) item.onEnterFrame();
+   }
+   // END MILAN CHANGE
    function rebuildPlayerOption()
    {
       if(this.optionData == undefined || this.optionData.length == 0) return;
       var rows = this.optionData[0].children;
       for(var i = rows.length - 1; i >= 0; i--)
       {
-         if(rows[i].optionId == com.bioware.masseffect.views.PhotoMode.OPTION_FOLLOWED_PLAYER || rows[i].optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_MARKERS) rows.splice(i,1);
+         if((rows[i].optionId >= com.bioware.masseffect.views.PhotoMode.OPTION_FOLLOWED_PLAYER && rows[i].optionId <= com.bioware.masseffect.views.PhotoMode.OPTION_CAMERA_COLLISION) || rows[i].optionId == com.bioware.masseffect.views.PhotoMode.OPTION_MOVEMENT_SMOOTHING) rows.splice(i,1);
          else if(rows[i].optionId == 0)
          {
             var freeLabel = rows[i].control.children[0].label;
@@ -392,6 +598,14 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
       }
       if(choices.length == 0) choices.push({label:this.noPlayersLabel});
       rows.splice(1,0,{label:this.followedPlayerLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_FOLLOWED_PLAYER,type:"TextSliderEx",enabled:this.multiplayerPlayers.length > 0,control:{children:choices,defaultValue:selectedIndex}});
+      // MILAN CHANGE - Mgamerz - 2026-10-17
+      rows.push({label:this.freeSpeedLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_FREE_SPEED,type:"TextSliderEx",control:{children:[{label:"0.25x"},{label:"0.5x"},{label:"1x"},{label:"2x"},{label:"4x"},{label:"8x"},{label:"16x"}],defaultValue:this.freeSpeedIndex}});
+      rows.push({label:this.smoothingLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_TURN_SMOOTHING,type:"TextSliderEx",control:{children:[{label:this.markersOffLabel},{label:this.smoothingLowLabel},{label:this.smoothingMediumLabel},{label:this.smoothingHighLabel}],defaultValue:this.turnSmoothingIndex}});
+      // MILAN CHANGE - Mgamerz - 2026-10-20
+      rows.push({label:this.movementSmoothingLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_MOVEMENT_SMOOTHING,type:"TextSliderEx",control:{children:[{label:this.markersOffLabel},{label:this.smoothingLowLabel},{label:this.smoothingMediumLabel},{label:this.smoothingHighLabel}],defaultValue:this.movementSmoothingIndex}});
+      // END MILAN CHANGE
+      rows.push({label:this.collisionLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_CAMERA_COLLISION,type:"TextSliderEx",control:{children:[{label:this.markersOffLabel},{label:this.markersOnLabel}],defaultValue:this.cameraCollision ? 1 : 0}});
+      // END MILAN CHANGE
    }
    // MILAN CHANGE - Mgamerz - 2026-10-16
    function rebuildMarkerOption()
@@ -400,9 +614,17 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
       var rows = this.optionData[this.markerPageIndex].children;
       for(var i = rows.length - 1; i >= 0; i--)
       {
-         if(rows[i].optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_MARKERS) rows.splice(i,1);
+         if(rows[i].optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_MARKERS || rows[i].optionId == com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_OUTLINES || (rows[i].optionId >= com.bioware.masseffect.views.PhotoMode.OPTION_PHOTO_OVERLAYS && rows[i].optionId <= com.bioware.masseffect.views.PhotoMode.OPTION_GRENADE_INDICATORS)) rows.splice(i,1);
       }
-      rows.push({label:this.playerMarkersLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_MARKERS,type:"TextSliderEx",control:{children:[{label:this.markersOffLabel},{label:this.markersOnLabel}],defaultValue:this.showPlayerMarkers ? 1 : 0}});
+      // MILAN CHANGE - Mgamerz - 2026-10-19
+      rows.push({label:this.overlaysLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_PHOTO_OVERLAYS,type:"TextSliderEx",control:{children:[{label:this.markersOffLabel},{label:this.markersOnLabel}],defaultValue:this.showPhotoOverlays ? 1 : 0}});
+      rows.push({label:this.playerMarkersLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_MARKERS,type:"TextSliderEx",enabled:this.showPhotoOverlays,control:{children:[{label:this.markersOffLabel},{label:this.markersOnLabel}],defaultValue:this.showPlayerMarkers ? 1 : 0}});
+      rows.push({label:this.hintPopupsLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_HINT_POPUPS,type:"TextSliderEx",enabled:this.showPhotoOverlays,control:{children:[{label:this.markersOffLabel},{label:this.markersOnLabel}],defaultValue:this.showHintPopups ? 1 : 0}});
+      rows.push({label:this.grenadeIndicatorsLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_GRENADE_INDICATORS,type:"TextSliderEx",enabled:this.showPhotoOverlays,control:{children:[{label:this.markersOffLabel},{label:this.markersOnLabel}],defaultValue:this.showGrenadeIndicators ? 1 : 0}});
+      // MILAN CHANGE - Mgamerz - 2026-10-25
+      rows.push({label:this.playerOutlinesLabel,optionId:com.bioware.masseffect.views.PhotoMode.OPTION_PLAYER_OUTLINES,type:"TextSliderEx",enabled:this.showPhotoOverlays,control:{children:[{label:this.markersOffLabel},{label:this.markersOnLabel}],defaultValue:this.showPlayerOutlines ? 1 : 0}});
+      // END MILAN CHANGE
+      // END MILAN CHANGE
    }
    // All pages use the same value column, including choice and numeric controls.
    function configureMenuWidth()
@@ -413,17 +635,16 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
       }
       if(this.menuValueWidth == 0)
       {
-         this.createTextField("menuWidthProbe",this.getNextHighestDepth(),0,0,1000,22);
-         var probe = this.menuWidthProbe;
-         probe._visible = false;
-         probe.embedFonts = this.list.rawChildren[0].labelTxt.embedFonts;
-         var format = this.list.rawChildren[0].labelTxt.getTextFormat();
-         format.size = 14;
-         probe.setNewTextFormat(format);
+         // MILAN CHANGE - Mgamerz - 2026-10-17
+         // Keep the authored field's imported font ID, which createTextField does not retain.
+         this.attachMovie("TextSliderMenuItem","menuWidthProbe",this.getNextHighestDepth());
+         this.menuWidthProbe._visible = false;
+         var probe = this.menuWidthProbe.labelTxt;
+         probe._width = 1000;
          probe.text = "00000000000000000000";
-         probe.setTextFormat(format);
          this.menuValueWidth = Math.ceil(probe.textWidth) + 8;
-         probe.removeTextField();
+         this.menuWidthProbe.removeMovieClip();
+         // END MILAN CHANGE
       }
       var width = this.menuValueWidth;
       var extra = width - this.playerLayoutWidth;
@@ -459,6 +680,23 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
       return true;
    }
    // END MILAN CHANGE
+   // MILAN CHANGE - Mgamerz - 2026-10-17
+   function updatePlayerControlEnabled()
+   {
+      if(this.activeHeaderIndex != 0) return;
+      var index = this.list.GetOptionIndex(com.bioware.masseffect.views.PhotoMode.OPTION_FOLLOWED_PLAYER);
+      if(index >= 0 && this.list.rawChildren[index].loaded)
+      {
+         var following = this.optionData[0].children[0].control.defaultValue == 1;
+         this.list.rawChildren[index].setEnabled(this.multiplayerPlayers.length > 0 && following);
+         for(var i = 0; i < this.list.rawChildren.length; i++)
+         {
+            var id = this.list.rawChildren[i].optionId;
+            if(id == com.bioware.masseffect.views.PhotoMode.OPTION_FREE_SPEED || id == com.bioware.masseffect.views.PhotoMode.OPTION_TURN_SMOOTHING) this.list.rawChildren[i].setEnabled(!following);
+         }
+      }
+   }
+   // END MILAN CHANGE
    function configurePlayerControl()
    {
       // Attached controls acquire optionId in onLoad, on the next advance rather than synchronously.
@@ -467,26 +705,29 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
       sync.onEnterFrame = function()
       {
          if(!owner.configureMenuWidth()) return;
+         owner.updatePhotoOverlayControls();
          var index = owner.list.GetOptionIndex(com.bioware.masseffect.views.PhotoMode.OPTION_FOLLOWED_PLAYER);
          if(index >= 0)
          {
             var item = owner.list.rawChildren[index];
-            item.setEnabled(owner.multiplayerPlayers.length > 0);
+            owner.updatePlayerControlEnabled();
             // MILAN CHANGE - Mgamerz - 2026-10-16
             // Use a fixed twenty-character viewport and a separate value label. The stock
             // row color transform overrides child text colors, and its carousel is too narrow.
-            item.createTextField("photoPlayerLabel",1000,item.MENUHOLDER_X,1,1000,22);
+            // MILAN CHANGE - Mgamerz - 2026-10-17
+            // Reuse the authored shared-font field; copying a TextFormat to a new field
+            // does not preserve the imported AeroLight Shared font in the game renderer.
+            item.attachMovie("TextSliderMenuItem","photoPlayerValue",1000);
+            item.photoPlayerValue._x = item.MENUHOLDER_X;
+            item.photoPlayerValue._y = 1;
+            item.photoPlayerLabel = item.photoPlayerValue.labelTxt;
             var field = item.photoPlayerLabel;
             field.selectable = false;
-            field.embedFonts = item.menuItems[0].labelTxt.embedFonts;
-            var format = item.menuItems[0].labelTxt.getTextFormat();
-            format.size = item.textSize;
-            format.align = "center";
-            field.setNewTextFormat(format);
             var width = owner.menuValueWidth;
-            field._width = width;
+            field._width = width - 4;
             field.textAutoSize = "shrink";
             field.text = "";
+            // END MILAN CHANGE
             // Keep native selection/arrow logic, but draw only the selected name. This also
             // avoids sliding neighboring names through the viewport on roster rebuilds.
             item.menuHolder._visible = false;
@@ -504,9 +745,9 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
                if(name.length > 20) name = name.substr(0,19) + "\u2026";
                if(this.photoPlayerLabel.text != name)
                {
-                  com.TextFieldEx.SetText(this.photoPlayerLabel,name,true,14);
+                  this.photoPlayerLabel.text = name;
                }
-               this.photoPlayerLabel.textColor = player != undefined && player.downed ? 0xE08080 : color;
+               this.photoPlayerLabel.textColor = enabled && player != undefined && player.downed ? 0xE08080 : color;
             };
             item.onEnterFrame();
             // END MILAN CHANGE
