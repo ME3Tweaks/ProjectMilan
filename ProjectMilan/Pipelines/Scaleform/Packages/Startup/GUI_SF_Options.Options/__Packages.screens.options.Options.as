@@ -185,21 +185,28 @@ class screens.options.Options extends com.SFXScreen
    }
    function onMenuItemRollover(p_event)
    {
-      var _loc4_;
-      var _loc3_;
-      if(!_global.DissabledInput)
+      if(_global.DissabledInput)
       {
-         _loc4_ = p_event.target;
-         _loc3_ = _loc4_.nIndex - this.position;
-         if(_loc3_ > 0)
-         {
-            this.HandleDPadDown(_loc3_);
-         }
-         else if(_loc3_ < 0)
-         {
-            this.HandleDPadUp(_loc3_);
-         }
+         return undefined;
       }
+      // An open dropdown owns selection until it closes.
+      if(this.list.dataProvider[this.position].type.indexOf("DropDown") != -1 && this.list.selectedItem.bActive)
+      {
+         return undefined;
+      }
+      var _loc2_ = p_event.target.nIndex;
+      if(isNaN(_loc2_) || _loc2_ < 0 || _loc2_ >= this.list.dataProvider.length || _loc2_ == this.position)
+      {
+         return undefined;
+      }
+      com.SFXScreen.PlayGUISound("OptionsMove");
+      this.adjustingControl = false;
+      this.position = _loc2_;
+      // Moving rows can roll under a stationary mouse during wheel animation.
+      // Updating hover must not feed another navigation scroll back into that animation.
+      this.list.SelectIndex(this.position,false);
+      this.updateController();
+      this.setStory();
    }
    function finishMenuIn(p_event)
    {
@@ -728,9 +735,87 @@ class screens.options.Options extends com.SFXScreen
       _global.Platform = p_ScreenLayout;
       this.updateScreenLayout();
       this.menuLevel = 0;
+      // MILAN CHANGE - Mgamerz - 2026-10-26: A native rebuild replaces the entire navigation tree.
+      this.history = [];
+      this.lastSelectedIndex = [];
+      this._previousSubTitles = [];
+      // END MILAN CHANGE
       this.optionsData = p_options;
       this.setDefaultView();
    }
+   // MILAN CHANGE - Mgamerz - 2026-10-26
+   // Game-populated pages can contain themselves, so page lookup tracks visited rows.
+   function FindNestedPage(rows, label)
+   {
+      var pending = [{rows:rows,index:0}];
+      var visited = [];
+      while(pending.length > 0)
+      {
+         var item = pending.pop();
+         if(item.index < item.rows.length)
+         {
+            var row = item.rows[item.index];
+            pending.push({rows:item.rows,index:item.index + 1});
+            if(!this.HasVisitedPage(row,visited))
+            {
+               visited.push(row);
+               if(row.type == "BaseMenuItem" && row.label == label)
+               {
+                  return {row:row,rows:item.rows,index:item.index};
+               }
+               if(row.children != undefined)
+               {
+                  pending.push({rows:row.children,index:0});
+               }
+            }
+         }
+      }
+      return undefined;
+   }
+   function HasVisitedPage(row, visited)
+   {
+      var seen = false;
+      var i = 0;
+      while(i < visited.length && !seen)
+      {
+         seen = visited[i] == row;
+         i = i + 1;
+      }
+      return seen;
+   }
+   function NestPage(parentLabel, childLabel, parentStory)
+   {
+      var child = this.FindNestedPage(this.optionsData,childLabel);
+      if(child == undefined || parentLabel == childLabel)
+      {
+         return;
+      }
+      var parent = this.FindNestedPage(this.optionsData,parentLabel);
+      if(parent == undefined)
+      {
+         var row = {type:"BaseMenuItem",label:parentLabel,story:parentStory,children:[]};
+         this.optionsData.push(row);
+         parent = {row:row};
+      }
+      if(parent.row.children == child.rows || this.FindNestedPage(child.row.children,parentLabel) != undefined)
+      {
+         return;
+      }
+      if(parent.row.children == undefined)
+      {
+         parent.row.children = [];
+      }
+      child.rows.splice(child.index,1);
+      parent.row.children.push(child.row);
+   }
+   function RefreshNestedPages()
+   {
+      if(this.menuLevel == 0)
+      {
+         this.setDefaultView();
+      }
+   }
+   // END MILAN CHANGE
    function SetSingleOption(optionId, option)
    {
       if(optionId == screens.options.Options.OPTION_Resolution && _global.Platform == com.XPlatform.PC)
