@@ -128,6 +128,8 @@ var repnotify byte NumKickVotesReceived;
 // MILAN CHANGE - 10/04/2026 - Mgamerz
 // Add byte that represents the lobby screen the player is on
 var byte LobbyScreen;
+// MILAN CHANGE - Mgamerz - 2026-10-27
+var transient int HeavySelectionSerial;
 // END MILAN CHANGE
 
 
@@ -501,7 +503,7 @@ public simulated function LoadDataFromSave(SFXMPCharacterRecord Character)
     {
         return;
     }
-    RestoreLocalHeavyWeaponSelection();
+    RestoreLocalHeavyWeaponSelection(Character);
     MPSaveManager = SFXEngine(Class'Engine'.static.GetEngine()).MPSaveManager;
     ClassRecord = MPSaveManager.GetClassRecord(Character.className);
     AccManager = SFXEngine(Class'Engine'.static.GetEngine()).AccomplishmentManager;
@@ -629,7 +631,7 @@ public final simulated function SendCharacterDataToServer(optional bool bCharact
     if (bWeapon)
     {
         RestoreLocalHeavyWeaponSelection();
-        ServerSetHeavyWeaponSelection(HeavyWeaponId);
+        ServerSetHeavyWeaponSelection(HeavyWeaponId, GetCharacterKit(), HeavySelectionSerial);
     }
     if (bCharacter)
     {
@@ -1365,45 +1367,76 @@ public simulated function SetLobbyScreen(byte NewScreen)
     ServerSetLobbyScreen(NewScreen);
 }
 
+// MILAN CHANGE - Mgamerz - 2026-10-27
 public simulated function SetHeavyWeaponSelection(int Id)
 {
+    local SFXMPCharacterRecord Character;
+
+    Character = GetLocalHeavyWeaponRecord();
+    if (Character == None)
+    {
+        return;
+    }
     HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Id);
-    RememberLocalHeavyWeaponSelection();
-    ServerSetHeavyWeaponSelection(HeavyWeaponId);
+    Character.HeavyWeaponId = HeavyWeaponId;
+    ++HeavySelectionSerial;
+    ServerSetHeavyWeaponSelection(HeavyWeaponId, Character.KitName, HeavySelectionSerial);
 }
-public reliable server function ServerSetHeavyWeaponSelection(int Id)
+public reliable server function ServerSetHeavyWeaponSelection(int Id, Name KitName, int SelectionSerial)
 {
     HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeId(Id);
     ReconcileHeavyWeaponSelection();
-    ClientHeavyWeaponSelection(HeavyWeaponId);
+    ClientHeavyWeaponSelection(HeavyWeaponId, KitName, SelectionSerial);
 }
-public reliable client function ClientHeavyWeaponSelection(int Id)
+public reliable client function ClientHeavyWeaponSelection(int Id, Name KitName, int SelectionSerial)
 {
-    HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeId(Id);
-    RememberLocalHeavyWeaponSelection();
+    local SFXMPCharacterRecord Character;
+
+    Character = GetLocalHeavyWeaponRecord();
+    if (Character == None || Character.KitName != KitName || SelectionSerial != HeavySelectionSerial)
+    {
+        return;
+    }
+    HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Id);
     ReconcileHeavyWeaponSelection();
 }
-private simulated function RememberLocalHeavyWeaponSelection()
+private simulated function SFXMPCharacterRecord GetLocalHeavyWeaponRecord()
+{
+    local PlayerController PC;
+    local SFXEngine Engine;
+
+    PC = PlayerController(Owner);
+    if (PC == None || !PC.IsLocalPlayerController())
+    {
+        return None;
+    }
+    Engine = Class'SFXEngine'.static.GetSFXEngine();
+    if (Engine == None || Engine.MPSaveManager == None)
+    {
+        return None;
+    }
+    return Engine.MPSaveManager.GetCurrentSelectedCharacterRecord();
+}
+private simulated function RestoreLocalHeavyWeaponSelection(optional SFXMPCharacterRecord Character)
 {
     local PlayerController PC;
 
     PC = PlayerController(Owner);
-    if (PC != None && PC.IsLocalPlayerController())
+    if (PC == None || !PC.IsLocalPlayerController())
     {
-        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(HeavyWeaponId);
-        Class'SFXMilanHeavyWeaponCatalog'.static.RememberLocalSelection(HeavyWeaponId);
+        return;
+    }
+    if (Character == None)
+    {
+        Character = GetLocalHeavyWeaponRecord();
+    }
+    if (Character != None)
+    {
+        ++HeavySelectionSerial;
+        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Character.HeavyWeaponId);
     }
 }
-private simulated function RestoreLocalHeavyWeaponSelection()
-{
-    local PlayerController PC;
-
-    PC = PlayerController(Owner);
-    if (PC != None && PC.IsLocalPlayerController())
-    {
-        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Class'SFXMilanHeavyWeaponCatalog'.static.GetLocalSelection(HeavyWeaponId));
-    }
-}
+// END MILAN CHANGE
 private simulated function ReconcileHeavyWeaponSelection()
 {
     local SFXPawn_PlayerMP PlayerPawn;

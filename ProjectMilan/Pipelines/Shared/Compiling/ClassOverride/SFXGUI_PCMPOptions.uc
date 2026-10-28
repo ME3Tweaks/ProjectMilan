@@ -3,6 +3,7 @@ Class SFXGUI_PCMPOptions extends BioSFHandler_PCOptions
     config(UI);
 
 // MILAN CHANGE - Mgamerz - 2026-10-26
+// Accessibilty menu uses subpages
 struct MilanSubPage
 {
     var stringref Parent;

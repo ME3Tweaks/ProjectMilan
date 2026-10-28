@@ -546,8 +546,8 @@ public simulated function DeferredPostBeginPlay()
         // Every rendering peer initializes its own lights after replicated inventory and appearance are ready.
         EnsureMapFlashlight();
         // END MILAN CHANGE
-        // MILAN CHANGE - Mgamerz - 2026-10-21
-        // Apply accessibility settings
+        // MILAN CHANGE - Mgamerz - 2026-10-26
+        // Apply saved accessibility settings after kit assets load.
         Class'MilanScreenOverlaySettings'.static.ApplyAll();
         // END MILAN CHANGE
     }
