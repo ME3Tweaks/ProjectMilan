@@ -55,6 +55,12 @@ internal static class HiddenHeavyWeaponVariants
                     defaultproperties
                     {
                         bHiddenVariant = TRUE
+                        Begin Template Class=SkeletalMeshComponent Name=WeaponMesh
+                        End Template
+                        Mesh = WeaponMesh
+                        DroppedPickupMesh = WeaponMesh
+                        PickupFactoryMesh = WeaponMesh
+                        Components = (WeaponMesh)
                     }
                     """;
                 var (_, log) = UnrealScriptCompiler.CompileClass(package, source, library, options, parent: original.Parent);

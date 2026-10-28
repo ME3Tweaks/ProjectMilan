@@ -197,11 +197,12 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             // END PRECOMPILED PACKAGES ----------
 
             // GAME SOURCED PACKAGES -------------
-            foreach (var entry in HeavyWeapons.Where(x => x.SourcePackage != null && !foundClasses.ContainsKey(x.ClassPath)))
-            {
-                using var package = MilanShared.GetLE3Package(entry.SourcePackage);
-                InstallHeavyWeaponPackage(package, foundClasses, nonConsumableClasses);
-            }
+            // We have to pre-prep packages so these aren't useful
+            //foreach (var entry in HeavyWeapons.Where(x => x.SourcePackage != null && !foundClasses.ContainsKey(x.ClassPath)))
+            //{
+            //    using var package = MilanShared.GetLE3Package(entry.SourcePackage);
+            //    InstallHeavyWeaponPackage(package, foundClasses, nonConsumableClasses);
+            //}
             // END GAME SOURCED PACKAGES ---------
 
             // Our images, plus the game's own mapped ones (vanilla weapon art)
