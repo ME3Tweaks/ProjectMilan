@@ -17,12 +17,12 @@ enum EOverlayTargetType
     OTT_DistributionOutput,
 };
 
-// ProfileIndex is the overlay's byte in the profile setting: never reuse or reorder one
+// ProfileIndex selects two bits in the profile setting
+// NEVER reuse or reorder them!
 struct OverlayDefinition
 {
     var name Overlay;
     var int ProfileIndex;
-    // Used until the profile setting exists, and for a profile that has no byte for this overlay yet
     var int DefaultLevel;
     // Without it, None is treated as Reduced
     var bool bAllowNone;
@@ -45,11 +45,13 @@ struct OverlayTarget
 
 var config array<OverlayDefinition> Overlays;
 var config array<OverlayTarget> Targets;
+var config int ProfileSettingId;
 
 public static function int GetOverlayLevel(name Overlay)
 {
     local int Index;
     local int Level;
+    local int StoredValue;
 
     Index = default.Overlays.Find('Overlay', Overlay);
     if (Index == -1)
@@ -57,6 +59,11 @@ public static function int GetOverlayLevel(name Overlay)
         return LEVEL_NORMAL;
     }
     Level = default.Overlays[Index].DefaultLevel;
+    StoredValue = Class'MilanProfileBits'.static.Get(default.ProfileSettingId, 2 * default.Overlays[Index].ProfileIndex, 2);
+    if (StoredValue != 0)
+    {
+        Level = StoredValue - 1;
+    }
     if (Level == LEVEL_NONE && !default.Overlays[Index].bAllowNone)
     {
         return LEVEL_REDUCED;
@@ -93,6 +100,7 @@ public static function ApplyTarget(OverlayTarget Target, int Level)
             if (MIC != None)
             {
                 MIC.SetScalarParameterValue(Target.Field, Value);
+                ApplyLiveMaterials(MIC, Target.Field, Value, Color, FALSE);
             }
             break;
         case EOverlayTargetType.OTT_VectorParameter:
@@ -101,6 +109,7 @@ public static function ApplyTarget(OverlayTarget Target, int Level)
             {
                 Color = Level == LEVEL_NONE ? Target.OffColor : (Level == LEVEL_REDUCED ? Target.ReducedColor : Target.NormalColor);
                 MIC.SetVectorParameterValue(Target.Field, Color);
+                ApplyLiveMaterials(MIC, Target.Field, Value, Color, TRUE);
             }
             break;
         case EOverlayTargetType.OTT_DistributionOutput:
@@ -118,4 +127,74 @@ public static function ApplyTarget(OverlayTarget Target, int Level)
             }
             break;
     }
+}
+
+// Helper function to apply changes to live materials such as frame buffer materials
+private static function ApplyLiveMaterials(MaterialInstanceConstant Source, name Field, float Value, LinearColor Color, bool bVector)
+{
+    local Engine Engine;
+    local int i;
+    local int j;
+    local LocalPlayer Player;
+
+    Engine = Class'Engine'.static.GetEngine();
+    if (Engine == None)
+    {
+        return;
+    }
+    for (i = 0; i < Engine.GamePlayers.Length; i++)
+    {
+        Player = Engine.GamePlayers[i];
+        if (Player != None)
+        {
+            ApplyLiveChain(Player.PlayerPostProcess, Source, Field, Value, Color, bVector);
+            for (j = 0; j < Player.PlayerPostProcessChains.Length; j++)
+            {
+                ApplyLiveChain(Player.PlayerPostProcessChains[j], Source, Field, Value, Color, bVector);
+            }
+        }
+    }
+}
+
+private static function ApplyLiveChain(PostProcessChain Chain, MaterialInstanceConstant Source, name Field, float Value, LinearColor Color, bool bVector)
+{
+    local int i;
+    local MaterialEffect Effect;
+    local MaterialInstanceConstant MIC;
+    local MaterialInstance Ancestor;
+
+    if (Chain == None)
+    {
+        return;
+    }
+    for (i = 0; i < Chain.Effects.Length; i++)
+    {
+        Effect = MaterialEffect(Chain.Effects[i]);
+        if (Effect == None)
+        {
+            continue;
+        }
+        MIC = MaterialInstanceConstant(Effect.Material);
+        Ancestor = MIC;
+        while (Ancestor != None && Ancestor != Source)
+        {
+            Ancestor = MaterialInstance(Ancestor.Parent);
+        }
+        if (MIC != None && Ancestor == Source)
+        {
+            if (bVector)
+            {
+                MIC.SetVectorParameterValue(Field, Color);
+            }
+            else
+            {
+                MIC.SetScalarParameterValue(Field, Value);
+            }
+        }
+    }
+}
+
+defaultproperties
+{
+    ProfileSettingId = 4
 }

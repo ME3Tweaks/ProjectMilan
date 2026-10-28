@@ -2742,12 +2742,22 @@
 		<Section name="sfxgamecontent.sfxprojectile_powercustomaction_proximitymine">
 			<Property name="bignoremultiplayerwaveendcleanup" type="0">true</Property>
 		</Section>
-		<Section name="sfxgamecontent_milan.milanscreenoverlaysettings">
+		<!-- MILAN CHANGE - Mgamerz - Add overlay choice options -->
+		<Section name="sfxgamecontent_milanbase.sfxgui_option_milanchoice">
+			<Property name="choices">
+				<Value type="3">(OptionId=OPTION_Milan_1,SettingId=4,BitOffset=0,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=GethVision,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
+				<Value type="3">(OptionId=OPTION_Milan_2,SettingId=4,BitOffset=2,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=Bloodlust,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
+				<Value type="3">(OptionId=OPTION_Milan_3,SettingId=4,BitOffset=4,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=RepairMatrix,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
+				<Value type="3">(OptionId=OPTION_Milan_4,SettingId=4,BitOffset=6,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=KroganRage,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
+			</Property>
+		</Section>
+		<!-- END MILAN CHANGE -->
+		<Section name="sfxgamecontent_milanbase.milanscreenoverlaysettings">
 			<Property name="overlays">
-				<Value type="3">(Overlay=GethVision,ProfileIndex=0,DefaultLevel=1,bAllowNone=true)</Value>
-				<Value type="3">(Overlay=Bloodlust,ProfileIndex=1,DefaultLevel=1,bAllowNone=true)</Value>
-				<Value type="3">(Overlay=RepairMatrix,ProfileIndex=2,DefaultLevel=1,bAllowNone=true)</Value>
-				<Value type="3">(Overlay=KroganRage,ProfileIndex=3,DefaultLevel=1,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=GethVision,ProfileIndex=0,DefaultLevel=0,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=Bloodlust,ProfileIndex=1,DefaultLevel=0,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=RepairMatrix,ProfileIndex=2,DefaultLevel=0,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=KroganRage,ProfileIndex=3,DefaultLevel=0,bAllowNone=true)</Value>
 			</Property>
 			<Property name="targets">
 				<Value type="3">(Overlay=GethVision,Type=OTT_DistributionOutput,ObjectPath="BioVFX_DLC_MP1_Geth.Particles.GethVision_Gui.ParticleModuleColorOverLife_0.DistributionFloatParticleParameter_2310",Field=MaxOutput,Normal=20.0,Reduced=7.0,Off=0.0)</Value>
