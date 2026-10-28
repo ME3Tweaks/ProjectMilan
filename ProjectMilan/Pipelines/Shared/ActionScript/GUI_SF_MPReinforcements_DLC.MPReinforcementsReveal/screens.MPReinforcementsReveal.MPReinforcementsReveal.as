@@ -18,8 +18,10 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
     var m_nNumCurrentlyAnimatingCards = 0;
     var m_bLeftArrowPressed = false;
     var m_bRightArrowPressed = false;
-	var bUsingGamepad;
-	var bIntroFinished;
+    var bUsingGamepad;
+    var bIntroFinished;
+    var queuedScrollEvents = 0;
+    var scrollRatio = 3;
     function MPReinforcementsReveal()
     {
         super();
@@ -46,54 +48,58 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
         this.PCContinueButton = _root.mcContinueButton;
         this.ControllerButtons.addEventListener("onDPadLeft",this.MakeDelegate(this.OnDPadLeft));
         this.ControllerButtons.addEventListener("onDPadRight",this.MakeDelegate(this.OnDPadRight));
-        
-		this.PCContinueButton.SetVisible(false);
-		this.PCContinueButton.SetEnabled(false);
-		this.PCContinueButton.SetText(this.srContinue);
-		this.PCContinueButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnContinue));
-		this.LeftArrow.addEventListener("SFXButton_onPress",this.MakeDelegate(this.OnLeftArrowPressed));
-		this.RightArrow.addEventListener("SFXButton_onPress",this.MakeDelegate(this.OnRightArrowPressed));
-		this.LeftArrow.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnLeftArrowReleased));
-		this.RightArrow.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnRightArrowReleased));
-		this.LeftArrow.addEventListener("SFXButton_onReleaseOutside",this.MakeDelegate(this.OnLeftArrowReleased));
-		this.RightArrow.addEventListener("SFXButton_onReleaseOutside",this.MakeDelegate(this.OnRightArrowReleased));
-	
-		this.ControllerButtons.addEventListener("onButtonA",this.MakeDelegate(this.OnContinue));
-		this.ControllerButtons.addEventListener("onInvalidInput",this.MakeDelegate(this.OnInvalidInput));
-		this.ControllerButtons.ControlA.Hidden = true;
-		this.ControllerButtons.ControlA.Active = false;
-		this.ControllerButtons.ControlA.SetText(this.srContinue);
-		this.ControllerButtons.ControlB.Active = false;
-		this.ControllerButtons.ControlB.Hidden = true;
-		this.ControllerButtons.ControlX.Active = false;
-		this.ControllerButtons.ControlX.Hidden = true;
-		this.ControllerButtons.ControlY.Active = false;
-		this.ControllerButtons.ControlY.Hidden = true;
-		this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
 
+        this.PCContinueButton.SetVisible(false);
+        this.PCContinueButton.SetEnabled(false);
+        this.PCContinueButton.SetText(this.srContinue);
+        this.PCContinueButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnContinue));
+        this.LeftArrow.addEventListener("SFXButton_onPress",this.MakeDelegate(this.OnLeftArrowPressed));
+        this.RightArrow.addEventListener("SFXButton_onPress",this.MakeDelegate(this.OnRightArrowPressed));
+        this.LeftArrow.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnLeftArrowReleased));
+        this.RightArrow.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnRightArrowReleased));
+        this.LeftArrow.addEventListener("SFXButton_onReleaseOutside",this.MakeDelegate(this.OnLeftArrowReleased));
+        this.RightArrow.addEventListener("SFXButton_onReleaseOutside",this.MakeDelegate(this.OnRightArrowReleased));
+
+        this.ControllerButtons.addEventListener("onButtonA",this.MakeDelegate(this.OnContinue));
+        this.ControllerButtons.addEventListener("onInvalidInput",this.MakeDelegate(this.OnInvalidInput));
+        this.ControllerButtons.ControlA.Hidden = true;
+        this.ControllerButtons.ControlA.Active = false;
+        this.ControllerButtons.ControlA.SetText(this.srContinue);
+        this.ControllerButtons.ControlB.Active = false;
+        this.ControllerButtons.ControlB.Hidden = true;
+        this.ControllerButtons.ControlX.Active = false;
+        this.ControllerButtons.ControlX.Hidden = true;
+        this.ControllerButtons.ControlY.Active = false;
+        this.ControllerButtons.ControlY.Hidden = true;
+        this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
+        // MILAN CHANGE Added by DropTheSquid 10/19/2026
+        // adding handling of scroll wheel, enter, and escape for scrolling the cards
+        Mouse.addListener(this);
+        Key.addListener(this);
+        // END MILAN CHANGE
     }
-	function RefreshButtonHelp(usingGamepad)
+    function RefreshButtonHelp(usingGamepad)
     {
         this.bUsingGamepad = usingGamepad;
         if(!usingGamepad)
         {
-			this.ControllerButtons._visible = false;
-			this.PCContinueButton.SetVisible(this.bIntroFinished);
+            this.ControllerButtons._visible = false;
+            this.PCContinueButton.SetVisible(this.bIntroFinished);
             this.PCContinueButton.SetEnabled(this.bIntroFinished);
         }
         else
         {
-			this.ControllerButtons._visible = true;
+            this.ControllerButtons._visible = true;
             this.PCContinueButton.SetVisible(false);
-			this.ControllerButtons.ControlA.Hidden = !this.bIntroFinished;
+            this.ControllerButtons.ControlA.Hidden = !this.bIntroFinished;
             this.ControllerButtons.ControlA.Active = this.bIntroFinished;
             this.ControllerButtons.FitLeft();
         }
     }
     function IntroFinished()
     {
-		this.bIntroFinished = true;
-		this.RefreshButtonHelp(this.bUsingGamepad);
+        this.bIntroFinished = true;
+        this.RefreshButtonHelp(this.bUsingGamepad);
     }
     function SetupCards(CardData)
     {
@@ -138,6 +144,20 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
             {
                 this.OnRightArrowPressed();
             }
+            // MILAN CHANGE Added by DropTheSquid 10/19/2026
+            // adding handling of scroll wheel for scrolling the cards
+            this.queuedScrollEvents = Math.round(this.queuedScrollEvents);
+            if (this.queuedScrollEvents > 0)
+            {
+                this.queuedScrollEvents -= 1;
+                this.MoveForward();
+            }
+            if (this.queuedScrollEvents < 0)
+            {
+                this.queuedScrollEvents += 1;
+                this.MoveBack();
+            }
+            // END MILAN CHANGE
         }
     }
     function InitializeScreen(SkipIntro)
@@ -301,6 +321,60 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
     {
         this.m_bRightArrowPressed = false;
     }
+    // MILAN CHANGE Added by DropTheSquid 10/19/2026
+    // adding handling of scroll wheel for scrolling the cards
+    // function LogFromAS()
+    // {
+    //     var _loc2_ = "";
+    //     var _loc3_ = 0;
+    //     while(_loc3_ < arguments.length)
+    //     {
+    //         if(_loc2_ == "")
+    //         {
+    //             _loc2_ = arguments[_loc3_].toString();
+    //         }
+    //         else
+    //         {
+    //             _loc2_ = _loc2_ + "," + arguments[_loc3_].toString();
+    //         }
+    //         _loc3_ = _loc3_ + 1;
+    //     }
+    //     flash.external.ExternalInterface.call("LogFromAS",_loc2_);
+    // }
+    function onMouseWheel(delta, scrollTarget)
+    {
+        if (delta < 0)
+        {
+            this.OnScrollUp();
+        }
+        else
+        {
+            this.OnScrollDown();
+        }
+    }
+    function OnScrollDown()
+    {
+        if (this.m_bCurrentlyAnimating)
+        {
+            this.queuedScrollEvents += 1 / this.scrollRatio;
+        }
+        else
+        {
+            this.MoveForward();
+        }
+    }
+    function OnScrollUp()
+    {
+        if (this.m_bCurrentlyAnimating)
+        {
+            this.queuedScrollEvents -= 1 / this.scrollRatio;
+        }
+        else
+        {
+            this.MoveBack();
+        }
+    }
+    // END MILAN CHANGE
     function RefreshArrowStates()
     {
         this.RightArrow.SetEnabled(this.nSelectedCardIndex < this.CardClips.length - 1);
@@ -333,6 +407,13 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
             case com.XInput.DPadRight:
                 this.OnDPadRight();
                 break;
+            // MILAN CHANGE 10/19/2026
+            // add handling of enter and escape to exit this screen
+            case 65:
+            case 66:
+                this.OnContinue();
+                break;
+            // END MILAN CHANGE
             default:
                 _global.SFX.PlayGUIError();
         }
