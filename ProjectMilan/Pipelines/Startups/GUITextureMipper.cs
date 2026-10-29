@@ -52,6 +52,64 @@ namespace ProjectMilan.Pipelines.Startups
             "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I58", // Medigel
             "GUI_SF_MPMatchConsum_DLC.MPMatchConsumables_I59", // Thermal Clips
 
+            // Select kit images: every KitTextureRef/LockedKitTextureRef in BioGame (SmallKitTextureRef is unused)
+            "GUI_MPImages.Kits.AdeptHumanFemale",
+            "GUI_MPImages.Kits.AdeptHumanMale",
+            "GUI_MPImages.Kits.EngineerHumanFemale",
+            "GUI_MPImages.Kits.EngineerHumanMale",
+            "GUI_MPImages.Kits.InfiltratorHumanFemale",
+            "GUI_MPImages.Kits.InfiltratorHumanMale",
+            "GUI_MPImages.Kits.SentinelHumanFemale",
+            "GUI_MPImages.Kits.SentinelHumanMale",
+            "GUI_MPImages.Kits.SoldierHumanFemale",
+            "GUI_MPImages.Kits.SoldierHumanMale",
+            "GUI_MPImages.Kits.VanguardHumanFemale",
+            "GUI_MPImages.Kits.VanguardHumanMale",
+            "GUI_MPImages.Kits.MP_Asari0",
+            "GUI_MPImages.Kits.MP_BF_HFM0",
+            "GUI_MPImages.Kits.MP_BF_HMM0",
+            "GUI_MPImages.Kits.MP_Drell0",
+            "GUI_MPImages.Kits.MP_Krogan0",
+            "GUI_MPImages.Kits.MP_Quarian0",
+            "GUI_MPImages.Kits.MP_Salarian0",
+            "GUI_MPImages.Kits.MP_Turian0",
+            "DLC_MPImages.Kits.MP_AsariComm",
+            "DLC_MPImages.Kits.MP_Batarian",
+            "DLC_MPImages.Kits.MP_GethEngineer",
+            "DLC_MPImages.Kits.MP_GethInfiltrator",
+            "DLC_MPImages.Kits.MP_KroganBM",
+            "GUI_MPImages_MP2.MP_Cerberus",
+            "GUI_MPImages_MP2.MP_QuarianMale0",
+            "GUI_MPImages_MP2.MP_Vorcha",
+            "GUI_MPImages_MP3.MP_AllianceADP",
+            "GUI_MPImages_MP3.MP_AllianceENG",
+            "GUI_MPImages_MP3.MP_AllianceINF",
+            "GUI_MPImages_MP3.MP_AllianceSEN",
+            "GUI_MPImages_MP3.MP_AllianceSOL",
+            "GUI_MPImages_MP3.MP_AllianceVAN",
+            "GUI_MPImages_MP4.MP_AsariINF",
+            "GUI_MPImages_MP4.MP_AsariSEN",
+            "GUI_MPImages_MP4.MP_BatarianADP",
+            "GUI_MPImages_MP4.MP_BatarianVAN",
+            "GUI_MPImages_MP4.MP_DrellINF",
+            "GUI_MPImages_MP4.MP_GethSLD",
+            "GUI_MPImages_MP4.MP_KroganADP",
+            "GUI_MPImages_MP4.MP_QuarianMSLD",
+            "GUI_MPImages_MP4.MP_TurianENG",
+            "GUI_MPImages_MP4.MP_TurianINF",
+            "GUI_MPImages_MP4.MP_TurianSLD",
+            "GUI_MPImages_MP4.MP_VolusADP",
+            "GUI_MPImages_MP4.MP_VolusENG",
+            "GUI_MPImages_MP4.MP_VolusENG2",
+            "GUI_MPImages_MP4.MP_VolusVAN",
+            "GUI_MPImages_MP4.MP_VorchaENG",
+            "DLC_MPImages_MP5.MP_BloodSEN",
+            "DLC_MPImages_MP5.MP_CollectADP",
+            "DLC_MPImages_MP5.MP_FBotINF",
+            "DLC_MPImages_MP5.MP_GethPSLD",
+            "DLC_MPImages_MP5.MP_MercENG",
+            "DLC_MPImages_MP5.MP_TurianVAN",
+
 
 
         };
@@ -106,20 +164,17 @@ namespace ProjectMilan.Pipelines.Startups
             { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_LTrigger", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_LTrigger", "GUI_SF_MPChallenges_DLC.Xbox_ControllerIcons_LTrigger", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_LTrigger"] },
             { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_RTrigger", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_RTrigger", "GUI_SF_MPChallenges_DLC.Xbox_ControllerIcons_RTrigger", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_RTrigger"] },
 
-            // Shared Scaleform images
-            { "GUI_SF_MessageBox_Milan.messageBox_I22", ["GUI_SF_WarAssets.warAssets_I33"] },
-            { "GUI_SF_MPSelectKit_DLC.MPSelectKit_I92", ["GUI_SF_MP_HUD.MP_HUD_I5C", "GUI_SF_MPNewLobby_DLC.MPNewLobby_I3B", "GUI_SF_WarAssets.WarAssets_IAA"] },
-            { "GUI_SF_MPSelectKit_DLC.MPSelectKit_I95", ["GUI_SF_MPNewLobby_DLC.MPNewLobby_I3E"] },
-            { "GUI_SF_MP_HUD.MP_HUD_I5E", ["GUI_SF_WarAssets.warAssets_IAF"] },
-            { "GUI_SF_WarAssets.warAssets_I94", ["GUI_SF_MPChallenges_DLC.MPChallenges_I2B"] },
-            { "GUI_SF_MPChallenges_DLC.MPChallenges_I2E", ["GUI_SF_WarAssets.warAssets_I97"] },
-            { "GUI_SF_MPChallenges_DLC.MPChallenges_I96", ["GUI_SF_WarAssets.warAssets_I1"] },
-            { "GUI_SF_MPChallenges_DLC.MPChallenges_IC2", ["GUI_SF_WarAssets.WarAssets_IA0"] },
-            { "GUI_SF_MPMatchResults.MPMatchResults_I22", ["GUI_SF_MPMatchResults.MPMatchResults_I77"] },
-            { "GUI_SF_MPMatchResults.MPMatchResults_I25", ["GUI_SF_MPMatchResults.MPMatchResults_I7B", "GUI_SF_MPNewLobby_DLC.MPNewLobby_I83"] }, // Coins
-            { "GUI_SF_MPMatchResults.MPMatchResults_I64", ["GUI_SF_MPSelectKit_DLC.MPSelectKit_I3B", "GUI_SF_MPStore_DLC.MPStore_ID"] }, // Blue row border
-            { "GUI_SF_MPMatchResults.MPMatchResults_I71", ["GUI_SF_MPNewLobby_DLC.MPNewLobby_I54"] },
-            { "GUI_SF_MPStore_DLC.MPStore_I45", ["GUI_SF_MPStore_DLC.MPStore_I4B"] }, // PlayStation Store banner
+            // Others were removed; they look similar but actually have slightly different sizes,
+            // when scaled these sizes significantly changed in looks
+        };
+
+        /// <summary>
+        /// Basegame GUI textures to mip in the BaseDelta, keyed by package name (e.g. "SFXGame"). Listed by hand, never discovered;
+        /// the mips ship in that package's delta. A cap for one of these paths in <see cref="TextureSizeCaps"/> applies too.
+        /// </summary>
+        public static readonly IReadOnlyDictionary<string, string[]> BaseDeltaTexturePaths = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
+        {
+            // { "SFXGame", ["GUI_SF_WeaponSelect.WeaponSelect_I4F"] },
         };
 
         /// <summary>Paths requiring either mip filtering or a size cap, for package scans and duplicate checks.</summary>
@@ -137,9 +192,52 @@ namespace ProjectMilan.Pipelines.Startups
         }
 
         /// <summary>
+        /// Largest top mip for a banner in our GUI image packages. Some source art is 4K, but banners never display that large so no point
+        /// </summary>
+        public const int BannerMaxSize = 2048;
+
+        /// <summary>
+        /// File name prefix of the GUI image packages ImagePackageBuilder generates
+        /// </summary>
+        public const string ImagePackageFilePrefix = "GUI_Images_MP";
+
+        /// <summary>
+        /// Every texture in our generated GUI image packages, with the package it is in
+        /// </summary>
+        private static List<(string TexturePath, string PackageName)> FindImagePackageTextures(string outputPath)
+        {
+            var textures = new List<(string, string)>();
+            foreach (var file in Directory.EnumerateFiles(outputPath, $"{ImagePackageFilePrefix}*.pcc", SearchOption.AllDirectories))
+            {
+                using var package = MEPackageHandler.UnsafePartialLoad(file, _ => false);
+                textures.AddRange(package.Exports.Where(e => e.ClassName == "Texture2D" && !e.IsDefaultObject)
+                    .Select(e => (e.InstancedFullPath, Path.GetFileNameWithoutExtension(file))));
+            }
+            return textures;
+        }
+
+        /// <summary>
+        /// Returns the size cap for a given texture
+        /// </summary>
+        public static Dictionary<string, int> DiscoverSizeCaps(string outputPath)
+        {
+            var caps = new Dictionary<string, int>(TextureSizeCaps, StringComparer.OrdinalIgnoreCase);
+            foreach (var (path, packageName) in FindImagePackageTextures(outputPath))
+            {
+                if (!path.Contains("Banner", StringComparison.OrdinalIgnoreCase) && !packageName.Contains("Banner", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                caps[path] = caps.TryGetValue(path, out int existing) ? Math.Min(existing, BannerMaxSize) : BannerMaxSize;
+            }
+            return caps;
+        }
+
+        /// <summary>
         /// Rebuilds the selection from output packages, including after a checkpoint restore. These are the
         /// packages previously mipped by Weapons/NonStartup; every copy of their UI texture paths is selected,
-        /// plus every path in <see cref="ExplicitTexturePaths"/> and every master and target in <see cref="TextureMasters"/>.
+        /// plus every texture in our GUI image packages, every path in <see cref="ExplicitTexturePaths"/> and every master
+        /// and target in <see cref="TextureMasters"/>.
         /// </summary>
         public static HashSet<string> DiscoverTexturePaths(string outputPath)
         {
@@ -152,6 +250,7 @@ namespace ProjectMilan.Pipelines.Startups
             var paths = new HashSet<string>(ExplicitTexturePaths, StringComparer.OrdinalIgnoreCase);
             paths.UnionWith(TextureMasters.Keys);
             paths.UnionWith(TextureMasters.Values.SelectMany(targets => targets));
+            paths.UnionWith(FindImagePackageTextures(outputPath).Select(texture => texture.TexturePath));
             foreach (var file in Directory.EnumerateFiles(outputPath, "*.pcc", SearchOption.AllDirectories)
                          .Where(file => sources.Contains(Path.GetFileNameWithoutExtension(file))))
             {
