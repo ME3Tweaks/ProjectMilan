@@ -8,7 +8,10 @@ class com.bioware.masseffect.controls.EA.EATextEntry extends com.bioware.masseff
    var m_active;
    var m_dataTxt;
    var m_sGameSideFunction;
+   var onEnterFrame;
    var m_bEnteringText = false;
+   var m_sFallbackChar;
+   var m_sTextAtKeyDown;
    function EATextEntry()
    {
       super();
@@ -30,14 +33,69 @@ class com.bioware.masseffect.controls.EA.EATextEntry extends com.bioware.masseff
    }
    function onKeyDown()
    {
-      switch(Key.getCode())
+      var _loc2_ = Key.getCode();
+      if(_loc2_ == 27 || _loc2_ == 13)
       {
-         case 27:
-         case 13:
-            this.EndTextInput();
-         default:
-            return;
+         this.EndTextInput();
       }
+      else if(_loc2_ == 86 && Key.isDown(17) || _loc2_ == 45 && Key.isDown(16))
+      {
+         this.PasteText();
+      }
+      else if(!Key.isDown(17))
+      {
+         if(_loc2_ == 186 && Key.isDown(16))
+         {
+            this.QueueFallbackChar(":");
+         }
+         else if(_loc2_ == 191 && !Key.isDown(16) || _loc2_ == 111)
+         {
+            this.QueueFallbackChar("/");
+         }
+      }
+   }
+   function PasteText()
+   {
+      var _loc2_ = flash.external.ExternalInterface.call("GetClipboardText");
+      if(_loc2_ != undefined && _loc2_ != null && String(_loc2_).length > 0)
+      {
+         this.InsertText(String(_loc2_));
+      }
+   }
+   function QueueFallbackChar(sChar)
+   {
+      this.m_sFallbackChar = sChar;
+      this.m_sTextAtKeyDown = this.m_dataTxt.text;
+      this.onEnterFrame = this.ApplyFallbackChar;
+   }
+   function ApplyFallbackChar()
+   {
+      delete this.onEnterFrame;
+      if(this.m_bEnteringText && this.m_dataTxt.text == this.m_sTextAtKeyDown)
+      {
+         this.InsertText(this.m_sFallbackChar);
+      }
+   }
+   function InsertText(sText)
+   {
+      var _loc3_ = this.m_dataTxt.text;
+      var _loc4_ = Selection.getBeginIndex();
+      var _loc5_ = Selection.getEndIndex();
+      if(_loc4_ < 0 || _loc5_ < _loc4_)
+      {
+         _loc4_ = _loc3_.length;
+         _loc5_ = _loc3_.length;
+      }
+      if(this.m_dataTxt.maxChars > 0)
+      {
+         sText = sText.substr(0,Math.max(0,this.m_dataTxt.maxChars - (_loc3_.length - (_loc5_ - _loc4_))));
+      }
+      if(sText.length == 0)
+      {
+         return undefined;
+      }
+      this.m_dataTxt.text = _loc3_.substr(0,_loc4_) + sText + _loc3_.substr(_loc5_);
+      Selection.setSelection(_loc4_ + sText.length,_loc4_ + sText.length);
    }
    function set Data(sVal)
    {

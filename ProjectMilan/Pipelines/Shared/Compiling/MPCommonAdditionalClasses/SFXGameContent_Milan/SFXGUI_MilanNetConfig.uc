@@ -243,6 +243,33 @@ public function EnterServerPassword(string sDefault)
 {
     GetKeyboard().DisplayKeyboard(srServerPassword, $0, 2, nMaxPasswordLength, sDefault);
 }
+// Paste support with only the first line used
+public function string GetClipboardText()
+{
+    local string sText;
+    local int nBreak;
+
+    if (GetPC() == None)
+    {
+        return "";
+    }
+    sText = Repl(GetPC().PasteFromClipboard(), Chr(13), Chr(10));
+    nBreak = InStr(sText, Chr(10));
+    if (nBreak != -1)
+    {
+        sText = Left(sText, nBreak);
+    }
+    sText = Repl(sText, Chr(9), " ");
+    while (Left(sText, 1) == " ")
+    {
+        sText = Mid(sText, 1);
+    }
+    while (Right(sText, 1) == " ")
+    {
+        sText = Left(sText, Len(sText) - 1);
+    }
+    return sText;
+}
 public function GFxScreenVisibilityChange(bool bNewValue);
 
 // --- Helpers ---
