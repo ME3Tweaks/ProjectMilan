@@ -36,6 +36,7 @@ namespace ProjectMilan.Pipelines.Store
         /// </summary>
         private static IEnumerable<StorePackEntry> Online =>
         [
+            // Arsenal Pack
             new()
             {
                 ID = 656, PackName = "arsenal", TitleStrRefId = 752068, DescriptionStrRefId = 752069, OfferId = 650200, CreditCost = 99000,
@@ -50,6 +51,7 @@ namespace ProjectMilan.Pipelines.Store
                     Slot(2, StorePools.GoldBackup, (StorePools.GoldGear, 0.2f), (StorePools.GoldWeapon, 0.725f), (StorePools.GoldUltraRare, 0.075f)),
                 ],
             },
+            // Reserves
             new()
             {
                 ID = 657, PackName = "reserves", TitleStrRefId = 752070, DescriptionStrRefId = 752071, OfferId = 650300, CreditCost = 99000,
@@ -117,7 +119,7 @@ namespace ProjectMilan.Pipelines.Store
             new()
             {
                 ID = 655, PackName = "n7equipment", TitleStrRefId = 752066, DescriptionStrRefId = 752067, OfferId = 650100, CreditCost = 75000,
-                Image = "GUI_MPImages_Online.StoreItems.StoreN7", // MILAN - Custom Image
+                Image = $"{StoreImages}.StoreN7", // MILAN - Custom Image
                 RevealIntroTextureRef = "GUI_MPImages.Creates.N7", RevealIntroHoloTextureRef = "GUI_MPImages.Creates.N7Holo", RevealIntroSound = "MPRevealCrate5",
                 Contents =
                 [

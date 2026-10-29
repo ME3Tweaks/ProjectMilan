@@ -12,11 +12,8 @@ public static partial class StorePacks
     {
         ID = banner.PackId,
         PackName = banner.PackName,
-        TitleStrRefId = MilanPipelinesShared.AssignTLK(banner.LocalizedTitle),
-        DescriptionStrRefId = MilanPipelinesShared.AssignTLK(new LocalizedString
-        {
-            { MELocalization.INT, $"Contains the {banner.Title} banner. Earned by completing its Legendary Edition achievement." }
-        }),
+        TitleStrRefId = MilanPipelinesShared.AssignTLK(banner.Title),
+        DescriptionStrRefId = MilanPipelinesShared.AssignTLK(banner.PackDescription),
         CreditCost = 0,
         PromoStrRefId = 703324,
         PerPlayerMax = 1,
@@ -28,14 +25,42 @@ public static partial class StorePacks
             UnlockVariableId = banner.UnlockId,
         },
         BannerRewardID = banner.EmblemId,
-        Image = banner.Image,
+        Image = banner.PackImage,
         RevealIntroTextureRef = "GUI_MPImages.Creates.Alliance",
         RevealIntroHoloTextureRef = "GUI_MPImages.Creates.AllianceHolo",
         RevealIntroSound = "MPRevealCrate1",
         Contents = [Slot(banner.Pool)],
     };
 
+    private static readonly LocalizedString LegendaryBannerPackTitle = new() { 
+        [MELocalization.INT] = "Legendary Pack" 
+    };
+
+    private static readonly LocalizedString LegendaryBannerPackDescription = new() { 
+        [MELocalization.INT] = "A legendary banner for legendary defenders of the galaxy." 
+    };
+
+    /// <summary>
+    /// Free, one-per-player pack available from the start, containing only the Legendary banner.
+    /// </summary>
+    private static StorePackEntry LegendaryBannerPack() => new()
+    {
+        ID = 707,
+        PackName = "legendarybanner",
+        TitleStrRefId = MilanPipelinesShared.AssignTLK(LegendaryBannerPackTitle),
+        DescriptionStrRefId = MilanPipelinesShared.AssignTLK(LegendaryBannerPackDescription),
+        CreditCost = 0,
+        PromoStrRefId = 703324,
+        PerPlayerMax = 1,
+        PlayerVariableId = 742,
+        BannerRewardID = 242,
+        Image = "Packs.LegendaryBG", // Needs an appropriate background image!
+        RevealIntroTextureRef = "GUI_MPImages.Creates.box",
+        RevealIntroHoloTextureRef = "GUI_MPImages.Creates.boxHolo",
+        RevealIntroSound = "MPRevealCrate1",
+        Contents = [Slot(StorePools.LegendaryBanner)],
+    };
+
     // Evaluated during registration because titles/descriptions assign TLK entries.
-    private static IReadOnlyList<StorePackEntry> GetMilanPacks() =>
-        StoreCards.AchievementBanners.Select(AchievementPack).ToList();
+    private static IReadOnlyList<StorePackEntry> GetMilanPacks() => StoreCards.AchievementBanners.Select(AchievementPack).Append(LegendaryBannerPack()).ToList();
 }

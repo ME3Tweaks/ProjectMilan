@@ -17,6 +17,9 @@ namespace ProjectMilan.Pipelines.Store
     {
         private const string LOG_CATEGORY = @"MILAN-Store";
 
+        private static readonly LocalizedString BannerCardType = new() { [MELocalization.INT] = "Banner" };
+        private static readonly LocalizedString BannerCardDescription = new() { [MELocalization.INT] = "Unlocks this banner for use in the multiplayer lobby." };
+
         /// <param name="builtImages">Images ImagePackageBuilder built, to check the packs that use them.</param>
         public static void Register(IReadOnlySet<string> builtImages)
         {
@@ -49,11 +52,8 @@ namespace ProjectMilan.Pipelines.Store
             var bannerDescription = 0;
             if (catalog.Banners.Any())
             {
-                bannerType = MilanPipelinesShared.AssignTLK(new LocalizedString { { MELocalization.INT, "Banner" } });
-                bannerDescription = MilanPipelinesShared.AssignTLK(new LocalizedString
-                {
-                    { MELocalization.INT, "Unlocks this banner for selection in the multiplayer lobby." }
-                });
+                bannerType = MilanPipelinesShared.AssignTLK(BannerCardType);
+                bannerDescription = MilanPipelinesShared.AssignTLK(BannerCardDescription);
             }
             catalog.CommitBannerConfig(game, MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine"),
                 MilanPipelinesShared.ConfigBundle.GetAsset("BioUI"), bannerType, bannerDescription, bannerImages);

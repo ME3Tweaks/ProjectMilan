@@ -8,18 +8,37 @@ namespace ProjectMilan.Pipelines.Store
     /// </summary>
     public static class StorePools
     {
+        /// <summary>
+        /// Common (bronze frame) banners
+        /// </summary>
         public static readonly StorePool CommonBanner = new("banner_common");
+        /// <summary>
+        /// Uncommon (silver frame) banners
+        /// </summary>
         public static readonly StorePool UncommonBanner = new("banner_uncommon");
+        /// <summary>
+        /// Gold border banners
+        /// </summary>
         public static readonly StorePool RareBanner = new("banner_rare");
+        /// <summary>
+        /// Banners that make people wish they didn't use UR slots
+        /// </summary>
         public static readonly StorePool UltraRareBanner = new("banner_ultrarare");
+        /// <summary>
+        /// Exclusive to the free Legendary Banner pack
+        /// </summary>
+        public static readonly StorePool LegendaryBanner = new("banner_legendary");
 
+        /// <summary>
+        /// Default pool for a banner of this rarity.
+        /// </summary>
         public static StorePool BannerPool(CardRarity rarity) => rarity switch
         {
             CardRarity.Common => CommonBanner,
             CardRarity.Uncommon => UncommonBanner,
             CardRarity.Rare => RareBanner,
             CardRarity.UltraRare => UltraRareBanner,
-            _ => throw new ArgumentOutOfRangeException(nameof(rarity)),
+            _ => throw new ArgumentOutOfRangeException(nameof(rarity), rarity, "Banners have no pool for this rarity"),
         };
 
         public static readonly StorePool BronzeChar = new("bronzechar");
@@ -55,23 +74,35 @@ namespace ProjectMilan.Pipelines.Store
         public static readonly StorePool GoldEquipment = new("goldequipment");
         public static readonly StorePool GoldGear = new("goldgear");
         public static readonly StorePool GoldMod = new("goldmod");
-        /// <summary>Capacity upgrades and respec</summary>
+        /// <summary>
+        /// Capacity upgrades and respec
+        /// </summary>
         public static readonly StorePool GoldPermanent = new("goldperm");
         public static readonly StorePool GoldUltraRare = new("goldultrarare");
         public static readonly StorePool GoldWeapon = new("goldweapon");
-        /// <summary>Rare characters that already unlocked award XP</summary>
+        /// <summary>
+        /// Rare characters that already unlocked award XP
+        /// </summary>
         public static readonly StorePool GoldXPChar = new("goldxpchar");
         public static readonly StorePool N7Weapon = new("n7weapon");
-        /// <summary>Not used by any pack</summary>
+        /// <summary>
+        /// Not used by any pack biower pls
+        /// </summary>
         public static readonly StorePool NewUltraRare = new("newultrarare");
         public static readonly StorePool Respec = new("respec");
-        /// <summary>Fallback when a silver pack runs dry</summary>
+        /// <summary>
+        /// Fallback when a silver pack runs dry
+        /// </summary>
         public static readonly StorePool SilverBackup = new("silverbackup");
         public static readonly StorePool SilverChar = new("silverchar");
-        /// <summary>Match consumables, version II</summary>
+        /// <summary>
+        /// Match consumables, version II
+        /// </summary>
         public static readonly StorePool SilverCommon = new("silvercommon");
         public static readonly StorePool SilverCommonWeapon = new("silvercommonweapon");
-        /// <summary>Equipment for silver packs (x2)</summary>
+        /// <summary>
+        /// Equipment for silver packs (x2)
+        /// </summary>
         public static readonly StorePool SilverConsumable = new("silverconsumable");
         public static readonly StorePool SilverGear = new("silvergear");
         public static readonly StorePool SilverMod = new("silvermod");
@@ -80,7 +111,9 @@ namespace ProjectMilan.Pipelines.Store
         public static readonly StorePool StarterExtra = new("starterextra");
         public static readonly StorePool StarterRevive = new("starterrevive");
         public static readonly StorePool UltraRareChar = new("ultrararechar");
-        /// <summary>Uncommon characters that already unlocked award XP</summary>
+        /// <summary>
+        /// Uncommon characters that already unlocked award XP
+        /// </summary>
         public static readonly StorePool XPChar = new("xpchar");
     }
 }
