@@ -219,7 +219,8 @@ namespace ProjectMilan.Pipelines.Texture
             var inputFolder = Path.Combine(Program.Settings.OutputModPath, @"CookedPCConsole");
             int cleanedTextures = 0, removedMips = 0;
             var guiTextures = GUITextureMipper.DiscoverTexturePaths(Program.Settings.OutputModPath);
-            var guiPolicyTextures = GUITextureMipper.GetPolicyTexturePaths(guiTextures);
+            var guiSizeCaps = GUITextureMipper.DiscoverSizeCaps(Program.Settings.OutputModPath);
+            var guiPolicyTextures = GUITextureMipper.GetPolicyTexturePaths(guiTextures, guiSizeCaps);
             var guiPackages = new List<string>();
             // Encoding (BC7 above all) is the slow part, and the same sources usually come back on the next run
             var importOverrides = TextureImportOverridePolicy.Load(Path.Combine(MilanShared.PipelineRoot, "Texture", "TextureImportOverrides.json"));
@@ -265,7 +266,7 @@ namespace ProjectMilan.Pipelines.Texture
                 if (p.Exports.Any(e => e.ClassName == "Texture2D" && guiPolicyTextures.Contains(e.InstancedFullPath)))
                 {
                     guiPackages.Add(pf);
-                    GUITextureMipper.GenerateMipsForPackage(p, guiTextures);
+                    GUITextureMipper.GenerateMipsForPackage(p, guiTextures, sizeCaps: guiSizeCaps);
                 }
 
                 // Run before the externalizer's Cubemap/NeverStream skips. Cubemap cleanup validates all six

@@ -55,9 +55,9 @@ public sealed partial class StoreCatalog
         }
         foreach (var pack in Packs.Where(p => p.BannerRewardID != null))
         {
-            if (pack.UnlockInfo == null || pack.PerPlayerMax != 1 || pack.CreditCost != 0)
+            if (pack.PerPlayerMax != 1 || pack.CreditCost != 0)
             {
-                errors.Add($"Banner pack {pack.PackName} must be free, achievement gated and claimable once");
+                errors.Add($"Banner pack {pack.PackName} must be free and claimable once");
             }
             if (pack.Contents.Count != 1 || pack.Contents[0].Quantity != 1 || pack.Contents[0].Pools.Count != 1
                 || pack.Contents[0].BackupPool != null)

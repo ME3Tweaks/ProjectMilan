@@ -65,7 +65,7 @@ namespace ProjectMilanCore.Config
         /// </summary>
         public AchievementUnlockInfo? UnlockInfo { get; set; }
 
-        /// <summary>Authoring-only assertion: this achievement pack must award exactly this banner and nothing else.</summary>
+        /// <summary>Authoring-only assertion: this free, claim-once pack must award exactly this banner and nothing else.</summary>
         public int? BannerRewardID { get; set; }
 
         /// <summary>
