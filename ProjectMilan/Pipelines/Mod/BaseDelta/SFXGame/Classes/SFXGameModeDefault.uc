@@ -158,6 +158,13 @@ public exec function EnableWalking()
 }
 public function bool FindCover(out CovPosInfo FoundCover, bool bWideCheck)
 {
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    // Keep Talon bow interruption in the base mode
+    // Using the override in the subclass screws stuff up
+    local BioPawn MercPawn;
+    local BioCustomAction MercAction;
+    // END MILAN CHANGE
+
     if (!Outer.IsLocalPlayerController())
     {
         return FALSE;
@@ -166,6 +173,17 @@ public function bool FindCover(out CovPosInfo FoundCover, bool bWideCheck)
     {
         return FALSE;
     }
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    // Interrupt the bow only after the Talon successfully finds cover.
+    MercPawn = BioPawn(Outer.Pawn);
+    if (MercPawn != None && MercPawn.IsA('SFXPawn_PlayerMP_Engineer_Merc'))
+    {
+        if (MercPawn.GetCurrentCustomAction(MercAction) && MercAction != None && MercAction.IsA('SFXCustomAction_MercBowBase'))
+        {
+            MercAction.InterruptThisCustomAction();
+        }
+    }
+    // END MILAN CHANGE
     return TRUE;
 }
 public function bool FindPlayerCover_Internal(out CovPosInfo FoundCover, bool bWideCheck)
@@ -821,7 +839,60 @@ public exec function TryHeavyMelee()
     local ECoverAction CoverAction;
     local ECoverType CoverType;
     local BioPawn oPawn;
-    
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    // Talon's bow and batarian gauntlet code brought up to this superclass
+    local BioPawn TargetPawn;
+    local SFXModule_GameEffectManager Manager;
+    local int idx;
+    local bool bHasGauntlet;
+
+    if (Outer.Pawn != None && Outer.Pawn.IsA('SFXPawn_PlayerMP_Engineer_Merc') && Outer.IsLocalPlayerController())
+    {
+        Manager = Outer.Pawn.GetModule(Class'SFXModule_GameEffectManager');
+        if (Manager != None)
+        {
+            for (idx = 0; idx < Manager.GameEffects.Length; idx++)
+            {
+                if (Manager.GameEffects[idx].IsA('SFXGameEffect_MatchConsumable_Gear_BatarianGauntlet'))
+                {
+                    bHasGauntlet = TRUE;
+                    break;
+                }
+            }
+        }
+        if (!bHasGauntlet)
+        {
+            if (Outer.IsMoveInputIgnored())
+            {
+                return;
+            }
+            oPawn = BioPawn(Outer.Pawn);
+            if (oPawn.Weapon != None && BioPlayerInput(Outer.PlayerInput) != None)
+            {
+                Weapon = SFXWeapon(oPawn.Weapon);
+                if (Weapon != None)
+                {
+                    Weapon.CancelReload();
+                }
+                if (oPawn.CoverType == ECoverType.CT_MidLevel && oPawn.CoverAction == ECoverAction.CA_Default)
+                {
+                    if (oPawn.VerifyCAHasBeenInstanced(62))
+                    {
+                        TargetPawn = oPawn.CustomActions[62].GetVictimPawn();
+                        if (TargetPawn != None)
+                        {
+                            Outer.StartCustomActionWithSyncPartner(62);
+                            Outer.GenerateTutorialEvent(3);
+                            return;
+                        }
+                    }
+                }
+                Outer.StartCustomAction(132, , , 64);
+            }
+            return;
+        }
+    }
+    // END MILAN CHANGE
     if (Outer.IsMoveInputIgnored())
     {
         return;
@@ -918,6 +989,27 @@ public exec function TryMelee()
     local ECoverType CoverType;
     local ECoverAction CoverAction;
     
+    // MILAN CHANGE - Mgamerz - 2026-10-20
+    // Talon's bow and batarian gauntlet code brought up to this superclass
+    if (Outer.Pawn != None && Outer.Pawn.IsA('SFXPawn_PlayerMP_Engineer_Merc') && Outer.IsLocalPlayerController())
+    {
+        if (Outer.IsMoveInputIgnored())
+        {
+            return;
+        }
+        oPawn = BioPawn(Outer.Pawn);
+        if (oPawn.Weapon != None && BioPlayerInput(Outer.PlayerInput) != None)
+        {
+            Weapon = SFXWeapon(oPawn.Weapon);
+            if (Weapon != None)
+            {
+                Weapon.CancelReload();
+                Outer.StartCustomAction(132, , , 63);
+            }
+        }
+        return;
+    }
+    // END MILAN CHANGE
     if (Outer.IsMoveInputIgnored())
     {
         return;
