@@ -93,21 +93,35 @@ var transient Vector MPPhotoFollowMoveVelocity;
 // New photo mode options for multiplayer
 var transient bool bMPPhotoOutlinesHidden;
 var transient array<Actor> MPPhotoHiddenOutlines;
-struct MPPhotoHiddenVisionEffect
-{
-    var RvrClientEffectComponent Component;
-    var RvrClientEffectInterface Template;
-    var Guid EffectId;
-    var bool bWasHidden;
-};
-var transient array<MPPhotoHiddenVisionEffect> MPPhotoHiddenVisionEffects;
 var transient bool bMPPhotoLoggedOutlineSuppression;
-var transient bool bMPPhotoLoggedVisionSuppression;
 var transient delegate<MPPhotoCycleRequested> MPPhotoCycleCallback;
 var transient bool bMPPhotoPrevButtonHeld;
 var transient bool bMPPhotoNextButtonHeld;
 var transient bool bMPPhotoPrevKeyHeld;
 var transient bool bMPPhotoNextKeyHeld;
+// END MILAN CHANGE
+// MILAN CHANGE - Mgamerz - 2026-10-29
+// Stores info about a renderer effect
+struct MPObserverEffectIdentity
+{
+    var RvrClientEffectComponent Component;
+    var RvrClientEffectInterface Template;
+    var Guid EffectId;
+};
+
+// Stores info about a screen effect
+struct MPObserverScreenEffect
+{
+    var MPObserverEffectIdentity Identity;
+    var RvrClientEffectModuleInstance Module;
+    var PrimitiveComponent Primitive;
+    var PostProcessChain Chain;
+    var PostProcessEffect PostEffect;
+    var bool bWasHidden;
+    var bool bTouched;
+    var RadialBlurComponent Blur;
+};
+var transient array<MPObserverScreenEffect> MPObserverScreenEffects;
 // END MILAN CHANGE
 public function Activated()
 {
@@ -768,7 +782,6 @@ public function ActivateMPPhoto()
     bMPPhotoLoggedAxes = FALSE;
     // MILAN CHANGE - Mgamerz - 2026-10-25
     bMPPhotoLoggedOutlineSuppression = FALSE;
-    bMPPhotoLoggedVisionSuppression = FALSE;
     bMPPhotoPrevButtonHeld = FALSE;
     bMPPhotoNextButtonHeld = FALSE;
     bMPPhotoPrevKeyHeld = FALSE;
@@ -1321,6 +1334,29 @@ public function UpdateMPPhoto(float DeltaTime)
     MPPhotoPOV = PhotoCamFree.m_pov;
 }
 
+// MILAN CHANGE - Mgamerz - 2026-10-28
+public final function RevealMPPhotoOverlaysForAlert()
+{
+    local SFXSFHandler_PhotoMode Handler;
+    local array<ASParams> Params;
+
+    if (!bMPSpectatorPhoto || !bIsActive) {
+        return;
+    }
+    bMPPhotoOverlaysHidden = FALSE;
+    bMPPhotoHintsHidden = FALSE;
+    bMPPhotoGrenadesHidden = FALSE;
+    bMPPhotoOutlinesHidden = FALSE;
+    Class'SFXGUIValue_MarkerPlayerHealth'.default.bHideInPhotoMode = FALSE;
+    ApplyMPPhotoHintVisibility(TRUE);
+    Handler = Class'SFXGUIInteraction'.static.GetInstance().GetPhotoModeHandler(Outer);
+    if (Handler != None && Handler.oPanel != None) {
+        Handler.oPanel.InvokeMethodArgs("PhotoMode.revealOverlaysForAlert", Params);
+    }
+    // LogInternal("MilanPhoto: Forced showing a priority alert");
+}
+// END MILAN CHANGE
+
 public final function ApplyMPPhotoHintVisibility(optional bool bRestore = FALSE)
 {
     local SFXGUIInteraction GUI;
@@ -1331,7 +1367,11 @@ public final function ApplyMPPhotoHintVisibility(optional bool bRestore = FALSE)
     {
         Hint = GUI.m_aHintStack[0];
     }
-    if (!bRestore && bMPSpectatorPhoto && bIsActive && (bMPPhotoOverlaysHidden || bMPPhotoHintsHidden))
+    // MILAN CHANGE - Mgamerz - 2026-10-28
+    // ForceVisible hints force show up
+    if (!bRestore && bMPSpectatorPhoto && bIsActive && (bMPPhotoOverlaysHidden || bMPPhotoHintsHidden)
+        && (Hint == None || !Hint.m_bForceVisible))
+    // END MILAN CHANGE
     {
         if (Hint != None && Hint.GetPC() == Outer && Hint.GetVisible())
         {
@@ -1405,29 +1445,7 @@ public final function bool ShouldHideMPPhotoOutline(SFXOutlineGlowActorBase Glow
         && Glow.Source != None && Glow.Source.IsA('SFXPawn_PlayerMP');
 }
 
-public final function bool IsMPPhotoVisionTemplate(RvrClientEffectInterface Template)
-{
-    local int Depth;
-    local RvrClientEffectInstanceConstant Instance;
-
-    // Recursively see if we're the geth vision vfx
-    for (Depth = 0; Template != None && Depth < 8; Depth++)
-    {
-        if (Template.Name == 'Geth_Vision_VCFX') 
-        {
-            return TRUE;
-        }
-        Instance = RvrClientEffectInstanceConstant(Template);
-        if (Instance == None) 
-        {
-            return FALSE;
-        }
-        Template = Instance.m_pClientEffect;
-    }
-    return FALSE;
-}
-
-public final function bool IsCurrentMPPhotoVisionEffect(MPPhotoHiddenVisionEffect Entry)
+public final function bool IsCurrentMPObserverEffect(MPObserverEffectIdentity Entry)
 {
     return Entry.Component != None && Entry.Component.m_bActive
         && Entry.Component.m_pClientEffect == Entry.Template
@@ -1441,13 +1459,12 @@ public final function ApplyMPPhotoVisuals(bool bRestore)
 {
     local bool bActive;
     local int i;
-    local int StackIndex;
-    local int EffectIndex;
     local SFXOutlineGlowActorBase Glow;
-    local RvrClientEffectManager Manager;
-    local RvrClientEffectComponent Component;
-    local MPPhotoHiddenVisionEffect Entry;
 
+    // MILAN CHANGE - Mgamerz - 2026-10-28
+    // Screen overlays remain suppressed when photo mode closes back to spectator
+    UpdateMPObserverScreenEffects();
+    // END MILAN CHANGE
     bActive = !bRestore && bMPSpectatorPhoto && bIsActive;
     for (i = MPPhotoHiddenOutlines.Length - 1; i >= 0; i--)
     {
@@ -1456,17 +1473,6 @@ public final function ApplyMPPhotoVisuals(bool bRestore)
         {
             Outer.HiddenActors.RemoveItem(MPPhotoHiddenOutlines[i]);
             MPPhotoHiddenOutlines.Remove(i, 1);
-        }
-    }
-    for (i = MPPhotoHiddenVisionEffects.Length - 1; i >= 0; i--)
-    {
-        if (!bActive || !IsCurrentMPPhotoVisionEffect(MPPhotoHiddenVisionEffects[i]))
-        {
-            if (!bActive && IsCurrentMPPhotoVisionEffect(MPPhotoHiddenVisionEffects[i]))
-            {
-                MPPhotoHiddenVisionEffects[i].Component.Hide(MPPhotoHiddenVisionEffects[i].bWasHidden);
-            }
-            MPPhotoHiddenVisionEffects.Remove(i, 1);
         }
     }
     if (!bActive) 
@@ -1489,6 +1495,190 @@ public final function ApplyMPPhotoVisuals(bool bRestore)
         bMPPhotoLoggedOutlineSuppression = TRUE;
         LogInternal("MilanPhoto: local outline suppression connected" @ MPPhotoHiddenOutlines.Length);
     }
+}
+// END MILAN CHANGE
+
+// MILAN CHANGE - Mgamerz - 2026-10-28
+public final function bool IsCurrentMPObserverScreenEffect(MPObserverScreenEffect Entry)
+{
+    local RvrCEffectModuleEmitterInstance Emitter;
+    local RvrCEffectModuleRadialBlurInstance Blur;
+    local RvrCEffectModuleFramebufferInstance Framebuffer;
+
+    if (!IsCurrentMPObserverEffect(Entry.Identity)) {
+        // Not an observer effect
+        return FALSE;
+    }
+    if (Entry.Module != None)
+    {
+        if (Entry.Identity.Component.m_lstModuleInstances.Find(Entry.Module) == -1 || !Entry.Module.m_bActive || Entry.Module.m_bFinished) 
+        {
+            // Module isn't active
+            return FALSE;
+        }
+    }
+    if (Entry.Primitive != None)
+    {
+        Emitter = RvrCEffectModuleEmitterInstance(Entry.Module);
+        return Emitter != None && Emitter.m_pPSysComponent == Entry.Primitive;
+    }
+    if (Entry.Blur != None)
+    {
+        Blur = RvrCEffectModuleRadialBlurInstance(Entry.Module);
+        return Blur != None && Blur.m_pRBComponent == Entry.Blur;
+    }
+    if (Entry.PostEffect == None || Entry.Chain == None || Entry.Chain.Effects.Find(Entry.PostEffect) == -1) 
+    {
+        return FALSE;
+    }
+    if (Entry.Module == None) {
+        return Entry.Identity.Component.m_pPostProcessChain == Entry.Chain;
+    }
+    Framebuffer = RvrCEffectModuleFramebufferInstance(Entry.Module);
+    return Framebuffer != None && Framebuffer.m_pPostProcessInstance == Entry.Chain;
+}
+
+public final function bool IsMPObserverCameraEmitter(RvrClientEffectComponent Component, RvrCEffectModuleEmitter Emitter)
+{
+    local int i;
+    local RvrCEffectModuleLocation LocationModule;
+
+    if (Emitter == None) return FALSE;
+    if (Emitter.m_eEmitterTarget == EEffectLocationTarget.ELT_Camera || (Emitter.m_bLocalPlayerOnly && Emitter.m_eDPG == ESceneDepthPriorityGroup.SDPG_Foreground)) 
+    {
+        return TRUE;
+    }
+
+    // Some modules attach to camera, e.g. bloodlust, krogy rage
+    for (i = 0; i < Component.m_lstModuleInstances.Length; i++)
+    {
+        if (Component.m_lstModuleInstances[i] == None)
+        {
+            continue;
+        }
+        LocationModule = RvrCEffectModuleLocation(Component.m_lstModuleInstances[i].m_pModule);
+        if (LocationModule != None && LocationModule.m_bSetEffectLocation && LocationModule.m_eTarget == EEffectLocationTarget.ELT_Camera) 
+        {
+            // This attached to camera
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+public final function HideMPObserverScreenEffect(RvrClientEffectComponent Component, RvrClientEffectModuleInstance Module, PrimitiveComponent Primitive, PostProcessChain Chain, PostProcessEffect PostEffect, optional RadialBlurComponent Blur)
+{
+    local int i;
+    local MPObserverScreenEffect Entry;
+
+    if (Primitive == None && PostEffect == None && Blur == None) 
+    {
+        // Not relevant
+        return;
+    }
+    for (i = 0; i < MPObserverScreenEffects.Length; i++)
+    {
+        if (MPObserverScreenEffects[i].Identity.Component == Component && MPObserverScreenEffects[i].Primitive == Primitive && MPObserverScreenEffects[i].Blur == Blur && MPObserverScreenEffects[i].PostEffect == PostEffect) 
+        {
+            break;
+        }
+    }
+    if (i == MPObserverScreenEffects.Length)
+    {
+        Entry.Identity.Component = Component;
+        Entry.Identity.Template = Component.m_pClientEffect;
+        Entry.Identity.EffectId = Component.m_oTarget.Id;
+        Entry.Module = Module;
+        Entry.Primitive = Primitive;
+        Entry.Chain = Chain;
+        Entry.PostEffect = PostEffect;
+        Entry.Blur = Blur;
+        if (Primitive != None)
+        {
+            Entry.bWasHidden = Primitive.HiddenGame;
+        }
+        else if (Blur != None)
+        {
+            Entry.bWasHidden = !Blur.bEnabled;
+        }
+        else
+        {
+            Entry.bWasHidden = !PostEffect.bShowInGame;
+        }
+        MPObserverScreenEffects.AddItem(Entry);
+    }
+    MPObserverScreenEffects[i].bTouched = TRUE;
+    if (Primitive != None)
+    {
+        if (!Primitive.HiddenGame) Primitive.SetHidden(TRUE);
+    }
+    else if (Blur != None)
+    {
+        if (Blur.bEnabled) Blur.SetEnabled(FALSE);
+    }
+    else
+    {
+        PostEffect.bShowInGame = FALSE;
+    }
+}
+
+public final function RestoreMPObserverScreenEffect(MPObserverScreenEffect Entry)
+{
+    // Check screen effects are still relevant
+    if (!IsCurrentMPObserverScreenEffect(Entry)) 
+    {
+        return;
+    }
+    if (Entry.Primitive != None)
+    {
+        // Restore state
+        Entry.Primitive.SetHidden(Entry.bWasHidden);
+    }
+    else if (Entry.Blur != None)
+    {
+        // Restore state
+        Entry.Blur.SetEnabled(!Entry.bWasHidden);
+    }
+    else
+    {
+        // Rstore state
+        Entry.PostEffect.bShowInGame = !Entry.bWasHidden;
+    }
+}
+
+public final function UpdateMPObserverScreenEffects(optional bool bRestore = FALSE)
+{
+    local bool bActive;
+    local int i;
+    local int StackIndex;
+    local int EffectIndex;
+    local int ModuleIndex;
+    local int PPIndex;
+    local RvrClientEffectManager Manager;
+    local RvrClientEffectComponent Component;
+    local RvrClientEffectModuleInstance Module;
+    local RvrCEffectModuleEmitterInstance Emitter;
+    local RvrCEffectModuleFramebufferInstance Framebuffer;
+    local RvrCEffectModuleRadialBlurInstance Blur;
+
+    bActive = !bRestore && LocalPlayer(Outer.Player) != None && Outer.GameModeManager2 != None && Outer.WorldInfo != None && Outer.WorldInfo.GRI != None && Outer.WorldInfo.GRI.IsMultiplayerGame() && ((bMPSpectatorPhoto && bIsActive) || Outer.GameModeManager2.IsActive(20));
+    for (i = MPObserverScreenEffects.Length - 1; i >= 0; i--)
+    {
+        if (!bActive || !IsCurrentMPObserverScreenEffect(MPObserverScreenEffects[i]))
+        {
+            if (!bActive) 
+            {
+                // Effect needs turned back on
+                RestoreMPObserverScreenEffect(MPObserverScreenEffects[i]);
+            }
+            MPObserverScreenEffects.Remove(i, 1);
+        }
+        else MPObserverScreenEffects[i].bTouched = FALSE;
+    }
+    if (!bActive) 
+    {
+        return;
+    }
     Manager = Class'RvrClientEffectManager'.static.GetClientEffectManager();
     if (Manager == None) 
     {
@@ -1499,29 +1689,51 @@ public final function ApplyMPPhotoVisuals(bool bRestore)
         for (EffectIndex = 0; EffectIndex < Manager.m_aStacks[StackIndex].Elements.Length; EffectIndex++)
         {
             Component = Manager.m_aStacks[StackIndex].Elements[EffectIndex];
-            if (Component == None || !Component.m_bActive || !IsMPPhotoVisionTemplate(Component.m_pClientEffect)) 
+            if (Component == None || !Component.m_bActive) 
             {
                 continue;
             }
-            i = MPPhotoHiddenVisionEffects.Find('Component', Component);
-            if (i == -1)
+            // Only live client-effect chains: never disable level post-processing,
+            // the photo mode's grading/filter chains, or shared material templates
+            if (Component.m_pPostProcessChain != None)
             {
-                Entry.Component = Component;
-                Entry.Template = Component.m_pClientEffect;
-                Entry.EffectId = Component.m_oTarget.Id;
-                Entry.bWasHidden = Component.m_bHidden;
-                MPPhotoHiddenVisionEffects.AddItem(Entry);
+                for (PPIndex = 0; PPIndex < Component.m_pPostProcessChain.Effects.Length; PPIndex++) {
+                    HideMPObserverScreenEffect(Component, None, None, Component.m_pPostProcessChain, Component.m_pPostProcessChain.Effects[PPIndex]);
+                }
             }
-            if (!Component.m_bHidden) 
+            for (ModuleIndex = 0; ModuleIndex < Component.m_lstModuleInstances.Length; ModuleIndex++)
             {
-                Component.Hide(TRUE);
+                Module = Component.m_lstModuleInstances[ModuleIndex];
+                if (Module == None || !Module.m_bActive || Module.m_bFinished)
+                {
+                    continue;
+                }
+                Framebuffer = RvrCEffectModuleFramebufferInstance(Module);
+                if (Framebuffer != None && Framebuffer.m_pPostProcessInstance != None)
+                {
+                    for (PPIndex = 0; PPIndex < Framebuffer.m_pPostProcessInstance.Effects.Length; PPIndex++) {
+                        HideMPObserverScreenEffect(Component, Module, None, Framebuffer.m_pPostProcessInstance, Framebuffer.m_pPostProcessInstance.Effects[PPIndex]);
+                    }
+                }
+                Emitter = RvrCEffectModuleEmitterInstance(Module);
+                if (Emitter != None && IsMPObserverCameraEmitter(Component, RvrCEffectModuleEmitter(Module.m_pModule))) {
+                    HideMPObserverScreenEffect(Component, Module, Emitter.m_pPSysComponent, None, None);
+                }
+                Blur = RvrCEffectModuleRadialBlurInstance(Module);
+                if (Blur != None) 
+                {
+                    HideMPObserverScreenEffect(Component, Module, None, None, None, Blur.m_pRBComponent);
+                }
             }
         }
     }
-    if (MPPhotoHiddenVisionEffects.Length > 0 && !bMPPhotoLoggedVisionSuppression)
+    for (i = MPObserverScreenEffects.Length - 1; i >= 0; i--)
     {
-        bMPPhotoLoggedVisionSuppression = TRUE;
-        LogInternal("MilanPhoto: Hunter/Scanner vision suppression connected" @ MPPhotoHiddenVisionEffects.Length);
+        if (!MPObserverScreenEffects[i].bTouched)
+        {
+            RestoreMPObserverScreenEffect(MPObserverScreenEffects[i]);
+            MPObserverScreenEffects.Remove(i, 1);
+        }
     }
 }
 // END MILAN CHANGE
