@@ -73,7 +73,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstorm",
                 NonConsumableClassPath = "SFXGameContent_Milan.SFXHeavyWeapon_Blackstorm",
                 Name = 361364, // M-490 Blackstorm
-                ShortName = new LocalizedString { [MELocalization.INT] = "Blackstorm" },
+                ShortName = new LocalizedString { [MELocalization.INT] = "M-490 Blackstorm" },
                 Description = 361363,
                 ShortDescription = 344479,
                 Image = $"{IconPackage}.Blackstorm_512x256",
@@ -95,9 +95,26 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstar",
                 InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Blackstar",
                 // Vanilla has no ShortPrettyName for it
-                ShortName = new LocalizedString { [MELocalization.INT] = "Blackstar" },
+                ShortName = new LocalizedString { [MELocalization.INT] = "Reaper Blackstar" },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
                 // TODO: We need an actual short text or move hidden to the top.
+            },
+            // M-920 Cain
+            new()
+            {
+                Id = 7,
+                HiddenId = 8,
+                UnlockName = "MilanHeavy_Cain",
+                HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "M-920 Cain (Hidden)" },
+                UnlockPlayerVariableId = 805,
+                HiddenUnlockPlayerVariableId = 806,
+                // Drop from ultrarare pool, cain is special
+                Rarity = "ultrarare",
+                DisplayOrder = 30,
+                ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableCain",
+                InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Cain",
+                ShortName = new LocalizedString { [MELocalization.INT] = "M-920 Cain" },
+                IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
             },
         ];
 
