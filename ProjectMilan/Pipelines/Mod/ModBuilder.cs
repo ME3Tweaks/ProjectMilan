@@ -176,7 +176,7 @@ namespace ProjectMilan.Pipelines.Mod
             var linkerPatchDest = Path.Combine(Program.Settings.OutputModPath, "LinkerPatches");
             if (!Directory.Exists(linkerPatchSource))
             {
-                MilanLog.Warning($"Linker patch source directory does not exist: {linkerPatchSource}", customPrefix: LOG_CATEGORY);
+                MilanLog.Information($"No linker patch source directory, skipping: {linkerPatchSource}", customPrefix: LOG_CATEGORY);
                 return;
             }
             var linkerPatches = Directory.GetFiles(linkerPatchSource, "*.*", SearchOption.TopDirectoryOnly);
