@@ -2245,6 +2245,17 @@ public simulated function GetProjectileFirePosition(out Vector out_ProjLoc, out 
     local Vector StartTrace;
     local Vector EndTrace;
     local ImpactInfo TestImpact;
+    // MILAN CHANGE - Mgamerz - 2026-10-29
+    // Projectile weapon trace fixes
+    local BioPawn HitPawn;
+    local Actor AimHitActor;
+    local Vector AimTraceStart;
+    local Vector AimHitLocation;
+    local Vector AimHitNormal;
+    local Vector CamRot;
+    local TraceHitInfo AimHitInfo;
+    local SFXPlayerCamera Camera;
+    // END MILAN CHANGE
     
     if (Instigator.IsHumanControlled() == FALSE)
     {
@@ -2260,6 +2271,53 @@ public simulated function GetProjectileFirePosition(out Vector out_ProjLoc, out 
         {
             EndTrace = StartTrace + out_ProjDir * GetTraceRange();
             TestImpact = CalcWeaponFire(StartTrace, EndTrace);
+            // MILAN CHANGE - Mgamerz - 2026-10-29
+            // Projectiles should ignore friendlies when computing their firing target
+            // Because trace comes from muzzle it can cause muzzle to trace hit as the firing line
+            // which means at point blank you can fire at the ground and miss.
+            HitPawn = BioPawn(TestImpact.HitActor);
+            if (HitPawn != None && HitPawn.IsFriendly(BioPawn(Instigator)))
+            {
+                AimTraceStart = StartTrace;
+                if (Instigator.Controller != None)
+                {
+                    Camera = SFXPlayerCamera(PlayerController(Instigator.Controller).PlayerCamera);
+                    if (Camera != None)
+                    {
+                        // Trace from camera location
+                        CamRot = Vector(Camera.CameraCache.POV.Rotation);
+                        AimTraceStart += CamRot * ((Instigator.location - AimTraceStart) Dot CamRot);
+                    }
+                }
+                TestImpact.HitLocation = EndTrace;
+                foreach Instigator.TraceActors(Class'Actor', AimHitActor, AimHitLocation, AimHitNormal, EndTrace, AimTraceStart, vect(0.0, 0.0, 0.0), AimHitInfo, 1)
+                {
+                    if (AimHitActor == Instigator || AimHitActor.Owner == Instigator)
+                    {
+                        // Hit ourselves, ignore
+                        continue;
+                    }
+                    HitPawn = BioPawn(AimHitActor);
+                    if (HitPawn != None && HitPawn.IsFriendly(BioPawn(Instigator)))
+                    {
+                        // Do NOT accept a hit on friendlies
+                        continue;
+                    }
+                    if (!AimHitActor.bWorldGeometry && (Trigger(AimHitActor) != None || TriggerVolume(AimHitActor) != None))
+                    {
+                        // Ignore trigger volumes
+                        continue;
+                    }
+                    if (Pawn(AimHitActor) == None && !AimHitActor.bWorldGeometry && !AimHitActor.bProjTarget && (!AimHitActor.bBlockActors || AimHitInfo.HitComponent == None || !AimHitInfo.HitComponent.BlockZeroExtent))
+                    {
+                        // Did we hit nothing?
+                        continue;
+                    }
+                    TestImpact.HitLocation = AimHitLocation;
+                    break;
+                }
+            }
+            // END MILAN CHANGE
             if (!FastTrace(TestImpact.HitLocation, out_ProjLoc, , ))
             {
                 out_ProjLoc = StartTrace;
