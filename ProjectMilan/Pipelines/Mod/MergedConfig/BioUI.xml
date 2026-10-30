@@ -788,7 +788,8 @@
 				<Value type="3">(GUIDescription=676673, GUIDescription_GoBig=758572)</Value>
 				<Value type="3">(GUIDescription=676674, GUIDescription_GoBig=758573)</Value>
 				<Value type="3">(GUIDescription=676675, GUIDescription_GoBig=758574)</Value>
-				<Value type="3">(GUIDescription=750416, GUIDescription_GoBig=771273)</Value>
+				<!-- MILAN CHANGE - Use Heavy Weapon Ammo string-->
+				<Value type="3">(GUIDescription=750416, GUIDescription_GoBig=49875827)</Value>
 				<Value type="3">(GUIDescription=750438, GUIDescription_GoBig=771274)</Value>
 				<Value type="3">(GUIDescription=750420, GUIDescription_GoBig=771275)</Value>
 				<Value type="3">(GUIDescription=750422, GUIDescription_GoBig=771276)</Value>
