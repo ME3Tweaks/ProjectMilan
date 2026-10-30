@@ -2286,6 +2286,7 @@
 			<Property name="rateoffire" type="0">(X=50,Y=50)</Property>
 		</Section>
 		<!-- Blackstorm, ported from LE2 -->
+		<!-- Changes from LE2 are noted, otherwise left the same. Consumable version doesn't actually use mag. -->
 		<Section name="sfxgamecontent_milan.sfxheavyweapon_blackstorm">
 			<Property name="accfireinterpspeed" type="0">(X=3.0f,Y=3.0f)</Property>
 			<Property name="accfirepenalty" type="0">(X=3.3f,Y=3.3f)</Property>
@@ -2323,8 +2324,10 @@
 			<Property name="magsize" type="0">(X=25,Y=25)</Property>
 		</Section>
 		<Section name="sfxgamecontent_milan.sfxprojectile_blackstorm">
-			<Property name="damagepersecond" type="0">25.0</Property>
-			<Property name="explosiondamage" type="0">350.0</Property>
+			<!-- 25 -> 45 - Weapon should do damage but not kill which forces a respawn-->
+			<Property name="damagepersecond" type="0">45.0</Property>
+			<!-- 350 -> 20000 - A heavy weapon should do heavy damage -->
+			<Property name="explosiondamage" type="0">20000.0</Property>
 		</Section>
 	</Sections>
 </CoalesceAsset>
