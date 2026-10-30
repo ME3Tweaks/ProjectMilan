@@ -2285,5 +2285,46 @@
 			<Property name="minchargetime" type="0">0.0</Property>
 			<Property name="rateoffire" type="0">(X=50,Y=50)</Property>
 		</Section>
+		<!-- Blackstorm, ported from LE2 -->
+		<Section name="sfxgamecontent_milan.sfxheavyweapon_blackstorm">
+			<Property name="accfireinterpspeed" type="0">(X=3.0f,Y=3.0f)</Property>
+			<Property name="accfirepenalty" type="0">(X=3.3f,Y=3.3f)</Property>
+			<Property name="ai_aimdelay" type="0">(X=1.0f,Y=1.0f)</Property>
+			<Property name="ai_burstfirecount" type="0">(X=1,Y=1)</Property>
+			<Property name="ai_burstfiredelay" type="0">(X=2.0f,Y=3.25f)</Property>
+			<Property name="bforcefireaftercharge" type="0">true</Property>
+			<Property name="bzoomsnapenabled" type="0">false</Property>
+			<Property name="damagehench" type="0">0.35</Property>
+			<Property name="encumbranceweight" type="0">(X=0.0f,Y=0.0f)</Property>
+			<Property name="magsize" type="0">(X=5,Y=5)</Property>
+			<Property name="maxaimerror" type="0">(X=0.0f,Y=0.0f)</Property>
+			<Property name="maxchargetime" type="0">2.0</Property>
+			<Property name="maxcrosshairrange" type="0">(X=100.0f,Y=100.0f)</Property>
+			<Property name="maxzoomaimerror" type="0">(X=0.0f,Y=0.0f)</Property>
+			<Property name="maxzoomcrosshairrange" type="0">(X=80.0f,Y=80.0f)</Property>
+			<Property name="minaimerror" type="0">(X=0.0f,Y=0.0f)</Property>
+			<Property name="minchargetime" type="0">2.0</Property>
+			<Property name="mincrosshairrange" type="0">(X=40.0f,Y=40.0f)</Property>
+			<Property name="minzoomaimerror" type="0">(X=0.0f,Y=0.0f)</Property>
+			<Property name="minzoomcrosshairrange" type="0">(X=25.0f,Y=25.0f)</Property>
+			<Property name="noammofiresounddelay" type="0">1.0</Property>
+			<Property name="rateoffire" type="0">(X=30,Y=30)</Property>
+			<Property name="rateoffireai" type="0">0.5</Property>
+			<Property name="recoil" type="0">(X=0.3f,Y=0.3f)</Property>
+			<Property name="recoilfadespeed" type="0">3.0</Property>
+			<Property name="recoilinterpspeed" type="0">30.0</Property>
+			<Property name="recoilyawscale" type="0">0.25</Property>
+			<Property name="recoilzoomfadespeed" type="0">5.0</Property>
+			<Property name="zoomaccfireinterpspeed" type="0">(X=2.0f,Y=2.0f)</Property>
+			<Property name="zoomaccfirepenalty" type="0">(X=2.15f,Y=2.15f)</Property>
+			<Property name="zoomrecoil" type="0">(X=0.1f,Y=0.1f)</Property>
+		</Section>
+		<Section name="sfxgamecontent_milan.sfxweapon_heavy_consumableblackstorm">
+			<Property name="magsize" type="0">(X=25,Y=25)</Property>
+		</Section>
+		<Section name="sfxgamecontent_milan.sfxprojectile_blackstorm">
+			<Property name="damagepersecond" type="0">25.0</Property>
+			<Property name="explosiondamage" type="0">350.0</Property>
+		</Section>
 	</Sections>
 </CoalesceAsset>
