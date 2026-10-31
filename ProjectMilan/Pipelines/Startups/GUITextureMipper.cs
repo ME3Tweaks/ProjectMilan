@@ -163,7 +163,7 @@ namespace ProjectMilan.Pipelines.Startups
             { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_RBumper", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_RBumper", "GUI_SF_MPNewLobby_DLC.Xbox_ControllerIcons_RBumper", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_RBumper"] },
             { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_LTrigger", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_LTrigger", "GUI_SF_MPChallenges_DLC.Xbox_ControllerIcons_LTrigger", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_LTrigger"] },
             { "GUI_SF_Leaderboard_Milan.Xbox_ControllerIcons_RTrigger", ["GUI_SF_MP_HUD.Xbox_ControllerIcons_RTrigger", "GUI_SF_MPChallenges_DLC.Xbox_ControllerIcons_RTrigger", "GUI_SF_MPPlayerCountdown_Milan.Xbox_ControllerIcons_RTrigger"] },
-
+        
             // Others were removed; they look similar but actually have slightly different sizes,
             // when scaled these sizes significantly changed in looks
         };
@@ -174,7 +174,26 @@ namespace ProjectMilan.Pipelines.Startups
         /// </summary>
         public static readonly IReadOnlyDictionary<string, string[]> BaseDeltaTexturePaths = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            // { "SFXGame", ["GUI_SF_WeaponSelect.WeaponSelect_I4F"] },
+            { "SFXGame", 
+                [
+                    // Weapon select borders (appears aliased)
+                    // Blue
+                    "GUI_SF_WeaponSelect.WeaponSelect_I4F",
+                    // Silver
+                    "GUI_SF_WeaponSelect.WeaponSelect_I51",
+                    // Gold
+                    "GUI_SF_WeaponSelect.WeaponSelect_I53",
+                    // N7
+                    "GUI_SF_WeaponSelect.WeaponSelect_I55",
+
+                    // Weapon selection border (left side)
+                    "GUI_SF_WeaponSelect.WeaponSelect_I90",
+                    "GUI_SF_WeaponSelect.WeaponSelect_I93", // Selected version
+                    "GUI_SF_WeaponSelect.WeaponSelect_I96", // Red version
+
+
+                ]
+            },
         };
 
         /// <summary>Paths requiring either mip filtering or a size cap, for package scans and duplicate checks.</summary>
@@ -308,6 +327,29 @@ namespace ProjectMilan.Pipelines.Startups
             MilanLog.Information($"Applied GUI mip/size/residency policy to {mipped} GUI texture(s) in {package.FileNameNoExtension} in {stopwatch.Elapsed.TotalSeconds:0.#}s " +
                                  $"(texture data {bytesBefore / 1048576.0:0.#} MiB -> {bytesAfter / 1048576.0:0.#} MiB)", customPrefix: LOG_CATEGORY);
             return mipped;
+        }
+
+        /// <summary>
+        /// Mips the textures <see cref="BaseDeltaTexturePaths"/> lists for a BaseDelta package, with only their own size caps. Nothing
+        /// else in the package is touched.
+        /// </summary>
+        /// <param name="packageName">The BaseDelta package's name, e.g. "SFXGame".</param>
+        /// <returns>Listed paths that are not a Texture2D in the package.</returns>
+        public static List<string> MipBaseDeltaPackage(IMEPackage package, string packageName, IReadOnlyDictionary<string, string[]>? basePaths = null,
+            IReadOnlyDictionary<string, int>? sizeCaps = null)
+        {
+            basePaths ??= BaseDeltaTexturePaths;
+            sizeCaps ??= TextureSizeCaps;
+            if (!basePaths.TryGetValue(packageName, out var listed) || listed.Length == 0)
+            {
+                return [];
+            }
+
+            var selected = new HashSet<string>(listed, StringComparer.OrdinalIgnoreCase);
+            var missing = selected.Where(path => package.FindExport(path)?.ClassName != "Texture2D").ToList();
+            var caps = sizeCaps.Where(cap => selected.Contains(cap.Key)).ToDictionary(cap => cap.Key, cap => cap.Value, StringComparer.OrdinalIgnoreCase);
+            GenerateMipsForPackage(package, selected, sizeCaps: caps);
+            return missing;
         }
 
         /// <summary>
