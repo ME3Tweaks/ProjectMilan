@@ -1380,15 +1380,15 @@
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.asl_body_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.bls_body_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.snp_body_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_ammo-capacity_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_heat-sink_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_penetration-mod_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_shredder-mod_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_smg_heat-sink-mod_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_stability-damper_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_tazer-mod_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_ultralight-material_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
-				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_barrel-choke_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_ammo-capacity_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_heat-sink_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_penetration-mod_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_shredder-mod_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_smg_heat-sink-mod_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_stability-damper_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_tazer-mod_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_ultralight-material_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_barrel-choke_256x128",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.MOD_concentration-mod_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.asl_avenger_256x128",SeekFreePackageName="SFXNotificationImages_AssaultRifles")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.asl_vindicator_256x128",SeekFreePackageName="SFXNotificationImages_AssaultRifles")</Value>
