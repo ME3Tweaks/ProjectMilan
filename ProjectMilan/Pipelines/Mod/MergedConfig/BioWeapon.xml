@@ -179,6 +179,9 @@
 			<Property name="statbardamage" type="0">(X=1344.4f,Y=1650.0f)</Property>
 		</Section>
 		<Section name="sfxgamecontent.sfxweapon_shotgun_crusader">
+			<!-- MILAN CHANGE - Mgamerz - Crusader now uses config based latent fire time so we don't have to patch the base package and ship it -->
+			<Property name="latentfiretime" type="0">0.0</Property>
+			<!-- END MILAN CHANGE -->
 			<Property name="damage" type="0">(X=630.7,Y=788.4)</Property>
 			<Property name="encumbranceweight" type="0">(X=2.3f,Y=2.0f)</Property>
 			<Property name="statbardamage" type="0">(X=630.7,Y=788.4)</Property>
