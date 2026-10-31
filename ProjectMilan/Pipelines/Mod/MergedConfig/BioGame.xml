@@ -5372,7 +5372,9 @@
 			<Property name="maximumrange" type="0">(BaseValue=4000.0f)</Property>
 			<Property name="projectilespeed" type="0">(BaseValue=3000.0f)</Property>
 			<Property name="spawnzoffset" type="0">150.0f</Property>
-			<Property name="turretshields" type="0">(BaseValue=500.0f,RankBonuses[2]=0.3f)</Property>
+			<!-- MILAN CHANGE - UP3 - Match Juggernaut turret shields to the Geth Engineer turret -->
+			<Property name="turretshields" type="0">(BaseValue=1000.0f,RankBonuses[2]=0.3f)</Property>
+			<!-- END MILAN CHANGE -->
 		</Section>
 		<Section name="sfxgamecontentdlc_con_mp5.sfxpowercustomactionmp_gethturretattack_mp5">
 			<Property name="force" type="0">(BaseValue=500.0f)</Property>
