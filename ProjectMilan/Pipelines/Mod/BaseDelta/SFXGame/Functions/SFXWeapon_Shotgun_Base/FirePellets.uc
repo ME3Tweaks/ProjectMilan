@@ -1,5 +1,5 @@
-// MILAN CHANGE - Mgamerz - 2026-10-31
-// C01: A nonpositive pellet delay processes the shot immediately, without a timer.
+// MILAN CHANGE - Mgamerz
+// <= 0 latent fire time no longer uses a forced minimum and is effectively hitscan
 public final simulated function FirePellets(Vector StartLocation, Rotator AimRotation, byte FireMode)
 {
     local int PelletIdx;
@@ -8,18 +8,18 @@ public final simulated function FirePellets(Vector StartLocation, Rotator AimRot
     LatentFire_AimRotation = AimRotation;
     LatentFire_CurrentPellet = 0;
     LatentFire_StartLocation = StartLocation;
+    // MILAN CHANGE - Fire immediately when there is no latent time
     if (LatentFireTime <= 0.0)
     {
+        // Fire immediately with no latent fire callback
         ClearTimer('PollLatentFire', Self);
-        // Bound the loop independently of the completion callback's pellet state.
         NumPellets = PelletSpread.Length;
         for (PelletIdx = 0; PelletIdx < NumPellets; PelletIdx++)
         {
-            // Retain the existing impact, replication, FX and completion handling.
             PollLatentFire();
         }
         return;
     }
+    // END MILAN CHANGE
     SetTimer(FMax(0.00100000005, LatentFireTime / float(PelletSpread.Length)), TRUE, 'PollLatentFire', );
 }
-// END MILAN CHANGE
