@@ -1,4 +1,4 @@
-// 08/27/2026 - Mgamerz
+﻿// 08/27/2026 - Mgamerz
 // Game effect that applies a headshot damage multiplier onto the host
 // Requires changes to SFXGame to work as HeadshotDamageTakenMultiplier does not exist in vanilla LE3.
 // Created for supporting the Rank 5A headshot damage effect of Tactical Scan that appears was abandoned mid development due to lack of the necessary support in the base game.
