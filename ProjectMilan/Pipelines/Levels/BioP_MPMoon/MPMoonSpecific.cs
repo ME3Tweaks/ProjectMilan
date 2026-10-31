@@ -16,6 +16,7 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 
 
         // Condor ammo boxes don't have the correct respawn time set which makes it SUCK to get ammo
+        // Fix crate UV
         public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
             foreach (var package in pipeline.ME3Packages.Values)
@@ -34,6 +35,13 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
                 }
 
                 package.GetLevel().WriteBinary(bin);
+
+                if (package.FileNameNoExtension == "BioA_MPMoon_100")
+                {
+                    // Rename crate mesh so it doens't take LE3's donor, it has totally different UV
+                    // and we don't want to have to remap the atlas
+                    package.FindExport("bioapl_cra_crate01.Crate01_M.Crate01_M").ObjectName = "Crate01_M_ME3";
+                }
             }
         }
 
