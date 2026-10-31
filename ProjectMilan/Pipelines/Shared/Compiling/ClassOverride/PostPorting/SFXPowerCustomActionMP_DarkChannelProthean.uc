@@ -1,7 +1,7 @@
 // Source: LE3, Collector_Adept_MP
 // Initial decompilation: 9/7/2024 5:13:18 PM
 // MILAN CHANGE - UP3
-// Preserve Dark Channel damage type on replicated jumps and restore Prothean visuals.
+// Preserve Dark Channel damage type on replicated jumps and restore Prothean visuals
 Class SFXPowerCustomActionMP_DarkChannelProthean extends SFXPowerCustomActionMP_DarkChannel2_MP5
     config(Game);
 
