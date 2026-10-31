@@ -1,5 +1,6 @@
-// This does not get automatically compiled into the build. It is only included for documentation and a building point for further changes
-// we can include comments and more intuitive syntax without it going through the compiler/decompiler cycle of JPEXS
+// MILAN CHANGE
+// Stumpy 2026/10/31 - Move MPAppearance into the Scaleform pipeline
+// This file also has tons of changes that were primarily by Squid
 class screens.MPAppearance.MPAppearance extends com.SFXScreen
 {
     var Scrollbar;
