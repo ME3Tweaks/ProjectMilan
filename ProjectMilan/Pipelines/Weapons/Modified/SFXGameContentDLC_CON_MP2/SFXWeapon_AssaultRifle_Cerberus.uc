@@ -135,8 +135,10 @@ defaultproperties
     MaxZoomAimError = {X = 0.449999988, Y = 0.449999988}
     RateOfFire = {X = 550.0, Y = 550.0}
     EncumbranceWeight = {X = 1.75, Y = 1.0}
-    Recoil = {X = 4.5, Y = 4.5}
-    ZoomRecoil = {X = 1.5, Y = 1.5}
+    // MILAN CHANGE - UP3 - Correct the swapped Harrier recoil values
+    Recoil = {X = 1.5, Y = 1.5}
+    ZoomRecoil = {X = 4.5, Y = 4.5}
+    // END MILAN CHANGE
     AccFirePenalty = {X = 19.0, Y = 19.0}
     AccFireInterpSpeed = {X = 18.0, Y = 18.0}
     ZoomAccFirePenalty = {X = 37.0, Y = 37.0}

@@ -391,7 +391,7 @@ defaultproperties
         AnimSets = (AnimSet'BIOG_WPN_A.WPN_HVYj_Main')
         ReplacementPrimitive = None
     End Template
-    MovementSpeedOverrides = ({CharacterClass = 'SFXCharacterClassMP_Soldier_GethDestroyer', MovementSpeedDecrease = 0.0}, 
+    MovementSpeedOverrides = ({CharacterClass = 'SFXCharacterClassMP_Soldier_GethDestroyer', MovementSpeedDecrease = 0.0},
                               {CharacterClass = 'SFXCharacterClassMP_Sentinel_KroganWarlord', MovementSpeedDecrease = 0.0}, 
                               {CharacterClass = 'SFXCharacterClassMP_Soldier_Krogan', MovementSpeedDecrease = 0.0}, 
                               {CharacterClass = 'SFXCharacterClassMP_Vanguard_Krogan', MovementSpeedDecrease = 0.0}, 
@@ -405,8 +405,12 @@ defaultproperties
                               {CharacterClass = 'SFXCharacterClassMP_Engineer_Turian', MovementSpeedDecrease = -0.25}, 
                               {CharacterClass = 'SFXCharacterClassMP_Adept_Batarian', MovementSpeedDecrease = -0.25}, 
                               {CharacterClass = 'SFXCharacterClassMP_Soldier_Batarian', MovementSpeedDecrease = -0.25}, 
-                              {CharacterClass = 'SFXCharacterClassMP_Sentinel_Batarian', MovementSpeedDecrease = -0.25}
-                             )
+                              // MILAN CHANGE - UP3 - Include Krogan Sentinel and Cabal in the kit movement overrides
+                              {CharacterClass = 'SFXCharacterClassMP_Sentinel_Batarian', MovementSpeedDecrease = -0.25},
+                              {CharacterClass = 'SFXCharacterClassMP_Sentinel_Krogan', MovementSpeedDecrease = 0.0},
+                              {CharacterClass = 'SFXCharacterClassMP_Vanguard_TurianFemale', MovementSpeedDecrease = -0.25}
+                              // END MILAN CHANGE
+                       )
     PowerUpSound1 = WwiseEvent'Wwise_Weapons_NP_MP5_Spitfire.Play_wep_p_spitfire_MP5_fire_start' // MILAN NOTE: Using OT banks. Will need to have these fixed via Audio pipeline
     PowerDownSound1 = WwiseEvent'Wwise_Weapons_NP_MP5_Spitfire.Play_wep_p_spitfire_MP5_fire_stop'
     NPCPowerUpSound1 = WwiseEvent'Wwise_Weapons_NP_MP5_Spitfire.Play_wep_MP5_np_spitfire_fire_start'
@@ -426,7 +430,9 @@ defaultproperties
     MaxAimError = {X = 2.75, Y = 2.75}
     MinZoomAimError = {X = 0.5, Y = 0.5}
     MaxZoomAimError = {X = 1.0, Y = 1.0}
-    RateOfFire = {X = 650.0, Y = 650.0}
+    // MILAN CHANGE - UP3/Mgamerz - Buff to 700 RPM, match statbar
+    RateOfFire = {X = 700.0, Y = 700.0}
+    // END MILAN CHANGE
     EncumbranceWeight = {X = 3.0, Y = 2.5}
     Recoil = {X = 0.100000001, Y = 0.100000001}
     ZoomRecoil = {X = 0.150000006, Y = 0.150000006}
@@ -437,7 +443,9 @@ defaultproperties
     MinZoomCrosshairRange = {X = 25.0, Y = 25.0}
     MaxZoomCrosshairRange = {X = 40.0, Y = 40.0}
     StatBarDamage = {X = 53.7999992, Y = 67.3000031}
-    StatBarRateOfFire = {X = 800.0, Y = 800.0}
+    // MILAN CHANGE - UP3/Mgamerz - Buff to 700RPM, match statbar
+    StatBarRateOfFire = {X = 700.0, Y = 700.0}
+    // END MILAN CHANGE
     GUIImage = "GUI_Codex_Weapons_Images.Weapons.hvy_spitfire_512x256" // MILAN CHANGE - Use EXPPack_003 asset
     NotificationImage = "GUI_Icons.Weapons.hvy_spitfire_256x128" // MILAN CHANGE - Use EXPPack_003 asset
     GUIZoomReticleClass = Class'SFXGUI_WeaponReticleSimple'

@@ -4549,9 +4549,9 @@
 			<Property name="versioncount" type="0">3</Property>
 		</Section>
 		<Section name="sfxgamecontentdlc_con_mp4.sfxgameeffect_matchconsumable_ammopower_polonium">
-			<Property name="dotdamage[0]" type="0">0.2f</Property>
-			<Property name="dotdamage[1]" type="0">0.4f</Property>
-			<Property name="dotdamage[2]" type="0">0.6f</Property>
+			<Property name="dotdamage[0]" type="0">0.25f</Property>
+			<Property name="dotdamage[1]" type="0">0.50f</Property>
+			<Property name="dotdamage[2]" type="0">0.75f</Property>
 			<Property name="dotduration[0]" type="0">5.f</Property>
 			<Property name="dotduration[1]" type="0">5.f</Property>
 			<Property name="dotduration[2]" type="0">5.f</Property>
