@@ -35,7 +35,7 @@ namespace ProjectMilan.Pipelines.Levels
             }
 
             // Our own copy of the file, as the shuttle fix and the event change it
-            using var package = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, $"{bioDName}.pcc"), diskIOSyncLock: MilanShared.DiskIOSyncLock);
+            using var package = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, $"{bioDName}.pcc"), forceLoadFromDisk: true, diskIOSyncLock: MilanShared.DiskIOSyncLock);
             var sequence = package.FindExport(MainSequencePath);
             if (sequence == null)
             {
@@ -79,6 +79,8 @@ namespace ProjectMilan.Pipelines.Levels
             // Try to also fix the lighting as its a bit wonk.
             ExtractionShuttleLightEnvironmentFix.Apply(package, levelPipeline.LogCategory);
 
+            // Shuttle restoration starts from stock too, so keep the longer draw distances.
+            LevelShared.MultiplyLevelCullingDistances(package, 2f);
             package.Save(Path.Combine(levelPipeline.LevelOutputDir, $"{bioDName}.pcc"), diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
         }

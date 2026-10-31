@@ -369,7 +369,7 @@ namespace ProjectMilan.Pipelines.Levels
             var me3BioP = MilanShared.GetME3Package($"{levelPipeline.BioP}.pcc");
             levelPipeline.ME3BioP = me3BioP;
             levelPipeline.ME3Packages[levelPipeline.BioP] = me3BioP;
-            levelPipeline.LE3BioP = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, $@"{levelPipeline.BioP}.pcc")); // This file is not patched in METR
+            levelPipeline.LE3BioP = MEPackageHandler.OpenMEPackage(Path.Combine(LE3Directory.CookedPCPath, $@"{levelPipeline.BioP}.pcc"), forceLoadFromDisk: true); // This file is not patched in METR
             levelPipeline.LE3BioP.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this file
 
             // Add start locations
@@ -393,6 +393,18 @@ namespace ProjectMilan.Pipelines.Levels
             MilanLevelTools.RebuildPersistentLevelChildren(level);
             MilanLevelTools.SetupHordeModes(levelPipeline.LE3BioP, false);
 
+
+            // These maps skip the ME3 port, but still need the extra draw distance fixes
+            LevelShared.MultiplyLevelCullingDistances(levelPipeline.LE3BioP, 2f);
+            foreach (var sublevel in LevelShared.GetSublevelPackages(levelPipeline.LE3BioP).Distinct(StringComparer.OrdinalIgnoreCase))
+            {
+                MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, $"{sublevel}.pcc", out var sourcePath);
+                using var package = MEPackageHandler.OpenMEPackage(sourcePath, forceLoadFromDisk: true, diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                if (LevelShared.MultiplyLevelCullingDistances(package, 2f) > 0)
+                {
+                    package.Save(Path.Combine(outputPath, $"{sublevel}.pcc"), diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                }
+            }
 
             // Save BioP into folder
             levelPipeline.LE3BioP.Save(Path.Combine(outputPath, Path.GetFileName(levelPipeline.LE3BioP.FilePath)), diskIOSyncLock: MilanShared.DiskIOSyncLock);
