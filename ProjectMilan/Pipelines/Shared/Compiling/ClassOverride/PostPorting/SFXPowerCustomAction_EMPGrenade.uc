@@ -1,7 +1,5 @@
-﻿// Source: LE3, QuarianMale_Engineer_MP
+// Source: LE3, QuarianMale_Engineer_MP
 // Initial decompilation: 9/7/2024 4:00:17 PM
-// MILAN CHANGE 10/19/2026
-// Use same discipline as EMPGrenade2 (N7 Engineer)
 // Credit: MP Unofficial Bugfix and Consistency Patch
 Class SFXPowerCustomAction_EMPGrenade extends SFXPowerCustomAction_GrenadeBase
     config(Game);
@@ -207,7 +205,7 @@ defaultproperties
     HenchmanCastSound = WwiseEvent'Wwise_Power_Soldier_FragGren.Play_power_soldier_NP_fraggren_cast'
     ImpactDistanceLayer = WwiseEvent'Wwise_Generic_Explosions.Play_power_soldier_P_fraggren_distant'
     HenchmanImpactDistanceLayer = WwiseEvent'Wwise_Generic_Explosions.Play_power_soldier_NP_flashgren_distant'
-    // MILAN CHANGE - Use Tech discipline
+    // MILAN CHANGE - UP3 - Classify Quarian Arc Grenade as a tech power
     Discipline = EBioCapMode.BIO_CAPMODE_TECH
     // END MILAN CHANGE
     MaximumRange = {BaseValue = 6000.0}
