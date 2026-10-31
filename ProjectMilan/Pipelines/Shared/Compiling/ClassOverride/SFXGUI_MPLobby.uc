@@ -112,7 +112,10 @@ public event function OnStart()
 {
     Super(SFXGUIMovie).OnStart();
     SetGameMode(TRUE, 24); // MILAN Patched: GameMode Enum Index
-    SetMouseVisible(TRUE);
+    // MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
     SetRequiresUIWorld(TRUE);
     PreloadLobbyImages();
     if (IsUIWorldPawnRequired(int(GetLobbyFlow().CurrentLobbyTab)))
@@ -236,7 +239,8 @@ public event function OnClose()
         //GAWAssetHandler.Cleanup(); // MILAN Patched: Remove Galaxy At War calls
         GAWAssetHandler = None;
     }
-    SetMouseVisible(FALSE);
+    // we do not need this
+    // SetMouseVisible(FALSE);
     SetGameMode(FALSE, 24); // MILAN Patched: GameMode Enum Index
     Super(SFXGUIMovie).OnClose();
 }

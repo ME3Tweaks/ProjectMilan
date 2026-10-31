@@ -13,10 +13,10 @@ public event function HandleButtonRefresh(bool usingGamepad)
 public event function OnStart()
 {
     Super.OnStart();
-    // make sure we actually can control the mouse visibility
-	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
-	// make sure the mouse is initially shown/hidden based on the input mode
-	SetMouseVisible(!bUsingGamepad);
+    // MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
 }
 // END MILAN
 public function array<MatchConsumableDisplayInfo> GetCharacterConsumableInfo_DLC(SFXPRIMP PRI)
