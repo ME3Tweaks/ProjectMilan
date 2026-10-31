@@ -122,7 +122,6 @@
     <String id="49875793">Grenade Indicators</String>
     <String id="49875794">Movement Smoothing</String>
     <String id="49875795">Player Outlines</String>
-	<!-- Todo: Look up if any of these strings are already in TLK -->
 	<!-- Banner selection page title -->
     <String id="49875800">Select Banner</String>
     <String id="49875801">Select lobby card banner</String>
@@ -132,6 +131,29 @@
     <String id="49875808">Unable to equip this banner.</String>
 	<!-- String shown in multiplayer menu instead of leaderboards -->
 	<String id="49875811">Banners</String>
+	<!-- MP accessibility screen effects -->
+    <String id="49875812">Accessibility</String>
+    <String id="49875813">Adjust accessibility options.</String>
+    <String id="49875814">Screen effects</String>
+    <String id="49875815">Adjust the intensity of ability screen effects.</String>
+    <String id="49875816">Geth Vision</String>
+    <String id="49875817">Adjust the brightness and colour fringing of Geth Vision, including the Geth Scanner gear effect.</String>
+    <String id="49875818">Blood Lust</String>
+    <String id="49875819">Adjust the intensity of the screen overlay during Blood Lust.</String>
+    <String id="49875820">Adjust the intensity of the screen overlay during Repair Matrix.</String>
+    <String id="49875821">Krogan Rage</String>
+    <String id="49875822">Adjust the intensity of the screen overlay during Krogan Rage.</String>
+    <String id="49875823">Reduced</String>
+    <String id="49875824">Use the original strength of this screen effect.</String>
+    <String id="49875825">Use a less intense version of this screen effect.</String>
+    <String id="49875826">Hide the screen effect. The ability and its gameplay bonuses remain active.</String>
+	<!-- Polonium Rounds: total added damage per hit, rather than damage per second. -->
+    <String id="49875827">Apply polonium rounds for one mission. Repeated hits stack damage and refresh the duration.
+Damage per Hit: &lt;CUSTOM0&gt;% of weapon damage
+Duration: &lt;CUSTOM3&gt; seconds</String>
+	<String id="49875828">Earned by obtaining the Legendary Edition acheivement.</String>
+
+	<!-- Overrides vanilla string-->
 	<!-- Shared heavy ammo text -->
     <String id="724481">Every character carries these standard supplies into a mission:
 
