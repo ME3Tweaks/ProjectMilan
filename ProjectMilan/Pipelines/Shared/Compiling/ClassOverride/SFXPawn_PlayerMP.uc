@@ -962,7 +962,9 @@ public simulated function PlayerKilledMessage()
     // MILAN CHANGE - Mgamerz - 2026-09-23
     // Suppress the ordinary kill ticker for sync-kill damage; PermaDeadChanged reports the execution
     local Class<SFXDamageType> MPDamageType;
-    MPDamageType = Class<SFXDamageType>(KilledByDamageType);
+    // Read replicated damage type so we know if it's kill damage
+    // otherwise ticker behaves different between client/server
+    MPDamageType = Class<SFXDamageType>(ReplicatedDeathInfo.DamageType);
     if (MPDamageType != None && MPDamageType.default.bMPKillDamage)
     {
         return;
