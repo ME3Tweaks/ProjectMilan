@@ -2328,6 +2328,17 @@
 			<Property name="damagepersecond" type="0">45.0</Property>
 			<!-- 350 -> 20000 - A heavy weapon should do heavy damage -->
 			<Property name="explosiondamage" type="0">20000.0</Property>
+			<!-- Pawns that will never be ragdolled -->
+			<Property name="neverragdollclasses">
+				<Value type="3">SFXPawn_Atlas</Value>
+			</Property>
+			<!-- Pawns that can't be ragdolled are dragged towards the black hole and are slowed down -->
+			<Property name="dragspeed" type="0">250.0</Property>
+			<Property name="dragstopdistance" type="0">150.0</Property>
+			<Property name="dragslowdown" type="0">0.5</Property>
+			<!-- Blackstorm should constantly prime targets -->
+			<Property name="primecomborank" type="0">3.0</Property>
+			<Property name="primerefreshdelay" type="0">0.5</Property>
 		</Section>
 	</Sections>
 </CoalesceAsset>
