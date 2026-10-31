@@ -3,6 +3,8 @@ class com.ButtonGroup.ConsoleButtonGroup extends com.SFXInputMovieClip
     var dispatchEvent;
     var m_ControlA;
     var m_ControlB;
+    var m_ControlBack;
+    var m_ControlStart;
     var m_ControlX;
     var m_ControlY;
     var m_FitType;
@@ -35,6 +37,16 @@ class com.ButtonGroup.ConsoleButtonGroup extends com.SFXInputMovieClip
         this.m_ControlX.addEventListener("onVisibleChanged",mx.utils.Delegate.create(this,this.onControlVisibleChanged));
         this.m_ControlA.addEventListener("onVisibleChanged",mx.utils.Delegate.create(this,this.onControlVisibleChanged));
         this.m_ControlB.addEventListener("onVisibleChanged",mx.utils.Delegate.create(this,this.onControlVisibleChanged));
+        // Register Start button
+        this.m_OrderedButtons.push(this.m_ControlStart);
+        this.m_ControlStart.addAsTextListener(this);
+        this.m_ControlStart.addEventListener("onHiddenChanged",mx.utils.Delegate.create(this,this.onControlHidden));
+        this.m_ControlStart.addEventListener("onVisibleChanged",mx.utils.Delegate.create(this,this.onControlVisibleChanged));
+        // Register Back button
+        this.m_OrderedButtons.push(this.m_ControlBack);
+        this.m_ControlBack.addAsTextListener(this);
+        this.m_ControlBack.addEventListener("onHiddenChanged",mx.utils.Delegate.create(this,this.onControlHidden));
+        this.m_ControlBack.addEventListener("onVisibleChanged",mx.utils.Delegate.create(this,this.onControlVisibleChanged));
         this.dispatchEvent({type:"ConsoleButtonGroupLoaded"});
     }
     function IsLoaded()
@@ -57,6 +69,15 @@ class com.ButtonGroup.ConsoleButtonGroup extends com.SFXInputMovieClip
     {
         return _global.SFX.AdvanceButtonSwapped ? this.m_ControlA : this.m_ControlB;
     }
+    // Start and Back getters
+    function get ControlStart()
+    {
+        return this.m_ControlStart;
+    }
+    function get ControlBack()
+    {
+        return this.m_ControlStart;
+    }
     function set ControlY(x)
     {
     }
@@ -67,6 +88,13 @@ class com.ButtonGroup.ConsoleButtonGroup extends com.SFXInputMovieClip
     {
     }
     function set ControlB(x)
+    {
+    }
+    // Start and Back setters
+    function set ControlStart(x)
+    {
+    }
+    function set ControlBack(x)
     {
     }
     function Fit(FitType)
