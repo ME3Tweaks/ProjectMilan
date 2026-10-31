@@ -40,7 +40,10 @@ public event function OnStart()
     if (PromoData.Image != "")
     {
         RequestImage(PromoData.Image);
-        AS_SetLoadingClipVisible(TRUE);
+        // MILAN CHANGE
+        // Don't show the loading clip until we check locally
+        // AS_SetLoadingClipVisible(TRUE);
+        // END MILAN CHANGE
     }
     MPSaveManager.SetPlayerVariable('LastPromoIDShown', PromoData.TrackingID);
     MPSaveManager.SaveRecords();
@@ -54,6 +57,25 @@ public event function OnClose()
 }
 private final function RequestImage(string ImageURL)
 {
+    // MILAN CHANGE 10/30/2026 Mgamerz
+    // Change ImageURL for the initial N7 promo
+    // to load it out of package rather than fetching online
+    if (Class'SFXEngine'.static.IsSeekFreeObjectSupported(ImageURL))
+    {
+        AS_SetLoadingClipVisible(FALSE);
+        PromoTexture = Texture2D(Class'SFXEngine'.static.LoadSeekFreeObjectBlocking(ImageURL, Class'Texture2D'));
+        if (PromoTexture != None)
+        {
+            // Loaded from disk, use it instead
+            SetExternalTexture(TextureSymbolPath, PromoTexture);
+            AS_SetImageVisible(TRUE);
+        }
+        return;
+    }
+
+    // Set the loading clip back to visible
+    AS_SetLoadingClipVisible(TRUE);
+    // END MILAN CHANGE
     Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentImageManager().RequestImage(ImageURL, OnRequestComplete);
 }
 public final function OnContinue()
