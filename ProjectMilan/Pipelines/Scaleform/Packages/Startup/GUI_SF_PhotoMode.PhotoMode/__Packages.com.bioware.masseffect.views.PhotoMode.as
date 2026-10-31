@@ -440,6 +440,14 @@ class com.bioware.masseffect.views.PhotoMode extends MovieClip
       }
    }
    // MILAN CHANGE - Mgamerz - 2026-10-19
+   // MILAN CHANGE - Mgamerz - 2026-10-28
+   // Native alert handling restores the actual flags
+   function revealOverlaysForAlert()
+   {
+      this.showPlayerMarkers = true;
+      this.setPhotoOverlayOptions(this.overlaysLabel,this.hintPopupsLabel,this.grenadeIndicatorsLabel,true,true,true,this.playerOutlinesLabel,true);
+   }
+   // END MILAN CHANGE
    function setPhotoOverlayOptions(allLabel, hintLabel, grenadeLabel, showAll, showHints, showGrenades, outlineLabel, showOutlines)
    {
       this.overlaysLabel = allLabel;
