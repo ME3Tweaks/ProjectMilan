@@ -3913,7 +3913,9 @@
 			<Property name="maxburntargets" type="0">2</Property>
 			<Property name="maximumrange" type="0">(BaseValue=6000.0f)</Property>
 			<Property name="shielddrainconversion" type="0">1.0f</Property>
-			<Property name="updatefrequency" type="0">0.5f</Property>
+			<!-- MILAN CHANGE - UP3/Mgamerz - Update Annihilation Field targets every 0.25 (was 0.5) seconds -->
+			<Property name="updatefrequency" type="0">0.25f</Property>
+			<!-- END MILAN CHANGE -->
 		</Section>
 		<Section name="sfxgamecontentdlc_con_mp3.sfxpowercustomactionmp_cryocone">
 			<Property name="armorweakness" type="0">(BaseValue=0.25f,Formula=BonusIsHardValue)</Property>
@@ -5795,7 +5797,9 @@
 			<Property name="maxburntargets" type="0">2</Property>
 			<Property name="maximumrange" type="0">(BaseValue=6000.0f)</Property>
 			<Property name="shielddrainconversion" type="0">1.0f</Property>
-			<Property name="updatefrequency" type="0">0.5f</Property>
+			<!-- MILAN CHANGE - UP3/Mgamerz - Update Annihilation Field targets every 0.25 (was 0.5) seconds -->
+			<Property name="updatefrequency" type="0">0.25f</Property>
+			<!-- END MILAN CHANGE -->
 		</Section>
 		<Section name="sfxgamecontentdlc_shared.sfxpowercustomactionmp_barrier_shared">
 			<Property name="blastdamage" type="0">(BaseValue=500.0f,RankBonuses[2]=0.2f)</Property>
