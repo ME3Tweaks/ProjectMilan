@@ -1,9 +1,9 @@
 class screens.MPAppearance.TintSwatchListItem extends com.bioware.masseffect.controls.VListItem
 {
+    var ColorPanelColorTransform;
     var Swatch1;
     var Swatch2;
     var Swatch3;
-    var ColorPanelColorTransform;
     var m_SelectedCallback = null;
     var m_HoveredCallback = null;
     var m_HoveredEndCallback = null;
@@ -136,26 +136,26 @@ class screens.MPAppearance.TintSwatchListItem extends com.bioware.masseffect.con
     }
     function onRollOver()
     {
-		// MILAN CHANGE DropTheSquid 12/18/2023
-		// make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
-		if (_root.screen.bUsingGamepad || _root.screen.bIgnoreMouseHover || _root.screen.bRightClickHeld)
-		{
-			return;
-		}
-		// END MILAN
+        // MILAN CHANGE DropTheSquid 12/18/2023
+        // make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
+        if(_root.screen.bUsingGamepad || _root.screen.bIgnoreMouseHover || _root.screen.bRightClickHeld)
+        {
+            return;
+        }
+        // END MILAN
         super.onRollOver();
         this.m_bRolledOver = true;
         this.FindAndProcessHoveredSwatch();
     }
     function onRollOut()
     {
-		// MILAN CHANGE DropTheSquid 12/18/2023
-		// make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
-		if (_root.screen.bUsingGamepad || _root.screen.bIgnoreMouseHover || _root.screen.bRightClickHeld)
-		{
-			return;
-		}
-		// END MILAN
+        // MILAN CHANGE DropTheSquid 12/18/2023
+        // make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
+        if(_root.screen.bUsingGamepad || _root.screen.bIgnoreMouseHover || _root.screen.bRightClickHeld)
+        {
+            return;
+        }
+        // END MILAN
         super.onRollOut();
         this.m_bRolledOver = false;
         if(this.m_RolledOverSwatch != null)

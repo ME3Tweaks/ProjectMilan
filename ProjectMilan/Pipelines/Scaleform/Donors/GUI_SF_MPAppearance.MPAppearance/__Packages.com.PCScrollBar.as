@@ -1,28 +1,27 @@
 class com.PCScrollBar extends com.PCGuiWidgit
 {
+    var _alpha;
+    var discreteScrolling;
+    var dragLocked;
+    var func_onScroll;
+    var hitTest;
     var isHorizontal;
     var m_LeftStick;
+    var m_PlatformID;
     var mc_bg;
-    var mc_sliderBounding;
-    var mc_slider;
-    var mc_scrollUp;
     var mc_scrollDown;
+    var mc_scrollUp;
     var mc_scrollbarVisibleBackground;
-    var dragLocked;
+    var mc_slider;
+    var mc_sliderBounding;
+    var num_boundingLen;
+    var num_sliderLen;
+    var num_sliderMax;
     var num_sliderMin;
-    var _visible;
-    var _alpha;
-    var hitTest;
-    var func_onScroll;
+    var num_sliderPos;
+    var num_stepLen;
     var num_steps;
     var num_stepsPerPage;
-    var num_sliderPos;
-    var m_PlatformID;
-    var num_stepLen;
-    var num_sliderLen;
-    var num_boundingLen;
-    var num_sliderMax;
-    var discreteScrolling;
     var mc_text = undefined;
     var bInDrag = false;
     var _SliderMaxLen = 15;
@@ -133,25 +132,22 @@ class com.PCScrollBar extends com.PCGuiWidgit
         var owner = this;
         mc.onRollOver = mc.onDragOver = function()
         {
-			// MILAN CHANGE DropTheSquid 12/18/2023
-			// make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
-			if (_root.screen.bUsingGamepad)
-			{
-				return;
-			}
-			// END MILAN
+            // MILAN CHANGE DropTheSquid 12/18/2023
+            // make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
+            if(_root.screen.bUsingGamepad)
+            {
+                return;
+            }
+            // END MILAN
             mc.gotoAndStop("hover");
             owner.ActivateRollOver();
         };
         mc.onRollOut = mc.onDragOut = function()
         {
-			// MILAN CHANGE DropTheSquid 12/18/2023
-			// make sure this does not fire while we are using the gamepad, even if you leave the (invisible) mouse hovering over it.
-			if (_root.screen.bUsingGamepad)
-			{
-				return;
-			}
-			// END MILAN
+            if(_root.screen.bUsingGamepad)
+            {
+                return;
+            }
             mc.gotoAndStop("normal");
         };
     }
@@ -340,21 +336,21 @@ class com.PCScrollBar extends com.PCGuiWidgit
     function doScrollUp()
     {
         this.setCurrentStep(this.getCurrentStep() - 1);
-        getURL("FSCommand:" add com.UnrealMessages.PlaySound,this.SoundScrollStep);
+        fscommand(com.UnrealMessages.PlaySound,this.SoundScrollStep);
     }
     function doScrollDown()
     {
         this.setCurrentStep(this.getCurrentStep() + 1);
-        getURL("FSCommand:" add com.UnrealMessages.PlaySound,this.SoundScrollStep);
+        fscommand(com.UnrealMessages.PlaySound,this.SoundScrollStep);
     }
     function doScrollBy(i_nSteps)
     {
         this.setCurrentStep(this.getCurrentStep() - i_nSteps);
-        getURL("FSCommand:" add com.UnrealMessages.PlaySound,this.SoundScrollPage);
+        fscommand(com.UnrealMessages.PlaySound,this.SoundScrollPage);
     }
     function doPage()
     {
-        var _loc2_ = undefined;
+        var _loc2_;
         if(this.isHorizontal)
         {
             _loc2_ = this.mc_slider._xmouse * this.mc_slider._xscale / 100;
@@ -372,7 +368,7 @@ class com.PCScrollBar extends com.PCGuiWidgit
             this.setCurrentStep(this.getCurrentStep() + this.num_stepsPerPage);
         }
         this.UpdateText();
-        getURL("FSCommand:" add com.UnrealMessages.PlaySound,this.SoundScrollPage);
+        fscommand(com.UnrealMessages.PlaySound,this.SoundScrollPage);
     }
     function doStartDrag()
     {
@@ -398,7 +394,7 @@ class com.PCScrollBar extends com.PCGuiWidgit
             owner.discreteScrolling = false;
             owner.bDirty = true;
             owner.func_onScroll.call(this);
-            getURL("FSCommand:" add com.UnrealMessages.PlaySound,owner.SoundScrollDragMove);
+            fscommand(com.UnrealMessages.PlaySound,owner.SoundScrollDragMove);
             owner.UpdateText();
         };
     }
@@ -441,9 +437,10 @@ class com.PCScrollBar extends com.PCGuiWidgit
     }
     function UpdateSlider()
     {
+        var _loc2_;
         if(this.m_PlatformID != com.XPlatform.PC)
         {
-            var _loc2_ = this.getCurrentPercent();
+            _loc2_ = this.getCurrentPercent();
             if(_loc2_ <= 0)
             {
                 this.mc_slider.slider.gotoAndStop("stickDown");
@@ -476,29 +473,31 @@ class com.PCScrollBar extends com.PCGuiWidgit
                 this.CounterScale(this.mc_slider);
                 this.setSteps(this.num_steps,this.num_stepsPerPage,false,false);
                 this.UpdateSlider();
+            default:
+                return;
         }
     }
     function CounterScale(i_mc)
     {
-        var _loc2_ = i_mc;
-        var _loc3_ = i_mc._yscale / 100;
-        _loc2_ = i_mc._parent;
-        while(_loc2_ != _root)
+        var _loc3_ = i_mc;
+        var _loc4_ = i_mc._yscale / 100;
+        _loc3_ = i_mc._parent;
+        while(_loc3_ != _root)
         {
-            _loc3_ *= 100 / _loc2_._yscale;
-            _loc2_ = _loc2_._parent;
+            _loc4_ *= 100 / _loc3_._yscale;
+            _loc3_ = _loc3_._parent;
         }
-        _loc3_ *= 100;
-        i_mc._yscale = _loc3_;
-        _loc3_ = i_mc._xscale / 100;
-        _loc2_ = i_mc._parent;
-        while(_loc2_ != _root)
+        _loc4_ *= 100;
+        i_mc._yscale = _loc4_;
+        _loc4_ = i_mc._xscale / 100;
+        _loc3_ = i_mc._parent;
+        while(_loc3_ != _root)
         {
-            _loc3_ *= 100 / _loc2_._xscale;
-            _loc2_ = _loc2_._parent;
+            _loc4_ *= 100 / _loc3_._xscale;
+            _loc3_ = _loc3_._parent;
         }
-        _loc3_ *= 100;
-        i_mc._xscale = _loc3_;
+        _loc4_ *= 100;
+        i_mc._xscale = _loc4_;
     }
     function ProxyHitCheck()
     {
