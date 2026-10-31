@@ -44,6 +44,7 @@
         HeavyWeapons = 45,
         MP4Enemies = 50,
         Levels = 60,
+        MenuScenes = 65,
         Rejection = 70,
         Redemption = 80,
 
