@@ -2774,6 +2774,12 @@
 				<Value type="3">(Overlay=KroganRage,Type=OTT_ScalarParameter,ObjectPath="BioVFX_C_KroganBerserk.FrameBuffer.KroganBerserk_FB_INST",Field=Milan_Gain,Normal=5.0,Reduced=1.5,Off=5.0)</Value>
 			</Property>
 		</Section>
+		<!-- MILAN CHANGE - Mgamerz - Kills by these damage types ragdoll pawns that normally can't be -->
+		<Section name="sfxgamecontent_milanbase.milanragdollrules">
+			<Property name="forceragdolldeathdamagetypes">
+				<Value type="3">SFXDamageType_BlackStormCollapse</Value>
+			</Property>
+		</Section>
 		<Section name="sfxgamecontentdlc_con_mp1.sfxcharacterclassmp_adept_asaricommando">
 			<Property name="mappedpowers">
 				<Value type="3">SFXPowerCustomActionMP_BubbleShield</Value>
