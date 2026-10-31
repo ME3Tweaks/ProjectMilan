@@ -205,7 +205,7 @@ public function MovieLoaded()
     Params.AddItem(Param);
     oPanel.InvokeMethodArgs("PhotoMode.setCameraControlOptions", Params);
     // MILAN CHANGE - Mgamerz - 2026-10-28
-    // Overlay arguments start at zero; camera labels/values must not prefix this call.
+    // Overlay arguments start at zero; camera labels/values must not prefix this call
     Params.Length = 0;
     // END MILAN CHANGE
     Param.Type = ASParamTypes.ASParam_String;
