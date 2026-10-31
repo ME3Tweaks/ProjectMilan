@@ -2586,7 +2586,7 @@
 				<Value type="2">(PlayerVariable="SoldierHumanFemale",Value=1)</Value>
 				<Value type="2">(PlayerVariable="VanguardHumanFemale",Value=1)</Value>
 			</Property>
-			<Property name="defaulttutorialmessage" type="2">(TrackingID=1,MessageTitle=723623,MessageText=723624,ImageURL="Promo_n7.dds")</Property>
+			<Property name="defaulttutorialmessage" type="2">(TrackingID=1,MessageTitle=723623,MessageText=723624,ImageURL="Promotions.Promo_n7")</Property>
 			<Property name="maxmplevelbonus" type="2">10</Property>
 			<Property name="mpclasses">
 				<Value type="2">(ClassName="Adept",srDisplayName=93954,srDescription=605057)</Value>
