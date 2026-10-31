@@ -512,7 +512,8 @@
 			<Property name="prettyname" type="0">731643</Property>
 			<Property name="rateoffire" type="0">(X=550,Y=550)</Property>
 			<Property name="rateoffireai" type="0">1.f</Property>
-			<Property name="recoil" type="0">(X=4.5f,Y=4.5f)</Property>
+			<!-- MILAN CHANGE - UP3 - Fix Harrier Recoil -->
+			<Property name="recoil" type="0">(X=1.5,Y=1.5)</Property>
 			<Property name="recoilfadespeed" type="0">3.0f</Property>
 			<Property name="recoilinterpspeed" type="0">15.f</Property>
 			<Property name="recoilyawfrequency" type="0">60</Property>
@@ -528,7 +529,8 @@
 			<Property name="weaponmodbodycolours" type="0">(R=0.02f,G=0.02f,B=0.04f,A=0.0f)</Property>
 			<Property name="zoomaccfireinterpspeed" type="0">(X=35.0f,Y=35.0f)</Property>
 			<Property name="zoomaccfirepenalty" type="0">(X=37.0f,Y=37.0f)</Property>
-			<Property name="zoomrecoil" type="0">(X=1.5,Y=1.5)</Property>
+			<Property name="zoomrecoil" type="0">(X=4.5,Y=4.5)</Property>
+			<!-- END MILAN CHANGE -->
 		</Section>
 		<Section name="sfxgamecontentdlc_con_mp2.sfxweapon_assaultrifle_prothean_mp">
 			<Property name="accfireinterpspeed" type="0">(X=0.0f,Y=0.0f)</Property>
@@ -1154,12 +1156,18 @@
 				<Value type="3">(CharacterClass="SFXCharacterClassMP_Adept_Batarian",MovementSpeedDecrease=-0.25f)</Value>
 				<Value type="3">(CharacterClass="SFXCharacterClassMP_Soldier_Batarian",MovementSpeedDecrease=-0.25f)</Value>
 				<Value type="3">(CharacterClass="SFXCharacterClassMP_Sentinel_Batarian",MovementSpeedDecrease=-0.25f)</Value>
+				<!-- MILAN CHANGE - UP3 Fix spitfire speed  overrides for some kits -->
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Sentinel_Krogan",MovementSpeedDecrease=0.f)</Value>
+				<Value type="3">(CharacterClass="SFXCharacterClassMP_Vanguard_TurianFemale",MovementSpeedDecrease=-0.25f)</Value>
+				<!-- END MILAN CHANGE -->
 			</Property>
 			<Property name="noammofiresounddelay" type="0">0.5</Property>
 			<Property name="notificationimage" type="0">DLC_MPImages_MP5.WPN_MP5_Spitfire_256x128</Property>
 			<Property name="prettyname" type="0">814438</Property>
 			<Property name="ramptime" type="0">0.75f</Property>
-			<Property name="rateoffire" type="0">(X=650,Y=650)</Property>
+			<!-- MILAN CHANGE - UP3/Mgamerz - Spitfire goes from 650->700 RPM and the UI is adjusted to match -->
+			<Property name="rateoffire" type="0">(X=700,Y=700)</Property>
+			<!-- END MILAN CHANGE -->
 			<Property name="rateoffireai" type="0">1.0f</Property>
 			<Property name="recoil" type="0">(X=0.1,Y=0.1)</Property>
 			<Property name="recoilfadespeed" type="0">0.0f</Property>
@@ -1171,7 +1179,9 @@
 			<Property name="shortdescription" type="0">814604</Property>
 			<Property name="shortprettyname" type="0">814438</Property>
 			<Property name="statbardamage" type="0">(X=62.2,Y=77.8)</Property>
-			<Property name="statbarrateoffire" type="0">(X=800,Y=800)</Property>
+			<!-- MILAN CHANGE - UP3/Mgamerz - Spitfire goes from 650->700 RPM and the UI is adjusted to match -->
+			<Property name="statbarrateoffire" type="0">(X=700,Y=700)</Property>
+			<!-- END MILAN CHANGE -->
 			<Property name="steamsoundthreshold" type="0">1</Property>
 			<Property name="tracerange" type="0">100000</Property>
 			<Property name="zoomaccfireinterpspeed" type="0">(X=35.0f,Y=35.0f)</Property>
