@@ -84,7 +84,7 @@ public event function OnStart()
     SetRequiresUIWorld(TRUE);
     SetGameMode(TRUE, 24); // MILAN Patched: GameMode Enum Index
 	// MILAN CHANGE DropTheSquid 1/4/2024
-	// removing this; it is now handled better in the superclass anyway
+	// removing this; it is now handled better in the child class anyway
     // SetMouseVisible(TRUE);
 	// END MILAN
     PlayGuiSound('MPSelectKitStart');
@@ -128,7 +128,7 @@ public event function Update(float fDeltaT)
 public event function OnClose()
 {
     MPSaveManager.ClearNewReinforcementCategory(7);
-    SetMouseVisible(FALSE);
+    // SetMouseVisible(FALSE);
     SetGameMode(FALSE, 24); // MILAN Patched: GameMode Enum Index
     Super(SFXGUIMovie).OnClose();
 }

@@ -51,7 +51,10 @@ public event function OnStart()
     nPackIndex = GAWManager.StoreInfoArray.Find('PackName', AwardedPackName);
     SetRequiresUIWorld(TRUE);
     SetGameMode(TRUE, 24); // MILAN Patched: GameMode Enum Index
-    SetMouseVisible(TRUE);
+    // MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
     if (!bManualReveal)
     {
         PackRevealSound = GetPackRevealSound();
@@ -68,7 +71,7 @@ public event function OnStart()
 }
 public event function OnClose()
 {
-    SetMouseVisible(FALSE);
+    // SetMouseVisible(FALSE);
     SetGameMode(FALSE, 24); // MILAN Patched: GameMode Enum Index
     Super(SFXGUIMovie).OnClose();
     if (GAWManager != None)

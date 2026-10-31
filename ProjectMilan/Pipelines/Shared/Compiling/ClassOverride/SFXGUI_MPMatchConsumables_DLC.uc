@@ -7,7 +7,7 @@ Class SFXGUI_MPMatchConsumables_DLC extends SFXGUI_MPMatchConsumables
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
-	SetMouseVisible(!bUsingGamepad);
+	SetMouseVisible(!usingGamepad);
     ActionScriptVoid("screen.RefreshButtonHelp");
 }
 // END MILAN
@@ -15,12 +15,10 @@ public event function OnStart()
 {
     Super(SFXGUIMovie).OnStart();
     SetGameMode(TRUE, 24); // MILAN Patched: GameMode Enum Index
-	// MILAN CHANGE DropTheSquid 12/17/2023
-    // make sure we actually can control the mouse visibility
-	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
-	// make sure the mouse is initially shown/hidden based on the input mode
-	SetMouseVisible(!bUsingGamepad);
-	// END MILAN
+	// MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
     SetRequiresUIWorld(TRUE);
     PlayGuiSound('MPMatchConsumablesStart');
     GAWManager = SFXGAWReinforcementManager(SFXLocalPlayer(GetPC().Player).GAWReinforcementManager);

@@ -152,11 +152,9 @@ public event function OnStart()
     CurrModifiableCharacter = MPSaveManager.GetCurrentModifiableCharacter();
     Super(SFXGUIMovie).OnStart();
     SetGameMode(TRUE, 24); // MILAN Patched: GameMode Enum Index
-    // MILAN Change DropTheSquid 12/16/2023
-    // make sure we actually can control the mouse visibility
-	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
-	// make sure the mouse is initially shown/hidden based on the input mode
-	SetMouseVisible(!bUsingGamepad);
+    // MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
     // END MILAN
     SetRequiresUIWorld(TRUE);
     PlayGuiSound('MPAppearanceStart');

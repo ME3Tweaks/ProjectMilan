@@ -102,12 +102,10 @@ public event function OnStart()
 {
     Super(SFXGUIMovie).OnStart();
     SetGameMode(TRUE, 24); // MILAN Patched: GameMode Enum Index
-	// MILAN CHANGE DropTheSquid 1/8/2024
-	// making sure we can actually show/hide the mouse when in lobby game mode. 
-	BioPlayerController(GetPC()).GameModeManager2.GameModes[24].bHasMouseAuthority = FALSE;
-	// making sure the mouse visibility is correct (removed a call a few lines up)
-    SetMouseVisible(!bUsingGamepad);
-	// END MILAN
+	// MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
     SetRequiresUIWorld(TRUE);
     PlayGuiSound('MPMatchResultsStart');
     AS_InitializeScreen();
@@ -127,7 +125,8 @@ public event function OnClose()
 {
     Super(SFXGUIMovie).OnClose();
     SetGameMode(FALSE, 24); // MILAN Patched: GameMode Enum Index
-    SetMouseVisible(FALSE);
+    // we do not need this
+    // SetMouseVisible(FALSE);
     OverallMatchResults.ResetData();
     StopGuiSound('MPMatchResultsXPProgress');
 }
