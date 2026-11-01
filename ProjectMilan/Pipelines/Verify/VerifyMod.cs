@@ -25,6 +25,8 @@ namespace ProjectMilan.Pipelines.Verify
 
         private static void InternalRunPipeline()
         {
+            StoreImageVerification.Verify(Program.Settings.OutputModPath);
+
             var afcFilesReferenced = new HashSet<string>();
             var tfcFiles = new Dictionary<string, string>(MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, includeTFCs: true), StringComparer.OrdinalIgnoreCase);
             // Milan TFCs must be in this build; don't look at installed LMP
