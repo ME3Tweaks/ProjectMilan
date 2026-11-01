@@ -1139,6 +1139,9 @@ public function DoAFKTick()
     local BioPlayerInput BPI;
     local SFXOnlineSubsystem oOnlineSubsystem;
     local ISFXOnlineComponentGame oOnlineGame;
+    // MILAN CHANGE - Add GRIMP
+    local SFXGRIMP GRIMP;
+    // END MILAN CHANGE
     
     BPI = BioPlayerInput(PlayerInput);
     if (BPI != None)
@@ -1153,10 +1156,24 @@ public function DoAFKTick()
             AFKLastActionTime = WorldInfo.TimeSeconds;
             return;
         }
+
+        // MILAN CHANGE - Mgamerz - 2026-10-31
+        // If there's only 1 player (you), don't AFK kick.
+        // Why should we do that? You can idle in your own game all you want.
+        GRIMP = SFXGRIMP(WorldInfo.GRI);
+        if (GRIMP != None && GRIMP.PRIArray.Length <= 1)
+        {
+            if (!IsAFKPostponementActive)
+            {
+                AFKPostponementStartTime = WorldInfo.TimeSeconds;
+                IsAFKPostponementActive = TRUE;
+            }
+        }
+        // END MILAN CHANGE
         // MILAN CHANGE - Mgamerz - 2026-10-31
         // MilanPhotoMode extends BaseSpectating, not Spectating, so it needs its own entry
         // or players get kicked for being AFK even though they're technically spectating
-        if (IsInState('Dead', ) || IsInState('Dying', ) || IsInState('SpectateCam', ) || IsInState('Spectating', ) || IsInState('MilanPhotoMode', ))
+        else if (IsInState('Dead', ) || IsInState('Dying', ) || IsInState('SpectateCam', ) || IsInState('Spectating', ) || IsInState('MilanPhotoMode', ))
         {
             if (!IsAFKPostponementActive)
             {
