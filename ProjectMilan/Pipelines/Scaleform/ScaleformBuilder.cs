@@ -1,10 +1,16 @@
 ﻿#pragma warning disable CA1416
 
 using ProjectMilanCore;
-
-namespace ProjectMilan.Pipelines.Scaleform;
+using ProjectMilanCore.Textures;
 using System.Diagnostics;
 using Microsoft.Win32;
+using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal;
+using ProjectMilan.Utility;
+using PixelFormat = LegendaryExplorerCore.Textures.PixelFormat;
+
+namespace ProjectMilan.Pipelines.Scaleform;
+
 public class ScaleformBuilder
 {
 
@@ -15,6 +21,7 @@ public class ScaleformBuilder
     /// e.g. for Startup the output will go to {OutputDir}/{PackageName}/PropertyUpdate/{PropertyName}
     /// </summary>
     private static readonly string OutputDir = Path.Combine(MilanShared.PipelineRoot, "Mod", "BaseDelta");
+    private static readonly string DonorOutputDir = Path.Combine(MilanShared.PipelineRoot, "Shared", "GlobalDonors", "GUI");
 
     private const string FFDecUninstallKey = @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\{E618D276-6596-41F4-8A98-447D442A77DB}_is1";
 
@@ -113,6 +120,96 @@ public class ScaleformBuilder
         }
     }
 
+    /// <summary>
+    /// Builds GUI donor packages
+    /// </summary>
+    public static void BuildDonors()
+    {
+        MilanLog.Information("Building GUI donors", customPrefix: LogCategory);
+        var sourceDonorDir = Path.Combine(MilanShared.PipelineRoot, "Scaleform", "Donors");
+        var builtSwfDir = new DirectoryInfo(Path.Combine(DonorOutputDir, "Scaleform"));
+        builtSwfDir.Create();
+
+        // Built SWFs are generated (and gitignored) - clear them so one whose XML was removed or renamed doesn't keep shipping
+        if (builtSwfDir.Exists)
+        {
+            foreach (var staleSwf in builtSwfDir.GetFiles("*.swf"))
+            {
+                staleSwf.Delete();
+            }
+        }
+
+        if (!Directory.Exists(sourceDonorDir))
+        {
+            MilanLog.Fatal($"{sourceDonorDir} does not exist...\nThis is a fatal error.", customPrefix: "UI-Donors");
+            Environment.Exit(1);
+        }
+
+        foreach (var sourceXmlPath in Directory.GetFiles(sourceDonorDir, "*.xml", SearchOption.AllDirectories))
+        {
+            var swfName = Path.GetFileNameWithoutExtension(sourceXmlPath);
+            var swfDir = Directory.GetParent(sourceXmlPath);
+            var packageExportName = swfName.Split('.')[0];
+            var movieName = swfName.Split('.')[1];
+            var builtSwfPath = Path.Combine(builtSwfDir.FullName, $"{swfName}.swf");
+            Xml2Swf(sourceXmlPath, builtSwfPath);
+            foreach (var scriptPath in swfDir.GetFiles("*.as"))
+            {
+                SwfReplaceScript(builtSwfPath, scriptPath.FullName);
+            }
+
+            MEPackageHandler.CreateAndSavePackage(Path.Combine(DonorOutputDir, $"{swfName}.pcc"), MEGame.LE3);
+            using var pkg = MEPackageHandler.OpenMEPackage(Path.Combine(DonorOutputDir, $"{swfName}.pcc"));
+            var pkgExport = pkg.CreatePackageExport(packageExportName);
+            pkgExport.PackageGUID = Utilities.GenerateNewPackageGuid(packageExportName);
+            var movie = pkg.CreateExport(movieName, "GFxMovieInfo", pkgExport, indexed: false);
+            var swfBytes = File.ReadAllBytes(builtSwfPath);
+            var swfData = new ImmutableByteArrayProperty(swfBytes, "RawData");
+            movie.WriteProperty(swfData);
+
+            var references = new ArrayProperty<ObjectProperty>("References");
+            foreach (var texPath in new DirectoryInfo(Path.Combine(swfDir.FullName, "Textures")).GetFiles("*.png").OrderBy(f => f.Name))
+            {
+                var texName = Path.GetFileNameWithoutExtension((texPath.Name)).Split('-')[1];
+                var format = PixelFormat.ARGB;
+                switch (Path.GetFileNameWithoutExtension((texPath.Name)).Split('-')[0].ToUpper())
+                {
+                    // Only a subset of formats is supported, can always expand if needed
+                    case "UNKNOWN":
+                    case "UNK":
+                        format = PixelFormat.Unknown;
+                        break;
+                    case "ARGB":
+                    case "A8R8G8B8":
+                        format = PixelFormat.ARGB;
+                        break;
+                    case "DXT1":
+                        format = PixelFormat.DXT1;
+                        break;
+                    case "DXT3":
+                        format = PixelFormat.DXT3;
+                        break;
+                    case "DXT5":
+                        format = PixelFormat.DXT5;
+                        break;
+                    case "BC5":
+                        format = PixelFormat.BC5;
+                        break;
+                    case "BC7":
+                        format = PixelFormat.BC7;
+                        break;
+                }
+                var tex = GUITextureImporter.AddGUITexture(pkg, pkgExport, texName, texPath.FullName, format);
+                references.Add(tex);
+            }
+            movie.WriteProperty(references);
+            movie.WriteProperty(new BoolProperty(true, "bUsesFontlib"));
+            pkg.Save();
+        }
+        // Cleanup build folder
+        builtSwfDir.Delete(true);
+    }
+    
     /// <summary>
     /// Converts an XML representation of a scaleform into SWF <br/>
     /// (The XML has to be exported via the JPEXS Decompiler)
