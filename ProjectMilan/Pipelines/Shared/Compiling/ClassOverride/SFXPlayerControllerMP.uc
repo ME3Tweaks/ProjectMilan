@@ -1143,7 +1143,7 @@ public function DoAFKTick()
     // MILAN CHANGE - Add GRIMP
     local SFXGRIMP GRIMP;
     // END MILAN CHANGE
-    
+
     BPI = BioPlayerInput(PlayerInput);
     if (BPI != None)
     {
