@@ -54,6 +54,9 @@ public event simulated function HandlePostBeginPlay()
     Class'SFXGame'.static.ReCalculate(CombatPowerDamageTakenMultiplier);
     Class'SFXGame'.static.ReCalculate(WeaponDamageTakenMultiplier);
     Class'SFXGame'.static.ReCalculate(PartBasedDamageMultiplier);
+    // MILAN CHANGE - Mgamerz - Calculate headshot damage scaling with the other multipliers (new to milan)
+    Class'SFXGame'.static.ReCalculate(HeadshotDamageTakenMultiplier);
+    // END MILAN CHANGE
     DeferedHandlePostBeginPlay();
 }
 public simulated function SFXTakeDamage(float Damage, out TraceHitInfo HitInfo, out Vector HitLocation, Vector Momentum, Class<DamageType> DamageType, Controller instigatedBy, optional Actor DamageCauser)
