@@ -1153,7 +1153,10 @@ public function DoAFKTick()
             AFKLastActionTime = WorldInfo.TimeSeconds;
             return;
         }
-        if (IsInState('Dead', ) || IsInState('Dying', ) || IsInState('SpectateCam', ) || IsInState('Spectating', ))
+        // MILAN CHANGE - Mgamerz - 2026-10-31
+        // MilanPhotoMode extends BaseSpectating, not Spectating, so it needs its own entry
+        // or players get kicked for being AFK even though they're technically spectating
+        if (IsInState('Dead', ) || IsInState('Dying', ) || IsInState('SpectateCam', ) || IsInState('Spectating', ) || IsInState('MilanPhotoMode', ))
         {
             if (!IsAFKPostponementActive)
             {
