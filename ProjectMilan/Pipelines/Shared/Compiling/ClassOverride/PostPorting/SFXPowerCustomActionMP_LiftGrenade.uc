@@ -1,6 +1,6 @@
 // Source: LE3, Krogan_Sentinel_MP
 // Initial decompilation: 9/7/2024 3:57:27 PM
-// MILAN CHANGE - UP3/Mgamerz
+// MILAN CHANGE - UP3
 // Allow protected targets to detonate combos without granting lift effects
 Class SFXPowerCustomActionMP_LiftGrenade extends SFXPowerCustomAction_LiftGrenade
     config(Game);
