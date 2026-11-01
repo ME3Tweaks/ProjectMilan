@@ -57,7 +57,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             // 5 Blackstar
             // 6 Hidden Blackstar
             // 7 Cain
-            // 8 Hidden
+            // 8 Hidden Cain
 
             // M-490 Blackstorm
             new()
@@ -68,7 +68,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "M-490 Blackstorm (Hidden)" },
                 UnlockPlayerVariableId = 801,
                 HiddenUnlockPlayerVariableId = 802,
-                Rarity = "rare",
+                Rarity = "ultrarare",
                 DisplayOrder = 10,
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstorm",
                 NonConsumableClassPath = "SFXGameContent_Milan.SFXHeavyWeapon_Blackstorm",
