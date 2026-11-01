@@ -383,6 +383,7 @@ FodyWeavers.xsd
 /ProjectMilan/Pipelines/StaticLighting/Levels/
 /ProjectMilan/Pipelines/StaticLighting/PreBake/
 /ProjectMilan/Pipelines/Shared/ClassLibrary/LooseClasses
+/ProjectMilan/Pipelines/Shared/GlobalDonors/GUI/Scaleform
 /ProjectMilan/Pipelines/Audio/ConvertedCache
 /ProjectMilan/Pipelines/Texture/EncodedCache
 /ProjectMilan/Pipelines/Mod/MergedConfig/Default_DLC_MOD_ProjectMilan.bin
