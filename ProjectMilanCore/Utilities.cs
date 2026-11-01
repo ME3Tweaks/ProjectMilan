@@ -364,5 +364,17 @@ namespace ProjectMilan.Utility
             }
             return null;
         }
+
+        /// <summary>
+        /// Returns a GUID for a given package name.
+        /// </summary>
+        /// <param name="packageExportName">Name of export, e.g. SFXGameContent_MilanBase</param>
+        /// <returns></returns>
+        public static Guid GenerateNewPackageGuid(string packageExportName)
+        {
+            return new Guid(System.Security.Cryptography.MD5.HashData(
+                System.Text.Encoding.UTF8.GetBytes($"ProjectMilan.{packageExportName.ToUpperInvariant()}")
+            ));
+        }
     }
 }
