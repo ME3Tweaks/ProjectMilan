@@ -791,6 +791,7 @@ public exec function bool TryExitLadder()
     }
     return FALSE;
 }
+// MILAN CHANGE - UP3 - Allow aimed melee and rolls with non-sniper weapons
 public exec function bool TryForwardRoll()
 {
     local SFXWeapon Weapon;
@@ -806,7 +807,7 @@ public exec function bool TryForwardRoll()
     CoverAction = BioPawn(Outer.Pawn).CoverAction;
     CoverType = BioPawn(Outer.Pawn).CoverType;
     oPawn = BioPawn(Outer.Pawn);
-    if (Outer.Pawn != None && Outer.Pawn.Weapon != None && Outer.IsZoomed() == FALSE && Outer.Pawn.Physics != EPhysics.PHYS_Falling)
+    if (Outer.Pawn != None && Outer.Pawn.Weapon != None && (Outer.IsZoomed() == FALSE || SFXWeapon_SniperRifle_Base(Outer.Pawn.Weapon) == None) && Outer.Pawn.Physics != EPhysics.PHYS_Falling)
     {
         Input = BioPlayerInput(Outer.PlayerInput);
         if (Input != None)
@@ -832,6 +833,8 @@ public exec function bool TryForwardRoll()
     }
     return FALSE;
 }
+// END MILAN CHANGE
+// MILAN CHANGE - UP3 - Allow aimed melee and rolls with non-sniper weapons
 public exec function TryHeavyMelee()
 {
     local SFXWeapon Weapon;
@@ -900,7 +903,7 @@ public exec function TryHeavyMelee()
     oPawn = BioPawn(Outer.Pawn);
     CoverAction = BioPawn(Outer.Pawn).CoverAction;
     CoverType = BioPawn(Outer.Pawn).CoverType;
-    if (Outer.Pawn != None && Outer.Pawn.Weapon != None && Outer.IsZoomed() == FALSE)
+    if (Outer.Pawn != None && Outer.Pawn.Weapon != None && (Outer.IsZoomed() == FALSE || SFXWeapon_SniperRifle_Base(Outer.Pawn.Weapon) == None))
     {
         Input = BioPlayerInput(Outer.PlayerInput);
         if (Input != None)
@@ -960,6 +963,7 @@ public exec function TryHeavyMelee()
         }
     }
 }
+// END MILAN CHANGE
 public exec function TryHolster()
 {
     local BioPawn ChkPawn;
@@ -981,6 +985,7 @@ public exec function TryHolster()
         }
     }
 }
+// MILAN CHANGE - UP3 - Allow aimed melee and rolls with non-sniper weapons
 public exec function TryMelee()
 {
     local SFXWeapon Weapon;
@@ -1020,7 +1025,7 @@ public exec function TryMelee()
         CoverType = oPawn.CoverType;
         CoverAction = oPawn.CoverAction;
     }
-    if (oPawn != None && oPawn.Weapon != None && Outer.IsZoomed() == FALSE)
+    if (oPawn != None && oPawn.Weapon != None && (Outer.IsZoomed() == FALSE || SFXWeapon_SniperRifle_Base(Outer.Pawn.Weapon) == None))
     {
         Input = BioPlayerInput(Outer.PlayerInput);
         if (Input != None)
@@ -1085,6 +1090,7 @@ public exec function TryMelee()
         }
     }
 }
+// END MILAN CHANGE
 public exec function TryReload()
 {
     local SFXWeapon Weapon;
@@ -1108,6 +1114,7 @@ public exec function TryReload()
         }
     }
 }
+// MILAN CHANGE - UP3 - Allow aimed melee and rolls with non-sniper weapons
 public exec function bool TryRoll()
 {
     local SFXWeapon Weapon;
@@ -1121,7 +1128,7 @@ public exec function bool TryRoll()
     }
     CoverAction = BioPawn(Outer.Pawn).CoverAction;
     oPawn = BioPawn(Outer.Pawn);
-    if (Outer.Pawn != None && Outer.Pawn.Weapon != None && Outer.IsZoomed() == FALSE && Outer.Pawn.Physics != EPhysics.PHYS_Falling)
+    if (Outer.Pawn != None && Outer.Pawn.Weapon != None && (Outer.IsZoomed() == FALSE || SFXWeapon_SniperRifle_Base(Outer.Pawn.Weapon) == None) && Outer.Pawn.Physics != EPhysics.PHYS_Falling)
     {
         Input = BioPlayerInput(Outer.PlayerInput);
         if (Input != None)
@@ -1153,6 +1160,7 @@ public exec function bool TryRoll()
     }
     return FALSE;
 }
+// END MILAN CHANGE
 public exec function TrySnap()
 {
     local BioPawn BP;
