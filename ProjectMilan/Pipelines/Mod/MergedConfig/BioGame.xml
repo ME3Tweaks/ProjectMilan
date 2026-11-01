@@ -6490,6 +6490,13 @@
 			<Property name="turretshields" type="0">(BaseValue=1000.0f,RankBonuses[2]=0.3f)</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxpowercustomactionmp_shockwave">
+			<!-- MILAN CHANGE - UP3/Mgamerz - Shockwave can hit more targets -->
+			<Property name="maximumimpacttargets" type="0">(BaseValue=8)</Property>
+			<Property name="maximumragdolltargets" type="0">(BaseValue=4)</Property>
+			<Property name="maximpacttargetsperpulse" type="0">2</Property>
+			<Property name="maxragdolltargetsperpulse" type="0">1</Property>
+			<Property name="maxdetonations" type="0">2</Property>
+			<!-- END MILAN CHANGE -->
 			<Property name="damage" type="0">(BaseValue=300.0f,RankBonuses[2]=0.25f)</Property>
 			<Property name="evolve_bioticcombomult" type="0">0.65f</Property>
 			<Property name="force" type="0">(BaseValue=700.0f,RankBonuses[2]=0.25f)</Property>
