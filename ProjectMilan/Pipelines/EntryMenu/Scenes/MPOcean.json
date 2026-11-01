@@ -1,0 +1,8 @@
+{
+  "Map": "MPOcean",
+  "TerminalAnchor": { "Location": { "X": -1465.5, "Y": 1697.0, "Z": -1508.7 }, "Rotation": { "Pitch": 0, "Yaw": 2717, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": 5230.4, "Y": -8480.4, "Z": 486.3 }, "Rotation": { "Pitch": -243, "Yaw": 4958, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": 3660.4, "Y": -3872.9, "Z": -1079.8 }, "Rotation": { "Pitch": -2130, "Yaw": 23647, "Roll": 0 }, "FOV": 60 }
+  }
+}

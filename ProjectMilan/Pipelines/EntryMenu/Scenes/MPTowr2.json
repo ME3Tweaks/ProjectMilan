@@ -1,0 +1,13 @@
+{
+  "Map": "MPTowr2",
+  "TerminalAnchor": { "Location": { "X": -2450, "Y": -3100, "Z": -1529 }, "Rotation": { "Pitch": 0, "Yaw": 16384, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": 2220, "Y": -3369, "Z": -779 }, "Rotation": { "Pitch": -3648, "Yaw": -23840, "Roll": 0 }, "FOV": 70 },
+    "End": { "Location": { "X": 2446, "Y": -3566, "Z": -779 }, "Rotation": { "Pitch": -3648, "Yaw": -24840, "Roll": 0 }, "FOV": 70 }
+  },
+  "HologramTint": { "R": 5, "G": 1.5, "B": 0.3 },
+  "UITint": { "R": 1, "G": 0.85, "B": 0.6 },
+  "DesignLevels": [
+    { "Package": "BioD_MPTowr2", "KeepKismet": [ "SeqEvent_LevelLoaded_2" ], "RemoveActors": [ "SkeletalMeshActor_0" ] }
+  ]
+}

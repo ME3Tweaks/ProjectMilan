@@ -1,0 +1,8 @@
+{
+  "Map": "MPRoad",
+  "TerminalAnchor": { "Location": { "X": 52607.9, "Y": -45449.1, "Z": 745.3 }, "Rotation": { "Pitch": 0, "Yaw": -10262, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": 56084.3, "Y": -49396.8, "Z": 936.2 }, "Rotation": { "Pitch": -1115, "Yaw": -12485, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": 55751.1, "Y": -42367.6, "Z": 843.7 }, "Rotation": { "Pitch": -2488, "Yaw": -8833, "Roll": 0 }, "FOV": 60 }
+  }
+}

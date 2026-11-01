@@ -1,0 +1,8 @@
+{
+  "Map": "MPNov2",
+  "TerminalAnchor": { "Location": { "X": -1585, "Y": -6, "Z": -102 }, "Rotation": { "Pitch": 0, "Yaw": -32310, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": 779, "Y": -643, "Z": 269 }, "Rotation": { "Pitch": -4480, "Yaw": -4032, "Roll": 0 }, "FOV": 70 },
+    "End": { "Location": { "X": 892, "Y": -365, "Z": 269 }, "Rotation": { "Pitch": -4480, "Yaw": -5032, "Roll": 0 }, "FOV": 70 }
+  }
+}

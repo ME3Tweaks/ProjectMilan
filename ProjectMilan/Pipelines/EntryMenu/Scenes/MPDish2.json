@@ -1,0 +1,8 @@
+{
+  "Map": "MPDish2",
+  "TerminalAnchor": { "Location": { "X": 1863, "Y": -2789, "Z": 219 }, "Rotation": { "Pitch": 0, "Yaw": -9108, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": -1759, "Y": -1375, "Z": 171 }, "Rotation": { "Pitch": -480, "Yaw": -25216, "Roll": 0 }, "FOV": 70 },
+    "End": { "Location": { "X": -1560, "Y": -1600, "Z": 171 }, "Rotation": { "Pitch": -480, "Yaw": -26216, "Roll": 0 }, "FOV": 70 }
+  }
+}

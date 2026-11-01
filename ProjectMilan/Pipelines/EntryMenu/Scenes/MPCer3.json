@@ -1,0 +1,8 @@
+{
+  "Map": "MPCer3",
+  "TerminalAnchor": { "Location": { "X": 2476.0, "Y": -912.5, "Z": 100.4 }, "Rotation": { "Pitch": 0, "Yaw": -30128, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": 8869.1, "Y": 2381.0, "Z": 396.9 }, "Rotation": { "Pitch": -2053, "Yaw": -29368, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": 4689.5, "Y": 2202.4, "Z": 278.7 }, "Rotation": { "Pitch": -659, "Yaw": -22772, "Roll": 0 }, "FOV": 60 }
+  }
+}

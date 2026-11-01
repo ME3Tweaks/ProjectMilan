@@ -1,0 +1,8 @@
+{
+  "Map": "MPThes",
+  "TerminalAnchor": { "Location": { "X": -8382.5, "Y": -6747.2, "Z": 2297.9 }, "Rotation": { "Pitch": 0, "Yaw": 15730, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": -15129.8, "Y": -6327.9, "Z": 955.2 }, "Rotation": { "Pitch": 390, "Yaw": -18456, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": -12492.2, "Y": -5116.2, "Z": 1422.2 }, "Rotation": { "Pitch": -1893, "Yaw": 14260, "Roll": 0 }, "FOV": 60 }
+  }
+}

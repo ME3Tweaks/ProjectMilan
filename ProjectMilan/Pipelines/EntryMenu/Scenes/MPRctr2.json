@@ -1,0 +1,8 @@
+{
+  "Map": "MPRctr2",
+  "TerminalAnchor": { "Location": { "X": 2790, "Y": -2506, "Z": -210 }, "Rotation": { "Pitch": 0, "Yaw": -15706, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": 2238, "Y": -615, "Z": -146 }, "Rotation": { "Pitch": -544, "Yaw": 21664, "Roll": 0 }, "FOV": 70 },
+    "End": { "Location": { "X": 1976, "Y": -760, "Z": -146 }, "Rotation": { "Pitch": -544, "Yaw": 20664, "Roll": 0 }, "FOV": 70 }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "Map": "MPJngl",
+  "TerminalAnchor": { "Location": { "X": -804.4, "Y": -2642.8, "Z": 300.7 }, "Rotation": { "Pitch": 0, "Yaw": 9366, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": 343.4, "Y": 4784.6, "Z": 1463.3 }, "Rotation": { "Pitch": 683, "Yaw": 16810, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": 191.5, "Y": -941.5, "Z": 1260.2 }, "Rotation": { "Pitch": -2692, "Yaw": 21555, "Roll": 0 }, "FOV": 60 }
+  }
+}

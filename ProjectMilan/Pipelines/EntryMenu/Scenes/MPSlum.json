@@ -1,0 +1,8 @@
+{
+  "Map": "MPSlum",
+  "TerminalAnchor": { "Location": { "X": -4545.7, "Y": 2882.0, "Z": 1805.4 }, "Rotation": { "Pitch": 0, "Yaw": 313, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": -4376.5, "Y": 14269.7, "Z": 1303.3 }, "Rotation": { "Pitch": 457, "Yaw": 17346, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": -3934.7, "Y": 2621.3, "Z": 2786.8 }, "Rotation": { "Pitch": -3074, "Yaw": -6554, "Roll": 0 }, "FOV": 60 }
+  }
+}

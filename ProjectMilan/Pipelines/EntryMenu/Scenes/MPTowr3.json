@@ -1,0 +1,8 @@
+{
+  "Map": "MPTowr3",
+  "TerminalAnchor": { "Location": { "X": -2270.9, "Y": -8282.2, "Z": -1799.8 }, "Rotation": { "Pitch": 0, "Yaw": -4271, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": 5634.9, "Y": -248.7, "Z": -966.7 }, "Rotation": { "Pitch": -408, "Yaw": 20226, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": 2089.5, "Y": -2434.7, "Z": -484.3 }, "Rotation": { "Pitch": -2984, "Yaw": -24644, "Roll": 0 }, "FOV": 60 }
+  }
+}

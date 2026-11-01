@@ -1,0 +1,8 @@
+{
+  "Map": "MPMoon",
+  "TerminalAnchor": { "Location": { "X": -16541.5, "Y": -3745.2, "Z": -1199.5 }, "Rotation": { "Pitch": 0, "Yaw": 6140, "Roll": 0 } },
+  "VistaCamera": {
+    "Start": { "Location": { "X": -9912.2, "Y": 2809.8, "Z": -2074.8 }, "Rotation": { "Pitch": -2328, "Yaw": -4349, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": -12882.3, "Y": 865.1, "Z": -497.6 }, "Rotation": { "Pitch": -3872, "Yaw": -14246, "Roll": 0 }, "FOV": 60 }
+  }
+}
