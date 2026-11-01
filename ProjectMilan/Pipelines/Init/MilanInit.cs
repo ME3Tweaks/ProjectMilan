@@ -45,6 +45,7 @@ namespace ProjectMilan.Pipelines.Init
             MilanShared.ME3ObjectDB = MilanInitShared.LoadObjectDB(MEGame.ME3);
 
             WriteDonorOutputPath(); // For development
+            Scaleform.ScaleformBuilder.BuildDonors();
             SharedMaterialDonor.RegisterSharedDonors();
             UVFixGraft.LoadFixedMeshes();
         }
