@@ -4012,10 +4012,10 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
         <!-- MILAN CHANGE - 2026/10/31 - Stumpy -->
         <!-- Import "XboxControllerFull" instead of "XboxController" so we get the Start and Back buttons -->
         <item>XboxControllerFull</item>
+        <!-- MILAN END -->
       </names>
     </item>
-    <item type="PlaceObject2Tag" characterId="79" depth="4" forceWriteAsLong="true" name="ConsoleControllerAppearance" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
-        <!-- MILAN END -->
+    <item type="PlaceObject2Tag" characterId="79" depth="4" forceWriteAsLong="true" name="ConsoleController" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
       <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="15" translateX="9302" translateY="12948"/>
     </item>
     <item type="ImportAssets2Tag" downloadNow="1" forceWriteAsLong="true" hasDigest="0" url="PC_SharedAssets.swf">
