@@ -45,6 +45,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             new ScriptPackagePatchTarget("SFXGame", "SFXGame.pcc class overrides and Scaleform UI replacements", preBuild: () => ScaleformBuilder.Build("SFXGame"), postCompile: package =>
             {
                 CheatProfileRegistry.Apply(package);
+                SplashStartSoundRouting.Apply(package);
                 using var vanilla = MEPackageHandler.OpenMEPackage(GetVanillaCookedFilePath("SFXGame.pcc"));
                 PhotoModeRuntimeMetadata.Apply(package, vanilla);
             }),
