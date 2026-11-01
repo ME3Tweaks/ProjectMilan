@@ -214,6 +214,8 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.m_ControllerButtons.addEventListener("onControllerButtonA",mx.utils.Delegate.create(this,this.OnSelectButtonPressed));
         this.m_ControllerButtons.addEventListener("onControllerButtonB",mx.utils.Delegate.create(this,this.OnConsoleBackButtonPressed));
         this.m_ControllerButtons.addEventListener("onControllerButtonX",mx.utils.Delegate.create(this,this.OnResetButtonPressed));
+        // 2026/10/31 - Stumpy - listen to start button events
+        this.m_ControllerButtons.addEventListener("onButtonStart",mx.utils.Delegate.create(this,this.onButtonStart));
         this.m_ControllerButtons.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
         this.m_ControllerButtons.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
         this.m_ControllerButtons.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
@@ -222,6 +224,8 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
         this.m_ControllerButtons.ControlA.SetText(this.srSelect);
         this.m_ControllerButtons.ControlB.SetText(this.srBack);
         this.m_ControllerButtons.ControlX.SetText(this.srReset);
+        // 2026/10/31 - Stumpy - Add "Confirm" text to the Start button prompt
+        this.m_ControllerButtons.ControlStart.SetText(this.srConfirm);
         this.rightStick.TextInput.text = this.srMoveCamera;
         // set visibility correctly
         this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
@@ -755,6 +759,14 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             _global.SFX.PlayGUIError();
         }
     }
+    // MILAN CHANGE - 2026/10/31 - Stumpy
+    // Start button handler
+    function onButtonStart(p_event)
+    {
+        flash.external.ExternalInterface.call("SetCharacterName",this.playerInfo.characterName.name.text);
+        flash.external.ExternalInterface.call("ConfirmButtonPressed");
+    }
+    // MILAN END
     function OnResetButtonPressed()
     {
         flash.external.ExternalInterface.call("ResetScreenInfo");
@@ -1000,6 +1012,11 @@ class screens.MPAppearance.MPAppearance extends com.SFXScreen
             this.m_ControllerButtons._visible = true;
             this.m_ControllerButtons.ControlY.Active = false;
             this.m_ControllerButtons.ControlY._visible = false;
+            // MILAN CHANGE - 2026/10/31 - Stumpy
+            // Hide the "Back" button
+            this.m_ControllerButtons.m_ControlBack.Active = false;
+            this.m_ControllerButtons.m_ControlBack._visible = false;
+            // MILAN END
             this.m_ControllerButtons.FitLeft();
             // make sure the list is loaded before we try to add things or it breaks the UI
             // also make sure we don't add it twice
