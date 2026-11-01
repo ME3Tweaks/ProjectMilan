@@ -711,7 +711,7 @@ public sealed class ShaderInstallPlanner(ShaderInstallPlannerOptions options)
                 sb.Append(p.Name.Instanced).Append('[').Append(p.StaticArrayIndex).Append("]=");
                 switch (p)
                 {
-                    case ObjectProperty o: sb.Append(o.Value == 0 ? "null" : package.GetEntry(o.Value)?.InstancedFullPath ?? "?"); break;
+                    case ObjectProperty o: sb.Append(o.Value == 0 ? "null" : package.GetEntry(o.Value)?.InstancedFullPath.ToLowerInvariant() ?? "?"); break;
                     case StructProperty s: sb.Append('{'); Append(s.Properties, package, sb); sb.Append('}'); break;
                     // LE2 cooking nulls stripped expressions in place where LE3 removes them; the empty slots change nothing
                     case ArrayProperty<ObjectProperty> { Name.Name: "Expressions" } a:
