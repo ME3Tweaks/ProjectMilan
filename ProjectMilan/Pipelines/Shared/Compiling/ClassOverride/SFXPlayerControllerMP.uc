@@ -4,6 +4,7 @@
 // By Mgamerz
 // Fix controller vibration not working due to ME3 PC-specific build assuming no controller support
 // 10/23/2026 ClientSetMaterialActorParam, for SFXGameContent_Milan.SFXSeqAct_SetMaterialParam
+// 10/31/2026 Don't kick in photo mode, don't kick in public when you're the only player
 Class SFXPlayerControllerMP extends SFXPlayerController
     config(Game);
 
