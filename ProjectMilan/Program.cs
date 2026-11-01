@@ -11,6 +11,7 @@ using ProjectMilan.MilanUDK;
 using ProjectMilan.Pipelines;
 using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.EntryMenu;
+using ProjectMilan.Pipelines.EntryMenu.MenuScenes;
 using ProjectMilan.Pipelines.Finalize;
 using ProjectMilan.Pipelines.HeavyWeapons;
 using ProjectMilan.Pipelines.Init;
@@ -119,6 +120,7 @@ namespace ProjectMilan
             (ECheckpointStage.HeavyWeapons, "HeavyWeapons", () => true), // Always runs
             (ECheckpointStage.MP4Enemies, "MP4Enemies", () => ShouldRunWeaponsPipeline && Settings.RunMP4EnemiesPipeline),
             (ECheckpointStage.Levels, "Levels", () => ShouldRunLevelsPipeline),
+            (ECheckpointStage.MenuScenes, "MenuScenes", () => ShouldRunLevelsPipeline),
             (ECheckpointStage.Rejection, "Rejection", () => Settings.RunRejectionPipeline),
             (ECheckpointStage.Redemption, "Redemption", () => Settings.RunRedemptionPipeline),
             (ECheckpointStage.AssetFixes, "AssetFix", () => Settings.RunAssetFixPipeline),
@@ -188,7 +190,7 @@ namespace ProjectMilan
         /// checkpoints are never shipped, and a full rebuild is exactly the cost they exist to avoid. A change to one
         /// of those pipelines just makes a checkpoint taken at or after it stale - retake it.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 24; // 24: Heavy unlock ownership, prerequisites and generic ammo text. 23: Achievement packs now award their registered banner, with ownership mappings 716-722. 22: Store banner ownership config and reveal structs/movie must be rebuilt together. 21: Restore the local heavy choice after PRI replacement. 20: Heavy selection confirms on Back and slot handoff. 19: Heavy loadout reconciliation and None bonuses. 18: Heavy catalog rarity independent of store drops. 17: Explicit None heavy choice and Cobra Titan artwork. 16: Indexed heavy icons and authored label. 15: Heavy catalog, PRI ID, handler and six-slot movie must be built together. 14: Hidden heavy weapon subclasses and their SFXHeavyWeapon base fields must be built together. 13: AssetFix applies GUI mips/residency to every copy; older checkpoints may have mismatched or streamed GUI images. 12: HeavyWeapons stage after Weapons installs the heavy weapon packages and registers their config/TLK strings, which checkpoints taken after it don't contain. 11:BaseDelta net-indexes every patched package append-only against the vanilla net index cache (canonical indexes, new objects after the linker's highest, counts raised to cover them), which older checkpoints' patches don't do. 10: BaseDelta compiles Classes/<Package>/ classes into their own forced-export packages (AAT, SFXGameContent_MilanBase) instead of SFXGame, which older checkpoints' SFXGame patches don't do. 9: BaseDelta gained the Startup.pcc target (Scaleform UI) and SFXGame PropertyUpdate (GUI WwiseBank), which older checkpoints' patches don't contain. 8: Levels checks its image references against the built image packages (MilanWavelist\Wavelists\Coalition), which older NonStartup checkpoints don't contain. 7: NonStartup builds GUI_Images_MP* image packages and registers the online banners/store packs, and checkpoints now carry their dynamically assigned TLK strings - old checkpoints have none of these
+        public const int MIN_CHECKPOINT_VERSION = 31; // 31: MilanMenuScene
 
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
@@ -813,6 +815,7 @@ namespace ProjectMilan
 
         levelBuild:
             RunPipeline(ECheckpointStage.Levels, ShouldRunLevelsPipeline, MPLevels.RunPipeline, "Levels"); // Builds level packages
+            RunPipeline(ECheckpointStage.MenuScenes, ShouldRunLevelsPipeline, MenuScenesPipeline.RunPipeline, "MenuScenes"); // Builds the main menu backdrops from the built levels
 
         rejectionBuild:
             RunPipeline(ECheckpointStage.Rejection, Settings.RunRejectionPipeline, RejectsPipeline.RunPipeline, "Rejection"); // Builds Rejection Enemies
@@ -1019,7 +1022,8 @@ namespace ProjectMilan
             if (result.Count == 0)
                 return;
 
-            var outPath = Path.Combine(Settings.OutputModPath, "TieredCacheHeatMapCallStacks.json");
+            // Do not put in the mod's DLC folder
+            var outPath = Path.Combine(Settings.OutputModPath, "..", "TieredCacheHeatMapCallStacks.json");
             File.WriteAllText(outPath, JsonConvert.SerializeObject(result, Formatting.Indented));
             MilanLog.Information($"Wrote TieredPackageCache call stack heatmap to {outPath}");
         }

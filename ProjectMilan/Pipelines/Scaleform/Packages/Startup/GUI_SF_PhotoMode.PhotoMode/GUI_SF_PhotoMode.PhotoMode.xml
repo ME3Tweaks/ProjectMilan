@@ -2365,9 +2365,9 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
         <item type="ShowFrameTag" forceWriteAsLong="false"/>
       </subTags>
     </item>
-    <item type="DefineExternalImage2" bitmapFormat="13" characterID="111" exportName="" extraData="00" fileName="PhotoMode_I6F.tga" forceWriteAsLong="false" idType="0" imageID="111" targetHeight="162" targetWidth="162"/>
+    <item type="DefineExternalImage2" bitmapFormat="13" characterID="111" exportName="" extraData="00" fileName="PhotoMode_I6F.tga" forceWriteAsLong="false" idType="0" imageID="111" targetHeight="162" targetWidth="324"/>
     <item type="DefineShapeTag" forceWriteAsLong="true" shapeId="112">
-      <shapeBounds type="RECT" Xmax="614" Xmin="-390" Ymax="301" Ymin="-703" nbits="11"/>
+      <shapeBounds type="RECT" Xmax="1618" Xmin="-390" Ymax="301" Ymin="-703" nbits="12"/>
       <shapes type="SHAPEWITHSTYLE" numFillBits="2" numLineBits="0">
         <fillStyles type="FILLSTYLEARRAY">
           <fillStyles>
@@ -2383,10 +2383,10 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
           <lineStyles/>
         </lineStyles>
         <shapeRecords>
-          <item type="StyleChangeRecord" fillStyle1="2" moveBits="11" moveDeltaX="614" moveDeltaY="301" stateFillStyle0="false" stateFillStyle1="true" stateLineStyle="false" stateMoveTo="true" stateNewStyles="false"/>
-          <item type="StraightEdgeRecord" deltaX="-1004" generalLineFlag="false" numBits="9" vertLineFlag="false"/>
+          <item type="StyleChangeRecord" fillStyle1="2" moveBits="12" moveDeltaX="1618" moveDeltaY="301" stateFillStyle0="false" stateFillStyle1="true" stateLineStyle="false" stateMoveTo="true" stateNewStyles="false"/>
+          <item type="StraightEdgeRecord" deltaX="-2008" generalLineFlag="false" numBits="10" vertLineFlag="false"/>
           <item type="StraightEdgeRecord" deltaY="-1004" generalLineFlag="false" numBits="9" vertLineFlag="true"/>
-          <item type="StraightEdgeRecord" deltaX="1004" generalLineFlag="false" numBits="9" vertLineFlag="false"/>
+          <item type="StraightEdgeRecord" deltaX="2008" generalLineFlag="false" numBits="10" vertLineFlag="false"/>
           <item type="StraightEdgeRecord" deltaY="1004" generalLineFlag="false" numBits="9" vertLineFlag="true"/>
           <item type="EndShapeRecord" endOfShape="0"/>
         </shapeRecords>
@@ -2546,7 +2546,7 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
           <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="14" translateX="5350" translateY="-126"/>
         </item>
         <item type="PlaceObject2Tag" characterId="105" depth="4" forceWriteAsLong="true" name="hideUILabel" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="true" placeFlagMove="false" ratio="3">
-          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="15" translateX="8978" translateY="-126"/>
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="15" translateX="9731" translateY="-126"/>
         </item>
         <item type="PlaceObject2Tag" characterId="106" depth="5" forceWriteAsLong="true" name="takePhotoLabel" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="true" placeFlagMove="false" ratio="3">
           <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="15" translateX="12797" translateY="-125"/>
@@ -2579,7 +2579,7 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
       </names>
     </item>
     <item type="DefineShape3Tag" forceWriteAsLong="true" shapeId="118">
-      <shapeBounds type="RECT" Xmax="7699" Xmin="627" Ymax="6516" Ymin="2549" nbits="14"/>
+      <shapeBounds type="RECT" Xmax="7699" Xmin="627" Ymax="8516" Ymin="2549" nbits="15"/>
       <shapes type="SHAPEWITHSTYLE" numFillBits="2" numLineBits="0">
         <fillStyles type="FILLSTYLEARRAY">
           <fillStyles>
@@ -2625,13 +2625,13 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
           <item type="StraightEdgeRecord" deltaY="-472" generalLineFlag="false" numBits="8" vertLineFlag="true"/>
           <item type="StraightEdgeRecord" deltaX="6762" generalLineFlag="false" numBits="12" vertLineFlag="false"/>
           <item type="StraightEdgeRecord" deltaX="168" generalLineFlag="false" numBits="7" vertLineFlag="false"/>
-          <item type="StyleChangeRecord" fillStyle1="2" moveBits="14" moveDeltaX="7699" moveDeltaY="6516" stateFillStyle0="false" stateFillStyle1="true" stateLineStyle="false" stateMoveTo="true" stateNewStyles="false"/>
+          <item type="StyleChangeRecord" fillStyle1="2" moveBits="15" moveDeltaX="7699" moveDeltaY="8516" stateFillStyle0="false" stateFillStyle1="true" stateLineStyle="false" stateMoveTo="true" stateNewStyles="false"/>
           <item type="StraightEdgeRecord" deltaX="-7072" generalLineFlag="false" numBits="12" vertLineFlag="false"/>
           <item type="StraightEdgeRecord" deltaY="-28" generalLineFlag="false" numBits="4" vertLineFlag="true"/>
           <item type="StraightEdgeRecord" deltaY="-29" generalLineFlag="false" numBits="4" vertLineFlag="true"/>
-          <item type="StraightEdgeRecord" deltaY="-2978" generalLineFlag="false" numBits="11" vertLineFlag="true"/>
+          <item type="StraightEdgeRecord" deltaY="-4978" generalLineFlag="false" numBits="12" vertLineFlag="true"/>
           <item type="StraightEdgeRecord" deltaX="7072" generalLineFlag="false" numBits="12" vertLineFlag="false"/>
-          <item type="StraightEdgeRecord" deltaY="3035" generalLineFlag="false" numBits="11" vertLineFlag="true"/>
+          <item type="StraightEdgeRecord" deltaY="5035" generalLineFlag="false" numBits="12" vertLineFlag="true"/>
           <item type="EndShapeRecord" endOfShape="0"/>
         </shapeRecords>
       </shapes>
@@ -2850,7 +2850,7 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
           <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="0" translateX="0" translateY="0"/>
         </item>
         <item type="PlaceObject2Tag" characterId="117" depth="2" forceWriteAsLong="true" name="btnLegend" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
-          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="14" translateX="626" translateY="7023"/>
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="15" translateX="626" translateY="9023"/>
         </item>
         <item type="PlaceObject2Tag" characterId="131" depth="16" forceWriteAsLong="true" name="headerButtons" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
           <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="13" translateX="702" translateY="2585"/>
@@ -2873,7 +2873,7 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
       </names>
     </item>
     <item type="PlaceObject2Tag" characterId="133" depth="1" forceWriteAsLong="true" name="PhotoMode" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
-      <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="14" translateX="1305" translateY="6401"/>
+      <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="14" translateX="1305" translateY="4401"/>
     </item>
     <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="134">
       <subTags/>

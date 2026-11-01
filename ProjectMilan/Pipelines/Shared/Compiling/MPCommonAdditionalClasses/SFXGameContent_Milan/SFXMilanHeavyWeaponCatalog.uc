@@ -23,18 +23,6 @@ var config stringref HiddenLabel;
 var config stringref HiddenDescriptionSuffix;
 var config stringref AmmoName;
 var config stringref AmmoDescription;
-var transient bool bHasLocalSelection;
-var transient int LocalSelectionId;
-
-public static final function RememberLocalSelection(int Id)
-{
-    default.LocalSelectionId = NormalizeId(Id);
-    default.bHasLocalSelection = TRUE;
-}
-public static final function int GetLocalSelection(int CurrentId)
-{
-    return NormalizeId(default.bHasLocalSelection ? default.LocalSelectionId : CurrentId);
-}
 
 public static final function int FindIndex(int Id)
 {

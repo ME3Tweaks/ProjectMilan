@@ -88,12 +88,10 @@ public event function OnStart()
     Super(SFXGUIMovie).OnStart();
     SetRequiresUIWorld(TRUE);
     SetGameMode(TRUE, 24);
-	// MILAN CHANGE DropTheSquid 12/16/2023
-    // make sure we actually can control the mouse visibility
-	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
-	// make sure the mouse is initially shown/hidden based on the input mode
-	SetMouseVisible(!bUsingGamepad);
-	// END MILAN
+	// MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
     GAWManager = SFXGAWReinforcementManager(SFXLocalPlayer(GetPC().Player).GAWReinforcementManager);
     MPSaveManager = SFXEngine(Class'Engine'.static.GetEngine()).MPSaveManager;
     GAWManager.LastAwardedCards.Length = 0;
@@ -149,7 +147,7 @@ public event function OnClose()
     nNumRequestedRemoteImages = 0;
     IgnoredImageReferences.Length = 0;
     ShowNotification($0);
-    SetMouseVisible(FALSE);
+    // SetMouseVisible(FALSE);
     SetGameMode(FALSE, 24);
     Super(SFXGUIMovie).OnClose();
 }

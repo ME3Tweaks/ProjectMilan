@@ -17,7 +17,7 @@ namespace ProjectMilanCore.Shaders.OfflineCompiler;
 /// </para>
 /// <para>
 /// Overlays also get Milan_ tuning parameters, added in code when their decooked graph is opened, for
-/// SFXGameContent_Milan.MilanScreenOverlaySettings to set on their instances at runtime. The effects animate their own
+/// SFXGameContent_MilanBase.MilanScreenOverlaySettings to set on their instances at runtime. The effects animate their own
 /// parameters (Krogan rage's framebuffer modules rewrite Intensity every frame), so tuning needs parameters nothing else
 /// writes. Each defaults to the authored look.
 /// </para>

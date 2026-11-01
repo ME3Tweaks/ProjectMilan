@@ -18,7 +18,9 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             "WwiseAudio.pcc",
             "GuidCache.pcc",
             "GesturesConfig.pcc",
-            "EntryMenu.pcc",
+            // 10/29/2026 - should use DLC version as it premounts
+            // This also provides guard against game loading if MilanHost is not present
+            //"EntryMenu.pcc",
             "entry.pcc",
             "SFXWeapon_AssaultRifle_Argus.pcc",
             "SFXWeapon_AssaultRifle_Avenger.pcc",
@@ -194,6 +196,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             "SFXNotificationImages_SniperRifles.pcc",
             "SFXNotification_ModLarge.pcc",
             "SFXNotification_WeaponUpgrades.pcc",
+            "SFXWeaponImages_HeavyWeapons.pcc",
             "SFXPawn_Atlas.pcc",
             "SFXPawn_Banshee.pcc",
             "SFXPawn_Brute.pcc",

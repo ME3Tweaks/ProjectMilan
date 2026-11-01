@@ -85,4 +85,22 @@ enum EGuiOptions
     OPTION_AAT_Friction,
     // MILAN CHANGE - Mgamerz - 2026-10-10: Multiplayer Settings page (SFXGUI_PCMPOptions.BuildMilanNetConfigPage)
     OPTION_MilanNetConfig,
+    // MILAN CHANGE - Mgamerz - 2026-10-26: Reserved future accessibility options
+    OPTION_Milan_1,
+    OPTION_Milan_2,
+    OPTION_Milan_3,
+    OPTION_Milan_4,
+    OPTION_Milan_5,
+    OPTION_Milan_6,
+    OPTION_Milan_7,
+    OPTION_Milan_8,
+    OPTION_Milan_9,
+    OPTION_Milan_10,
+    OPTION_Milan_11,
+    OPTION_Milan_12,
+    OPTION_Milan_13,
+    OPTION_Milan_14,
+    OPTION_Milan_15,
+    OPTION_Milan_16,
+    // END MILAN CHANGE
 };

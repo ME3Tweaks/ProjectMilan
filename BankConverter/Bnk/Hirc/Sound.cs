@@ -10,6 +10,17 @@ public sealed class Sound
     // v56 only; folded into the v134 PropBundle as Loop(+ranged min/max).
     public short Loop, LoopModMin, LoopModMax;
 
+    // ME3 -> LE3 specific fixes
+    // Change volume values for fembot heavy melee
+    // These seem to be asari stuff put in a filter so probably don't want them too loud
+    // might be why bioware didn't bother either
+    private static readonly Dictionary<uint, float> VolumeOverrides = new()
+    {
+        [13809640] = -4f, [179403519] = -4f, [206269821] = -4f, [224099339] = -4f, [227149206] = -4f,
+        [248023457] = -4f, [319276070] = -4f, [375639249] = -4f, [555866137] = -4f, [850103009] = -4f,
+        [937756221] = -4f, [954268620] = -4f, [962997130] = -4f, [1066837790] = -4f,
+    };
+
     public static Sound ReadV56(BankReader r)
     {
         var s = new Sound { Id = r.U32() };
@@ -47,6 +58,8 @@ public sealed class Sound
             NodeBase.ExtraRanges ??= new PropBundle();
             NodeBase.ExtraRanges.SetRangeInt(PropIdV134.Loop, LoopModMin, LoopModMax);
         }
+
+        if (VolumeOverrides.TryGetValue(Id, out var volume)) NodeBase.Volume = volume;
 
         NodeBase.WriteV134(w, remapBusId, isFxSupported);
         return w.ToArray();

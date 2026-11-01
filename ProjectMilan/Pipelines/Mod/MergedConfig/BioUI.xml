@@ -40,6 +40,10 @@
 
 				<!-- Disabled VOIP related settings -->
 				<Value type="3">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange<!--, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice-->) )</Value>
+				<!-- MILAN CHANGE - Mgamerz - 2026-10-26 - Screen effects accessibilty menu -->
+				<Value type="3">(label=49875812, story=49875813, options=())</Value>
+				<Value type="3">(label=49875814, story=49875815, options=(OPTION_Milan_1, OPTION_Milan_2, OPTION_Milan_3, OPTION_Milan_4))</Value>
+				<!-- END MILAN CHANGE -->
 
 				<!-- Telemetry option removed due to telemetry being stripped by Milan build -->
  				<!--<Value type="3">(label=345447, story=345448, options=(OPTION_OnlineTelemetry) )</Value>-->
@@ -52,6 +56,12 @@
 			<Property name="textslideroptions">
 				<Value type="3">(id=OPTION_AAT_Adhesion, label=49875630, story=49875631, defaultVal=10, UClass="AATGUI.AATGUI_Option_Adhesion")</Value>
 				<Value type="3">(id=OPTION_AAT_Friction, label=49875632, story=49875633, defaultVal=10, UClass="AATGUI.AATGUI_Option_Friction")</Value>
+				<!-- MILAN CHANGE - Mgamerz - 2026-10-26 - Screen effects -->
+				<Value type="3">(id=OPTION_Milan_1, label=49875816, story=49875817, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
+				<Value type="3">(id=OPTION_Milan_2, label=49875818, story=49875819, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
+				<Value type="3">(id=OPTION_Milan_3, label=814233, story=49875820, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
+				<Value type="3">(id=OPTION_Milan_4, label=49875821, story=49875822, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
+				<!-- END MILAN CHANGE -->
 			</Property>
 			<!-- <Property name="optionpages">
 				<Value type="1">null</Value>
@@ -66,6 +76,11 @@
 			<!-- I think this was a mistake by bioware (Leftover "AlienFX™ Lights" settings) -->
 			<!--<Property name="textslideroptions" type="3">(id=OPTION_CONTENT_1, label=767420, story=0, TelemetryKey="alfx", defaultVal=0, values=((label=767421,story=767422),(label=767423,story=767424),(label=767425,story=767426)))</Property>-->
 		</Section>
+		<!-- MILAN CHANGE - Mgamerz - 2026-10-26 - Screen effects -->
+		<Section name="sfxgamempcontent.sfxgui_pcmpoptions">
+			<Property name="subpages" type="3">(Parent=49875812,Child=49875814,ParentStory=49875813)</Property>
+		</Section>
+		<!-- END MILAN CHANGE -->
 		<Section name="sfxgame.biosfhandler_pcoptions">
 			<!-- We don't want this from merge. -->
 			<!--<Property name="aliasmap">
@@ -773,7 +788,8 @@
 				<Value type="3">(GUIDescription=676673, GUIDescription_GoBig=758572)</Value>
 				<Value type="3">(GUIDescription=676674, GUIDescription_GoBig=758573)</Value>
 				<Value type="3">(GUIDescription=676675, GUIDescription_GoBig=758574)</Value>
-				<Value type="3">(GUIDescription=750416, GUIDescription_GoBig=771273)</Value>
+				<!-- MILAN CHANGE - Use Heavy Weapon Ammo string-->
+				<Value type="3">(GUIDescription=750416, GUIDescription_GoBig=49875827)</Value>
 				<Value type="3">(GUIDescription=750438, GUIDescription_GoBig=771274)</Value>
 				<Value type="3">(GUIDescription=750420, GUIDescription_GoBig=771275)</Value>
 				<Value type="3">(GUIDescription=750422, GUIDescription_GoBig=771276)</Value>

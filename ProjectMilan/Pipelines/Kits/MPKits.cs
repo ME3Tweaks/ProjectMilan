@@ -79,8 +79,13 @@ namespace ProjectMilan.Pipelines.Kits
 
             // Apply post corrections
             kitPipeline.PostCorrections?.Invoke(kitPipeline);
+            if (kitPipeline.PortedPackage?.IsModified == true)
+            {
+                // Package needs saved
+                kitPipeline.PortedPackage.Save();
+            }
 
-            // Lose refernce
+            // Lose reference
             kitPipeline.PortedPackage = null;
             kitPipeline.Cache.Dispose();
         }

@@ -3,6 +3,7 @@
 // MILAN CHANGE 10/17/2026
 // By Mgamerz
 // Fix controller vibration not working due to ME3 PC-specific build assuming no controller support
+// 10/23/2026 ClientSetMaterialActorParam, for SFXGameContent_Milan.SFXSeqAct_SetMaterialParam
 Class SFXPlayerControllerMP extends SFXPlayerController
     config(Game);
 
@@ -72,6 +73,24 @@ public event reliable client function ClientPlaySimpleDialogLine(stringref Dialo
         DialogPlayer.PlayDialogLine(DialogLineSr, Self);
     }
 }
+// MILAN CHANGE
+// Method used to replicate material parameters to clients
+public reliable client function ClientSetMaterialActorParam(MaterialInstanceActor MIA, Name ParamName, bool bScalar, Object.LinearColor VectorValue, float ScalarValue)
+{
+    if (MIA == None || MIA.MatInst == None)
+    {
+        return;
+    }
+    if (bScalar)
+    {
+        MIA.MatInst.SetScalarParameterValue(ParamName, ScalarValue);
+    }
+    else
+    {
+        MIA.MatInst.SetVectorParameterValue(ParamName, VectorValue);
+    }
+}
+// END MILAN CHANGE
 public event simulated function Destroyed()
 {
     if (IsLocalPlayerController())

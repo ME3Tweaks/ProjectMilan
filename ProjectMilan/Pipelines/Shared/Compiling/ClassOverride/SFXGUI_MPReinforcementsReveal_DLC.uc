@@ -7,16 +7,16 @@ Class SFXGUI_MPReinforcementsReveal_DLC extends SFXGUI_MPReinforcementsReveal
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
-	SetMouseVisible(!bUsingGamepad);
+	SetMouseVisible(!usingGamepad);
     ActionScriptVoid("screen.RefreshButtonHelp");
 }
 public event function OnStart()
 {
     Super.OnStart();
-    // make sure we actually can control the mouse visibility
-	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
-	// make sure the mouse is initially shown/hidden based on the input mode
-	SetMouseVisible(!bUsingGamepad);
+    // MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
 }
 // END MILAN
 public function SFXGAWReinforcementMatchConsumable FindReinforcement(CardInfoData CardData)
@@ -124,6 +124,9 @@ public function CardDisplayData GetCardDisplayData_DLC(const out CardInfoData Ca
         }
     }
     ClearCustomTokens();
+    // MILAN CHANGE
+    NewCard.IsBanner = CardData.GUIType == "banner";
+    // END MILAN CHANGE
     NewCard.TextureReference = CardData.GUITextureRef;
     NewCard.CardType = int(CardData.Rarity);
     return NewCard;

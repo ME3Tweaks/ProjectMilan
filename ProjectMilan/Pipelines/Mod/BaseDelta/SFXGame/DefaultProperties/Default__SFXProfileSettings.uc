@@ -115,7 +115,10 @@
                          122, 
                          123, 
                          124, 
-                         60
+                         60,
+                         // MILAN CHANGE - Accessibility
+                         4
+                         // END MILAN CHANGE
                         )
     DefaultSettings = ({
                         ProfileSetting = {
@@ -908,7 +911,17 @@
                                           AdvertisementType = EOnlineDataAdvertisementType.ODAT_DontAdvertise
                                          }, 
                         Owner = EOnlineProfilePropertyOwner.OPPO_Game
+                       },
+                       // MILAN CHANGE - Mgamerz - 2026-10-26
+                       {
+                        ProfileSetting = {
+                                          Data = {Value1 = 0, Type = ESettingsDataType.SDT_Int32},
+                                          PropertyId = 4,
+                                          AdvertisementType = EOnlineDataAdvertisementType.ODAT_DontAdvertise
+                                         },
+                        Owner = EOnlineProfilePropertyOwner.OPPO_Game
                        }
+                       // END MILAN CHANGE
                       )
     ProfileMappings = ({
                         ColumnHeaderText = "", 
@@ -2100,7 +2113,14 @@
                         MaxVal = 0.0, 
                         RangeIncrement = 0.0, 
                         MappingType = EPropertyValueMappingType.PVMT_IdMapped
+                       },
+                       // MILAN CHANGE - Mgamerz - 2026-10-26
+                       {
+                        Name = 'MilanAccessibility',
+                        Id = 4,
+                        MappingType = EPropertyValueMappingType.PVMT_RawValue
                        }
+                       // END MILAN CHANGE
                       )
     VersionNumber = 50
 }

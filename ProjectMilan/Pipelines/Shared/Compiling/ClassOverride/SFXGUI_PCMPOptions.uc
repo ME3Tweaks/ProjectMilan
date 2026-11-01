@@ -2,6 +2,49 @@
 Class SFXGUI_PCMPOptions extends BioSFHandler_PCOptions
     config(UI);
 
+// MILAN CHANGE - Mgamerz - 2026-10-26
+// Accessibilty menu uses subpages
+struct MilanSubPage
+{
+    var stringref Parent;
+    var stringref Child;
+    var stringref ParentStory;
+};
+
+var config array<MilanSubPage> SubPages;
+
+public function MovieLoaded()
+{
+    Super.MovieLoaded();
+    NestMilanPages();
+}
+
+public function Callback_ResetToDefaults(bool bAPressed, int Context)
+{
+    Super.Callback_ResetToDefaults(bAPressed, Context);
+    if (bAPressed)
+    {
+        NestMilanPages();
+    }
+}
+
+private function NestMilanPages()
+{
+    local int i;
+
+    for (i = 0; i < SubPages.Length; i++)
+    {
+        AS_NestPage(string(SubPages[i].Parent), string(SubPages[i].Child), string(SubPages[i].ParentStory));
+    }
+    ActionScriptVoid("_root.options.RefreshNestedPages");
+}
+
+private final function AS_NestPage(string ParentLabel, string ChildLabel, string ParentStory)
+{
+    ActionScriptVoid("_root.options.NestPage");
+}
+// END MILAN CHANGE
+
 // MILAN CHANGE - Mgamerz - 2026-10-10
 // Multiplayer Settings page. OPTION_MilanNetConfig is listed in GamePopulatedOptionPages, so the
 // Options movie calls this when it builds the page (Options opening, menuLevel 0). The page is given

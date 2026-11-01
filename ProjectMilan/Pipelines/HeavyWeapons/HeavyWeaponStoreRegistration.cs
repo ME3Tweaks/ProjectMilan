@@ -76,9 +76,10 @@ internal static class HeavyWeaponStoreRegistration
         catalog.Cards.Add(Unlock(HiddenCobraUnlock, HiddenCobraOwnershipId, MilanPipelinesShared.AssignTLK(HiddenCobraTitleText), hiddenDescription, "GUI_Icons.Weapons.hvy_titan_256x128"));
         foreach (var entry in HeavyWeaponsPipeline.HeavyWeapons)
         {
-            catalog.Cards.Add(Unlock(entry.UnlockName, entry.UnlockPlayerVariableId, entry.ResolveName(), unlockDescription, entry.GetNotificationImage()));
+            var rarity = GetCardRarity(entry);
+            catalog.Cards.Add(Unlock(entry.UnlockName, entry.UnlockPlayerVariableId, entry.ResolveName(), unlockDescription, entry.GetNotificationImage(), rarity));
             catalog.Cards.Add(Unlock(entry.HiddenUnlockName, entry.HiddenUnlockPlayerVariableId, entry.HiddenUnlockTitle.Resolve(), hiddenDescription,
-                entry.GetNotificationImage()) with
+                entry.GetNotificationImage(), rarity) with
             { RequiresCard = entry.UnlockName });
         }
         var engine = MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine").GetOrAddSection("sfxgame.sfxengine");
@@ -90,18 +91,34 @@ internal static class HeavyWeaponStoreRegistration
         ui.AddEntry(new CoalesceProperty("cardtypetextdata", new CoalesceValue($"(CardType=\"{CardType}\",GUIType={MilanPipelinesShared.AssignTLK(CardTypeText)})", CoalesceParseAction.AddUnique)));
     }
 
-    private static StoreCard Unlock(string name, int ownershipId, int title, int description, string image) => new()
+    /// <summary>
+    /// An unlock card. Ultra rare ones join the ultra rare weapon pool, so they drop like the ultra rare guns; the rest
+    /// join <see cref="StorePools.GoldPermanent"/>.
+    /// </summary>
+    private static StoreCard Unlock(string name, int ownershipId, int title, int description, string image, CardRarity rarity = CardRarity.Rare) => new()
     {
         UniqueName = name,
         Kind = ReinforcementKind.PermanentUpgrade,
-        Rarity = CardRarity.Rare,
+        Rarity = rarity,
         MaxCount = 1,
         GUIName = title,
         GUIDescription = description,
         GUIType = CardType,
         GUITextureRef = image,
         PlayerVariableIds = [ownershipId],
-        Pools = [new(StorePools.GoldPermanent)]
+        Pools = [new(rarity == CardRarity.UltraRare ? StorePools.GoldUltraRare : StorePools.GoldPermanent)]
+    };
+
+    /// <summary>
+    /// The card rarity for a registration's <see cref="HeavyWeaponEntry.Rarity"/>.
+    /// </summary>
+    private static CardRarity GetCardRarity(HeavyWeaponEntry entry) => entry.Rarity switch
+    {
+        "common" => CardRarity.Common,
+        "uncommon" => CardRarity.Uncommon,
+        "rare" => CardRarity.Rare,
+        "ultrarare" => CardRarity.UltraRare,
+        _ => throw new InvalidOperationException($"Heavy weapon {entry.ClassPath} has an unknown rarity '{entry.Rarity}'"),
     };
 
     /// <summary>

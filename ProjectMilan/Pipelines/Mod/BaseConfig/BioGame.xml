@@ -44,6 +44,8 @@
 			<Property name="defaultgame" type="2">SFXGame.SFXGame</Property>
 			<Property name="defaultgametype" type="2">SFXGameContent.SFXGameInfoSP</Property>
 			<Property name="defaultmapprefixes">
+				<!-- MILAN CHANGE - Menu scenes use this prefix of which some have dependency on BIOP_MP_COMMON -->
+				<Value type="2">(Prefix="EntryMenu_",bUsesCommonPackage=TRUE,OverrideCommonPackage="BIOP_MP_COMMON",GameType="SFXGame.SFXGame")</Value>
 				<Value type="2">(Prefix="EntryMenu",bUsesCommonPackage=FALSE,GameType="SFXGameContent.SFXGameInfoEntryMenu")</Value>
 				<Value type="2">(Prefix="BIOG_UIWorld",bUsesCommonPackage=FALSE,GameType="SFXGame.SFXGame",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
 				<Value type="2">(Prefix="Bio",bUsesCommonPackage=TRUE,GameType="SFXGameContent.SFXGameInfoSP",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
@@ -2586,7 +2588,7 @@
 				<Value type="2">(PlayerVariable="SoldierHumanFemale",Value=1)</Value>
 				<Value type="2">(PlayerVariable="VanguardHumanFemale",Value=1)</Value>
 			</Property>
-			<Property name="defaulttutorialmessage" type="2">(TrackingID=1,MessageTitle=723623,MessageText=723624,ImageURL="Promo_n7.dds")</Property>
+			<Property name="defaulttutorialmessage" type="2">(TrackingID=1,MessageTitle=723623,MessageText=723624,ImageURL="Promotions.Promo_n7")</Property>
 			<Property name="maxmplevelbonus" type="2">10</Property>
 			<Property name="mpclasses">
 				<Value type="2">(ClassName="Adept",srDisplayName=93954,srDescription=605057)</Value>

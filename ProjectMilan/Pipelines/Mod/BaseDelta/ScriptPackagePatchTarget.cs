@@ -15,6 +15,7 @@ using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Textures;
 using Image = LegendaryExplorerCore.Textures.Image;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
+using ProjectMilan.Pipelines.Startups;
 
 namespace ProjectMilan.Pipelines.Mod.BaseDelta
 {
@@ -224,6 +225,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 
             ApplyPropertyUpdates(package, baseDeltaFolder, packageName, logCategory);
             ApplyTextureUpdates(package, baseDeltaFolder, packageName, logCategory);
+            ApplyGUIMips(package, packageName, logCategory);
 
             ApplyClassElements(package, fileLib, usop, Path.Combine(baseDeltaFolder, "AddToClassOrReplace"));
 
@@ -349,6 +351,20 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 var messages = new Texture2D(texExport).Replace(Image.LoadFromFile(file, PixelFormat.ARGB), texExport.GetProperties(), isPackageStored: true);
                 foreach (var message in messages)
                     MilanLog.Warning($"{texName}: {message}", customPrefix: logCategory);
+            }
+        }
+
+        /// <summary>
+        /// Mips the GUI textures listed for this package in <see cref="GUITextureMipper.BaseDeltaTexturePaths"/>, after any
+        /// TextureUpdate has replaced them.
+        /// </summary>
+        internal static void ApplyGUIMips(IMEPackage package, string packageName, string logCategory)
+        {
+            var missing = GUITextureMipper.MipBaseDeltaPackage(package, packageName);
+            if (missing.Count > 0)
+            {
+                MilanLog.Fatal($"{packageName} has no Texture2D for GUI mip path(s) {string.Join(", ", missing)} in GUITextureMipper.BaseDeltaTexturePaths - this is a fatal error.", customPrefix: logCategory);
+                Environment.Exit(1);
             }
         }
 

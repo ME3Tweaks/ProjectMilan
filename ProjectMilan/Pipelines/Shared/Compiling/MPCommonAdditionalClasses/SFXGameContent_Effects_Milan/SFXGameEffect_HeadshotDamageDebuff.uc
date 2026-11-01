@@ -14,7 +14,8 @@ public function OnRemoved()
         DmgModule = Owner.GetModule(Class'SFXModule_Damage');
         if (DmgModule != None)
         {
-            DmgModule.WeaponDamageTakenMultiplier.Bonuses.RemoveItem(Self);
+            // Register the headshot effect on the headshot bonus list
+            DmgModule.HeadshotDamageTakenMultiplier.Bonuses.RemoveItem(Self);
             Class'SFXGame'.static.ReCalculate(DmgModule.HeadshotDamageTakenMultiplier);
         }
     }
@@ -29,7 +30,8 @@ public function OnApplied()
         DmgModule = Owner.GetModule(Class'SFXModule_Damage');
         if (DmgModule != None)
         {
-            DmgModule.WeaponDamageTakenMultiplier.Bonuses.AddItem(Self);
+            // Register the headshot effect on the headshot bonus list
+            DmgModule.HeadshotDamageTakenMultiplier.Bonuses.AddItem(Self);
             Class'SFXGame'.static.ReCalculate(DmgModule.HeadshotDamageTakenMultiplier);
         }
     }

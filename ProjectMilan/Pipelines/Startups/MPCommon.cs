@@ -4,8 +4,6 @@ using LegendaryExplorerCore.Helpers;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.UnrealScript;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
-using ME3TweaksModManager.modmanager.objects.mod.merge;
-using ME3TweaksModManager.modmanager.objects.mod.merge.v1;
 using Newtonsoft.Json;
 using ProjectMilan.Pipelines.Mod.BaseDelta;
 using ProjectMilan.Utility;

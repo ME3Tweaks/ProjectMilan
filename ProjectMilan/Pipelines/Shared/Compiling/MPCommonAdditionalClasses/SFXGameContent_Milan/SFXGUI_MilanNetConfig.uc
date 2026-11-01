@@ -10,6 +10,11 @@ Class SFXGUI_MilanNetConfig extends SFXGUIMovieLegacyAdapter
     config(UI);
 
 var transient SFXGUIHelper_ConsoleKeyboard m_oKeyboard;
+// Temporarily store banned characters list
+// We should store it in the wild encounter data table...
+// mmm, maybe that's a bad idea
+var transient string m_sBannedChars;
+var transient bool m_bBannedCharsCleared;
 // Values shown in the form; kept so the form can be restored after an error message
 var transient string m_sPlayerName;
 var transient bool m_bMatchmaking;
@@ -81,6 +86,7 @@ public event function OnPanelAdded()
 }
 public event function OnPanelRemoved()
 {
+    RestoreKeyboardChars();
     m_oKeyboard = None;
 }
 public function HandleButtonHelpRefresh(bool usingGamepad)
@@ -233,15 +239,45 @@ public function SubmitMessageBox(int nButton)
 }
 public function EnterPlayerName(string sDefault)
 {
+    RestoreKeyboardChars();
     GetKeyboard().DisplayKeyboard(srProfileName, $0, 0, nMaxNameLength, sDefault);
 }
 public function EnterServer(string sDefault)
 {
+    AllowAllKeyboardChars();
     GetKeyboard().DisplayKeyboard(srServerAddress, $0, 0, nMaxServerLength, sDefault);
 }
 public function EnterServerPassword(string sDefault)
 {
+    AllowAllKeyboardChars();
     GetKeyboard().DisplayKeyboard(srServerPassword, $0, 2, nMaxPasswordLength, sDefault);
+}
+// Paste support with only the first line used
+public function string GetClipboardText()
+{
+    local string sText;
+    local int nBreak;
+
+    if (GetPC() == None)
+    {
+        return "";
+    }
+    sText = Repl(GetPC().PasteFromClipboard(), Chr(13), Chr(10));
+    nBreak = InStr(sText, Chr(10));
+    if (nBreak != -1)
+    {
+        sText = Left(sText, nBreak);
+    }
+    sText = Repl(sText, Chr(9), " ");
+    while (Left(sText, 1) == " ")
+    {
+        sText = Mid(sText, 1);
+    }
+    while (Right(sText, 1) == " ")
+    {
+        sText = Left(sText, Len(sText) - 1);
+    }
+    return sText;
 }
 public function GFxScreenVisibilityChange(bool bNewValue);
 
@@ -311,8 +347,27 @@ private final function RefreshLocalPlayerName(string sPlayerName)
 }
 private final function CloseScreen()
 {
+    RestoreKeyboardChars();
     m_oKeyboard = None;
     Close(TRUE);
+}
+// Temporarily allow all keyboard characters in input fields
+private final function AllowAllKeyboardChars()
+{
+    if (!m_bBannedCharsCleared)
+    {
+        m_sBannedChars = Class'SFXGUIInputHandler'.default.BannedChars;
+        m_bBannedCharsCleared = TRUE;
+    }
+    Class'SFXGUIInputHandler'.default.BannedChars = "";
+}
+private final function RestoreKeyboardChars()
+{
+    if (m_bBannedCharsCleared)
+    {
+        Class'SFXGUIInputHandler'.default.BannedChars = m_sBannedChars;
+        m_bBannedCharsCleared = FALSE;
+    }
 }
 private final function bool IsValidServerAddress(string sAddress)
 {
@@ -341,6 +396,7 @@ private final function SFXGUIHelper_ConsoleKeyboard GetKeyboard()
 }
 public final function KeyboardEntryComplete(bool bOK, string sText)
 {
+    RestoreKeyboardChars();
     if (bOK)
     {
         AS_SetActiveInputField(sText);

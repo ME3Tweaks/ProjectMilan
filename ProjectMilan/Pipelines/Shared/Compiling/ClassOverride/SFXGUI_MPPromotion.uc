@@ -25,12 +25,10 @@ public event function OnStart()
     Super(SFXGUIMovie).OnStart();
     SetRequiresUIWorld(TRUE);
     SetGameMode(TRUE, 9);
-    // MILAN CHANGE DropTheSquid 12/17/2023
-    // make sure we actually can control the mouse visibility
-	BioPlayerController(GetPC()).GameModeManager2.GameModes[int(EGameModes.GameMode_Lobby)].bHasMouseAuthority = false;
-	// make sure the mouse is initially shown/hidden based on the input mode
-	SetMouseVisible(!bUsingGamepad);
-	// END MILAN
+    // MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
     MPSaveManager = Class'SFXEngine'.static.GetSFXEngine().MPSaveManager;
     PromoData = MPSaveManager.GetPromotionalMessageData();
     PromotionalOfferID = PromoData.offerId;
@@ -40,7 +38,10 @@ public event function OnStart()
     if (PromoData.Image != "")
     {
         RequestImage(PromoData.Image);
-        AS_SetLoadingClipVisible(TRUE);
+        // MILAN CHANGE
+        // Don't show the loading clip until we check locally
+        // AS_SetLoadingClipVisible(TRUE);
+        // END MILAN CHANGE
     }
     MPSaveManager.SetPlayerVariable('LastPromoIDShown', PromoData.TrackingID);
     MPSaveManager.SaveRecords();
@@ -48,12 +49,31 @@ public event function OnStart()
 public event function OnClose()
 {
     Super(SFXGUIMovie).OnClose();
-    SetMouseVisible(FALSE);
+    // SetMouseVisible(FALSE);
     SetGameMode(FALSE, 9);
     PromoTexture = None;
 }
 private final function RequestImage(string ImageURL)
 {
+    // MILAN CHANGE 10/30/2026 Mgamerz
+    // Change ImageURL for the initial N7 promo
+    // to load it out of package rather than fetching online
+    if (Class'SFXEngine'.static.IsSeekFreeObjectSupported(ImageURL))
+    {
+        AS_SetLoadingClipVisible(FALSE);
+        PromoTexture = Texture2D(Class'SFXEngine'.static.LoadSeekFreeObjectBlocking(ImageURL, Class'Texture2D'));
+        if (PromoTexture != None)
+        {
+            // Loaded from disk, use it instead
+            SetExternalTexture(TextureSymbolPath, PromoTexture);
+            AS_SetImageVisible(TRUE);
+        }
+        return;
+    }
+
+    // Set the loading clip back to visible
+    AS_SetLoadingClipVisible(TRUE);
+    // END MILAN CHANGE
     Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentImageManager().RequestImage(ImageURL, OnRequestComplete);
 }
 public final function OnContinue()

@@ -36,6 +36,7 @@ namespace ProjectMilan.Pipelines.Store
         /// </summary>
         private static IEnumerable<StorePackEntry> Online =>
         [
+            // Arsenal Pack
             new()
             {
                 ID = 656, PackName = "arsenal", TitleStrRefId = 752068, DescriptionStrRefId = 752069, OfferId = 650200, CreditCost = 99000,
@@ -45,11 +46,12 @@ namespace ProjectMilan.Pipelines.Store
                 [
                     Slot(StorePools.GoldConsumable, StorePools.GoldCommon),
                     Slot(1, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.5f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.45f)),
-                    // Milan - half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
+                    // Half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
                     Slot(1, StorePools.GoldCommon, (StorePools.GoldMod, 0.45f), (StorePools.SilverGear, 0.4f), (StorePools.GoldPermanent, 0.15f)),
                     Slot(2, StorePools.GoldBackup, (StorePools.GoldGear, 0.2f), (StorePools.GoldWeapon, 0.725f), (StorePools.GoldUltraRare, 0.075f)),
                 ],
             },
+            // Reserves
             new()
             {
                 ID = 657, PackName = "reserves", TitleStrRefId = 752070, DescriptionStrRefId = 752071, OfferId = 650300, CreditCost = 99000,
@@ -59,7 +61,7 @@ namespace ProjectMilan.Pipelines.Store
                 [
                     Slot(StorePools.GoldConsumable, StorePools.GoldCommon),
                     Slot(1, StorePools.GoldCommon, (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.45f), (StorePools.GoldXPChar, 0.5f)),
-                    // Milan - half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
+                    // Half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
                     Slot(1, StorePools.GoldCommon, (StorePools.GoldMod, 0.2f), (StorePools.SilverGear, 0.3f), (StorePools.SilverChar, 0.35f), (StorePools.GoldPermanent, 0.15f)),
                     Slot(2, StorePools.GoldBackup, (StorePools.GoldGear, 0.2f), (StorePools.GoldChar, 0.675f), (StorePools.GoldUltraRare, 0.075f), (StorePools.UltraRareChar, 0.05f)),
                 ],
@@ -109,6 +111,26 @@ namespace ProjectMilan.Pipelines.Store
                 Contents = [Slot(StorePools.FreeGoldChar, StorePools.GoldCommon)],
             },
             OperationPack(13, "prophecy", 634, 1500114), // Operation Prophecy
+
+            // 10/27/2026 - Moved from vanilla packs to here since it referneces this gui image packs' package
+            // and I don't want to have to run 3 builds to fix the damn thing if I screw it up
+            // Was only listed with entitlement 2000001, which nothing grants
+            // This pack seems to just be all consumables.
+            new()
+            {
+                ID = 655, PackName = "n7equipment", TitleStrRefId = 752066, DescriptionStrRefId = 752067, OfferId = 650100, CreditCost = 75000,
+                Image = $"{StoreImages}.StoreN7", // MILAN - Custom Image
+                RevealIntroTextureRef = "GUI_MPImages.Creates.N7", RevealIntroHoloTextureRef = "GUI_MPImages.Creates.N7Holo", RevealIntroSound = "MPRevealCrate5",
+                Contents =
+                [
+                    Slot(StorePools.EquipAmmo, StorePools.BronzeCommon),
+                    Slot(StorePools.EquipRevive, StorePools.SilverCommon),
+                    Slot(StorePools.EquipRocket, StorePools.SilverCommon),
+                    Slot(StorePools.EquipShield, StorePools.BronzeCommon),
+                    Slot(5, StorePools.SilverCommon, (StorePools.SilverCommon, 0.4f), (StorePools.GoldCommon, 0.4f), (StorePools.GoldEquipment, 0.1f), (StorePools.EquipRandom, 0.1f)),
+                    Slot(1, StorePools.GoldEquipment, (StorePools.GoldCommon, 0.8f), (StorePools.GoldEquipment, 0.125f), (StorePools.GoldUltraRare, 0.075f)),
+                ],
+            },
         ];
     }
 }

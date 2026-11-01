@@ -105,7 +105,7 @@ var transient MPChallengeCategory m_eCurrentTab;
 public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super.HandleButtonRefresh(usingGamepad);
-	SetMouseVisible(!bUsingGamepad);
+	SetMouseVisible(!usingGamepad);
     ActionScriptVoid("mcGUI.RefreshButtonHelp");
 }
 // END MILAN
@@ -236,10 +236,10 @@ public event function bool HandleInputEvent(BioGuiEvents Event, optional float f
 public event function OnStart()
 {
     Super.OnStart();
-	// MILAN CHANGE DropTheSquid 12/17/2023
-	// make sure the mouse shows up (or not) initially based on input
-	SetMouseVisible(!bUsingGamepad);
-	// END MILAN
+	// MILAN Change DropTheSquid 10/31/2026
+	// make sure the mouse is initially shown/hidden based on the input mode, updated to prevent the mouse briefly flickering
+	SetMouseVisible(!IsUsingGamepad());
+    // END MILAN
     SetupFunctionIntercepts();
     ConstructEnumObjects();
 }

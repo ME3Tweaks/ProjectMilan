@@ -57,7 +57,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             // 5 Blackstar
             // 6 Hidden Blackstar
             // 7 Cain
-            // 8 Hidden
+            // 8 Hidden Cain
 
             // M-490 Blackstorm
             new()
@@ -68,12 +68,12 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "M-490 Blackstorm (Hidden)" },
                 UnlockPlayerVariableId = 801,
                 HiddenUnlockPlayerVariableId = 802,
-                Rarity = "rare",
+                Rarity = "ultrarare",
                 DisplayOrder = 10,
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstorm",
                 NonConsumableClassPath = "SFXGameContent_Milan.SFXHeavyWeapon_Blackstorm",
                 Name = 361364, // M-490 Blackstorm
-                ShortName = new LocalizedString { [MELocalization.INT] = "Blackstorm" },
+                ShortName = new LocalizedString { [MELocalization.INT] = "M-490 Blackstorm" },
                 Description = 361363,
                 ShortDescription = 344479,
                 Image = $"{IconPackage}.Blackstorm_512x256",
@@ -95,9 +95,26 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstar",
                 InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Blackstar",
                 // Vanilla has no ShortPrettyName for it
-                ShortName = new LocalizedString { [MELocalization.INT] = "Blackstar" },
+                ShortName = new LocalizedString { [MELocalization.INT] = "Reaper Blackstar" },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
                 // TODO: We need an actual short text or move hidden to the top.
+            },
+            // M-920 Cain
+            new()
+            {
+                Id = 7,
+                HiddenId = 8,
+                UnlockName = "MilanHeavy_Cain",
+                HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "M-920 Cain (Hidden)" },
+                UnlockPlayerVariableId = 805,
+                HiddenUnlockPlayerVariableId = 806,
+                // Drop from ultrarare pool, cain is special
+                Rarity = "ultrarare",
+                DisplayOrder = 30,
+                ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableCain",
+                InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Cain",
+                ShortName = new LocalizedString { [MELocalization.INT] = "M-920 Cain" },
+                IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
             },
         ];
 
@@ -197,11 +214,12 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             // END PRECOMPILED PACKAGES ----------
 
             // GAME SOURCED PACKAGES -------------
-            foreach (var entry in HeavyWeapons.Where(x => x.SourcePackage != null && !foundClasses.ContainsKey(x.ClassPath)))
-            {
-                using var package = MilanShared.GetLE3Package(entry.SourcePackage);
-                InstallHeavyWeaponPackage(package, foundClasses, nonConsumableClasses);
-            }
+            // We have to pre-prep packages so these aren't useful
+            //foreach (var entry in HeavyWeapons.Where(x => x.SourcePackage != null && !foundClasses.ContainsKey(x.ClassPath)))
+            //{
+            //    using var package = MilanShared.GetLE3Package(entry.SourcePackage);
+            //    InstallHeavyWeaponPackage(package, foundClasses, nonConsumableClasses);
+            //}
             // END GAME SOURCED PACKAGES ---------
 
             // Our images, plus the game's own mapped ones (vanilla weapon art)

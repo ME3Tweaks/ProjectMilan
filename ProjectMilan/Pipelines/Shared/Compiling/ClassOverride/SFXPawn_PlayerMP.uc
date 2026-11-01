@@ -546,8 +546,8 @@ public simulated function DeferredPostBeginPlay()
         // Every rendering peer initializes its own lights after replicated inventory and appearance are ready.
         EnsureMapFlashlight();
         // END MILAN CHANGE
-        // MILAN CHANGE - Mgamerz - 2026-10-21
-        // Apply accessibility settings
+        // MILAN CHANGE - Mgamerz - 2026-10-26
+        // Apply saved accessibility settings after kit assets load.
         Class'MilanScreenOverlaySettings'.static.ApplyAll();
         // END MILAN CHANGE
     }
@@ -962,7 +962,9 @@ public simulated function PlayerKilledMessage()
     // MILAN CHANGE - Mgamerz - 2026-09-23
     // Suppress the ordinary kill ticker for sync-kill damage; PermaDeadChanged reports the execution
     local Class<SFXDamageType> MPDamageType;
-    MPDamageType = Class<SFXDamageType>(KilledByDamageType);
+    // Read replicated damage type so we know if it's kill damage
+    // otherwise ticker behaves different between client/server
+    MPDamageType = Class<SFXDamageType>(ReplicatedDeathInfo.DamageType);
     if (MPDamageType != None && MPDamageType.default.bMPKillDamage)
     {
         return;

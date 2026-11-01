@@ -480,7 +480,7 @@ namespace LEDecooker
             return packages.Where(packageName =>
             {
                 // Uncomment to disable filtering.
-                // return true;
+                return true;
 
                 // Currently rebuilding the shader-parity residual: every package that still owns a
                 // byte mismatch after the 2026-09-17 qualified-path texture resolver landed. See

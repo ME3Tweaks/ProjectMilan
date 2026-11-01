@@ -21,7 +21,8 @@ internal static class AssetFixPipeline
         }
 
         var guiTextures = GUITextureMipper.DiscoverTexturePaths(Program.Settings.OutputModPath);
-        var guiPolicyTextures = GUITextureMipper.GetPolicyTexturePaths(guiTextures);
+        var guiSizeCaps = GUITextureMipper.DiscoverSizeCaps(Program.Settings.OutputModPath);
+        var guiPolicyTextures = GUITextureMipper.GetPolicyTexturePaths(guiTextures, guiSizeCaps);
         var guiPackages = new List<string>();
 
         // A filename is the complete memory path of the export, independent of the containing package.
@@ -111,7 +112,7 @@ internal static class AssetFixPipeline
             {
                 guiPackages.Add(file);
                 matchedGui.UnionWith(package.Exports.Where(e => e.ClassName == "Texture2D").Select(e => e.InstancedFullPath));
-                changed += GUITextureMipper.GenerateMipsForPackage(package, guiTextures);
+                changed += GUITextureMipper.GenerateMipsForPackage(package, guiTextures, sizeCaps: guiSizeCaps);
             }
             // A failure above leaves this package unsaved. Save only packages with changed export data.
             if (changed > 0)
@@ -131,7 +132,10 @@ internal static class AssetFixPipeline
         {
             MilanLog.Warning($"Mesh asset fix matched no exports: {path}", customPrefix: LogCategory);
         }
-        foreach (var path in GUITextureMipper.ExplicitTexturePaths.Concat(GUITextureMipper.TextureSizeCaps.Keys).Distinct(StringComparer.OrdinalIgnoreCase).Where(path => !matchedGui.Contains(path)))
+        // Basegame paths live in the BaseDelta packages, not the mod
+        var baseDeltaPaths = GUITextureMipper.BaseDeltaTexturePaths.Values.SelectMany(paths => paths).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var path in GUITextureMipper.ExplicitTexturePaths.Concat(GUITextureMipper.TextureSizeCaps.Keys).Distinct(StringComparer.OrdinalIgnoreCase)
+                     .Where(path => !matchedGui.Contains(path) && !baseDeltaPaths.Contains(path)))
         {
             MilanLog.Warning($"GUI texture policy path matched no Texture2D exports: {path}", customPrefix: LogCategory);
         }

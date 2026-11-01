@@ -92,6 +92,10 @@ public event function HandleButtonRefresh(bool usingGamepad)
 {
     Super(SFXGUIMovie).HandleButtonRefresh(usingGamepad);
     ActionScriptVoid("RefreshButtonHelp");
+    // MILAN CHANGE 10/28/2026 Mgamerz
+    // Refresh DPad visibility
+    MilanRefreshDPadVisibility(usingGamepad);
+    // END MILAN CHANGE
     // MILAN CHANGE - Mgamerz - 2026-10-15
     // Refresh spectator prompts when a PC player switches between keyboard and gamepad
     if (m_bSpectatorHUDVisible && SpectatorModeDescription != None)
@@ -165,6 +169,10 @@ public event function Update(float fDeltaT)
     local bool bUpdateHUD;
     
     PC = BioPlayerController(GetPC());
+    // MILAN CHANGE 10/28/2026 Mgamerz
+    // Refresh DPad visibility
+    MilanRefreshDPadVisibility(bUsingGamepad);
+    // END MILAN CHANGE
     bSpectator = PC.GameModeManager2.IsActive(20); // MILAN Patched: GameMode Enum Index
     bDying = PC.GameModeManager2.IsActive(21); // MILAN Patched: GameMode Enum Index
     bInPauseMenu = PC.GameModeManager2.IsActive(9);
@@ -525,6 +533,57 @@ public final function HideCenterProgressBar()
         CenterBarVisible = FALSE;
     }
 }
+// MILAN CHANGE - Mgamerz - 10/28/2026
+// Fatal sync kills enter Downed before bIsDead is set
+// This hides your actions because you're dead, so no point
+// showing them
+public final function bool MilanCanShowDPad()
+{
+    local BioPlayerController PC;
+    local SFXPawn_PlayerMP PlayerPawn;
+    local Class<SFXDamageType> MPDamageType;
+
+    PC = BioPlayerController(GetPC());
+    if (PC == None)
+    {
+        return FALSE;
+    }
+    // Use the local pawn, never a living spectator view target.
+    PlayerPawn = SFXPawn_PlayerMP(PC.Pawn);
+    if (PlayerPawn == None || PlayerPawn.bIsDead || PC.GameModeManager2.IsActive(20))
+    {
+        return FALSE;
+    }
+    if (PlayerPawn.bIsDowned || PlayerPawn.IsInState('Downed'))
+    {
+        MPDamageType = Class<SFXDamageType>(PlayerPawn.KilledByDamageType);
+        if (MPDamageType != None && MPDamageType.default.bMPKillDamage)
+        {
+            return FALSE;
+        }
+    }
+    return TRUE;
+}
+
+// Helper method to show or hide the DPad
+public final function bool MilanRefreshDPadVisibility(bool usingGamepad)
+{
+    local bool bCanShow;
+    local GFxValue DPadMap;
+
+    bCanShow = MilanCanShowDPad();
+    if (!bCanShow && Initialized)
+    {
+        HideDPadPowerIcons(TRUE);
+    }
+    DPadMap = GetVariableObject("DPadMap");
+    if (DPadMap != None)
+    {
+        DPadMap.SetVisible(usingGamepad && bCanShow);
+    }
+    return bCanShow;
+}
+// END MILAN CHANGE
 public final function HideDPadPowerIcons(optional bool bSkipTransition = FALSE)
 {
     if (DPadVisible)
@@ -778,6 +837,13 @@ public final function ShowDPadPowerIcons(optional bool bSkipTransition = FALSE)
     {
         return;
     }
+    // MILAN CHANGE 10/29/2026
+    // Abort DPad visibility changes
+    if (!MilanRefreshDPadVisibility(bUsingGamepad))
+    {
+        return;
+    }
+    // END MILAN CHANGE
     if (!DPadVisible)
     {
         AS_SetDPadVisible(TRUE, bSkipTransition);
@@ -871,6 +937,10 @@ public final function UpdateDPadPowerIcons()
     {
         return;
     }
+    // MILAN CHANGE 10/29/2026
+    // Update DPad visibility
+    MilanRefreshDPadVisibility(bUsingGamepad);
+    // END MILAN CHANGE
     if (!DPadVisible)
     {
         ShowDPadPowerIcons();

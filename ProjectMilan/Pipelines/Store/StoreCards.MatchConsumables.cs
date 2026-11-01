@@ -260,9 +260,10 @@ namespace ProjectMilan.Pipelines.Store
                 PlayerVariableIds = [515, 520, 525],
                 Pools =
                 [
-                    new(StorePools.BronzeCommon) { VersionIdx = 0, Tokens = "Custom0Token=0.2f, Custom1Token=10.f" },
-                    new(StorePools.GoldCommon) { VersionIdx = 2, Rarity = CardRarity.Uncommon, Tokens = "Custom0Token=0.4f, Custom1Token=10.f" },
-                    new(StorePools.SilverCommon) { VersionIdx = 1, Tokens = "Custom0Token=0.3f, Custom1Token=10.f" },
+                    // Polonium rounds - these must be kept in sync with config!
+                    new(StorePools.BronzeCommon) { VersionIdx = 0, Tokens = "Custom0Token=0.25f, Custom3Token=5.f" },
+                    new(StorePools.SilverCommon) { VersionIdx = 1, Tokens = "Custom0Token=0.50f, Custom3Token=5.f" },
+                    new(StorePools.GoldCommon)   { VersionIdx = 2, Rarity = CardRarity.Uncommon, Tokens = "Custom0Token=0.75f, Custom3Token=5.f" },
                 ],
             },
             new()

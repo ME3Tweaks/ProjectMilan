@@ -22,7 +22,7 @@ namespace ProjectMilan.Pipelines.Startups
         /// <summary>
         /// Prefix of every generated package file; the source folder name goes after it.
         /// </summary>
-        public const string PackageFilePrefix = "GUI_Images_MP";
+        public const string PackageFilePrefix = GUITextureMipper.ImagePackageFilePrefix;
 
         public static string SourceRoot => Path.Combine(MilanShared.PipelineRoot, "Startups", "NonStartup", "ImagePackages");
 
