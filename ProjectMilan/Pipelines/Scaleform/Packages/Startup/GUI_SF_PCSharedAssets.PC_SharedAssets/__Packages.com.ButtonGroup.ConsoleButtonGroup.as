@@ -76,7 +76,7 @@ class com.ButtonGroup.ConsoleButtonGroup extends com.SFXInputMovieClip
     }
     function get ControlBack()
     {
-        return this.m_ControlStart;
+        return this.m_ControlBack;
     }
     function set ControlY(x)
     {
