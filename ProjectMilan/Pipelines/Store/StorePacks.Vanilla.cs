@@ -100,7 +100,9 @@ namespace ProjectMilan.Pipelines.Store
                 [
                     Slot(2, StorePools.BronzeCommon, (StorePools.BronzeConsumable, 1f)),
                     Slot(StorePools.BronzeCommon, StorePools.BronzeConsumable),
-                    Slot(1, StorePools.BronzeCommon, (StorePools.BronzeMod, 0.75f), (StorePools.SilverMod, 0.05f), (StorePools.BronzeCommon, 0.2f)),
+                    // Milan Change
+                    // StarterBanner takes 25% from BronzeMod (0.75 -> 0.5)
+                    Slot(1, StorePools.BronzeCommon, (StorePools.BronzeMod, 0.5f), (StorePools.StarterBanner, 0.25f), (StorePools.SilverMod, 0.05f), (StorePools.BronzeCommon, 0.2f)),
                     Slot(1, StorePools.XPChar, (StorePools.BronzeWeapon, 0.6f), (StorePools.BronzeChar, 0.35f), (StorePools.SilverWeapon, 0.025f), (StorePools.SilverChar, 0.025f)),
                 ],
             },
@@ -116,7 +118,8 @@ namespace ProjectMilan.Pipelines.Store
                     Slot(1, StorePools.SilverCommon, (StorePools.SilverCommonWeapon, 0.4f), (StorePools.SilverCommon, 0.6f)),
                     // Milan Change
                     // Uncommon Banner, Common Banner each take 5% from SilverMod
-                    Slot(1, StorePools.SilverCommon, (StorePools.SilverMod, 0.45f), (StorePools.UncommonBanner, 0.05f), (StorePools.CommonBanner, 0.05f), (StorePools.GoldMod, 0.05f), (StorePools.XPChar, 0.1f), (StorePools.SilverCommon, 0.3f)),
+                    // StarterBanner takes another 15% from SilverMod (0.45 -> 0.3)
+                    Slot(1, StorePools.SilverCommon, (StorePools.SilverMod, 0.3f), (StorePools.StarterBanner, 0.15f), (StorePools.UncommonBanner, 0.05f), (StorePools.CommonBanner, 0.05f), (StorePools.GoldMod, 0.05f), (StorePools.XPChar, 0.1f), (StorePools.SilverCommon, 0.3f)),
                     Slot(1, StorePools.SilverBackup, (StorePools.SilverGear, 0.125f), (StorePools.GoldGear, 0.025f), (StorePools.SilverWeapon, 0.525f), (StorePools.SilverChar, 0.225f), (StorePools.GoldPermanent, 0.02f), (StorePools.GoldWeapon, 0.02f), (StorePools.GoldChar, 0.02f), (StorePools.Respec, 0.04f)),
                 ],
             },
@@ -132,7 +135,8 @@ namespace ProjectMilan.Pipelines.Store
                     Slot(StorePools.GoldCommon),
                     // Milan Change
                     // GoldCommonWeapon donates 5% to RareBanner
-                    Slot(1, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.2f), (StorePools.RareBanner, 0.05f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.45f), (StorePools.GoldXPChar, 0.25f)),
+                    // GoldCommon donates 5% to StarterBanner
+                    Slot(1, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.2f), (StorePools.RareBanner, 0.05f), (StorePools.StarterBanner, 0.05f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.4f), (StorePools.GoldXPChar, 0.25f)),
                     // Half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
                     Slot(1, StorePools.GoldCommon, (StorePools.GoldMod, 0.4f), (StorePools.SilverGear, 0.3f), (StorePools.SilverChar, 0.15f), (StorePools.GoldPermanent, 0.15f)),
                     // Milan Change
@@ -149,7 +153,9 @@ namespace ProjectMilan.Pipelines.Store
                 Contents =
                 [
                     Slot(StorePools.GoldConsumable, StorePools.GoldCommon),
-                    Slot(1, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.25f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.45f), (StorePools.GoldXPChar, 0.25f)),
+                    // Milan Change
+                    // GoldCommon donates 5% to StarterBanner
+                    Slot(1, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.25f), (StorePools.StarterBanner, 0.05f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.4f), (StorePools.GoldXPChar, 0.25f)),
                     // Half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
                     // Milan Change
                     // Gold Mod drops 10%, RareBanner: 10%
@@ -172,7 +178,9 @@ namespace ProjectMilan.Pipelines.Store
                 [
                     // Milan Change - 7% Gold Banner
                     Slot(2, StorePools.GoldCommon, (StorePools.GoldConsumable, 0.93f), (StorePools.RareBanner, 0.07f)),
-                    Slot(2, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.25f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.45f), (StorePools.GoldXPChar, 0.25f)),
+                    // Milan Change
+                    // GoldCommon donates 5% to StarterBanner
+                    Slot(2, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.25f), (StorePools.StarterBanner, 0.05f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.4f), (StorePools.GoldXPChar, 0.25f)),
                     // Half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
                     Slot(2, StorePools.GoldCommon, (StorePools.GoldMod, 0.4f), (StorePools.SilverGear, 0.3f), (StorePools.SilverChar, 0.15f), (StorePools.GoldPermanent, 0.15f)),
                     // Milan Change

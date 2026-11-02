@@ -30,6 +30,12 @@ namespace ProjectMilan.Pipelines.Store
         public static readonly StorePool LegendaryBanner = new("banner_legendary");
 
         /// <summary>
+        /// A handful of early banners that drop far more often than their rarity pool. This lets players get some faction banners or other 
+        /// ones early so they have something to show
+        /// </summary>
+        public static readonly StorePool StarterBanner = new("banner_starter");
+
+        /// <summary>
         /// Default pool for a banner of this rarity.
         /// </summary>
         public static StorePool BannerPool(CardRarity rarity) => rarity switch

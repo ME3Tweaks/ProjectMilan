@@ -45,7 +45,9 @@ namespace ProjectMilan.Pipelines.Store
                 Contents =
                 [
                     Slot(StorePools.GoldConsumable, StorePools.GoldCommon),
-                    Slot(1, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.5f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.45f)),
+                    // Milan Change
+                    // GoldCommon donates 5% to StarterBanner
+                    Slot(1, StorePools.GoldCommon, (StorePools.GoldCommonWeapon, 0.5f), (StorePools.StarterBanner, 0.05f), (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.4f)),
                     // Half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
                     Slot(1, StorePools.GoldCommon, (StorePools.GoldMod, 0.45f), (StorePools.SilverGear, 0.4f), (StorePools.GoldPermanent, 0.15f)),
                     Slot(2, StorePools.GoldBackup, (StorePools.GoldGear, 0.2f), (StorePools.GoldWeapon, 0.725f), (StorePools.GoldUltraRare, 0.075f)),
@@ -60,7 +62,9 @@ namespace ProjectMilan.Pipelines.Store
                 Contents =
                 [
                     Slot(StorePools.GoldConsumable, StorePools.GoldCommon),
-                    Slot(1, StorePools.GoldCommon, (StorePools.Respec, 0.05f), (StorePools.GoldCommon, 0.45f), (StorePools.GoldXPChar, 0.5f)),
+                    // Milan Change
+                    // GoldCommon donates 5% to StarterBanner
+                    Slot(1, StorePools.GoldCommon, (StorePools.Respec, 0.05f), (StorePools.StarterBanner, 0.05f), (StorePools.GoldCommon, 0.4f), (StorePools.GoldXPChar, 0.5f)),
                     // Half of SilverGear's weight was "silvergearmp3", which isn't a pool (that section's pool is silvergear), so it always fell to the backup
                     Slot(1, StorePools.GoldCommon, (StorePools.GoldMod, 0.2f), (StorePools.SilverGear, 0.3f), (StorePools.SilverChar, 0.35f), (StorePools.GoldPermanent, 0.15f)),
                     Slot(2, StorePools.GoldBackup, (StorePools.GoldGear, 0.2f), (StorePools.GoldChar, 0.675f), (StorePools.GoldUltraRare, 0.075f), (StorePools.UltraRareChar, 0.05f)),
