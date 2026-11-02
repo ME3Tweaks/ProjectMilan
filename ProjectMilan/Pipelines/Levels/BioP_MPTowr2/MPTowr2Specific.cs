@@ -160,6 +160,61 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
             "TheWorld.PersistentLevel.StaticMeshCollectionActor_202.StaticMeshActor_SMC_782",
         ];
 
+        static string[] CoverNeedingLightGuidFixes = [
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_186.StaticMeshActor_SMC_1691",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_1389",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_149",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_16",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_164",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_1728",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_18",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_190",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_53",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_56",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_887",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_974",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_191.StaticMeshActor_SMC_981",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_199.StaticMeshActor_SMC_1385",
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_201.StaticMeshActor_SMC_90",
+        ];
+
+        /// <summary>
+        /// GUID of the cannon light effect
+        /// </summary>
+        private static readonly Guid CannonLightGuid = new("37f105aa-cfa9-4b2b-9114-8148cfa495b5");
+
+        /// <summary>
+        /// Fixes the thin cover not getting lit by the cannon lighting which is much more noticable on dark lighting for Towr2
+        /// </summary>
+        /// <param name="pipeline"></param>
+        /// <param name="package"></param>
+        private static void FixCoverPiecesLighting(LevelSpecificPipeline pipeline, IMEPackage package)
+        {
+            if (package.FileNameNoExtension != "BioA_MPTowr2_200")
+            {
+                return; // Not this level
+            }
+
+            foreach (var cover in CoverNeedingLightGuidFixes)
+            {
+                var exp = package.FindExport(cover);
+                var irrelevantLights = exp.GetProperty<ArrayProperty<StructProperty>>("IrrelevantLights");
+
+                var newIrrelevantLights = irrelevantLights.Where(x => CommonStructs.GetGuid(x) != CannonLightGuid).ToArray();
+
+                if (newIrrelevantLights.Length == 0)
+                {
+                    // Nuke whole property
+                    exp.RemoveProperty("IrrelevantLights");
+                }
+                else
+                {
+                    // Write them back
+                    exp.WriteProperty(new ArrayProperty<StructProperty>(newIrrelevantLights, "IrrelevantLights"));
+                }
+            }
+        }
+
         private static void EnableStructuralStaticLighting(LevelSpecificPipeline pipeline, IMEPackage package)
         {
             // Validate the entire list before modifying any component
@@ -191,11 +246,17 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
         public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
             if (!pipeline.ME3Packages.TryGetValue(LightingPackageName, out var package))
+            {
                 throw new InvalidOperationException($"MPTowr2 lighting: required package {LightingPackageName} was not loaded.");
+            }
 
             ApplyLightBrightness(pipeline, path => package.FindExport(path));
 
+            // Makes flashlights work on other parts of the level
             EnableStructuralStaticLighting(pipeline, package);
+
+            // Fixes light flashing on the thin cover pieces that are supposed to be lit by the cannon light
+            FixCoverPiecesLighting(pipeline, package);
         }
 
         public override void CorrectUDKExport(LevelSpecificPipeline pipeline, IMEPackage udk)
