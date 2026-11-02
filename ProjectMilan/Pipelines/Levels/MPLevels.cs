@@ -57,8 +57,11 @@ namespace ProjectMilan.Pipelines.Levels
         /// </summary>
         private const string WavelistImages = "Images";
 
+#if !SHIPPING_RELEASE
         private static readonly LocalizedString DiamondDifficultyName = new() { [MELocalization.INT] = "Diamond" };
         private static readonly LocalizedString DiamondDifficultyAllCapsName = new() { [MELocalization.INT] = "DIAMOND" };
+#endif
+
         class MPLevelsVars
         {
             /// <summary>
@@ -97,7 +100,9 @@ namespace ProjectMilan.Pipelines.Levels
             /// </summary>
             public readonly List<DifficultyEntry> Difficulties = new()
             {
+#if !SHIPPING_RELEASE
                 new DifficultyEntry { ID = 4, NameStrRefId = MilanPipelinesShared.AssignTLK(DiamondDifficultyName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(DiamondDifficultyAllCapsName), Image = "GUI_MPImages.MatchSettings.OptChallgDiamond" },
+#endif
             };
 
             /// <summary>

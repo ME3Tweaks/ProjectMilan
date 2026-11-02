@@ -2,6 +2,7 @@
   <Configurations>
     <BuildType Name="Debug" />
     <BuildType Name="Release" />
+    <BuildType Name="ShippingRelease" />
     <BuildType Name="WinAzureRelease" />
     <BuildType Name="WinAzureTest" />
     <BuildType Name="WinDebug" />
@@ -11,24 +12,36 @@
     <Platform Name="x86" />
   </Configurations>
   <Project Path="BankConverter/BankConverter.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
+  <Project Path="BannerEditor/BannerEditor.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureRelease|*" Project="Release" />
+    <BuildType Solution="WinAzureTest|*" Project="Release" />
+    <BuildType Solution="WinDebug|*" Project="Debug" />
+    <BuildType Solution="WinRelease|*" Project="Release" />
+    <Platform Project="x64" />
+  </Project>
   <Project Path="CreditsEditor/CreditsEditor.csproj" Id="7ca85869-4c76-4501-ae77-22eea80c5cf7">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="JDiffCS.Test/JDiffCS.Test.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Debug" />
     <BuildType Solution="WinAzureTest|*" Project="Debug" />
     <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Debug" />
   </Project>
   <Project Path="JDiffCS/JDiffCS.csproj" Id="6b6abeee-320c-4ea6-9c6b-001a8b39e0b3">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="Debug|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
@@ -36,6 +49,7 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="LEDecooker/LEDecooker.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="Debug|x64" Project="Debug" />
     <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
@@ -44,12 +58,15 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
     <Platform Solution="Debug|x64" Project="x64" />
     <Platform Solution="Release|x64" Project="x64" />
+    <Platform Solution="ShippingRelease|x64" Project="x64" />
   </Project>
   <Project Path="LegendaryExplorer/LegendaryExplorer/LegendaryExplorerCore.SourceGenerators/LegendaryExplorerCore.SourceGenerators.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="LegendaryExplorer/LegendaryExplorer/LegendaryExplorerCore/LegendaryExplorerCore.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="Debug|x64" Project="Debug" />
     <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="WinAzureRelease" />
@@ -59,6 +76,7 @@
     <Platform Project="x64" />
   </Project>
   <Project Path="LegendaryExplorer/LegendaryExplorer/submodules/Wwiser.NET/BinarySerializer/BinarySerializer/BinarySerializer.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Debug" />
     <BuildType Solution="WinAzureTest|x64" Project="Debug" />
@@ -67,6 +85,7 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="LegendaryExplorer/LegendaryExplorer/submodules/Wwiser.NET/ME3Tweaks.Wwiser/ME3Tweaks.Wwiser.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Debug" />
     <BuildType Solution="WinAzureTest|x64" Project="Debug" />
@@ -75,24 +94,28 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="MilanCoverHost/MilanCoverHost.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="MilanShaderCompilerLib/MilanShaderCompilerLib.vcxproj" Id="b682c2a0-585b-4985-b0b3-e91727e22dd9">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="MilanShaderHost.Test/MilanShaderHost.Test.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="MilanShaderHost/MilanShaderHost.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
@@ -101,12 +124,14 @@
     <Build Solution="*|Any CPU" Project="false" />
     <Build Solution="*|x86" Project="false" />
     <Build Solution="Release|x64" Project="false" />
+    <Build Solution="ShippingRelease|x64" Project="false" />
     <Build Solution="WinAzureRelease|x64" Project="false" />
     <Build Solution="WinAzureTest|x64" Project="false" />
     <Build Solution="WinDebug|x64" Project="false" />
     <Build Solution="WinRelease|x64" Project="false" />
   </Project>
   <Project Path="MilanShaderResearchTool/MilanShaderResearchTool.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
@@ -115,12 +140,14 @@
     <Build Solution="*|Any CPU" Project="false" />
     <Build Solution="*|x86" Project="false" />
     <Build Solution="Release|x64" Project="false" />
+    <Build Solution="ShippingRelease|x64" Project="false" />
     <Build Solution="WinAzureRelease|x64" Project="false" />
     <Build Solution="WinAzureTest|x64" Project="false" />
     <Build Solution="WinDebug|x64" Project="false" />
     <Build Solution="WinRelease|x64" Project="false" />
   </Project>
   <Project Path="MultiInstancePatcher/MultiInstancePatcher.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
     <BuildType Solution="WinAzureTest|x64" Project="Debug" />
@@ -129,12 +156,14 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="NetIndexingChecker/NetIndexingChecker.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="ProjectMilan/ProjectMilan.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="ShippingRelease" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
     <BuildType Solution="WinAzureTest|x64" Project="Debug" />
@@ -148,6 +177,7 @@
     <Build Solution="WinRelease|x64" Project="false" />
   </Project>
   <Project Path="ProjectMilanCore/ProjectMilanCore.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
     <BuildType Solution="WinAzureTest|x64" Project="Debug" />
@@ -161,6 +191,7 @@
     <Build Solution="WinRelease|x64" Project="false" />
   </Project>
   <Project Path="ProjectMilan_ExtraContent/ProjectMilan_ExtraContent.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
     <BuildType Solution="WinAzureTest|x64" Project="Debug" />
@@ -174,6 +205,7 @@
     <Build Solution="WinRelease|x64" Project="false" />
   </Project>
   <Project Path="RedemptionMapTool/RedemptionMapTool.csproj" Id="2fae0277-39f4-482d-8167-6da191f38d11">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="Debug|x64" Project="Debug" />
     <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
@@ -183,12 +215,14 @@
     <Platform Project="x64" />
   </Project>
   <Project Path="ShaderCompare/ShaderCompare.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="ShaderResearchTool/ShaderResearchTool.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="Debug|x64" Project="Debug" />
     <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
@@ -198,18 +232,21 @@
     <Platform Project="x64" />
   </Project>
   <Project Path="UDKLevelSelect/UDKLevelSelect.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="UDKLoadTest/UDKLoadTest.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="WwiseTools/WwiseTools_DotNet6/WwiseTools_DotNet6.csproj">
+    <BuildType Solution="ShippingRelease|*" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
     <BuildType Solution="WinAzureTest|x64" Project="Debug" />
@@ -220,6 +257,7 @@
   </Project>
   <Folder Name="/UdkInj/">
     <Project Path="UdkInj/MinHook/build/VC17/libMinHook.vcxproj" Id="f142a341-5ee0-442d-a15f-98ae9b48dbae">
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
       <BuildType Solution="WinAzureRelease|*" Project="Release" />
       <BuildType Solution="WinAzureTest|*" Project="Debug" />
       <BuildType Solution="WinDebug|*" Project="Debug" />
@@ -227,6 +265,7 @@
       <Platform Project="x64" />
     </Project>
     <Project Path="UdkInj/SDK/SDK.vcxproj" Id="2bcaea70-4935-4b45-8167-4a6f057aef39">
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
       <BuildType Solution="WinAzureRelease|*" Project="Release" />
       <BuildType Solution="WinAzureTest|*" Project="Debug" />
       <BuildType Solution="WinDebug|*" Project="Debug" />
@@ -234,6 +273,7 @@
       <Platform Project="x64" />
     </Project>
     <Project Path="UdkInj/UDKAgent/UDKAgent.vcxproj" Id="27c89f9b-68d6-4405-a347-2ff4251978cd">
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
       <BuildType Solution="WinAzureRelease|*" Project="Release" />
       <BuildType Solution="WinAzureTest|*" Project="Debug" />
       <BuildType Solution="WinDebug|*" Project="Debug" />
@@ -241,18 +281,21 @@
       <Platform Project="x64" />
   </Project>
     <Project Path="UdkInj/UDKInj.LightmassBridge/UDKInj.LightmassBridge.csproj">
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
       <BuildType Solution="WinAzureRelease|*" Project="Release" />
       <BuildType Solution="WinAzureTest|*" Project="Debug" />
       <BuildType Solution="WinDebug|*" Project="Debug" />
       <BuildType Solution="WinRelease|*" Project="Release" />
     </Project>
     <Project Path="UdkInj/UDKInj.Shell/UDKInj.Shell.csproj">
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
       <BuildType Solution="WinAzureRelease|*" Project="Release" />
       <BuildType Solution="WinAzureTest|*" Project="Debug" />
       <BuildType Solution="WinDebug|*" Project="Debug" />
       <BuildType Solution="WinRelease|*" Project="Release" />
     </Project>
     <Project Path="UdkInj/UDKInj/UDKInj.csproj">
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
       <BuildType Solution="WinAzureRelease|*" Project="Release" />
       <BuildType Solution="WinAzureTest|*" Project="Debug" />
       <BuildType Solution="WinDebug|*" Project="Debug" />

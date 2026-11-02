@@ -106,7 +106,7 @@ namespace ProjectMilan.Pipelines.Mod
 
             // Add spalsh
 #if SHIPPING_RELEASE
-            var sourceFileName = "ship.png";
+            var sourceFileName = "lmp.png";
 #else
             var sourceFileName = "milan.png";
 #endif
