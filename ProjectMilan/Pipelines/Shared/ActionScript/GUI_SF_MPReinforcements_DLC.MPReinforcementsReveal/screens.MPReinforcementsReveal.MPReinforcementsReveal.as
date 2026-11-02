@@ -234,12 +234,20 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
                 if(this.nSelectedCardIndex <= 0)
                 {
                     this.m_bLeftArrowPressed = false;
+                    // MILAN CHANGE Added by DropTheSquid 11/2/2026
+                    // clear queued scroll events when we reach the beginning of the list
+                    this.queuedScrollEvents = 0;
+                    // END MILAN CHANGE
                 }
                 _global.SFX.PlayGUISound("MPReinforcementsRevealChange");
             }
         }
         else
         {
+            // MILAN CHANGE Added by DropTheSquid 11/2/2026
+            // clear queued scroll events when we can't move further
+            this.queuedScrollEvents = 0;
+            // END MILAN CHANGE
             _global.SFX.PlayGUIError();
         }
     }
@@ -284,12 +292,20 @@ class screens.MPReinforcementsReveal.MPReinforcementsReveal extends com.SFXScree
                 if(this.nSelectedCardIndex >= this.CardClips.length - 1)
                 {
                     this.m_bRightArrowPressed = false;
+                    // MILAN CHANGE Added by DropTheSquid 11/2/2026
+                    // clear queued scroll events when we reach the end of the list
+                    this.queuedScrollEvents = 0;
+                    // END MILAN CHANGE
                 }
                 _global.SFX.PlayGUISound("MPReinforcementsRevealChange");
             }
         }
         else
         {
+            // MILAN CHANGE Added by DropTheSquid 11/2/2026
+            // clear queued scroll events when we can't move further
+            this.queuedScrollEvents = 0;
+            // END MILAN CHANGE
             _global.SFX.PlayGUIError();
         }
     }
