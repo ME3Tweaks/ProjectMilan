@@ -170,7 +170,16 @@ public class ScaleformBuilder
             var references = new ArrayProperty<ObjectProperty>("References");
             foreach (var texPath in new DirectoryInfo(Path.Combine(swfDir.FullName, "Textures")).GetFiles("*.png").OrderBy(f => f.Name))
             {
-                var texName = Path.GetFileNameWithoutExtension((texPath.Name)).Split('-')[1];
+                string texName;
+                if (texPath.Name.Contains('-'))
+                {
+                    texName = Path.GetFileNameWithoutExtension(texPath.Name).Split('-')[1];
+                }
+                else
+                {
+                    texName = Path.GetFileNameWithoutExtension(texPath.Name);
+                }
+
                 var format = PixelFormat.ARGB;
                 switch (Path.GetFileNameWithoutExtension((texPath.Name)).Split('-')[0].ToUpper())
                 {
