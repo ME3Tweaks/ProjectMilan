@@ -407,6 +407,12 @@ namespace ProjectMilan.Pipelines.Levels
                 using var package = MEPackageHandler.OpenMEPackage(sourcePath, forceLoadFromDisk: true, diskIOSyncLock: MilanShared.DiskIOSyncLock);
                 if (LevelShared.MultiplyLevelCullingDistances(package, 2f) > 0)
                 {
+                    // These LE3 sublevels can still branch on SP game classes that do not exist in LMP.
+                    var sequence = package.FindExport("TheWorld.PersistentLevel.Main_Sequence");
+                    if (sequence != null)
+                    {
+                        LevelShared.FixSequencing(sequence, levelPipeline);
+                    }
                     package.Save(Path.Combine(outputPath, $"{sublevel}.pcc"), diskIOSyncLock: MilanShared.DiskIOSyncLock);
                 }
             }
