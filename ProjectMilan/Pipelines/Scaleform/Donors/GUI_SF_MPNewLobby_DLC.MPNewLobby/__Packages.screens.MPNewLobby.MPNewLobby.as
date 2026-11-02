@@ -1,17 +1,18 @@
+// Stumpy - 2026/11/03 - Name variables and update from scaleform
 class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
 {
-   // MILAN CHANGE - Mgamerz - 2026-10-10
-   // Four physical cards are rebound to absolute lobby slots. Menu indices remain local.
-   var m_FirstVisibleSlot = 0;
-   var m_SelectedPlayerSlot = -1;
-   var m_PlayerSlotCount = 0;
-   var m_CustomPlayerIcons;
-   var m_BindingPlayerRows = false;
-   var m_ScrollDirection = 0;
-   var m_NextScrollRepeat = 0;
-   var m_ViewStickDirection = 0;
-   var m_PlayerViewPending = false;
-   var m_PlayerInputTimer;
+    // MILAN CHANGE - Mgamerz - 2026-10-10
+    // Four physical cards are rebound to absolute lobby slots. Menu indices remain local.
+    var m_FirstVisibleSlot = 0;
+    var m_SelectedPlayerSlot = -1;
+    var m_PlayerSlotCount = 0;
+    var m_CustomPlayerIcons;
+    var m_BindingPlayerRows = false;
+    var m_ScrollDirection = 0;
+    var m_NextScrollRepeat = 0;
+    var m_ViewStickDirection = 0;
+    var m_PlayerViewPending = false;
+    var m_PlayerInputTimer;
 
     var m_bConnected;
     var leftPage;
@@ -19,6 +20,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     var m_ControllerLegend;
     var m_PCLegend;
     var ActionMappings;
+    var MakeDelegate;
     var m_ArrowLeft;
     var m_ArrowRight;
     var rightPage;
@@ -114,19 +116,19 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         super();
     }
     function onLoad()
-   {
-      Mouse.addListener(this);
-      this.m_PlayerInputTimer = setInterval(this,"TickPlayerInput",50);
+    {
+        Mouse.addListener(this);
+        this.m_PlayerInputTimer = setInterval(this,"TickPlayerInput",50);
 
-      super.onLoad();
-      this.m_bConnected = false;
-      this.LoadStrings();
-      this.SetupPageArrows();
-      this.SetupButtonLegend();
-      var _loc4_ = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
-      this.LoadTab(_loc4_);
-      _root.gotoAndStop(2);
-   }
+        super.onLoad();
+        this.m_bConnected = false;
+        this.LoadStrings();
+        this.SetupPageArrows();
+        this.SetupButtonLegend();
+        var CurrentLobbyTab = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
+        this.LoadTab(CurrentLobbyTab);
+        _root.gotoAndStop(2);
+    }
     function LoadStrings()
     {
         this.srBack = "$" + _global.SFX.GetIniString("srBack");
@@ -181,16 +183,18 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         this.srChallengeTracking = "$" + _global.SFX.GetIniString("srChallengeTracking");
     }
     function SetInitialSelectedItem()
-   {
-      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD) return;
-
-      var _loc2_ = this.leftPage.contents.list;
-      if(!_loc2_.IsIndexValid(this.PreviouslySelectedItem))
-      {
-         this.PreviouslySelectedItem = 0;
-      }
-      _loc2_.selectedIndex = this.PreviouslySelectedItem;
-   }
+    {
+        if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
+        {
+            return;
+        }
+        var PageList = this.leftPage.contents.list;
+        if(!PageList.IsIndexValid(this.PreviouslySelectedItem))
+        {
+            this.PreviouslySelectedItem = 0;
+        }
+        PageList.selectedIndex = this.PreviouslySelectedItem;
+    }
     function SetupButtonLegend()
     {
         this.m_ControllerLegend = _root.mcControllerButtons;
@@ -255,7 +259,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     {
         if(_root.screen.m_ControllerLegend.InputDisabled)
         {
-            return undefined;
+            return;
         }
         if(Key.getCode() == com.XInput.ButtonY)
         {
@@ -263,14 +267,14 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
     }
     function SetupPageArrows()
-   {
-      this.m_ArrowLeft = _root.ArrowLeft;
-      this.m_ArrowRight = _root.ArrowRight;
-      this.leftArrowOriginalX = this.m_ArrowLeft.contents._x;
-      this.rightArrayOriginalX = this.m_ArrowRight.contents._x;
-      this.m_ArrowLeft.addEventListener("ArrowPressed",this.MakeDelegate(this.HideSquadScreen));
-      this.m_ArrowRight.addEventListener("ArrowPressed",this.MakeDelegate(this.ShowSquadScreen));
-   }
+    {
+        this.m_ArrowLeft = _root.ArrowLeft;
+        this.m_ArrowRight = _root.ArrowRight;
+        this.leftArrowOriginalX = this.m_ArrowLeft.contents._x;
+        this.rightArrayOriginalX = this.m_ArrowRight.contents._x;
+        this.m_ArrowLeft.addEventListener("ArrowPressed",this.MakeDelegate(this.HideSquadScreen));
+        this.m_ArrowRight.addEventListener("ArrowPressed",this.MakeDelegate(this.ShowSquadScreen));
+    }
     function MakeLoadTabDelegate(subscreen)
     {
         return function()
@@ -283,48 +287,50 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         flash.external.ExternalInterface.call("LoadTab",subscreen);
     }
     function OnTabLoaded(subscreen)
-   {
-      this.m_PlayerViewPending = false;
-      this.m_ScrollDirection = 0;
-      if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Squad) this.m_SelectedPlayerSlot = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",subscreen));
-
-      this.PreviouslySelectedItem = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",subscreen));
-      this.m_bConnected = Boolean(flash.external.ExternalInterface.call("IsMPGame"));
-      if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_MultiplayerMenu)
-      {
-         this.SetTitle(this.srMultiplayerMenuTitle);
-         this.LoadPage(this.leftPage,this.PAGE_MULTIPLAYER_MENU);
-         this.LoadPage(this.rightPage,this.PAGE_GALAXY_AT_WAR);
-      }
-      else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Character)
-      {
-         this.SetTitle(this.srCharacter);
-         this.LoadPage(this.leftPage,this.PAGE_CHARACTER_MENU);
-         this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
-      }
-      else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_MissionSetup)
-      {
-         this.SetTitle(this.GetMissionSettingsTabTitle());
-         this.LoadPage(this.leftPage,this.PAGE_MISSION_SETUP);
-         this.LoadPage(this.rightPage,this.PAGE_GALAXY_AT_WAR);
-      }
-      else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Lobby)
-      {
-         this.SetTitle(this.srLobbyTitle);
-         this.LoadPage(this.leftPage,this.PAGE_LOBBY_MENU);
-         this.LoadPage(this.rightPage,this.PAGE_SQUAD);
-      }
-      else if(subscreen == screens.MPNewLobby.MPNewLobby.LSS_Squad)
-      {
-         this.SetTitle(this.srSquad);
-         this.LoadPage(this.leftPage,this.PAGE_SQUAD);
-         this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
-      }
-      if(this.m_PageTransitionType != this.PAGE_TRANSITION_NONE)
-      {
-         this.StartPageTransition();
-      }
-   }
+    {
+        this.m_PlayerViewPending = false;
+        this.m_ScrollDirection = 0;
+        if(subscreen == LSS_Squad)
+        {
+            this.m_SelectedPlayerSlot = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",subscreen));
+        }
+        this.PreviouslySelectedItem = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",subscreen));
+        this.m_bConnected = Boolean(flash.external.ExternalInterface.call("IsMPGame"));
+        if(subscreen == LSS_MultiplayerMenu)
+        {
+            this.SetTitle(this.srMultiplayerMenuTitle);
+            this.LoadPage(this.leftPage,this.PAGE_MULTIPLAYER_MENU);
+            this.LoadPage(this.rightPage,this.PAGE_GALAXY_AT_WAR);
+        }
+        else if(subscreen == LSS_Character)
+        {
+            this.SetTitle(this.srCharacter);
+            this.LoadPage(this.leftPage,this.PAGE_CHARACTER_MENU);
+            this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
+        }
+        else if(subscreen == LSS_MissionSetup)
+        {
+            this.SetTitle(this.GetMissionSettingsTabTitle());
+            this.LoadPage(this.leftPage,this.PAGE_MISSION_SETUP);
+            this.LoadPage(this.rightPage,this.PAGE_GALAXY_AT_WAR);
+        }
+        else if(subscreen == LSS_Lobby)
+        {
+            this.SetTitle(this.srLobbyTitle);
+            this.LoadPage(this.leftPage,this.PAGE_LOBBY_MENU);
+            this.LoadPage(this.rightPage,this.PAGE_SQUAD);
+        }
+        else if(subscreen == LSS_Squad)
+        {
+            this.SetTitle(this.srSquad);
+            this.LoadPage(this.leftPage,this.PAGE_SQUAD);
+            this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
+        }
+        if(this.m_PageTransitionType != this.PAGE_TRANSITION_NONE)
+        {
+            this.StartPageTransition();
+        }
+    }
     function SetTitle(sTitle)
     {
         this.tabs.mainTab.title.textAutoSize = "shrink";
@@ -360,34 +366,46 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
     }
     function RefreshPage(page, sSymbolName)
-    {
-        var _loc4_ = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
-        this.PreviouslySelectedItem = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",_loc4_));
-        var _loc5_ = page.list;
-        var _loc6_ = undefined;
+    { 
+        var CurrentLobbyTab = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
+        this.PreviouslySelectedItem = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem", CurrentLobbyTab));
+        var PageList = page.list;
+        var bCanAffordNewStoreItems;
+        var IsChallengeSystemEnabled;
+        var MatchSettings;
+        var MapList;
+        var PrivacyTypes;
+        var EnemyTypes;
+        var ChallengeTypes;
+        var bIsMPClient;
+        var bCurrentTabIsLSS_Squad;
+        var bCanLevelUp;
+        var bHasNewWeapons;
+        var bHasNewAppearanceOptions;
+        var bHasNewMatchConsumables;
         if(sSymbolName == this.PAGE_MULTIPLAYER_MENU)
         {
-            var _loc7_ = Boolean(flash.external.ExternalInterface.call("CanAffordNewStoreItems"));
-            var _loc8_ = Boolean(flash.external.ExternalInterface.call("IsChallengeSystemEnabled"));
-            if(!_loc8_)
+            bCanAffordNewStoreItems = Boolean(flash.external.ExternalInterface.call("CanAffordNewStoreItems"));
+            IsChallengeSystemEnabled = Boolean(flash.external.ExternalInterface.call("IsChallengeSystemEnabled"));
+            if(!IsChallengeSystemEnabled)
             {
-                _loc5_.gotoAndStop("nochallenges");
+                PageList.gotoAndStop("nochallenges");
             }
-            _loc5_.item1.contents.title.text = this.srQuickMatch;
-            _loc5_.item1.action = this.CustomMatch;
-            _loc5_.item2.contents.title.text = this.srHostNewMission;
-            _loc5_.item2.action = this.HostNewMission;
-            _loc5_.item3.contents.title.text = this.srCharacter;
-            _loc5_.item3.action = this.MakeDelegate(this.ShowCharacterScreen);
-            _loc5_.item4.contents.title.text = this.srLeaderboards;
-            _loc5_.item4.action = this.ShowLeaderboardScreen;
-            _loc5_.item5.contents.title.text = this.srReinforcements;
-            _loc5_.item5.action = this.ShowStoreScreen;
-            _loc5_.item5.SetAlert(_loc7_,this.srNew);
-            if(_loc8_)
+            PageList.item1.contents.title.text = this.srQuickMatch;
+            PageList.item1.action = this.CustomMatch;
+            PageList.item2.contents.title.text = this.srHostNewMission;
+            PageList.item2.action = this.HostNewMission;
+            PageList.item3.contents.title.text = this.srCharacter;
+            PageList.item3.action = this.MakeDelegate(this.ShowCharacterScreen);
+            PageList.item4.contents.title.text = this.srLeaderboards;
+            PageList.item4.action = this.ShowLeaderboardScreen;
+            PageList.item5.contents.title.text = this.srReinforcements;
+            PageList.item5.action = this.ShowStoreScreen;
+            PageList.item5.SetAlert(bCanAffordNewStoreItems,this.srNew);
+            if(IsChallengeSystemEnabled)
             {
-                _loc5_.item6.contents.title.text = this.srChallengeTracking;
-                _loc5_.item6.action = this.MakeDelegate(this.ShowMPChallengeScreen);
+                PageList.item6.contents.title.text = this.srChallengeTracking;
+                PageList.item6.action = this.MakeDelegate(this.ShowMPChallengeScreen);
             }
             this.RefreshPlayerInfo(page,false);
         }
@@ -397,136 +415,139 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
         else if(sSymbolName == this.PAGE_MISSION_SETUP)
         {
-            var _loc9_ = flash.external.ExternalInterface.call("GetMatchSettings");
-            var _loc10_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetMapList"));
-            var _loc11_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetPrivacyTypes"));
-            var _loc12_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetEnemyTypes"));
-            var _loc13_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetChallengeTypes"));
+            MatchSettings = flash.external.ExternalInterface.call("GetMatchSettings");
+            MapList = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetMapList"));
+            PrivacyTypes = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetPrivacyTypes"));
+            EnemyTypes = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetEnemyTypes"));
+            ChallengeTypes = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetChallengeTypes"));
             this.bIsHostingNewMission = Boolean(flash.external.ExternalInterface.call("IsHostingNewMission"));
-            var _loc14_ = com.SFXScreen.IsMPClient;
+            bIsMPClient = com.SFXScreen.IsMPClient;
             if(this.m_bConnected)
             {
-                _loc5_.item1.Initialize(this.srTeam,_loc11_,_loc9_.privacy,!_loc14_);
+                PageList.item1.Initialize(this.srTeam, PrivacyTypes,MatchSettings.privacy, !bIsMPClient);
             }
             else if(this.bIsHostingNewMission)
             {
-                _loc5_.item1.Initialize(this.srTeam,_loc11_,_loc9_.privacy,!_loc14_);
+                PageList.item1.Initialize(this.srTeam, PrivacyTypes,MatchSettings.privacy, !bIsMPClient);
             }
             else
             {
-                _loc10_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetMapListForSearching"));
-                _loc12_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetEnemyTypesForSearching"));
-                _loc13_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetChallengeTypesForSearching"));
-                _loc5_.item1.Initialize(this.srTeam,_loc11_,0,false);
+                MapList = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetMapListForSearching"));
+                EnemyTypes = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetEnemyTypesForSearching"));
+                ChallengeTypes = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetChallengeTypesForSearching"));
+                PageList.item1.Initialize(this.srTeam,PrivacyTypes, 0, false);
             }
-            _loc5_.item1.Refresh();
-            if(_loc9_.bRandomMap)
+            PageList.item1.Refresh();
+            if(MatchSettings.bRandomMap)
             {
-                _loc5_.item2.Initialize(this.srMap,_loc10_,0,!_loc14_);
+                PageList.item2.Initialize(this.srMap, MapList, 0, !bIsMPClient);
             }
             else
             {
-                _loc5_.item2.Initialize(this.srMap,_loc10_,_loc9_.MapId,!_loc14_);
+                PageList.item2.Initialize(this.srMap, MapList,MatchSettings.MapId, !bIsMPClient);
             }
-            _loc5_.item2.Refresh();
-            if(_loc9_.bRandomEnemy)
+            PageList.item2.Refresh();
+            if(MatchSettings.bRandomEnemy)
             {
-                _loc5_.item3.Initialize(this.srEnemy,_loc12_,0,!_loc14_);
+                PageList.item3.Initialize(this.srEnemy, EnemyTypes, 0, !bIsMPClient);
             }
             else
             {
-                _loc5_.item3.Initialize(this.srEnemy,_loc12_,_loc9_.Enemy,!_loc14_);
+                PageList.item3.Initialize(this.srEnemy, EnemyTypes, MatchSettings.Enemy, !bIsMPClient);
             }
-            _loc5_.item3.Refresh();
-            _loc5_.item4.Initialize(this.srChallenge,_loc13_,_loc9_.Challenge,!_loc14_);
-            _loc5_.item4.Refresh();
+            PageList.item3.Refresh();
+            PageList.item4.Initialize(this.srChallenge, ChallengeTypes, MatchSettings.Challenge, !bIsMPClient);
+            PageList.item4.Refresh();
         }
         else if(sSymbolName == this.PAGE_SQUAD)
         {
-            var _loc15_ = _loc4_ == screens.MPNewLobby.MPNewLobby.LSS_Squad;
-            this.RefreshPlayerList(screens.MPNewLobby.PlayerList(_loc5_),_loc15_);
+            bCurrentTabIsLSS_Squad = CurrentLobbyTab == LSS_Squad;
+            this.RefreshPlayerList(screens.MPNewLobby.PlayerList(PageList), bCurrentTabIsLSS_Squad);
         }
         else if(sSymbolName == this.PAGE_CHARACTER_MENU)
         {
-            var _loc16_ = Boolean(flash.external.ExternalInterface.call("CanLevelUp"));
-            var _loc17_ = Boolean(flash.external.ExternalInterface.call("HasNewWeapons"));
-            var _loc18_ = Boolean(flash.external.ExternalInterface.call("HasNewAppearanceOptions"));
-            var _loc19_ = Boolean(flash.external.ExternalInterface.call("HasNewMatchConsumables"));
-            _loc7_ = Boolean(flash.external.ExternalInterface.call("CanAffordNewStoreItems"));
-            _loc5_.item1.contents.title.text = this.srTalentsLevelUp;
-            _loc5_.item1.action = this.ShowTalentsLevelUpScreen;
-            _loc5_.item1.SetLevelUpIcon(_loc16_);
-            _loc5_.item2.contents.title.text = this.srWeapons;
-            _loc5_.item2.action = this.ShowWeaponsScreen;
-            _loc5_.item2.SetAlert(_loc17_,this.srNew);
-            _loc5_.item3.contents.title.text = this.srAppearance;
-            _loc5_.item3.action = this.ShowAppearanceScreen;
-            _loc5_.item3.SetAlert(_loc18_,this.srNew);
-            _loc5_.item4.contents.title.text = this.srMatchConsumables;
-            _loc5_.item4.action = this.ShowMatchConsumablesScreen;
-            _loc5_.item4.SetAlert(_loc19_,this.srNew);
-            _loc5_.item5.contents.title.text = this.srReinforcements;
-            _loc5_.item5.action = this.ShowStoreScreen;
-            _loc5_.item5.SetAlert(_loc7_,this.srNew);
+            bCanLevelUp = Boolean(flash.external.ExternalInterface.call("CanLevelUp"));
+            bHasNewWeapons = Boolean(flash.external.ExternalInterface.call("HasNewWeapons"));
+            bHasNewAppearanceOptions = Boolean(flash.external.ExternalInterface.call("HasNewAppearanceOptions"));
+            bHasNewMatchConsumables = Boolean(flash.external.ExternalInterface.call("HasNewMatchConsumables"));
+            bCanAffordNewStoreItems = Boolean(flash.external.ExternalInterface.call("CanAffordNewStoreItems"));
+            PageList.item1.contents.title.text = this.srTalentsLevelUp;
+            PageList.item1.action = this.ShowTalentsLevelUpScreen;
+            PageList.item1.SetLevelUpIcon(bCanLevelUp);
+            PageList.item2.contents.title.text = this.srWeapons;
+            PageList.item2.action = this.ShowWeaponsScreen;
+            PageList.item2.SetAlert(bHasNewWeapons, this.srNew);
+            PageList.item3.contents.title.text = this.srAppearance;
+            PageList.item3.action = this.ShowAppearanceScreen;
+            PageList.item3.SetAlert(bHasNewAppearanceOptions, this.srNew);
+            PageList.item4.contents.title.text = this.srMatchConsumables;
+            PageList.item4.action = this.ShowMatchConsumablesScreen;
+            PageList.item4.SetAlert(bHasNewMatchConsumables, this.srNew);
+            PageList.item5.contents.title.text = this.srReinforcements;
+            PageList.item5.action = this.ShowStoreScreen;
+            PageList.item5.SetAlert(bCanAffordNewStoreItems,this.srNew);
             this.RefreshPlayerInfo(page,true);
         }
         else if(sSymbolName == this.PAGE_LOBBY_MENU)
         {
-            _loc16_ = Boolean(flash.external.ExternalInterface.call("CanLevelUp"));
-            _loc17_ = Boolean(flash.external.ExternalInterface.call("HasNewWeapons"));
-            _loc18_ = Boolean(flash.external.ExternalInterface.call("HasNewAppearanceOptions"));
-            _loc19_ = Boolean(flash.external.ExternalInterface.call("HasNewMatchConsumables"));
-            _loc7_ = Boolean(flash.external.ExternalInterface.call("CanAffordNewStoreItems"));
-            _loc5_.item1.contents.title.text = this.srToggleReady;
-            _loc5_.item1.action = this.ToggleReady;
-            _loc5_.item1._visible = this.m_bConnected;
-            _loc5_.item2.contents.title.text = this.srMissionSetup;
-            _loc5_.item2.action = this.ShowMissionSetupScreen;
-            _loc5_.item2._visible = this.m_bConnected;
-            _loc5_.item3.contents.title.text = this.srTalentsLevelUp;
-            _loc5_.item3.action = this.ShowTalentsLevelUpScreen;
-            _loc5_.item3.SetLevelUpIcon(_loc16_);
-            _loc5_.item4.contents.title.text = this.srWeapons;
-            _loc5_.item4.action = this.ShowWeaponsScreen;
-            _loc5_.item4.SetAlert(_loc17_,this.srNew);
-            _loc5_.item5.contents.title.text = this.srAppearance;
-            _loc5_.item5.action = this.ShowAppearanceScreen;
-            _loc5_.item5.SetAlert(_loc18_,this.srNew);
-            _loc5_.item6.contents.title.text = this.srMatchConsumables;
-            _loc5_.item6.action = this.ShowMatchConsumablesScreen;
-            _loc5_.item6.SetAlert(_loc19_,this.srNew);
-            _loc5_.item7.contents.title.text = this.srReinforcements;
-            _loc5_.item7.action = this.ShowStoreScreen;
-            _loc5_.item7.SetAlert(_loc7_,this.srNew);
-            this.RefreshPlayerInfo(page,true);
+            bCanLevelUp = Boolean(flash.external.ExternalInterface.call("CanLevelUp"));
+            bHasNewWeapons = Boolean(flash.external.ExternalInterface.call("HasNewWeapons"));
+            bHasNewAppearanceOptions = Boolean(flash.external.ExternalInterface.call("HasNewAppearanceOptions"));
+            bHasNewMatchConsumables = Boolean(flash.external.ExternalInterface.call("HasNewMatchConsumables"));
+            bCanAffordNewStoreItems = Boolean(flash.external.ExternalInterface.call("CanAffordNewStoreItems"));
+            PageList.item1.contents.title.text = this.srToggleReady;
+            PageList.item1.action = this.ToggleReady;
+            PageList.item1._visible = this.m_bConnected;
+            PageList.item2.contents.title.text = this.srMissionSetup;
+            PageList.item2.action = this.ShowMissionSetupScreen;
+            PageList.item2._visible = this.m_bConnected;
+            PageList.item3.contents.title.text = this.srTalentsLevelUp;
+            PageList.item3.action = this.ShowTalentsLevelUpScreen;
+            PageList.item3.SetLevelUpIcon(bCanLevelUp);
+            PageList.item4.contents.title.text = this.srWeapons;
+            PageList.item4.action = this.ShowWeaponsScreen;
+            PageList.item4.SetAlert(bHasNewWeapons, this.srNew);
+            PageList.item5.contents.title.text = this.srAppearance;
+            PageList.item5.action = this.ShowAppearanceScreen;
+            PageList.item5.SetAlert(bHasNewAppearanceOptions, this.srNew);
+            PageList.item6.contents.title.text = this.srMatchConsumables;
+            PageList.item6.action = this.ShowMatchConsumablesScreen;
+            PageList.item6.SetAlert(bHasNewMatchConsumables, this.srNew);
+            PageList.item7.contents.title.text = this.srReinforcements;
+            PageList.item7.action = this.ShowStoreScreen;
+            PageList.item7.SetAlert(bCanAffordNewStoreItems, this.srNew);
+            this.RefreshPlayerInfo(page, true);
         }
         else if(sSymbolName == this.PAGE_GALAXY_AT_WAR)
         {
             this.RefreshGalaxyAtWarMap();
         }
+        var bShouldShowChatDisabledMessage;
         if(page._parent == this.leftPage)
         {
             this.SetInitialSelectedItem();
             this.RefreshButtonLegend();
-            var _loc20_ = Boolean(flash.external.ExternalInterface.call("ShouldShowChatDisabledMessage"));
+            bShouldShowChatDisabledMessage = Boolean(flash.external.ExternalInterface.call("ShouldShowChatDisabledMessage"));
             page.chatDisabled.text = this.srChatDisabled;
-            page.chatDisabled._visible = _loc20_ && sSymbolName == this.PAGE_LOBBY_MENU;
+            page.chatDisabled._visible = bShouldShowChatDisabledMessage && sSymbolName == this.PAGE_LOBBY_MENU;
         }
         this.RefreshPageArrows();
     }
+
     function RefreshPageArrows()
-   {
-      this.m_ArrowLeft._visible = false;
-      this.m_ArrowRight._visible = false;
-      if(this.leftPage.contents.m_symbolName == this.PAGE_LOBBY_MENU)
-      {
-         this.m_ArrowRight._visible = true;
-      }
-      else if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
-      {
-         this.m_ArrowLeft._visible = true;
-      }
-   }
+    {
+        this.m_ArrowLeft._visible = false;
+        this.m_ArrowRight._visible = false;
+        if(this.leftPage.contents.m_symbolName == this.PAGE_LOBBY_MENU)
+        {
+            this.m_ArrowRight._visible = true;
+        }
+        else if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
+        {
+            this.m_ArrowLeft._visible = true;
+        }
+    }
+
     function RefreshGalaxyAtWarMap()
     {
         if(_global.SFX.IsDemo)
@@ -537,306 +558,328 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         {
             this.rightPage.contents.title.text = this.srGalaxyAtWar;
         }
-        var _loc3_ = this.rightPage.contents.map;
-        var _loc4_ = Boolean(flash.external.ExternalInterface.call("HasGAWRatingsError"));
-        _loc3_.SetErrorText(_loc4_,this.srGalaxyAtWarError);
+        var GAWMap = this.rightPage.contents.map;
+        var bHasGAWRatingsError = Boolean(flash.external.ExternalInterface.call("HasGAWRatingsError"));
+        GAWMap.SetErrorText(bHasGAWRatingsError, this.srGalaxyAtWarError);
         this.RefreshGalaxyAtWarRatings();
         this.RefreshGalaxyAtWarMapPositionMarker();
     }
+
     function RefreshGalaxyAtWarRatings()
     {
+        var GAWMap;
+        var GAWRatings;
+        var GAWZoneIdx;
         if(this.rightPage.contents.m_symbolName == this.PAGE_GALAXY_AT_WAR)
         {
-            var _loc3_ = this.rightPage.contents.map;
-            var _loc4_ = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetGAWRatings"));
-            var _loc5_ = 0;
-            while(_loc5_ < _loc4_.length)
+            GAWMap = this.rightPage.contents.map;
+            GAWRatings = com.SFXScreen.ObjectToArray(flash.external.ExternalInterface.call("GetGAWRatings"));
+            GAWZoneIdx = 0;
+            while(GAWZoneIdx < GAWRatings.length)
             {
-                _loc3_.SetZoneText(_loc4_[_loc5_].ZoneID,_loc4_[_loc5_].ZoneName);
-                _loc3_.SetZoneReadiness(_loc4_[_loc5_].ZoneID,_loc4_[_loc5_].CurrentRating);
-                _loc5_ += 1;
+                GAWMap.SetZoneText(GAWRatings[GAWZoneIdx].ZoneID,GAWRatings[GAWZoneIdx].ZoneName);
+                GAWMap.SetZoneReadiness(GAWRatings[GAWZoneIdx].ZoneID,GAWRatings[GAWZoneIdx].CurrentRating);
+                GAWZoneIdx += 1;
             }
             // MILAN CHANGE - Mgamerz - 2026-10-16
             // Hide readiness percentages while retaining their fields and updates.
-            _loc3_.SetPercentagesVisible(false);
+            GAWMap.SetPercentagesVisible(false);
             // END MILAN CHANGE
         }
     }
+
     function RefreshGalaxyAtWarMapPositionMarker()
     {
         // MILAN CHANGE - Mgamerz - 2026-10-16
         // Retain the readiness bonus text and updates, but hide its display.
+        var GAWMap = this.rightPage.contents.map;
         this.rightPage.contents.GAWBonusText._visible = false;
         // END MILAN CHANGE
-        var _loc2_ = this.rightPage.contents.map;
+        var MapInfo;
+        var MapZoneID;
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP && this.rightPage.contents.m_symbolName == this.PAGE_GALAXY_AT_WAR)
         {
-            var _loc3_ = flash.external.ExternalInterface.call("GetMapInfo",this.GetMapSetting());
-            var _loc4_ = Number(flash.external.ExternalInterface.call("GetMapZoneID",_loc3_.PackageName));
+            MapInfo = flash.external.ExternalInterface.call("GetMapInfo",this.GetMapSetting());
+            MapZoneID = Number(flash.external.ExternalInterface.call("GetMapZoneID",MapInfo.PackageName));
             this.rightPage.contents.GAWBonusText.textAutoSize = "shrink";
             this.rightPage.contents.GAWBonusText.text = String(flash.external.ExternalInterface.call("GetGAWZoneBonusText",this.GetMapSetting()));
-            if(_loc3_.Id > 0 && _loc3_.GalaxyAtWarMapSubtitle != 0)
+            if(MapInfo.Id > 0 && MapInfo.GalaxyAtWarMapSubtitle != 0)
             {
-                _loc2_.SetTextFieldTransparancy(30);
-                _loc2_.SetZoneTextFieldTransparency(_loc4_,100);
-                _loc2_.SetPositionalMarker(true,"","",_loc3_.GalaxyAtWarMapPosition.X,_loc3_.GalaxyAtWarMapPosition.Y);
-                _loc2_.SelectZone(_loc4_);
+                GAWMap.SetTextFieldTransparancy(30);
+                GAWMap.SetZoneTextFieldTransparency(MapZoneID,100);
+                GAWMap.SetPositionalMarker(true,"","",MapInfo.GalaxyAtWarMapPosition.X,MapInfo.GalaxyAtWarMapPosition.Y);
+                GAWMap.SelectZone(MapZoneID);
             }
             else
             {
-                _loc2_.SetTextFieldTransparancy(100);
-                _loc2_.SetPositionalMarker(false,"","",0,0);
-                _loc2_.UnselectCurrentZone();
+                GAWMap.SetTextFieldTransparancy(100);
+                GAWMap.SetPositionalMarker(false,"","",0,0);
+                GAWMap.UnselectCurrentZone();
             }
         }
         else
         {
-            _loc2_.SetTextFieldTransparancy(100);
-            _loc2_.SetPositionalMarker(false,"","",0,0);
-            _loc2_.UnselectCurrentZone();
+            GAWMap.SetTextFieldTransparancy(100);
+            GAWMap.SetPositionalMarker(false,"","",0,0);
+            GAWMap.UnselectCurrentZone();
             this.rightPage.contents.GAWBonusText.text = "";
         }
     }
-    function onListItemSelected(list)
-   {
-      if(this.m_BindingPlayerRows) return;
-      if(list == this.GetPlayerWindowList() && list.selectedItem != undefined) this.m_SelectedPlayerSlot = list.selectedItem.m_slotIndex;
 
-      if(this.leftPage.contents.list != list)
-      {
-         this.leftPage.contents.list.selectedIndex = -1;
-      }
-      if(this.rightPage.contents.list != list)
-      {
-         this.rightPage.contents.list.selectedIndex = -1;
-      }
-      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
-      {
-         this.RefreshCharacterSummary();
-      }
-      this.RefreshButtonLegend();
-   }
+    function onListItemSelected(list)
+    {
+        if(this.m_BindingPlayerRows)
+        {
+            return;
+        }
+        if(list == this.GetPlayerWindowList() && list.selectedItem != undefined)
+        {
+            this.m_SelectedPlayerSlot = list.selectedItem.m_slotIndex;
+        }
+        if(this.leftPage.contents.list != list)
+        {
+            this.leftPage.contents.list.selectedIndex = -1;
+        }
+        if(this.rightPage.contents.list != list)
+        {
+            this.rightPage.contents.list.selectedIndex = -1;
+        }
+        if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
+        {
+            this.RefreshCharacterSummary();
+        }
+        this.RefreshButtonLegend();
+    }
+
     function RefreshCharacterSummary()
     {
-        var _loc2_ = this.rightPage.contents.summary;
-        if(_loc2_ != null)
+        var CharacterSummary = this.rightPage.contents.summary;
+        if(CharacterSummary != null)
         {
-            _loc2_.Refresh();
+            CharacterSummary.Refresh();
         }
     }
+
     function RefreshScreen()
     {
         this.RefreshPage(this.leftPage.contents,this.leftPage.contents.m_symbolName);
         this.RefreshPage(this.rightPage.contents,this.rightPage.contents.m_symbolName);
     }
+
     function RefreshButtonLegend()
     {
-        var _loc2_ = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
-        if(_loc2_ == screens.MPNewLobby.MPNewLobby.LSS_MultiplayerMenu)
+        var CurrentLobbyTab = Number(flash.external.ExternalInterface.call("GetCurrentLobbyTab"));
+        if(CurrentLobbyTab == LSS_MultiplayerMenu)
         {
             this.RefreshButtonLegend_MultiplayerMenu();
         }
-        else if(_loc2_ == screens.MPNewLobby.MPNewLobby.LSS_Character)
+        else if(CurrentLobbyTab == LSS_Character)
         {
             this.RefreshButtonLegend_Character();
         }
-        else if(_loc2_ == screens.MPNewLobby.MPNewLobby.LSS_MissionSetup)
+        else if(CurrentLobbyTab == LSS_MissionSetup)
         {
             this.RefreshButtonLegend_MissionSetup();
         }
-        else if(_loc2_ == screens.MPNewLobby.MPNewLobby.LSS_Lobby)
+        else if(CurrentLobbyTab == LSS_Lobby)
         {
             this.RefreshButtonLegend_Lobby();
         }
-        else if(_loc2_ == screens.MPNewLobby.MPNewLobby.LSS_Squad)
+        else if(CurrentLobbyTab == LSS_Squad)
         {
             this.RefreshButtonLegend_Squad();
         }
         this.m_ControllerLegend.FitLeft();
     }
+
     function RefreshButtonLegend_MultiplayerMenu()
     {
-        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        // var _loc5_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
-        var cameFromSelectFirstCharacter = Boolean(flash.external.ExternalInterface.call("CameFromSelectFirstCharacter"));
+        var bCanInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        // var bIsInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        var bCameFromSelectFirstCharacter = Boolean(flash.external.ExternalInterface.call("CameFromSelectFirstCharacter"));
         if(!this.bUsingGamepad)
         {
-            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
+            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
             // map xbox A/Enter to "select current item"
-            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,bCanInteract);
             // map PC mid button 2 to options without affecting enter mapping
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srOptions,this.ShowOptionsScreen,canInteract);
-            if(cameFromSelectFirstCharacter)
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srOptions,this.ShowOptionsScreen,bCanInteract);
+            if(bCameFromSelectFirstCharacter)
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,canInteract);
+                this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,bCanInteract);
             }
             else
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,canInteract);
+                this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,bCanInteract);
             }
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract, true);
-            if(cameFromSelectFirstCharacter)
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,bCanInteract,true);
+            if(bCameFromSelectFirstCharacter)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,canInteract, true);
+                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.GoBackToSelectFirstCharacter,bCanInteract,true);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,canInteract, true);
+                this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitMultiplayer,this.ExitMultiplayer,bCanInteract,true);
             }
         }
     }
+
     function RefreshButtonLegend_Character()
     {
-        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        var bCanInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
         // var isInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
         if(!this.bUsingGamepad)
         {
-            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
+            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
-            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,bCanInteract);
             // map PC mid button 2 to options without affecting enter mapping
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srOptions,this.ShowOptionsScreen,canInteract);
-            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),canInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srOptions,this.ShowOptionsScreen,bCanInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),bCanInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),canInteract, true);
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),bCanInteract,true);
         }
     }
+
     function RefreshButtonLegend_Lobby()
     {
-        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        var isInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        var bCanInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        var bIsInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
         if(!this.bUsingGamepad)
         {
-            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract);
+            this.RefreshButton(_root.PCBtnCharacter,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,0,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
-            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract);
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,bCanInteract);
             // map PC mid button 2 to options without affecting enter mapping
-            if(isInParty)
+            if(bIsInParty)
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull());
             }
             else
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull());
             }
-            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,canInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,bCanInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,canInteract, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false, true);
-            if(isInParty)
+            this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false,true);
+            if(bIsInParty)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull(), true);
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull(), true);
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
             }
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,canInteract, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,canInteract, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,bCanInteract,true);
         }
     }
+
     function RefreshButtonLegend_Squad()
-   {
-      var _loc3_ = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-      var _loc4_ = Boolean(flash.external.ExternalInterface.call("IsInParty"));
-      var _loc5_;
-      var _loc6_;
-      if(!this.bUsingGamepad)
-      {
-         this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
-         _loc5_ = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
-         if(_loc5_.isOccupied && !_loc5_.isLocalPlayer)
-         {
-            _loc6_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
-            this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,!_loc6_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,_loc3_);
-         }
-         else
-         {
-            this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false);
-         }
-         this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,_loc3_);
-         this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,_loc3_);
-         if(_loc4_)
-         {
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,_loc3_ && !this.IsGameFull());
-         }
-         else
-         {
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,_loc3_ && !this.IsGameFull());
-         }
-         this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),_loc3_);
-      }
-      else
-      {
-         this.RefreshButton(_root.m_ControlY,0,"",undefined,false,true);
-         _loc5_ = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
-         if(_loc5_.isOccupied && !_loc5_.isLocalPlayer)
-         {
-            _loc6_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
-            this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,!_loc6_ ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,_loc3_,true);
-         }
-         else
-         {
-            this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false,true);
-         }
-         if(_loc4_)
-         {
-            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,_loc3_ && !this.IsGameFull(),true);
-         }
-         else
-         {
-            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,_loc3_ && !this.IsGameFull(),true);
-         }
-         this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false,true);
-         this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),_loc3_,true);
-         this.m_ControllerLegend.ControlB.SetVisible(false);
-      }
-   }
+    {
+        var bCanInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        var bIsInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        var SelectedPlayer;
+        var bHasVotedToKickPlayerInSlot;
+        if(!this.bUsingGamepad)
+        {
+            this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
+            SelectedPlayer = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
+            if(SelectedPlayer.isOccupied && !SelectedPlayer.isLocalPlayer)
+            {
+                bHasVotedToKickPlayerInSlot = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
+                this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,!bHasVotedToKickPlayerInSlot ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,bCanInteract);
+            }
+            else
+            {
+                this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false);
+            }
+            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract);
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,bCanInteract);
+            if(bIsInParty)
+            {
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull());
+            }
+            else
+            {
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull());
+            }
+            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),bCanInteract);
+        }
+        else
+        {
+            this.RefreshButton(_root.m_ControlY,0,"",undefined,false,true);
+            SelectedPlayer = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
+            if(SelectedPlayer.isOccupied && !SelectedPlayer.isLocalPlayer)
+            {
+                bHasVotedToKickPlayerInSlot = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
+                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,!bHasVotedToKickPlayerInSlot ? this.srVoteToKick : this.srUnvoteToKick,this.ToggleVoteToKickSelectedPlayer,bCanInteract,true);
+            }
+            else
+            {
+                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srVoteToKick,this.ToggleVoteToKickSelectedPlayer,false,true);
+            }
+            if(bIsInParty)
+            {
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
+            }
+            else
+            {
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
+            }
+            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),bCanInteract,true);
+            this.m_ControllerLegend.ControlB.SetVisible(false);
+        }
+    }
+
     function RefreshButtonLegend_MissionSetup()
     {
-        var canInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
-        var isInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
-        var _loc6_ = com.SFXScreen.IsMPClient == false;
-        var _loc7_ = Boolean(flash.external.ExternalInterface.call("IsHostingNewMission"));
+        var bCanInteract = Boolean(flash.external.ExternalInterface.call("CanInteract"));
+        var bIsInParty = Boolean(flash.external.ExternalInterface.call("IsInParty"));
+        var bIsMPHost = com.SFXScreen.IsMPClient == false;
+        var bIsHostingNewMission = Boolean(flash.external.ExternalInterface.call("IsHostingNewMission"));
+        var SelectedMap;
         if(this.m_bConnected)
         {
             if(!this.bUsingGamepad)
             {
                 this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
                 this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,"",undefined,false);
-                this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,canInteract);
+                this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract);
                 // TODO should enter do anything in this case?
                 // this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ActivateCurrentListItem,canInteract);
-                if(isInParty)
+                if(bIsInParty)
                 {
-                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull());
+                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull());
                 }
                 else
                 {
-                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull());
+                    this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull());
                 }
-                var _loc8_ = this.leftPage.contents.list.getItem(this.SETTING_MAP);
-                if(_loc8_.IsValueAvailable(_loc8_.GetActiveValue()))
+                SelectedMap = this.leftPage.contents.list.getItem(this.SETTING_MAP);
+                if(SelectedMap.IsValueAvailable(SelectedMap.GetActiveValue()))
                 {
-                    this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,!_loc6_ ? this.CancelMatchSettings : this.ConfirmMatchSettings,canInteract);
+                    this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srBack,!bIsMPHost ? this.CancelMatchSettings : this.ConfirmMatchSettings,bCanInteract);
                 }
                 else
                 {
@@ -845,25 +888,25 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             }
             else
             {
-                this.RefreshButton(_root.m_ControlY,0,"",undefined,false, true);
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srOptions,this.ShowOptionsScreen,canInteract, true);
-                if(isInParty)
+                this.RefreshButton(_root.m_ControlY,0,"",undefined,false,true);
+                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
+                if(bIsInParty)
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,canInteract && !this.IsGameFull(), true);
+                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
                 }
                 else
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,canInteract && !this.IsGameFull(), true);
+                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
                 }
-                this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false, true);
-                _loc8_ = this.leftPage.contents.list.getItem(this.SETTING_MAP);
-                if(_loc8_.IsValueAvailable(_loc8_.GetActiveValue()))
+                this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false,true);
+                SelectedMap = this.leftPage.contents.list.getItem(this.SETTING_MAP);
+                if(SelectedMap.IsValueAvailable(SelectedMap.GetActiveValue()))
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,canInteract, true);
+                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,bCanInteract,true);
                 }
                 else
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,false, true);
+                    this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.ConfirmMatchSettings,false,true);
                 }
             }
         }
@@ -873,19 +916,20 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
             // Enter will confirm match settings, so will the button
-            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ConfirmMatchSettings,canInteract);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,canInteract);
-            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,canInteract);
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ConfirmMatchSettings,bCanInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,!bIsHostingNewMission ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,bCanInteract);
+            this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,bCanInteract);
         }
         else
         {
-            this.RefreshButton(_root.m_ControlY,0,"",undefined,false, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,"",undefined,false, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,"",undefined,false, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,!_loc7_ ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,canInteract, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,canInteract, true);
+            this.RefreshButton(_root.m_ControlY, 0, "", undefined, false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlY, com.XInput.ButtonY, "",undefined,false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlX, com.XInput.ButtonX, "",undefined,false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlA, com.XInput.ButtonA, !bIsHostingNewMission ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlB, com.XInput.ButtonB, this.srCancel, this.CancelMatchSettings,bCanInteract,true);
         }
     }
+
     // made it so this does not rely on platform or current input mode, but a hardcoded bool of whether this button is a PC button or a controller button
     function RefreshButton(mcButton, nButtonID, sLabel, fnAction, bEnabled, bIsControllerButton)
     {
@@ -904,100 +948,129 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             mcButton.Active = bEnabled;
         }
     }
+
     function RefreshPlayerList(list, bInteractive)
-   {
-      this.m_PlayerSlotCount = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
-      this.m_FirstVisibleSlot = Math.max(0,Math.min(this.m_FirstVisibleSlot,Math.max(0,this.m_PlayerSlotCount - 4)));
-      if(this.m_SelectedPlayerSlot < 0) this.m_SelectedPlayerSlot = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",screens.MPNewLobby.MPNewLobby.LSS_Squad));
-      this.m_SelectedPlayerSlot = this.m_PlayerSlotCount == 0 ? -1 : Math.max(this.m_FirstVisibleSlot,Math.min(this.m_SelectedPlayerSlot,Math.min(this.m_PlayerSlotCount - 1,this.m_FirstVisibleSlot + 3)));
-      this.m_BindingPlayerRows = true;
-      // Deactivate before rebinding, even if the selected physical row is unchanged.
-      list.selectedIndex = -1;
-      var privateMatch = this.IsPrivateMatch();
-      for(var row = 0; row < list.numItems; row++)
-      {
-         var slot = this.m_FirstVisibleSlot + row;
-         var card = list.getItem(row);
-         card.m_slotIndex = slot;
-         card._visible = slot < this.m_PlayerSlotCount;
-         card.SetCustomIcon(-1);
-         if(card._visible && Boolean(flash.external.ExternalInterface.call("IsPlayerSlotOccupied",slot)))
-         {
-            var basic = flash.external.ExternalInterface.call("GetPlayerSlotBasicInfo",slot);
-            var patch = flash.external.ExternalInterface.call("GetPlayerSlotInfo_Patch",slot);
-            basic.NumClassPromotions = patch.NumClassPromotions;
-            basic.EmblemID = patch.EmblemID;
-            basic.NumChallengesComplete = patch.NumChallengesComplete;
-            list.SetSlotPlayer(row,basic);
-         }
-         else list.SetSlotEmpty(row);
-         list.SetSlotPermission(row,privateMatch);
-      }
-      list.SetInteractive(bInteractive);
-      this.ApplyPlayerIcons(list);
-      if(bInteractive) list.selectedIndex = this.m_SelectedPlayerSlot - this.m_FirstVisibleSlot;
-      else
-      {
-         for(var i = 0; i < list.numItems; i++)
-         {
-            list.getItem(i).active = false;
-            // Empty cards use selection for their outline, not just a highlight.
-            if(this.bUsingGamepad) list.getItem(i).selection._visible = !list.getItem(i).isOccupied;
-         }
-      }
-      this.m_BindingPlayerRows = false;
-      if(this.m_SelectedPlayerSlot >= 0) flash.external.ExternalInterface.call("SetPreviouslySelectedItem",screens.MPNewLobby.MPNewLobby.LSS_Squad,this.m_SelectedPlayerSlot);
-      this.RefreshPlayerScrollArrows();
-      if(bInteractive)
-      {
-         this.RefreshCharacterSummary();
-         this.RefreshButtonLegend();
-      }
-   }
+    {
+        this.m_PlayerSlotCount = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
+        this.m_FirstVisibleSlot = Math.max(0,Math.min(this.m_FirstVisibleSlot,Math.max(0,this.m_PlayerSlotCount - 4)));
+        if(this.m_SelectedPlayerSlot < 0)
+        {
+            this.m_SelectedPlayerSlot = Number(flash.external.ExternalInterface.call("GetPreviouslySelectedItem",LSS_Squad));
+        }
+        this.m_SelectedPlayerSlot = this.m_PlayerSlotCount == 0 ? -1 : Math.max(this.m_FirstVisibleSlot,Math.min(this.m_SelectedPlayerSlot,Math.min(this.m_PlayerSlotCount - 1,this.m_FirstVisibleSlot + 3)));
+        this.m_BindingPlayerRows = true;
+        // Deactivate before rebinding, even if the selected physical row is unchanged.
+        list.selectedIndex = -1;
+        var privateMatch = this.IsPrivateMatch();
+        var row = 0;
+        while(row < list.numItems)
+        {
+            var slot = this.m_FirstVisibleSlot + row;
+            var card = list.getItem(row);
+            card.m_slotIndex = slot;
+            card._visible = slot < this.m_PlayerSlotCount;
+            card.SetCustomIcon(-1);
+            if(card._visible && Boolean(flash.external.ExternalInterface.call("IsPlayerSlotOccupied",slot)))
+            {
+                var basic = flash.external.ExternalInterface.call("GetPlayerSlotBasicInfo",slot);
+                var patch = flash.external.ExternalInterface.call("GetPlayerSlotInfo_Patch",slot);
+                basic.NumClassPromotions = patch.NumClassPromotions;
+                basic.EmblemID = patch.EmblemID;
+                basic.NumChallengesComplete = patch.NumChallengesComplete;
+                list.SetSlotPlayer(row,basic);
+            }
+            else
+            {
+                list.SetSlotEmpty(row);
+            }
+            list.SetSlotPermission(row,privateMatch);
+            row++;
+        }
+        list.SetInteractive(bInteractive);
+        this.ApplyPlayerIcons(list);
+        if(bInteractive)
+        {
+            list.selectedIndex = this.m_SelectedPlayerSlot - this.m_FirstVisibleSlot;
+        }
+        else
+        {
+            var i = 0;
+            while(i < list.numItems)
+            {
+                list.getItem(i).active = false;
+                // Empty cards use selection for their outline, not just a highlight.
+                if(this.bUsingGamepad)
+                {
+                    list.getItem(i).selection._visible = !list.getItem(i).isOccupied;
+                }
+                i++;
+            }
+        }
+        this.m_BindingPlayerRows = false;
+        if(this.m_SelectedPlayerSlot >= 0)
+        {
+            flash.external.ExternalInterface.call("SetPreviouslySelectedItem",LSS_Squad,this.m_SelectedPlayerSlot);
+        }
+        this.RefreshPlayerScrollArrows();
+        if(bInteractive)
+        {
+            this.RefreshCharacterSummary();
+            this.RefreshButtonLegend();
+        }
+    }
+
     // MILAN CHANGE - 10/04/2026 - Mgamerz
     // The voice icon now shows what screen each player is on. IconData is indexed by lobby slot:
     // -1 for none, otherwise the index of the custom icon frame (custom0 - custom9).
     function RefreshAllCustomIcons(IconData)
-   {
-      this.m_CustomPlayerIcons = IconData;
-      this.ApplyPlayerIcons(this.GetPlayerWindowList());
-   }
+    {
+        this.m_CustomPlayerIcons = IconData;
+        this.ApplyPlayerIcons(this.GetPlayerWindowList());
+    }
+
     function RefreshPlayerInfo(page, bShowLevelUp)
     {
-        var _loc4_ = flash.external.ExternalInterface.call("GetLocalPlayerBasicInfo");
-        var _loc5_ = Boolean(flash.external.ExternalInterface.call("CanLevelUp"));
+        var LocalPlayerBasicInfo = flash.external.ExternalInterface.call("GetLocalPlayerBasicInfo");
+        var bCanLevelUp = Boolean(flash.external.ExternalInterface.call("CanLevelUp"));
         page.levelUpOverlay.LevelUpText.text = this.srLevelUp;
-        page.levelUpOverlay._visible = bShowLevelUp && _loc5_;
+        page.levelUpOverlay._visible = bShowLevelUp && bCanLevelUp;
         page.playerInfo.characterName.textAutoSize = "shrink";
-        page.playerInfo.characterName.text = _loc4_.PlayerName;
-        page.playerInfo.levelAndClass.text = _loc4_.ClassData;
-        page.playerInfo.credits.text = _loc4_.Credits;
+        page.playerInfo.characterName.text = LocalPlayerBasicInfo.PlayerName;
+        page.playerInfo.levelAndClass.text = LocalPlayerBasicInfo.ClassData;
+        page.playerInfo.credits.text = LocalPlayerBasicInfo.Credits;
     }
+
     function onButtonA(p_event)
     {
         this.ActionMappings[com.XInput.ButtonA].call(this);
     }
+
     // added to separately handle controller A/Enter and the PC mid 2 button press
     function onPCMid2(p_event)
     {
         this.ActionMappings[PCMid2Event].call(this);
     }
+
     function onButtonB(p_event)
     {
         this.ActionMappings[com.XInput.ButtonB].call(this);
     }
+
     function onButtonX(p_event)
     {
         this.ActionMappings[com.XInput.ButtonX].call(this);
     }
+
     function onButtonY(p_event)
     {
         this.ActionMappings[com.XInput.ButtonY].call(this);
     }
+
     function ActivateCurrentListItem()
     {
         this.leftPage.contents.list.selectedItem.activate();
     }
+
     function onDPadLeft()
     {
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP)
@@ -1012,6 +1085,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.HideSquadScreen();
         }
     }
+
     function onDPadRight()
     {
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP)
@@ -1026,46 +1100,54 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.ShowSquadScreen();
         }
     }
+
     function onDPadUp()
-   {
-      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD) { this.MovePlayerSelection(-1); return; }
+    {
+        if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
+        {
+            this.MovePlayerSelection(-1);
+            return;
+        }
+        var PageList = this.leftPage.contents.list;
+        var PreviousItem;
+        if(PageList != null)
+        {
+            PreviousItem = PageList.selectedIndex - 1;
+            if(PageList.IsIndexValid(PreviousItem))
+            {
+                PageList.selectedIndex = PreviousItem;
+                _global.SFX.PlayGUISound("MPLobbyPageItemChange");
+            }
+            else
+            {
+                _global.SFX.PlayGUIError();
+            }
+        }
+    }
 
-      var _loc3_ = this.leftPage.contents.list;
-      var _loc4_;
-      if(_loc3_ != null)
-      {
-         _loc4_ = _loc3_.selectedIndex - 1;
-         if(_loc3_.IsIndexValid(_loc4_))
-         {
-            _loc3_.selectedIndex = _loc4_;
-            _global.SFX.PlayGUISound("MPLobbyPageItemChange");
-         }
-         else
-         {
-            _global.SFX.PlayGUIError();
-         }
-      }
-   }
     function onDPadDown()
-   {
-      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD) { this.MovePlayerSelection(1); return; }
-
-      var _loc3_ = this.leftPage.contents.list;
-      var _loc4_;
-      if(_loc3_ != null)
-      {
-         _loc4_ = _loc3_.selectedIndex + 1;
-         if(_loc3_.IsIndexValid(_loc4_))
-         {
-            _loc3_.selectedIndex = _loc4_;
-            _global.SFX.PlayGUISound("MPLobbyPageItemChange");
-         }
-         else
-         {
-            _global.SFX.PlayGUIError();
-         }
-      }
-   }
+    {
+        if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
+        {
+            this.MovePlayerSelection(1);
+            return;
+        }
+        var PageList = this.leftPage.contents.list;
+        var NextItem;
+        if(PageList != null)
+        {
+            NextItem = PageList.selectedIndex + 1;
+            if(PageList.IsIndexValid(NextItem))
+            {
+                PageList.selectedIndex = NextItem;
+                _global.SFX.PlayGUISound("MPLobbyPageItemChange");
+            }
+            else
+            {
+                _global.SFX.PlayGUIError();
+            }
+        }
+    }
     function onInvalidInput(p_event)
     {
         _global.SFX.PlayGUIError();
@@ -1117,9 +1199,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         flash.external.ExternalInterface.call("MakeMatchPublic");
     }
     function ShowGamercard()
-   {
-      flash.external.ExternalInterface.call("ShowGamercard",this.GetSelectedPlayerSlot());
-   }
+    {
+        flash.external.ExternalInterface.call("ShowGamercard",this.GetSelectedPlayerSlot());
+    }
     function CustomMatch()
     {
         _global.SFX.PlayGUISound("MPMissionSettingsStart");
@@ -1130,99 +1212,123 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         _global.SFX.PlayGUISound("MPMissionSettingsStart");
         flash.external.ExternalInterface.call("HostNewMission");
     }
+
     function ShowCharacterScreen()
     {
         _global.SFX.PlayGUISound("MPCharacterStart");
-        this.LoadTab(screens.MPNewLobby.MPNewLobby.LSS_Character);
+        this.LoadTab(LSS_Character);
     }
+
     function HideCharacterScreen()
     {
         _global.SFX.PlayGUISound("MPCharacterExit");
-        this.LoadTab(screens.MPNewLobby.MPNewLobby.LSS_MultiplayerMenu);
+        this.LoadTab(LSS_MultiplayerMenu);
     }
+
     function ShowTalentsLevelUpScreen()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
         flash.external.ExternalInterface.call("ShowTalentsLevelUpScreen");
     }
+
     function ShowWeaponsScreen()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
         flash.external.ExternalInterface.call("ShowWeaponsScreen");
     }
+
     function ShowStoreScreen()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
         flash.external.ExternalInterface.call("ShowStoreScreen");
     }
+
     function ShowAppearanceScreen()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
         flash.external.ExternalInterface.call("ShowAppearanceScreen");
     }
+
     function ShowLeaderboardScreen()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
         flash.external.ExternalInterface.call("ShowLeaderboardScreen");
     }
+
     function ShowMatchConsumablesScreen()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
         flash.external.ExternalInterface.call("ShowMatchConsumablesScreen");
     }
+
     function ShowMissionSetupScreen()
     {
         _global.SFX.PlayGUISound("MPMissionSettingsStart");
         flash.external.ExternalInterface.call("ShowMatchSettingsScreen");
     }
+
     function ShowOptionsScreen()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
         flash.external.ExternalInterface.call("ShowOptionsScreen");
     }
+
     function ShowSquadScreen()
-   {
-      if(this.rightPage.contents.m_symbolName != this.PAGE_SQUAD || !this.CanScrollPlayers()) return;
-      this.m_PlayerViewPending = true;
-      this.m_ScrollDirection = 0;
+    {
+        if(this.rightPage.contents.m_symbolName != this.PAGE_SQUAD || !this.CanScrollPlayers())
+        {
+            return;
+        }
+        this.m_PlayerViewPending = true;
+        this.m_ScrollDirection = 0;
 
-      this.m_PageTransitionType = this.PAGE_TRANSITION_SLIDE_LEFT;
-      _global.SFX.PlayGUISound("MPSquadStart");
-      this.LoadTab(screens.MPNewLobby.MPNewLobby.LSS_Squad);
-   }
+        this.m_PageTransitionType = this.PAGE_TRANSITION_SLIDE_LEFT;
+        _global.SFX.PlayGUISound("MPSquadStart");
+        this.LoadTab(LSS_Squad);
+    }
+
     function HideSquadScreen()
-   {
-      if(this.leftPage.contents.m_symbolName != this.PAGE_SQUAD || !this.CanScrollPlayers()) return;
-      this.m_PlayerViewPending = true;
-      this.m_ScrollDirection = 0;
+    {
+        if(this.leftPage.contents.m_symbolName != this.PAGE_SQUAD || !this.CanScrollPlayers())
+        {
+            return;
+        }
+        this.m_PlayerViewPending = true;
+        this.m_ScrollDirection = 0;
 
-      this.m_PageTransitionType = this.PAGE_TRANSITION_SLIDE_RIGHT;
-      _global.SFX.PlayGUISound("MPSquadExit");
-      this.LoadTab(screens.MPNewLobby.MPNewLobby.LSS_Lobby);
-   }
+        this.m_PageTransitionType = this.PAGE_TRANSITION_SLIDE_RIGHT;
+        _global.SFX.PlayGUISound("MPSquadExit");
+        this.LoadTab(LSS_Lobby);
+    }
+
     function SwitchCharacter()
     {
         _root.screen.m_ControllerLegend.InputDisabled = true;
         flash.external.ExternalInterface.call("SwitchCharacter");
     }
+
     function ShowMPChallengeScreen()
     {
         flash.external.ExternalInterface.call("ShowMPChallengeScreen");
     }
+
     function HasLeaderboardNotifications()
     {
         return Boolean(flash.external.ExternalInterface.call("HasLeaderboardNotifications"));
     }
+
     function GetLeaderboardNotificationText()
     {
         return String(flash.external.ExternalInterface.call("GetLeaderboardNotificationText"));
     }
+
     function ConfirmMatchSettings()
     {
         com.TweenManager.stopAllTweens();
         _global.SFX.PlayGUISound("MPMissionSettingsExit");
         flash.external.ExternalInterface.call("ChangeMatchSettings");
     }
+
     function CancelMatchSettings()
     {
         com.TweenManager.stopAllTweens();
@@ -1231,15 +1337,17 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     }
     function ToggleReady()
     {
-        var _loc1_ = Boolean(flash.external.ExternalInterface.call("IsReady"));
-        flash.external.ExternalInterface.call("SetReady",!_loc1_);
+        var bIsReady = Boolean(flash.external.ExternalInterface.call("IsReady"));
+        flash.external.ExternalInterface.call("SetReady",!bIsReady);
     }
+
     function ToggleVoteToKickSelectedPlayer()
-   {
-      var _loc2_ = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
-      flash.external.ExternalInterface.call("VoteToKickPlayerInSlot",this.GetSelectedPlayerSlot(),!_loc2_);
-      this.RefreshButtonLegend();
-   }
+    {
+        var bHasVotedToKickPlayerInSlot = Boolean(flash.external.ExternalInterface.call("HasVotedToKickPlayerInSlot",this.GetSelectedPlayerSlot()));
+        flash.external.ExternalInterface.call("VoteToKickPlayerInSlot",this.GetSelectedPlayerSlot(),!HasVotedToKickPlayerInSlot);
+        this.RefreshButtonLegend();
+    }
+
     function GetPrivacySetting()
     {
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP)
@@ -1248,6 +1356,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
         return 0;
     }
+
     function GetMapSetting()
     {
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP)
@@ -1256,6 +1365,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
         return 0;
     }
+
     function GetEnemySetting()
     {
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP)
@@ -1264,6 +1374,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
         return 0;
     }
+
     function GetChallengeSetting()
     {
         if(this.leftPage.contents.m_symbolName == this.PAGE_MISSION_SETUP)
@@ -1272,237 +1383,334 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         }
         return 0;
     }
+
     function GetMissionSettingsTabTitle()
     {
         if(this.m_bConnected)
         {
             return this.srMissionSetup;
         }
-        var _loc2_ = Boolean(flash.external.ExternalInterface.call("IsHostingNewMission"));
-        return !_loc2_ ? this.srQuickMatch : this.srHostNewMission;
+        var bIsHostingNewMission = Boolean(flash.external.ExternalInterface.call("IsHostingNewMission"));
+        return !bIsHostingNewMission ? this.srQuickMatch : this.srHostNewMission;
     }
+
     function ExitLobbyCancelled()
     {
         _root.screen.m_ControllerLegend.InputDisabled = false;
     }
+
     function ExitMultiplayerCancelled()
     {
         _root.screen.m_ControllerLegend.InputDisabled = false;
     }
 
-   function GetPlayerWindowList()
-   {
-      if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD) return this.leftPage.contents.list;
-      if(this.rightPage.contents.m_symbolName == this.PAGE_SQUAD) return this.rightPage.contents.list;
-      return null;
-   }
+    function GetPlayerWindowList()
+    {
+        if(this.leftPage.contents.m_symbolName == this.PAGE_SQUAD)
+        {
+            return this.leftPage.contents.list;
+        }
+        if(this.rightPage.contents.m_symbolName == this.PAGE_SQUAD)
+        {
+            return this.rightPage.contents.list;
+        }
+        return null;
+    }
 
-   function CanScrollPlayers()
-   {
-      return !this.m_PlayerViewPending && this.m_bConnected && !this.m_ControllerLegend.InputDisabled && this.GetPlayerWindowList().numItems > 0 && Boolean(flash.external.ExternalInterface.call("CanInteract"));
-   }
+    function CanScrollPlayers()
+    {
+        return !this.m_PlayerViewPending && this.m_bConnected && !this.m_ControllerLegend.InputDisabled && this.GetPlayerWindowList().numItems > 0 && Boolean(flash.external.ExternalInterface.call("CanInteract"));
+    }
 
-   function GetSelectedPlayerSlot()
-   {
-      return this.leftPage.contents.list.selectedItem.m_slotIndex;
-   }
+    function GetSelectedPlayerSlot()
+    {
+        return this.leftPage.contents.list.selectedItem.m_slotIndex;
+    }
 
-   function ApplyPlayerIcons(list)
-   {
-      if(list == null) return;
-      for(var row = 0; row < list.numItems; row++)
-      {
-         var icon = this.m_CustomPlayerIcons[list.getItem(row).m_slotIndex];
-         list.SetSlotCustomIcon(row,icon == undefined ? -1 : icon);
-      }
-   }
+    function ApplyPlayerIcons(list)
+    {
+        if(list == null)
+        {
+            return;
+        }
+        var row = 0;
+        while(row < list.numItems)
+        {
+            var icon = this.m_CustomPlayerIcons[list.getItem(row).m_slotIndex];
+            list.SetSlotCustomIcon(row,icon == undefined ? -1 : icon);
+            row++;
+        }
+    }
 
-   function RefreshPlayerScrollArrows()
-   {
-      var list = this.GetPlayerWindowList();
-      if(list == null || list.numItems == 0) return;
-      var page = list._parent;
-      if(page.playerScrollUp == undefined)
-      {
-         page.attachMovie("MilanPlayerScrollArrow","playerScrollUp",page.getNextHighestDepth());
-         page.attachMovie("MilanPlayerScrollArrow","playerScrollDown",page.getNextHighestDepth());
-         page.playerScrollUp.addEventListener("ArrowPressed",this.MakeDelegate(this.ScrollPlayersUp));
-         page.playerScrollDown.addEventListener("ArrowPressed",this.MakeDelegate(this.ScrollPlayersDown));
-         page.playerScrollUp._rotation = -90;
-         page.playerScrollDown._rotation = 90;
-      }
-      var first = list.getItem(0);
-      var last = list.getItem(list.numItems - 1);
+    function RefreshPlayerScrollArrows()
+    {
+        var list = this.GetPlayerWindowList();
+        if(list == null || list.numItems == 0)
+        {
+            return;
+        }
+        var page = list._parent;
+        if(page.playerScrollUp == undefined)
+        {
+            page.attachMovie("MilanPlayerScrollArrow","playerScrollUp",page.getNextHighestDepth());
+            page.attachMovie("MilanPlayerScrollArrow","playerScrollDown",page.getNextHighestDepth());
+            page.playerScrollUp.addEventListener("ArrowPressed",this.MakeDelegate(this.ScrollPlayersUp));
+            page.playerScrollDown.addEventListener("ArrowPressed",this.MakeDelegate(this.ScrollPlayersDown));
+            page.playerScrollUp._rotation = -90;
+            page.playerScrollDown._rotation = 90;
+        }
+        var first = list.getItem(0);
+        var last = list.getItem(list.numItems - 1);
       // Keep the complete pulse inside the card strip, clear of the footer buttons.
       // Card pitch excludes selection glows and other decorative bounds.
-      var cardPitch = list.numItems > 1 ? list.getItem(1)._y - first._y : 121.7;
-      page.playerScrollUp._x = list._x + 420;
-      page.playerScrollDown._x = list._x + 420;
-      page.playerScrollUp._y = list._y + first._y + 18;
-      page.playerScrollDown._y = list._y + last._y + cardPitch - 18;
-      page.playerScrollUp.contents._x = 0;
-      page.playerScrollUp.contents._y = 0;
-      page.playerScrollDown.contents._x = 0;
-      page.playerScrollDown.contents._y = 0;
-      page.playerScrollUp.contents._xscale = 35;
-      page.playerScrollUp.contents._yscale = 25;
-      page.playerScrollDown.contents._xscale = 35;
-      page.playerScrollDown.contents._yscale = 25;
-      page.playerScrollUp.ShowStickIcon(false);
-      page.playerScrollDown.ShowStickIcon(false);
-      page.playerScrollUp.m_ScrollAvailable = this.m_FirstVisibleSlot > 0;
-      page.playerScrollDown.m_ScrollAvailable = this.m_FirstVisibleSlot + 4 < this.m_PlayerSlotCount;
-      page.playerScrollUp._visible = page.playerScrollUp.m_ScrollAvailable || page.playerScrollUp.m_ScrollFlashStart != undefined;
-      page.playerScrollDown._visible = page.playerScrollDown.m_ScrollAvailable || page.playerScrollDown.m_ScrollFlashStart != undefined;
-   }
+        var cardPitch = list.numItems > 1 ? list.getItem(1)._y - first._y : 121.7;
+        page.playerScrollUp._x = list._x + 420;
+        page.playerScrollDown._x = list._x + 420;
+        page.playerScrollUp._y = list._y + first._y + 18;
+        page.playerScrollDown._y = list._y + last._y + cardPitch - 18;
+        page.playerScrollUp.contents._x = 0;
+        page.playerScrollUp.contents._y = 0;
+        page.playerScrollDown.contents._x = 0;
+        page.playerScrollDown.contents._y = 0;
+        page.playerScrollUp.contents._xscale = 35;
+        page.playerScrollUp.contents._yscale = 25;
+        page.playerScrollDown.contents._xscale = 35;
+        page.playerScrollDown.contents._yscale = 25;
+        page.playerScrollUp.ShowStickIcon(false);
+        page.playerScrollDown.ShowStickIcon(false);
+        page.playerScrollUp.m_ScrollAvailable = this.m_FirstVisibleSlot > 0;
+        page.playerScrollDown.m_ScrollAvailable = this.m_FirstVisibleSlot + 4 < this.m_PlayerSlotCount;
+        page.playerScrollUp._visible = page.playerScrollUp.m_ScrollAvailable || page.playerScrollUp.m_ScrollFlashStart != undefined;
+        page.playerScrollDown._visible = page.playerScrollDown.m_ScrollAvailable || page.playerScrollDown.m_ScrollFlashStart != undefined;
+    }
 
-   function ShiftPlayerWindow(delta)
-   {
-      if(!this.CanScrollPlayers()) return false;
-      var count = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
-      var next = Math.max(0,Math.min(this.m_FirstVisibleSlot + delta,Math.max(0,count - 4)));
-      if(next == this.m_FirstVisibleSlot) return false;
-      this.m_FirstVisibleSlot = next;
-      this.RefreshPlayerList(this.GetPlayerWindowList(),this.leftPage.contents.m_symbolName == this.PAGE_SQUAD);
-      this.FlashPlayerScrollArrow(delta);
-      _global.SFX.PlayGUISound("SaveLoadMove");
-      return true;
-   }
+    function ShiftPlayerWindow(delta)
+    {
+        if(!this.CanScrollPlayers())
+        {
+            return false;
+        }
+        var count = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
+        var next = Math.max(0,Math.min(this.m_FirstVisibleSlot + delta,Math.max(0,count - 4)));
+        if(next == this.m_FirstVisibleSlot)
+        {
+            return false;
+        }
+        this.m_FirstVisibleSlot = next;
+        this.RefreshPlayerList(this.GetPlayerWindowList(),this.leftPage.contents.m_symbolName == this.PAGE_SQUAD);
+        this.FlashPlayerScrollArrow(delta);
+        _global.SFX.PlayGUISound("SaveLoadMove");
+        return true;
+    }
 
-   function ScrollPlayersUp() { this.ShiftPlayerWindow(-1); }
+    function ScrollPlayersUp()
+    {
+        this.ShiftPlayerWindow(-1);
+    }
 
-   function ScrollPlayersDown() { this.ShiftPlayerWindow(1); }
+    function ScrollPlayersDown()
+    {
+        this.ShiftPlayerWindow(1);
+    }
 
-   function onMouseWheel(delta, target)
-   {
-      var list = this.GetPlayerWindowList();
-      if(list == null || delta == 0) return;
-      // Target ownership includes nested card clips and the two scroll arrows.
-      var node = target;
-      while(node != undefined && node != list._parent && node != _root) node = node._parent;
-      if(node == list._parent || (target == undefined && this.IsMouseOverPlayers())) this.ShiftPlayerWindow(delta > 0 ? -1 : 1);
-   }
+    function onMouseWheel(delta, target)
+    {
+        var list = this.GetPlayerWindowList();
+        if(list == null || delta == 0)
+        {
+            return;
+        }
+        // Target ownership includes nested card clips and the two scroll arrows.
+        var node = target;
+        while(node != undefined && node != list._parent && node != _root)
+        {
+            node = node._parent;
+        }
+        if(node == list._parent || target == undefined && this.IsMouseOverPlayers())
+        {
+            this.ShiftPlayerWindow(delta > 0 ? -1 : 1);
+        }
+    }
 
-   function IsMouseOverPlayers()
-   {
-      var list = this.GetPlayerWindowList();
-      if(list == null) return false;
-      var bounds = list.getBounds(list);
-      return list._xmouse >= bounds.xMin && list._xmouse <= bounds.xMax && list._ymouse >= bounds.yMin && list._ymouse <= bounds.yMax;
-   }
+    function IsMouseOverPlayers()
+    {
+        var list = this.GetPlayerWindowList();
+        if(list == null)
+        {
+            return false;
+        }
+        var bounds = list.getBounds(list);
+        return list._xmouse >= bounds.xMin && list._xmouse <= bounds.xMax && list._ymouse >= bounds.yMin && list._ymouse <= bounds.yMax;
+    }
 
-   function ScrollPlayersWheel(value)
-   {
-      if(!this.CanScrollPlayers() || !this.IsMouseOverPlayers()) return 0;
-      this.ShiftPlayerWindow(value > 0 ? -1 : 1);
-      return 1;
-   }
+    function ScrollPlayersWheel(value)
+    {
+        if(!this.CanScrollPlayers() || !this.IsMouseOverPlayers())
+        {
+            return 0;
+        }
+        this.ShiftPlayerWindow(value > 0 ? -1 : 1);
+        return 1;
+    }
 
-   function ScrollPlayersAnalog(value)
-   {
-      // BioGUI Y follows content movement: positive scrolls content up (later slots).
-      // Match the game's MPStore DetailsScrollMarquee.ScrollPanel convention.
-      var direction = Math.abs(value) < 0.35 ? 0 : (value > 0 ? 1 : -1);
-      if(!this.CanScrollPlayers()) direction = 0;
-      if(direction != this.m_ScrollDirection)
-      {
-         this.m_ScrollDirection = direction;
-         if(direction != 0) this.ShiftPlayerWindow(direction);
-         this.m_NextScrollRepeat = getTimer() + 350;
-      }
-   }
+    function ScrollPlayersAnalog(value)
+    {
+        // BioGUI Y follows content movement: positive scrolls content up (later slots).
+        // Match the game's MPStore DetailsScrollMarquee.ScrollPanel convention.
+        var direction = Math.abs(value) < 0.35 ? 0 : (value > 0 ? 1 : -1);
+        if(!this.CanScrollPlayers())
+        {
+            direction = 0;
+        }
+        if(direction != this.m_ScrollDirection)
+        {
+            this.m_ScrollDirection = direction;
+            if(direction != 0)
+            {
+                this.ShiftPlayerWindow(direction);
+            }
+            this.m_NextScrollRepeat = getTimer() + 350;
+        }
+    }
 
-   function TickPlayerInput()
-   {
-      this.UpdatePlayerScrollFeedback();
-      // Keep occupied lobby cards unhighlighted without hiding empty-card borders.
-      // Run while input is gated too: card timelines can replace selection clips.
-      if(this.bUsingGamepad && this.rightPage.contents.m_symbolName == this.PAGE_SQUAD)
-      {
-         var list = this.GetPlayerWindowList();
-         for(var row = 0; row < list.numItems; row++) list.getItem(row).selection._visible = !list.getItem(row).isOccupied;
-      }
-      if(!this.CanScrollPlayers())
-      {
-         this.m_ScrollDirection = 0;
-         return;
-      }
-      if(this.m_ScrollDirection != 0 && getTimer() >= this.m_NextScrollRepeat)
-      {
-         this.ShiftPlayerWindow(this.m_ScrollDirection);
-         this.m_NextScrollRepeat = getTimer() + 150;
-      }
-   }
+    function TickPlayerInput()
+    {
+        this.UpdatePlayerScrollFeedback();
+        // Keep occupied lobby cards unhighlighted without hiding empty-card borders.
+        // Run while input is gated too: card timelines can replace selection clips.
+        if(this.bUsingGamepad && this.rightPage.contents.m_symbolName == this.PAGE_SQUAD)
+        {
+            var list = this.GetPlayerWindowList();
+            var row = 0;
+            while(row < list.numItems)
+            {
+                list.getItem(row).selection._visible = !list.getItem(row).isOccupied;
+                row++;
+            }
+        }
+        if(!this.CanScrollPlayers())
+        {
+            this.m_ScrollDirection = 0;
+            return;
+        }
+        if(this.m_ScrollDirection != 0 && getTimer() >= this.m_NextScrollRepeat)
+        {
+            this.ShiftPlayerWindow(this.m_ScrollDirection);
+            this.m_NextScrollRepeat = getTimer() + 150;
+        }
+    }
 
-   function SwitchPlayersViewAnalog(value)
-   {
-      var direction = Math.abs(value) < 0.55 ? 0 : (value > 0 ? 1 : -1);
-      if(direction == this.m_ViewStickDirection) return;
-      this.m_ViewStickDirection = direction;
-      if(!this.CanScrollPlayers()) return;
-      if(direction > 0) this.ShowSquadScreen();
-      else if(direction < 0) this.HideSquadScreen();
-   }
+    function SwitchPlayersViewAnalog(value)
+    {
+        var direction = Math.abs(value) < 0.55 ? 0 : (value > 0 ? 1 : -1);
+        if(direction == this.m_ViewStickDirection)
+        {
+            return;
+        }
+        this.m_ViewStickDirection = direction;
+        if(!this.CanScrollPlayers())
+        {
+            return;
+        }
+        if(direction > 0)
+        {
+            this.ShowSquadScreen();
+        }
+        else if(direction < 0)
+        {
+            this.HideSquadScreen();
+        }
+    }
 
-   function MovePlayerSelection(delta)
-   {
-      if(!this.CanScrollPlayers()) return;
-      var count = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
-      var next = Math.max(0,Math.min(count - 1,this.m_SelectedPlayerSlot + delta));
-      if(count == 0 || next == this.m_SelectedPlayerSlot) return;
-      var previousWindow = this.m_FirstVisibleSlot;
-      this.m_SelectedPlayerSlot = next;
-      if(next < this.m_FirstVisibleSlot) this.m_FirstVisibleSlot = next;
-      if(next >= this.m_FirstVisibleSlot + 4) this.m_FirstVisibleSlot = next - 3;
-      this.RefreshPlayerList(this.GetPlayerWindowList(),true);
-      if(this.m_FirstVisibleSlot != previousWindow) this.FlashPlayerScrollArrow(this.m_FirstVisibleSlot - previousWindow);
-      _global.SFX.PlayGUISound("SaveLoadMove");
-   }
+    function MovePlayerSelection(delta)
+    {
+        if(!this.CanScrollPlayers())
+        {
+            return;
+        }
+        var count = Math.max(0,Number(flash.external.ExternalInterface.call("GetNumPlayerSlots")));
+        var next = Math.max(0,Math.min(count - 1,this.m_SelectedPlayerSlot + delta));
+        if(count == 0 || next == this.m_SelectedPlayerSlot)
+        {
+            return;
+        }
+        var previousWindow = this.m_FirstVisibleSlot;
+        this.m_SelectedPlayerSlot = next;
+        if(next < this.m_FirstVisibleSlot)
+        {
+            this.m_FirstVisibleSlot = next;
+        }
+        if(next >= this.m_FirstVisibleSlot + 4)
+        {
+            this.m_FirstVisibleSlot = next - 3;
+        }
+        this.RefreshPlayerList(this.GetPlayerWindowList(),true);
+        if(this.m_FirstVisibleSlot != previousWindow)
+        {
+            this.FlashPlayerScrollArrow(this.m_FirstVisibleSlot - previousWindow);
+        }
+        _global.SFX.PlayGUISound("SaveLoadMove");
+    }
 
-   function onUnload()
-   {
-      clearInterval(this.m_PlayerInputTimer);
-      Mouse.removeListener(this);
-      Key.removeListener(this);
-   }
-function FlashPlayerScrollArrow(delta)
-   {
-      var list = this.GetPlayerWindowList();
-      if(list == null) return;
-      var arrow = delta < 0 ? list._parent.playerScrollUp : list._parent.playerScrollDown;
-      if(arrow == undefined) return;
-      if(arrow.m_ScrollColor == undefined)
-      {
-         arrow.m_ScrollColor = new Color(arrow);
-         arrow.m_NormalScrollColor = arrow.m_ScrollColor.getTransform();
-      }
-      arrow.m_ScrollFlashStart = getTimer();
-      // Hold the pulse at its fully visible frame while the activation tint fades.
-      arrow.contents.gotoAndStop(39);
-      arrow._visible = true;
-      this.UpdatePlayerScrollArrowFeedback(arrow);
-   }
-function UpdatePlayerScrollArrowFeedback(arrow)
-   {
-      if(arrow == undefined || arrow.m_ScrollFlashStart == undefined) return;
-      var elapsed = getTimer() - arrow.m_ScrollFlashStart;
-      var normal = arrow.m_NormalScrollColor;
-      if(elapsed >= 600)
-      {
-         arrow.m_ScrollColor.setTransform(normal);
-         delete arrow.m_ScrollFlashStart;
-         arrow.contents.play();
-         arrow._visible = arrow.m_ScrollAvailable;
-         return;
-      }
-      var amount = 1 - Math.max(0,elapsed - 120) / 480;
-      arrow.m_ScrollColor.setTransform({ra:normal.ra * (1 - amount),ga:normal.ga * (1 - amount),ba:normal.ba * (1 - amount),rb:normal.rb * (1 - amount) + 255 * amount,gb:normal.gb * (1 - amount) + 180 * amount,bb:normal.bb * (1 - amount) + 64 * amount,aa:normal.aa,ab:normal.ab});
-   }
-function UpdatePlayerScrollFeedback()
-   {
-      var list = this.GetPlayerWindowList();
-      if(list == null) return;
-      this.UpdatePlayerScrollArrowFeedback(list._parent.playerScrollUp);
-      this.UpdatePlayerScrollArrowFeedback(list._parent.playerScrollDown);
-   }
+    function onUnload()
+    {
+        clearInterval(this.m_PlayerInputTimer);
+        Mouse.removeListener(this);
+        Key.removeListener(this);
+    }
+
+    function FlashPlayerScrollArrow(delta)
+    {
+        var list = this.GetPlayerWindowList();
+        if(list == null)
+        {
+            return;
+        }
+        var arrow = delta < 0 ? list._parent.playerScrollUp : list._parent.playerScrollDown;
+        if(arrow == undefined)
+        {
+            return;
+        }
+        if(arrow.m_ScrollColor == undefined)
+        {
+            arrow.m_ScrollColor = new Color(arrow);
+            arrow.m_NormalScrollColor = arrow.m_ScrollColor.getTransform();
+        }
+        arrow.m_ScrollFlashStart = getTimer();
+        // Hold the pulse at its fully visible frame while the activation tint fades.
+        arrow.contents.gotoAndStop(39);
+        arrow._visible = true;
+        this.UpdatePlayerScrollArrowFeedback(arrow);
+    }
+
+    function UpdatePlayerScrollArrowFeedback(arrow)
+    {
+        if(arrow == undefined || arrow.m_ScrollFlashStart == undefined)
+        {
+            return;
+        }
+        var elapsed = getTimer() - arrow.m_ScrollFlashStart;
+        var normal = arrow.m_NormalScrollColor;
+        if(elapsed >= 600)
+        {
+            arrow.m_ScrollColor.setTransform(normal);
+            delete arrow.m_ScrollFlashStart;
+            arrow.contents.play();
+            arrow._visible = arrow.m_ScrollAvailable;
+            return;
+        }
+        var amount = 1 - Math.max(0,elapsed - 120) / 480;
+        arrow.m_ScrollColor.setTransform({ra:normal.ra * (1 - amount),ga:normal.ga * (1 - amount),ba:normal.ba * (1 - amount),rb:normal.rb * (1 - amount) + 255 * amount,gb:normal.gb * (1 - amount) + 180 * amount,bb:normal.bb * (1 - amount) + 64 * amount,aa:normal.aa,ab:normal.ab});
+    }
+
+    function UpdatePlayerScrollFeedback()
+    {
+        var list = this.GetPlayerWindowList();
+        if(list == null)
+        {
+            return;
+        }
+        this.UpdatePlayerScrollArrowFeedback(list._parent.playerScrollUp);
+        this.UpdatePlayerScrollArrowFeedback(list._parent.playerScrollDown);
+    }
 }
