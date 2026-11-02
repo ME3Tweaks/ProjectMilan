@@ -1,4 +1,5 @@
 // Stumpy - 2026/11/03 - Name variables and update from scaleform
+// Stumpy - 2026/11/03 - Update key bindings for inviting friends and opening options on controller
 class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
 {
     // MILAN CHANGE - Mgamerz - 2026-10-10
@@ -211,6 +212,8 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         this.m_ControllerLegend.addEventListener("onButtonA",mx.utils.Delegate.create(this,this.onButtonA));
         this.m_ControllerLegend.addEventListener("onButtonB",mx.utils.Delegate.create(this,this.onButtonB));
         this.m_ControllerLegend.addEventListener("onButtonX",mx.utils.Delegate.create(this,this.onButtonX));
+        // Add Start button handler
+        this.m_ControllerLegend.addEventListener("onButtonStart",mx.utils.Delegate.create(this,this.onButtonStart));
         this.m_ControllerLegend.addEventListener("onDPadUp",mx.utils.Delegate.create(this,this.onDPadUp));
         this.m_ControllerLegend.addEventListener("onDPadDown",mx.utils.Delegate.create(this,this.onDPadDown));
         this.m_ControllerLegend.addEventListener("onDPadLeft",mx.utils.Delegate.create(this,this.onDPadLeft));
@@ -719,6 +722,8 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         {
             this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract,true);
             this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlStart,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlBack,0,"",undefined,false,true);
             this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
             this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,bCanInteract,true);
             if(bCameFromSelectFirstCharacter)
@@ -750,6 +755,8 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         {
             this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract,true);
             this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlStart,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlBack,0,"",undefined,false,true);
             this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
             this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,bCanInteract,true);
             this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideCharacterScreen),bCanInteract,true);
@@ -781,13 +788,15 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         {
             this.RefreshButton(_root.m_ControlY,com.XInput.ButtonY,this.srSwitchCharacter,this.SwitchCharacter,bCanInteract,true);
             this.RefreshButton(this.m_ControllerLegend.ControlY,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlBack,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
             if(bIsInParty)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
+                this.RefreshButton(this.m_ControllerLegend.ControlStart,com.XInput.ButtonStart,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
+                this.RefreshButton(this.m_ControllerLegend.ControlStart,com.XInput.ButtonStart,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
             }
             this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,this.srSelect,this.ActivateCurrentListItem,bCanInteract,true);
             this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srExitLobby,this.ExitLobby,bCanInteract,true);
@@ -828,6 +837,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         else
         {
             this.RefreshButton(_root.m_ControlY,0,"",undefined,false,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlBack, 0, "", undefined, false, true);
             SelectedPlayer = screens.MPNewLobby.PlayerItem(this.leftPage.contents.list.selectedItem);
             if(SelectedPlayer.isOccupied && !SelectedPlayer.isLocalPlayer)
             {
@@ -840,14 +850,15 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             }
             if(bIsInParty)
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
+                this.RefreshButton(this.m_ControllerLegend.ControlStart,com.XInput.ButtonStart,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
             }
             else
             {
-                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
+                this.RefreshButton(this.m_ControllerLegend.ControlStart,com.XInput.ButtonStart,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
             }
             this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false,true);
             this.RefreshButton(this.m_ControllerLegend.ControlB,com.XInput.ButtonB,this.srBack,this.MakeDelegate(this.HideSquadScreen),bCanInteract,true);
+            this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
             this.m_ControllerLegend.ControlB.SetVisible(false);
         }
     }
@@ -889,14 +900,16 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             else
             {
                 this.RefreshButton(_root.m_ControlY,0,"",undefined,false,true);
-                this.RefreshButton(this.m_ControllerLegend.ControlY,com.XInput.ButtonY,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
+                this.RefreshButton(this.m_ControllerLegend.ControlBack,0,"",undefined,false,true);
+                this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
+                this.RefreshButton(this.m_ControllerLegend.ControlStart,com.XInput.ButtonStart,this.srOptions,this.ShowOptionsScreen,bCanInteract,true);
                 if(bIsInParty)
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
+                    this.RefreshButton(this.m_ControllerLegend.ControlStart,com.XInput.ButtonStart,this.srInviteParty,this.InviteParty,bCanInteract && !this.IsGameFull(),true);
                 }
                 else
                 {
-                    this.RefreshButton(this.m_ControllerLegend.ControlX,com.XInput.ButtonX,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
+                    this.RefreshButton(this.m_ControllerLegend.ControlStart,com.XInput.ButtonStart,this.srInviteFriends,this.InviteFriends,bCanInteract && !this.IsGameFull(),true);
                 }
                 this.RefreshButton(this.m_ControllerLegend.ControlA,com.XInput.ButtonA,"",undefined,false,true);
                 SelectedMap = this.leftPage.contents.list.getItem(this.SETTING_MAP);
@@ -923,6 +936,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         else
         {
             this.RefreshButton(_root.m_ControlY, 0, "", undefined, false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlBack, 0, "", undefined, false, true);
             this.RefreshButton(this.m_ControllerLegend.ControlY, com.XInput.ButtonY, "",undefined,false, true);
             this.RefreshButton(this.m_ControllerLegend.ControlX, com.XInput.ButtonX, "",undefined,false, true);
             this.RefreshButton(this.m_ControllerLegend.ControlA, com.XInput.ButtonA, !bIsHostingNewMission ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,bCanInteract,true);
@@ -1065,7 +1079,10 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     {
         this.ActionMappings[com.XInput.ButtonY].call(this);
     }
-
+    function onButtonStart(p_event)
+    {
+        this.ActionMappings[com.XInput.ButtonStart].call(this);
+    }
     function ActivateCurrentListItem()
     {
         this.leftPage.contents.list.selectedItem.activate();

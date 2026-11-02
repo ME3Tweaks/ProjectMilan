@@ -12790,7 +12790,10 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
         <item>330</item>
       </tags>
       <names>
-        <item>XboxController</item>
+        <!-- MILAN CHANGE -->
+        <!-- 2026/11/03 - Stumpy - Switch to XboxControllerFull -->
+        <item>XboxControllerFull</item>
+        <!-- MILAN END -->
       </names>
     </item>
     <item type="PlaceObject2Tag" characterId="330" depth="9" forceWriteAsLong="true" name="mcControllerButtons" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="true" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
