@@ -176,9 +176,12 @@ namespace ProjectMilan.Pipelines.Kits
             new KitSpecificPipeline() { PackageName = "Salar_Engineer_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "Turian_Sentinel_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "Turian_Soldier_MP", Enabled = true},
+#if !SHIPPING_RELEASE
             // BioWare chickened out of making a female BF3 soldier
+            // Will be PRC due to rework
+            // Does not have a drop card
             new KitSpecificPipeline() { PackageName = "HumanFemale_InfBF3_MP", Enabled = true, PostCorrections = BF3Infiltrator.ApplyPostFixes},
-
+#endif
             // MP1
             new KitSpecificPipeline() { PackageName = "AsariCommando_Adept_MP", Enabled = true},
             new KitSpecificPipeline() { PackageName = "Batarian_Soldier_MP", Enabled = true},
