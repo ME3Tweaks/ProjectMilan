@@ -601,38 +601,41 @@ defaultproperties
                  Alias = "PC_PrevWeapon", 
                  GameMode = EGameModes.GameMode_Default
                 }, 
-                {
-                 Keys[0] = {
-                            Command = "", 
-                            Name = 'None', 
-                            Control = FALSE, 
-                            Shift = FALSE, 
-                            Alt = FALSE, 
-                            bIgnoreCtrl = FALSE, 
-                            bIgnoreShift = FALSE, 
-                            bIgnoreAlt = FALSE
-                           }, 
-                 Keys[1] = {
-                            Command = "", 
-                            Name = 'None', 
-                            Control = FALSE, 
-                            Shift = FALSE, 
-                            Alt = FALSE, 
-                            bIgnoreCtrl = FALSE, 
-                            bIgnoreShift = FALSE, 
-                            bIgnoreAlt = FALSE
-                           }, 
-                 KeysLocName[0] = "", 
-                 KeysLocName[1] = "", 
-                 Subordinates = ({bAllGameModes = FALSE, Alias = "PC_EnterCommandMenu", GameMode = EGameModes.GameMode_Vehicle}, 
-                                 {bAllGameModes = FALSE, Alias = "PC_EnterCommandMenu", GameMode = EGameModes.GameMode_Atlas}, 
-                                 {bAllGameModes = FALSE, Alias = "PC_ExitCommandMenu", GameMode = EGameModes.GameMode_Command}
-                                ), 
-                 Name = $282856, 
-                 bCategory = FALSE, 
-                 Alias = "PC_EnterCommandMenu", 
-                 GameMode = EGameModes.GameMode_Default
-                }, 
+                // MILAN CHANGE DropTheSquid 11/2/2026
+                // we removed the slightly broken tactics HUD, so we should also remove the keybind. 
+                // {
+                //  Keys[0] = {
+                //             Command = "", 
+                //             Name = 'None', 
+                //             Control = FALSE, 
+                //             Shift = FALSE, 
+                //             Alt = FALSE, 
+                //             bIgnoreCtrl = FALSE, 
+                //             bIgnoreShift = FALSE, 
+                //             bIgnoreAlt = FALSE
+                //            }, 
+                //  Keys[1] = {
+                //             Command = "", 
+                //             Name = 'None', 
+                //             Control = FALSE, 
+                //             Shift = FALSE, 
+                //             Alt = FALSE, 
+                //             bIgnoreCtrl = FALSE, 
+                //             bIgnoreShift = FALSE, 
+                //             bIgnoreAlt = FALSE
+                //            }, 
+                //  KeysLocName[0] = "", 
+                //  KeysLocName[1] = "", 
+                //  Subordinates = ({bAllGameModes = FALSE, Alias = "PC_EnterCommandMenu", GameMode = EGameModes.GameMode_Vehicle}, 
+                //                  {bAllGameModes = FALSE, Alias = "PC_EnterCommandMenu", GameMode = EGameModes.GameMode_Atlas}, 
+                //                  {bAllGameModes = FALSE, Alias = "PC_ExitCommandMenu", GameMode = EGameModes.GameMode_Command}
+                //                 ), 
+                //  Name = $282856, 
+                //  bCategory = FALSE, 
+                //  Alias = "PC_EnterCommandMenu", 
+                //  GameMode = EGameModes.GameMode_Default
+                // }, 
+                // END MILAN CHANGE
                 // MILAN CHANGE - Remove Squad commands
                 // {
                 //  Keys[0] = {
