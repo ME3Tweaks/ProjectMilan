@@ -1159,10 +1159,15 @@ namespace ProjectMilanCore
             var sourceRef = source.Exports.FirstOrDefault(x => x.idxLink == 0 && x.ObjectName == "ObjectReferencer" && x.ClassName == "ObjectReferencer");
             var destRef = target.Exports.FirstOrDefault(x => x.idxLink == 0 && x.ObjectName == "ObjectReferencer" && x.ClassName == "ObjectReferencer");
 
+            if (destRef is null)
+            {
+                destRef = target.CreateObjectReferencer();
+            }
+
             // We are going to do a replace with relink to pull in all referenced content. We don't want to trash 
             // anything if possible, so we will use the existing referencer
             // First we must cache the contents.
-            var originalReferences = destRef.GetProperty<ArrayProperty<ObjectProperty>>("ReferencedObjects").Select(x => target.GetEntry(x.Value)).ToList();
+            var originalReferences = destRef.GetProperty<ArrayProperty<ObjectProperty>>("ReferencedObjects")?.Select(x => target.GetEntry(x.Value))?.ToList() ?? [];
 
             EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourceRef,
                 target, destRef, true, new RelinkerOptionsPackage()
