@@ -1238,27 +1238,27 @@ public function bool SetMilanZoomFOV(int Value)
     local int MilanFOV;
     local int Mask;
     
-    LogInternal(SETFOVZoom - Got FOV Value  $ Value, );
+    LogInternal("SETFOVZoom - Got FOV Value: " $ Value, );
     if (!GetProfileSettingValueInt(3, OriginalProfileSettingValue))
     {
-        LogInternal(SETFOVZoom - Setting missing, adding..., );
+        LogInternal("SETFOVZoom - Setting missing, adding...", );
         AddSettingInt(3);
     }
     foreach FovSettings(Item, )
     {
         if (Item.Setting == EFovSettings.Zoomed)
         {
-            Mask = (1  Item.Size) - 1  Item.bitOffset;
-            if (Value  0)
+            Mask = (1 << Item.Size) - 1 << Item.bitOffset;
+            if (Value < 0)
             {
-                LogInternal(Value PRE  $ Value, );
-                 Make sure the sign bit is set and invert the Value
-                Value = 1  Item.Size - 1  ~Value + 1;
-                LogInternal(Value POST  $ Value, );
+                LogInternal("Value PRE: " $ Value, );
+                // Make sure the sign bit is set and invert the Value
+                Value = 1 << Item.Size - 1 | ~Value + 1;
+                LogInternal("Value POST: " $ Value, );
             }
-            FinalProfileSettingValue = OriginalProfileSettingValue & ~Mask  Value  Item.bitOffset;
+            FinalProfileSettingValue = OriginalProfileSettingValue & ~Mask | Value << Item.bitOffset;
             SetProfileSettingValueInt(3, FinalProfileSettingValue);
-            LogInternal(SETFOVZoom - Set Profile value  $ FinalProfileSettingValue, );
+            LogInternal("SETFOVZoom - Set Profile value: " $ FinalProfileSettingValue, );
             return TRUE;
         }
     }
