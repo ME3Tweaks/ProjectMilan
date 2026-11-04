@@ -85,6 +85,9 @@ enum EGuiOptions
     OPTION_AAT_Friction,
     // MILAN CHANGE - Mgamerz - 2026-10-10: Multiplayer Settings page (SFXGUI_PCMPOptions.BuildMilanNetConfigPage)
     OPTION_MilanNetConfig,
+    // MILAN CHANGE - Stumpy - 2026-10-23: Options to control FOV settings 
+    OPTION_MilanFOV,
+    OPTION_MilanFOVZoom,
     // MILAN CHANGE - Mgamerz - 2026-10-26: Reserved future accessibility options
     OPTION_Milan_1,
     OPTION_Milan_2,

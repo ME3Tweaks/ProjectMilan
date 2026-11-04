@@ -14,6 +14,7 @@ using LegendaryExplorerCore.Unreal.BinaryConverters;
 using LegendaryExplorerCore.Unreal.Classes;
 using LegendaryExplorerCore.Textures;
 using Image = LegendaryExplorerCore.Textures.Image;
+using ProjectMilan.Utility;
 using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using ProjectMilan.Pipelines.Startups;
 
@@ -125,7 +126,16 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 // sorting this is a bit hacky, should probably have a manifest
                 foreach (var cls in Directory.GetFiles(classFolder, "*.uc", searchOption: SearchOption.AllDirectories).OrderBy(f => f))
                 {
-                    var className = Path.GetFileNameWithoutExtension(cls);
+                    // a prefix that ends with a dash (-) allows us to make sure certain classes build before others. Not very pretty, but it works 
+                    string className;
+                    if (cls.Contains('-'))
+                    {
+                        className = Path.GetFileNameWithoutExtension(cls.Split("-")[1]);
+                    }
+                    else
+                    {
+                        className = Path.GetFileNameWithoutExtension(cls);
+                    }
                     ExportEntry? classExport = null;
                     IEntry? classParent = null;
                     var relativeFolder = Path.GetRelativePath(classFolder, Path.GetDirectoryName(cls)!);
@@ -251,9 +261,18 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 return false;
 
             bool applied = false;
-            foreach (var atcor in Directory.GetFiles(folder, "*.uc"))
+            foreach (var atcor in Directory.GetFiles(folder, "*.uc").OrderBy(f => f))
             {
-                var atcorName = Path.GetFileNameWithoutExtension(atcor);
+                // a prefix that ends with a dash (-) allows us to make sure certain classes build before others. Not very pretty, but it works
+                string atcorName;
+                if (atcor.Contains('-'))
+                {
+                    atcorName = Path.GetFileNameWithoutExtension(atcor.Split("-")[1]);
+                }
+                else
+                {
+                    atcorName = Path.GetFileNameWithoutExtension(atcor);
+                }
                 var atcorExport = package.FindExport(atcorName.Split(".")[0]);
                 if (atcorExport == null)
                 {
@@ -385,16 +404,10 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 
             var packageExport = ExportCreator.CreatePackageExport(package, NameReference.FromInstancedString(name), forcedExport: true, reuseExisting: false);
             packageExport.PackageFlags = UnrealFlags.EPackageFlags.AllowDownload | UnrealFlags.EPackageFlags.NoExportsData;
-            packageExport.PackageGUID = GetAddedPackageGuid(name);
+            packageExport.PackageGUID = Utilities.GenerateNewPackageGuid(name);
             addedPackages[name] = packageExport;
             MilanLog.Information($"Added package {name}", customPrefix: logCategory);
             return packageExport;
-        }
-
-        private static Guid GetAddedPackageGuid(string name)
-        {
-            return new Guid(System.Security.Cryptography.MD5.HashData(
-                System.Text.Encoding.UTF8.GetBytes($"ProjectMilan.{name.ToUpperInvariant()}")));
         }
 
     }

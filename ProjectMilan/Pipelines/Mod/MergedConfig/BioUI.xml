@@ -31,7 +31,7 @@
 				<Value type="3">(label=163249, story=163250, options=(OPTION_Resolution, OPTION_WindowMode, OPTION_MonitorSelection, OPTION_DynShadows, OPTION_MotionBlur, OPTION_VerticalSync, OPTION_CappedFramerate, OPTION_FilmGrain, OPTION_AntiAliasing, OPTION_AmbientOcclusion) )</Value>
 				<!-- MELE "Calibration" menu -->
 				<Value type="3">(label=817923, story=817949, options=(OPTION_Gamma, OPTION_HDREnabled, OPTION_HDRContrast, OPTION_HDRBrightness) )</Value>
-				<Value type="3">(label=163117, story=163118, options=(OPTION_MPAutoLvlUp, OPTION_Subtitles, OPTION_Hints, OPTION_ActionUIHints, OPTION_CONTENT_1))</Value>
+				<Value type="3">(label=163117, story=163118, options=(OPTION_MPAutoLvlUp, OPTION_Subtitles, OPTION_Hints, OPTION_ActionUIHints, OPTION_MilanFOV, OPTION_MilanFOVZoom, OPTION_CONTENT_1))</Value>
 				<!-- OPTION_AAT_* are added by Aim Assist Tweaks -->
 				<!-- OPTION_InvertYAxis and OPTION_MouseInvert do the same thing (likely also have the same BioSFHandler) -->
 				<Value type="3">(label=49875680, story=49875681, options=(OPTION_InvertYAxis, OPTION_ControllerSensitivity, OPTION_StickConfig, OPTION_TriggerConfig, OPTION_AAT_ZoomSnap, OPTION_AAT_Adhesion, OPTION_AAT_Friction) )</Value>
@@ -56,6 +56,8 @@
 			<Property name="textslideroptions">
 				<Value type="3">(id=OPTION_AAT_Adhesion, label=49875630, story=49875631, defaultVal=10, UClass="AATGUI.AATGUI_Option_Adhesion")</Value>
 				<Value type="3">(id=OPTION_AAT_Friction, label=49875632, story=49875633, defaultVal=10, UClass="AATGUI.AATGUI_Option_Friction")</Value>
+				<Value type="3">(id=OPTION_MilanFOV, label=49875941, story=49875941, defaultVal=0, UClass="SFXGameContent_MilanBase.MilanGUI_Option_FOV")</Value>
+				<Value type="3">(id=OPTION_MilanFOVZoom, label=49875942, story=49875942, defaultVal=0, UClass="SFXGameContent_MilanBase.MilanGUI_Option_ZoomFOV")</Value>
 				<!-- MILAN CHANGE - Mgamerz - 2026-10-26 - Screen effects -->
 				<Value type="3">(id=OPTION_Milan_1, label=49875816, story=49875817, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
 				<Value type="3">(id=OPTION_Milan_2, label=49875818, story=49875819, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>

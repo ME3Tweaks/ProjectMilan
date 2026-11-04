@@ -114,11 +114,14 @@
                          121, 
                          122, 
                          123, 
-                         124, 
-                         60,
+                         124,
                          // MILAN CHANGE - Accessibility
-                         4
-                         // END MILAN CHANGE
+                         4, 
+                         // 2026/10/23 - Stumpy
+                         // Add ID for FOV settings 
+                         3,
+                         // MILAN END 
+                         60
                         )
     DefaultSettings = ({
                         ProfileSetting = {
@@ -920,8 +923,19 @@
                                           AdvertisementType = EOnlineDataAdvertisementType.ODAT_DontAdvertise
                                          },
                         Owner = EOnlineProfilePropertyOwner.OPPO_Game
+                       },
+                       // MILAN CHANGE START 
+                       // 2026/10/23 - Stumpy
+                       // Add ID for FOV settings
+                       {
+                        ProfileSetting = {
+                                          Data = {Value1 = 0, Type = ESettingsDataType.SDT_Int32}, 
+                                          PropertyId = 3, 
+                                          AdvertisementType = EOnlineDataAdvertisementType.ODAT_DontAdvertise
+                                         }, 
+                        Owner = EOnlineProfilePropertyOwner.OPPO_OnlineService
                        }
-                       // END MILAN CHANGE
+                       // MILAN END
                       )
     ProfileMappings = ({
                         ColumnHeaderText = "", 
@@ -2119,8 +2133,28 @@
                         Name = 'MilanAccessibility',
                         Id = 4,
                         MappingType = EPropertyValueMappingType.PVMT_RawValue
+                       },
+                       // MILAN CHANGE START 
+                       // 2026/10/23 - Stumpy
+                       // Add ID for FOV settings 
+                       {
+                        ColumnHeaderText = "", 
+                        ValueMappings = (), 
+                        PredefinedValues = (), 
+                        Name = 'FOV Settings', 
+                        Id = 3, 
+                        MinVal = 0.0, 
+                        MaxVal = 0.0, 
+                        RangeIncrement = 0.0, 
+                        MappingType = EPropertyValueMappingType.PVMT_RawValue
                        }
-                       // END MILAN CHANGE
+                       // MILAN END
                       )
+    // MILAN CHANGE START
+    // 2026/10/23 - Stumpy
+    // Add FOV setting props
+    FovSettings = ({Setting = EFovSettings.General, bitOffset = 8, Size = 8}, 
+                   {Setting = EFovSettings.Zoomed, bitOffset = 16, Size = 8})
+    // MILAN END
     VersionNumber = 50
 }

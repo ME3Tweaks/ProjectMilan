@@ -153,6 +153,54 @@ Damage per Hit: &lt;CUSTOM0&gt;% of weapon damage
 Duration: &lt;CUSTOM3&gt; seconds</String>
 	<String id="49875828">Earned by obtaining the Legendary Edition acheivement.</String>
 
+    <!-- FOV START -->
+    <String id="49875900">-100°</String>
+    <String id="49875901">-95°</String>
+    <String id="49875902">-90°</String>
+    <String id="49875903">-85°</String>
+    <String id="49875904">-80°</String>
+    <String id="49875905">-75°</String>
+    <String id="49875906">-70°</String>
+    <String id="49875907">-65°</String>
+    <String id="49875908">-60°</String>
+    <String id="49875909">-55°</String>
+    <String id="49875910">-50°</String>
+    <String id="49875911">-45°</String>
+    <String id="49875912">-40°</String>
+    <String id="49875913">-35°</String>
+    <String id="49875914">-30°</String>
+    <String id="49875915">-25°</String>
+    <String id="49875916">-20°</String>
+    <String id="49875917">-15°</String>
+    <String id="49875918">-10°</String>
+    <String id="49875919">-5°</String>
+    <String id="49875920">0°</String>
+    <String id="49875921">5°</String>
+    <String id="49875922">10°</String>
+    <String id="49875923">15°</String>
+    <String id="49875924">20°</String>
+    <String id="49875925">25°</String>
+    <String id="49875926">30°</String>
+    <String id="49875927">35°</String>
+    <String id="49875928">40°</String>
+    <String id="49875929">45°</String>
+    <String id="49875930">50°</String>
+    <String id="49875931">55°</String>
+    <String id="49875932">60°</String>
+    <String id="49875933">65°</String>
+    <String id="49875934">70°</String>
+    <String id="49875935">75°</String>
+    <String id="49875936">80°</String>
+    <String id="49875937">85°</String>
+    <String id="49875938">90°</String>
+    <String id="49875939">95°</String>
+    <String id="49875940">100°</String>
+    <String id="49875941">Field of View offset</String>
+    <String id="49875942">Zoomed Field of View offset</String>
+    <String id="49875943">Field of View offset</String> <!-- Reserved for description -->
+    <String id="49875944">Zoomed Field of View offset</String> <!-- Reserved for description -->
+    <!-- FOV END -->
+    
 	<!-- Overrides vanilla string-->
 	<!-- Shared heavy ammo text -->
     <String id="724481">Every character carries these standard supplies into a mission:
