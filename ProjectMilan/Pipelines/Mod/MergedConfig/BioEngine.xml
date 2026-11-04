@@ -37,6 +37,10 @@
 				<Value type="3">GuidCache_DLC_MOD_ProjectMilan</Value>
 			</Property>
 		</Section>
+		<Section name="ipdrv.tcpnetdriver">
+			<!-- MILAN CHANGE 50->10s for dropping connections -->
+			<Property name="connectiontimeout" type="0">10.0</Property>
+		</Section>
 		<Section name="sfxgame.biotiermanager">
 			<Property name="tierdetails">
 				<Value type="3">(TierName="TIER_Art3",Color=(R=0,G=255,B=0),IsEnabled=TRUE,IsFloor=FALSE,IsGlobal=FALSE,IsDynamic=FALSE,Priority=9)</Value>
