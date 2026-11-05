@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using UDKInj;
 using LegendaryExplorerCore.GameFilesystem;
+using LegendaryExplorerCore.Packages;
 using ProjectMilanCore;
 using ProjectMilan.Utility;
 using ProjectMilan.Pipelines.Levels;
@@ -429,7 +430,12 @@ namespace ProjectMilan.Pipelines.StaticLighting
                     $"diffuse boost x{settings.DiffuseBoostScale}, bounces {settings.IndirectLightingBounces?.ToString() ?? "as exported"})", customPrefix: LOG_CATEGORY);
                 var culture = System.Globalization.CultureInfo.InvariantCulture;
                 var importanceBox = "";
-                if (settings.AddImportanceVolume && GameplayImportanceVolume.Compute(StaticLightingExport.GetMapOutputPath(mapName), settings.ImportanceVolumeMargin) is var (min, max))
+                if (settings.ImportanceBox is { Length: 6 } box)
+                {
+                    importanceBox = " --importance-box " + string.Join(",", box.Select(v => v.ToString("0.###", culture)));
+                    MilanLog.Information($"Importance volume ({box[0]:0},{box[1]:0},{box[2]:0})-({box[3]:0},{box[4]:0},{box[5]:0}) as given", customPrefix: LOG_CATEGORY);
+                }
+                else if (settings.AddImportanceVolume && GameplayImportanceVolume.Compute(StaticLightingExport.GetMapOutputPath(mapName), settings.ImportanceVolumeMargin) is var (min, max))
                     importanceBox = " --importance-box " + string.Join(",", new[] { min.X, min.Y, min.Z, max.X, max.Y, max.Z }.Select(v => v.ToString("0.###", culture)));
                 RunUdkInjShell($"install-lightmass-bridge \"{Program.Settings.MilanUDKPath}\" \"{UE4ReferencePath}\" \"{ue4Lightmass}\" " +
                     $"--environment-color-scale {settings.EnvironmentColorScale.ToString(culture)} " +
@@ -634,6 +640,17 @@ namespace ProjectMilan.Pipelines.StaticLighting
             var pipeline = MPLevels.FindLevelPipeline(mapName);
             if (pipeline != null)
                 StaticLightingExport.ApplyExportCorrections(pipeline, Directory.GetFiles(mapOutput, "*.udk"));
+
+            // 11/02/2026 - Add support for a custom lightmass setup
+            if (pipeline?.WorldLightmass != null)
+            {
+                using var persistent = MEPackageHandler.OpenUDKPackage(Path.Combine(mapOutput, $"{mapName}.udk"));
+                pipeline.WorldLightmass.ApplyTo(persistent.Exports.First(exp => exp.ClassName == "WorldInfo"), LOG_CATEGORY);
+                if (persistent.IsModified)
+                {
+                    persistent.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                }
+            }
             MilanLog.Information($"Baking {mapName} at {quality} from {maps.Length} pre-bake maps into the {Program.Lightmass} bakes", customPrefix: LOG_CATEGORY);
             ComputeLighting(mapName, allowLightmapCompression: false, defaultStaticMeshLightingRes: defaultStaticMeshLightingRes,
                 qualityLevel: quality, ue4Lightmass: pipeline?.UE4Lightmass, keepQuality: true);

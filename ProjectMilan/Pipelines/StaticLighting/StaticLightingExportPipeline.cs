@@ -2,6 +2,7 @@
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.UDK;
 using LegendaryExplorerCore.Unreal;
+using LegendaryExplorerCore.Unreal.ObjectInfo;
 using LegendaryExplorerCore;
 using ProjectMilan.MilanUDK;
 using ProjectMilan.Utility;
@@ -37,15 +38,64 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// <summary>Applies bake-only corrections to generated maps or copies of saved pre-bake maps.</summary>
         internal static void ApplyExportCorrections(LevelSpecificPipeline level, IEnumerable<string> mapPaths)
         {
-            if (level.SpecialFixes == null)
-                return;
-
             foreach (var path in mapPaths)
             {
                 using IMEPackage udk = MEPackageHandler.OpenUDKPackage(path);
-                level.SpecialFixes.CorrectUDKExport(level, udk);
+                ClearForceDirectLightMap(udk);
+                ConvertShadowMappedLightsToToggleable(udk);
+                level.SpecialFixes?.CorrectUDKExport(level, udk);
                 if (udk.IsModified)
                     udk.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+            }
+        }
+
+        /// <summary>
+        /// UDK's StaticMeshActor template forces every static light into the lightmap so shadow maps don't generate
+        /// This forces it to be false
+        /// </summary>
+        private static void ClearForceDirectLightMap(IMEPackage udk)
+        {
+            foreach (var smc in udk.Exports.Where(x => x.ClassName == "StaticMeshComponent" && x.Parent is ExportEntry { ClassName: "StaticMeshActor" }))
+            {
+                if (smc.GetProperty<BoolProperty>("bForceDirectLightMap") is not { Value: false })
+                {
+                    smc.WriteProperty(new BoolProperty(false, "bForceDirectLightMap"));
+                }
+            }
+        }
+
+        /// <summary>
+        /// UDK won't generate shadowmaps except for toggleable lights. So we convert
+        /// to toggleable just for bake so shadow maps ME3 had will bake again as a
+        /// shadow map
+        /// </summary>
+        private static void ConvertShadowMappedLightsToToggleable(IMEPackage udk)
+        {
+            foreach (var light in udk.Exports.Where(x => x.ClassName is "PointLightComponent" or "SpotLightComponent" or "DirectionalLightComponent").ToList())
+            {
+                if (light.Parent is not ExportEntry actor || actor.ClassName.EndsWith("Toggleable")
+                    || light.GetProperty<BoolProperty>("UseDirectLightMap") is not { Value: false })
+                    continue;
+
+                var toggleable = actor.ClassName + "Toggleable";
+                actor.Class = udk.GetEntryOrAddImport($"Engine.{toggleable}", "Class");
+                udk.GetEntryOrAddImport($"Engine.Default__{toggleable}", toggleable, "Engine");
+                light.Archetype = udk.GetEntryOrAddImport($"Engine.Default__{toggleable}.{light.ClassName}0", light.ClassName, "Engine");
+
+                // The toggleable template's IndirectLightingScale is 0
+                // Keep the static light's bounce (default is 1)
+                var settings = light.GetProperty<StructProperty>("LightmassSettings");
+                if (settings == null)
+                {
+                    var structType = light.ClassName == "DirectionalLightComponent" ? "LightmassDirectionalLightSettings" : "LightmassPointLightSettings";
+                    settings = new StructProperty(structType, GlobalUnrealObjectInfo.getDefaultStructValue(MEGame.UDK, structType, true, udk), "LightmassSettings");
+                }
+                if (settings.GetProp<FloatProperty>("IndirectLightingScale") == null)
+                {
+                    settings.Properties.AddOrReplaceProp(new FloatProperty(1f, "IndirectLightingScale"));
+                }
+                light.WriteProperty(settings);
+                MilanLog.Information($"{udk.FileNameNoExtension}: converted shadow-mapped {actor.ObjectName.Instanced} to {toggleable}", customPrefix: LOG_CATEGORY);
             }
         }
 

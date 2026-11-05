@@ -68,6 +68,11 @@ namespace ProjectMilan.Pipelines.StaticLighting
         /// <summary>Added on every side of the gameplay mesh actors' positions.</summary>
         public float ImportanceVolumeMargin { get; set; } = 1500f;
 
+        /// <summary>
+        /// An importance volume (min X, Y, Z, max X, Y, Z) to use instead of the computed gameplay one. Null computes it.
+        /// </summary>
+        public float[] ImportanceBox { get; set; }
+
         public UE4LightmassSettings Clone() => (UE4LightmassSettings)MemberwiseClone();
     }
 
@@ -78,7 +83,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
     /// </summary>
     public sealed record UE4LightmassOverrides(float? EnvironmentColorScale = null, float? DirectionalIndirectLightingScale = null,
         float? LocalIndirectLightingScale = null, float? DiffuseBoostScale = null, int? IndirectLightingBounces = null,
-        float? LocalLightBrightnessScale = null, float? LocalLightRadiusScale = null)
+        float? LocalLightBrightnessScale = null, float? LocalLightRadiusScale = null, float[] ImportanceBox = null)
     {
         public UE4LightmassSettings ApplyTo(UE4LightmassSettings settings)
         {
@@ -90,6 +95,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
             result.IndirectLightingBounces = IndirectLightingBounces ?? result.IndirectLightingBounces;
             result.LocalLightBrightnessScale = LocalLightBrightnessScale ?? result.LocalLightBrightnessScale;
             result.LocalLightRadiusScale = LocalLightRadiusScale ?? result.LocalLightRadiusScale;
+            result.ImportanceBox = ImportanceBox ?? result.ImportanceBox;
             return result;
         }
     }
