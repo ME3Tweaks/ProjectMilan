@@ -28,6 +28,10 @@ namespace ProjectMilan.Pipelines.Store
         /// Exclusive to the free Legendary Banner pack
         /// </summary>
         public static readonly StorePool LegendaryBanner = new("banner_legendary");
+        /// <summary>
+        /// Commemorative Dragon Age banners
+        /// </summary>
+        public static readonly StorePool DragonAgeBanner = new("banner_dragon_age");
 
         /// <summary>
         /// A handful of early banners that drop far more often than their rarity pool. This lets players get some faction banners or other 

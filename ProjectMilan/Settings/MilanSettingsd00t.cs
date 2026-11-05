@@ -34,7 +34,7 @@ namespace ProjectMilan.Settings
         public bool RunShaderPipeline { get; set; } = false;
 
         public int MaxThreads { get; set; } = 16;
-        public bool DontDeleteModFolder { get; set; } = true;
+        public bool DontDeleteModFolder { get; set; } = false;
         public bool UseCheckpointSystem { get; set; } = true;
         public string CheckpointFolder { get; set; } = @"E:\Milan\_Library\LMP\Legendary Edition Multiplayer Dev\Checkpoint";
         public EModInstallPreference ModInstallPreference { get; set; } = EModInstallPreference.NoInstall;
