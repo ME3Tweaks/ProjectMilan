@@ -198,7 +198,17 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
             foreach (var cover in CoverNeedingLightGuidFixes)
             {
                 var exp = package.FindExport(cover);
+                if (exp == null)
+                {
+                    MilanLog.Warning($"Cover lighting: component not found: {package.FileNameNoExtension}.{cover}", customPrefix: pipeline.LogCategory);
+                    continue;
+                }
                 var irrelevantLights = exp.GetProperty<ArrayProperty<StructProperty>>("IrrelevantLights");
+                if (irrelevantLights == null)
+                {
+                    MilanLog.Warning($"Cover lighting: IrrelevantLights not found: {package.FileNameNoExtension}.{cover}", customPrefix: pipeline.LogCategory);
+                    continue;
+                }
 
                 var newIrrelevantLights = irrelevantLights.Where(x => CommonStructs.GetGuid(x) != CannonLightGuid).ToArray();
 
@@ -255,8 +265,6 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
             // Makes flashlights work on other parts of the level
             EnableStructuralStaticLighting(pipeline, package);
 
-            // Fixes light flashing on the thin cover pieces that are supposed to be lit by the cannon light
-            FixCoverPiecesLighting(pipeline, package);
         }
 
         public override void CorrectUDKExport(LevelSpecificPipeline pipeline, IMEPackage udk)
@@ -321,6 +329,8 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPTowr2
             // The *_UI_Lights sublevel's lights are left as they are; every other light is in this package
             var packagePath = Path.Combine(pipeline.LevelOutputDir, $"{LightingPackageName}.pcc");
             using var package = MEPackageHandler.OpenMEPackage(packagePath);
+            // Lighting import is where IrrelevantLights comes from
+            FixCoverPiecesLighting(pipeline, package);
             var (local, character) = CharacterLighting.Apply(package);
             if (package.IsModified)
                 package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
