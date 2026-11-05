@@ -96,8 +96,8 @@ namespace ProjectMilan.Pipelines.EntryMenu
                 properties.AddOrReplaceProp(new IntProperty(1024, "OriginalSizeY"));
                 new Texture2D(logo).Replace(image, properties, isPackageStored: true, forcedNewFormat: PixelFormat.ARGB,
                     forceMipping: true, mipOptions: MipGenerationOptions.HighQuality);
-                logo.AddToObjectReferencer();
             }
+            logo.AddToObjectReferencer();
 
             // Promotional enables Scaleform's mip filtering; NeverStream keeps the entire chain resident.
             GUITextureMipper.GenerateMipsForGUITexture(logo);
