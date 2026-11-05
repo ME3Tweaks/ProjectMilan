@@ -1,5 +1,7 @@
 // Source: ME3, Patch_SFXGUI_MPAppearance
 // Modified 12/12/2023-12/16/2023 by DropTheSquid to account for switching input modes.
+// 11/01/2026 - Mgamerz
+// Color swatch IDs are the packed 0xRRGGBB swatch color 
 Class SFXGUI_MPAppearance extends SFXGUIMovieMP
     config(UI);
 
@@ -563,9 +565,23 @@ public function EAppearanceMenuItemState GetEmissiveState()
 {
     return GetMenuItemState(RequiredEmissiveLevel);
 }
+// MILAN CHANGE - Swatch IDs are now actually packed colors
+public final function array<TintSwatchData> GetColorSwatchData(const out array<TintSwatchData> Mappings)
+{
+    local array<TintSwatchData> Swatches;
+    local int i;
+
+    Swatches = Mappings;
+    for (i = 0; i < Swatches.Length; ++i)
+    {
+        Swatches[i].SwatchID = Class'MilanColor'.static.PackRGB(Swatches[i].SwatchColor);
+    }
+    return Swatches;
+}
+// END MILAN CHANGE
 public function array<TintSwatchData> GetEmissiveSwatchData()
 {
-    return EmissiveSwatchMappings;
+    return GetColorSwatchData(EmissiveSwatchMappings);
 }
 public final function int GetMaxCharacterNameLength()
 {
@@ -600,7 +616,7 @@ public function EAppearanceMenuItemState GetPatternColorState()
 }
 public function array<TintSwatchData> GetPatternColorSwatchData()
 {
-    return PatternColorSwatchMappings;
+    return GetColorSwatchData(PatternColorSwatchMappings);
 }
 public function array<PatternData> GetPatternData()
 {
@@ -616,7 +632,7 @@ public function EAppearanceMenuItemState GetPhongState()
 }
 public function array<TintSwatchData> GetPhongSwatchData()
 {
-    return PhongSwatchMappings;
+    return GetColorSwatchData(PhongSwatchMappings);
 }
 public final function string GetSelectedCharacterClassAndLevel()
 {
@@ -670,7 +686,7 @@ public function EAppearanceMenuItemState GetSkinToneState()
 }
 public function array<TintSwatchData> GetSkinToneSwatchData()
 {
-    return SkinToneSwatchMappings;
+    return GetColorSwatchData(SkinToneSwatchMappings);
 }
 public function EAppearanceMenuItemState GetTint1State()
 {
@@ -678,7 +694,7 @@ public function EAppearanceMenuItemState GetTint1State()
 }
 public function array<TintSwatchData> GetTint1SwatchData()
 {
-    return Tint1SwatchMappings;
+    return GetColorSwatchData(Tint1SwatchMappings);
 }
 public function EAppearanceMenuItemState GetTint2State()
 {
@@ -686,7 +702,7 @@ public function EAppearanceMenuItemState GetTint2State()
 }
 public function array<TintSwatchData> GetTint2SwatchData()
 {
-    return Tint2SwatchMappings;
+    return GetColorSwatchData(Tint2SwatchMappings);
 }
 
 // MILAN CHANGE - 10/05/2026 - Mgamerz

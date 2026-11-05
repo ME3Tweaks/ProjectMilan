@@ -1,5 +1,7 @@
 // MILAN CHANGE - Mgamerz - 2026-10-27
 // Serialize heavy weapon ID from end of character string
+// MILAN CHANGE - Mgamerz - 2026-11-01
+// Read appearance colors as #RRGGBB, converting old palette IDs
 private final function EMPSerializationResult SetCharacter(int CharacterIndex, const out SFXSaveManagerMP MPSaveManager)
 {
     local string KitName;
@@ -43,16 +45,17 @@ private final function EMPSerializationResult SetCharacter(int CharacterIndex, c
         return EMPSerializationResult.EMPSerializationResult_Failure;
     }
     CharacterRecord.CharacterName = CharacterParts[CharacterCursor++];
-    CharacterRecord.Tint1ID = int(CharacterParts[CharacterCursor++]);
-    CharacterRecord.Tint2ID = int(CharacterParts[CharacterCursor++]);
+    // MILAN CHANGE - colors are #RRGGBB 
+    CharacterRecord.Tint1ID = Class'MilanColor'.static.ParseTintField(CharacterParts[CharacterCursor++], Class'SFXMPCharacterRecord'.default.Tint1ID);
+    CharacterRecord.Tint2ID = Class'MilanColor'.static.ParseTintField(CharacterParts[CharacterCursor++], Class'SFXMPCharacterRecord'.default.Tint2ID);
     CharacterRecord.PatternID = int(CharacterParts[CharacterCursor++]);
-    CharacterRecord.PatternColorID = int(CharacterParts[CharacterCursor++]);
+    CharacterRecord.PatternColorID = Class'MilanColor'.static.ParseTintField(CharacterParts[CharacterCursor++], Class'SFXMPCharacterRecord'.default.PatternColorID);
     if (Version >= 15)
     {
-        CharacterRecord.PhongID = int(CharacterParts[CharacterCursor++]);
-        CharacterRecord.EmissiveID = int(CharacterParts[CharacterCursor++]);
+        CharacterRecord.PhongID = Class'MilanColor'.static.ParseTintField(CharacterParts[CharacterCursor++], Class'SFXMPCharacterRecord'.default.PhongID);
+        CharacterRecord.EmissiveID = Class'MilanColor'.static.ParseEmissiveField(CharacterParts[CharacterCursor++], Class'SFXMPCharacterRecord'.default.EmissiveID);
     }
-    CharacterRecord.SkinToneID = int(CharacterParts[CharacterCursor++]);
+    CharacterRecord.SkinToneID = Class'MilanColor'.static.ParseSkinToneField(CharacterParts[CharacterCursor++], Class'SFXMPCharacterRecord'.default.SkinToneID);
     CharacterRecord.SecondsPlayed = float(int(CharacterParts[CharacterCursor++]));
     CharacterRecord.TimeStamp.Year = int(CharacterParts[CharacterCursor++]);
     CharacterRecord.TimeStamp.Month = int(CharacterParts[CharacterCursor++]);
@@ -72,7 +75,8 @@ private final function EMPSerializationResult SetCharacter(int CharacterIndex, c
     CharacterRecord.HeavyWeaponId = 0;
     if (CharacterCursor < CharacterParts.Length)
     {
-        CharacterRecord.HeavyWeaponId = Max(0, int(CharacterParts[CharacterCursor]));
+        // Advance the cursor so later trailing fields read from the right place
+        CharacterRecord.HeavyWeaponId = Max(0, int(CharacterParts[CharacterCursor++]));
     }
     // END MILAN CHANGE
     CharacterRecord.bSerializedFromBlaze = TRUE;

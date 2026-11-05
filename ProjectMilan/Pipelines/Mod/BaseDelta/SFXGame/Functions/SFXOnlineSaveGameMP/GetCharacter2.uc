@@ -1,5 +1,7 @@
 // MILAN CHANGE - Mgamerz - 2026-10-27
 // Serialize heavy weapon ID to end of character string
+// MILAN CHANGE - Mgamerz - 2026-11-01
+// Serialize appearance colors as #RRGGBB instead of palette IDs
 private final function string GetCharacter2(const out SFXMPCharacterRecord CharacterRecord, const out SFXSaveManagerMP MPSaveManager, int nCharacterIndex)
 {
     local string KitName;
@@ -39,13 +41,16 @@ private final function string GetCharacter2(const out SFXMPCharacterRecord Chara
         }
     }
     CharacterName = Repl(CharacterRecord.CharacterName, ";", "", TRUE);
-    Tint1ID = string(CharacterRecord.Tint1ID);
-    Tint2ID = string(CharacterRecord.Tint2ID);
+    // MILAN CHANGE - colors are written as #RRGGBB, or empty for no override. 
+    // Patterns aren't colors so they can just stay an ID
+    Tint1ID = Class'MilanColor'.static.ToHexString(CharacterRecord.Tint1ID);
+    Tint2ID = Class'MilanColor'.static.ToHexString(CharacterRecord.Tint2ID);
     PatternID = string(CharacterRecord.PatternID);
-    PatternColorID = string(CharacterRecord.PatternColorID);
-    PhongID = string(CharacterRecord.PhongID);
-    EmissiveID = string(CharacterRecord.EmissiveID);
-    SkinToneID = string(CharacterRecord.SkinToneID);
+    PatternColorID = Class'MilanColor'.static.ToHexString(CharacterRecord.PatternColorID);
+    PhongID = Class'MilanColor'.static.ToHexString(CharacterRecord.PhongID);
+    EmissiveID = Class'MilanColor'.static.ToHexString(CharacterRecord.EmissiveID);
+    SkinToneID = Class'MilanColor'.static.ToHexString(CharacterRecord.SkinToneID);
+    // END MILAN CHANGE
     SecondsPlayed = string(int(CharacterRecord.SecondsPlayed));
     TimeStamp = CharacterRecord.TimeStamp.Year $ ";" $ CharacterRecord.TimeStamp.Month $ ";" $ CharacterRecord.TimeStamp.Day $ ";" $ CharacterRecord.TimeStamp.SecondsSinceMidnight;
     Powers = GetPowers(CharacterRecord.Powers);
