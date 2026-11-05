@@ -3,6 +3,8 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Packages.CloningImportingAndRelinking;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.ObjectInfo;
+using ProjectMilan.Pipelines.StaticLighting;
+using System.Drawing;
 
 namespace ProjectMilan.Pipelines.Levels.BioP_MPThes
 {
@@ -11,8 +13,19 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPThes
         // Map has some extra levels we don't want to include in the lighting bake.
         public override string[] IgnoredLightingLevels => [
             "BioA_MPThes_100",
-            "BioA_MPThes_101"
+            "BioA_MPThes_101",
+            // Second stage bake
+            "BioA_MPThes_Vista2"
         ];
+
+        /// <summary>
+        /// Use a custom environment color so areas don't just turn black.
+        /// </summary>
+        public static WorldLightmassSettings WorldLighting => new()
+        {
+            EnvironmentColor = Color.FromArgb(255, 70, 85, 105),
+            EnvironmentIntensity = 0.25f,
+        };
 
         // The waving banners (BioT_MPThes.Waving_Flag/Waving_Flag2) amplify this normal map 5x; ME3 only ever had its
         // 32x32 mips, and LE3's 2048x2048 copy turns the banners into dark streaks. See TextureMipCap.

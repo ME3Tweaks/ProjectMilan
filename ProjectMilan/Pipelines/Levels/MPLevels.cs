@@ -143,7 +143,7 @@ namespace ProjectMilan.Pipelines.Levels
                 // MP2 Rebellion
                 new LevelSpecificPipeline() { BioP="BioP_MPJngl", Enabled = true, // Jade
                     MapListInfo = new MapListEntry { PackageName="BioP_MPJngl", PrettyNameStrRefId=728030, DescriptionStrRefId=null, GAWMapPositionX=231, GAWMapPositionY=362, GAWMapSubtitleStrRefId=500264, ImageObjectPath="GUI_MPImages_MP2.OptMapJade", ImageSeekFreePackageName="MP2Images" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled = true, SpecialFixes = new MPThesSpecific(), // Goddess
+                new LevelSpecificPipeline() { BioP="BioP_MPThes", Enabled = true, SpecialFixes = new MPThesSpecific(), WorldLightmass = MPThesSpecific.WorldLighting, // Goddess
                     MapListInfo = new MapListEntry { PackageName="BioP_MPThes", PrettyNameStrRefId=728031, DescriptionStrRefId=null, GAWMapPositionX=105, GAWMapPositionY=278, GAWMapSubtitleStrRefId=500427, ImageObjectPath="GUI_MPImages_MP2.OptMapGoddess", ImageSeekFreePackageName="MP2Images" } },
 
                 // MP3 Earth
@@ -163,7 +163,7 @@ namespace ProjectMilan.Pipelines.Levels
                     MapListInfo = new MapListEntry { PackageName="BioP_MPNov2", PrettyNameStrRefId=772316, DescriptionStrRefId=618048, GAWMapPositionX=352, GAWMapPositionY=352, GAWMapSubtitleStrRefId=706334, ImageObjectPath="GUI_MPImages_MP4.OptMapSnowstorm", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPRctr2", Enabled = true, SpecialFixes = new MPRctr2Specific(), // Reactor - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPRctr2", PrettyNameStrRefId=772396, DescriptionStrRefId=618044, GAWMapPositionX=111, GAWMapPositionY=333, GAWMapSubtitleStrRefId=706336, ImageObjectPath="GUI_MPImages_MP4.OptMapMeltdown", ImageSeekFreePackageName="SFXHazardMapImages" } },
-                new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled = true, // Ghost - Hazard
+                new LevelSpecificPipeline() { BioP="BioP_MPSlum2", Enabled = true, SpecialFixes = new MPSlum2Specific(), // Ghost - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPSlum2", PrettyNameStrRefId=772394, DescriptionStrRefId=618042, GAWMapPositionX=310, GAWMapPositionY=403, GAWMapSubtitleStrRefId=706335, ImageObjectPath="GUI_MPImages_MP4.OptMapAcid", ImageSeekFreePackageName="SFXHazardMapImages" } },
                 new LevelSpecificPipeline() { BioP="BioP_MPTowr2", Enabled = true, SpecialFixes = new MPTowr2Specific(), UE4Lightmass = MPTowr2Specific.BakeTuning, // Giant - Hazard
                     MapListInfo = new MapListEntry { PackageName="BioP_MPTowr2", PrettyNameStrRefId=772399, DescriptionStrRefId=618043, GAWMapPositionX=195, GAWMapPositionY=358, GAWMapSubtitleStrRefId=706332, ImageObjectPath="GUI_MPImages_MP4.OptMapTower", ImageSeekFreePackageName="SFXHazardMapImages" } },
