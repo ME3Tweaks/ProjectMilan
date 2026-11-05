@@ -61,6 +61,9 @@ namespace ProjectMilan
         [Option("ue4-environment-color-scale", HelpText = "UE4 Lightmass bakes this run: scales the environment (sky) color. Overrides every level's setting.", Required = false)]
         public float? UE4EnvironmentColorScale { get; set; }
 
+        [Option("ue4-importance-box", Separator = ',', HelpText = "UE4 Lightmass bakes this run: the importance volume as minX,minY,minZ,maxX,maxY,maxZ, instead of the one computed around the gameplay sublevels. Write it as --ue4-importance-box=... when it starts with a minus sign.", Required = false)]
+        public IEnumerable<float> UE4ImportanceBox { get; set; }
+
         [Option("build-vanilla-netindex-cache", HelpText = "Only regenerate Pipelines\\Finalize\\VanillaNetIndex.bin (and VanillaNetIndexOverrides.txt) by scanning every package LE3 loads, from the ME3Tweaks LE3 backup when there is one, then exit. Builds nothing else.", Required = false)]
         public bool BuildVanillaNetIndexCache { get; set; }
 

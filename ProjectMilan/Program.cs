@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using System.Timers;
 using CommandLine;
 using LegendaryExplorerCore;
@@ -190,8 +190,7 @@ namespace ProjectMilan
         /// checkpoints are never shipped, and a full rebuild is exactly the cost they exist to avoid. A change to one
         /// of those pipelines just makes a checkpoint taken at or after it stale - retake it.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 31; // 31: MilanMenuScene
-
+        public const int MIN_CHECKPOINT_VERSION = 32; // 32: Correct store mod-image seek-free mappings in the base Coalesced delta
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
         /// </summary>
@@ -207,8 +206,12 @@ namespace ProjectMilan
             if (obj.UE4IndirectBounces < 0 || new[] { obj.UE4DiffuseBoostScale, obj.UE4LocalIndirectScale, obj.UE4DirectionalIndirectScale,
                     obj.UE4EnvironmentColorScale, obj.UE4LocalBrightnessScale, obj.UE4LocalRadiusScale }.Any(x => x < 0))
                 throw new ArgumentException("--ue4-* lighting tuning values can't be negative");
+            var importanceBox = obj.UE4ImportanceBox?.ToArray() is { Length: > 0 } box ? box : null;
+            if (importanceBox != null && (importanceBox.Length != 6 || importanceBox[0] >= importanceBox[3] || importanceBox[1] >= importanceBox[4] || importanceBox[2] >= importanceBox[5]))
+                throw new ArgumentException("--ue4-importance-box takes minX,minY,minZ,maxX,maxY,maxZ with each min below its max");
             UE4LightmassOverrides = new UE4LightmassOverrides(obj.UE4EnvironmentColorScale, obj.UE4DirectionalIndirectScale,
-                obj.UE4LocalIndirectScale, obj.UE4DiffuseBoostScale, obj.UE4IndirectBounces, obj.UE4LocalBrightnessScale, obj.UE4LocalRadiusScale);
+                obj.UE4LocalIndirectScale, obj.UE4DiffuseBoostScale, obj.UE4IndirectBounces, obj.UE4LocalBrightnessScale, obj.UE4LocalRadiusScale,
+                importanceBox);
             UseCachedLighting = obj.CachedLighting || obj.ImportCachedLighting;
             if (!Enum.TryParse<LightmassSolver>(obj.Lightmass, ignoreCase: true, out var lightmass) || !Enum.IsDefined(lightmass))
                 throw new ArgumentException($"Unknown --lightmass {obj.Lightmass}; use UE3 or UE4");
@@ -508,6 +511,7 @@ namespace ProjectMilan
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.ME3, MEGame.LE3]);
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
+            FileAccessTracker.Enabled = true; // So a sharing violation can name the thread in this process it collided with
 
 #if DEBUG
             LECLog.LogDebug = true;
@@ -837,9 +841,9 @@ namespace ProjectMilan
             else
                 TLKPipeline.FinalizePipeline();
 
-        // EVERYTHING AFTER THIS IS NON-CONTENT PORTING. ONLY THE DEV-ONLY STAGES (TEXTURE THROUGH VTABLES) MAY BE
-        // CHECKPOINTED, IN DEV BUILDS. Changes to those pipelines make such a checkpoint stale without bumping
-        // MIN_CHECKPOINT_VERSION - retake it. Conformance onward is never checkpointed. ---------
+            // EVERYTHING AFTER THIS IS NON-CONTENT PORTING. ONLY THE DEV-ONLY STAGES (TEXTURE THROUGH VTABLES) MAY BE
+            // CHECKPOINTED, IN DEV BUILDS. Changes to those pipelines make such a checkpoint stale without bumping
+            // MIN_CHECKPOINT_VERSION - retake it. Conformance onward is never checkpointed. ---------
 
             // MIDWAY POINT - We should no longer be porting content, so we can
             // drop some caches to release memory.
@@ -861,7 +865,7 @@ namespace ProjectMilan
 
             if (Settings.RunShaderPipeline)
             {
-            RunPipeline(ECheckpointStage.PostShaders, true, PostShaderPipeline.RunPipeline, "PostShaders");
+                RunPipeline(ECheckpointStage.PostShaders, true, PostShaderPipeline.RunPipeline, "PostShaders");
             }
             else
             {

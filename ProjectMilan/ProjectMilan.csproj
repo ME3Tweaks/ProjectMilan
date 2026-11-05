@@ -6,15 +6,34 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <Platforms>x64</Platforms>
+    <Configurations>Debug;Release;ShippingRelease;ShippingDebug</Configurations>
 	  <EnableSourceControlManagerQueries>true</EnableSourceControlManagerQueries>
 	  <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <!-- ShippingRelease is Release plus the SHIPPING_RELEASE preprocessor symbol (strips dev-only content). -->
+  <PropertyGroup Condition="'$(Configuration)' == 'ShippingRelease'">
+    <Optimize>true</Optimize>
+    <DefineConstants>$(DefineConstants);RELEASE;SHIPPING_RELEASE</DefineConstants>
+  </PropertyGroup>
+
+  <!-- ShippingDebug is ShippingRelease's code paths (SHIPPING_RELEASE, no DEBUG) built unoptimized with full
+       symbols so it can be stepped through in a debugger. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'ShippingDebug'">
+    <Optimize>false</Optimize>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <DefineConstants>$(DefineConstants);SHIPPING_RELEASE</DefineConstants>
+  </PropertyGroup>
+
 
   <ItemGroup>
     <Compile Remove="Pipelines\Audio\ConversionReview\**" />
     <Compile Remove="Pipelines\Audio\ConvertedCache\**" />
     <Compile Remove="Pipelines\Levels\BioP_MPThes\Donors\**" />
     <Compile Remove="Pipelines\Material\**" />
+    <Compile Remove="Pipelines\Shared\ActionScript\GUI_SF_MilanBannerSelect.LoadSave\Packaging\**" />
+    <Compile Remove="Pipelines\Shared\ActionScript\GUI_SF_MPReinforcements_DLC.MPReinforcementsReveal\Packaging\**" />
     <EmbeddedResource Remove="Pipelines\Audio\ConversionReview\**" />
     <EmbeddedResource Remove="Pipelines\Audio\ConvertedCache\**" />
     <EmbeddedResource Remove="Pipelines\Levels\BioP_MPThes\Donors\**" />
@@ -34,11 +53,13 @@
     <Folder Include="Pipelines\MP4NewEnemies\LooseClasses\" />
     <Folder Include="Pipelines\MP4NewEnemies\Modified\SFXPawn_CollectorTrooper\" />
     <Folder Include="Pipelines\Shared\Compiling\AutoDonor\" />
+    <Folder Include="Pipelines\Shared\Compiling\FunctionOverride\Development\" />
     <Folder Include="Pipelines\Shared\Compiling\FunctionOverride\SFXGameInfoMP_Lobby\" />
     <Folder Include="Pipelines\Shared\Compiling\Functions\" />
     <Folder Include="Pipelines\Shared\Compiling\LooseClasses\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Material\" />
     <Folder Include="Pipelines\Shared\GlobalDonors\Meshes\" />
+    <Folder Include="Pipelines\Shared\GlobalDonors\Audio\" />
     <Folder Include="Pipelines\Startups\MPCommon\MergeMod\Staging\" />
     <Folder Include="Pipelines\Weapons\LooseClasses\" />
   </ItemGroup>
@@ -70,5 +91,9 @@
     <ProjectReference Include="..\UdkInj\UDKAgent\UDKAgent.vcxproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" SetPlatform="Platform=x64" />
     <ProjectReference Include="..\UdkInj\UDKInj.Shell\UDKInj.Shell.csproj" ReferenceOutputAssembly="false" SetPlatform="Platform=AnyCPU" />
     <ProjectReference Include="..\WwiseTools\WwiseTools_DotNet6\WwiseTools_DotNet6.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Configuration)' == 'ShippingRelease' Or '$(Configuration)' == 'ShippingDebug'">
+    <ProjectReference Update="@(ProjectReference)" SetConfiguration="Configuration=Release" />
   </ItemGroup>
 </Project>
