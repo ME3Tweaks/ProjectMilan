@@ -54,8 +54,9 @@ namespace ProjectMilanCore.Textures
         }
 
         /// <summary>
-        /// Creates a GUI texture export from a source image and adds it to the package's object referencer (so
-        /// resynthesis doesn't strip it).
+        /// Creates a GUI texture export from a source image. It is not added to an object referencer: callers whose
+        /// package needs one (so resynthesis doesn't strip the texture) add it themselves. Scaleform donors and
+        /// dynamically loaded image packages must not get one.
         /// </summary>
         /// <param name="package">Package to create the texture in.</param>
         /// <param name="parent">Parent export, e.g. a forced export Package for dynamic-load-mapped images. Null for a top level texture.</param>
@@ -86,8 +87,6 @@ namespace ProjectMilanCore.Textures
 
             var texture = new Texture2D(texExport);
             texture.Replace(image, props, isPackageStored: true, forcedNewFormat: pixelFormat);
-
-            texExport.AddToObjectReferencer();
 
             return texExport;
         }
