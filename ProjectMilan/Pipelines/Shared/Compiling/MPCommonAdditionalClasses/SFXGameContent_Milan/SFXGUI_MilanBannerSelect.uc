@@ -30,6 +30,55 @@ var transient array<BannerImageRequest> Images;
 var transient bool bPickerOpen;
 var GFxMovieInfo BannerMovie;
 
+// Used to retain banner textures so GC doesn't kill them
+// due to LE3 engine bugs
+struct RetainedBannerTexture
+{
+    var string Resource;
+    var Texture2D Texture;
+};
+var transient array<RetainedBannerTexture> RetainedTextures;
+
+// Scaleform's resource paths do not keep the textures alive across Unreal GC
+// Retain each requested image until panel disposal
+private final function Texture2D RetainBannerTexture(string Resource, optional Texture2D Image)
+{
+    local int Index;
+    local BioDefine.EAsyncLoadStatus AsyncStatus;
+    local RetainedBannerTexture Retained;
+
+    if (Resource == "")
+    {
+        return None;
+    }
+    for (Index = 0; Index < RetainedTextures.Length; ++Index)
+    {
+        if (RetainedTextures[Index].Resource ~= Resource)
+        {
+            if (Image != None)
+            {
+                RetainedTextures[Index].Texture = Image;
+            }
+            if (RetainedTextures[Index].Texture != None)
+            {
+                return RetainedTextures[Index].Texture;
+            }
+        }
+    }
+    if (Image == None)
+    {
+        Image = Texture2D(Class'SFXEngine'.static.LoadSeekFreeObjectAsync(Resource, Class'Texture2D', AsyncStatus));
+    }
+    if (Image == None)
+    {
+        return None;
+    }
+    Retained.Resource = Resource;
+    Retained.Texture = Image;
+    RetainedTextures.AddItem(Retained);
+    return Image;
+}
+
 public static final function SFXGUI_MilanBannerSelect ShowBannerSelect(PlayerController PC, optional delegate<SFXGUIMovie.OnMovieClosedDelegate> OnClosed)
 {
     local SFXGUI_MilanBannerSelect Movie;
@@ -54,6 +103,7 @@ public event function OnPanelRemoved()
     bPickerOpen = FALSE;
     oPanel.InvokeMethod("DisposePicker");
     Images.Length = 0;
+    RetainedTextures.Length = 0;
     Super.OnPanelRemoved();
 }
 public function onExternalInitialize()
@@ -156,8 +206,16 @@ public final function string GetBannerImage(int EmblemID)
         return "";
     }
     Resource = Class'SFXPRIMP'.default.EmblemList[Index].BackgroundResource;
-    if (Resource == "" || Class'SFXEngine'.static.IsSeekFreeObjectSupported(Resource))
+    if (Resource == "")
     {
+        return "";
+    }
+    if (Class'SFXEngine'.static.IsSeekFreeObjectSupported(Resource))
+    {
+        if (RetainBannerTexture(Resource) == None)
+        {
+            return "";
+        }
         return Resource;
     }
     for (Index = 0; Index < Images.Length; ++Index)
@@ -166,6 +224,7 @@ public final function string GetBannerImage(int EmblemID)
         {
             if (Images[Index].Request.mCompleted && Images[Index].Request.mDynamicImage != None)
             {
+                RetainBannerTexture(Resource, Images[Index].Request.mDynamicImage);
                 return PathName(Images[Index].Request.mDynamicImage);
             }
             return "";
@@ -189,6 +248,10 @@ private final function OnRequestImageComplete(SFXOnlineImageRequest Result)
         if (Images[Index].Request.mImageName == Result.mImageName)
         {
             Images[Index].Request = Result;
+            if (Result.mDynamicImage != None)
+            {
+                RetainBannerTexture(Result.mImageName, Result.mDynamicImage);
+            }
         }
     }
 }
