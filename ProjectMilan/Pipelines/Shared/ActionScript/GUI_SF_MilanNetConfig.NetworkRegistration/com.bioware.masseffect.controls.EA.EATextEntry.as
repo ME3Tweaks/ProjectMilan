@@ -107,14 +107,26 @@ class com.bioware.masseffect.controls.EA.EATextEntry extends com.bioware.masseff
    }
    function BeginTextInput()
    {
+      if(_root.milanTextInput != undefined && _root.milanTextInput != this)
+      {
+         _root.milanTextInput.EndTextInput();
+      }
       Selection.setFocus(this.m_dataTxt);
       Key.addListener(this);
       this.m_bEnteringText = true;
+      _root.milanTextInput = this;
+      flash.external.ExternalInterface.call("BeginPCTextInput");
       fscommand(com.UnrealMessages.SetTextInputStream,"Yes");
       _global.SFX.PlayGUISound("EANetworkOnExecute");
    }
    function EndTextInput()
    {
+      if(_root.milanTextInput == this)
+      {
+         delete _root.milanTextInput;
+         flash.external.ExternalInterface.call("EndPCTextInput");
+      }
+      delete this.onEnterFrame;
       fscommand(com.UnrealMessages.SetTextInputStream,"No");
       Selection.setFocus(null);
       Key.removeListener(this);

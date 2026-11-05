@@ -135,6 +135,16 @@ function SetActiveInputField(sVal)
       mcActiveSubscreen.SetActiveInputField(sVal);
    }
 }
+// LE3 removes Slash from its native GFx key map, before AS2 onKeyDown can see it.
+// The screen's scoped raw-key delegate forwards only Slash presses/repeats here.
+function QueueNativeSlash()
+{
+   var field = _root.milanTextInput;
+   if(mcActiveSubscreen == mcNetConfig && mcNetConfig._visible && field != undefined && field.m_bEnteringText && !field.m_bDisabled && Selection.getFocus() == String(field.m_dataTxt) && !Key.isDown(16) && !Key.isDown(17) && !Key.isDown(18))
+   {
+      field.QueueFallbackChar("/");
+   }
+}
 function OnHandleInputConfigurations(bMenuAdvanceSwapped, bStickSouthpaw, bTriggerSouthpaw, bTriggersShouldersSwapped)
 {
    mcNetConfig.OnHandleInputConfigurations(bMenuAdvanceSwapped,bStickSouthpaw,bTriggerSouthpaw,bTriggersShouldersSwapped);

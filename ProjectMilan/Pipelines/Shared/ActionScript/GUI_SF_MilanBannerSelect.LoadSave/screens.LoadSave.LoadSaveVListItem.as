@@ -230,16 +230,12 @@ class screens.LoadSave.LoadSaveVListItem extends com.bioware.masseffect.controls
       format.align = "left";
       this.info.infoTxt.setTextFormat(format);
       if(this.data.gameIndex == 0) { return; }
-      if(this.bannerSlot.status == undefined)
+      if(this.bannerSlot.loadingBacking == undefined)
       {
          var backing = this.bannerSlot.createEmptyMovieClip("loadingBacking",0);
          backing.beginFill(0x07131F,65);
          this.DrawRect(backing,0,0,560,140);
          backing.endFill();
-         this.bannerSlot.createTextField("status",2,12,12,536,100);
-         this.bannerSlot.status.embedFonts = this.info.infoTxt.embedFonts;
-         this.bannerSlot.status.setNewTextFormat(format);
-         this.bannerSlot.status.selectable = false;
       }
       // Include both native fade zones, and one adjacent row for prefetch
       var near = Math.abs(this.data.index-screen.vList.movementRefElementIndex-1) <= 3;
@@ -262,9 +258,5 @@ class screens.LoadSave.LoadSaveVListItem extends com.bioware.masseffect.controls
          if(resource != undefined && resource != "") { this.LoadResolvedImage(resource); }
       }
       this.bannerSlot.loadingBacking._visible = !this.imageLoaded;
-      // Leave pending artwork blank
-      // Only display status text after an actual failure
-      this.bannerSlot.status._visible = !this.imageLoaded && this.imageFailed;
-      this.bannerSlot.status.text = this.imageFailed ? screen.labels.Unavailable : "";
    }
 }
