@@ -33,12 +33,11 @@ public static partial class StoreCards
     };
 
     private static readonly LocalizedString ColonialSaviorPackDescription = new() { [MELocalization.INT] = "Contains the Colonial Savior banner. $49875828" };
-    private static readonly LocalizedString MissionAccomplishedTitle = new() { [MELocalization.INT] = "Mission accomplished" };
-    private static readonly LocalizedString MissionAccomplishedPackDescription = new() { [MELocalization.INT] = "Contains the Mission accomplished banner. $49875828" };
-    private static readonly LocalizedString BringerOfPainTitle = new() { [MELocalization.INT] = "Bringer of pain" };
-    private static readonly LocalizedString BringerOfPainPackDescription = new() { [MELocalization.INT] = "Contains the Bringer of pain banner. $49875828" };
-    private static readonly LocalizedString EndOfTheWorldTitle = new() { [MELocalization.INT] = "End of the world" };
-    private static readonly LocalizedString EndOfTheWorldPackDescription = new() { [MELocalization.INT] = "Contains the End of the world banner. $49875828" };
+    private static readonly LocalizedString MissionAccomplishedTitle = new() { [MELocalization.INT] = "Mission Accomplished" };
+    private static readonly LocalizedString MissionAccomplishedPackDescription = new() { [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 2) banner. $49875828" };
+    private static readonly LocalizedString MercilessTitle = new() { [MELocalization.INT] = "Merciless" };
+    private static readonly LocalizedString MercilessPackDescription = new() { [MELocalization.INT] = "Contains the Merciless banner. $49875828" };
+    private static readonly LocalizedString MissionAccomplishedLE3PackDescription = new() { [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 3) banner. $49875828" };
     private static readonly LocalizedString TheOneAndOnlyTitle = new() { [MELocalization.INT] = "The One and Only" };
     private static readonly LocalizedString TheOneAndOnlyPackDescription = new() { [MELocalization.INT] = "Contains the The One and Only banner. $49875828" };
     private static readonly LocalizedString InsaneTitle = new() { [MELocalization.INT] = "Insane" };
@@ -48,7 +47,7 @@ public static partial class StoreCards
     internal static IReadOnlyList<AchievementBannerDefinition> AchievementBanners { get; } =
     [
         new(700, "ach_me1_medalofhonor", 702, LEAchievementIds.ME1_MedalOfHonor, 709, 222, 716,
-            MedalOfHonorTitle, MedalOfHonorPackDescription, "ChallengeBanners.Placeholder", // TODO artwork
+            MedalOfHonorTitle, MedalOfHonorPackDescription, "AchievementBanners.MedalOfHonor",
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
 
         new(701, "ach_me1_colonialsurvival", 703, LEAchievementIds.ME1_ColonialSurvival, 710, 223, 717,
@@ -60,19 +59,19 @@ public static partial class StoreCards
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
         
         new(703, "ach_me2_merciless", 705, LEAchievementIds.ME2_Merciless, 712, 225, 719,
-            BringerOfPainTitle, BringerOfPainPackDescription, "ChallengeBanners.Placeholder", // TODO artwork
+            MercilessTitle, MercilessPackDescription, "AchievementBanners.Merciless",
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
         
         new(704, "ach_me3_missionaccomplished", 706, LEAchievementIds.ME3_MissionAccomplished, 713, 226, 720,
-            EndOfTheWorldTitle, EndOfTheWorldPackDescription, "ChallengeBanners.Placeholder", // TODO artwork
+            MissionAccomplishedTitle, MissionAccomplishedLE3PackDescription, "AchievementBanners.MissionAccomplishedLE3", 
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
         
         new(705, "ach_me3_theoneandonly", 707, LEAchievementIds.ME3_TheOneAndOnly, 714, 227, 721,
-            TheOneAndOnlyTitle, TheOneAndOnlyPackDescription, "ChallengeBanners.Placeholder", // TODO artwork
+            TheOneAndOnlyTitle, TheOneAndOnlyPackDescription, "AchievementBanners.TheOneAndOnly", 
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
         
         new(706, "ach_insanityiii", 708, LEAchievementIds.Trilogy_InsanityIII, 715, 228, 722,
-            InsaneTitle, InsanePackDescription, "ChallengeBanners.Placeholder", // TODO artwork
+            InsaneTitle, InsanePackDescription, "AchievementBanners.Insane", 
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
     ];
 
