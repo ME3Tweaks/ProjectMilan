@@ -53,7 +53,7 @@ public static partial class StoreCards
         // N7 Squad
         Banner(247, "MilanBanner_N7S1", 741, N7S1Title, "Groups.N7S1", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
         // MEMP
-        Banner(247, "MilanBanner_MEMP", 742, MEMPTitle, "Groups.MEMP", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
+        Banner(248, "MilanBanner_MEMP", 742, MEMPTitle, "Groups.MEMP", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
     ];
 
     public static StoreCard Banner(int emblemId, string uniqueName, int playerVariableId, int titleStrRefId,
