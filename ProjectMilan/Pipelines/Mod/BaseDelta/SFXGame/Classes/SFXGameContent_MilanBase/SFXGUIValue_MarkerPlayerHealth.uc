@@ -10,6 +10,12 @@ var float HealthTintAtCritical;
 var float PulseAngularSpeed;
 var float PulseMinimumRed;
 
+// Limit the amount of tint that can change per second
+// so it makes a smoother transition
+var float TintTransitionSeconds;
+var transient LinearColor DisplayedTint;
+var transient bool bTintInitialized;
+
 // MILAN CHANGE - Mgamerz - 2026-10-16
 // Hide only the player marker's visuals during local photo mode, preserving native updates.
 var bool bPhotoMarkerHidden;
@@ -43,13 +49,13 @@ public function UpdateAppearance(float DeltaSeconds)
 
     if (MarkerModule == None)
     {
-        SetMarkerTint(1.0, 1.0, 1.0, 1.0);
+        SetMarkerTint(1.0, 1.0, 1.0, 1.0, DeltaSeconds);
         return;
     }
 
     if (MarkerModule.PlayerIsDead)
     {
-        SetMarkerTint(0.0, 0.0, 0.0, 1.0);
+        SetMarkerTint(0.0, 0.0, 0.0, 1.0, DeltaSeconds);
         return;
     }
 
@@ -72,14 +78,14 @@ public function UpdateAppearance(float DeltaSeconds)
             * (1.0 + Sin(TimeNow * PulseAngularSpeed))
             * 0.5;
 
-        SetMarkerTint(Pulse, 0.0, 0.0, 1.0);
+        SetMarkerTint(Pulse, 0.0, 0.0, 1.0, DeltaSeconds);
         return;
     }
 
     // A positive shield value means the marker stays white.
     if (MarkerPawn.GetCurrentShields() > 0.0)
     {
-        SetMarkerTint(1.0, 1.0, 1.0, 1.0);
+        SetMarkerTint(1.0, 1.0, 1.0, 1.0, DeltaSeconds);
         return;
     }
 
@@ -95,7 +101,7 @@ public function UpdateAppearance(float DeltaSeconds)
     }
 
     GreenBlue = 1.0 - ((1.0 - HealthTintAtCritical) * HealthBlend);
-    SetMarkerTint(1.0, GreenBlue, GreenBlue, 1.0);
+    SetMarkerTint(1.0, GreenBlue, GreenBlue, 1.0, DeltaSeconds);
 }
 
 // END MILAN CHANGE
@@ -133,9 +139,11 @@ private final function SetMarkerTint(
     float Red,
     float Green,
     float Blue,
-    float Alpha)
+    float Alpha,
+    float DeltaSeconds)
 {
     local ASColorTransform Tint;
+    local float MaxChannelChange;
 
     if (MarkerMiscTextClipAnim == None)
     {
@@ -146,6 +154,16 @@ private final function SetMarkerTint(
     Tint.Multiply.G = Green;
     Tint.Multiply.B = Blue;
     Tint.Multiply.A = Alpha;
+
+    if (bTintInitialized && TintTransitionSeconds > 0.0)
+    {
+        MaxChannelChange = FMax(DeltaSeconds, 0.0) / TintTransitionSeconds;
+        Tint.Multiply.R = FClamp(Red, DisplayedTint.R - MaxChannelChange, DisplayedTint.R + MaxChannelChange);
+        Tint.Multiply.G = FClamp(Green, DisplayedTint.G - MaxChannelChange, DisplayedTint.G + MaxChannelChange);
+        Tint.Multiply.B = FClamp(Blue, DisplayedTint.B - MaxChannelChange, DisplayedTint.B + MaxChannelChange);
+    }
+    DisplayedTint = Tint.Multiply;
+    bTintInitialized = TRUE;
 
     Tint.Add.R = 0.0;
     Tint.Add.G = 0.0;
@@ -164,4 +182,5 @@ defaultproperties
     HealthTintAtCritical=0.35
     PulseAngularSpeed=5.0
     PulseMinimumRed=0.65
+    TintTransitionSeconds=0.15
 }
