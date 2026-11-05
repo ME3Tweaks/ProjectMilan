@@ -27,6 +27,14 @@ public static partial class StoreCards
     private static readonly LocalizedString SFXTitle = new() { [MELocalization.INT] = "SFX" };
     private static readonly LocalizedString N7S1Title = new() { [MELocalization.INT] = "N7 Squad" };
     private static readonly LocalizedString MEMPTitle = new() { [MELocalization.INT] = "United Through Discord" };
+    private static readonly LocalizedString DAArlathanGloryTitle = new() { [MELocalization.INT] = "Glory of Arlathan" };
+    private static readonly LocalizedString DAArlathanRitualTitle = new() { [MELocalization.INT] = "The Ritual" };
+    private static readonly LocalizedString DAFromTrickleToFloodTitle = new() { [MELocalization.INT] = "From a Trickle to a Flood" };
+    private static readonly LocalizedString DATheDeepRoadsTitle = new() { [MELocalization.INT] = "The Deep Roads" };
+    private static readonly LocalizedString DATheLastStraw1Title = new() { [MELocalization.INT] = "The Last Straw" };
+    private static readonly LocalizedString DATheLastStraw2Title = new() { [MELocalization.INT] = "The Last Straw" };
+    private static readonly LocalizedString DATheWrathOfHeavenTitle = new() { [MELocalization.INT] = "The Wrath of Heaven" };
+    private static readonly LocalizedString DATrespasserTitle = new() { [MELocalization.INT] = "Trespasser" };
 
     // Add custom milan banners here that have drops.
     private static IEnumerable<StoreCard> Banners =>
@@ -54,6 +62,15 @@ public static partial class StoreCards
         Banner(247, "MilanBanner_N7S1", 741, N7S1Title, "Groups.N7S1", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
         // MEMP
         Banner(248, "MilanBanner_MEMP", 742, MEMPTitle, "Groups.MEMP", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
+        // Dragon Age
+        Banner(249, "MilanBanner_DA_ArlathanGlory", 744, DAArlathanGloryTitle, "ThedasBanners.ArlathanGlory", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(250, "MilanBanner_DA_ArlathanRitual", 745, DAArlathanRitualTitle, "ThedasBanners.ArlathanRitual", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(251, "MilanBanner_DA_FromTrickleToFlood", 746, DAFromTrickleToFloodTitle, "ThedasBanners.FromTrickleToFlood", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(252, "MilanBanner_DA_TheDeepRoads", 747, DATheDeepRoadsTitle, "ThedasBanners.TheDeepRoads", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        //Banner(253, "MilanBanner_DA_TheLastStraw1", 748, DATheLastStraw1Title, "ThedasBanners.TheLastStraw1", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(254, "MilanBanner_DA_TheLastStraw2", 749, DATheLastStraw2Title, "ThedasBanners.TheLastStraw2", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(255, "MilanBanner_DA_TheWrathOfHeaven", 750, DATheWrathOfHeavenTitle, "ThedasBanners.TheWrathOfHeaven", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(256, "MilanBanner_DA_Trespasser", 751, DATrespasserTitle, "ThedasBanners.Trespasser", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
     ];
 
     public static StoreCard Banner(int emblemId, string uniqueName, int playerVariableId, int titleStrRefId,
