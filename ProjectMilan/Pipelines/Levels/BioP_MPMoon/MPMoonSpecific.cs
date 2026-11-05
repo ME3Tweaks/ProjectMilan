@@ -3,6 +3,7 @@ using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
 using ProjectMilanCore;
+using System.ComponentModel;
 
 namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 {
@@ -16,7 +17,6 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 
 
         // Condor ammo boxes don't have the correct respawn time set which makes it SUCK to get ammo
-        // Fix crate UV
         public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
             foreach (var package in pipeline.ME3Packages.Values)
@@ -36,12 +36,6 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 
                 package.GetLevel().WriteBinary(bin);
 
-                if (package.FileNameNoExtension == "BioA_MPMoon_100")
-                {
-                    // Rename crate mesh so it doens't take LE3's donor, it has totally different UV
-                    // and we don't want to have to remap the atlas
-                    package.FindExport("bioapl_cra_crate01.Crate01_M.Crate01_M").ObjectName = "Crate01_M_ME3";
-                }
             }
         }
 
@@ -52,6 +46,8 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
         {
             foreach (var package in pipeline.LE3Packages.Values)
             {
+                FixContainerMaterialOverrides(package);
+
                 foreach (var export in package.Exports)
                 {
                     if (export.ClassName != "StaticMesh" || export.InstancedFullPath != DebrisShipMeshIFP)
@@ -77,6 +73,37 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
                         export.WriteBinary(mesh);
                     }
                 }
+            }
+        }
+
+        // LE asset for the supply tank/crate thing
+        // changes UVs and mesh but our override uses old ME3
+        // version, so we take that instead
+        private static void FixContainerMaterialOverrides(IMEPackage package)
+        {
+            if (package.FileNameNoExtension != "BioA_MPMoon_100")
+            {
+                return;
+            }
+
+            var material = package.FindExport("bioapl_con_container03.Container03_MatInst");
+            foreach (var component in package.Exports.Where(x=> x.ClassName == "StaticMeshComponent"))
+            {
+                if (component.GetProperty<ObjectProperty>("StaticMesh")?.ResolveToEntry(package)?.InstancedFullPath != "bioapl_con_container03.Container03")
+                {
+                    // Not our mesh
+                    continue;
+                }
+
+                var materials = component.GetProperty<ArrayProperty<ObjectProperty>>("Materials");
+                if (materials == null || materials.Count == 0 || materials[0].ResolveToEntry(package)?.InstancedFullPath != "BioT_MPMoon.Materials.Container03_MatInst")
+                {
+                    continue;
+                }
+
+                // Correct the material to the version that works with LE3
+                materials[0].Value = material.UIndex;
+                component.WriteProperty(materials);
             }
         }
     }
