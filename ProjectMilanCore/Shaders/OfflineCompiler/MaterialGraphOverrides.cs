@@ -43,7 +43,8 @@ public static class MaterialGraphOverrides
         ["Geth_Vision_post_Mat_MP5_"] = AddGethVisionParameters,
         ["BloodLust_FB_Mat"] = AddStrengthParameter,
         ["RepairMatrix_Particle_Mat"] = AddStrengthParameter,
-        ["KroganBerserk_FB_Mat"] = AddKroganRageParameters
+        ["KroganBerserk_FB_Mat"] = AddKroganRageParameters,
+        ["SLUM_ACID_ASPHALT"] = AddTransitionDiffuseTint
     };
 
     /// <summary>True when the material at <paramref name="identity"/> (an instanced full path) has an edited graph.</summary>
@@ -77,6 +78,18 @@ public static class MaterialGraphOverrides
         BlendInputToward(material, Expression(material, "MaterialExpressionSceneTexture_1"), "Coordinates", red, "Coordinates", "Milan_Aberration");
         BlendInputToward(material, Expression(material, "MaterialExpressionSceneTexture_3"), "Coordinates", red, "Coordinates", "Milan_Aberration");
         ScaleInput(material, Expression(material, "MaterialExpressionAdd_0"), "B", "Milan_SceneAdd");
+    }
+
+    // The Rain_Valve=1 branch samples raw diffuse while Rain_Valve=0 applies Diff_tint. The skycar's diffuse is a
+    // magenta/blue paint stack, so it must keep its red tint through the transition. Other instances default to 0
+    private static void AddTransitionDiffuseTint(ExportEntry material)
+    {
+        var branch = Expression(material, "MaterialExpressionAdd_28");
+        var tinted = Expression(material, "MaterialExpressionAdd_33");
+        var blend = Node(material, "Milan_KeepDiffuseTint_Blend", "MaterialExpressionLinearInterpolate",
+            AsExpressionInput(Input(branch, "A"), "A"), AsExpressionInput(Input(tinted, "B"), "B"),
+            Link(Parameter(material, "Milan_KeepDiffuseTint", 0f), "Alpha"));
+        SetInput(branch, "A", blend);
     }
 
     private static void AddStrengthParameter(ExportEntry material) => ScaleInput(material, material, "EmissiveColor", "Milan_Strength");
