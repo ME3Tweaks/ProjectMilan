@@ -1,8 +1,13 @@
+// Captured in game on 2026-11-04 with milanmenu.capture (debug camera, FOV 60).
 {
   "Map": "MPSlum2",
-  "TerminalAnchor": { "Location": { "X": -4035, "Y": 3904, "Z": 1802 }, "Rotation": { "Pitch": 0, "Yaw": 23700, "Roll": 0 } },
+  "TerminalAnchor": { "Location": { "X": -4991.3, "Y": -507.4, "Z": 1885.3 }, "Rotation": { "Pitch": 0, "Yaw": -19975, "Roll": 0 } },
   "VistaCamera": {
-    "Start": { "Location": { "X": -1475, "Y": -267, "Z": 2330 }, "Rotation": { "Pitch": -5248, "Yaw": 17120, "Roll": 0 }, "FOV": 70 },
-    "End": { "Location": { "X": -1774, "Y": -288, "Z": 2330 }, "Rotation": { "Pitch": -5248, "Yaw": 16120, "Roll": 0 }, "FOV": 70 }
-  }
+    "Start": { "Location": { "X": -3088.8, "Y": -2449.2, "Z": 2476.3 }, "Rotation": { "Pitch": -4156, "Yaw": 4672, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": -3500.8, "Y": 2543.4, "Z": 2426.2 }, "Rotation": { "Pitch": -2393, "Yaw": -3198, "Roll": 0 }, "FOV": 60 }
+  },
+  // The match starts the rain after wave 1; this Matinee turns on the rain emitters and wets the ground.
+  "DesignLevels": [
+    { "Package": "BioD_MPSlum2_haz", "StartOnSceneReady": [ "SeqAct_Interp_0" ] }
+  ]
 }

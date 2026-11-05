@@ -1,8 +1,9 @@
+// Captured in game on 2026-11-04 with milanmenu.capture (debug camera, FOV 60).
 {
   "Map": "MPDish2",
-  "TerminalAnchor": { "Location": { "X": 1863, "Y": -2789, "Z": 219 }, "Rotation": { "Pitch": 0, "Yaw": -9108, "Roll": 0 } },
+  "TerminalAnchor": { "Location": { "X": -3881.4, "Y": -4395.3, "Z": -59.7 }, "Rotation": { "Pitch": 0, "Yaw": -21089, "Roll": 0 } },
   "VistaCamera": {
-    "Start": { "Location": { "X": -1759, "Y": -1375, "Z": 171 }, "Rotation": { "Pitch": -480, "Yaw": -25216, "Roll": 0 }, "FOV": 70 },
-    "End": { "Location": { "X": -1560, "Y": -1600, "Z": 171 }, "Rotation": { "Pitch": -480, "Yaw": -26216, "Roll": 0 }, "FOV": 70 }
+    "Start": { "Location": { "X": 1239.1, "Y": 1076.5, "Z": 280.5 }, "Rotation": { "Pitch": -2387, "Yaw": -26891, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": -3747.6, "Y": 1303.7, "Z": 1142.5 }, "Rotation": { "Pitch": -3487, "Yaw": -6949, "Roll": 0 }, "FOV": 60 }
   }
 }

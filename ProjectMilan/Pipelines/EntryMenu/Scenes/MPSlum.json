@@ -1,8 +1,9 @@
+// Captured in game on 2026-11-04 with milanmenu.capture (debug camera, FOV 60).
 {
   "Map": "MPSlum",
-  "TerminalAnchor": { "Location": { "X": -4545.7, "Y": 2882.0, "Z": 1805.4 }, "Rotation": { "Pitch": 0, "Yaw": 313, "Roll": 0 } },
+  "TerminalAnchor": { "Location": { "X": -2449.0, "Y": -1149.9, "Z": 1709.7 }, "Rotation": { "Pitch": 0, "Yaw": -19978, "Roll": 0 } },
   "VistaCamera": {
-    "Start": { "Location": { "X": -4376.5, "Y": 14269.7, "Z": 1303.3 }, "Rotation": { "Pitch": 457, "Yaw": 17346, "Roll": 0 }, "FOV": 60 },
-    "End": { "Location": { "X": -3934.7, "Y": 2621.3, "Z": 2786.8 }, "Rotation": { "Pitch": -3074, "Yaw": -6554, "Roll": 0 }, "FOV": 60 }
+    "Start": { "Location": { "X": -3613.1, "Y": 7400.9, "Z": 2531.1 }, "Rotation": { "Pitch": -501, "Yaw": -15947, "Roll": -177 }, "FOV": 60 },
+    "End": { "Location": { "X": -3765.6, "Y": 3421.8, "Z": 2533.2 }, "Rotation": { "Pitch": -1762, "Yaw": -12796, "Roll": -177 }, "FOV": 60 }
   }
 }
