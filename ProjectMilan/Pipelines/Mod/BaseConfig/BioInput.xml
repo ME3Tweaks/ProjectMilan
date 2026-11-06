@@ -306,12 +306,6 @@
 		</Section>
 		<Section name="sfxgame.sfxgamemodebase">
 			<Property name="bindings">
-				<Value type="2">( Name="Console_LookX", Command="Axis aTurn Speed=1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Console_LookY", Command="Axis aLookup Speed=1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Console_LookY_Invert", Command="Axis aLookup Speed=-1.0, DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Console_Strafe", Command="Axis aStrafe Speed=1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Console_Movement", Command="Axis aBaseY Speed=1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Console_Movement_Invert", Command="Axis aBaseY Speed=-1.0 DeadZone=0.2" )</Value>
 				<Value type="2">( Name="Shared_Shoot", Command="SwapWeaponIfEmpty | FireWeapon | OnRelease StopFiringWeapon" )</Value>
 				<Value type="2">( Name="Shared_Aim", Command="SwapWeaponIfEmpty | TightAim | OnRelease StopTightAim" )</Value>
 				<Value type="2">( Name="Console_WeaponWheelAndQuickPower1", Command="OnTap 0.3 TryUsePower 0 | OnHold 0.3 EnterWeaponWheel" )</Value>
@@ -353,8 +347,6 @@
 				<Value type="2">( Name="Console_UsePower3", Command="OnRelease TryUsePower 2" )</Value>
 				<Value type="2">( Name="Console_NavAssistanceOrCoverTurn", Command="Exclusive TryCoverTurn | Exclusive ActivatePOI | OnRelease DeactivatePOI | ShowAreaMap " )</Value>
 				<Value type="2">( Name="Shared_TogglePhotoOptions", Command="ToggleOptions")</Value>
-				<Value type="2">( Name="Shared_MoveUp", Command="Axis aUp Speed=1.0 DeadZone=0.2" )</Value>
-				<Value type="2">( Name="Shared_MoveDown", Command="Axis aUp Speed=-1.0 DeadZone=0.2" )</Value>
 				<Value type="2">( Name="Shared_Screenshot", Command="TakePhoto" )</Value>
 				<Value type="2">( Name="Console_PhotoStrafe", Command="Axis aStrafe Speed=1.0 DeadZone=0.1" )</Value>
 				<Value type="2">( Name="Console_PhotoMovement", Command="Axis aBaseY Speed=1.0 DeadZone=0.1" )</Value>

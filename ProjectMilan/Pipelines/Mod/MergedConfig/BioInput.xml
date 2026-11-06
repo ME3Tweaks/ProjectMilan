@@ -96,30 +96,39 @@
 				<Value type="2">( Name="MouseScrollDown", Command="Shared_ViewPrevPlayer" )</Value>
 			</Property>
 		</Section>
-    <!-- MILAN change DropTheSquid 12/10/2023 -->
-    <Section name="sfxgame.sfxgamemodedying">
-      <Property name="bindings">
-        <!-- remove the original ambiguous binds (when asking for the binding for ProlongLife is is undefined/inconsistent/unintuitive whether it will give you the PC or Console bind) -->
-        <Value type="4">( Name="XboxTypeS_A", Command="ProlongLife" )</Value>
-        <Value type="4">( Name="XboxTypeS_DPad_Down", Command="UseRevivePower" )</Value>
-        <Value type="4">( Name="SpaceBar", Command="ProlongLife" )</Value>
-        <Value type="4">( Name="Seven", Command="UseRevivePower" )</Value>
-        <!-- replace them with new better named ones, in line with most LE binds -->
-        <Value type="3">( Name="XboxTypeS_A", Command="Console_ProlongLife" )</Value>
-        <Value type="3">( Name="XboxTypeS_DPad_Down", Command="Console_UseRevivePower" )</Value>
-        <Value type="3">( Name="SpaceBar", Command="PC_ProlongLife" )</Value>
-        <Value type="3">( Name="Seven", Command="PC_UseRevivePower" )</Value>
-      </Property>
-    </Section>
-    <Section name="sfxgame.sfxgamemodebase">
-      <Property name="bindings">
-        <!-- add binds for GameModeDying binds to direct to -->
-        <Value type="3">( Name="Console_ProlongLife", Command="ProlongLife" )</Value>
-        <Value type="3">( Name="PC_ProlongLife", Command="ProlongLife" )</Value>
-        <Value type="3">( Name="Console_UseRevivePower", Command="UseRevivePower" )</Value>
-        <Value type="3">( Name="PC_UseRevivePower", Command="UseRevivePower" )</Value>
-      </Property>
-    </Section>
-    <!-- END MILAN -->
+		<!-- MILAN change DropTheSquid 12/10/2023 -->
+		<Section name="sfxgame.sfxgamemodedying">
+		  <Property name="bindings">
+			<!-- remove the original ambiguous binds (when asking for the binding for ProlongLife is is undefined/inconsistent/unintuitive whether it will give you the PC or Console bind) -->
+			<Value type="4">( Name="XboxTypeS_A", Command="ProlongLife" )</Value>
+			<Value type="4">( Name="XboxTypeS_DPad_Down", Command="UseRevivePower" )</Value>
+			<Value type="4">( Name="SpaceBar", Command="ProlongLife" )</Value>
+			<Value type="4">( Name="Seven", Command="UseRevivePower" )</Value>
+			<!-- replace them with new better named ones, in line with most LE binds -->
+			<Value type="3">( Name="XboxTypeS_A", Command="Console_ProlongLife" )</Value>
+			<Value type="3">( Name="XboxTypeS_DPad_Down", Command="Console_UseRevivePower" )</Value>
+			<Value type="3">( Name="SpaceBar", Command="PC_ProlongLife" )</Value>
+			<Value type="3">( Name="Seven", Command="PC_UseRevivePower" )</Value>
+		  </Property>
+		</Section>
+		<Section name="sfxgame.sfxgamemodebase">
+		  <Property name="bindings">
+			<!-- add binds for GameModeDying binds to direct to -->
+			<Value type="3">( Name="Console_ProlongLife", Command="ProlongLife" )</Value>
+			<Value type="3">( Name="PC_ProlongLife", Command="ProlongLife" )</Value>
+			<Value type="3">( Name="Console_UseRevivePower", Command="UseRevivePower" )</Value>
+			<Value type="3">( Name="PC_UseRevivePower", Command="UseRevivePower" )</Value>
+            <!-- 2026/11/06 - Stumpy - Lower deadzone to 0.1 from 0.2 -->
+			<Value type="3">( Name="Console_LookX", Command="Axis aTurn Speed=1.0 DeadZone=0.1" )</Value>
+			<Value type="3">( Name="Console_LookY", Command="Axis aLookup Speed=1.0 DeadZone=0.1" )</Value>
+			<Value type="3">( Name="Console_LookY_Invert", Command="Axis aLookup Speed=-1.0, DeadZone=0.1" )</Value>
+			<Value type="3">( Name="Console_Strafe", Command="Axis aStrafe Speed=1.0 DeadZone=0.1" )</Value>
+			<Value type="3">( Name="Console_Movement", Command="Axis aBaseY Speed=1.0 DeadZone=0.1" )</Value>
+			<Value type="3">( Name="Console_Movement_Invert", Command="Axis aBaseY Speed=-1.0 DeadZone=0.1" )</Value>
+			<Value type="3">( Name="Shared_MoveUp", Command="Axis aUp Speed=1.0 DeadZone=0.1" )</Value>
+			<Value type="3">( Name="Shared_MoveDown", Command="Axis aUp Speed=-1.0 DeadZone=0.1" )</Value>
+			<!-- END MILAN -->
+		  </Property>
+		</Section>
 	</Sections>
 </CoalesceAsset>
