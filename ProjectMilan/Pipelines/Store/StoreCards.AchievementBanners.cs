@@ -8,8 +8,8 @@ namespace ProjectMilan.Pipelines.Store;
 // Defines an acheivement banner, including its pack information.
 // BannerImage is the 4:1 banner art
 // PackImage is the pack's store background
-internal sealed record AchievementBannerDefinition(int PackId, string PackName, int CounterId, int AchievementId,
-    int UnlockId, int EmblemId, int OwnershipId, LocalizedString Title, LocalizedString PackDescription,
+internal sealed record AchievementBannerDefinition(MilanStorePackId PackId, string PackName, MilanPlayerVariable CounterId, int AchievementId,
+    MilanPlayerVariable UnlockId, MilanBannerId EmblemId, MilanPlayerVariable OwnershipId, LocalizedString Title, LocalizedString PackDescription,
     string BannerImage, string PackImage)
 {
     /// <summary>
@@ -46,31 +46,41 @@ public static partial class StoreCards
     // Rare is the reveal frame, not random availability: these never join generic rarity pools.
     internal static IReadOnlyList<AchievementBannerDefinition> AchievementBanners { get; } =
     [
-        new(700, "ach_me1_medalofhonor", 702, LEAchievementIds.ME1_MedalOfHonor, 709, 222, 716,
+        new(MilanStorePackId.Achievement_MedalOfHonor, "ach_me1_medalofhonor", MilanPlayerVariable.AchievementPack_MedalOfHonor, LEAchievementIds.ME1_MedalOfHonor,
+            MilanPlayerVariable.AchievementUnlock_MedalOfHonor, MilanBannerId.Achievement_MedalOfHonor, MilanPlayerVariable.AchievementBanner_MedalOfHonor,
             MedalOfHonorTitle, MedalOfHonorPackDescription, "AchievementBanners.MedalOfHonor",
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
 
-        new(701, "ach_me1_colonialsurvival", 703, LEAchievementIds.ME1_ColonialSurvival, 710, 223, 717,
+        new(MilanStorePackId.Achievement_ColonialSurvival, "ach_me1_colonialsurvival", MilanPlayerVariable.AchievementPack_ColonialSurvival, LEAchievementIds.ME1_ColonialSurvival,
+            MilanPlayerVariable.AchievementUnlock_ColonialSurvival, MilanBannerId.Achievement_ColonialSurvival, MilanPlayerVariable.AchievementBanner_ColonialSurvival,
             ColonialSaviorTitle, ColonialSaviorPackDescription, "AchievementBanners.ColonialSavior",
-            "Packs.ColonialSurvivorBG"),
+            AchievementBannerDefinition.PlaceholderPackImage
+            // When we do the full version PRC
+            //"Packs.ColonialSurvivorBG"
+            ),
         
-        new(702, "ach_me2_missionaccomplished", 704, LEAchievementIds.ME2_MissionAccomplished, 711, 224, 718,
+        new(MilanStorePackId.Achievement_ME2MissionAccomplished, "ach_me2_missionaccomplished", MilanPlayerVariable.AchievementPack_ME2MissionAccomplished, LEAchievementIds.ME2_MissionAccomplished,
+            MilanPlayerVariable.AchievementUnlock_ME2MissionAccomplished, MilanBannerId.Achievement_ME2MissionAccomplished, MilanPlayerVariable.AchievementBanner_ME2MissionAccomplished,
             MissionAccomplishedTitle, MissionAccomplishedPackDescription, "AchievementBanners.MissionAccomplishedLE2",
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
         
-        new(703, "ach_me2_merciless", 705, LEAchievementIds.ME2_Merciless, 712, 225, 719,
+        new(MilanStorePackId.Achievement_Merciless, "ach_me2_merciless", MilanPlayerVariable.AchievementPack_Merciless, LEAchievementIds.ME2_Merciless,
+            MilanPlayerVariable.AchievementUnlock_Merciless, MilanBannerId.Achievement_Merciless, MilanPlayerVariable.AchievementBanner_Merciless,
             MercilessTitle, MercilessPackDescription, "AchievementBanners.Merciless",
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
         
-        new(704, "ach_me3_missionaccomplished", 706, LEAchievementIds.ME3_MissionAccomplished, 713, 226, 720,
+        new(MilanStorePackId.Achievement_ME3MissionAccomplished, "ach_me3_missionaccomplished", MilanPlayerVariable.AchievementPack_ME3MissionAccomplished, LEAchievementIds.ME3_MissionAccomplished,
+            MilanPlayerVariable.AchievementUnlock_ME3MissionAccomplished, MilanBannerId.Achievement_ME3MissionAccomplished, MilanPlayerVariable.AchievementBanner_ME3MissionAccomplished,
             MissionAccomplishedTitle, MissionAccomplishedLE3PackDescription, "AchievementBanners.MissionAccomplishedLE3", 
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
         
-        new(705, "ach_me3_theoneandonly", 707, LEAchievementIds.ME3_TheOneAndOnly, 714, 227, 721,
+        new(MilanStorePackId.Achievement_TheOneAndOnly, "ach_me3_theoneandonly", MilanPlayerVariable.AchievementPack_TheOneAndOnly, LEAchievementIds.ME3_TheOneAndOnly,
+            MilanPlayerVariable.AchievementUnlock_TheOneAndOnly, MilanBannerId.Achievement_TheOneAndOnly, MilanPlayerVariable.AchievementBanner_TheOneAndOnly,
             TheOneAndOnlyTitle, TheOneAndOnlyPackDescription, "AchievementBanners.TheOneAndOnly", 
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
         
-        new(706, "ach_insanityiii", 708, LEAchievementIds.Trilogy_InsanityIII, 715, 228, 722,
+        new(MilanStorePackId.Achievement_InsanityIII, "ach_insanityiii", MilanPlayerVariable.AchievementPack_InsanityIII, LEAchievementIds.Trilogy_InsanityIII,
+            MilanPlayerVariable.AchievementUnlock_InsanityIII, MilanBannerId.Achievement_InsanityIII, MilanPlayerVariable.AchievementBanner_InsanityIII,
             InsaneTitle, InsanePackDescription, "AchievementBanners.Insane", 
             AchievementBannerDefinition.PlaceholderPackImage), // TODO pack artwork
     ];

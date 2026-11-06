@@ -472,7 +472,7 @@ namespace ProjectMilan.Pipelines.Store
             {
                 UniqueName = "SFXGameContent.SFXWeapon_AssaultRifle_Reckoning", Kind = ReinforcementKind.InventoryUnlock, Rarity = CardRarity.Rare, MaxCount = 10,
                 GUIName = 708423, GUIDescription = 708424, GUICategory = CardGUICategory.AssaultRifle, GUIType = "assault", GUITextureRef = "GUI_Icons.Weapons.hvy_reckoning_256x128",
-                PlayerVariableIds = [700],
+                PlayerVariableIds = [(int)MilanPlayerVariable.Card_Reckoning],
                 Pools = [new(StorePools.GoldCommonWeapon)],
             },
         ];

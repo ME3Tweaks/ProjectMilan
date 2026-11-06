@@ -123,7 +123,7 @@ namespace ProjectMilan.Pipelines.Store
             {
                 UniqueName = "SFXGameContentDLC_CON_MP2.SFXGameEffect_MatchConsumable_Gear_WeaponStability", Kind = ReinforcementKind.MatchConsumableGear, Rarity = CardRarity.Uncommon, MaxCount = 5, UseVersionIdx = false, VersionIdx = 0, Category = 4,
                 GUIName = 733137, GUIDescription = 733290, GUICategory = CardGUICategory.MatchConsumableGear, GUIType = "gearUpgrade", GUITextureRef = "DLC_MPImages.Cards.DLC_Stability",
-                PlayerVariableIds = [701],
+                PlayerVariableIds = [(int)MilanPlayerVariable.Card_GearWeaponStability],
                 Pools =
                 [
                     new(StorePools.SilverGear) { VersionIdx = 0, Tokens = "Custom0Tokens[0]=0.15f,Custom0Tokens[1]=0.22f,Custom0Tokens[2]=0.28f,Custom0Tokens[3]=0.34f,Custom0Tokens[4]=0.40f" },

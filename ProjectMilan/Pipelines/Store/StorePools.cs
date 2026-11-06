@@ -29,6 +29,10 @@ namespace ProjectMilan.Pipelines.Store
         /// </summary>
         public static readonly StorePool LegendaryBanner = new("banner_legendary");
         /// <summary>
+        /// Exclusive to the free Save Mass Effect pack
+        /// </summary>
+        public static readonly StorePool SaveMassEffectBanner = new("banner_savemasseffect");
+        /// <summary>
         /// Commemorative Dragon Age banners
         /// </summary>
         public static readonly StorePool DragonAgeBanner = new("banner_dragon_age");

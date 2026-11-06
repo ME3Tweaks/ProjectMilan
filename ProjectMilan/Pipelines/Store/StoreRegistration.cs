@@ -28,6 +28,11 @@ namespace ProjectMilan.Pipelines.Store
             catalog.Cards.AddRange(StoreCards.All);
             HeavyWeaponStoreRegistration.Configure(catalog);
             catalog.Packs.AddRange(StorePacks.GetAll());
+            var unassignedIds = MilanIds.FindUnassignedIds(catalog).ToList();
+            if (unassignedIds.Count > 0)
+            {
+                throw new InvalidOperationException($"Store IDs must come from MilanIds.cs:\n{string.Join("\n", unassignedIds)}");
+            }
 
             foreach (var pack in catalog.Packs)
             {

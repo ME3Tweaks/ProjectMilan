@@ -102,11 +102,11 @@ public static partial class StorePacks
         PackName = "grindbreakerspectre",
         TitleStrRefId = MilanPipelinesShared.AssignTLK(new()
         {
-            [MELocalization.INT] = "Spectre Shipment"
+            [MELocalization.INT] = "Black-Market Shipment"
         }),
         DescriptionStrRefId = MilanPipelinesShared.AssignTLK(new()
         {
-            [MELocalization.INT] = "Colleagues from the Office of Special Tactics and Reconnaissance can send a large shipment your way."
+            [MELocalization.INT] = "A mysteriously colossal shipment of high-tier gear, elite operatives, and heavy-duty ordnance, likely to completely revolutionize your loadout. Includes 100 items."
         }),
         CreditCost = 1_400_000,
         Image = "GUI_MPImages.StoreItems.Store004",
@@ -137,11 +137,11 @@ public static partial class StorePacks
         PackName = "grindbreakerequipment",
         TitleStrRefId = MilanPipelinesShared.AssignTLK(new()
         {
-            [MELocalization.INT] = "Spectre Shipment (Equipment)"
+            [MELocalization.INT] = "Spectre Shipment"
         }),
         DescriptionStrRefId = MilanPipelinesShared.AssignTLK(new()
         {
-            [MELocalization.INT] = "Colleagues from the Office of Special Tactics and Reconnaissance can send a large shipment of consumables your way."
+            [MELocalization.INT] = "A platoon's worth of equipment shipped straight to your doorstep. Includes 200 random items ranging from supplies to rares."
         }),
         CreditCost = 400_000,
         Image = "Packs.grindbreakerequipmentBG",
