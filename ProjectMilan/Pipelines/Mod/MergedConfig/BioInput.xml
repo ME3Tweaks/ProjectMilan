@@ -82,6 +82,20 @@
 				<Value type="4">( Name="S", Command="PC_GalaxyKeyMoveBackward" )</Value>
 			</Property>
 		</Section>-->
+		<!-- MILAN CHANGE - Add photo mode filters -->
+		<Section name="sfxgame.sfxgamemodephoto">
+			<Property name="filtermaterialpaths">
+				<Value type="3">BIOG_PhotoModeFilters.PhotoMode_Filter_Cool_INST</Value>
+				<Value type="3">BIOG_PhotoModeFilters.PhotoMode_Filter_Warm_INST</Value>
+				<Value type="3">BIOG_PhotoModeFilters.PhotoMode_Filter_Sepia_INST</Value>
+				<Value type="3">BIOG_PhotoModeFilters.PhotoMode_Filter_Vintage_INST</Value>
+				<Value type="3">BIOG_PhotoModeFilters.PhotoMode_Filter_Noir_INST</Value>
+				<Value type="3">BIOG_PhotoModeFilters.PhotoMode_Filter_Negative_INST</Value>
+				<Value type="3">BIOG_PhotoModeFilters.PhotoMode_Filter_ComicBook_INST</Value>
+				<Value type="3">BIOG_PhotoModeFilters.PhotoMode_Filter_RetroLCD_INST</Value>
+			</Property>
+		</Section>
+		<!-- END MILAN CHANGE -->
 		<Section name="sfxgame.sfxgamemodespectator">
 			<Property name="bindings">
 				<Value type="4">( Name="SpaceBar", Command="ViewNextPlayer true" )</Value>
