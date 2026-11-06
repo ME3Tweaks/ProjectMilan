@@ -6,11 +6,18 @@
 Class SFXPowerCustomActionMP_Damping extends SFXPowerCustomAction
     config(Game);
 
+struct DampingEyeHeightShared 
+{
+    var string PawnType;
+    var float EyeHeight;
+};
+
 var config PowerData AdditionalDamageTaken;
 var config PowerData MovementSpeedModifier;
 var config PowerData HeadshotDamageModifier; // MILAN CHANGE 08/27/2026 - Mgamerz: Added to properly account for headshot damage bonus
 var config PowerData TargetShieldgateModifier; // MILAN CHANGE 08/27/2026 - Mgamerz: Added to buff Rank 5A because headshots suck with shieldgating
 var config array<Name> InstantKillEnemies;
+var config array<DampingEyeHeightShared> DampingEyeHeights;
 var Guid PlayerScanVFXGuid;
 var Guid TargetScanVFXGuid;
 var Guid PlayerOmniToolVFXGuid;
@@ -28,7 +35,7 @@ var config Vector2D HoloMeshScaleRange;
 var config Vector2D HighlightSizeRange;
 var config float Evolve_WeaponDamageBonus;
 var config float Evolve_PowerDamageBonus;
-var float Evolve_HeadShotBonus;
+var config float Evolve_HeadShotBonus;
 var config float Evolve_MovementSpeedBonus;
 var config float Evolve_DamageTakenBonus;
 var config float Evolve_DurationBonus;
@@ -66,6 +73,9 @@ public function bool OnImpact(EPowerResistance Resistance, Actor oImpacted, int 
     local float fVFXScale;
     local Vector vScale;
     local int idx;
+    local int EyeIdx;
+    local float EyeHeight;
+    local Vector SpawnLocation;
     
     oTargetPawn = SFXPawn(oImpacted);
     if (oTargetPawn == None)
@@ -98,9 +108,19 @@ public function bool OnImpact(EPowerResistance Resistance, Actor oImpacted, int 
         PlayerScanVFXGuid = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_PlayerScanTemplate, TargetInfo, m_oPawn);
         m_oPawn.SetTimer(AttachMeshDelay, FALSE, 'AttachMeshToPlayer', Self);
     }
-    fPawnSize = (CurrentlyAffectedPawn.default.BaseEyeHeight - EnemySizeRange.Y) / (EnemySizeRange.X - EnemySizeRange.Y);
+    EyeIdx = DampingEyeHeights.Find('PawnType', Locs(string(CurrentlyAffectedPawn.Class.Name)));
+    if (EyeIdx == -1)
+    {
+        EyeHeight = CurrentlyAffectedPawn.default.BaseEyeHeight;
+    }
+    else
+    {
+        EyeHeight = DampingEyeHeights[EyeIdx].EyeHeight;
+    }
+    fPawnSize = (EyeHeight - EnemySizeRange.Y) / (EnemySizeRange.X - EnemySizeRange.Y);
     fVFXScale = Lerp(HighlightSizeRange.Y, HighlightSizeRange.X, FClamp(fPawnSize, 0.0, 1.0));
-    TargetEmitter = m_oPawn.Spawn(Class'SFXEmitter', m_oPawn, 'QuarianScanTarget', oImpacted.location, oImpacted.Rotation, , TRUE, FALSE);
+    SpawnLocation = CurrentlyAffectedPawn.Mesh.GetBoneLocation('Root');
+    TargetEmitter = m_oPawn.Spawn(Class'SFXEmitter', m_oPawn, 'QuarianScanTarget', SpawnLocation, oImpacted.Rotation, , TRUE, FALSE);
     if (TargetEmitter != None)
     {
         TargetEmitter.SetTemplate(PS_HealthShieldTemplate);
@@ -132,7 +152,7 @@ public function bool OnImpact(EPowerResistance Resistance, Actor oImpacted, int 
         // Repoint to new game effect that hooks into the new SFXDamageModule headshot calculation code
         ApplyTemporaryGameEffect(oImpacted, Class'SFXGameEffect_HeadshotDamageDebuff', EffectDuration.CurrentValue, Evolve_HeadShotBonus, DampingUniqueCategory, m_oPawn.Controller);
         // Also add new shield gate bypass to help make this evolution more worth choosing
-        ApplyTemporaryGameEffect(oImpacted, Class'SFXGameEffect_ShieldGateReduction', EffectDuration.CurrentValue, 1.0, DampingUniqueCategory, m_oPawn.Controller);
+        ApplyTemporaryGameEffect(oImpacted, Class'SFXGameEffect_ShieldGateReduction', EffectDuration.CurrentValue, Evolve_ShieldGateReduction, DampingUniqueCategory, m_oPawn.Controller);
         // END MILAN CHANGE
     }
     ApplyTemporaryGameEffect(oImpacted, Class'SFXGameEffect_MovementSpeedBonus', EffectDuration.CurrentValue, -MovementSpeedModifier.CurrentValue, DampingUniqueCategory, m_oPawn.Controller);
@@ -254,6 +274,8 @@ public function AttachMeshToPlayer()
     local float fMeshDrawScale;
     local Vector vScale;
     local RvrClientEffectTarget TargetInfo;
+    local float EyeHeight;
+    local int EyeIdx;
     
     if (CurrentlyAffectedPawn == None)
     {
@@ -267,7 +289,16 @@ public function AttachMeshToPlayer()
             oMeshSpawnable.SetBase(m_oPawn, , m_oPawn.Mesh, 'Scan01');
             oMeshSpawnable.bIgnoreBaseRotation = TRUE;
             oMeshSpawnable.SetRotation(CurrentlyAffectedPawn.Rotation + InitialRot);
-            fPawnSize = (CurrentlyAffectedPawn.default.BaseEyeHeight - EnemySizeRange.Y) / (EnemySizeRange.X - EnemySizeRange.Y);
+            EyeIdx = DampingEyeHeights.Find('PawnType', Locs(string(CurrentlyAffectedPawn.Class.Name)));
+            if (EyeIdx == -1)
+            {
+                EyeHeight = CurrentlyAffectedPawn.default.BaseEyeHeight;
+            }
+            else
+            {
+                EyeHeight = DampingEyeHeights[EyeIdx].EyeHeight;
+            }
+            fPawnSize = (EyeHeight - EnemySizeRange.Y) / (EnemySizeRange.X - EnemySizeRange.Y);
             fMeshDrawScale = Lerp(HoloMeshScaleRange.Y, HoloMeshScaleRange.X, FClamp(fPawnSize, 0.0, 1.0));
             oMeshSpawnable.SetDrawScale(fMeshDrawScale);
             CurrentPawnMeshCopy = oMeshSpawnable;
@@ -354,7 +385,7 @@ public function SetOmniToolEnabled(bool bEnable)
     {
         if (PlayerOmniToolVFXGuid.A != 0 || PlayerOmniToolVFXGuid.B != 0 || PlayerOmniToolVFXGuid.C != 0 || PlayerOmniToolVFXGuid.D != 0)
         {
-            Class'RvrClientEffectManager'.static.GetClientEffectManager().@Stop(CE_PlayerOmniToolTemplate, PlayerOmniToolVFXGuid, TRUE);
+            Class'RvrClientEffectManager'.static.GetClientEffectManager().Stop(CE_PlayerOmniToolTemplate, PlayerOmniToolVFXGuid, TRUE);
         }
         bOmniToolActive = FALSE;
     }
@@ -382,7 +413,7 @@ public function StopCurrentTargetScan(bool bStopOmniTool)
     }
     if (PlayerScanVFXGuid.A != 0 || PlayerScanVFXGuid.B != 0 || PlayerScanVFXGuid.C != 0 || PlayerScanVFXGuid.D != 0)
     {
-        Class'RvrClientEffectManager'.static.GetClientEffectManager().@Stop(CE_PlayerScanTemplate, PlayerScanVFXGuid, TRUE);
+        Class'RvrClientEffectManager'.static.GetClientEffectManager().Stop(CE_PlayerScanTemplate, PlayerScanVFXGuid, TRUE);
     }
     if (TargetScanVFXGuid.A != 0 || TargetScanVFXGuid.B != 0 || TargetScanVFXGuid.C != 0 || TargetScanVFXGuid.D != 0)
     {
@@ -515,6 +546,7 @@ public function UpdateTarget()
     }
 }
 
+//class default properties can be edited in the Properties tab for the class's Default__ object.
 defaultproperties
 {
     Begin Object Class=BioDynamicAnimSet Name=MY_DYN_HMM_CB_PistolAiScan_CON_MP2
@@ -562,6 +594,8 @@ defaultproperties
                              }
     // END MILAN CHANGE
     InstantKillEnemies = ('SFXPawn_GethPrimeTurret', 'SFXPawn_GethPrimeShieldDrone')
+    DampingEyeHeights = ({PawnType = "sfxpawn_scion", EyeHeight = 100.0}
+                        )
     HealthColor = {X = 1.0, Y = 0.100000001, Z = 0.100000001}
     ArmorColor = {X = 1.0, Y = 0.5, Z = 0.100000001}
     ShieldColor = {X = 0.100000001, Y = 0.5, Z = 1.0}

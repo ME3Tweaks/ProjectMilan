@@ -14,6 +14,8 @@ struct DampingEyeHeightShared
 
 var config PowerData AdditionalDamageTaken;
 var config PowerData MovementSpeedModifier;
+var config PowerData HeadshotDamageModifier; // MILAN CHANGE 08/27/2026 - Mgamerz: Added to properly account for headshot damage bonus
+var config PowerData TargetShieldgateModifier; // MILAN CHANGE 08/27/2026 - Mgamerz: Added to buff Rank 5A because headshots suck with shieldgating
 var config array<Name> InstantKillEnemies;
 var config array<DampingEyeHeightShared> DampingEyeHeights;
 var Guid PlayerScanVFXGuid;
@@ -39,6 +41,7 @@ var config float Evolve_DamageTakenBonus;
 var config float Evolve_DurationBonus;
 var config float Evolve_AreaScanRadius;
 var config float Evolve_AreaScanDuration;
+var config float Evolve_ShieldGateReduction;
 var RvrClientEffectInterface CE_PlayerScanTemplate;
 var RvrClientEffectInterface CE_TargetScanTemplate;
 var RvrClientEffectInterface CE_PlayerOmniToolTemplate;
@@ -145,9 +148,11 @@ public function bool OnImpact(EPowerResistance Resistance, Actor oImpacted, int 
     }
     if (IsEvolvedWithChoice(2))
     {
-        // MILAN CHANGE  Use headshot and shield-gate effects for shared Tactical Scan
+        // MILAN CHANGE 08/27/2026 - Mgamerz
+        // Repoint to new game effect that hooks into the new SFXDamageModule headshot calculation code
         ApplyTemporaryGameEffect(oImpacted, Class'SFXGameEffect_HeadshotDamageDebuff', EffectDuration.CurrentValue, Evolve_HeadShotBonus, DampingUniqueCategory, m_oPawn.Controller);
-        ApplyTemporaryGameEffect(oImpacted, Class'SFXGameEffect_ShieldGateReduction', EffectDuration.CurrentValue, 1.0, DampingUniqueCategory, m_oPawn.Controller);
+        // Also add new shield gate bypass to help make this evolution more worth choosing
+        ApplyTemporaryGameEffect(oImpacted, Class'SFXGameEffect_ShieldGateReduction', EffectDuration.CurrentValue, Evolve_ShieldGateReduction, DampingUniqueCategory, m_oPawn.Controller);
         // END MILAN CHANGE
     }
     ApplyTemporaryGameEffect(oImpacted, Class'SFXGameEffect_MovementSpeedBonus', EffectDuration.CurrentValue, -MovementSpeedModifier.CurrentValue, DampingUniqueCategory, m_oPawn.Controller);
@@ -170,6 +175,12 @@ public function EvolvePower(EEvolveChoice choice)
         case EEvolveChoice.EvolveChoice2:
             break;
         case EEvolveChoice.EvolveChoice3:
+            // MILAN CHANGE 08/27/2026 - Mgamerz
+            // Fix headshot (requires changes to sfxgame) evolution
+            // Add shield gate modifier to power as well.
+            AddEvolvedRankBonus(HeadshotDamageModifier, Evolve_HeadShotBonus);
+            AddEvolvedRankBonus(HeadshotDamageModifier, Evolve_ShieldGateReduction);
+            // END MILAN CHANGE
             break;
         case EEvolveChoice.EvolveChoice4:
             AddEvolvedRankBonus(MovementSpeedModifier, Evolve_MovementSpeedBonus);
@@ -190,7 +201,7 @@ public function PopulatePowerStatBarEvolves()
     PowerStatBars[0].Data = SFXPawn_Henchman(m_oPawn) == None ? CooldownTime : HenchmanCooldownTime;
     PowerStatBars[0].srDisplayTotalToken = StatBarToken_Time;
     PowerStatBars[0].srStatBarDisplayTitle = StatBarTitle_Cooldown;
-    // MILAN CHANGE - Mgamerz - Omit the unrelated headshot bonus from the cooldown stat bar
+    // MILAN CHANGE - Removed headshot damage stats that originally appeared here as they were pointless.
     PowerStatBars[1].Data = EffectDuration;
     PowerStatBars[1].srDisplayTotalToken = StatBarToken_Time;
     PowerStatBars[1].srStatBarDisplayTitle = StatBarTitle_Duration;
@@ -211,6 +222,8 @@ public function RecalculateAllPowerData(optional bool bReset = FALSE)
     Super(SFXPowerCustomActionBase).RecalculateAllPowerData(bReset);
     RecalculatePowerData(AdditionalDamageTaken, bReset);
     RecalculatePowerData(MovementSpeedModifier, bReset);
+    RecalculatePowerData(HeadshotDamageModifier, bReset); // MILAN CHANGE - Recalculate changes
+    RecalculatePowerData(TargetShieldgateModifier, bReset); // MILAN CHANGE - Recalculate changes
 }
 public function ReleaseInstantPower()
 {
@@ -247,6 +260,135 @@ public function StartPower()
     Super.StartPower();
     SetOmniToolEnabled(TRUE);
     m_oPawn.SetTimer(ShutOffOmniToolDelay, FALSE, 'StopOmniTool', Self);
+}
+public function StopOmniTool()
+{
+    SetOmniToolEnabled(FALSE);
+}
+public function AttachMeshToPlayer()
+{
+    local SkeletalMeshActorSpawnable oMeshSpawnable;
+    local SkeletalMeshComponent TargetSkelMesh;
+    local bool bMeshFound;
+    local float fPawnSize;
+    local float fMeshDrawScale;
+    local Vector vScale;
+    local RvrClientEffectTarget TargetInfo;
+    local float EyeHeight;
+    local int EyeIdx;
+    
+    if (CurrentlyAffectedPawn == None)
+    {
+        return;
+    }
+    TargetSkelMesh = CurrentlyAffectedPawn.GetPrimarySkelMeshComponent();
+    foreach m_oPawn.DynamicActors(Class'SkeletalMeshActorSpawnable', oMeshSpawnable, )
+    {
+        if (oMeshSpawnable.SkeletalMeshComponent.SkeletalMesh == TargetSkelMesh.SkeletalMesh)
+        {
+            oMeshSpawnable.SetBase(m_oPawn, , m_oPawn.Mesh, 'Scan01');
+            oMeshSpawnable.bIgnoreBaseRotation = TRUE;
+            oMeshSpawnable.SetRotation(CurrentlyAffectedPawn.Rotation + InitialRot);
+            EyeIdx = DampingEyeHeights.Find('PawnType', Locs(string(CurrentlyAffectedPawn.Class.Name)));
+            if (EyeIdx == -1)
+            {
+                EyeHeight = CurrentlyAffectedPawn.default.BaseEyeHeight;
+            }
+            else
+            {
+                EyeHeight = DampingEyeHeights[EyeIdx].EyeHeight;
+            }
+            fPawnSize = (EyeHeight - EnemySizeRange.Y) / (EnemySizeRange.X - EnemySizeRange.Y);
+            fMeshDrawScale = Lerp(HoloMeshScaleRange.Y, HoloMeshScaleRange.X, FClamp(fPawnSize, 0.0, 1.0));
+            oMeshSpawnable.SetDrawScale(fMeshDrawScale);
+            CurrentPawnMeshCopy = oMeshSpawnable;
+            TargetInfo.Instigator = m_oPawn;
+            PlayerOmniToolScanBeamVFXGuid = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_PlayerOmniToolScanBeamTemplate, TargetInfo, m_oPawn);
+            TargetInfo.SpawnValue.Y = HoloHighlightSize;
+            PlayerOmniToolInfoVFXGuid = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_PlayerOmniToolInfoTemplate, TargetInfo, m_oPawn);
+            HologramEmitter = m_oPawn.Spawn(Class'SFXEmitter', m_oPawn, 'QuarianScanHologram', m_oPawn.location, m_oPawn.Rotation, , TRUE, FALSE);
+            if (HologramEmitter != None)
+            {
+                HologramEmitter.SetTemplate(PS_HoloHealthShieldTemplate);
+                HologramEmitter.SetBase(m_oPawn, , m_oPawn.Mesh, 'Scan01');
+                HologramEmitter.ParticleSystemComponent.SetActive(TRUE);
+                vScale.X = HoloHealthBarSize;
+                vScale.Y = HoloHealthBarSize;
+                vScale.Z = HoloHealthBarSize;
+                HologramEmitter.SetVectorParameter('V_Scale', vScale);
+                UpdateHealthShieldParameters();
+            }
+            m_oPawn.SetTimer(ShowDistanceMeterDelay, FALSE, 'ShowDistanceMeter', Self);
+            bMeshFound = TRUE;
+            break;
+        }
+    }
+    if (!bMeshFound)
+    {
+        m_oPawn.SetTimer(AttachMeshDelay, FALSE, 'AttachMeshToPlayer', Self);
+    }
+}
+public function CreateGlowActor(BioPawn Target, float fDuration)
+{
+    local SFXModule_GameEffectManager Manager;
+    local SFXGameEffect_ScanGlowActor_Shared GlowEffect;
+    
+    Manager = Target.GetModule(Class'SFXModule_GameEffectManager');
+    if (Manager != None)
+    {
+        GlowEffect = SFXGameEffect_ScanGlowActor_Shared(Manager.GetFirstEffectOfType(Class'SFXGameEffect_ScanGlowActor_Shared'));
+        if (GlowEffect != None)
+        {
+            if (GlowEffect.Duration - GlowEffect.CurrentTime < fDuration)
+            {
+                GlowEffect.CurrentTime = 0.0;
+                GlowEffect.Duration = fDuration;
+            }
+        }
+        else
+        {
+            Manager.CreateAndApplyEffect(Class'SFXGameEffect_ScanGlowActor_Shared', GlowActorUniqueCategory, fDuration, 1, MaximumRange.CurrentValue, m_oPawn.Controller, m_oPawn);
+        }
+    }
+}
+public function CreateNearbyPawnGlowActors(BioPawn SourcePawn)
+{
+    local BioPawn NearbyPawn;
+    
+    if (SourcePawn == None)
+    {
+        return;
+    }
+    foreach m_oPawn.WorldInfo.AllPawns(Class'BioPawn', NearbyPawn, SourcePawn.location, Evolve_AreaScanRadius)
+    {
+        if (!NearbyPawn.IsDead() && NearbyPawn.GetTeam().TeamIndex == 1)
+        {
+            CreateGlowActor(NearbyPawn, Evolve_AreaScanDuration);
+        }
+    }
+}
+public function ScanComplete()
+{
+    StopCurrentTargetScan(TRUE);
+}
+public function SetOmniToolEnabled(bool bEnable)
+{
+    local RvrClientEffectTarget TargetInfo;
+    
+    if (bEnable && !bOmniToolActive)
+    {
+        TargetInfo.Instigator = m_oPawn;
+        PlayerOmniToolVFXGuid = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_PlayerOmniToolTemplate, TargetInfo, m_oPawn);
+        bOmniToolActive = TRUE;
+    }
+    else if (!bEnable && bOmniToolActive)
+    {
+        if (PlayerOmniToolVFXGuid.A != 0 || PlayerOmniToolVFXGuid.B != 0 || PlayerOmniToolVFXGuid.C != 0 || PlayerOmniToolVFXGuid.D != 0)
+        {
+            Class'RvrClientEffectManager'.static.GetClientEffectManager().Stop(CE_PlayerOmniToolTemplate, PlayerOmniToolVFXGuid, TRUE);
+        }
+        bOmniToolActive = FALSE;
+    }
 }
 public function ShowDistanceMeter()
 {
@@ -397,139 +539,10 @@ public function UpdateTarget()
     {
         nDistToTarget = Round(VSize(CurrentlyAffectedPawn.location - m_oPawn.location) / 100.0);
         HologramDistanceEmitter.SetFloatParameter('D1', float(nDistToTarget / 100));
-        nDistToTarget = nDistToTarget %  100;
+        nDistToTarget = nDistToTarget % 100;
         HologramDistanceEmitter.SetFloatParameter('D2', float(nDistToTarget / 10));
-        nDistToTarget = nDistToTarget %  10;
+        nDistToTarget = nDistToTarget % 10;
         HologramDistanceEmitter.SetFloatParameter('D3', float(nDistToTarget));
-    }
-}
-public function StopOmniTool()
-{
-    SetOmniToolEnabled(FALSE);
-}
-public function AttachMeshToPlayer()
-{
-    local SkeletalMeshActorSpawnable oMeshSpawnable;
-    local SkeletalMeshComponent TargetSkelMesh;
-    local bool bMeshFound;
-    local float fPawnSize;
-    local float fMeshDrawScale;
-    local Vector vScale;
-    local RvrClientEffectTarget TargetInfo;
-    local float EyeHeight;
-    local int EyeIdx;
-    
-    if (CurrentlyAffectedPawn == None)
-    {
-        return;
-    }
-    TargetSkelMesh = CurrentlyAffectedPawn.GetPrimarySkelMeshComponent();
-    foreach m_oPawn.DynamicActors(Class'SkeletalMeshActorSpawnable', oMeshSpawnable, )
-    {
-        if (oMeshSpawnable.SkeletalMeshComponent.SkeletalMesh == TargetSkelMesh.SkeletalMesh)
-        {
-            oMeshSpawnable.SetBase(m_oPawn, , m_oPawn.Mesh, 'Scan01');
-            oMeshSpawnable.bIgnoreBaseRotation = TRUE;
-            oMeshSpawnable.SetRotation(CurrentlyAffectedPawn.Rotation + InitialRot);
-            EyeIdx = DampingEyeHeights.Find('PawnType', Locs(string(CurrentlyAffectedPawn.Class.Name)));
-            if (EyeIdx == -1)
-            {
-                EyeHeight = CurrentlyAffectedPawn.default.BaseEyeHeight;
-            }
-            else
-            {
-                EyeHeight = DampingEyeHeights[EyeIdx].EyeHeight;
-            }
-            fPawnSize = (EyeHeight - EnemySizeRange.Y) / (EnemySizeRange.X - EnemySizeRange.Y);
-            fMeshDrawScale = Lerp(HoloMeshScaleRange.Y, HoloMeshScaleRange.X, FClamp(fPawnSize, 0.0, 1.0));
-            oMeshSpawnable.SetDrawScale(fMeshDrawScale);
-            CurrentPawnMeshCopy = oMeshSpawnable;
-            TargetInfo.Instigator = m_oPawn;
-            PlayerOmniToolScanBeamVFXGuid = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_PlayerOmniToolScanBeamTemplate, TargetInfo, m_oPawn);
-            TargetInfo.SpawnValue.Y = HoloHighlightSize;
-            PlayerOmniToolInfoVFXGuid = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_PlayerOmniToolInfoTemplate, TargetInfo, m_oPawn);
-            HologramEmitter = m_oPawn.Spawn(Class'SFXEmitter', m_oPawn, 'QuarianScanHologram', m_oPawn.location, m_oPawn.Rotation, , TRUE, FALSE);
-            if (HologramEmitter != None)
-            {
-                HologramEmitter.SetTemplate(PS_HoloHealthShieldTemplate);
-                HologramEmitter.SetBase(m_oPawn, , m_oPawn.Mesh, 'Scan01');
-                HologramEmitter.ParticleSystemComponent.SetActive(TRUE);
-                vScale.X = HoloHealthBarSize;
-                vScale.Y = HoloHealthBarSize;
-                vScale.Z = HoloHealthBarSize;
-                HologramEmitter.SetVectorParameter('V_Scale', vScale);
-                UpdateHealthShieldParameters();
-            }
-            m_oPawn.SetTimer(ShowDistanceMeterDelay, FALSE, 'ShowDistanceMeter', Self);
-            bMeshFound = TRUE;
-            break;
-        }
-    }
-    if (!bMeshFound)
-    {
-        m_oPawn.SetTimer(AttachMeshDelay, FALSE, 'AttachMeshToPlayer', Self);
-    }
-}
-public function CreateGlowActor(BioPawn Target, float fDuration)
-{
-    local SFXModule_GameEffectManager Manager;
-    local SFXGameEffect_ScanGlowActor_Shared GlowEffect;
-    
-    Manager = Target.GetModule(Class'SFXModule_GameEffectManager');
-    if (Manager != None)
-    {
-        GlowEffect = SFXGameEffect_ScanGlowActor_Shared(Manager.GetFirstEffectOfType(Class'SFXGameEffect_ScanGlowActor_Shared'));
-        if (GlowEffect != None)
-        {
-            if (GlowEffect.Duration - GlowEffect.CurrentTime < fDuration)
-            {
-                GlowEffect.CurrentTime = 0.0;
-                GlowEffect.Duration = fDuration;
-            }
-        }
-        else
-        {
-            Manager.CreateAndApplyEffect(Class'SFXGameEffect_ScanGlowActor_Shared', GlowActorUniqueCategory, fDuration, 1, MaximumRange.CurrentValue, m_oPawn.Controller, m_oPawn);
-        }
-    }
-}
-public function CreateNearbyPawnGlowActors(BioPawn SourcePawn)
-{
-    local BioPawn NearbyPawn;
-    
-    if (SourcePawn == None)
-    {
-        return;
-    }
-    foreach m_oPawn.WorldInfo.AllPawns(Class'BioPawn', NearbyPawn, SourcePawn.location, Evolve_AreaScanRadius)
-    {
-        if (!NearbyPawn.IsDead() && NearbyPawn.GetTeam().TeamIndex == 1)
-        {
-            CreateGlowActor(NearbyPawn, Evolve_AreaScanDuration);
-        }
-    }
-}
-public function ScanComplete()
-{
-    StopCurrentTargetScan(TRUE);
-}
-public function SetOmniToolEnabled(bool bEnable)
-{
-    local RvrClientEffectTarget TargetInfo;
-    
-    if (bEnable && !bOmniToolActive)
-    {
-        TargetInfo.Instigator = m_oPawn;
-        PlayerOmniToolVFXGuid = Class'RvrClientEffectManager'.static.GetClientEffectManager().StartOnTarget(CE_PlayerOmniToolTemplate, TargetInfo, m_oPawn);
-        bOmniToolActive = TRUE;
-    }
-    else if (!bEnable && bOmniToolActive)
-    {
-        if (PlayerOmniToolVFXGuid.A != 0 || PlayerOmniToolVFXGuid.B != 0 || PlayerOmniToolVFXGuid.C != 0 || PlayerOmniToolVFXGuid.D != 0)
-        {
-            Class'RvrClientEffectManager'.static.GetClientEffectManager().Stop(CE_PlayerOmniToolTemplate, PlayerOmniToolVFXGuid, TRUE);
-        }
-        bOmniToolActive = FALSE;
     }
 }
 
@@ -565,6 +578,21 @@ defaultproperties
                              CurrentValue = 0.0, 
                              Formula = EPowerDataFormula.BonusIsHardValue
                             }
+    // MILAN CHANGE 08/27/2026 - Mgamerz
+    // Added HeadshotDamageModifier to properly account for headshot damage bonus
+    HeadshotDamageModifier = {
+                              DynamicBonuses = (), 
+                              RankBonuses[0] = 0.0, 
+                              RankBonuses[1] = 0.0, 
+                              RankBonuses[2] = 0.0, 
+                              RankBonuses[3] = 0.0, 
+                              RankBonuses[4] = 0.0, 
+                              RankBonuses[5] = 0.0, 
+                              BaseValue = 25.0, 
+                              CurrentValue = 0.0, 
+                              Formula = EPowerDataFormula.BonusIsHardValue
+                             }
+    // END MILAN CHANGE
     InstantKillEnemies = ('SFXPawn_GethPrimeTurret', 'SFXPawn_GethPrimeShieldDrone')
     DampingEyeHeights = ({PawnType = "sfxpawn_scion", EyeHeight = 100.0}
                         )
@@ -585,6 +613,7 @@ defaultproperties
     Evolve_DurationBonus = 1.0
     Evolve_AreaScanRadius = 2000.0
     Evolve_AreaScanDuration = 3.0
+    Evolve_ShieldGateReduction = 0.25
     CE_PlayerScanTemplate = RvrClientEffect'BioVFX_DLC_MaleQuarian.VCFX.Scan_Info_Crust'
     CE_TargetScanTemplate = RvrClientEffect'BioVFX_DLC_MaleQuarian.VCFX.Scan_Info_Target_VCFX'
     CE_PlayerOmniToolTemplate = RvrClientEffectMulti'BioVFX_T_TechPowers._OmniTool.VCFX.OmniTool_RightFull_VCFX_M'
