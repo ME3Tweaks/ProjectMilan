@@ -11,7 +11,8 @@ namespace ProjectMilanCore.Config
     public class StorePackEntry
     {
         /// <summary>
-        /// Store item ID (nID). Unique across the store.
+        /// Store item ID (nID). Unique across the store. Milan nIDs start at 700 and come from the MilanStorePackId
+        /// enum in ProjectMilan\Pipelines\Shared\MilanIds.cs.
         /// </summary>
         public int ID { get; set; }
 
@@ -54,8 +55,8 @@ namespace ProjectMilanCore.Config
 
         /// <summary>
         /// mpplayervariablemappings ID for this pack's per-player purchase counter (ClassName=PackName). Vanilla
-        /// and online packs use IDs up to 670 (online ones fill the 612-669 gaps); Milan IDs start at 700 and are
-        /// shared with weapons/gear, so pick one that's free.
+        /// and online packs use IDs up to 670 (online ones fill the 612-669 gaps); Milan IDs start at 700 and come
+        /// from the MilanPlayerVariable enum in ProjectMilan\Pipelines\Shared\MilanIds.cs.
         /// </summary>
         public int? PlayerVariableId { get; set; }
 

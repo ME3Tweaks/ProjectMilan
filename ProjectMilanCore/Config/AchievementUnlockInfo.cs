@@ -19,7 +19,7 @@ namespace ProjectMilanCore.Config
 
         /// <summary>
         /// mpplayervariablemappings ID for <see cref="UnlockVariableName"/>. Ends up in player saves, so it has to stay
-        /// the same from build to build.
+        /// the same from build to build. Comes from the MilanPlayerVariable enum in ProjectMilan\Pipelines\Shared\MilanIds.cs.
         /// </summary>
         public int UnlockVariableId { get; set; }
     }

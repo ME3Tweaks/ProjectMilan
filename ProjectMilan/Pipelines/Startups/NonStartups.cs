@@ -290,7 +290,6 @@ namespace ProjectMilan.Pipelines.Startups
             // the ported ones
             var builtImages = ImagePackageBuilder.BuildImagePackages(Path.Combine(vars.OutputPath, NonStartupCategory.Images.ToString()));
             OnlineContentRegistration.RegisterOnlineBanners(builtImages);
-            OnlineContentRegistration.RegisterMilanBanners(builtImages); // This is technically not 'Online' content, but it fits right here anyways.
             StoreRegistration.Register(builtImages); // The whole MP store: cards, pools and packs
             MilanPipelinesShared.CommitConfigBundle(); // Flush the image packages' dynamic load mappings and the online content using them
         }

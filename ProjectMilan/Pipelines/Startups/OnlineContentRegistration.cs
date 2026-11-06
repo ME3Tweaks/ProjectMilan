@@ -1,5 +1,3 @@
-using LegendaryExplorerCore.Packages;
-using ProjectMilanCore;
 using ProjectMilanCore.Config;
 using ProjectMilanCore.Utility;
 
@@ -28,16 +26,6 @@ namespace ProjectMilan.Pipelines.Startups
         {
             MilanLog.Information("Registering online challenge banners", customPrefix: LOG_CATEGORY);
             foreach (var banner in OnlineBanners)
-            {
-                CheckImageBuilt(builtImages, banner.BackgroundResource, $"challenge banner {banner.ID}");
-                ChallengeBannerRegistration.RegisterChallengeBanner(banner);
-            }
-        }
-
-        public static void RegisterMilanBanners(IReadOnlySet<string> builtImages)
-        {
-            MilanLog.Information("Registering Project Milan challenge banners", customPrefix: LOG_CATEGORY);
-            foreach (var banner in GetMilanBanners())
             {
                 CheckImageBuilt(builtImages, banner.BackgroundResource, $"challenge banner {banner.ID}");
                 ChallengeBannerRegistration.RegisterChallengeBanner(banner);
@@ -80,23 +68,5 @@ namespace ProjectMilan.Pipelines.Startups
             Banner(219, "VolusLover", 817851),
             Banner(220, "FullTeam", 817847),
         ];
-
-        /// <summary>
-        /// This is a method because we need to dynamically assign TLK entries.
-        /// </summary>
-        /// <returns></returns>
-        private static IReadOnlyList<ChallengeBannerEntry> GetMilanBanners()
-        {
-            var milanBanners = new List<ChallengeBannerEntry>();
-
-            // Add custom Milan banners here.
-            // Note - these all need localized.
-            milanBanners.Add(Banner(221, "ME3Tweaks", MilanPipelinesShared.AssignTLK(new LocalizedString()
-            {
-                { MELocalization.INT, "ME3Tweaks" }
-            })));
-
-            return milanBanners;
-        }
     }
 }
