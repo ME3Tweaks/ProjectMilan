@@ -10,21 +10,21 @@ public static partial class StorePacks
     /// <summary>Free, one-per-player achievement reward containing exactly its associated banner.</summary>
     private static StorePackEntry AchievementPack(AchievementBannerDefinition banner) => new()
     {
-        ID = banner.PackId,
+        ID = (int)banner.PackId,
         PackName = banner.PackName,
         TitleStrRefId = MilanPipelinesShared.AssignTLK(banner.Title),
         DescriptionStrRefId = MilanPipelinesShared.AssignTLK(banner.PackDescription),
         CreditCost = 0,
         PromoStrRefId = 703324,
         PerPlayerMax = 1,
-        PlayerVariableId = banner.CounterId,
+        PlayerVariableId = (int)banner.CounterId,
         UnlockInfo = new AchievementUnlockInfo
         {
             AchievementId = banner.AchievementId,
             UnlockVariableName = $"{banner.PackName}_unlock",
-            UnlockVariableId = banner.UnlockId,
+            UnlockVariableId = (int)banner.UnlockId,
         },
-        BannerRewardID = banner.EmblemId,
+        BannerRewardID = (int)banner.EmblemId,
         Image = banner.PackImage,
         RevealIntroTextureRef = "GUI_MPImages.Creates.Alliance",
         RevealIntroHoloTextureRef = "GUI_MPImages.Creates.AllianceHolo",
@@ -45,20 +45,51 @@ public static partial class StorePacks
     /// </summary>
     private static StorePackEntry LegendaryBannerPack() => new()
     {
-        ID = 707,
+        ID = (int)MilanStorePackId.LegendaryBanner,
         PackName = "legendarybanner",
         TitleStrRefId = MilanPipelinesShared.AssignTLK(LegendaryBannerPackTitle),
         DescriptionStrRefId = MilanPipelinesShared.AssignTLK(LegendaryBannerPackDescription),
         CreditCost = 0,
         PromoStrRefId = 703324,
         PerPlayerMax = 1,
-        PlayerVariableId = 743,  // 742 conflicted with groups.memp banner
-        BannerRewardID = 242,
+        PlayerVariableId = (int)MilanPlayerVariable.Pack_LegendaryBanner,
+        BannerRewardID = (int)MilanBannerId.Legendary,
         Image = "Packs.LegendaryBG", // Needs an appropriate background image!
         RevealIntroTextureRef = "GUI_MPImages.Creates.box",
         RevealIntroHoloTextureRef = "GUI_MPImages.Creates.boxHolo",
         RevealIntroSound = "MPRevealCrate1",
         Contents = [Slot(StorePools.LegendaryBanner)],
+    };
+
+    private static readonly LocalizedString SaveMassEffectPackTitle = new()
+    {
+        [MELocalization.INT] = "Save Mass Effect Pack"
+    };
+
+    private static readonly LocalizedString SaveMassEffectPackDescription = new()
+    {
+        [MELocalization.INT] = "Contains the Save Mass Effect banner."
+    };
+
+    /// <summary>
+    /// Free, one-per-player pack available from the start, containing only the Save Mass Effect banner.
+    /// </summary>
+    private static StorePackEntry SaveMassEffectPack() => new()
+    {
+        ID = (int)MilanStorePackId.SaveMassEffect,
+        PackName = "savemasseffect",
+        TitleStrRefId = MilanPipelinesShared.AssignTLK(SaveMassEffectPackTitle),
+        DescriptionStrRefId = MilanPipelinesShared.AssignTLK(SaveMassEffectPackDescription),
+        CreditCost = 0,
+        PromoStrRefId = 703324,
+        PerPlayerMax = 1,
+        PlayerVariableId = (int)MilanPlayerVariable.Pack_SaveMassEffect,
+        BannerRewardID = (int)MilanBannerId.SaveMassEffect,
+        Image = AchievementBannerDefinition.PlaceholderPackImage, // TODO pack artwork
+        RevealIntroTextureRef = "GUI_MPImages.Creates.box",
+        RevealIntroHoloTextureRef = "GUI_MPImages.Creates.boxHolo",
+        RevealIntroSound = "MPRevealCrate1",
+        Contents = [Slot(StorePools.SaveMassEffectBanner)],
     };
 
     /// <summary>
@@ -67,7 +98,7 @@ public static partial class StorePacks
     /// <returns></returns>
     private static StorePackEntry BigBadSbectreBack() => new()
     {
-        ID = 708,
+        ID = (int)MilanStorePackId.SpectreShipment,
         PackName = "grindbreakerspectre",
         TitleStrRefId = MilanPipelinesShared.AssignTLK(new()
         {
@@ -102,7 +133,7 @@ public static partial class StorePacks
     /// <returns></returns>
     private static StorePackEntry BigBadEquibmentBack() => new()
     {
-        ID = 709,
+        ID = (int)MilanStorePackId.SpectreShipmentEquipment,
         PackName = "grindbreakerequipment",
         TitleStrRefId = MilanPipelinesShared.AssignTLK(new()
         {
@@ -129,6 +160,7 @@ public static partial class StorePacks
         // Evaluated during registration because titles/descriptions assign TLK entries.
         ..StoreCards.AchievementBanners.Select(AchievementPack),
         LegendaryBannerPack(),
+        SaveMassEffectPack(),
         BigBadSbectreBack(),
         BigBadEquibmentBack(),
     ];
