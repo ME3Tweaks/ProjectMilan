@@ -1143,7 +1143,7 @@ public function bool GetMilanFOV(out int FOV)
         LogInternal("GETFOV - Setting missing, adding...", );
         AddSettingInt(3);
     }
-    LogInternal("GETFOV - Got setting value: " $ ProfileSettingValue, );
+    // LogInternal("GETFOV - Got setting value: " $ ProfileSettingValue, );
     foreach FovSettings(Item, )
     {
         if (Item.Setting == EFovSettings.General)
@@ -1159,7 +1159,7 @@ public function bool GetMilanFOV(out int FOV)
                 FOV = ~FOV + 1;
                 // Return signed integer
             }
-            LogInternal("GETFOV - Got FOV: " $ FOV, );
+            // LogInternal("GETFOV - Got FOV: " $ FOV, );
         }
     }
     return TRUE;
@@ -1172,10 +1172,10 @@ public function bool SetMilanFOV(int Value)
     local int MilanFOV;
     local int Mask;
     
-    LogInternal("SETFOV - Got FOV Value: " $ Value, );
+    // LogInternal("SETFOV - Got FOV Value: " $ Value, );
     if (!GetProfileSettingValueInt(3, OriginalProfileSettingValue))
     {
-        LogInternal("SETFOV - Setting missing, adding...", );
+        // LogInternal("SETFOV - Setting missing, adding...", );
         AddSettingInt(3);
     }
     foreach FovSettings(Item, )
@@ -1185,10 +1185,10 @@ public function bool SetMilanFOV(int Value)
             Mask = (1 << Item.Size) - 1 << Item.bitOffset;
             if (Value < 0)
             {
-                LogInternal("Value PRE: " $ Value, );
+                // LogInternal("Value PRE: " $ Value, );
                 // Make sure the sign bit is set and invert the Value
                 Value = 1 << Item.Size - 1 | ~Value + 1;
-                LogInternal("Value POST: " $ Value, );
+                // LogInternal("Value POST: " $ Value, );
             }
             FinalProfileSettingValue = OriginalProfileSettingValue & ~Mask | Value << Item.bitOffset;
             SetProfileSettingValueInt(3, FinalProfileSettingValue);
@@ -1206,10 +1206,10 @@ public function bool GetMilanZoomFov(out int FOV)
     
     if (!GetProfileSettingValueInt(3, ProfileSettingValue))
     {
-        LogInternal("GETFOVZoom - Setting missing, adding...", );
+        // LogInternal("GETFOVZoom - Setting missing, adding...", );
         AddSettingInt(3);
     }
-    LogInternal("GETFOVZoom - Got setting value: " $ ProfileSettingValue, );
+    // LogInternal("GETFOVZoom - Got setting value: " $ ProfileSettingValue, );
     foreach FovSettings(Item, )
     {
         if (Item.Setting == EFovSettings.Zoomed)
@@ -1225,7 +1225,7 @@ public function bool GetMilanZoomFov(out int FOV)
                 FOV = ~FOV + 1;
                 // Return signed integer
             }
-            LogInternal("GETFOV - Got FOV: " $ FOV, );
+            // LogInternal("GETFOV - Got FOV: " $ FOV, );
         }
     }
     return TRUE;
@@ -1238,10 +1238,10 @@ public function bool SetMilanZoomFOV(int Value)
     local int MilanFOV;
     local int Mask;
     
-    LogInternal("SETFOVZoom - Got FOV Value: " $ Value, );
+    // LogInternal("SETFOVZoom - Got FOV Value: " $ Value, );
     if (!GetProfileSettingValueInt(3, OriginalProfileSettingValue))
     {
-        LogInternal("SETFOVZoom - Setting missing, adding...", );
+        // LogInternal("SETFOVZoom - Setting missing, adding...", );
         AddSettingInt(3);
     }
     foreach FovSettings(Item, )
@@ -1251,10 +1251,10 @@ public function bool SetMilanZoomFOV(int Value)
             Mask = (1 << Item.Size) - 1 << Item.bitOffset;
             if (Value < 0)
             {
-                LogInternal("Value PRE: " $ Value, );
+                // LogInternal("Value PRE: " $ Value, );
                 // Make sure the sign bit is set and invert the Value
                 Value = 1 << Item.Size - 1 | ~Value + 1;
-                LogInternal("Value POST: " $ Value, );
+                // LogInternal("Value POST: " $ Value, );
             }
             FinalProfileSettingValue = OriginalProfileSettingValue & ~Mask | Value << Item.bitOffset;
             SetProfileSettingValueInt(3, FinalProfileSettingValue);
