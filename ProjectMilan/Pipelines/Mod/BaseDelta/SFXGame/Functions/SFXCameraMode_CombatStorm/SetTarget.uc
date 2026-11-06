@@ -29,8 +29,11 @@ public function SetTarget()
         else
         {
             bRecenterCameraNew = TRUE;
-            Input.CameraSensitivity.X = 0.0;
-            Input.CameraSensitivity.Y = 0.0;
+            // MILAN CHANGE - Stumpy - 2026-11-06
+            // Restore camera control when sprinting with a controller 
+            // Input.CameraSensitivity.X = 0.0;
+            // Input.CameraSensitivity.Y = 0.0;
+            // MILAN END
         }
         MoveStickAdjusted = PInput.MoveStick;
         MoveStickAdjusted.X = Abs(MoveStickAdjusted.X);
