@@ -23,54 +23,64 @@ public static partial class StoreCards
     private static readonly LocalizedString LegendaryTitle = new() { [MELocalization.INT] = "Legendary" };
     private static readonly LocalizedString LegendaryAltTitle = new() { [MELocalization.INT] = "Legendary" };
     private static readonly LocalizedString TrilogyTitle = new() { [MELocalization.INT] = "Mass Effect Trilogy" };
-    private static readonly LocalizedString ClubTitle = new() { [MELocalization.INT] = "Club" };
+    private static readonly LocalizedString ClubTitle = new() { [MELocalization.INT] = "Neon" };
     private static readonly LocalizedString SFXTitle = new() { [MELocalization.INT] = "SFX" };
     private static readonly LocalizedString N7S1Title = new() { [MELocalization.INT] = "N7 Squad" };
+    private static readonly LocalizedString MEMTitle = new() { [MELocalization.INT] = "Mass Effect Modding" };
+    private static readonly LocalizedString ME3TweaksTitle = new() { [MELocalization.INT] = "ME3Tweaks" };
     private static readonly LocalizedString MEMPTitle = new() { [MELocalization.INT] = "United Through Discord" };
     private static readonly LocalizedString DAArlathanGloryTitle = new() { [MELocalization.INT] = "Glory of Arlathan" };
     private static readonly LocalizedString DAArlathanRitualTitle = new() { [MELocalization.INT] = "The Ritual" };
     private static readonly LocalizedString DAFromTrickleToFloodTitle = new() { [MELocalization.INT] = "From a Trickle to a Flood" };
     private static readonly LocalizedString DATheDeepRoadsTitle = new() { [MELocalization.INT] = "The Deep Roads" };
-    private static readonly LocalizedString DATheLastStraw1Title = new() { [MELocalization.INT] = "The Last Straw" };
+    // private static readonly LocalizedString DATheLastStraw1Title = new() { [MELocalization.INT] = "The Last Straw" };
     private static readonly LocalizedString DATheLastStraw2Title = new() { [MELocalization.INT] = "The Last Straw" };
     private static readonly LocalizedString DATheWrathOfHeavenTitle = new() { [MELocalization.INT] = "The Wrath of Heaven" };
+    private static readonly LocalizedString SaveMassEffectTitle = new() { [MELocalization.INT] = "Save Mass Effect" };
     private static readonly LocalizedString DATrespasserTitle = new() { [MELocalization.INT] = "Trespasser" };
 
     // Add custom milan banners here that have drops.
     private static IEnumerable<StoreCard> Banners =>
     [
-        Banner(229, "MilanBanner_BarCrawler", 723, BarCrawlerTitle, "ChallengeBanners.BarCrawler", CardRarity.UltraRare),
-        Banner(230, "MilanBanner_Berserk", 724, BerserkTitle, "ChallengeBanners.Berserk", CardRarity.Rare),
-        Banner(231, "MilanBanner_Busted", 725, BustedTitle, "ChallengeBanners.Busted", CardRarity.Rare),
-        Banner(232, "MilanBanner_Diplomat", 726, DiplomatTitle, "ChallengeBanners.Diplomat", CardRarity.Rare),
-        Banner(233, "MilanBanner_Sunset", 727, SunsetTitle, "ChallengeBanners.Sunset", CardRarity.Uncommon),
-        Banner(234, "MilanBanner_KeyartLE1", 728, KeyartLE1Title, "Keyart.KeyartLE1", CardRarity.Common, StorePools.CommonBanner, StorePools.StarterBanner),
-        Banner(235, "MilanBanner_KeyartLE1_Alt", 729, KeyartLE1AltTitle, "Keyart.KeyartLE1_Alt", CardRarity.Rare),
-        Banner(236, "MilanBanner_KeyartLE2", 730, KeyartLE2Title, "Keyart.KeyartLE2", CardRarity.Common, StorePools.CommonBanner, StorePools.StarterBanner),
-        Banner(237, "MilanBanner_Caretaker", 731, CaretakerTitle, "Banners.Caretaker", CardRarity.Uncommon),
-        Banner(238, "MilanBanner_Explorer", 732, ExplorerTitle, "Banners.Explorer", CardRarity.Uncommon),
-        Banner(239, "MilanBanner_Pathfinder", 733, PathfinderTitle, "Banners.Pathfinder", CardRarity.Rare),
-        Banner(240, "MilanBanner_Trailblazer", 734, TrailblazerTitle, "Banners.Trailblazer", CardRarity.Rare),
-        Banner(241, "MilanBanner_Unknown", 735, UnknownTitle, "Banners.Unknown", CardRarity.Rare),
+        Banner(MilanBannerId.BarCrawler, "MilanBanner_BarCrawler", MilanPlayerVariable.Banner_BarCrawler, BarCrawlerTitle, "ChallengeBanners.BarCrawler", CardRarity.UltraRare),
+        Banner(MilanBannerId.Berserk, "MilanBanner_Berserk", MilanPlayerVariable.Banner_Berserk, BerserkTitle, "ChallengeBanners.Berserk", CardRarity.Rare),
+        Banner(MilanBannerId.Busted, "MilanBanner_Busted", MilanPlayerVariable.Banner_Busted, BustedTitle, "ChallengeBanners.Busted", CardRarity.Rare),
+        Banner(MilanBannerId.Diplomat, "MilanBanner_Diplomat", MilanPlayerVariable.Banner_Diplomat, DiplomatTitle, "ChallengeBanners.Diplomat", CardRarity.Rare),
+        Banner(MilanBannerId.Sunset, "MilanBanner_Sunset", MilanPlayerVariable.Banner_Sunset, SunsetTitle, "ChallengeBanners.Sunset", CardRarity.Uncommon),
+        Banner(MilanBannerId.KeyartLE1, "MilanBanner_KeyartLE1", MilanPlayerVariable.Banner_KeyartLE1, KeyartLE1Title, "Keyart.KeyartLE1", CardRarity.Common, StorePools.CommonBanner, StorePools.StarterBanner),
+        Banner(MilanBannerId.KeyartLE1_Alt, "MilanBanner_KeyartLE1_Alt", MilanPlayerVariable.Banner_KeyartLE1_Alt, KeyartLE1AltTitle, "Keyart.KeyartLE1_Alt", CardRarity.Rare),
+        Banner(MilanBannerId.KeyartLE2, "MilanBanner_KeyartLE2", MilanPlayerVariable.Banner_KeyartLE2, KeyartLE2Title, "Keyart.KeyartLE2", CardRarity.Common, StorePools.CommonBanner, StorePools.StarterBanner),
+        Banner(MilanBannerId.Caretaker, "MilanBanner_Caretaker", MilanPlayerVariable.Banner_Caretaker, CaretakerTitle, "Banners.Caretaker", CardRarity.Uncommon),
+        Banner(MilanBannerId.Explorer, "MilanBanner_Explorer", MilanPlayerVariable.Banner_Explorer, ExplorerTitle, "Banners.Explorer", CardRarity.Uncommon),
+        Banner(MilanBannerId.Pathfinder, "MilanBanner_Pathfinder", MilanPlayerVariable.Banner_Pathfinder, PathfinderTitle, "Banners.Pathfinder", CardRarity.Rare),
+        Banner(MilanBannerId.Trailblazer, "MilanBanner_Trailblazer", MilanPlayerVariable.Banner_Trailblazer, TrailblazerTitle, "Banners.Trailblazer", CardRarity.Rare),
+        Banner(MilanBannerId.Unknown, "MilanBanner_Unknown", MilanPlayerVariable.Banner_Unknown, UnknownTitle, "Banners.Unknown", CardRarity.Rare),
         // Only drops from the free Legendary Banner pack
-        Banner(242, "MilanBanner_Legendary", 736, LegendaryTitle, "ChallengeBanners.Legendary", CardRarity.Rare, StorePools.LegendaryBanner),
-        Banner(243, "MilanBanner_Legendary_Alt", 737, LegendaryAltTitle, "ChallengeBanners.Legendary_Alt", CardRarity.Rare),
-        Banner(244, "MilanBanner_Trilogy", 738, TrilogyTitle, "KeyArt.Trilogy", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
-        Banner(245, "MilanBanner_Club", 739, ClubTitle, "Banners.Club", CardRarity.Rare),
-        Banner(246, "MilanBanner_SFX", 740, SFXTitle, "Banners.SFX", CardRarity.Rare),
+        Banner(MilanBannerId.Legendary, "MilanBanner_Legendary", MilanPlayerVariable.Banner_Legendary, LegendaryTitle, "ChallengeBanners.Legendary", CardRarity.Rare, StorePools.LegendaryBanner),
+        Banner(MilanBannerId.Legendary_Alt, "MilanBanner_Legendary_Alt", MilanPlayerVariable.Banner_Legendary_Alt, LegendaryAltTitle, "ChallengeBanners.Legendary_Alt", CardRarity.Rare),
+        Banner(MilanBannerId.Trilogy, "MilanBanner_Trilogy", MilanPlayerVariable.Banner_Trilogy, TrilogyTitle, "KeyArt.Trilogy", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
+        Banner(MilanBannerId.Club, "MilanBanner_Club", MilanPlayerVariable.Banner_Club, ClubTitle, "Banners.Club", CardRarity.Rare),
+        Banner(MilanBannerId.SFX, "MilanBanner_SFX", MilanPlayerVariable.Banner_SFX, SFXTitle, "Banners.SFX", CardRarity.Rare),
         // N7 Squad
-        Banner(247, "MilanBanner_N7S1", 741, N7S1Title, "Groups.N7S1", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
+        Banner(MilanBannerId.N7S1, "MilanBanner_N7S1", MilanPlayerVariable.Banner_N7S1, N7S1Title, "Groups.N7S1", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
         // MEMP
-        Banner(248, "MilanBanner_MEMP", 742, MEMPTitle, "Groups.MEMP", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
+        Banner(MilanBannerId.MEMP, "MilanBanner_MEMP", MilanPlayerVariable.Banner_MEMP, MEMPTitle, "Groups.MEMP", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
+        // MEM
+        Banner(MilanBannerId.MassEffectModding, "MilanBanner_MEM", MilanPlayerVariable.Banner_MassEffectModding, MEMTitle, "Groups.MEM", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
+        // ME3Tweaks
+        Banner(MilanBannerId.ME3Tweaks, "MilanBanner_ME3Tweaks", MilanPlayerVariable.Banner_ME3Tweaks, ME3TweaksTitle, "Groups.ME3Tweaks", CardRarity.Uncommon, StorePools.UncommonBanner, StorePools.StarterBanner),
+
         // Dragon Age
-        Banner(249, "MilanBanner_DA_ArlathanGlory", 744, DAArlathanGloryTitle, "ThedasBanners.ArlathanGlory", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
-        Banner(250, "MilanBanner_DA_ArlathanRitual", 745, DAArlathanRitualTitle, "ThedasBanners.ArlathanRitual", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
-        Banner(251, "MilanBanner_DA_FromTrickleToFlood", 746, DAFromTrickleToFloodTitle, "ThedasBanners.FromTrickleToFlood", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
-        Banner(252, "MilanBanner_DA_TheDeepRoads", 747, DATheDeepRoadsTitle, "ThedasBanners.TheDeepRoads", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
-        //Banner(253, "MilanBanner_DA_TheLastStraw1", 748, DATheLastStraw1Title, "ThedasBanners.TheLastStraw1", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
-        Banner(254, "MilanBanner_DA_TheLastStraw2", 749, DATheLastStraw2Title, "ThedasBanners.TheLastStraw2", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
-        Banner(255, "MilanBanner_DA_TheWrathOfHeaven", 750, DATheWrathOfHeavenTitle, "ThedasBanners.TheWrathOfHeaven", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
-        Banner(256, "MilanBanner_DA_Trespasser", 751, DATrespasserTitle, "ThedasBanners.Trespasser", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(MilanBannerId.DA_ArlathanGlory, "MilanBanner_DA_ArlathanGlory", MilanPlayerVariable.Banner_DA_ArlathanGlory, DAArlathanGloryTitle, "ThedasBanners.ArlathanGlory", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(MilanBannerId.DA_ArlathanRitual, "MilanBanner_DA_ArlathanRitual", MilanPlayerVariable.Banner_DA_ArlathanRitual, DAArlathanRitualTitle, "ThedasBanners.ArlathanRitual", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(MilanBannerId.DA_FromTrickleToFlood, "MilanBanner_DA_FromTrickleToFlood", MilanPlayerVariable.Banner_DA_FromTrickleToFlood, DAFromTrickleToFloodTitle, "ThedasBanners.FromTrickleToFlood", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(MilanBannerId.DA_TheDeepRoads, "MilanBanner_DA_TheDeepRoads", MilanPlayerVariable.Banner_DA_TheDeepRoads, DATheDeepRoadsTitle, "ThedasBanners.TheDeepRoads", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        //Banner(MilanBannerId.DA_TheLastStraw1, "MilanBanner_DA_TheLastStraw1", MilanPlayerVariable.Banner_DA_TheLastStraw1, DATheLastStraw1Title, "ThedasBanners.TheLastStraw1", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(MilanBannerId.DA_TheLastStraw2, "MilanBanner_DA_TheLastStraw2", MilanPlayerVariable.Banner_DA_TheLastStraw2, DATheLastStraw2Title, "ThedasBanners.TheLastStraw2", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(MilanBannerId.DA_TheWrathOfHeaven, "MilanBanner_DA_TheWrathOfHeaven", MilanPlayerVariable.Banner_DA_TheWrathOfHeaven, DATheWrathOfHeavenTitle, "ThedasBanners.TheWrathOfHeaven", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        Banner(MilanBannerId.DA_Trespasser, "MilanBanner_DA_Trespasser", MilanPlayerVariable.Banner_DA_Trespasser, DATrespasserTitle, "ThedasBanners.Trespasser", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
+        // Only drops from the free Save Mass Effect pack
+        Banner(MilanBannerId.SaveMassEffect, "MilanBanner_SaveMassEffect", MilanPlayerVariable.Banner_SaveMassEffect, SaveMassEffectTitle, "Groups.SME", CardRarity.Rare, StorePools.SaveMassEffectBanner),
     ];
 
     public static StoreCard Banner(int emblemId, string uniqueName, int playerVariableId, int titleStrRefId,
@@ -88,7 +98,7 @@ public static partial class StoreCards
         Pools = (pools.Length == 0 ? [StorePools.BannerPool(rarity)] : pools).Select(p => new PoolEntry(p)).ToList(),
     };
 
-    public static StoreCard Banner(int emblemId, string uniqueName, int playerVariableId, LocalizedString title,
+    public static StoreCard Banner(MilanBannerId emblemId, string uniqueName, MilanPlayerVariable playerVariable, LocalizedString title,
         string image, CardRarity rarity, params StorePool[] pools) =>
-        Banner(emblemId, uniqueName, playerVariableId, MilanPipelinesShared.AssignTLK(title), image, rarity, pools);
+        Banner((int)emblemId, uniqueName, (int)playerVariable, MilanPipelinesShared.AssignTLK(title), image, rarity, pools);
 }
