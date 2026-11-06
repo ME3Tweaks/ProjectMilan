@@ -109,9 +109,9 @@ public static partial class StorePacks
             [MELocalization.INT] = "A mysteriously colossal shipment of high-tier gear, elite operatives, and heavy-duty ordnance, likely to completely revolutionize your loadout. Includes 100 items."
         }),
         CreditCost = 1_400_000,
-        Image = "GUI_MPImages.StoreItems.Store004",
-        RevealIntroTextureRef = "GUI_MPImages.Creates.box4",
-        RevealIntroHoloTextureRef = "GUI_MPImages.Creates.box4Holo",
+        Image = "Packs.grindbreakerBG",
+        RevealIntroTextureRef = "GUI_MPImages.Crates.grindbreakerBox",
+        RevealIntroHoloTextureRef = "GUI_MPImages.Crates.grindbreakerBoxHolo",
         RevealIntroSound = "MPRevealCrate4",
         Contents = [
             Slot(20, StorePools.SilverCommon, (StorePools.BronzeConsumable, 0.4f), (StorePools.SilverConsumable, 0.4f), (StorePools.GoldConsumable, 0.2f)),
