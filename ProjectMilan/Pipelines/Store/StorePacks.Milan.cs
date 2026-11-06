@@ -113,9 +113,9 @@ public static partial class StorePacks
             [MELocalization.INT] = "Colleagues from the Office of Special Tactics and Reconnaissance can send a large shipment of consumables your way."
         }),
         CreditCost = 400_000,
-        Image = "GUI_MPImages.StoreItems.Store005",
-        RevealIntroTextureRef = "GUI_MPImages.Creates.box5",
-        RevealIntroHoloTextureRef = "GUI_MPImages.Creates.box5Holo",
+        Image = "Packs.grindbreakerequipmentBG",
+        RevealIntroTextureRef = "GUI_MPImages.Crates.grindbreakerequipmentBox",
+        RevealIntroHoloTextureRef = "GUI_MPImages.Crates.grindbreakerequipmentBoxHolo",
         RevealIntroSound = "MPRevealCrate5",
         Contents = [
             Slot(40, StorePools.BronzeCommon, (StorePools.EquipAmmo, 0.475f), (StorePools.EquipShield, 0.475f), (StorePools.BronzeMod, 0.05f)),
