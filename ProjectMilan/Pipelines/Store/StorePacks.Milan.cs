@@ -110,8 +110,8 @@ public static partial class StorePacks
         }),
         CreditCost = 1_400_000,
         Image = "Packs.grindbreakerBG",
-        RevealIntroTextureRef = "GUI_MPImages.Crates.grindbreakerBox",
-        RevealIntroHoloTextureRef = "GUI_MPImages.Crates.grindbreakerBoxHolo",
+        RevealIntroTextureRef = "Crates.grindbreakerBox",
+        RevealIntroHoloTextureRef = "Crates.grindbreakerBoxHolo",
         RevealIntroSound = "MPRevealCrate4",
         Contents = [
             Slot(20, StorePools.SilverCommon, (StorePools.BronzeConsumable, 0.4f), (StorePools.SilverConsumable, 0.4f), (StorePools.GoldConsumable, 0.2f)),
@@ -145,8 +145,8 @@ public static partial class StorePacks
         }),
         CreditCost = 400_000,
         Image = "Packs.grindbreakerequipmentBG",
-        RevealIntroTextureRef = "GUI_MPImages.Crates.grindbreakerequipmentBox",
-        RevealIntroHoloTextureRef = "GUI_MPImages.Crates.grindbreakerequipmentBoxHolo",
+        RevealIntroTextureRef = "Crates.grindbreakerequipmentBox",
+        RevealIntroHoloTextureRef = "Crates.grindbreakerequipmentBoxHolo",
         RevealIntroSound = "MPRevealCrate5",
         Contents = [
             Slot(40, StorePools.BronzeCommon, (StorePools.EquipAmmo, 0.475f), (StorePools.EquipShield, 0.475f), (StorePools.BronzeMod, 0.05f)),
