@@ -136,9 +136,9 @@ public static partial class StorePacks
             [MELocalization.RUS] = "Загадочный, невероятно масштабный груз: первоклассное снаряжение, элитные оперативники и мощное вооружение — всё это способно полностью преобразить ваш арсенал. Включает 100 предметов.",
         }),
         CreditCost = 1_400_000,
-        Image = "GUI_MPImages.StoreItems.Store004",
-        RevealIntroTextureRef = "GUI_MPImages.Creates.box4",
-        RevealIntroHoloTextureRef = "GUI_MPImages.Creates.box4Holo",
+        Image = "Packs.grindbreakerBG",
+        RevealIntroTextureRef = "Crates.grindbreakerBox",
+        RevealIntroHoloTextureRef = "Crates.grindbreakerBoxHolo",
         RevealIntroSound = "MPRevealCrate4",
         Contents = [
             Slot(20, StorePools.SilverCommon, (StorePools.BronzeConsumable, 0.4f), (StorePools.SilverConsumable, 0.4f), (StorePools.GoldConsumable, 0.2f)),
@@ -182,8 +182,8 @@ public static partial class StorePacks
         }),
         CreditCost = 400_000,
         Image = "Packs.grindbreakerequipmentBG",
-        RevealIntroTextureRef = "GUI_MPImages.Crates.grindbreakerequipmentBox",
-        RevealIntroHoloTextureRef = "GUI_MPImages.Crates.grindbreakerequipmentBoxHolo",
+        RevealIntroTextureRef = "Crates.grindbreakerequipmentBox",
+        RevealIntroHoloTextureRef = "Crates.grindbreakerequipmentBoxHolo",
         RevealIntroSound = "MPRevealCrate5",
         Contents = [
             Slot(40, StorePools.BronzeCommon, (StorePools.EquipAmmo, 0.475f), (StorePools.EquipShield, 0.475f), (StorePools.BronzeMod, 0.05f)),
