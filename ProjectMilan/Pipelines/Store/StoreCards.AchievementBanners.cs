@@ -24,24 +24,102 @@ internal sealed record AchievementBannerDefinition(MilanStorePackId PackId, stri
 public static partial class StoreCards
 {
     // These must stay above AchievementBanners: static initializers in this file run in order.
-    private static readonly LocalizedString MedalOfHonorTitle = new() { [MELocalization.INT] = "Medal of Honor" };
-
-    // The $49875828 value is "Earned by obtaining the Legendary Edition acheivement."
-    private static readonly LocalizedString MedalOfHonorPackDescription = new() { [MELocalization.INT] = "Contains the Medal of Honor banner. $49875828" };
-    private static readonly LocalizedString ColonialSaviorTitle = new() { 
-        [MELocalization.INT] = "Colonial Savior"
+    private static readonly LocalizedString MedalOfHonorTitle = new() {
+        [MELocalization.INT] = "Medal of Honor",
+        [MELocalization.DEU] = "Ehrenmedaille",
+        [MELocalization.FRA] = "Médaille du mérite",
+        [MELocalization.POL] = "Medal honoru",
+        [MELocalization.RUS] = "Медаль Почета",
     };
 
-    private static readonly LocalizedString ColonialSaviorPackDescription = new() { [MELocalization.INT] = "Contains the Colonial Savior banner. $49875828" };
-    private static readonly LocalizedString MissionAccomplishedTitle = new() { [MELocalization.INT] = "Mission Accomplished" };
-    private static readonly LocalizedString MissionAccomplishedPackDescription = new() { [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 2) banner. $49875828" };
-    private static readonly LocalizedString MercilessTitle = new() { [MELocalization.INT] = "Merciless" };
-    private static readonly LocalizedString MercilessPackDescription = new() { [MELocalization.INT] = "Contains the Merciless banner. $49875828" };
-    private static readonly LocalizedString MissionAccomplishedLE3PackDescription = new() { [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 3) banner. $49875828" };
-    private static readonly LocalizedString TheOneAndOnlyTitle = new() { [MELocalization.INT] = "The One and Only" };
-    private static readonly LocalizedString TheOneAndOnlyPackDescription = new() { [MELocalization.INT] = "Contains the The One and Only banner. $49875828" };
-    private static readonly LocalizedString InsaneTitle = new() { [MELocalization.INT] = "Insane" };
-    private static readonly LocalizedString InsanePackDescription = new() { [MELocalization.INT] = "Contains the Insane banner. $49875828" };
+    // The $49875828 value is "Earned by obtaining the Legendary Edition acheivement."
+    private static readonly LocalizedString MedalOfHonorPackDescription = new() {
+        [MELocalization.INT] = "Contains the Medal of Honor banner. $49875828",
+        [MELocalization.DEU] = "Enthält das Banner \"Ehrenmedaille\". $49875828",
+        [MELocalization.FRA] = "Contient la bannière Médaille du mérite. $49875828",
+        [MELocalization.POL] = "Zawiera baner \"Medalu honoru\". $49875828",
+        [MELocalization.RUS] = "Содержит баннер Медаль Почета. $49875828",
+    };
+    private static readonly LocalizedString ColonialSaviorTitle = new() {
+        [MELocalization.INT] = "Colonial Savior",
+        [MELocalization.DEU] = "Kolonialer Retter",
+        [MELocalization.FRA] = "Sauveur des colonies",
+        [MELocalization.POL] = "Zbawca kolonii",
+        [MELocalization.RUS] = "Спаситель Колоний",
+    };
+
+    private static readonly LocalizedString ColonialSaviorPackDescription = new() {
+        [MELocalization.INT] = "Contains the Colonial Savior banner. $49875828",
+        [MELocalization.DEU] = "Enthält das Banner \"Kolonialer Retter\". $49875828",
+        [MELocalization.FRA] = "Contient la bannière Sauveur des colonies. $49875828",
+        [MELocalization.POL] = "Zawiera baner \"Zbawca kolonii\". $49875828",
+        [MELocalization.RUS] = "Содержит баннер Спаситель Колоний. $49875828",
+    };
+    private static readonly LocalizedString MissionAccomplishedTitle = new() {
+        [MELocalization.INT] = "Mission Accomplished",
+        [MELocalization.DEU] = "Mission erfüllt",
+        [MELocalization.FRA] = "Mission accomplie",
+        [MELocalization.POL] = "Misja zakończona sukcesem",
+        [MELocalization.RUS] = "Миссия Выполнена",
+    };
+    private static readonly LocalizedString MissionAccomplishedPackDescription = new() {
+        [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 2) banner. $49875828",
+        [MELocalization.DEU] = "Enthält das Banner \"Mission erfüllt (Mass Effect 2)\". $49875828",
+        [MELocalization.FRA] = "Contient la bannière Mission accomplie (Mass Effect 2). $49875828",
+        [MELocalization.POL] = "Zawiera baner \"Misja zakończona sukcesem (Mass Effect 2)\". $49875828",
+        [MELocalization.RUS] = "Содержит баннер Миссия Выполнена (Mass Effect 2). $49875828",
+    };
+    private static readonly LocalizedString MercilessTitle = new() {
+        [MELocalization.INT] = "Merciless",
+        [MELocalization.DEU] = "Gnadenlos",
+        [MELocalization.FRA] = "Impitoyable",
+        [MELocalization.POL] = "Bez litości",
+        [MELocalization.RUS] = "Без Пощады",
+    };
+    private static readonly LocalizedString MercilessPackDescription = new() {
+        [MELocalization.INT] = "Contains the Merciless banner. $49875828",
+        [MELocalization.DEU] = "Enthält das Banner „Gnadenlos“. $49875828",
+        [MELocalization.FRA] = "Contient la bannière Impitoyable. $49875828",
+        [MELocalization.POL] = "Zawiera baner \"Bez litości\". $49875828",
+        [MELocalization.RUS] = "Содержит баннер Без Пощады. $49875828",
+    };
+    private static readonly LocalizedString MissionAccomplishedLE3PackDescription = new() {
+        [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 3) banner. $49875828",
+        [MELocalization.DEU] = "Enthält das Banner \"Mission erfüllt (Mass Effect 3)\". $49875828",
+        [MELocalization.FRA] = "Contient la bannière Mission accomplie (Mass Effect 3). $49875828",
+        [MELocalization.POL] = "Zawiera baner \"Misja zakończona sukcesem (Mass Effect 3)\". $49875828",
+        [MELocalization.RUS] = "Содержит баннер Миссия Выполнена (Mass Effect 3). $49875828",
+    };
+    private static readonly LocalizedString TheOneAndOnlyTitle = new() {
+        [MELocalization.INT] = "The One and Only",
+        [MELocalization.DEU] = "Der Einzige",
+        [MELocalization.FRA] = "Le seul, l'unique",
+        [MELocalization.POL] = "Jedyny w swoim rodzaju",
+        [MELocalization.RUS] = "Великая Победа",
+    };
+    private static readonly LocalizedString TheOneAndOnlyPackDescription = new() {
+        [MELocalization.INT] = "Contains the The One and Only banner. $49875828",
+        [MELocalization.DEU] = "Enthält das Banner \"Der Einzige\". $49875828",
+        [MELocalization.FRA] = "Contient la bannière Le seul, l'unique. $49875828",
+        [MELocalization.POL] = "Zawiera baner \"Jedyny w swoim rodzaju\". $49875828",
+        [MELocalization.RUS] = "Содержит баннер Великая Победа. $49875828",
+    };
+    private static readonly LocalizedString InsaneTitle = new() {
+        [MELocalization.INT] = "Insane",
+        [MELocalization.DEU] = "Wahnsinnig",
+        [MELocalization.ESN] = "Loco",
+        [MELocalization.FRA] = "Dément",
+        [MELocalization.POL] = "Obłąkany",
+        [MELocalization.RUS] = "Безумие",
+    };
+    private static readonly LocalizedString InsanePackDescription = new() {
+        [MELocalization.INT] = "Contains the Insane banner. $49875828",
+        [MELocalization.DEU] = "Enthält das Banner \"Wahnsinnig\". $49875828",
+        [MELocalization.ESN] = "Contiene el banner \"Loco\". $49875828",
+        [MELocalization.FRA] = "Contient la bannière Dément. $49875828",
+        [MELocalization.POL] = "Zawiera baner \"Obłąkany\". $49875828",
+        [MELocalization.RUS] = "Содержит баннер Безумие. $49875828",
+    };
 
     // Rare is the reveal frame, not random availability: these never join generic rarity pools.
     internal static IReadOnlyList<AchievementBannerDefinition> AchievementBanners { get; } =

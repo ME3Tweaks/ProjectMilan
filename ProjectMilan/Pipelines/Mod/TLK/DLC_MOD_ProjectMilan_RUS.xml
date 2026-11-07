@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tlkFile TLKToolVersion="4.0.0.0">
+    <!--Male entries section begin-->
+	<!-- Project Milan Strings -->
+    <String id="49875622">Project Milan DLC</String>
+    <String id="49875623">DLC_MOD_ProjectMilan</String>
+    <String id="49875624">ru-ru</String>
+    <String id="49875625">Male</String>
+    <!--AAT entries begin -->
+    <String id="49875626">Автонаведение</String>
+    <String id="49875627">Автоматически наводит перекрестие на врага при переходе в режим прицеливания.</String>
+    <String id="49875628">Автонаведение: Включено </String>
+    <String id="49875629">Автонаведение: Выключено</String>
+    <String id="49875630">Автоприцеливание</String>
+    <String id="49875631">Так называемое вращательное автоприцеливание или прилипание следует за центром масс цели, помогая в прицеливании.</String>
+    <String id="49875632">Помощь в доводке прицела</String>
+    <String id="49875633">Отвечает за замедление камеры, когда перекрестье находится рядом с врагом.</String>
+    <String id="49875634">0% (Выключено)</String>
+    <String id="49875635">10%</String>
+    <String id="49875636">20%</String>
+    <String id="49875637">30%</String>
+    <String id="49875638">40%</String>
+    <String id="49875639">50%</String>
+    <String id="49875640">60%</String>
+    <String id="49875641">70%</String>
+    <String id="49875642">80%</String>
+    <String id="49875643">90%</String>
+    <String id="49875644">100%</String>
+    <String id="49875645">110%</String>
+    <String id="49875646">120%</String>
+    <String id="49875647">130%</String>
+    <String id="49875648">140%</String>
+    <String id="49875649">150%</String>
+    <String id="49875650">160%</String>
+    <String id="49875651">170%</String>
+    <String id="49875652">180%</String>
+    <String id="49875653">190%</String>
+    <String id="49875654">200%</String>
+    <String id="49875655">210%</String>
+    <String id="49875656">220%</String>
+    <String id="49875657">230%</String>
+    <String id="49875658">240%</String>
+    <String id="49875659">250%</String>
+    <String id="49875660">260%</String>
+    <String id="49875661">270%</String>
+    <String id="49875662">280%</String>
+    <String id="49875663">290%</String>
+    <String id="49875664">300%</String>
+    <!--AAT entries end-->
+    <!-- New Settings TLKs begin -->
+    <String id="49875680">Геймпад</String>
+    <String id="49875681">Настройка опций ввода геймпада</String>
+    <String id="49875683">Настройка опций ввода мыши</String>
+    <!-- New Settings TLKs end -->
+    <!-- MilanHost matchmaking TLKs begin: read by ID from MilanHost -->
+    <String id="49875700">Код Приглашения: {0}</String>
+    <String id="49875701">Код Приглашения: {0} (пригласительная ссылка скопирована)</String>
+    <String id="49875702">Код приглашения недоступен (создатель матча не подключился)</String>
+    <String id="49875703">Приглашение больше недоступно. Хост мог отключиться или лобби закрылось.</String>
+    <String id="49875704">Лобби заполнено.</String>
+    <String id="49875705">Лобби не принимает игроков в данный момент. Возможно происходит смена хостов или завершение матча. Повторите попытку позже.</String>
+    <String id="49875706">Версия игры хоста отличается. Для совместной игры ваши версии должны совпадать.</String>
+    <String id="49875707">Слишком много подключений из вашей сети в обработке. Подождите минуту и повторите попытку.</String>
+    <String id="49875708">Сервер подбора игры занят. Повторите попытку позже.</String>
+    <String id="49875709">Сервер подбора игры недоступен. Проверьте ваше соединение и повторите попытку.</String>
+    <String id="49875710">Невозможно присоединиться к данному лобби ({0})</String>
+    <String id="49875711">Хост или данное лобби недоступны. Повторите попытку позже.</String>
+    <String id="49875712">Нет соединения с сервером поиска игры {0}. Повторите попытку позже.</String>
+    <String id="49875713">Невозможно присоединиться к данному лобби: подбор игры выключен.</String>
+    <String id="49875714">Другой игрок стал хостом. Повтор соединения...</String>
+    <String id="49875715">Потеряно соединение с хостом. Поиск нового хоста...</String>
+    <String id="49875716">Приглашения отключены при размере лобби 1</String>
+    <String id="49875717">Только хост может приглашать игроков в закрытое лобби.</String>
+    <String id="49875718">Пароль сервера подбора игры отсутствует или неверен. Для проверки зайдите в Настройки &gt; Сеть</String>
+    <String id="49875719">Быстрый матч недоступен когда подбор игры выключен.</String>
+    <String id="49875720">Быстрый матч недоступен поскольку недоступен сервер подбора игры.</String>
+    <!-- MilanHost matchmaking TLKs end -->
+    <!-- Multiplayer Settings (SFXGUI_MilanNetConfig) TLKs begin. On/Off, Accept/Cancel and OK reuse the stock LE3 strings. -->
+    <String id="49875740">Сеть</String>
+    <String id="49875741">Выберите имя, видимое другим игрокам и то как игра подбирает матчи.</String>
+    <String id="49875742">Имя Профиля</String>
+    <String id="49875744">Адрес Сервера</String>
+    <String id="49875745">Пароль сервера подбора игры отсутствует или неверен. Для проверки зайдите в Настройки &gt; Сеть</String>
+    <String id="49875746">Введите имя профиля.</String>
+    <String id="49875747">Адрес сервера должен начинаться с http:// или https://.</String>
+    <String id="49875748">Невозможно сохранить ваши настройки сетевой игры.</String>
+    <String id="49875749">Изменение имени профиля и сервера подбора игры.</String>
+    <String id="49875750">Сервер Подбора Игры</String>
+    <String id="49875752">Пользовательский</String>
+    <String id="49875753">Пароль сервера может содержать только буквы, цифры и символы, без пробелов.</String>
+    <String id="49875754">Данные настройки могут быть изменены только из меню сетевой игры, но не из лобби или матча.</String>
+    <!-- Multiplayer Settings TLKs end -->
+    <!-- In-match pause menu: localizable column labels, ping units, and controls. -->
+    <String id="49875760">ИМЯ</String>
+    <String id="49875761">СЧЁТ</String>
+    <String id="49875762">ПИНГ</String>
+    <String id="49875763">Хост</String>
+	<!-- milliseconds -->
+    <String id="49875764">мс</String>
+	<!-- Unused in V1 - Pause Menu kick system -->
+    <String id="49875765">X: Голосовать за исключение</String>
+    <String id="49875766">X: Убрать голосование</String>
+    <String id="49875767">Пригласить Игрока</String>
+    <String id="49875768">Вверх/Вниз: Прокрутка</String>
+    <String id="49875769">Y: Пригласить Игрока</String>
+    <!-- Spectator controls and the entry point for the future MP photo mode. -->
+    <String id="49875770">[spectator:Shared_ViewPrevPlayer] / [spectator:Shared_ViewNextPlayer]: Сменить игрока   [spectator:Shared_SpectatorPhotoMode]: Режим Фото</String>
+    <String id="49875771">[XBoxB_Btn_LB] / [XBoxB_Btn_RB]: Сменить игрока   [XBoxB_Btn_X]: Режим Фото</String>
+    <!-- Was a placeholder -->
+	<!--<String id="49875772">Photo mode is not available yet.</String>-->
+    <!-- Multiplayer Photo Mode player selector. -->
+    <String id="49875780">Наблюдаемый Игрок</String>
+    <String id="49875781">Нет доступных игроков</String>
+    <String id="49875782">Сбитый</String>
+    <String id="49875783">Наблюдать</String>
+    <String id="49875784">Маркеры Игроков</String>
+    <String id="49875785">Скорость Свободной Камеры</String>
+    <String id="49875786">Сглаживаение Свободного Вращения</String>
+    <String id="49875787">Столкновение Камеры</String>
+    <String id="49875791">Оверлеи Фото</String>
+    <String id="49875792">Всплывающие Подсказки</String>
+    <String id="49875793">Индикаторы Гранаты</String>
+    <String id="49875794">Сглаживание Движения</String>
+    <String id="49875795">Контуры Игрока</String>
+	<!-- Banner selection page title -->
+    <String id="49875800">Выбрать Баннер</String>
+    <String id="49875801">Выбрать баннер карточки лобби</String>
+    <String id="49875805">Установлено</String>
+    <String id="49875806">Загрузка изображения...</String>
+    <String id="49875807">Изображение недоступно</String>
+    <String id="49875808">Невозможно установить данный баннер</String>
+	<!-- String shown in multiplayer menu instead of leaderboards -->
+	<String id="49875811">Баннеры</String>
+	<!-- MP accessibility screen effects -->
+    <String id="49875812">Специальные возможности</String>
+    <String id="49875813">Настройка специальных возможностей</String>
+    <String id="49875814">Экранные эффекты</String>
+    <String id="49875815">Настройка интенстивности экранных эффектов</String>
+    <String id="49875816">Зрение Гета</String>
+    <String id="49875817">Настройка яркости и цветокоррекции Зрения Гета, включая эффект снаряжения Сканера Гета.</String>
+    <String id="49875818">Жажда Крови</String>
+    <String id="49875819">Настройка интенсивности экранного оверлея во время Жажды Крови</String>
+    <String id="49875820">Настройка интенсивности экранного оверлея во время Ремонтной Матрицы.</String>
+    <String id="49875821">Ярость Крогана</String>
+    <String id="49875822">Настройка интенсивности экранного оверлея во время Ярости Крогана.</String>
+    <String id="49875823">Снижен</String>
+    <String id="49875824">Использовать оригинальную силу данного экранного эффекта.</String>
+    <String id="49875825">Использовать менее интенсивную версию данного экранного эффекта.</String>
+    <String id="49875826">Скрыть экранный эффект. Способность и игровые бонусы остаются активными.</String>
+	<!-- Polonium Rounds: total added damage per hit, rather than damage per second. -->
+    <String id="49875827">Применить полониевые боеприпасы для одной миссии. Повторные попадания накапливают ущерб и обновляют длительность эффекта.
+Ущерб за попадание: &lt;CUSTOM0&gt;% ущерба оружия.
+Длительность: &lt;CUSTOM3&gt; секунд</String>
+	<String id="49875828">Награда за получение достижения Легендарного Издания.</String>
+	<!-- Team Betrayal system -->
+	<String id="49875829">{0} попытался предать команду</String>
+
+	<!-- FOV START -->
+    <String id="49875900">-100°</String>
+    <String id="49875901">-95°</String>
+    <String id="49875902">-90°</String>
+    <String id="49875903">-85°</String>
+    <String id="49875904">-80°</String>
+    <String id="49875905">-75°</String>
+    <String id="49875906">-70°</String>
+    <String id="49875907">-65°</String>
+    <String id="49875908">-60°</String>
+    <String id="49875909">-55°</String>
+    <String id="49875910">-50°</String>
+    <String id="49875911">-45°</String>
+    <String id="49875912">-40°</String>
+    <String id="49875913">-35°</String>
+    <String id="49875914">-30°</String>
+    <String id="49875915">-25°</String>
+    <String id="49875916">-20°</String>
+    <String id="49875917">-15°</String>
+    <String id="49875918">-10°</String>
+    <String id="49875919">-5°</String>
+    <String id="49875920">0°</String>
+    <String id="49875921">5°</String>
+    <String id="49875922">10°</String>
+    <String id="49875923">15°</String>
+    <String id="49875924">20°</String>
+    <String id="49875925">25°</String>
+    <String id="49875926">30°</String>
+    <String id="49875927">35°</String>
+    <String id="49875928">40°</String>
+    <String id="49875929">45°</String>
+    <String id="49875930">50°</String>
+    <String id="49875931">55°</String>
+    <String id="49875932">60°</String>
+    <String id="49875933">65°</String>
+    <String id="49875934">70°</String>
+    <String id="49875935">75°</String>
+    <String id="49875936">80°</String>
+    <String id="49875937">85°</String>
+    <String id="49875938">90°</String>
+    <String id="49875939">95°</String>
+    <String id="49875940">100°</String>
+    <String id="49875941">Смещение Угла Обзора</String>
+    <String id="49875942">Смещение Угла Обзора при Увеличении</String>
+    <String id="49875943">Смещение Угла Обзора</String> <!-- Reserved for description -->
+    <String id="49875944">Смещение Угла Обзора при Увеличении</String> <!-- Reserved for description -->
+    <!-- FOV END -->
+	<!-- Credits begin: flashing credits at the start of BaseConfig/BioCredits.xml. Title, then names (one per line). -->
+	<String id="49875945">Сетевая Игра Легендарного Издания</String>
+	<String id="49875946">Сделано для вас командой ME3Tweaks</String>
+	<String id="49875947">Руководитель Проекта</String>
+	<String id="49875948">Mgamerz</String>
+	<String id="49875949">Текстуры</String>
+	<String id="49875950">Audemus
+starkgate
+Stumpy</String>
+	<String id="49875951">Модели</String>
+	<String id="49875952">Stumpy
+naNuke
+clericofshadows</String>
+	<String id="49875953">Аудио</String>
+	<String id="49875954">HenBagle</String>
+	<String id="49875955">Пользовательский интерфейс</String>
+	<String id="49875956">DropTheSquid
+Stumpy
+Mgamerz</String>
+	<String id="49875957">Technical</String>
+	<String id="49875958">SirCxyrtyx
+DropTheSquid
+Stumpy
+naNuke
+HenBagle
+Benefactor
+Kinkojiro
+Mgamerz
+Scottina
+d00t</String>
+	<String id="49875959">Инфрастуктура</String>
+	<String id="49875960">d00t
+Mgamerz
+Stumpy</String>
+	<String id="49875961">Реверс-инженеринг</String>
+	<String id="49875962">d00t
+Mgamerz
+SirCxyrtyx</String>
+	<String id="49875963">Тестирование</String>
+	<String id="49875964">Ody
+Synthian
+beccatoria
+RedLightningN7S
+Herobrine24</String>
+	<String id="49875965">Локализация - Русский </String>
+	<String id="49875966">ArcViolon</String>
+	<String id="49875967">Локализация - Испанский</String>
+	<String id="49875968">Stumpy</String>
+	<String id="49875969">Локализация - Немецкий</String>
+	<String id="49875970">???</String>
+	<String id="49875971">Локализация - Польский</String>
+	<String id="49875972">Rey</String>
+	<String id="49875973">Локализация - Итальянский</String>
+	<String id="49875974">???</String>
+	<String id="49875975">Локализация - Японский</String>
+	<String id="49875976">???</String>
+	<String id="49875977">Локализация - Французский</String>
+	<String id="49875978">Loadingue</String>
+	<String id="49875979">Неофициальный патч сетевой игры (Mass Effect 3)</String>
+	<String id="49875980">EyeSpy</String>
+	<!-- Credits end -->
+    
+	<!-- TLK changes -->
+	<!-- Tactical Scan rank 5A description - add shield gate -->
+    <String id="733112">Увеличение ущерба от попадания в голову посредством {Evolve_HeadshotBonus%p}%.
+Уменьшение эффективности щита цели посредством {Evolve_ShieldGateReduction%p}%.</String>
+	<!-- Reaper Blackstar descriptions - Remove single use text -->
+    <String id="699890">Высокоэнергетическое оружие, используемое войсками Жнецов для уничтожения бронированной техники, Черная Звезда поражает противников на атомарном уровне. Локальные реакции расщепления и синтеза уничтожают практически все в радиусе поражения.</String>
+    <String id="699888">Оружие площадного поражения, разрывающее, сжигающее и облучающее атомы противника.</String>
+
+	<!-- Cobra - New description and short card description -->
+	<String id="661351">Протестированная в боях пусковая установка М-560 Кобра запускает одиночную ракету высокой мощности, уничтожая пртивников в небольшом радиусе. Ранние варианты требовали короткой зарядки перед выстрелом, но полевые улучшения во время войны устранили задержку перед выстрелом, сохранив множество жизней в критические моменты.</String>
+	<String id="661167">Скоростная пусковая установка, подходящая для уничтожения защищённых целей.</String>
+
+	<!-- Shared heavy ammo text -->
+    <!--<String id="724481">Every character carries these standard supplies into a mission:
+
+1. Heavy Weapon Ammo: Ammunition for your equipped heavy weapon.
+
+2. Thermal Clip Pack: Refill your thermal clips and grenade supply during a mission.
+
+3. Medi-Gel: Revive yourself when incapacitated in combat.
+
+4. Ops Survival Pack: Fully restore health and shields.
+
+A character can bring a limited number of supplies on a mission, but capacity upgrades are available (see the next section).</String>
+    <String id="724946">The current number of supplies you are carrying are shown on the left side of the screen.
+
+Press [XBoxB_Btn_DPadU] to equip your heavy weapon
+Press [XBoxB_Btn_DPadR] to use ops survival packs
+Press [XBoxB_Btn_DPadD] to use medi-gel
+Press [XBoxB_Btn_DPadL] to use thermal clip packs</String>
+    <String id="724947">The current number of supplies you are carrying are shown on the left side of the screen.
+
+Press ([PC_HotKey5]) to equip your heavy weapon.
+Press ([PC_HotKey6]) to use ops survival packs.
+Press ([PC_HotKey7]) to use medi-gel
+Press ([PC_HotKey8]) to use thermal clip packs.</String>-->
+    
+	
+	<!--Male entries section end-->
+    <!--Female entries section begin-->
+    <String id="49875625">Female</String>
+    <!--Female entries section end-->
+</tlkFile>

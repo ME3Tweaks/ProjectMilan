@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tlkFile TLKToolVersion="4.0.0.0">
+    <!--Male entries section begin-->
+	<!-- Project Milan Strings -->
+    <String id="49875622">Project Milan DLC</String>
+    <String id="49875623">DLC_MOD_ProjectMilan</String>
+    <String id="49875624">en-us</String>
+    <String id="49875625">Male</String>
+    <!--AAT entries begin -->
+    <String id="49875626">Zoom Snap</String>
+    <String id="49875627">Snaps your crosshairs onto an enemy when you start aiming.</String>
+    <String id="49875628">Zoom Snap: Enabled</String>
+    <String id="49875629">Zoom Snap: Disabled</String>
+    <String id="49875630">Adhesion</String>
+    <String id="49875631">Also known as rotational aim assist, adhesion helps with tracking a target by moving the reticle so it remains on the target's center of mass.</String>
+    <String id="49875632">Dampening</String>
+    <String id="49875633">Also known as friction, responsible for slowing your camera when the reticle goes near an enemy.</String>
+    <String id="49875634">0% (Disabled)</String>
+    <String id="49875635">10%</String>
+    <String id="49875636">20%</String>
+    <String id="49875637">30%</String>
+    <String id="49875638">40%</String>
+    <String id="49875639">50%</String>
+    <String id="49875640">60%</String>
+    <String id="49875641">70%</String>
+    <String id="49875642">80%</String>
+    <String id="49875643">90%</String>
+    <String id="49875644">100%</String>
+    <String id="49875645">110%</String>
+    <String id="49875646">120%</String>
+    <String id="49875647">130%</String>
+    <String id="49875648">140%</String>
+    <String id="49875649">150%</String>
+    <String id="49875650">160%</String>
+    <String id="49875651">170%</String>
+    <String id="49875652">180%</String>
+    <String id="49875653">190%</String>
+    <String id="49875654">200%</String>
+    <String id="49875655">210%</String>
+    <String id="49875656">220%</String>
+    <String id="49875657">230%</String>
+    <String id="49875658">240%</String>
+    <String id="49875659">250%</String>
+    <String id="49875660">260%</String>
+    <String id="49875661">270%</String>
+    <String id="49875662">280%</String>
+    <String id="49875663">290%</String>
+    <String id="49875664">300%</String>
+    <!--AAT entries end-->
+    <!-- New Settings TLKs begin -->
+    <String id="49875680">Controller</String>
+    <String id="49875681">Adjust controller input options</String>
+    <String id="49875683">Adjust mouse input options</String>
+    <!-- New Settings TLKs end -->
+    <!-- MilanHost matchmaking TLKs begin: read by ID from MilanHost -->
+    <String id="49875700">Invite Code: {0}</String>
+    <String id="49875701">Invite Code: {0} (join link copied)</String>
+    <String id="49875702">Invite code unavailable (matchmaker not connected)</String>
+    <String id="49875703">This invite is no longer valid. The host may have left, or the lobby has closed.</String>
+    <String id="49875704">This lobby is full.</String>
+    <String id="49875705">This lobby is not accepting players right now. It may be changing hosts or finishing a match. Try again shortly.</String>
+    <String id="49875706">The host is running a different version of the game. You both need the same version to play together.</String>
+    <String id="49875707">Too many joins from your network are in progress. Wait a minute and try again.</String>
+    <String id="49875708">The matchmaking server is busy. Try again later.</String>
+    <String id="49875709">Could not reach the matchmaking server. Check your connection and try again.</String>
+    <String id="49875710">Could not join this lobby ({0}).</String>
+    <String id="49875711">Could not reach the host of this lobby. Try again shortly.</String>
+    <String id="49875712">Could not connect to the matchmaking server at {0}. Try again later.</String>
+    <String id="49875713">Cannot join this lobby: matchmaking is turned off.</String>
+    <String id="49875714">Another player is the new host. Rejoining...</String>
+    <String id="49875715">Lost the connection to the host. Looking for a new host...</String>
+    <String id="49875716">Invites are disabled when the lobby size set to 1</String>
+    <String id="49875717">Only the host can invite players to a private lobby.</String>
+    <String id="49875718">The matchmaking server's password is missing or wrong. Check it in Options &gt; Network.</String>
+    <String id="49875719">Quick match is unavailable when matchmaking is off.</String>
+    <String id="49875720">Quick match is unavailable because the matchmaking server is unavailable.</String>
+    <!-- MilanHost matchmaking TLKs end -->
+    <!-- Multiplayer Settings (SFXGUI_MilanNetConfig) TLKs begin. On/Off, Accept/Cancel and OK reuse the stock LE3 strings. -->
+    <String id="49875740">Network</String>
+    <String id="49875741">Choose the name other players see and how this game finds matches.</String>
+    <String id="49875742">Profile Name</String>
+    <String id="49875744">Server Address</String>
+    <String id="49875745">Server Password</String>
+    <String id="49875746">Enter a profile name.</String>
+    <String id="49875747">The server address must start with http:// or https://.</String>
+    <String id="49875748">Your multiplayer settings could not be saved.</String>
+    <String id="49875749">Change your profile name and matchmaking server.</String>
+    <String id="49875750">Matchmaking Server</String>
+    <String id="49875752">Custom</String>
+    <String id="49875753">The server password can only use letters, numbers and symbols, with no spaces.</String>
+    <String id="49875754">These settings can only be changed from the multiplayer menu, not from a lobby or a match.</String>
+    <!-- Multiplayer Settings TLKs end -->
+    <!-- In-match pause menu: localizable column labels, ping units, and controls. -->
+    <String id="49875760">NAME</String>
+    <String id="49875761">SCORE</String>
+    <String id="49875762">PING</String>
+    <String id="49875763">Host</String>
+	<!-- milliseconds -->
+    <String id="49875764">ms</String>
+	<!-- Unused in V1 - Pause Menu kick system -->
+    <String id="49875765">X: Vote to kick</String>
+    <String id="49875766">X: Remove vote</String>
+    <String id="49875767">Invite Player</String>
+    <String id="49875768">Up/Down: Scroll</String>
+    <String id="49875769">Y: Invite Player</String>
+    <!-- Spectator controls and the entry point for the future MP photo mode. -->
+    <String id="49875770">[spectator:Shared_ViewPrevPlayer] / [spectator:Shared_ViewNextPlayer]: Change player   [spectator:Shared_SpectatorPhotoMode]: Photo Mode</String>
+    <String id="49875771">[XBoxB_Btn_LB] / [XBoxB_Btn_RB]: Change player   [XBoxB_Btn_X]: Photo Mode</String>
+    <!-- Was a placeholder -->
+	<!--<String id="49875772">Photo mode is not available yet.</String>-->
+    <!-- Multiplayer Photo Mode player selector. -->
+    <String id="49875780">Followed Player</String>
+    <String id="49875781">No players available</String>
+    <String id="49875782">Downed</String>
+    <String id="49875783">Follow</String>
+    <String id="49875784">Player Markers</String>
+    <String id="49875785">Free Camera Speed</String>
+    <String id="49875786">Free Turn Smoothing</String>
+    <String id="49875787">Camera Collision</String>
+    <String id="49875791">Photo Overlays</String>
+    <String id="49875792">Hint Popups</String>
+    <String id="49875793">Grenade Indicators</String>
+    <String id="49875794">Movement Smoothing</String>
+    <String id="49875795">Player Outlines</String>
+	<!-- Banner selection page title -->
+    <String id="49875800">Select Banner</String>
+    <String id="49875801">Select lobby card banner</String>
+    <String id="49875805">Equipped</String>
+    <String id="49875806">Loading image...</String>
+    <String id="49875807">Image unavailable</String>
+    <String id="49875808">Unable to equip this banner.</String>
+	<!-- String shown in multiplayer menu instead of leaderboards -->
+	<String id="49875811">Banners</String>
+	<!-- MP accessibility screen effects -->
+    <String id="49875812">Accessibility</String>
+    <String id="49875813">Adjust accessibility options.</String>
+    <String id="49875814">Screen effects</String>
+    <String id="49875815">Adjust the intensity of ability screen effects.</String>
+    <String id="49875816">Geth Vision</String>
+    <String id="49875817">Adjust the brightness and color fringing of Geth Vision, including the Geth Scanner gear effect.</String>
+    <String id="49875818">Blood Lust</String>
+    <String id="49875819">Adjust the intensity of the screen overlay during Blood Lust.</String>
+    <String id="49875820">Adjust the intensity of the screen overlay during Repair Matrix.</String>
+    <String id="49875821">Krogan Rage</String>
+    <String id="49875822">Adjust the intensity of the screen overlay during Krogan Rage.</String>
+    <String id="49875823">Reduced</String>
+    <String id="49875824">Use the original strength of this screen effect.</String>
+    <String id="49875825">Use a less intense version of this screen effect.</String>
+    <String id="49875826">Hide the screen effect. The ability and its gameplay bonuses remain active.</String>
+	<!-- Polonium Rounds: total added damage per hit, rather than damage per second. -->
+    <String id="49875827">Apply polonium rounds for one mission. Repeated hits stack damage and refresh the duration.
+Damage per Hit: &lt;CUSTOM0&gt;% of weapon damage
+Duration: &lt;CUSTOM3&gt; seconds</String>
+	<String id="49875828">Earned by obtaining the Legendary Edition achievement.</String>
+	<!-- Team Betrayal system -->
+	<String id="49875829">{0} attempted to betray the team</String>
+
+	<!-- FOV START -->
+    <String id="49875900">-100°</String>
+    <String id="49875901">-95°</String>
+    <String id="49875902">-90°</String>
+    <String id="49875903">-85°</String>
+    <String id="49875904">-80°</String>
+    <String id="49875905">-75°</String>
+    <String id="49875906">-70°</String>
+    <String id="49875907">-65°</String>
+    <String id="49875908">-60°</String>
+    <String id="49875909">-55°</String>
+    <String id="49875910">-50°</String>
+    <String id="49875911">-45°</String>
+    <String id="49875912">-40°</String>
+    <String id="49875913">-35°</String>
+    <String id="49875914">-30°</String>
+    <String id="49875915">-25°</String>
+    <String id="49875916">-20°</String>
+    <String id="49875917">-15°</String>
+    <String id="49875918">-10°</String>
+    <String id="49875919">-5°</String>
+    <String id="49875920">0°</String>
+    <String id="49875921">5°</String>
+    <String id="49875922">10°</String>
+    <String id="49875923">15°</String>
+    <String id="49875924">20°</String>
+    <String id="49875925">25°</String>
+    <String id="49875926">30°</String>
+    <String id="49875927">35°</String>
+    <String id="49875928">40°</String>
+    <String id="49875929">45°</String>
+    <String id="49875930">50°</String>
+    <String id="49875931">55°</String>
+    <String id="49875932">60°</String>
+    <String id="49875933">65°</String>
+    <String id="49875934">70°</String>
+    <String id="49875935">75°</String>
+    <String id="49875936">80°</String>
+    <String id="49875937">85°</String>
+    <String id="49875938">90°</String>
+    <String id="49875939">95°</String>
+    <String id="49875940">100°</String>
+    <String id="49875941">Field of View offset</String>
+    <String id="49875942">Zoomed Field of View offset</String>
+    <String id="49875943">Field of View offset</String> <!-- Reserved for description -->
+    <String id="49875944">Zoomed Field of View offset</String> <!-- Reserved for description -->
+    <!-- FOV END -->
+	<!-- Credits begin: flashing credits at the start of BaseConfig/BioCredits.xml. Title, then names (one per line). -->
+	<String id="49875945">Legendary Edition Multiplayer</String>
+	<String id="49875946">Brought to you by ME3Tweaks</String>
+	<String id="49875947">Project Lead</String>
+	<String id="49875948">Mgamerz</String>
+	<String id="49875949">Textures</String>
+	<String id="49875950">Audemus
+starkgate
+Stumpy</String>
+	<String id="49875951">Modeling</String>
+	<String id="49875952">Stumpy
+naNuke
+clericofshadows</String>
+	<String id="49875953">Audio</String>
+	<String id="49875954">HenBagle</String>
+	<String id="49875955">User Interface</String>
+	<String id="49875956">DropTheSquid
+Stumpy
+Mgamerz</String>
+	<String id="49875957">Technical</String>
+	<String id="49875958">SirCxyrtyx
+DropTheSquid
+Stumpy
+naNuke
+HenBagle
+Benefactor
+Kinkojiro
+Mgamerz
+Scottina
+d00t</String>
+	<String id="49875959">Infrastructure</String>
+	<String id="49875960">d00t
+Mgamerz
+Stumpy</String>
+	<String id="49875961">Reverse Engineering</String>
+	<String id="49875962">d00t
+Mgamerz
+SirCxyrtyx</String>
+	<String id="49875963">Playtesting</String>
+	<String id="49875964">Ody
+Synthian
+beccatoria
+RedLightningN7S
+Herobrine24</String>
+	<String id="49875965">Localization - Russian</String>
+	<String id="49875966">Stumpy</String>
+	<String id="49875967">Localization - Spanish</String>
+	<String id="49875968">Stumpy</String>
+	<String id="49875969">Localization - German</String>
+	<String id="49875970">???</String>
+	<String id="49875971">Localization - Polish</String>
+	<String id="49875972">Rey</String>
+	<String id="49875973">Localization - Italian</String>
+	<String id="49875974">???</String>
+	<String id="49875975">Localization - Japanese</String>
+	<String id="49875976">???</String>
+	<String id="49875977">Localization - French</String>
+	<String id="49875978">Loadingue</String>
+	<String id="49875979">MP Unofficial Bugfix and Consistency Patch (Mass Effect 3)</String>
+	<String id="49875980">EyeSpy</String>
+	<!-- Credits end -->
+    
+	<!-- TLK changes -->
+	<!-- Tactical Scan rank 5A description - add shield gate -->
+    <String id="733112">Increase all headshot damage by {Evolve_HeadshotBonus%p}%.
+Reduces target shield gate effectiveness by {Evolve_ShieldGateReduction%p}%.</String>
+	<!-- Reaper Blackstar descriptions - Remove single use text -->
+    <String id="699890">A high-energy weapon used by Reaper troops to destroy armored vehicles, the Blackstar attacks enemies at the atomic level. Localized fission and fusion reactions destroy nearly anything in the blast radius.</String>
+    <String id="699888">Area-effect weapon that tears, burns, and irradiates an enemy's atoms.</String>
+
+	<!-- Cobra - New description and short card description -->
+	<String id="661351">The battle-tested Cobra Missile Launcher fires a single high-powered rocket, clearing a small area of enemies. Earlier variants required a brief charge before firing, but battlefield improvements during the war eliminated the firing delay, saving countless lives in dire moments.</String>
+	<String id="661167">A fast missile launcher useful for taking out hardened targets.</String>
+
+	<!-- Shared heavy ammo text -->
+    <!--<String id="724481">Every character carries these standard supplies into a mission:
+
+1. Heavy Weapon Ammo: Ammunition for your equipped heavy weapon.
+
+2. Thermal Clip Pack: Refill your thermal clips and grenade supply during a mission.
+
+3. Medi-Gel: Revive yourself when incapacitated in combat.
+
+4. Ops Survival Pack: Fully restore health and shields.
+
+A character can bring a limited number of supplies on a mission, but capacity upgrades are available (see the next section).</String>
+    <String id="724946">The current number of supplies you are carrying are shown on the left side of the screen.
+
+Press [XBoxB_Btn_DPadU] to equip your heavy weapon
+Press [XBoxB_Btn_DPadR] to use ops survival packs
+Press [XBoxB_Btn_DPadD] to use medi-gel
+Press [XBoxB_Btn_DPadL] to use thermal clip packs</String>
+    <String id="724947">The current number of supplies you are carrying are shown on the left side of the screen.
+
+Press ([PC_HotKey5]) to equip your heavy weapon.
+Press ([PC_HotKey6]) to use ops survival packs.
+Press ([PC_HotKey7]) to use medi-gel
+Press ([PC_HotKey8]) to use thermal clip packs.</String>-->
+    
+	
+	<!--Male entries section end-->
+    <!--Female entries section begin-->
+    <String id="49875625">Female</String>
+    <!--Female entries section end-->
+</tlkFile>

@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tlkFile TLKToolVersion="4.0.0.0">
+    <!--Male entries section begin-->
+	<!-- Project Milan Strings -->
+    <String id="49875622">Project Milan DLC</String>
+    <String id="49875623">DLC_MOD_ProjectMilan</String>
+    <String id="49875624">fr-fr</String>
+    <String id="49875625">Male</String>
+    <!--AAT entries begin -->
+    <String id="49875626">Zoom instantané</String>
+    <String id="49875627">Projette le réticule sur un ennemi lorsque l'on vise.</String>
+    <String id="49875628">Zoom instantané : Activé</String>
+    <String id="49875629">Zoom instantané : Désactivé</String>
+    <String id="49875630">Adhésion</String>
+    <String id="49875631">Aussi connue sous le nom d'aide à la visée rotationnelle, l'adhésion aide à suivre une cible en déplaçant le réticule de manière à ce qu'il reste pointé sur le centre de masse de celle-ci.</String>
+    <String id="49875632">Atténuation</String>
+    <String id="49875633">Aussi connue sous le nom de friction, elle fait ralentir la caméra du joueur lorsque le réticule est près d'un ennemi.</String>
+    <String id="49875634">0 % (Désactivée)</String>
+    <String id="49875635">10%</String>
+    <String id="49875636">20%</String>
+    <String id="49875637">30%</String>
+    <String id="49875638">40%</String>
+    <String id="49875639">50%</String>
+    <String id="49875640">60%</String>
+    <String id="49875641">70%</String>
+    <String id="49875642">80%</String>
+    <String id="49875643">90%</String>
+    <String id="49875644">100%</String>
+    <String id="49875645">110%</String>
+    <String id="49875646">120%</String>
+    <String id="49875647">130%</String>
+    <String id="49875648">140%</String>
+    <String id="49875649">150%</String>
+    <String id="49875650">160%</String>
+    <String id="49875651">170%</String>
+    <String id="49875652">180%</String>
+    <String id="49875653">190%</String>
+    <String id="49875654">200%</String>
+    <String id="49875655">210%</String>
+    <String id="49875656">220%</String>
+    <String id="49875657">230%</String>
+    <String id="49875658">240%</String>
+    <String id="49875659">250%</String>
+    <String id="49875660">260%</String>
+    <String id="49875661">270%</String>
+    <String id="49875662">280%</String>
+    <String id="49875663">290%</String>
+    <String id="49875664">300%</String>
+    <!--AAT entries end-->
+    <!-- New Settings TLKs begin -->
+    <String id="49875680">Manette</String>
+    <String id="49875681">Ajuster les options d'entrée de la manette.</String>
+    <String id="49875683">Ajuster les options d'entrée de la souris.</String>
+    <!-- New Settings TLKs end -->
+    <!-- MilanHost matchmaking TLKs begin: read by ID from MilanHost -->
+    <String id="49875700">Code d'invitation : {0}</String>
+    <String id="49875701">Code d'invitation : {0} (rejoindre lien copié)</String>
+    <String id="49875702">Code d'invitation indisponible (non-connecté au serveur de connexion)</String>
+    <String id="49875703">Cette invitation n'est plus valide. Soit l'hébergeur a quitté la salle d'attente, soit celle-ci a été fermée.</String>
+    <String id="49875704">Cette salle d'attente est remplie.</String>
+    <String id="49875705">Cette salle d'attente n'accepte pas de joueurs présentement. Ceci peut être dû à un changement d'hébergeur ou une fin de partie. Vous pourriez réessayer dans un instant.</String>
+    <String id="49875706">L'hébergeur utilise une version différente du jeu. Vous devez avoir la même version pour jouer ensemble.</String>
+    <String id="49875707">Il y a trop de personnes qui tentent de rejoindre votre réseau en même temps. Veuillez attendre une minute avant de réessayer.</String>
+    <String id="49875708">Le serveur de connexion entre joueurs est débordé. Veuillez réessayer plus tard.</String>
+    <String id="49875709">Le serveur de connexion n'a pas pu être contacté. Veuillez vérifier votre connexion en ligne et réessayer.</String>
+    <String id="49875710">Cette salle d'attente n'a pas pu être rejointe ({0}).</String>
+    <String id="49875711">L'hébergeur de cette salle n'a pas pu être contacté. Veuillez réessayer dans un instant.</String>
+    <String id="49875712">Le serveur de connexion entre joueurs n'a pas pu être contacté à {0}. Veuillez réessayer plus tard.</String>
+    <String id="49875713">Cette salle d'attente ne peut pas être rejointe : la connexion entre joueurs est désactivée.</String>
+    <String id="49875714">Un autre joueur est le nouvel hébergeur. Connexion en cours...</String>
+    <String id="49875715">Connexion perdue avec l'hébergeur. Recherche d'un nouvel hébergeur en cours...</String>
+    <String id="49875716">Les invitations sont désactivées lorsque la capacité de la salle est limitée à 1.</String>
+    <String id="49875717">Seul le joueur hébergeant peut inviter des joueurs à une salle d'attente privée.</String>
+    <String id="49875718">Le mot de passe du serveur de connexion entre joueurs est manquant ou erroné. Veuillez vérifier dans Options &gt; Réseau.</String>
+    <String id="49875719">Les parties rapides ne sont pas disponibles lorsque la connexion entre joueurs est désactivée.</String>
+    <String id="49875720">Les parties rapides ne sont pas disponibles parce que le serveur de connexion entre joueurs n'est pas disponible.</String>
+    <!-- MilanHost matchmaking TLKs end -->
+    <!-- Multiplayer Settings (SFXGUI_MilanNetConfig) TLKs begin. On/Off, Accept/Cancel and OK reuse the stock LE3 strings. -->
+    <String id="49875740">Réseau</String>
+    <String id="49875741">Choisir le nom visible pour les autres joueurs ainsi que la façon dont le jeu se connecte aux autres.</String>
+    <String id="49875742">Nom du profil</String>
+    <String id="49875744">Adresse du serveur</String>
+    <String id="49875745">Mot de passe du serveur</String>
+    <String id="49875746">Entrez un nom de profil.</String>
+    <String id="49875747">L'adresse de serveur doit commencer par http:// ou https://.</String>
+    <String id="49875748">Vos paramètres multijoueurs n'ont pas pu être sauvegardés.</String>
+    <String id="49875749">Changer votre nom de profil et votre serveur de connexion entre joueurs.</String>
+    <String id="49875750">Serveur de connexion entre joueurs</String>
+    <String id="49875752">Personnalisé</String>
+    <String id="49875753">Le mot de passe du serveur ne peut contenir que des lettres, des chiffres et des symboles sans aucun espace.</String>
+    <String id="49875754">Ces paramètres ne peuvent être changés que du menu multijoueurs, pas d'une salle d'attente ou durant une partie.</String>
+    <!-- Multiplayer Settings TLKs end -->
+    <!-- In-match pause menu: localizable column labels, ping units, and controls. -->
+    <String id="49875760">NOM</String>
+    <String id="49875761">SCORE</String>
+    <String id="49875762">PING</String>
+    <String id="49875763">Hébergeur</String>
+	<!-- milliseconds -->
+    <String id="49875764">ms</String>
+	<!-- Unused in V1 - Pause Menu kick system -->
+    <String id="49875765">X : Voter pour exclure</String>
+    <String id="49875766">X : Retirer vote</String>
+    <String id="49875767">Inviter joueur</String>
+    <String id="49875768">Haut/Bas : Défiler</String>
+    <String id="49875769">Y : Inviter joueur</String>
+    <!-- Spectator controls and the entry point for the future MP photo mode. -->
+    <String id="49875770">[spectator:Shared_ViewPrevPlayer] / [spectator:Shared_ViewNextPlayer]: Changer de joueur   [spectator:Shared_SpectatorPhotoMode]: Mode Photo</String>
+    <String id="49875771">[XBoxB_Btn_LB] / [XBoxB_Btn_RB]: Changer de joueur   [XBoxB_Btn_X]: Mode Photo</String>
+    <!-- Was a placeholder -->
+	<!--<String id="49875772">Photo mode is not available yet.</String>-->
+    <!-- Multiplayer Photo Mode player selector. -->
+    <String id="49875780">Joueur suivi</String>
+    <String id="49875781">Aucun joueur disponible</String>
+    <String id="49875782">Incapacité</String>
+    <String id="49875783">Suivre</String>
+    <String id="49875784">Marqueurs joueurs</String>
+    <String id="49875785">Vitesse de caméra libre</String>
+    <String id="49875786">Lissage des tournants libres</String>
+    <String id="49875787">Collision caméra</String>
+    <String id="49875791">Superposages photo</String>
+    <String id="49875792">Conseils spontanés</String>
+    <String id="49875793">Indicateurs grenade</String>
+    <String id="49875794">Lissage du mouvement</String>
+    <String id="49875795">Contour des joueurs</String>
+	<!-- Banner selection page title -->
+    <String id="49875800">Sélectionner bannière</String>
+    <String id="49875801">Sélectionner bannière de la salle</String>
+    <String id="49875805">Équippée</String>
+    <String id="49875806">Chargement image...</String>
+    <String id="49875807">Image indisponible</String>
+    <String id="49875808">Cette bannière ne peut être équippée.</String>
+	<!-- String shown in multiplayer menu instead of leaderboards -->
+	<String id="49875811">Bannières</String>
+	<!-- MP accessibility screen effects -->
+    <String id="49875812">Accessibilité</String>
+    <String id="49875813">Ajuster les options d'accessibilité.</String>
+    <String id="49875814">Effets sur écran</String>
+    <String id="49875815">Ajuster l'intensité des effets sur écran des capacités.</String>
+    <String id="49875816">Vision Geth</String>
+    <String id="49875817">Ajuster la luminosité et couleurs de la Vision Geth, notamment l'effet d'équipement du Scanner Geth.</String>
+    <String id="49875818">Soif de sang</String>
+    <String id="49875819">Ajuster l'intensité de l'image superposée sur l'écran pendant Soif de sang.</String>
+    <String id="49875820">Ajuster l'intensité de l'image superposée sur l'écran pendant Matrice réparatrice.</String>
+    <String id="49875821">Rage de chef de guerre</String>
+    <String id="49875822">Ajuster l'intensité de l'image superposée sur l'écran pendant Rage de chef de guerre.</String>
+    <String id="49875823">Réduite</String>
+    <String id="49875824">Utiliser l'intensité originale de cet effet sur écran.</String>
+    <String id="49875825">Utiliser une version moins intense de cet effet sur écran.</String>
+    <String id="49875826">Cacher l'effet sur écran. La capacité et ses avantages restent présents.</String>
+	<!-- Polonium Rounds: total added damage per hit, rather than damage per second. -->
+    <String id="49875827">Activer les balles au polonium le temps d'une mission. Les dégâts s'accroissent et la durée se réinitialise si les balles touchent une cible à répétition.
+Dégâts par Coup : &lt;CUSTOM0&gt; % des dégâts d'arme
+Durée : &lt;CUSTOM3&gt; secondes</String>
+	<String id="49875828">Débloqué en gagnant le trophée de l'Édition Légendaire.</String>
+	<!-- Team Betrayal system -->
+	<String id="49875829">{0} a tenté de trahir l'équipe</String>
+
+	<!-- FOV START -->
+    <String id="49875900">-100°</String>
+    <String id="49875901">-95°</String>
+    <String id="49875902">-90°</String>
+    <String id="49875903">-85°</String>
+    <String id="49875904">-80°</String>
+    <String id="49875905">-75°</String>
+    <String id="49875906">-70°</String>
+    <String id="49875907">-65°</String>
+    <String id="49875908">-60°</String>
+    <String id="49875909">-55°</String>
+    <String id="49875910">-50°</String>
+    <String id="49875911">-45°</String>
+    <String id="49875912">-40°</String>
+    <String id="49875913">-35°</String>
+    <String id="49875914">-30°</String>
+    <String id="49875915">-25°</String>
+    <String id="49875916">-20°</String>
+    <String id="49875917">-15°</String>
+    <String id="49875918">-10°</String>
+    <String id="49875919">-5°</String>
+    <String id="49875920">0°</String>
+    <String id="49875921">5°</String>
+    <String id="49875922">10°</String>
+    <String id="49875923">15°</String>
+    <String id="49875924">20°</String>
+    <String id="49875925">25°</String>
+    <String id="49875926">30°</String>
+    <String id="49875927">35°</String>
+    <String id="49875928">40°</String>
+    <String id="49875929">45°</String>
+    <String id="49875930">50°</String>
+    <String id="49875931">55°</String>
+    <String id="49875932">60°</String>
+    <String id="49875933">65°</String>
+    <String id="49875934">70°</String>
+    <String id="49875935">75°</String>
+    <String id="49875936">80°</String>
+    <String id="49875937">85°</String>
+    <String id="49875938">90°</String>
+    <String id="49875939">95°</String>
+    <String id="49875940">100°</String>
+    <String id="49875941">Décalage champ de vision</String>
+    <String id="49875942">Décalage champ de vision zoomé</String>
+    <String id="49875943">Décalage champ de vision</String> <!-- Reserved for description -->
+    <String id="49875944">Décalage champ de vision zoomé</String> <!-- Reserved for description -->
+    <!-- FOV END -->
+	<!-- Credits begin: flashing credits at the start of BaseConfig/BioCredits.xml. Title, then names (one per line). -->
+	<String id="49875945">Édition Légendaire Multijoueurs</String>
+	<String id="49875946">Présenté par ME3Tweaks</String>
+	<String id="49875947">Chef projet</String>
+	<String id="49875948">Mgamerz</String>
+	<String id="49875949">Textures</String>
+	<String id="49875950">Audemus
+starkgate
+Stumpy</String>
+	<String id="49875951">Modélisation</String>
+	<String id="49875952">Stumpy
+naNuke
+clericofshadows</String>
+	<String id="49875953">Audio</String>
+	<String id="49875954">HenBagle</String>
+	<String id="49875955">Interface utilisateur</String>
+	<String id="49875956">DropTheSquid
+Stumpy
+Mgamerz</String>
+	<String id="49875957">Technicités</String>
+	<String id="49875958">SirCxyrtyx
+DropTheSquid
+Stumpy
+naNuke
+HenBagle
+Benefactor
+Kinkojiro
+Mgamerz
+Scottina
+d00t</String>
+	<String id="49875959">Infrastructure</String>
+	<String id="49875960">d00t
+Mgamerz
+Stumpy</String>
+	<String id="49875961">Ingénierie inverse</String>
+	<String id="49875962">d00t
+Mgamerz
+SirCxyrtyx</String>
+	<String id="49875963">Playtesters</String>
+	<String id="49875964">Ody
+Synthian
+beccatoria
+RedLightningN7S
+Herobrine24</String>
+	<String id="49875965">Localisation - Russe</String>
+	<String id="49875966">ArcViolon</String>
+	<String id="49875967">Localisation - Espagnol</String>
+	<String id="49875968">Stumpy</String>
+	<String id="49875969">Localisation - Allemand</String>
+	<String id="49875970">???</String>
+	<String id="49875971">Localisation - Polonais</String>
+	<String id="49875972">Rey</String>
+	<String id="49875973">Localisation - Italien</String>
+	<String id="49875974">???</String>
+	<String id="49875975">Localisation - Japonais</String>
+	<String id="49875976">???</String>
+	<String id="49875977">Localisation - Français</String>
+	<String id="49875978">Loadingue</String>
+	<String id="49875979">MP Unofficial Bugfix and Consistency Patch (Mass Effect 3)</String>
+	<String id="49875980">EyeSpy</String>
+	<!-- Credits end -->
+    
+	<!-- TLK changes -->
+	<!-- Tactical Scan rank 5A description - add shield gate -->
+    <String id="733112">Augmente tous les dégâts de tir en pleine tête de {Evolve_HeadshotBonus%p} %.
+Réduit l'efficacité du bouclier de la cible de {Evolve_ShieldGateReduction%p} %.</String>
+	<!-- Reaper Blackstar descriptions - Remove single use text -->
+    <String id="699890">L'Étoile noire est une arme à haute énergie, utilisée par les Moissonneurs pour détruire les véhicules blindés au niveau moléculaire. Les réactions de fission et de fusion détruisent virtuellement tout ce qui se trouve dans la zone d'effet.</String>
+    <String id="699888">Arme à effet de zone, qui déchire, brûle et irradie la cible.</String>
+
+	<!-- Cobra - New description and short card description -->
+	<String id="661351">Le vénérable lance-missile Cobra tire un seul missile à haute vélocité capable d'anéantir une zone ennemie restreinte. Les modèles précédents devaient charger briévement avant de tirer, mais des améliorations en temps de guerre ont permis d'éliminer le délai, et d'innombrables vies en péril furent sauvées en conséquence.</String>
+	<String id="661167">Ce lance-missile rapide vous permet d’abattre les cibles coriaces.</String>
+
+	<!-- Shared heavy ammo text -->
+    <!--<String id="724481">Every character carries these standard supplies into a mission:
+
+1. Heavy Weapon Ammo: Ammunition for your equipped heavy weapon.
+
+2. Thermal Clip Pack: Refill your thermal clips and grenade supply during a mission.
+
+3. Medi-Gel: Revive yourself when incapacitated in combat.
+
+4. Ops Survival Pack: Fully restore health and shields.
+
+A character can bring a limited number of supplies on a mission, but capacity upgrades are available (see the next section).</String>
+    <String id="724946">The current number of supplies you are carrying are shown on the left side of the screen.
+
+Press [XBoxB_Btn_DPadU] to equip your heavy weapon
+Press [XBoxB_Btn_DPadR] to use ops survival packs
+Press [XBoxB_Btn_DPadD] to use medi-gel
+Press [XBoxB_Btn_DPadL] to use thermal clip packs</String>
+    <String id="724947">The current number of supplies you are carrying are shown on the left side of the screen.
+
+Press ([PC_HotKey5]) to equip your heavy weapon.
+Press ([PC_HotKey6]) to use ops survival packs.
+Press ([PC_HotKey7]) to use medi-gel
+Press ([PC_HotKey8]) to use thermal clip packs.</String>-->
+    
+	
+	<!--Male entries section end-->
+    <!--Female entries section begin-->
+    <String id="49875625">Female</String>
+    <!--Female entries section end-->
+</tlkFile>
