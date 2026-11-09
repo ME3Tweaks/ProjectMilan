@@ -46,7 +46,9 @@
 			<Property name="defaultmapprefixes">
 				<!-- MILAN CHANGE - Menu scenes use this prefix of which some have dependency on BIOP_MP_COMMON -->
 				<Value type="2">(Prefix="EntryMenu_",bUsesCommonPackage=TRUE,OverrideCommonPackage="BIOP_MP_COMMON",GameType="SFXGame.SFXGame")</Value>
-				<Value type="2">(Prefix="EntryMenu",bUsesCommonPackage=FALSE,GameType="SFXGameContent.SFXGameInfoEntryMenu")</Value>
+				<!-- MILAN CHANGE - Mgamerz - 2026-11-05: Load multiplayer UI dependencies for the default entrymenu (needed for options menu) -->
+				<Value type="2">(Prefix="EntryMenu",bUsesCommonPackage=TRUE,OverrideCommonPackage="BIOP_MP_COMMON",GameType="SFXGameContent.SFXGameInfoEntryMenu")</Value>
+				<!-- END MILAN CHANGE -->
 				<Value type="2">(Prefix="BIOG_UIWorld",bUsesCommonPackage=FALSE,GameType="SFXGame.SFXGame",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
 				<Value type="2">(Prefix="Bio",bUsesCommonPackage=TRUE,GameType="SFXGameContent.SFXGameInfoSP",ForcedObjects=("BioGlobalResources.BioGlobalResources"))</Value>
 			</Property>
@@ -5152,9 +5154,9 @@
 				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_SniperRifle_Javelin", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=551047, GUIDescription=551049, GUICategory=EReinforcementGUICategory_SniperRifle, GUIType="sniper", GUITextureRef="GUI_Icons.Weapons.snp_javelin_256x128")</Value>
 				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_AssaultRifle_Saber", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=676841, GUIDescription=676842, GUICategory=EReinforcementGUICategory_AssaultRifle, GUIType="assault", GUITextureRef="GUI_Icons.Weapons.asl_saber_256x128")</Value>
 				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_Pistol_Talon", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=551031, GUIDescription=551033, GUICategory=EReinforcementGUICategory_Pistol, GUIType="pistol", GUITextureRef="GUI_Icons.Weapons.pst_talon_256x128")</Value>
-				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_SniperRifle_BlackWidow", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=692577, GUIDescription=707215, GUICategory=EReinforcementGUICategory_SniperRifle, GUIType="sniper", GUITextureRef="GUI_Icons.Weapons.snp_widow_256x128")</Value>
-				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_Pistol_Ivory", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=704673, GUIDescription=707217, GUICategory=EReinforcementGUICategory_Pistol, GUIType="pistol", GUITextureRef="GUI_Icons.Weapons.pst_carniflex_256x128")</Value>
-				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_Shotgun_Striker", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=709355, GUIDescription=707213, GUICategory=EReinforcementGUICategory_Shotgun, GUIType="shotgun", GUITextureRef="GUI_Icons.Weapons.bls_eviscerator_256x128")</Value>
+				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_SniperRifle_BlackWidow", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=692577, GUIDescription=707215, GUICategory=EReinforcementGUICategory_SniperRifle, GUIType="sniper", GUITextureRef="GUI_Icons.Weapons.snp_blackwidow_256x128")</Value>
+				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_Pistol_Ivory", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=704673, GUIDescription=707217, GUICategory=EReinforcementGUICategory_Pistol, GUIType="pistol", GUITextureRef="GUI_Icons.Weapons.pst_ivory_256x128")</Value>
+				<Value type="2">(UniqueName="SFXGameContent.SFXWeapon_Shotgun_Striker", MaxCount = 10, Rarity=Rarity_UltraRare, GUIName=709355, GUIDescription=707213, GUICategory=EReinforcementGUICategory_Shotgun, GUIType="shotgun", GUITextureRef="GUI_Icons.Weapons.bls_striker_256x128")</Value>
 				<Value type="2">(UniqueName="AdeptHumanMale", Rarity=Rarity_Common, GUIName=711364, GUIType="char", GUITextureRef="GUI_MPImages.Cards.KitBioticMale")</Value>
 				<Value type="2">(UniqueName="AdeptHumanFemale", Rarity=Rarity_Common, GUIName=711370, GUIType="char", GUITextureRef="GUI_MPImages.Cards.KitBiotic")</Value>
 				<Value type="2">(UniqueName="EngineerHumanMale", Rarity=Rarity_Common, GUIName=711365, GUIType="char", GUITextureRef="GUI_MPImages.Cards.KitAgentMale")</Value>
