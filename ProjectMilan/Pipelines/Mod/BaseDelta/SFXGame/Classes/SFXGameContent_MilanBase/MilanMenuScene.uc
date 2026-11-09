@@ -8,16 +8,22 @@ struct SceneTint
     // The scene's persistent level, e.g. EntryMenu_MPDish
     var string Map;
     var bool bTintHologram;
-    // Replaces the Color parameter of every HologramMaterials entry
+    // Replaces the Color parameter of every HologramMaterials entry, scaled by its Brightness
     var LinearColor HologramTint;
     var bool bTintUI;
     // Multiplies the menu movie's colors
     var LinearColor UITint;
 };
 
+struct HologramMaterial
+{
+    // Memory path of one of the terminal's hologram materials
+    var string Path;
+    var float Brightness;
+};
+
 var config array<SceneTint> Scenes;
-// Memory paths of the terminal's hologram materials
-var config array<string> HologramMaterials;
+var config array<HologramMaterial> HologramMaterials;
 
 // Applies the current scene's tints to the terminal and the given menu movie
 public static function ApplyTints(GFxMovie MenuMovie)
@@ -25,6 +31,7 @@ public static function ApplyTints(GFxMovie MenuMovie)
     local int Index;
     local int MaterialIndex;
     local MaterialInstanceConstant MIC;
+    local LinearColor HologramColor;
     local ASColorTransform Tint;
     local GFxValue Root;
     local WorldInfo World;
@@ -44,10 +51,14 @@ public static function ApplyTints(GFxMovie MenuMovie)
     {
         for (MaterialIndex = 0; MaterialIndex < default.HologramMaterials.Length; MaterialIndex++)
         {
-            MIC = MaterialInstanceConstant(FindObject(default.HologramMaterials[MaterialIndex], Class'MaterialInstanceConstant'));
+            MIC = MaterialInstanceConstant(FindObject(default.HologramMaterials[MaterialIndex].Path, Class'MaterialInstanceConstant'));
             if (MIC != None)
             {
-                MIC.SetVectorParameterValue('Color', default.Scenes[Index].HologramTint);
+                HologramColor = default.Scenes[Index].HologramTint;
+                HologramColor.R *= default.HologramMaterials[MaterialIndex].Brightness;
+                HologramColor.G *= default.HologramMaterials[MaterialIndex].Brightness;
+                HologramColor.B *= default.HologramMaterials[MaterialIndex].Brightness;
+                MIC.SetVectorParameterValue('Color', HologramColor);
             }
         }
     }
