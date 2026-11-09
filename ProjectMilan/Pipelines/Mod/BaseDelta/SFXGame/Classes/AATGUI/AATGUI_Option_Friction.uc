@@ -2,8 +2,7 @@
 // 09/28/2026 - Stumpy
 // Handler for the Friction text slider in settings
 
-Class AATGUI_Option_Friction extends SFXGUI_OptionsObject within BioSFHandler_Options
-    native;
+Class AATGUI_Option_Friction extends SFXGUI_OptionsObject within BioSFHandler_Options;
 
 var bool bInitialized;
 var int sliderIndex;

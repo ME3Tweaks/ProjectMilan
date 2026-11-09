@@ -1,7 +1,6 @@
 ﻿// MILAN CHANGE - Stumpy - 2026-10-23
-// New class to handle FOV offset when zoomed in
-Class MilanGUI_Option_ZoomFOV extends SFXGUI_OptionsObject within BioSFHandler_Options
-    native;
+// New class to handle general FOV offset
+Class MilanGUI_Option_FOV extends SFXGUI_OptionsObject within BioSFHandler_Options;
 
 var int sliderIndex;
 var bool bInitialized;
@@ -30,7 +29,6 @@ public function UpdateCamera(int nValue)
     local SFXEngine Engine;
     local SFXPlayerCamera Camera;
     local SFXCameraMode CameraMode;
-    local int i;
     
     LogInternal(string(Name), );
     if (nValue + MinVal > MaxVal || nValue - MaxVal < MinVal)
@@ -49,48 +47,41 @@ public function UpdateCamera(int nValue)
     {
         return;
     }
-    LogInternal("Setting to player camera, ZoomFOV (*" $ Multiplier $ "+70 to it, e.g. 2*" $ Multiplier $ "+70=90): " $ sliderIndex, );
     SFXPlayerCamera(PC.PlayerCamera).CurrentCameraMode.Initialize();
 }
 public event function SaveOption()
 {
-    local BioWorldInfo BWI;
     local BioPlayerController PC;
-    local SFXEngine oEngine;
     
-    oEngine = SFXEngine(Class'Engine'.static.GetEngine());
     if (sliderIndex + MinVal > MaxVal)
     {
-        LogInternal("SET ZoomFOV too high (" $ sliderIndex + MinVal $ "), clamping to " $ MaxVal, );
+        LogInternal("SET FOV too high (" $ sliderIndex + MinVal $ "), clamping to " $ MaxVal, );
         sliderIndex = MaxVal;
     }
     else if (sliderIndex - MaxVal < MinVal)
     {
-        LogInternal("SET ZoomFOV too low (" $ sliderIndex - MaxVal $ "), clamping to " $ MinVal, );
+        LogInternal("SET FOV too low (" $ sliderIndex - MaxVal $ "), clamping to " $ MinVal, );
         sliderIndex = MinVal;
     }
-    oEngine.GetProfileSettings().SetMilanZoomFOV(sliderIndex + MinVal);
+    Class'MilanProfile'.static.SetMilanFOV(sliderIndex + MinVal);
     UpdateCamera(sliderIndex);
     ApplyOptionValue(sliderIndex);
 }
 public event function ConstructTextSliderOption(out BioSFHandler_Options.TextSliderOption Option)
 {
-    local SFXEngine Engine;
-    
     LogInternal(string(Name), );
     if (!bInitialized)
     {
-        Engine = SFXEngine(Class'SFXEngine'.static.GetEngine());
-        Engine.GetProfileSettings().GetMilanZoomFov(sliderIndex);
+        Class'MilanProfile'.static.GetMilanFOV(sliderIndex);
         sliderIndex = sliderIndex + MaxVal;
         if (sliderIndex + MinVal > MaxVal)
         {
-            LogInternal("GET ZoomFOV too high (" $ sliderIndex + MinVal $ "), clamping to " $ MaxVal, );
+            LogInternal("GET FOV too high (" $ sliderIndex + MinVal $ "), clamping to " $ MaxVal, );
             sliderIndex = MaxVal;
         }
         else if (sliderIndex - MaxVal < MinVal)
         {
-            LogInternal("GET ZoomFOV too low (" $ sliderIndex - MaxVal $ "), clamping to " $ MinVal, );
+            LogInternal("GET FOV too low (" $ sliderIndex - MaxVal $ "), clamping to " $ MinVal, );
             sliderIndex = MinVal;
         }
     }
@@ -115,13 +106,14 @@ public function RebuildSliderOptions(int currentFOVValue, out BioSFHandler_Optio
     local BioSFHandler_Options.OptionText oValue;
     local int fovValue;
     
-    LogInternal("Building FOV slider. Default slider should result in ZoomFOV " $ currentFOVValue, );
+    LogInternal("Building FOV slider. Default slider should result in FOV " $ currentFOVValue, );
     for (fovValue = MinVal; fovValue <= MaxVal; fovValue++)
     {
         oValue.Label = stringref(fovModTlkNumeralStartId + fovValue);
         oValue.Story = Option.Story;
         oValue.Value = fovValue;
         Option.Values.AddItem(oValue);
+        LogInternal("Adding slider: " $ fovValue $ "Stringref: " $ fovModTlkNumeralStartId + fovValue, );
         if (currentFOVValue == fovValue)
         {
             LogInternal("Found default FOV slider index at " $ fovValue, );

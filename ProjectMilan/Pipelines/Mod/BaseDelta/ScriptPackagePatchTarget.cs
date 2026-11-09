@@ -158,8 +158,14 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                             MilanLog.Fatal($"{packageName} already has a class {className}, so it can't also be added to package {relativeFolder} - edit it in Classes/{className}.uc or rename it. This is a fatal error.", customPrefix: logCategory);
                             Environment.Exit(1);
                         }
-
-                        classParent = GetOrCreateAddedPackage(package, relativeFolder, addedPackages);
+                        if (relativeFolder.Contains('-'))
+                        {
+                            classParent = GetOrCreateAddedPackage(package, relativeFolder.Split('-')[1], addedPackages);
+                        }
+                        else
+                        {
+                            classParent = GetOrCreateAddedPackage(package, relativeFolder, addedPackages);
+                        }
                     }
 
                     MilanLog.Information($"Compiling class {(classParent.IsNull() ? "" : $"{classParent?.ObjectNameString}.")}{className}", customPrefix: logCategory);

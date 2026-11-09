@@ -2,8 +2,7 @@
 // 09/28/2026 - Stumpy
 // Handler for the Adhesion text slider in settings
 
-Class AATGUI_Option_Adhesion extends SFXGUI_OptionsObject within BioSFHandler_Options
-    native;
+Class AATGUI_Option_Adhesion extends SFXGUI_OptionsObject within BioSFHandler_Options;
 
 var bool bInitialized;
 var int sliderIndex;
