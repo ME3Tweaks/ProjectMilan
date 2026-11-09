@@ -1,6 +1,6 @@
 // MILAN CHANGE - Mgamerz - 2026-09-30
-// Sleeping enemy ragdolls can retain reported speed above the recovery threshold.
-// Allow a valid, unfixed sleeping ragdoll on authority to recover after checking ground support.
+// Sleeping enemy ragdolls can retain reported speed above the recovery threshold
+// Allow a valid, unfixed sleeping ragdoll on authority to recover after checking ground support
 public function bool CheckBeginRecovery()
 {
     local bool bCanRecoverFromRagdoll;
@@ -13,7 +13,7 @@ public function bool CheckBeginRecovery()
 
     // MILAN CHANGE - Mgamerz - 2026-09-30
     // Sleeping enemy ragdolls can retain reported speed above the recovery threshold.
-    // Allow a valid, unfixed sleeping ragdoll on authority to recover after checking ground support.
+    // Allow a valid, unfixed sleeping ragdoll (Authority only) to recover after checking they're on the ground
     bCanRecoverFromRagdoll = FALSE;
     if (m_oPawn.IsInState('Downed') || m_oPawn.IsDead() || m_oPawn.bIsInRagdollRecovery)
     {
@@ -41,7 +41,7 @@ public function bool CheckBeginRecovery()
             bNothingBelow = m_oPawn.FastTrace(TraceEnd, m_oPawn.location, TraceExtent, FALSE);
             if (bNothingBelow)
             {
-                // Preserve the original stationary fallback only for the original low-speed path.
+                // Preserve the original stationary fallback only for the original low-speed path that didn't work for sleeping ragdolls
                 // A sleeping body above the speed threshold must have ground support to perform recovery
                 if (bSlowEnough)
                 {

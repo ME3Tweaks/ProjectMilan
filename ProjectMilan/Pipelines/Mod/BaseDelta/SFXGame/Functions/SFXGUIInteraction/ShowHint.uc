@@ -47,9 +47,12 @@ public event function ShowHint(stringref srConsoleText, stringref srPCText, floa
     {
         return;
     }
+    // MILAN CHANGE - Mgamerz - 2026-10-28
+    // Force a hint in the stack to be visible
+    m_aHintStack[0].m_bForceVisible = bForceVisible;
+    // END MILAN CHANGE
     if (fDisplayTime > 0.0)
     {
-        m_aHintStack[0].m_bForceVisible = bForceVisible;
         m_aHintStack[0].m_fHintTimeRemaining = fDisplayTime;
         m_aHintStack[0].SetUpdateDelegate(UpdateHint);
     }
@@ -60,7 +63,17 @@ public event function ShowHint(stringref srConsoleText, stringref srPCText, floa
     if (BioPlayerController(oPlayerController) != None && BioPlayerController(oPlayerController).GameModeManager2 != None)
     {
         Photo = BioPlayerController(oPlayerController).GameModeManager2.GetPhotoMode();
-        if (Photo != None) Photo.ApplyMPPhotoHintVisibility();
+        if (Photo != None)
+        {
+            // MILAN CHANGE - Mgamerz - 2026-10-28
+            // Connection loss is a priority event 
+            if (bForceVisible) 
+            {
+                Photo.RevealMPPhotoOverlaysForAlert();
+            }
+            // END MILAN CHANGE
+            Photo.ApplyMPPhotoHintVisibility();
+        }
     }
     // END MILAN CHANGE
 }
