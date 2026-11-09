@@ -43,13 +43,50 @@ namespace ProjectMilan.Pipelines.Levels
         internal static int DefaultStaticMeshLightingRes => (int)(128 * (Program.Settings.ProductionBuild ? ProductionLightmapResolutionMultiplier : 1f));
 
         // Only "Random waves"/"Mixed" need fresh TLK strings - the rest reuse their existing vanilla StrRef IDs.
-        private static readonly LocalizedString RandomWaveName = new() { [MELocalization.INT] = "Coalition" }; // Random Wave
-        private static readonly LocalizedString RandomWaveAllCapsName = new() { [MELocalization.INT] = "COALITION" };
-        private static readonly LocalizedString MixedName = new() { [MELocalization.INT] = "Unified" }; // Mixed
-        private static readonly LocalizedString MixedAllCapsName = new() { [MELocalization.INT] = "UNIFIED" };
+        private static readonly LocalizedString RandomWaveName = new() {
+            [MELocalization.INT] = "Coalition",
+            [MELocalization.DEU] = "Koalition",
+            [MELocalization.ESN] = "Coalición",
+            [MELocalization.FRA] = "Coalition",
+            [MELocalization.POL] = "Koalicja",
+            [MELocalization.RUS] = "Коалиция",
+        }; // Random Wave
+        private static readonly LocalizedString RandomWaveAllCapsName = new() {
+            [MELocalization.INT] = "COALITION",
+            [MELocalization.DEU] = "KOALITION",
+            [MELocalization.ESN] = "COALICIÓN",
+            [MELocalization.FRA] = "COALITION",
+            [MELocalization.POL] = "KOALICJA",
+            [MELocalization.RUS] = "КОАЛИЦИЯ",
+        };
+        private static readonly LocalizedString MixedName = new() {
+            [MELocalization.INT] = "Unified",
+            [MELocalization.DEU] = "Vereinigt",
+            [MELocalization.ESN] = "Unificado",
+            [MELocalization.FRA] = "Unifié",
+            [MELocalization.POL] = "Zjednoczeni",
+        }; // Mixed
+        private static readonly LocalizedString MixedAllCapsName = new() {
+            [MELocalization.INT] = "UNIFIED",
+            [MELocalization.DEU] = "VEREINIGT",
+            [MELocalization.ESN] = "UNFICADO",
+            [MELocalization.FRA] = "UNIFIÉ",
+            [MELocalization.POL] = "ZJEDNOCZENI",
+        };
 #if !SHIPPING_RELEASE
-        private static readonly LocalizedString NoEnemiesName = new() { [MELocalization.INT] = "None" };
-        private static readonly LocalizedString NoEnemiesAllCapsName = new() { [MELocalization.INT] = "NONE" };
+        private static readonly LocalizedString NoEnemiesName = new() {
+            [MELocalization.INT] = "None",
+            [MELocalization.DEU] = "Keine",
+            [MELocalization.ESN] = "Ningún",
+            [MELocalization.FRA] = "Aucun",
+        };
+        private static readonly LocalizedString NoEnemiesAllCapsName = new() {
+            [MELocalization.INT] = "NONE",
+            [MELocalization.DEU] = "KEINE",
+            [MELocalization.ESN] = "NINGÚN",
+            [MELocalization.FRA] = "AUCUN",
+            [MELocalization.POL] = "BRAK",
+        };
 #endif
 
         /// <summary>
@@ -58,8 +95,22 @@ namespace ProjectMilan.Pipelines.Levels
         private const string WavelistImages = "Images";
 
 #if !SHIPPING_RELEASE
-        private static readonly LocalizedString DiamondDifficultyName = new() { [MELocalization.INT] = "Diamond" };
-        private static readonly LocalizedString DiamondDifficultyAllCapsName = new() { [MELocalization.INT] = "DIAMOND" };
+        private static readonly LocalizedString DiamondDifficultyName = new() {
+            [MELocalization.INT] = "Diamond",
+            [MELocalization.DEU] = "Diamant",
+            [MELocalization.ESN] = "Diamante",
+            [MELocalization.FRA] = "Diamant",
+            [MELocalization.POL] = "Diament",
+            [MELocalization.RUS] = "Бриллиантовый",
+        };
+        private static readonly LocalizedString DiamondDifficultyAllCapsName = new() {
+            [MELocalization.INT] = "DIAMOND",
+            [MELocalization.DEU] = "DIAMANT",
+            [MELocalization.ESN] = "DIAMANTE",
+            [MELocalization.FRA] = "DIAMANT",
+            [MELocalization.POL] = "DIAMENT",
+            [MELocalization.RUS] = "БРИЛИАНТОВЫЙ",
+        };
 #endif
 
         class MPLevelsVars
