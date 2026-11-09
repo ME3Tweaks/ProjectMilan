@@ -36,10 +36,24 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPThes
         // in IrrelevantLights on every pane; the UDK bake gives four of them sunlit slivers and a shadow map instead.
         private const string AtriumGlassMeshIFP = "bios_thessia_monastery.WindowEnd_Window01";
 
-        public override bool KeepPortedLighting(ExportEntry component) =>
-            component.IsA("StaticMeshComponent") &&
-            component.GetProperty<ObjectProperty>("StaticMesh") is { Value: not 0 } mesh &&
-            component.FileRef.GetEntry(mesh.Value).InstancedFullPath == AtriumGlassMeshIFP;
+        // Beam above the fire near spawn lives in this package
+        private const string FireCoverBeamPackage = "BioA_MPThes_110";
+        private const string FireCoverBeamIFP = "TheWorld.PersistentLevel.StaticMeshCollectionActor_40.StaticMeshActor_SMC_1112";
+
+        public override bool KeepPortedLighting(ExportEntry component)
+        {
+            if (!component.IsA("StaticMeshComponent"))
+            {
+                return false;
+            }
+            if (component.FileRef.FileNameNoExtension.Equals(FireCoverBeamPackage, StringComparison.OrdinalIgnoreCase) && component.InstancedFullPath == FireCoverBeamIFP)
+            {
+                return true;
+            }
+            // Is this firebeam mesh?
+            return component.GetProperty<ObjectProperty>("StaticMesh") is { Value: not 0 } mesh &&
+               component.FileRef.GetEntry(mesh.Value).InstancedFullPath == AtriumGlassMeshIFP;
+        }
 
         public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
