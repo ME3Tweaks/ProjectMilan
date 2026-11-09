@@ -25,6 +25,11 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         private const string LevelPath = "TheWorld.PersistentLevel";
         private const string MainSequencePath = LevelPath + ".Main_Sequence";
 
+        /// <summary>
+        /// Latent action class that fires Inside or Outside as the player's view enters or leaves its volumes
+        /// </summary>
+        private const string CameraInVolumesClass = "SFXGameContent_Milan.SFXSeqAct_CameraInVolumes";
+
         private static string ScenesFolder => Path.Combine(MilanShared.PipelineRoot, "EntryMenu", "Scenes");
 
         /// <summary>
@@ -77,6 +82,7 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
 
             // The shared sublevel is the branded EntryMenu without its backdrop
             MenuSharedSublevel.Build(Path.Combine(MenuLevelTools.OutputFolder, "EntryMenu.pcc"));
+            var hologramBrightness = GetHologramBrightness(sharedSublevelPath);
             Directory.CreateDirectory(SceneOutputFolder);
             var built = 0;
             foreach (var manifestPath in manifestPaths)
@@ -90,7 +96,7 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
                 }
 
                 BuildScene(manifest, level);
-                RegisterConfig(manifest);
+                RegisterConfig(manifest, hologramBrightness);
                 built++;
             }
 
@@ -445,10 +451,20 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
                 ?? throw new InvalidDataException($"Menu scene {manifest.Map}: {design.Package} has no {MainSequencePath}.");
             var kept = new HashSet<ExportEntry> { mainSequence };
             var pending = new Stack<ExportEntry>();
+            if (design.PlayerTargets.Count > 0)
+            {
+                TargetPlayer(package, manifest, design, mainSequence);
+            }
             foreach (var root in design.KeepKismet)
             {
                 pending.Push(package.FindExport($"{MainSequencePath}.{root}")
                     ?? throw new InvalidDataException($"Menu scene {manifest.Map}: {design.Package} has no Kismet object {root}."));
+            }
+            if (design.StartOnSceneReady.Count > 0 || design.CameraTouches.Count > 0)
+            {
+                var sceneReady = CreateSceneReadyEvent(package, manifest, design, mainSequence);
+                AddCameraWatchers(package, manifest, design, mainSequence, sceneReady);
+                pending.Push(sceneReady);
             }
 
             while (pending.TryPop(out var node))
@@ -489,7 +505,8 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
             }
 
             // Events that wait on the multiplayer game won't fire in the menu
-            foreach (var gameplayEvent in kept.Where(x => x.ClassName.StartsWith("SFXSeqEvt_", StringComparison.OrdinalIgnoreCase) || x.ClassName == "SeqEvent_RemoteEvent"))
+            bool IsSceneReady(ExportEntry x) => x.GetProperty<NameProperty>("EventName") is { } eventName && eventName.Value.Instanced == MenuLevelTools.SceneReadyEvent;
+            foreach (var gameplayEvent in kept.Where(x => x.ClassName.StartsWith("SFXSeqEvt_", StringComparison.OrdinalIgnoreCase) || (x.ClassName == "SeqEvent_RemoteEvent" && !IsSceneReady(x))))
             {
                 MilanLog.Warning($"Menu scene {manifest.Map}: kept {gameplayEvent.InstancedFullPath} ({gameplayEvent.ClassName}) waits on gameplay and won't fire in the menu", customPrefix: LogCategory);
             }
@@ -511,15 +528,131 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         }
 
         /// <summary>
+        /// Substitutes touch events with a camera touching event so flyovers can trigger events
+        /// </summary>
+        private static void AddCameraWatchers(IMEPackage package, MenuSceneManifest manifest, MenuSceneDesignLevel design, ExportEntry mainSequence,
+            ExportEntry sceneReady)
+        {
+            StructProperty Output(ExportEntry touch, string desc) =>
+                touch.GetProperty<ArrayProperty<StructProperty>>("OutputLinks")?.FirstOrDefault(x => x.GetProp<StrProperty>("LinkDesc")?.Value == desc)
+                ?? throw new InvalidDataException($"Menu scene {manifest.Map}: {design.Package}'s {touch.ObjectName.Instanced} has no {desc} output.");
+            string Targets(StructProperty output) => string.Join(",", (output.GetProp<ArrayProperty<StructProperty>>("Links") ?? new ArrayProperty<StructProperty>("Links"))
+                .Select(x => $"{x.GetProp<ObjectProperty>("LinkedOp")?.Value}:{x.GetProp<IntProperty>("InputLinkIdx")?.Value}"));
+
+            var touches = design.CameraTouches.Select(path => package.FindExport($"{MainSequencePath}.{path}")
+                ?? throw new InvalidDataException($"Menu scene {manifest.Map}: {design.Package} has no touch event {path}.")).ToList();
+            // One watcher per set of outputs, so moving between volumes that do the same thing doesn't switch it off and on
+            foreach (var group in touches.GroupBy(x => $"{Targets(Output(x, "Touched"))}|{Targets(Output(x, "UnTouched"))}"))
+            {
+                var first = group.First();
+                var inside = Output(first, "Touched").DeepClone();
+                inside.Properties.AddOrReplaceProp(new StrProperty("Inside", "LinkDesc"));
+                var outside = Output(first, "UnTouched").DeepClone();
+                outside.Properties.AddOrReplaceProp(new StrProperty("Outside", "LinkDesc"));
+
+                var watcher = MenuLevelTools.CreateMilanAction(mainSequence, CameraInVolumesClass);
+                var volumes = new List<ObjectProperty>();
+                foreach (var touch in group)
+                {
+                    var volume = touch.GetProperty<ObjectProperty>("Originator")?.ResolveToEntry(package) as ExportEntry
+                        ?? throw new InvalidDataException($"Menu scene {manifest.Map}: {design.Package}'s {touch.ObjectName.Instanced} has no volume!");
+                    volumes.Add(new ObjectProperty(SequenceObjectCreator.CreateObject(mainSequence, volume, MilanShared.GetLE3GlobalCache())));
+                }
+
+                // LE3 doesn't have milan's class info, write it out in full
+                var volumesLink = GlobalUnrealObjectInfo.getDefaultStructValue(MEGame.LE3, "SeqVarLink", true, package);
+                volumesLink.AddOrReplaceProp(new ArrayProperty<ObjectProperty>(volumes, "LinkedVariables"));
+                volumesLink.AddOrReplaceProp(new StrProperty("Volumes", "LinkDesc"));
+                volumesLink.AddOrReplaceProp(new ObjectProperty(package.GetEntryOrAddImport("Engine.SeqVar_Object", "Class"), "ExpectedType"));
+                volumesLink.AddOrReplaceProp(new NameProperty("Targets", "PropertyName"));
+                volumesLink.AddOrReplaceProp(new IntProperty(1, "MinVars"));
+                volumesLink.AddOrReplaceProp(new IntProperty(255, "MaxVars"));
+
+                // Write properties
+                var properties = watcher.GetProperties();
+                properties.AddOrReplaceProp(new ArrayProperty<StructProperty>([inside, outside], "OutputLinks"));
+                properties.AddOrReplaceProp(new ArrayProperty<StructProperty>([new StructProperty("SeqVarLink", volumesLink)], "VariableLinks"));
+                watcher.WriteProperties(properties);
+
+                KismetHelper.CreateOutputLink(sceneReady, "Out", watcher);
+            }
+        }
+
+        /// <summary>
+        /// Retargets 'Player' objects in kismet
+        /// </summary>
+        private static void TargetPlayer(IMEPackage package, MenuSceneManifest manifest, MenuSceneDesignLevel design, ExportEntry mainSequence)
+        {
+            // Creates a player object, it will return a controller.
+            var player = SequenceObjectCreator.CreatePlayerObject(mainSequence, false, MilanShared.GetLE3GlobalCache());
+            foreach (var path in design.PlayerTargets)
+            {
+                var node = package.FindExport($"{MainSequencePath}.{path}")
+                    ?? throw new InvalidDataException($"Menu scene {manifest.Map}: {design.Package} has no Kismet object {path} to target the player.");
+                var links = KismetHelper.GetVariableLinksOfNode(node);
+                var target = links.FirstOrDefault(x => x.LinkDesc == "Target")
+                    ?? throw new InvalidDataException($"Menu scene {manifest.Map}: {design.Package}'s {path} has no Target variable link.");
+                target.LinkedNodes = [player];
+                KismetHelper.WriteVariableLinksToNode(node, links);
+            }
+        }
+
+        /// <summary>
+        /// Adds a remote event for BioD_MilanMenu's scene ready signal that starts remote StartOnSceneReady objects
+        /// </summary>
+        private static ExportEntry CreateSceneReadyEvent(IMEPackage package, MenuSceneManifest manifest, MenuSceneDesignLevel design, ExportEntry mainSequence)
+        {
+            // Create scene ready
+            var sceneReady = SequenceObjectCreator.CreateSequenceObject(mainSequence, "SeqEvent_RemoteEvent", MilanShared.GetLE3GlobalCache());
+            if (sceneReady.GetProperty<ArrayProperty<StructProperty>>("OutputLinks") == null)
+            {
+                throw new InvalidOperationException($"Menu scene {manifest.Map}: the new SeqEvent_RemoteEvent in {design.Package} has no default links.");
+            }
+            sceneReady.WriteProperty(new NameProperty(MenuLevelTools.SceneReadyEvent, "EventName"));
+
+            // Write outlink
+            foreach (var path in design.StartOnSceneReady)
+            {
+                var target = package.FindExport($"{MainSequencePath}.{path}")
+                    ?? throw new InvalidDataException($"Menu scene {manifest.Map}: {design.Package} has no Kismet object {path} to start.");
+                KismetHelper.CreateOutputLink(sceneReady, "Out", target);
+            }
+            return sceneReady;
+        }
+
+        /// <summary>
+        /// Used for adjusting the brightness of the menu hologram
+        /// </summary>
+        private static Dictionary<string, float> GetHologramBrightness(string sharedSublevelPath)
+        {
+            using var package = MEPackageHandler.OpenMEPackage(sharedSublevelPath, diskIOSyncLock: MilanShared.DiskIOSyncLock);
+            var luminance = new Dictionary<string, float>();
+            foreach (var path in HologramMaterials)
+            {
+                // Get color property
+                var color = package.FindExport(path)?.GetProperty<ArrayProperty<StructProperty>>("VectorParameterValues")
+                        ?.FirstOrDefault(x => x.GetProp<NameProperty>("ParameterName")?.Value.Instanced == "Color")
+                        ?.GetProp<StructProperty>("ParameterValue")
+                    ?? throw new InvalidDataException($"{sharedSublevelPath}: hologram material {path} has no Color parameter.");
+                // Convert to a brightness value from its RGB
+                luminance[path] = 0.2126f * color.GetProp<FloatProperty>("R") + 0.7152f * color.GetProp<FloatProperty>("G") + 0.0722f * color.GetProp<FloatProperty>("B");
+            }
+            // Change RGB to how much each contributes to the brightness as a percent
+            var brightest = luminance.Values.Max();
+            return luminance.ToDictionary(x => x.Key, x => x.Value / brightest);
+        }
+
+        /// <summary>
         /// Registers the scene's tints for MilanMenuScene
         /// </summary>
-        private static void RegisterConfig(MenuSceneManifest manifest)
+        private static void RegisterConfig(MenuSceneManifest manifest, Dictionary<string, float> hologramBrightness)
         {
             var game = MilanPipelinesShared.ConfigBundle.GetAsset("BioGame");
             var scenes = game.GetOrAddSection("sfxgamecontent_milanbase.milanmenuscene");
             foreach (var material in HologramMaterials)
             {
-                scenes.AddEntry(new CoalesceProperty("hologrammaterials", new CoalesceValue(material, CoalesceParseAction.AddUnique)));
+                var materialEntry = string.Create(CultureInfo.InvariantCulture, $"(Path=\"{material}\",Brightness={hologramBrightness[material]:0.####})");
+                scenes.AddEntry(new CoalesceProperty("hologrammaterials", new CoalesceValue(materialEntry, CoalesceParseAction.AddUnique)));
             }
 
             var entry = $"(Map=\"{MenuLevelTools.ScenePackagePrefix}{manifest.Map}\"" +

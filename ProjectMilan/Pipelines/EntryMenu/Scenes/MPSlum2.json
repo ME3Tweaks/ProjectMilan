@@ -1,13 +1,19 @@
-// Captured in game on 2026-11-04 with milanmenu.capture (debug camera, FOV 60).
+// Captured in game on 2026-11-06 with milanmenu.capture (debug camera, FOV 60).
 {
   "Map": "MPSlum2",
-  "TerminalAnchor": { "Location": { "X": -4991.3, "Y": -507.4, "Z": 1885.3 }, "Rotation": { "Pitch": 0, "Yaw": -19975, "Roll": 0 } },
+  "TerminalAnchor": { "Location": { "X": 1883.7, "Y": -859.1, "Z": 1980.5 }, "Rotation": { "Pitch": 0, "Yaw": -12107, "Roll": 0 } },
   "VistaCamera": {
-    "Start": { "Location": { "X": -3088.8, "Y": -2449.2, "Z": 2476.3 }, "Rotation": { "Pitch": -4156, "Yaw": 4672, "Roll": 0 }, "FOV": 60 },
-    "End": { "Location": { "X": -3500.8, "Y": 2543.4, "Z": 2426.2 }, "Rotation": { "Pitch": -2393, "Yaw": -3198, "Roll": 0 }, "FOV": 60 }
+    "Start": { "Location": { "X": 1129.9, "Y": -2489.2, "Z": 2587.1 }, "Rotation": { "Pitch": -690, "Yaw": 14055, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": -81.1, "Y": 2029.9, "Z": 2446.2 }, "Rotation": { "Pitch": -1919, "Yaw": -31334, "Roll": 0 }, "FOV": 60 }
   },
-  // The match starts the rain after wave 1; this Matinee turns on the rain emitters and wets the ground.
+  // The match starts the rain after wave 1: the Matinee turns on the rain emitters and wets the ground. The client effect
+  // is the rain around the camera, started on the pawn when it touches the outdoor volumes; here the view stands in.
   "DesignLevels": [
-    { "Package": "BioD_MPSlum2_haz", "StartOnSceneReady": [ "SeqAct_Interp_0" ] }
+    {
+      "Package": "BioD_MPSlum2_haz",
+      "StartOnSceneReady": [ "SeqAct_Interp_0" ],
+      "PlayerTargets": [ "RvrSeqAct_StoppableClientEffect_1" ],
+      "CameraTouches": [ "SFXSeqEvt_Touch_10", "SFXSeqEvt_Touch_11", "SFXSeqEvt_Touch_12", "SFXSeqEvt_Touch_13", "SFXSeqEvt_Touch_14" ]
+    }
   ]
 }

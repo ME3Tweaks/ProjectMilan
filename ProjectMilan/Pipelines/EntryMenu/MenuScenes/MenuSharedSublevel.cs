@@ -20,6 +20,11 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         private const string MainSequencePath = LevelPath + ".Main_Sequence";
 
         /// <summary>
+        /// SeqAct_ToggleHidden's UnHide input (Hide, UnHide, Toggle)
+        /// </summary>
+        private const int UnHideInput = 1;
+
+        /// <summary>
         /// Latent action (BIOP_MP_COMMON) that moves the splash camera to the end camera: steady speed, then slows to rest.
         /// LE3's camera blends can't do this, as the ones that come to rest also start from rest.
         /// </summary>
@@ -87,6 +92,17 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         private const string RightComputerActor = "SFXSkeletalMeshActor_2";
         private const string RightComputerAnimSet = "KIS_DYN_Gui_Terminal02_Base_AnimSet";
         private const string RightComputerClosedPose = "state_closed";
+
+        /// <summary>
+        /// The terminal and the desk. Hidden over the splash, where the vista can see them, and shown behind the black screen
+        /// before the cut to the terminal. The screen (SFXGUIRenderTarget_InterpActor_7) is left to the stock Kismet, which
+        /// hides it on load.
+        /// </summary>
+        private static readonly string[] TerminalShownActors =
+        [
+            TerminalActor,
+            .. TerminalDeskActors,
+        ];
 
         /// <summary>
         /// Actors to keep: world info, the terminal, its screen, the material actors its prefab Matinee animates, and the desk
@@ -218,6 +234,14 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
             capVolume.WriteProperty(new FloatProperty(MaxSoundEffectsVolume, "MaxVolume"));
             KismetHelper.CreateOutputLink(Node("SeqEvent_LevelLoaded_9"), "Loaded and Visible", capVolume);
 
+            // Add a wait for streaming so load screen doesn't come down without primed textures
+            var allLoaded = CreateAction(sequence, "SFXSeqAct_WaitForStreamingComplete", cache);
+            allLoaded.WriteProperty(new BoolProperty(false, "bWaitForVisibleOnly"));
+            var sceneReady = CreateAction(sequence, "SeqAct_ActivateRemoteEvent", cache);
+            sceneReady.WriteProperty(new NameProperty(MenuLevelTools.SceneReadyEvent, "EventName"));
+            KismetHelper.CreateOutputLink(Node("SeqEvent_LevelLoaded_9"), "Loaded and Visible", allLoaded);
+            KismetHelper.CreateOutputLink(allLoaded, "Finished", sceneReady);
+
             // Splash: cut to the vista behind black, wait for textures, then show the splash and drift
             var splashBranch = Node("BioSeqAct_ShouldShowSplashSequence_0");
             var showSplash = Node("BioSeqAct_ShowSplash_0");
@@ -261,6 +285,17 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
             var terminalCut = CreateSetCameraTarget(sequence, player, terminalCamera, 0f, "VTBlend_Linear", cache);
             KismetHelper.CreateOutputLink(splashBranch, "False", terminalCut);
             KismetHelper.CreateOutputLink(splashBranch, "False", openTerminal);
+
+            // Only show terminal when cutting to the actual menu
+            var showTerminal = CreateAction(sequence, "SeqAct_ToggleHidden", cache);
+            foreach (var name in TerminalShownActors)
+            {
+                var actor = package.FindExport($"{LevelPath}.{name}");
+                actor.WriteProperty(new BoolProperty(true, "bHidden"));
+                KismetHelper.CreateVariableLink(showTerminal, "Target", SequenceObjectCreator.CreateObject(sequence, actor, cache));
+            }
+            KismetHelper.CreateOutputLink(fadeOut, "Finished", showTerminal, UnHideInput);
+            KismetHelper.CreateOutputLink(splashBranch, "False", showTerminal, UnHideInput);
 
             // Either way, the menu waits for the terminal view's textures
             var initMainMenu = Node("SFXSeqAct_InitMainMenu_0");
@@ -344,26 +379,7 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
             return action;
         }
 
-        /// <summary>
-        /// Creates a sequence action of one of Milan's own Kismet classes. They are forced exports the class info doesn't
-        /// know, so no default links are written.
-        /// </summary>
-        private static ExportEntry CreateMilanAction(ExportEntry sequence, string classPath)
-        {
-            var package = sequence.FileRef;
-            var actionClass = MilanLevelTools.GetOrAddForcedExportClassImport(package, classPath);
-            var action = new ExportEntry(package, sequence, package.GetNextIndexedName(actionClass.ObjectName.Name), properties: new PropertyCollection
-            {
-                new IntProperty(1, "ObjInstanceVersion"),
-            })
-            {
-                Class = actionClass,
-            };
-            action.ObjectFlags |= UnrealFlags.EObjectFlags.Transactional;
-            package.AddExport(action);
-            KismetHelper.AddObjectToSequence(action, sequence);
-            return action;
-        }
+        private static ExportEntry CreateMilanAction(ExportEntry sequence, string classPath) => MenuLevelTools.CreateMilanAction(sequence, classPath);
 
         private static ExportEntry CreateSetCameraTarget(ExportEntry sequence, ExportEntry player, ExportEntry camera, float blendTime, string blendFunction, PackageCache cache)
         {

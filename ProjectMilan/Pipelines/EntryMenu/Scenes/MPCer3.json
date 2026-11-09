@@ -1,8 +1,11 @@
+// Captured in game on 2026-11-06 with milanmenu.capture (debug camera, FOV 60).
 {
   "Map": "MPCer3",
-  "TerminalAnchor": { "Location": { "X": 2476.0, "Y": -912.5, "Z": 100.4 }, "Rotation": { "Pitch": 0, "Yaw": -30128, "Roll": 0 } },
+  "TerminalAnchor": { "Location": { "X": 3930.3, "Y": -1842.5, "Z": 95.4 }, "Rotation": { "Pitch": 0, "Yaw": 8844, "Roll": 0 } },
   "VistaCamera": {
-    "Start": { "Location": { "X": 8869.1, "Y": 2381.0, "Z": 396.9 }, "Rotation": { "Pitch": -2053, "Yaw": -29368, "Roll": 0 }, "FOV": 60 },
-    "End": { "Location": { "X": 4689.5, "Y": 2202.4, "Z": 278.7 }, "Rotation": { "Pitch": -659, "Yaw": -22772, "Roll": 0 }, "FOV": 60 }
-  }
+    "Start": { "Location": { "X": 5139.4, "Y": 2262.4, "Z": 252.7 }, "Rotation": { "Pitch": -643, "Yaw": -30089, "Roll": -177 }, "FOV": 60 },
+    "End": { "Location": { "X": 4342.0, "Y": 432.6, "Z": 263.9 }, "Rotation": { "Pitch": -1623, "Yaw": -26782, "Roll": -177 }, "FOV": 60 }
+  },
+  // The estimate hits the key light cap here (several bright lights close to the anchor) and washes the desk out
+  "TerminalLighting": { "KeyBrightness": 0.25, "AmbientBrightness": 0.2 }
 }

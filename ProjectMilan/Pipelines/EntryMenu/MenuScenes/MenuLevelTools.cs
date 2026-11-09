@@ -1,6 +1,8 @@
+using LegendaryExplorerCore.Kismet;
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using ProjectMilanCore;
 
 namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
 {
@@ -22,9 +24,34 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         public const string TerminalAmbientLightTag = "MilanMenu_TerminalAmbient";
 
         /// <summary>
+        /// Remote event BioD_MilanMenu fires once every level of the scene is loaded
+        /// </summary>
+        public const string SceneReadyEvent = "MilanMenu_SceneReady";
+
+        /// <summary>
         /// Where this pipeline writes output to
         /// </summary>
         public static string OutputFolder => Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole", "EntryMenu");
+
+        /// <summary>
+        /// Creates a sequence action of one of Milan's own Kismet classes
+        /// </summary>
+        public static ExportEntry CreateMilanAction(ExportEntry sequence, string classPath)
+        {
+            var package = sequence.FileRef;
+            var actionClass = MilanLevelTools.GetOrAddForcedExportClassImport(package, classPath);
+            var action = new ExportEntry(package, sequence, package.GetNextIndexedName(actionClass.ObjectName.Name), properties: new PropertyCollection
+            {
+                new IntProperty(1, "ObjInstanceVersion"),
+            })
+            {
+                Class = actionClass,
+            };
+            action.ObjectFlags |= UnrealFlags.EObjectFlags.Transactional;
+            package.AddExport(action);
+            KismetHelper.AddObjectToSequence(action, sequence);
+            return action;
+        }
 
         /// <summary>
         /// Sets self-package name in the package

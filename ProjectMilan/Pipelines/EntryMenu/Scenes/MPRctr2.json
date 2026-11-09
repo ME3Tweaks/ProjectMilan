@@ -5,5 +5,7 @@
   "VistaCamera": {
     "Start": { "Location": { "X": 1043.5, "Y": 6923.5, "Z": 226.2 }, "Rotation": { "Pitch": -1437, "Yaw": -19922, "Roll": 0 }, "FOV": 60 },
     "End": { "Location": { "X": 2955.2, "Y": 4662.2, "Z": -73.6 }, "Rotation": { "Pitch": -1646, "Yaw": -18560, "Roll": 0 }, "FOV": 60 }
-  }
+  },
+  // The estimate hits the key light cap (3.0) and washes the desk out
+  "TerminalLighting": { "KeyBrightness": 1.5 }
 }

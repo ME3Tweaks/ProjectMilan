@@ -6,7 +6,8 @@
     "Start": { "Location": { "X": 3281.3, "Y": -2817.5, "Z": 417.9 }, "Rotation": { "Pitch": -5116, "Yaw": -26094, "Roll": 37 }, "FOV": 60 },
     "End": { "Location": { "X": -1102.4, "Y": -1782.3, "Z": 53.0 }, "Rotation": { "Pitch": -3976, "Yaw": -13581, "Roll": 0 }, "FOV": 60 }
   },
-  "HologramTint": { "R": 5, "G": 1.5, "B": 0.3 },
+  // Additive, so how see-through it looks is its luminance: this is about the stock blue's (0.5, 1, 5)
+  "HologramTint": { "R": 2.5, "G": 0.75, "B": 0.15 },
   "UITint": { "R": 1, "G": 0.85, "B": 0.6 },
   "DesignLevels": [
     { "Package": "BioD_MPTowr2", "KeepKismet": [ "SeqEvent_LevelLoaded_2" ], "RemoveActors": [ "SkeletalMeshActor_0" ] }

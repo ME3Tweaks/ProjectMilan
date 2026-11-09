@@ -1,8 +1,11 @@
+// Captured in game on 2026-11-06 with milanmenu.capture (debug camera, FOV 60).
 {
   "Map": "MPJngl",
-  "TerminalAnchor": { "Location": { "X": -804.4, "Y": -2642.8, "Z": 300.7 }, "Rotation": { "Pitch": 0, "Yaw": 9366, "Roll": 0 } },
+  "TerminalAnchor": { "Location": { "X": -1527.1, "Y": 1678.8, "Z": -69.4 }, "Rotation": { "Pitch": 0, "Yaw": 9439, "Roll": 0 } },
   "VistaCamera": {
-    "Start": { "Location": { "X": 343.4, "Y": 4784.6, "Z": 1463.3 }, "Rotation": { "Pitch": 683, "Yaw": 16810, "Roll": 0 }, "FOV": 60 },
-    "End": { "Location": { "X": 191.5, "Y": -941.5, "Z": 1260.2 }, "Rotation": { "Pitch": -2692, "Yaw": 21555, "Roll": 0 }, "FOV": 60 }
-  }
+    "Start": { "Location": { "X": -1315.9, "Y": 4505.9, "Z": 1173.6 }, "Rotation": { "Pitch": -2087, "Yaw": 21562, "Roll": 0 }, "FOV": 60 },
+    "End": { "Location": { "X": 273.9, "Y": -634.2, "Z": 1207.6 }, "Rotation": { "Pitch": -3538, "Yaw": 22318, "Roll": 0 }, "FOV": 60 }
+  },
+  // The estimate (key 1.75, ambient 0.14) is too bright on the desk
+  "TerminalLighting": { "KeyBrightness": 0.5, "AmbientBrightness": 0.1 }
 }

@@ -203,6 +203,21 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         public List<string> KeepKismet { get; set; } = [];
 
         /// <summary>
+        /// Items to start on scene becoming ready
+        /// </summary>
+        public List<string> StartOnSceneReady { get; set; } = [];
+
+        /// <summary>
+        /// Objects that are targets as players and become the camera actor. Used for Slum2 rain triggers going under an overpass
+        /// </summary>
+        public List<string> PlayerTargets { get; set; } = [];
+
+        /// <summary>
+        /// Touch triggers for the camera
+        /// </summary>
+        public List<string> CameraTouches { get; set; } = [];
+
+        /// <summary>
         /// Actors to drop by name in TheWorld.PersistentLevel, for art that only makes sense in a match (e.g. a parked
         /// shuttle). Actors based on them go too.
         /// </summary>
