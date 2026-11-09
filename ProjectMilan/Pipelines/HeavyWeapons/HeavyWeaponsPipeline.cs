@@ -39,41 +39,72 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
         /// </summary>
         private const string IconPackage = "MilanHeavyWeapons";
 
-        private static readonly LocalizedString NoneName = new() { [MELocalization.INT] = "None" };
+        private static readonly LocalizedString NoneName = new() {
+            [MELocalization.INT] = "None",
+            [MELocalization.DEU] = "Keine",
+            [MELocalization.ESN] = "Ninguno",
+            [MELocalization.FRA] = "Aucune",
+            [MELocalization.RUS] = "Отсутствует",
+        };
         // Might consider seeing if this can be done via config instead.
-        private static readonly LocalizedString NoneDescription = new() { [MELocalization.INT] = "No heavy weapon equipped. Grants +5% movement speed and +10% reserve ammo capacity." };
-        private static readonly LocalizedString CategoryName = new() { [MELocalization.INT] = "Heavy Weapons" };
-        private static readonly LocalizedString HiddenCategoryName = new() { [MELocalization.INT] = "Hidden" };
+        private static readonly LocalizedString NoneDescription = new() {
+            [MELocalization.INT] = "No heavy weapon equipped. Grants +5% movement speed and +10% reserve ammo capacity.",
+            [MELocalization.DEU] = "Keine schwere Waffe ausgerüstet. Gewährt +5 % Bewegungsgeschwindigkeit und +10 % Reservemunitionskapazität.",
+            [MELocalization.ESN] = "No hay arma pesada. Otorga +5% a la velozidad de movimiento y +10% capazidad de munición de reserva.",
+            [MELocalization.FRA] = "Aucune arme lourde équippée. Accorde +5 % de vitesse de mouvement et +10 % de capacité de munitions de réserve.",
+            [MELocalization.POL] = "Brak ciężkiej broni. Zapewnia +5% prędkości ruchu oraz +10% pojemności zapasu amunicji.",
+            [MELocalization.RUS] = "Без тяжёлого оружия. Дает +5% к скорости передвижения и +10% к боезапасу.",
+        };
+        private static readonly LocalizedString CategoryName = new() {
+            [MELocalization.INT] = "Heavy Weapons",
+            [MELocalization.DEU] = "Schwere Waffen",
+            [MELocalization.ESN] = "Armas pesadas",
+            [MELocalization.FRA] = "Armes lourdes",
+            [MELocalization.POL] = "Broń ciężka",
+            [MELocalization.RUS] = "Тяжелое Оружие",
+        };
+        private static readonly LocalizedString HiddenCategoryName = new() {
+            [MELocalization.INT] = "Hidden",
+            [MELocalization.DEU] = "Verborgen",
+            [MELocalization.ESN] = "Oculto",
+            [MELocalization.FRA] = "Cachées",
+            [MELocalization.POL] = "Ukryte",
+            [MELocalization.RUS] = "Скрытое",
+        };
 
         internal static readonly List<HeavyWeaponEntry> HeavyWeapons =
         [
-            // IDs aren't consistent for the first two entries due to development order
-            // IDs:
-            // 0 Cobra
-            // 1 Blackstorm
-            // 2 Hidden Cobra
-            // 3 Hidden blackstorm
-            // 4 None (reserved, not an entry)
-            // 5 Blackstar
-            // 6 Hidden Blackstar
-            // 7 Cain
-            // 8 Hidden Cain
+            // Selection IDs and unlock player variables are in MilanIds.cs
 
             // M-490 Blackstorm
             new()
             {
-                Id = 1,
-                HiddenId = 3,
+                Id = MilanHeavyWeaponId.Blackstorm,
+                HiddenId = MilanHeavyWeaponId.BlackstormHidden,
                 UnlockName = "MilanHeavy_Blackstorm",
-                HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "M-490 Blackstorm (Hidden)" },
-                UnlockPlayerVariableId = 801,
-                HiddenUnlockPlayerVariableId = 802,
+                HiddenUnlockTitle = new LocalizedString {
+                    [MELocalization.INT] = "M-490 Blackstorm (Hidden)",
+                    [MELocalization.DEU] = "M-490 Blackstorm (Verborgen)",
+                    [MELocalization.ESN] = "M-490 Blackstorm (Oculto)",
+                    [MELocalization.FRA] = "M-490 Blackstorm (Caché)",
+                    [MELocalization.POL] = "M-490 Blackstorm (ukryty)",
+                    [MELocalization.RUS] = "M-490 Буря (Скрытое)",
+                },
+                UnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_Blackstorm,
+                HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_BlackstormHidden,
                 Rarity = "ultrarare",
                 DisplayOrder = 10,
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstorm",
                 NonConsumableClassPath = "SFXGameContent_Milan.SFXHeavyWeapon_Blackstorm",
                 Name = 361364, // M-490 Blackstorm
-                ShortName = new LocalizedString { [MELocalization.INT] = "M-490 Blackstorm" },
+                ShortName = new LocalizedString {
+                    [MELocalization.INT] = "M-490 Blackstorm",
+                    [MELocalization.DEU] = "M-490 Blackstorm",
+                    [MELocalization.ESN] = "M-490 Blackstorm",
+                    [MELocalization.FRA] = "M-490 Blackstorm",
+                    [MELocalization.POL] = "M-490 Blackstorm",
+                    [MELocalization.RUS] = "M-490 Буря",
+                },
                 Description = 361363,
                 ShortDescription = 344479,
                 Image = $"{IconPackage}.Blackstorm_512x256",
@@ -84,36 +115,64 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             // Reaper Blackstar
             new()
             {
-                Id = 5,
-                HiddenId = 6,
+                Id = MilanHeavyWeaponId.Blackstar,
+                HiddenId = MilanHeavyWeaponId.BlackstarHidden,
                 UnlockName = "MilanHeavy_Blackstar",
-                HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "Reaper Blackstar (Hidden)" },
-                UnlockPlayerVariableId = 803,
-                HiddenUnlockPlayerVariableId = 804,
+                HiddenUnlockTitle = new LocalizedString {
+                    [MELocalization.INT] = "Reaper Blackstar (Hidden)",
+                    [MELocalization.DEU] = "Reaper Blackstar (Verborgen)",
+                    [MELocalization.ESN] = "Estrella Negra segadora (Oculta)",
+                    [MELocalization.FRA] = "Étoile noire de Moissonneurs (Caché)",
+                    [MELocalization.POL] = "Blackstar Żniwiarzy (ukryty)",
+                    [MELocalization.RUS] = "Черная Звезда (Скрытое)",
+                },
+                UnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_Blackstar,
+                HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_BlackstarHidden,
                 Rarity = "rare",
                 DisplayOrder = 20,
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstar",
                 InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Blackstar",
                 // Vanilla has no ShortPrettyName for it
-                ShortName = new LocalizedString { [MELocalization.INT] = "Reaper Blackstar" },
+                ShortName = new LocalizedString {
+                    [MELocalization.INT] = "Reaper Blackstar",
+                    [MELocalization.DEU] = "Reaper Blackstar",
+                    [MELocalization.ESN] = "Estrella Negra segadora",
+                    [MELocalization.FRA] = "Étoile noire de Moissonneurs",
+                    [MELocalization.POL] = "Blackstar Żniwiarzy",
+                    [MELocalization.RUS] = "Черная Звезда (Скрытое)",
+                },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
                 // TODO: We need an actual short text or move hidden to the top.
             },
             // M-920 Cain
             new()
             {
-                Id = 7,
-                HiddenId = 8,
+                Id = MilanHeavyWeaponId.Cain,
+                HiddenId = MilanHeavyWeaponId.CainHidden,
                 UnlockName = "MilanHeavy_Cain",
-                HiddenUnlockTitle = new LocalizedString { [MELocalization.INT] = "M-920 Cain (Hidden)" },
-                UnlockPlayerVariableId = 805,
-                HiddenUnlockPlayerVariableId = 806,
+                HiddenUnlockTitle = new LocalizedString {
+                    [MELocalization.INT] = "M-920 Cain (Hidden)",
+                    [MELocalization.DEU] = "M-920 Cain (Verborgen)",
+                    [MELocalization.ESN] = "M-920 Cain (Oculto)",
+                    [MELocalization.FRA] = "M-920 Cain (Caché)",
+                    [MELocalization.POL] = "M-920 Cain (ukryty)",
+                    [MELocalization.RUS] = "M-920 Каин (Скрытое)",
+                },
+                UnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_Cain,
+                HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_CainHidden,
                 // Drop from ultrarare pool, cain is special
                 Rarity = "ultrarare",
                 DisplayOrder = 30,
                 ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableCain",
                 InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Cain",
-                ShortName = new LocalizedString { [MELocalization.INT] = "M-920 Cain" },
+                ShortName = new LocalizedString {
+                    [MELocalization.INT] = "M-920 Cain",
+                    [MELocalization.DEU] = "M-920 Cain",
+                    [MELocalization.ESN] = "M-920 Cain",
+                    [MELocalization.FRA] = "M-920 Cain",
+                    [MELocalization.POL] = "M-920 Cain",
+                    [MELocalization.RUS] = "M-920 Каин",
+                },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
             },
         ];
@@ -162,7 +221,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
         public static void RunPipeline()
         {
             Directory.CreateDirectory(OutputFolder);
-            var ids = new HashSet<int> { 0, 2, 4 };
+            var ids = new HashSet<MilanHeavyWeaponId> { MilanHeavyWeaponId.Cobra, MilanHeavyWeaponId.CobraHidden, MilanHeavyWeaponId.None };
             var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             foreach (var entry in HeavyWeapons)
             {
@@ -173,7 +232,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             var noneName = MilanPipelinesShared.AssignTLK(NoneName);
             var catalog = new List<HeavyWeaponCatalogEntry>
             {
-                new() { Id = 4, ClassPath = "", Name = noneName, ShortName = noneName,
+                new() { Id = (int)MilanHeavyWeaponId.None, ClassPath = "", Name = noneName, ShortName = noneName,
                     Description = MilanPipelinesShared.AssignTLK(NoneDescription),
                     Image = "", Icon = "", IconResource = "", IconIndex = 0, NoWeapon = true, Rarity = "", DisplayOrder = -10 }
             };
@@ -187,7 +246,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             var cobraDefaults = mpCommon.GetUExport(ObjectBinary.From<UClass>(cobra).Defaults);
             var cobraEntry = new HeavyWeaponCatalogEntry
             {
-                Id = 0,
+                Id = (int)MilanHeavyWeaponId.Cobra,
                 ClassPath = CobraClassPath,
                 DisplayOrder = 0,
                 Name = cobraDefaults.GetProperty<StringRefProperty>("PrettyName").Value,
@@ -200,7 +259,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 IconIndex = 49,
             };
             catalog.Add(cobraEntry);
-            catalog.Add(cobraEntry with { Id = 2, ClassPath = HiddenHeavyWeaponVariants.GetClassPath(CobraClassPath), DisplayOrder = 1, Hidden = true, Rarity = "rare", UnlockVariable = HeavyWeaponStoreRegistration.HiddenCobraUnlock });
+            catalog.Add(cobraEntry with { Id = (int)MilanHeavyWeaponId.CobraHidden, ClassPath = HiddenHeavyWeaponVariants.GetClassPath(CobraClassPath), DisplayOrder = 1, Hidden = true, Rarity = "rare", UnlockVariable = HeavyWeaponStoreRegistration.HiddenCobraUnlock });
 
             // INSTALL PRECOMPILED PACKAGES ----------
             // Class path to the package it is in
@@ -235,7 +294,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 }
                 var resolved = RegisterHeavyWeapon(entry, packageName, nonConsumableClasses, loadableImages);
                 catalog.Add(resolved);
-                catalog.Add(resolved with { Id = entry.HiddenId, ClassPath = entry.HiddenClassPath, DisplayOrder = entry.DisplayOrder + 1, Hidden = true, UnlockVariable = entry.HiddenUnlockName });
+                catalog.Add(resolved with { Id = (int)entry.HiddenId, ClassPath = entry.HiddenClassPath, DisplayOrder = entry.DisplayOrder + 1, Hidden = true, UnlockVariable = entry.HiddenUnlockName });
             }
 
             foreach (var entry in HeavyWeapons.Where(x => !foundClasses.ContainsKey(x.ClassPath)))
@@ -280,9 +339,30 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 MissingObjectResolver = MilanShared.MissingObjectResolver,
                 GetVTableFromDonor = MilanShared.GetVTableFromDonor,
             };
-            foreach (var (original, variant) in HiddenHeavyWeaponVariants.Generate(package, consumables, options))
+            var variants = HiddenHeavyWeaponVariants.Generate(package, consumables, options);
+            foreach (var (original, variant) in variants)
             {
                 MilanLog.Information($"Generated {variant.InstancedFullPath} from {original}", customPrefix: LOG_CATEGORY);
+            }
+
+            // Copy superclass templates so they actually apply to us too
+            using var library = new FileLib(package);
+            if (!library.Initialize(options))
+            {
+                throw new InvalidOperationException($"Could not initialize {package.FileNameNoExtension} for heavy weapon templates: {string.Join(Environment.NewLine, library.InitializationLog.AllErrors)}");
+            }
+            foreach (var weaponClass in consumables.Where(x => !HiddenHeavyWeaponVariants.IsHiddenVariant(x)).Concat(variants.Values))
+            {
+                var added = InheritedSubobjectTemplates.Apply(weaponClass, library, options);
+                if (added.Count == 0)
+                {
+                    continue;
+                }
+                MilanLog.Information($"Templated {weaponClass.InstancedFullPath}'s inherited subobjects: {string.Join(", ", added)}", customPrefix: LOG_CATEGORY);
+                if (!library.ReInitializeFile(options))
+                {
+                    throw new InvalidOperationException($"Could not refresh {package.FileNameNoExtension} after templating {weaponClass.InstancedFullPath}");
+                }
             }
         }
 
@@ -358,7 +438,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             MilanLog.Information($"Registered {entry.ClassPath} in {packageName}", customPrefix: LOG_CATEGORY);
             return new HeavyWeaponCatalogEntry
             {
-                Id = entry.Id,
+                Id = (int)entry.Id,
                 ClassPath = entry.ClassPath,
                 DisplayOrder = entry.DisplayOrder,
                 Name = name,
@@ -435,14 +515,14 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
     internal class HeavyWeaponEntry
     {
         /// <summary>Permanent visible/hidden selection IDs; never assign from collection order.</summary>
-        public required int Id { get; init; }
-        public required int HiddenId { get; init; }
+        public required MilanHeavyWeaponId Id { get; init; }
+        public required MilanHeavyWeaponId HiddenId { get; init; }
         public required string UnlockName { get; init; }
         public string HiddenUnlockName => UnlockName + "_Hidden";
         /// <summary>Title of the hidden variant's store unlock card.</summary>
         public required HeavyWeaponString HiddenUnlockTitle { get; init; }
-        public required int UnlockPlayerVariableId { get; init; }
-        public required int HiddenUnlockPlayerVariableId { get; init; }
+        public required MilanPlayerVariable UnlockPlayerVariableId { get; init; }
+        public required MilanPlayerVariable HiddenUnlockPlayerVariableId { get; init; }
         public int DisplayOrder { get; init; }
 
         /// <summary>Indexed Scaleform weapon icon, separate from the notification texture.</summary>
