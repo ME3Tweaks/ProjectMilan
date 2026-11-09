@@ -10,19 +10,28 @@
 			<Property name="confirmexitmessage" type="2">343062</Property>
 			<Property name="credits">
 				<!-- MILAN CHANGE -->
-				<!-- We do this here because DLC_MOD_ProjectMilan does not mount until loading into MP mode,
-				     plus it would be horrible to do this in an override config. -->
+				<!-- Strings are in Mod/TLK/DLC_MOD_ProjectMilan_INT.xml (49875945-49875980). -->
 
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30000, Names=30001, StartTime=1.5\t)</Value>
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30002, Names=30016, DelayTime=1.0\t)</Value>
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30003, Names=30016, DelayTime=1.0\t)</Value>
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30004, Names=30005, DelayTime=1.0\t)</Value>
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30006, Names=30007, DelayTime=1.0\t)</Value>
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30008, Names=30009, DelayTime=1.0\t)</Value>
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30010, Names=30011, DelayTime=1.0\t)</Value>
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30012, Names=30013, DelayTime=1.0\t)</Value>
-				<Value type="2">(Type=CREDIT_Flashing,\tTitle=30014, Names=30015, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875945, Names=49875946, StartTime=1.5\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875947, Names=49875948, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875949, Names=49875950, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875951, Names=49875952, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875953, Names=49875954, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875955, Names=49875956, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875957, Names=49875958, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875959, Names=49875960, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875961, Names=49875962, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875963, Names=49875964, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875965, Names=49875966, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875967, Names=49875968, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875969, Names=49875970, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875971, Names=49875972, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875973, Names=49875974, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875975, Names=49875976, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875977, Names=49875978, DelayTime=1.0\t)</Value>
+				<Value type="2">(Type=CREDIT_Flashing,\tTitle=49875979, Names=49875980, DelayTime=1.0\t)</Value>
 
+				<!-- TODO: Add a separator so it doesn't look like Casey Hudson was our project director-->
 				<!-- END MILAN CHANGE -->
 				<Value type="2">(Type=CREDIT_Flashing,\tTitle=342757, Names=342910, DelayTime=1.5\t)</Value>
 				<Value type="2">(Type=CREDIT_Flashing,\tTitle=342758, Names=342911, DelayTime=.35\t)</Value>
