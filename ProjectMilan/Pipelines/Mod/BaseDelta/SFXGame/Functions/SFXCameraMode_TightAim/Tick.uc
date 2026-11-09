@@ -7,7 +7,6 @@ public function Tick(float TimeDelta)
     local Object.Vector HitLocation;
     local Object.Vector HitNormal;
     local SFXWeapon Weapon;
-    local SFXEngine Engine;
     local int nFOV;
     
     PC = BioPlayerController(GetViewTargetAsController());
@@ -19,8 +18,7 @@ public function Tick(float TimeDelta)
     if (Weapon != None && PC.GameModeManager2.IsActive(8) == FALSE)
     {
         // MILAN CHANGE 2026-10-23 - Stumpy
-        Engine = SFXEngine(Class'SFXEngine'.static.GetEngine());
-        Engine.GetProfileSettings().GetMilanZoomFov(nFOV);
+        Class'MilanProfile'.static.GetMilanZoomFOV(nFOV);
         m_pov.FOV = Weapon.GetZoomFOV() + float(nFOV * Class'MilanGUI_Option_ZoomFOV'.default.Multiplier);
         // MILAN END
         if (ZoomData != None)

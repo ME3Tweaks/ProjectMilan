@@ -2151,10 +2151,5 @@
                        // MILAN END
                       )
     // MILAN CHANGE START
-    // 2026/10/23 - Stumpy
-    // Add FOV setting props
-    FovSettings = ({Setting = EFovSettings.General, bitOffset = 8, Size = 8}, 
-                   {Setting = EFovSettings.Zoomed, bitOffset = 16, Size = 8})
-    // MILAN END
     VersionNumber = 50
 }
