@@ -1915,7 +1915,8 @@
 			<Property name="bforcefireaftercharge" type="2">true</Property>
 			<Property name="bfrictionenabled" type="2">true</Property>
 			<Property name="bzoomsnapenabled" type="2">false</Property>
-			<Property name="damage" type="2">(X=15000,Y=15000)</Property>
+			<!-- MILAN CHANGE - Blackstar damage from 15K to 30K -->
+			<Property name="damage" type="2">(X=30000,Y=30000)</Property>
 			<Property name="encumbranceweight" type="2">(X=0.0f,Y=0.0f)</Property>
 			<Property name="generaldescription" type="2">699890</Property>
 			<Property name="guiimage" type="2">GUI_Codex_Weapons_Images.Weapons.hvy_blackstar_512x256</Property>
