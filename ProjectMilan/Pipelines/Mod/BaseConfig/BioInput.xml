@@ -250,7 +250,6 @@
 				<Value type="2">( Name="RightMouseButton", Command="Shared_Aim" )</Value>
 				<Value type="2">( Name="SpaceBar",Command="Shared_Action")</Value>
 				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
-				<Value type="2">( Name="LeftShift", Command="PC_EnterCommandMenu" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodeatlas_00000407">
@@ -262,10 +261,6 @@
 				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="X", Command="Shared_ExitAtlas" )</Value>
-				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="Y", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
 			</Property>
@@ -279,10 +274,6 @@
 				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="X", Command="Shared_ExitAtlas" )</Value>
-				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="Z", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
 			</Property>
@@ -296,10 +287,6 @@
 				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="X", Command="Shared_ExitAtlas" )</Value>
-				<Value type="2">( Name="A", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="W", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
 			</Property>
@@ -423,30 +410,6 @@
 				<Value type="2">( Name="LeftShift", Command="PC_ExitCommandMenu" )</Value>
 			</Property>
 		</Section>
-		<Section name="sfxgame.sfxgamemodecommand_00000407">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="Y", Command="Shared_SquadAttack" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodecommand_00000409">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="Z", Command="PC_SquadAttack" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodecommand_0000040c">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="A", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="W", Command="PC_SquadAttack" )</Value>
-			</Property>
-		</Section>
 		<Section name="sfxgame.sfxgamemodeconversation">
 			<Property name="bindings">
 				<Value type="2">( Name="XboxTypeS_LeftTrigger", Command="Shared_ConvIntParagon" )</Value>
@@ -497,9 +460,6 @@
 				<Value type="2">( Name="Six", Command="PC_HotKey6" )</Value>
 				<Value type="2">( Name="Seven", Command="PC_HotKey7" )</Value>
 				<Value type="2">( Name="Eight", Command="PC_HotKey8" )</Value>
-				<Value type="2">( Name="F5", Command="Shared_QuickSave" )</Value>
-				<Value type="2">( Name="F9", Command="PC_QuickLoad" )</Value>
-				<Value type="2">( Name="LeftShift", Command="PC_EnterCommandMenu" )</Value>
 				<Value type="2">( Name="MiddleMouseButton", Command="PC_CoverTurn" )</Value>
 				<Value type="2">( Name="Tab", Command="PC_PushToTalk" )</Value>
 			</Property>
@@ -515,14 +475,8 @@
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="X", Command="PC_SwapWeapon" )</Value>
-				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="Y", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodedefault_00000409">
@@ -534,14 +488,8 @@
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="X", Command="PC_SwapWeapon" )</Value>
-				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="Z", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodedefault_0000040c">
@@ -553,14 +501,8 @@
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="F", Command="Shared_Melee" )</Value>
 				<Value type="2">( Name="X", Command="PC_SwapWeapon" )</Value>
-				<Value type="2">( Name="A", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="W", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodedreamsequence">
@@ -617,24 +559,6 @@
 			<Property name="prolonglifedecay" type="2">0.003</Property>
 			<Property name="startboosttime" type="2">12.f</Property>
 		</Section>
-		<Section name="sfxgame.sfxgamemodedying_00000407">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodedying_00000409">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodedying_0000040c">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
-			</Property>
-		</Section>
 		<Section name="sfxgame.sfxgamemodeflycam">
 			<Property name="bindings">
 				<Value type="2">( Name="XboxTypeS_LeftX", Command="Console_Strafe" )</Value>
@@ -680,8 +604,6 @@
 			<Property name="localizedbindings">
 				<Value type="2">( Name="V", Command="Shared_HideMap" )</Value>
 				<Value type="2">( Name="M", Command="Shared_HideMap" )</Value>
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 				<Value type="2">( Name="A", Command="PC_GUIControlLeft" )</Value>
 				<Value type="2">( Name="D", Command="PC_GUIControlRight" )</Value>
 				<Value type="2">( Name="W", Command="PC_GUIControlUp" )</Value>
@@ -692,8 +614,6 @@
 			<Property name="localizedbindings">
 				<Value type="2">( Name="V", Command="Shared_HideMap" )</Value>
 				<Value type="2">( Name="M", Command="Shared_HideMap" )</Value>
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 				<Value type="2">( Name="A", Command="PC_GUIControlLeft" )</Value>
 				<Value type="2">( Name="D", Command="PC_GUIControlRight" )</Value>
 				<Value type="2">( Name="W", Command="PC_GUIControlUp" )</Value>
@@ -708,8 +628,6 @@
 				<Value type="2">( Name="S", Command="PC_GUIControlDown" )</Value>
 				<Value type="2">( Name="V", Command="Shared_HideMap" )</Value>
 				<Value type="2">( Name="M", Command="Shared_HideMap" )</Value>
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodeillusivemanconflict">
@@ -744,8 +662,6 @@
 				<Value type="2">( Name="RightMouseButton", Command="Shared_Aim" )</Value>
 				<Value type="2">( Name="SpaceBar", Command="Shared_Action" )</Value>
 				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>
-				<Value type="2">( Name="F5", Command="Shared_QuickSave" )</Value>
-				<Value type="2">( Name="F9", Command="PC_QuickLoad" )</Value>
 			</Property>
 			<Property name="inputdelaytightaimexit" type="2">0.1</Property>
 		</Section>
@@ -787,24 +703,6 @@
 				<Value type="2">( Name="XboxTypeS_RightTrigger", Command="Shared_MPToggleReady" )</Value>
 				<Value type="2">( Name="Tab", Command="PC_PushToTalk" )</Value>
 				<Value type="2">( Name="Spacebar", Command="Shared_MPToggleReady" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodelobby_00000407">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodelobby_00000409">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodelobby_0000040c">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
 			</Property>
 		</Section>
 		<Section name="sfxgame.sfxgamemodemovie">
@@ -1047,24 +945,6 @@
 				<Value type="2">( Name="Tab", Command="PC_PushToTalk" )</Value>
 			</Property>
 		</Section>
-		<Section name="sfxgame.sfxgamemodespectator_00000407">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodespectator_00000409">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
-			</Property>
-		</Section>
-		<Section name="sfxgame.sfxgamemodespectator_0000040c">
-			<Property name="localizedbindings">
-				<Value type="2">( Name="T", Command="PC_Talk" )</Value>
-				<Value type="2">( Name="B", Command="PC_PushToTalk" )</Value>
-			</Property>
-		</Section>
 		<Section name="sfxgame.sfxgamemodevehicle">
 			<Property name="bindings">
 				<Value type="2">( Name="XboxTypeS_LeftX", Command="Console_Strafe" )</Value>
@@ -1099,10 +979,6 @@
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="X", Command="Shared_ExitMountedGun" )</Value>
-				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="Y", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
 			</Property>
@@ -1115,10 +991,6 @@
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="X", Command="Shared_ExitMountedGun" )</Value>
-				<Value type="2">( Name="Q", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="Z", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
 			</Property>
@@ -1131,10 +1003,6 @@
 				<Value type="2">( Name="S", Command="PC_MoveBackward" )</Value>
 				<Value type="2">( Name="R", Command="PC_Reload" )</Value>
 				<Value type="2">( Name="X", Command="Shared_ExitMountedGun" )</Value>
-				<Value type="2">( Name="A", Command="PC_SquadMove1" )</Value>
-				<Value type="2">( Name="E", Command="PC_SquadMove2" )</Value>
-				<Value type="2">( Name="C", Command="PC_SquadFollow" )</Value>
-				<Value type="2">( Name="W", Command="PC_SquadAttack" )</Value>
 				<Value type="2">( Name="V", Command="PC_ShowMap" )</Value>
 				<Value type="2">( Name="M", Command="PC_ShowMap" )</Value>
 			</Property>
