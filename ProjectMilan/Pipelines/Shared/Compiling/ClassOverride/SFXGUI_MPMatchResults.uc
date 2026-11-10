@@ -502,14 +502,9 @@ public function int GetXPRequredForLevel(int nLevel)
 }
 public final function bool HasOverallRatingsIncrease()
 {
-    local SFXMatchResultsData MatchResults;
-    
-    MatchResults = GetOverallMatchResults();
-    if (MatchResults.TotalSquadXP > 0 && Class'SFXGAWAssetsHandler'.static.GetGAWHandler().GetOverallReadiness() == 100)
-    {
-        return TRUE;
-    }
-    return MatchResults.CurrentMatchData.OverallRatingIncrease > 0;
+    // MILAN CHANGE - Mgamerz - 2026-11-04
+    // Remove GaW
+    return FALSE;
 }
 
 //class default properties can be edited in the Properties tab for the class's Default__ object.
