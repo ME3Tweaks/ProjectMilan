@@ -999,6 +999,19 @@ defaultproperties
                  GameMode = EGameModes.GameMode_Default
                 }, 
                 {
+                 Keys[0] = {Name = 'None'},
+                 Keys[1] = {Name = 'None'},
+                 Subordinates = ({bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Dying},
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Spectator},
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Atlas},
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Vehicle}
+                                ),
+                 Name = $49875981,
+                 bCategory = FALSE,
+                 Alias = "PC_Talk",
+                 GameMode = EGameModes.GameMode_Default
+                },
+                {
                  Keys[0] = {
                             Command = "", 
                             Name = 'None', 

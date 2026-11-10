@@ -4,11 +4,9 @@ defaultproperties
         MaxVelocity = 0.5
         MotionBlurAmount = 0.400000006
     End Template
-    // MILAN CHANGE - 2026/11/08 - Stumpy - Up the camera sensitivity to the same as the normal camera -30 to the Y axix
     Begin Template Class=SFXCameraInput Name=s_Input
-        CameraSensitivity = {X = 90.0, Y = 60.0}
+        CameraSensitivity = {X = 30.0, Y = 20.0}
     End Template
-    // MILAN END
     StickFactor = 0.0199999996
     FullTurnRecenter = 1.0
     Blur = s_DefaultBlur

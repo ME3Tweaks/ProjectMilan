@@ -14,7 +14,7 @@
 				<Value type="4">( Name="PC_GalaxyKeyStrafeRight", Command="Axis aGuiStrafe Speed=+1.0 EventID=2" )</Value>
 				<Value type="4">( Name="PC_GalaxyKeyMoveForward", Command="Axis aGuiBaseY Speed=+1.0 EventID=3" )</Value>
 				<Value type="4">( Name="PC_GalaxyKeyMoveBackward", Command="Axis aGuiBaseY Speed=-1 EventID=3" )</Value>
-				<Value type="4">( Name="PC_Talk", Command="BioTalk" );</Value>
+				<Value type="2">( Name="PC_Talk", Command="BioTalk" )</Value>
 			</Property>
 		</Section>
 		<!-- This kit is going to need extensive changes. It is horrible. Talon Mercenary from MP5-->

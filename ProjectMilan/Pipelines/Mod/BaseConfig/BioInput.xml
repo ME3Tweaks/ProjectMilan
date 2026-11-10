@@ -115,6 +115,9 @@
 				<Value type="2">(Name="XboxTypeS_B",Command="MoreSpeed | OnRelease NormalSpeed")</Value>
 			</Property>
 		</Section>
+		<Section name="sfxgamecontent_milanbase.milancamerasettings">
+			<Property name="combatstormcontrollersensitivity" type="2">(X=65.0,Y=60.0)</Property>
+		</Section>
 		<!-- MILAN CHANGE - Mgamerz - 2026-10-08: Demo playback camera controls and preferences. -->
 		<Section name="sfxgamecontent_milan_demorec.milandemorecinput">
 			<Property name="demomousesensitivity" type="2">40.0</Property>
