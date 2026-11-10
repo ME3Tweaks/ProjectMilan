@@ -238,7 +238,8 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 FileName = UDKDirectory.GetExecutablePath(Program.Settings.MilanUDKPath),
                 // Add -unattended if startup messages are getting in the way.
                 // -forcelogflush: Launch.log is otherwise buffered, so a hung or killed UDK loses its last minutes of log.
-                Arguments = $"editor -log -forcelogflush",
+                // -nosound - UDK is dumb
+                Arguments = $"editor -log -forcelogflush -nosound",
                 // Arguments = $"editor {mapName}.udk -log", // commented out; we control map load now.
             };
 
