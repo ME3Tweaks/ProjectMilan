@@ -76,6 +76,7 @@
     <String id="49875718">Falta la contraseña del servidor de matchmaking o es incorrecta. Compruébala en Opciones &gt; Red.</String>
     <String id="49875719">La partida rápida no está disponible cuando el matchmaking está desactivado.</String>
     <String id="49875720">La partida rápida no está disponible porque el servidor de matchmaking no está disponible.</String>
+	<String id="49875721">Legendary Edition Multiplayer {0} está disponible. Actualiza para encontrar a más jugadores.</String>
     <!-- MilanHost matchmaking TLKs end -->
     <!-- Multiplayer Settings (SFXGUI_MilanNetConfig) TLKs begin. On/Off, Accept/Cancel and OK reuse the stock LE3 strings. -->
     <String id="49875740">Red</String>
