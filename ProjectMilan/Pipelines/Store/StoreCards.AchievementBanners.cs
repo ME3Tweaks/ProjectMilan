@@ -27,6 +27,7 @@ public static partial class StoreCards
     private static readonly LocalizedString MedalOfHonorTitle = new() {
         [MELocalization.INT] = "Medal of Honor",
         [MELocalization.DEU] = "Ehrenmedaille",
+        [MELocalization.ESN] = "Medalla al honor",
         [MELocalization.FRA] = "Médaille du mérite",
         [MELocalization.POL] = "Medal honoru",
         [MELocalization.RUS] = "Медаль Почета",
@@ -36,6 +37,7 @@ public static partial class StoreCards
     private static readonly LocalizedString MedalOfHonorPackDescription = new() {
         [MELocalization.INT] = "Contains the Medal of Honor banner. $49875828",
         [MELocalization.DEU] = "Enthält das Banner \"Ehrenmedaille\". $49875828",
+        [MELocalization.ESN] = "Contiene el banner \"Medalla al Honor\". $49875828",
         [MELocalization.FRA] = "Contient la bannière Médaille du mérite. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Medalu honoru\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Медаль Почета. $49875828",
@@ -43,6 +45,7 @@ public static partial class StoreCards
     private static readonly LocalizedString ColonialSaviorTitle = new() {
         [MELocalization.INT] = "Colonial Savior",
         [MELocalization.DEU] = "Kolonialer Retter",
+        [MELocalization.ESN] = "Esperanza de la colonia",
         [MELocalization.FRA] = "Sauveur des colonies",
         [MELocalization.POL] = "Zbawca kolonii",
         [MELocalization.RUS] = "Спаситель Колоний",
@@ -51,6 +54,7 @@ public static partial class StoreCards
     private static readonly LocalizedString ColonialSaviorPackDescription = new() {
         [MELocalization.INT] = "Contains the Colonial Savior banner. $49875828",
         [MELocalization.DEU] = "Enthält das Banner \"Kolonialer Retter\". $49875828",
+        [MELocalization.ESN] = "Contiene el banner \"Esperanza de la colonia\". $49875828",
         [MELocalization.FRA] = "Contient la bannière Sauveur des colonies. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Zbawca kolonii\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Спаситель Колоний. $49875828",
@@ -58,6 +62,7 @@ public static partial class StoreCards
     private static readonly LocalizedString MissionAccomplishedTitle = new() {
         [MELocalization.INT] = "Mission Accomplished",
         [MELocalization.DEU] = "Mission erfüllt",
+        [MELocalization.ESN] = "Misión cumplida",
         [MELocalization.FRA] = "Mission accomplie",
         [MELocalization.POL] = "Misja zakończona sukcesem",
         [MELocalization.RUS] = "Миссия Выполнена",
@@ -65,6 +70,7 @@ public static partial class StoreCards
     private static readonly LocalizedString MissionAccomplishedPackDescription = new() {
         [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 2) banner. $49875828",
         [MELocalization.DEU] = "Enthält das Banner \"Mission erfüllt (Mass Effect 2)\". $49875828",
+        [MELocalization.ESN] = "Contiene el banner \"Misión cumplida\" (Mass Effect 2). $49875828\n",
         [MELocalization.FRA] = "Contient la bannière Mission accomplie (Mass Effect 2). $49875828",
         [MELocalization.POL] = "Zawiera baner \"Misja zakończona sukcesem (Mass Effect 2)\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Миссия Выполнена (Mass Effect 2). $49875828",
@@ -72,6 +78,7 @@ public static partial class StoreCards
     private static readonly LocalizedString MercilessTitle = new() {
         [MELocalization.INT] = "Merciless",
         [MELocalization.DEU] = "Gnadenlos",
+        [MELocalization.ESN] = "Implacable",
         [MELocalization.FRA] = "Impitoyable",
         [MELocalization.POL] = "Bez litości",
         [MELocalization.RUS] = "Без Пощады",
@@ -79,6 +86,7 @@ public static partial class StoreCards
     private static readonly LocalizedString MercilessPackDescription = new() {
         [MELocalization.INT] = "Contains the Merciless banner. $49875828",
         [MELocalization.DEU] = "Enthält das Banner „Gnadenlos“. $49875828",
+        [MELocalization.ESN] = "Contiene el banner \"Implacable\". $49875828\n\n",
         [MELocalization.FRA] = "Contient la bannière Impitoyable. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Bez litości\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Без Пощады. $49875828",
@@ -86,6 +94,7 @@ public static partial class StoreCards
     private static readonly LocalizedString MissionAccomplishedLE3PackDescription = new() {
         [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 3) banner. $49875828",
         [MELocalization.DEU] = "Enthält das Banner \"Mission erfüllt (Mass Effect 3)\". $49875828",
+        [MELocalization.ESN] = "Contiene el banner \"Misión cumplida\" (Mass Effect 3). $49875828\n",
         [MELocalization.FRA] = "Contient la bannière Mission accomplie (Mass Effect 3). $49875828",
         [MELocalization.POL] = "Zawiera baner \"Misja zakończona sukcesem (Mass Effect 3)\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Миссия Выполнена (Mass Effect 3). $49875828",
@@ -93,6 +102,7 @@ public static partial class StoreCards
     private static readonly LocalizedString TheOneAndOnlyTitle = new() {
         [MELocalization.INT] = "The One and Only",
         [MELocalization.DEU] = "Der Einzige",
+        [MELocalization.ESN] = "Sin paragón",
         [MELocalization.FRA] = "Le seul, l'unique",
         [MELocalization.POL] = "Jedyny w swoim rodzaju",
         [MELocalization.RUS] = "Великая Победа",
@@ -100,6 +110,7 @@ public static partial class StoreCards
     private static readonly LocalizedString TheOneAndOnlyPackDescription = new() {
         [MELocalization.INT] = "Contains the The One and Only banner. $49875828",
         [MELocalization.DEU] = "Enthält das Banner \"Der Einzige\". $49875828",
+        [MELocalization.ESN] = "Contiene el banner \"Sin paragón\" (Mass Effect 3). $49875828",
         [MELocalization.FRA] = "Contient la bannière Le seul, l'unique. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Jedyny w swoim rodzaju\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Великая Победа. $49875828",

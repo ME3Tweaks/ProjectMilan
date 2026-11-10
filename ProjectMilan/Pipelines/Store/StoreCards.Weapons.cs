@@ -254,21 +254,21 @@ namespace ProjectMilan.Pipelines.Store
             new()
             {
                 UniqueName = "SFXGameContent.SFXWeapon_SniperRifle_BlackWidow", Kind = ReinforcementKind.InventoryUnlock, Rarity = CardRarity.UltraRare, MaxCount = 10,
-                GUIName = 692577, GUIDescription = 707215, GUICategory = CardGUICategory.SniperRifle, GUIType = "sniper", GUITextureRef = "GUI_Icons.Weapons.snp_widow_256x128",
+                GUIName = 692577, GUIDescription = 707215, GUICategory = CardGUICategory.SniperRifle, GUIType = "sniper", GUITextureRef = "GUI_Icons.Weapons.snp_blackwidow_256x128",
                 PlayerVariableIds = [136],
                 Pools = [new(StorePools.GoldUltraRare), new(StorePools.NewUltraRare) { MaxCount = 1 }],
             },
             new()
             {
                 UniqueName = "SFXGameContent.SFXWeapon_Pistol_Ivory", Kind = ReinforcementKind.InventoryUnlock, Rarity = CardRarity.UltraRare, MaxCount = 10,
-                GUIName = 704673, GUIDescription = 707217, GUICategory = CardGUICategory.Pistol, GUIType = "pistol", GUITextureRef = "GUI_Icons.Weapons.pst_carniflex_256x128",
+                GUIName = 704673, GUIDescription = 707217, GUICategory = CardGUICategory.Pistol, GUIType = "pistol", GUITextureRef = "GUI_Icons.Weapons.pst_ivory_256x128",
                 PlayerVariableIds = [138],
                 Pools = [new(StorePools.GoldUltraRare), new(StorePools.NewUltraRare) { MaxCount = 1 }],
             },
             new()
             {
                 UniqueName = "SFXGameContent.SFXWeapon_Shotgun_Striker", Kind = ReinforcementKind.InventoryUnlock, Rarity = CardRarity.UltraRare, MaxCount = 10,
-                GUIName = 709355, GUIDescription = 707213, GUICategory = CardGUICategory.Shotgun, GUIType = "shotgun", GUITextureRef = "GUI_Icons.Weapons.bls_eviscerator_256x128",
+                GUIName = 709355, GUIDescription = 707213, GUICategory = CardGUICategory.Shotgun, GUIType = "shotgun", GUITextureRef = "GUI_Icons.Weapons.bls_striker_256x128",
                 PlayerVariableIds = [137],
                 Pools = [new(StorePools.GoldUltraRare), new(StorePools.NewUltraRare) { MaxCount = 1 }],
             },

@@ -17,8 +17,22 @@ namespace ProjectMilan.Pipelines.Store
     {
         private const string LOG_CATEGORY = @"MILAN-Store";
 
-        private static readonly LocalizedString BannerCardType = new() { [MELocalization.INT] = "Banner" };
-        private static readonly LocalizedString BannerCardDescription = new() { [MELocalization.INT] = "Unlocks this banner for use in the multiplayer lobby." };
+        private static readonly LocalizedString BannerCardType = new() {
+            [MELocalization.INT] = "Banner",
+            [MELocalization.DEU] = "Banner",
+            [MELocalization.ESN] = "Banner",
+            [MELocalization.FRA] = "Bannière",
+            [MELocalization.POL] = "Baner",
+            [MELocalization.RUS] = "Баннер",
+        };
+        private static readonly LocalizedString BannerCardDescription = new() {
+            [MELocalization.INT] = "Unlocks this banner for use in the multiplayer lobby.",
+            [MELocalization.DEU] = "Schaltet dieses Banner für die Verwendung in der Multiplayer-Lobby frei.",
+            [MELocalization.ESN] = "Desbloquea este banner para utilizarlo en el lobby multijugador.",
+            [MELocalization.FRA] = "Débloque cette bannière pour la salle d'attente multijoueurs.",
+            [MELocalization.POL] = "Odblokowuje ten baner do użycia w lobby trybu wieloosobowego.",
+            [MELocalization.RUS] = "Открывает данный баннер для использования в многопользовательстком лобби.",
+        };
 
         /// <param name="builtImages">Images ImagePackageBuilder built, to check the packs that use them.</param>
         public static void Register(IReadOnlySet<string> builtImages)

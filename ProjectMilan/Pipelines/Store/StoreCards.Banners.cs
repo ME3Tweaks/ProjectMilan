@@ -7,37 +7,245 @@ namespace ProjectMilan.Pipelines.Store;
 
 public static partial class StoreCards
 {
-    private static readonly LocalizedString BarCrawlerTitle = new() { [MELocalization.INT] = "Bar Crawler" };
-    private static readonly LocalizedString BerserkTitle = new() { [MELocalization.INT] = "Berserk" };
-    private static readonly LocalizedString BustedTitle = new() { [MELocalization.INT] = "Busted" };
-    private static readonly LocalizedString DiplomatTitle = new() { [MELocalization.INT] = "Diplomat" };
-    private static readonly LocalizedString SunsetTitle = new() { [MELocalization.INT] = "Sunset" };
-    private static readonly LocalizedString KeyartLE1Title = new() { [MELocalization.INT] = "Mass Effect" };
-    private static readonly LocalizedString KeyartLE1AltTitle = new() { [MELocalization.INT] = "Mass Effect" };
-    private static readonly LocalizedString KeyartLE2Title = new() { [MELocalization.INT] = "Mass Effect 2" };
-    private static readonly LocalizedString CaretakerTitle = new() { [MELocalization.INT] = "Caretaker" };
-    private static readonly LocalizedString ExplorerTitle = new() { [MELocalization.INT] = "Explorer" };
-    private static readonly LocalizedString PathfinderTitle = new() { [MELocalization.INT] = "Pathfinder" };
-    private static readonly LocalizedString TrailblazerTitle = new() { [MELocalization.INT] = "Trailblazer" };
-    private static readonly LocalizedString UnknownTitle = new() { [MELocalization.INT] = "Unknown" };
-    private static readonly LocalizedString LegendaryTitle = new() { [MELocalization.INT] = "Legendary" };
-    private static readonly LocalizedString LegendaryAltTitle = new() { [MELocalization.INT] = "Legendary" };
-    private static readonly LocalizedString TrilogyTitle = new() { [MELocalization.INT] = "Mass Effect Trilogy" };
-    private static readonly LocalizedString ClubTitle = new() { [MELocalization.INT] = "Neon" };
-    private static readonly LocalizedString SFXTitle = new() { [MELocalization.INT] = "SFX" };
-    private static readonly LocalizedString N7S1Title = new() { [MELocalization.INT] = "N7 Squad" };
-    private static readonly LocalizedString MEMTitle = new() { [MELocalization.INT] = "Mass Effect Modding" };
-    private static readonly LocalizedString ME3TweaksTitle = new() { [MELocalization.INT] = "ME3Tweaks" };
-    private static readonly LocalizedString MEMPTitle = new() { [MELocalization.INT] = "United Through Discord" };
-    private static readonly LocalizedString DAArlathanGloryTitle = new() { [MELocalization.INT] = "Glory of Arlathan" };
-    private static readonly LocalizedString DAArlathanRitualTitle = new() { [MELocalization.INT] = "The Ritual" };
-    private static readonly LocalizedString DAFromTrickleToFloodTitle = new() { [MELocalization.INT] = "From a Trickle to a Flood" };
-    private static readonly LocalizedString DATheDeepRoadsTitle = new() { [MELocalization.INT] = "The Deep Roads" };
+    private static readonly LocalizedString BarCrawlerTitle = new() {
+        [MELocalization.INT] = "Bar Crawler",
+        [MELocalization.DEU] = "Kneipengänger",
+        [MELocalization.ESN] = "Cliente habitual",
+        [MELocalization.FRA] = "Régulier des bars",
+        [MELocalization.POL] = "Miłośnik barów",
+    };
+    private static readonly LocalizedString BerserkTitle = new() {
+        [MELocalization.INT] = "Berserk",
+        [MELocalization.DEU] = "Berserker",
+        [MELocalization.ESN] = "Berserk",
+        [MELocalization.FRA] = "Fureur",
+        [MELocalization.POL] = "Berserk",
+        [MELocalization.RUS] = "Берсерк",
+    };
+    private static readonly LocalizedString BustedTitle = new() {
+        [MELocalization.INT] = "Busted",
+        [MELocalization.DEU] = "Erwischt",
+        [MELocalization.ESN] = "Pillado",
+        [MELocalization.FRA] = "Grillé",
+        [MELocalization.POL] = "Przyłapany",
+        [MELocalization.RUS] = "Пойман с поличным",
+    };
+    private static readonly LocalizedString DiplomatTitle = new() {
+        [MELocalization.INT] = "Diplomat",
+        [MELocalization.DEU] = "Diplomat",
+        [MELocalization.ESN] = "Diplomata",
+        [MELocalization.FRA] = "Diplomate",
+        [MELocalization.POL] = "Dyplomata",
+        [MELocalization.RUS] = "Дипломат",
+    };
+    private static readonly LocalizedString SunsetTitle = new() {
+        [MELocalization.INT] = "Sunset",
+        [MELocalization.DEU] = "Sonnenuntergang",
+        [MELocalization.ESN] = "Crepúsculo",
+        [MELocalization.FRA] = "Coucher de soleil",
+        [MELocalization.POL] = "Zachód słońca",
+        [MELocalization.RUS] = "Закат",
+    };
+    private static readonly LocalizedString KeyartLE1Title = new() {
+        [MELocalization.INT] = "Mass Effect",
+        [MELocalization.DEU] = "Mass Effect",
+        [MELocalization.ESN] = "Mass Effect",
+        [MELocalization.FRA] = "Mass Effect",
+        [MELocalization.POL] = "Mass Effect",
+        [MELocalization.RUS] = "Mass Effect",
+    };
+    private static readonly LocalizedString KeyartLE1AltTitle = new() {
+        [MELocalization.INT] = "Mass Effect",
+        [MELocalization.DEU] = "Mass Effect",
+        [MELocalization.ESN] = "Mass Effect",
+        [MELocalization.FRA] = "Mass Effect",
+        [MELocalization.POL] = "Mass Effect",
+        [MELocalization.RUS] = "Mass Effect",
+    };
+    private static readonly LocalizedString KeyartLE2Title = new() {
+        [MELocalization.INT] = "Mass Effect 2",
+        [MELocalization.DEU] = "Mass Effect 2",
+        [MELocalization.ESN] = "Mass Effect 2",
+        [MELocalization.FRA] = "Mass Effect 2",
+        [MELocalization.POL] = "Mass Effect 2",
+        [MELocalization.RUS] = "Mass Effect 2",
+    };
+    private static readonly LocalizedString CaretakerTitle = new() {
+        [MELocalization.INT] = "Caretaker",
+        [MELocalization.DEU] = "Hüter",
+        [MELocalization.ESN] = "Guardián",
+        [MELocalization.FRA] = "Gardien",
+        [MELocalization.POL] = "Opiekun",
+        [MELocalization.RUS] = "Смотритель",
+    };
+    private static readonly LocalizedString ExplorerTitle = new() {
+        [MELocalization.INT] = "Explorer",
+        [MELocalization.DEU] = "Entdecker",
+        [MELocalization.ESN] = "Explorador",
+        [MELocalization.FRA] = "Explorateur",
+        [MELocalization.POL] = "Odkrywca",
+        [MELocalization.RUS] = "Исследователь",
+    };
+    private static readonly LocalizedString PathfinderTitle = new() {
+        [MELocalization.INT] = "Pathfinder",
+        [MELocalization.DEU] = "Pathfinder",
+        [MELocalization.ESN] = "Pionero",
+        [MELocalization.FRA] = "Pionnier",
+        [MELocalization.POL] = "Pionier",
+        [MELocalization.RUS] = "Следопыт",
+    };
+    private static readonly LocalizedString TrailblazerTitle = new() {
+        [MELocalization.INT] = "Trailblazer",
+        [MELocalization.DEU] = "Wegbereiter",
+        [MELocalization.ESN] = "Precursor",
+        [MELocalization.FRA] = "Innovateur",
+        [MELocalization.POL] = "Prekursor",
+        [MELocalization.RUS] = "Первопроходец",
+    };
+    private static readonly LocalizedString UnknownTitle = new() {
+        [MELocalization.INT] = "Unknown",
+        [MELocalization.DEU] = "Unbekannt",
+        [MELocalization.ESN] = "Desconocido",
+        [MELocalization.FRA] = "Inconnu",
+        [MELocalization.POL] = "Nieznany",
+        [MELocalization.RUS] = "Неизвестный",
+    };
+    private static readonly LocalizedString LegendaryTitle = new() {
+        [MELocalization.INT] = "Legendary",
+        [MELocalization.DEU] = "Legendär",
+        [MELocalization.ESN] = "Legendario",
+        [MELocalization.FRA] = "Légendaire",
+        [MELocalization.POL] = "Legendarny",
+        [MELocalization.RUS] = "Легендарный",
+    };
+    private static readonly LocalizedString LegendaryAltTitle = new() {
+        [MELocalization.INT] = "Legendary",
+        [MELocalization.DEU] = "Legendär",
+        [MELocalization.ESN] = "Legendario",
+        [MELocalization.FRA] = "Légendaire",
+        [MELocalization.POL] = "Legendarny",
+        [MELocalization.RUS] = "Легендарный",
+    };
+    private static readonly LocalizedString TrilogyTitle = new() {
+        [MELocalization.INT] = "Mass Effect Trilogy",
+        [MELocalization.DEU] = "Mass Effect Trilogie",
+        [MELocalization.ESN] = "Trilogía de Mass Effect",
+        [MELocalization.FRA] = "Trilogie Mass Effect",
+        [MELocalization.POL] = "Trylogia Mass Effect",
+        [MELocalization.RUS] = "Трилогия Mass Effect",
+    };
+    private static readonly LocalizedString ClubTitle = new() {
+        [MELocalization.INT] = "Neon",
+        [MELocalization.DEU] = "Neon",
+        [MELocalization.ESN] = "Neón",
+        [MELocalization.FRA] = "Néon",
+        [MELocalization.POL] = "Neon",
+        [MELocalization.RUS] = "Неон",
+    };
+    private static readonly LocalizedString SFXTitle = new() {
+        [MELocalization.INT] = "SFX",
+        [MELocalization.DEU] = "SFX",
+        [MELocalization.ESN] = "SFX",
+        [MELocalization.FRA] = "SFX",
+        [MELocalization.POL] = "SFX",
+        [MELocalization.RUS] = "SFX",
+    };
+    private static readonly LocalizedString N7S1Title = new() {
+        [MELocalization.INT] = "N7 Squad",
+        [MELocalization.DEU] = "N7 Squad",
+        [MELocalization.ESN] = "N7 Squad",
+        [MELocalization.FRA] = "N7 Squad",
+        [MELocalization.POL] = "Oddział N7",
+        [MELocalization.RUS] = "Отряд N7",
+    };
+    private static readonly LocalizedString MEMTitle = new() {
+        [MELocalization.INT] = "Mass Effect Modding",
+        [MELocalization.DEU] = "Mass Effect Modding",
+        [MELocalization.ESN] = "Mass Effect Modding",
+        [MELocalization.FRA] = "Mass Effect Modding",
+        [MELocalization.POL] = "Mass Effect Modding",
+        [MELocalization.RUS] = "Mass Effect Моддинг",
+    };
+    private static readonly LocalizedString ME3TweaksTitle = new() {
+        [MELocalization.INT] = "ME3Tweaks",
+        [MELocalization.DEU] = "ME3Tweaks",
+        [MELocalization.ESN] = "ME3Tweaks",
+        [MELocalization.FRA] = "ME3Tweaks",
+        [MELocalization.POL] = "ME3Tweaks",
+        [MELocalization.RUS] = "ME3Tweaks",
+    };
+    private static readonly LocalizedString MEMPTitle = new() {
+        [MELocalization.INT] = "United Through Discord",
+        [MELocalization.DEU] = "Vereint durch Zwietracht",
+        [MELocalization.ESN] = "Unidos a través el desacuerdo",
+        [MELocalization.FRA] = "Unis par la discorde",
+        [MELocalization.POL] = "Zjednoczeni w niezgodzie",
+        [MELocalization.RUS] = "Discord Объединяет",
+    };
+    private static readonly LocalizedString DAArlathanGloryTitle = new() {
+        [MELocalization.INT] = "Glory of Arlathan",
+        [MELocalization.DEU] = "Ruhm von Arlathan",
+        [MELocalization.ESN] = "Gloria de Arlathan",
+        [MELocalization.FRA] = "Gloire d'Arlathan",
+        [MELocalization.POL] = "Chwała Arlathanu",
+        [MELocalization.RUS] = "Слава Арлатана",
+    };
+    private static readonly LocalizedString DAArlathanRitualTitle = new() {
+        [MELocalization.INT] = "The Ritual",
+        [MELocalization.DEU] = "Das Ritual",
+        [MELocalization.ESN] = "El Ritual",
+        [MELocalization.FRA] = "Le Rituel",
+        [MELocalization.POL] = "Rytuał",
+        [MELocalization.RUS] = "Ритуал",
+    };
+    private static readonly LocalizedString DAFromTrickleToFloodTitle = new() {
+        [MELocalization.INT] = "From a Trickle to a Flood",
+        [MELocalization.DEU] = "Vom Rinnsal zur Flut",
+        [MELocalization.ESN] = "De un chorrito a una inundación",
+        [MELocalization.FRA] = "De la Goutte au déluge",
+        [MELocalization.POL] = "Od strużki do powodzi",
+        [MELocalization.RUS] = "От Капели до Потопа",
+    };
+    private static readonly LocalizedString DATheDeepRoadsTitle = new() {
+        [MELocalization.INT] = "The Deep Roads",
+        [MELocalization.DEU] = "Die Tiefen Straßen",
+        [MELocalization.ESN] = "Caminos de las Profundidades",
+        [MELocalization.FRA] = "Les Tréfonds",
+        [MELocalization.POL] = "Głębokie Ścieżki",
+        [MELocalization.RUS] = "Дальние Дороги",
+    };
     // private static readonly LocalizedString DATheLastStraw1Title = new() { [MELocalization.INT] = "The Last Straw" };
-    private static readonly LocalizedString DATheLastStraw2Title = new() { [MELocalization.INT] = "The Last Straw" };
-    private static readonly LocalizedString DATheWrathOfHeavenTitle = new() { [MELocalization.INT] = "The Wrath of Heaven" };
-    private static readonly LocalizedString SaveMassEffectTitle = new() { [MELocalization.INT] = "Save Mass Effect" };
-    private static readonly LocalizedString DATrespasserTitle = new() { [MELocalization.INT] = "Trespasser" };
+    private static readonly LocalizedString DATheLastStraw2Title = new() {
+        [MELocalization.INT] = "The Last Straw",
+        [MELocalization.DEU] = "Der letzte Tropfen",
+        [MELocalization.ESN] = "La última gota",
+        [MELocalization.FRA] = "La Goutte d'eau",
+        [MELocalization.POL] = "Ostatnia kropla",
+        [MELocalization.RUS] = "Последняя Соломинка",
+    };
+    private static readonly LocalizedString DATheWrathOfHeavenTitle = new() {
+        [MELocalization.INT] = "The Wrath of Heaven",
+        [MELocalization.DEU] = "Der Zorn des Himmels",
+        [MELocalization.ESN] = "La ira del paraíso",
+        [MELocalization.FRA] = "La Colère du ciel",
+        [MELocalization.POL] = "Gniew niebios",
+        [MELocalization.RUS] = "Ярость Небес",
+    };
+    private static readonly LocalizedString SaveMassEffectTitle = new() {
+        [MELocalization.INT] = "Save Mass Effect",
+        [MELocalization.DEU] = "Rettet Mass Effect",
+        [MELocalization.ESN] = "Salva Mass Effect",
+        [MELocalization.FRA] = "Save Mass Effect",
+        [MELocalization.POL] = "Ratujmy Mass Effect",
+    };
+    private static readonly LocalizedString DATrespasserTitle = new() {
+        [MELocalization.INT] = "Trespasser",
+        [MELocalization.DEU] = "Eindringling",
+        [MELocalization.ESN] = "Intruso",
+        [MELocalization.FRA] = "Effraction",
+        [MELocalization.POL] = "Intruz",
+        [MELocalization.RUS] = "Нарушитель",
+    };
 
     // Add custom milan banners here that have drops.
     private static IEnumerable<StoreCard> Banners =>
