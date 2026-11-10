@@ -2,6 +2,10 @@ Class SFXHUDMP extends BioHUD
     transient
     config(UI);
 
+var Color ShadowColor;
+var int MaxMessageLength;
+var int MaxMessageCharactersPerLine;
+
 public function Message(PlayerReplicationInfo PRI, coerce string Msg, Name msgType, optional float Lifetime)
 {
     if (Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem() != None && Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentOrigin() != None && Class'SFXOnlineSubsystem'.static.GetOnlineSubsystem().GetComponentOrigin().IsMuted(PRI.PlayerName))
@@ -156,6 +160,12 @@ public function DUI_SetupElementPulse(BioSFHandler_DesignerUI.BioDUIElements nEl
 
 // MILAN CHANGE
 // 2026/11/10 - Stumpy - in-game "chat" improvements.
+// This method is hooked by MilanHost
+public final function bool IsScreenshotPending()
+{
+    return FALSE;
+}
+
 public function DisplayConsoleMessages()
 {
     local int idx;
@@ -178,6 +188,10 @@ public function DisplayConsoleMessages()
         {
             ConsoleMessages.Remove(idx--, 1);
         }
+    }
+    if (IsScreenshotPending())
+    {
+        return;
     }
     TextScale = float(Canvas.SizeY) / 720.0 / 2.0;
     XPos = int(ConsoleMessagePosX * HudCanvasScale * float(Canvas.SizeX) + (1.0 - HudCanvasScale) / 2.0 * float(Canvas.SizeX));
