@@ -2319,7 +2319,7 @@ defaultproperties
                 {
                  UniqueName = "SFXGameContent.SFXWeapon_SniperRifle_BlackWidow", 
                  GUIType = "sniper", 
-                 GUITextureRef = "GUI_Icons.Weapons.snp_widow_256x128", 
+                 GUITextureRef = "GUI_Icons.Weapons.snp_blackwidow_256x128", 
                  PoolName = "", 
                  UniqueId = 0, 
                  MaxCount = 10, 
@@ -2340,7 +2340,7 @@ defaultproperties
                 {
                  UniqueName = "SFXGameContent.SFXWeapon_Pistol_Ivory", 
                  GUIType = "pistol", 
-                 GUITextureRef = "GUI_Icons.Weapons.pst_carniflex_256x128", 
+                 GUITextureRef = "GUI_Icons.Weapons.pst_ivory_256x128", 
                  PoolName = "", 
                  UniqueId = 0, 
                  MaxCount = 10, 
@@ -2361,7 +2361,7 @@ defaultproperties
                 {
                  UniqueName = "SFXGameContent.SFXWeapon_Shotgun_Striker", 
                  GUIType = "shotgun", 
-                 GUITextureRef = "GUI_Icons.Weapons.bls_eviscerator_256x128", 
+                 GUITextureRef = "GUI_Icons.Weapons.bls_striker_256x128", 
                  PoolName = "", 
                  UniqueId = 0, 
                  MaxCount = 10, 
