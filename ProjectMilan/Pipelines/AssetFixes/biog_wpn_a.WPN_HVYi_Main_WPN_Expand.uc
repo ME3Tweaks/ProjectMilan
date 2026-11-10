@@ -95,10 +95,7 @@ properties
                              )
     SequenceName = 'WPN_Expand'
     m_pBioAnimSetData = BioAnimSetData'biog_wpn_a.BioAnimSetData_6'
-    // MILAN CHANGE
-    // 2026/11/07 - Stumpy - lower expand animation length so it finishes as soon as the weapon is shouldered
     SequenceLength = 1.5333333
-    // MILAN END
     NumFrames = 76
     RotationCompressionFormat = AnimationCompressionFormat.ACF_BioFixed48
     KeyEncodingFormat = AnimationKeyFormat.AKF_VariableKeyLerp
