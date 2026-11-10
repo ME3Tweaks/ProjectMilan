@@ -10,6 +10,8 @@ Class SFXGUI_MilanNetConfig extends SFXGUIMovieLegacyAdapter
     config(UI);
 
 var transient SFXGUIHelper_ConsoleKeyboard m_oKeyboard;
+var transient PlayerInput m_oPCTextInput;
+var transient delegate<Interaction.OnReceivedNativeInputKey> m_PreviousPCInputKey;
 // Temporarily store banned characters list
 // We should store it in the wild encounter data table...
 // mmm, maybe that's a bad idea
@@ -86,6 +88,7 @@ public event function OnPanelAdded()
 }
 public event function OnPanelRemoved()
 {
+    EndPCTextInput();
     RestoreKeyboardChars();
     m_oKeyboard = None;
 }
@@ -242,6 +245,46 @@ public function EnterPlayerName(string sDefault)
     RestoreKeyboardChars();
     GetKeyboard().DisplayKeyboard(srProfileName, $0, 0, nMaxNameLength, sDefault);
 }
+public function BeginPCTextInput()
+{
+    local PlayerController PC;
+
+    if (m_bReadOnly || m_oPCTextInput != None)
+    {
+        return;
+    }
+    PC = GetPC();
+    if (PC != None && PC.PlayerInput != None)
+    {
+        m_oPCTextInput = PC.PlayerInput;
+        m_PreviousPCInputKey = m_oPCTextInput.OnReceivedNativeInputKey;
+        m_oPCTextInput.OnReceivedNativeInputKey = OnPCTextInputKey;
+    }
+}
+public function EndPCTextInput()
+{
+    if (m_oPCTextInput != None)
+    {
+        if (m_oPCTextInput.OnReceivedNativeInputKey == OnPCTextInputKey)
+        {
+            m_oPCTextInput.OnReceivedNativeInputKey = m_PreviousPCInputKey;
+        }
+        m_oPCTextInput = None;
+        m_PreviousPCInputKey = None;
+    }
+}
+public function bool OnPCTextInputKey(int ControllerId, name Key, EInputEvent EventType, optional float AmountDepressed = 1.0, optional bool bGamepad)
+{
+    if (m_PreviousPCInputKey != None && m_PreviousPCInputKey(ControllerId, Key, EventType, AmountDepressed, bGamepad))
+    {
+        return TRUE;
+    }
+    if (!bGamepad && !m_bReadOnly && !m_bShowingMessage && HasFocus() && Key == 'Slash' && (EventType == EInputEvent.IE_Pressed || EventType == EInputEvent.IE_Repeat))
+    {
+        oPanel.InvokeMethod("QueueNativeSlash");
+    }
+    return FALSE;
+}
 public function EnterServer(string sDefault)
 {
     AllowAllKeyboardChars();
@@ -347,6 +390,7 @@ private final function RefreshLocalPlayerName(string sPlayerName)
 }
 private final function CloseScreen()
 {
+    EndPCTextInput();
     RestoreKeyboardChars();
     m_oKeyboard = None;
     Close(TRUE);
