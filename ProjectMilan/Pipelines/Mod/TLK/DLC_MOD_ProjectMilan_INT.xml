@@ -74,6 +74,7 @@
     <String id="49875718">The matchmaking server's password is missing or wrong. Check it in Options &gt; Network.</String>
     <String id="49875719">Quick match is unavailable when matchmaking is off.</String>
     <String id="49875720">Quick match is unavailable because the matchmaking server is unavailable.</String>
+    <String id="49875721">Project Milan {0} is available. Update to keep playing with most other players.</String>
     <!-- MilanHost matchmaking TLKs end -->
     <!-- Multiplayer Settings (SFXGUI_MilanNetConfig) TLKs begin. On/Off, Accept/Cancel and OK reuse the stock LE3 strings. -->
     <String id="49875740">Network</String>
