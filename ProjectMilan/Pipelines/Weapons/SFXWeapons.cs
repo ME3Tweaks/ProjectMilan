@@ -492,7 +492,7 @@ namespace ProjectMilan.Pipelines.Weapons
         /// <summary>
         /// The bench asynchronously loads CookedPackage for every nonempty preview mesh. Check the actual
         /// built/base packages and mesh exports, so an unshipped SP preview cannot pass catalog validation.
-        /// Mods without meshes (including ultralights) do not request a preview package.
+        /// Mods without meshes (including ultralights) do not request a preview package
         /// </summary>
         internal static void ValidateWeaponModPreviews(IEnumerable<StructProperty> mods, Func<string, IMEPackage?> openPackage)
         {
@@ -500,9 +500,10 @@ namespace ProjectMilan.Pipelines.Weapons
                          .GroupBy(x => x.GetProp<StrProperty>("CookedPackage")?.Value, StringComparer.OrdinalIgnoreCase))
             {
                 if (string.IsNullOrWhiteSpace(group.Key))
+                {
                     throw new InvalidOperationException("Weapon mod with preview meshes has no CookedPackage.");
-                using var preview = openPackage(group.Key)
-                    ?? throw new InvalidOperationException($"Weapon mod preview package {group.Key} is not shipped by the build or LE3.");
+                }
+                using var preview = openPackage(group.Key) ?? throw new InvalidOperationException($"Weapon mod preview package {group.Key} is not shipped by the build or LE3.");
                 foreach (var mod in group)
                 {
                     foreach (var mesh in mod.GetProp<ArrayProperty<StrProperty>>("Meshes").Where(x => !string.IsNullOrEmpty(x.Value)))

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <tlkFile TLKToolVersion="4.0.0.0">
     <!--Male entries section begin-->
+    <String id="326824">Arvuna</String>
 	<!-- Project Milan Strings -->
     <String id="49875622">Project Milan DLC</String>
     <String id="49875623">DLC_MOD_ProjectMilan</String>
@@ -74,6 +75,7 @@
     <String id="49875718">Das Passwort des Matchmaking-Servers fehlt oder ist falsch. Überprüfe es unter Optionen &gt; Netzwerk.</String>
     <String id="49875719">Schnelles Spiel ist nicht verfügbar, wenn Matchmaking deaktiviert ist.</String>
     <String id="49875720">Schnelles Spiel ist nicht verfügbar, da der Matchmaking-Server nicht erreichbar ist.</String>
+    <String id="49875721">Legendary Edition Multiplayer {0} ist verfügbar. Aktualisiere, um mehr Spieler zu finden.</String>
     <!-- MilanHost matchmaking TLKs end -->
     <!-- Multiplayer Settings (SFXGUI_MilanNetConfig) TLKs begin. On/Off, Accept/Cancel and OK reuse the stock LE3 strings. -->
     <String id="49875740">Netzwerk</String>
@@ -265,6 +267,7 @@ Herobrine24</String>
 	<!-- Credits end -->
     
 	<!-- TLK changes -->
+    <String id="49875981">Textchat</String>
 	<!-- Tactical Scan rank 5A description - add shield gate -->
     <String id="733112">Erhöht allen Kopfschussschaden um {Evolve_HeadshotBonus%p}%.
 Reduziert die Wirksamkeit des Schild-Gates des Ziels um {Evolve_ShieldGateReduction%p}%.</String>

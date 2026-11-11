@@ -29,6 +29,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = "Munitions pour votre arme lourde équippée.",
         [MELocalization.POL] = "Amunicja do wyposażonej broni ciężkiej.",
         [MELocalization.RUS] = "Боеприпасы для снаряженного тяжелого оружия.",
+        [MELocalization.ITA] = "Munizioni per le armi pesanti che hai equipaggiato.",
     };
     private static readonly LocalizedString GroupedAmmoText = new() {
         [MELocalization.INT] = "+<CUSTOM2> Heavy Weapon Ammo",
@@ -37,6 +38,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = " +<CUSTOM2> Munitions arme lourde",
         [MELocalization.POL] = "+<CUSTOM2> Amunicja do broni ciężkiej",
         [MELocalization.RUS] = "+<CUSTOM2> Боеприпасы Тяжелого Оружия",
+        [MELocalization.ITA] = "+<CUSTOM2> Munizioni per le armi pesanti",
     };
     private static readonly LocalizedString AmmoCapacityText = new() {
         [MELocalization.INT] = "Heavy Weapon Ammo Capacity +<CUSTOM2>",
@@ -45,6 +47,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = "Capacité munitions arme lourde +<CUSTOM2>",
         [MELocalization.POL] = "Pojemność amunicji broni ciężkiej +<CUSTOM2>",
         [MELocalization.RUS] = "Боезапас Тяжелого Оружия +<CUSTOM2>",
+        [MELocalization.ITA] = "Capacità delle munizioni per le armi pesanti +<CUSTOM2>",
     };
     private static readonly LocalizedString AmmoCapacityDescriptionText = new() {
         [MELocalization.INT] = "You can now carry <CUSTOM1> heavy weapon ammo charges into a mission.",
@@ -53,6 +56,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = "Vous pouvez désormais porter <CUSTOM1> charges de munitions pour arme lourde en mission.",
         [MELocalization.POL] = "Możesz teraz zabrać ze sobą na misję <CUSTOM1> amunicji broni ciężkiej.",
         [MELocalization.RUS] = "Вы теперь можете брать <CUSTOM1> зарядов тяжелого оружия на миссию.",
+        [MELocalization.ITA] = "Ora puoi trasportare  <CUSTOM1> munizioni per le armi pesanti in una missione.",
     };
     private static readonly LocalizedString GearDescriptionText = new() {
         [MELocalization.INT] = "Stores additional thermal clips and heavy weapon ammo in armored compartments to shield them from incoming fire.\nHeavy Weapon Ammo Capacity: +<CUSTOM3>\nAmmo Capacity: +<CUSTOM0>%",
@@ -61,6 +65,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = "Emmagasine des cartouches thermiques supplémentaires et des munitions pour arme lourde dans des compartiments armurés pour les protéger contre le feu ennemi.\nCapacité munitions arme lourde : +<CUSTOM3>\nCapacité munitions : +<CUSTOM0> %",
         [MELocalization.POL] = "Przechowuje dodatkowe pochłaniacze ciepła i amunicję do broni ciężkiej w pancernych schowkach, chroniąc je przed ostrzałem. Pojemność amunicji broni ciężkiej: +<CUSTOM3> Pojemność amunicji: +<CUSTOM0>%",
         [MELocalization.RUS] = "Хранит дополнильные термозаряды и боеприпасы тяжелого оружия в бронированных отсеках для защиты от входящего огня.\nБоезапас Тяжелого Оружия: +<CUSTOM3>\nБоезапас: +<CUSTOM0>%",
+        [MELocalization.ITA] = "Immagazzina clip termiche agiuntive e munizioni per le armi pesanti in scomparti corazzati per proteggerle dal fuoco nemico.\nCapacità delle munizioni per le armi pesanti: +<CUSTOM3>\nCapacità delle munizioni: +<CUSTOM0>%",
     };
     private static readonly LocalizedString HiddenText = new() {
         [MELocalization.INT] = "Hidden weapons disappear when holstered.",
@@ -69,6 +74,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = "Les armes cachées disparaissent lorsqu'elles ne sont pas en main.",
         [MELocalization.POL] = "Ukryta broń znika po jej schowaniu.",
         [MELocalization.RUS] = "Тяжелое оружие скрывается при убирании",
+        [MELocalization.ITA] = "Le armi nascoste scompaiono quando riposte.",
     };
     private static readonly LocalizedString UnlockDescriptionText = new() {
         [MELocalization.INT] = "Unlocks this heavy weapon for selection.",
@@ -77,6 +83,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = "Débloque la sélection de cette arme lourde.",
         [MELocalization.POL] = "Odblokowuje tę broń ciężką umożliwiając jej wybór.",
         [MELocalization.RUS] = "Разблокирует выбор тяжелого оружия.",
+        [MELocalization.ITA] = "Sblocca questa arma pesante per la selezione.",
     };
     private static readonly LocalizedString HiddenUnlockDescriptionText = LocalizedString.Join(UnlockDescriptionText, "\n\n", HiddenText);
     private static readonly LocalizedString HiddenCobraTitleText = new() {
@@ -86,6 +93,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = "Lance-missile Cobra (Caché)",
         [MELocalization.POL] = "Wyrzutnia rakiet Cobra (ukryta)",
         [MELocalization.RUS] = "М-560 Кобра",
+        [MELocalization.ITA] = "Lanciamissili Cobra (nascosto)",
     };
     private static readonly LocalizedString CardTypeText = new() {
         [MELocalization.INT] = "Heavy Weapon",
@@ -94,6 +102,7 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.FRA] = "Arme lourde",
         [MELocalization.POL] = "Broń ciężka",
         [MELocalization.RUS] = "Тяжелое Оружие",
+        [MELocalization.ITA] = "Arma pesante",
     };
 
     // Cobra is unlocked by deafult, so it doesn't have anything unlock for it. So we have to fill out the

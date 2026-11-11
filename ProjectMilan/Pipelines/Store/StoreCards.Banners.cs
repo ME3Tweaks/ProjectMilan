@@ -13,6 +13,8 @@ public static partial class StoreCards
         [MELocalization.ESN] = "Cliente habitual",
         [MELocalization.FRA] = "Régulier des bars",
         [MELocalization.POL] = "Miłośnik barów",
+        [MELocalization.ITA] = "Frequentatore di bar",
+        [MELocalization.RUS] = "Завсегдатай Баров",
     };
     private static readonly LocalizedString BerserkTitle = new() {
         [MELocalization.INT] = "Berserk",
@@ -21,6 +23,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Fureur",
         [MELocalization.POL] = "Berserk",
         [MELocalization.RUS] = "Берсерк",
+        [MELocalization.ITA] = "Berserk",
     };
     private static readonly LocalizedString BustedTitle = new() {
         [MELocalization.INT] = "Busted",
@@ -29,6 +32,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Grillé",
         [MELocalization.POL] = "Przyłapany",
         [MELocalization.RUS] = "Пойман с поличным",
+        [MELocalization.ITA] = "Fregato",
     };
     private static readonly LocalizedString DiplomatTitle = new() {
         [MELocalization.INT] = "Diplomat",
@@ -37,6 +41,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Diplomate",
         [MELocalization.POL] = "Dyplomata",
         [MELocalization.RUS] = "Дипломат",
+        [MELocalization.ITA] = "Diplomatico",
     };
     private static readonly LocalizedString SunsetTitle = new() {
         [MELocalization.INT] = "Sunset",
@@ -45,6 +50,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Coucher de soleil",
         [MELocalization.POL] = "Zachód słońca",
         [MELocalization.RUS] = "Закат",
+        [MELocalization.ITA] = "Tramonto",
     };
     private static readonly LocalizedString KeyartLE1Title = new() {
         [MELocalization.INT] = "Mass Effect",
@@ -53,6 +59,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Mass Effect",
         [MELocalization.POL] = "Mass Effect",
         [MELocalization.RUS] = "Mass Effect",
+        [MELocalization.ITA] = "Mass Effect",
     };
     private static readonly LocalizedString KeyartLE1AltTitle = new() {
         [MELocalization.INT] = "Mass Effect",
@@ -61,6 +68,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Mass Effect",
         [MELocalization.POL] = "Mass Effect",
         [MELocalization.RUS] = "Mass Effect",
+        [MELocalization.ITA] = "Mass Effect",
     };
     private static readonly LocalizedString KeyartLE2Title = new() {
         [MELocalization.INT] = "Mass Effect 2",
@@ -69,6 +77,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Mass Effect 2",
         [MELocalization.POL] = "Mass Effect 2",
         [MELocalization.RUS] = "Mass Effect 2",
+        [MELocalization.ITA] = "Mass Effect 2",
     };
     private static readonly LocalizedString CaretakerTitle = new() {
         [MELocalization.INT] = "Caretaker",
@@ -77,6 +86,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Gardien",
         [MELocalization.POL] = "Opiekun",
         [MELocalization.RUS] = "Смотритель",
+        [MELocalization.ITA] = "Guardiano",
     };
     private static readonly LocalizedString ExplorerTitle = new() {
         [MELocalization.INT] = "Explorer",
@@ -85,6 +95,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Explorateur",
         [MELocalization.POL] = "Odkrywca",
         [MELocalization.RUS] = "Исследователь",
+        [MELocalization.ITA] = "Esploratore",
     };
     private static readonly LocalizedString PathfinderTitle = new() {
         [MELocalization.INT] = "Pathfinder",
@@ -92,7 +103,8 @@ public static partial class StoreCards
         [MELocalization.ESN] = "Pionero",
         [MELocalization.FRA] = "Pionnier",
         [MELocalization.POL] = "Pionier",
-        [MELocalization.RUS] = "Следопыт",
+        [MELocalization.RUS] = "Первопроходец",
+        [MELocalization.ITA] = "Pioniere",
     };
     private static readonly LocalizedString TrailblazerTitle = new() {
         [MELocalization.INT] = "Trailblazer",
@@ -100,7 +112,8 @@ public static partial class StoreCards
         [MELocalization.ESN] = "Precursor",
         [MELocalization.FRA] = "Innovateur",
         [MELocalization.POL] = "Prekursor",
-        [MELocalization.RUS] = "Первопроходец",
+        [MELocalization.RUS] = "Звездопроходец",
+        [MELocalization.ITA] = "Precursore",
     };
     private static readonly LocalizedString UnknownTitle = new() {
         [MELocalization.INT] = "Unknown",
@@ -109,6 +122,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Inconnu",
         [MELocalization.POL] = "Nieznany",
         [MELocalization.RUS] = "Неизвестный",
+        [MELocalization.ITA] = "Sconosciuto",
     };
     private static readonly LocalizedString LegendaryTitle = new() {
         [MELocalization.INT] = "Legendary",
@@ -117,6 +131,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Légendaire",
         [MELocalization.POL] = "Legendarny",
         [MELocalization.RUS] = "Легендарный",
+        [MELocalization.ITA] = "Leggendario",
     };
     private static readonly LocalizedString LegendaryAltTitle = new() {
         [MELocalization.INT] = "Legendary",
@@ -125,6 +140,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Légendaire",
         [MELocalization.POL] = "Legendarny",
         [MELocalization.RUS] = "Легендарный",
+        [MELocalization.ITA] = "Leggendario",
     };
     private static readonly LocalizedString TrilogyTitle = new() {
         [MELocalization.INT] = "Mass Effect Trilogy",
@@ -133,6 +149,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Trilogie Mass Effect",
         [MELocalization.POL] = "Trylogia Mass Effect",
         [MELocalization.RUS] = "Трилогия Mass Effect",
+        [MELocalization.ITA] = "Trilogia di Mass Effect",
     };
     private static readonly LocalizedString ClubTitle = new() {
         [MELocalization.INT] = "Neon",
@@ -141,6 +158,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Néon",
         [MELocalization.POL] = "Neon",
         [MELocalization.RUS] = "Неон",
+        [MELocalization.ITA] = "Neon",
     };
     private static readonly LocalizedString SFXTitle = new() {
         [MELocalization.INT] = "SFX",
@@ -149,6 +167,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "SFX",
         [MELocalization.POL] = "SFX",
         [MELocalization.RUS] = "SFX",
+        [MELocalization.ITA] = "SFX",
     };
     private static readonly LocalizedString N7S1Title = new() {
         [MELocalization.INT] = "N7 Squad",
@@ -157,6 +176,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "N7 Squad",
         [MELocalization.POL] = "Oddział N7",
         [MELocalization.RUS] = "Отряд N7",
+        [MELocalization.ITA] = "N7 Squad",
     };
     private static readonly LocalizedString MEMTitle = new() {
         [MELocalization.INT] = "Mass Effect Modding",
@@ -165,6 +185,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Mass Effect Modding",
         [MELocalization.POL] = "Mass Effect Modding",
         [MELocalization.RUS] = "Mass Effect Моддинг",
+        [MELocalization.ITA] = "Mass Effect Modding",
     };
     private static readonly LocalizedString ME3TweaksTitle = new() {
         [MELocalization.INT] = "ME3Tweaks",
@@ -173,6 +194,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "ME3Tweaks",
         [MELocalization.POL] = "ME3Tweaks",
         [MELocalization.RUS] = "ME3Tweaks",
+        [MELocalization.ITA] = "ME3Tweaks",
     };
     private static readonly LocalizedString MEMPTitle = new() {
         [MELocalization.INT] = "United Through Discord",
@@ -181,6 +203,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Unis par la discorde",
         [MELocalization.POL] = "Zjednoczeni w niezgodzie",
         [MELocalization.RUS] = "Discord Объединяет",
+        [MELocalization.ITA] = "Uniti attraverso la discordia",
     };
     private static readonly LocalizedString DAArlathanGloryTitle = new() {
         [MELocalization.INT] = "Glory of Arlathan",
@@ -189,6 +212,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Gloire d'Arlathan",
         [MELocalization.POL] = "Chwała Arlathanu",
         [MELocalization.RUS] = "Слава Арлатана",
+        [MELocalization.ITA] = "Gloria di Arlathan",
     };
     private static readonly LocalizedString DAArlathanRitualTitle = new() {
         [MELocalization.INT] = "The Ritual",
@@ -197,6 +221,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Le Rituel",
         [MELocalization.POL] = "Rytuał",
         [MELocalization.RUS] = "Ритуал",
+        [MELocalization.ITA] = "Il Rituale",
     };
     private static readonly LocalizedString DAFromTrickleToFloodTitle = new() {
         [MELocalization.INT] = "From a Trickle to a Flood",
@@ -205,6 +230,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "De la Goutte au déluge",
         [MELocalization.POL] = "Od strużki do powodzi",
         [MELocalization.RUS] = "От Капели до Потопа",
+        [MELocalization.ITA] = "Da una goccia all’alluvione",
     };
     private static readonly LocalizedString DATheDeepRoadsTitle = new() {
         [MELocalization.INT] = "The Deep Roads",
@@ -213,6 +239,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Les Tréfonds",
         [MELocalization.POL] = "Głębokie Ścieżki",
         [MELocalization.RUS] = "Дальние Дороги",
+        [MELocalization.ITA] = "Le profondità",
     };
     // private static readonly LocalizedString DATheLastStraw1Title = new() { [MELocalization.INT] = "The Last Straw" };
     private static readonly LocalizedString DATheLastStraw2Title = new() {
@@ -222,6 +249,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "La Goutte d'eau",
         [MELocalization.POL] = "Ostatnia kropla",
         [MELocalization.RUS] = "Последняя Соломинка",
+        [MELocalization.ITA] = "L’ultima goccia",
     };
     private static readonly LocalizedString DATheWrathOfHeavenTitle = new() {
         [MELocalization.INT] = "The Wrath of Heaven",
@@ -230,6 +258,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "La Colère du ciel",
         [MELocalization.POL] = "Gniew niebios",
         [MELocalization.RUS] = "Ярость Небес",
+        [MELocalization.ITA] = "L’ira del paradiso",
     };
     private static readonly LocalizedString SaveMassEffectTitle = new() {
         [MELocalization.INT] = "Save Mass Effect",
@@ -237,6 +266,8 @@ public static partial class StoreCards
         [MELocalization.ESN] = "Salva Mass Effect",
         [MELocalization.FRA] = "Save Mass Effect",
         [MELocalization.POL] = "Ratujmy Mass Effect",
+        [MELocalization.ITA] = "Save Mass Effect",
+        [MELocalization.RUS] = "Спасение Mass Effect",
     };
     private static readonly LocalizedString DATrespasserTitle = new() {
         [MELocalization.INT] = "Trespasser",
@@ -245,6 +276,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Effraction",
         [MELocalization.POL] = "Intruz",
         [MELocalization.RUS] = "Нарушитель",
+        [MELocalization.ITA] = "Intruso",
     };
 
     // Add custom milan banners here that have drops.

@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <tlkFile TLKToolVersion="4.0.0.0">
     <!--Male entries section begin-->
+
+	<!-- 11/09/2026 - Add Firebase Hydra's location. It was stripped from LE3 Basegame TLK -->
+	<String id="326824">Arvuna</String>
+
 	<!-- Project Milan Strings -->
-    <String id="49875622">Project Milan DLC</String>
-    <String id="49875623">DLC_MOD_ProjectMilan</String>
+	<String id="49875622">Project Milan DLC</String>
+	<String id="49875623">DLC_MOD_ProjectMilan</String>
     <String id="49875624">en-us</String>
     <String id="49875625">Male</String>
     <!--AAT entries begin -->

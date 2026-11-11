@@ -38,6 +38,8 @@ public static partial class StorePacks
         [MELocalization.ESN] = "Pack Legendario",
         [MELocalization.FRA] = "Ensemble légendaire",
         [MELocalization.POL] = "Pakiet legendarny",
+        [MELocalization.ITA] = "Pack Leggendario",
+        [MELocalization.RUS] = "Легендарный Пак",
     };
 
     private static readonly LocalizedString LegendaryBannerPackDescription = new() {
@@ -47,6 +49,7 @@ public static partial class StorePacks
         [MELocalization.FRA] = "Une bannière légendaire pour les légendaires défenseurs de la galaxie.",
         [MELocalization.POL] = "Legendarny sztandar dla legendarnych obrońców galaktyki.",
         [MELocalization.RUS] = "Легендарный баннер для легендарных защитников галактики.",
+        [MELocalization.ITA] = "Un banner leggendario per i leggendari difensori della galassia",
     };
 
     /// <summary>
@@ -77,6 +80,8 @@ public static partial class StorePacks
         [MELocalization.ESN] = "Salva Mass Effect Pack",
         [MELocalization.FRA] = "Ensemble Save Mass Effect",
         [MELocalization.POL] = "Pakiet Ratujmy Mass Effect",
+        [MELocalization.ITA] = "Pack Save Mass Effect",
+        [MELocalization.RUS] = "Пак \"Спасение Mass Effect\"",
     };
 
     private static readonly LocalizedString SaveMassEffectPackDescription = new()
@@ -86,6 +91,8 @@ public static partial class StorePacks
         [MELocalization.ESN] = "Contiene el Salva Mass Effect banner.",
         [MELocalization.FRA] = "Contient la bannière Save Mass Effect.",
         [MELocalization.POL] = "Zawiera baner Ratujmy Mass Effect.",
+        [MELocalization.ITA] = "Contiene il banner Save Mass Effect",
+        [MELocalization.RUS] = "Содержит баннер \"Спасение Mass Effect\"",
     };
 
     /// <summary>
@@ -125,6 +132,7 @@ public static partial class StorePacks
             [MELocalization.FRA] = "Cargaison marché noir",
             [MELocalization.POL] = "Przemyt z czarnego rynku",
             [MELocalization.RUS] = "Груз \"Черный Рынок\"",
+            [MELocalization.ITA] = "Consegna del mercato nero",
         }),
         DescriptionStrRefId = MilanPipelinesShared.AssignTLK(new()
         {
@@ -134,6 +142,7 @@ public static partial class StorePacks
             [MELocalization.FRA] = "Une cargaison curieusement massive, d'équipement de haute volée, d'agents d'élite, et d'atouts destructeurs, fort susceptible de révolutionner complètement vos personnages. Contient 100 objets.",
             [MELocalization.POL] = "Tajemnicza, ogromna dostawa najwyższej klasy wyposażenia, elitarnych agentów i ciężkiej broni, która prawdopodobnie całkowicie przeobrazi twój ekwipunek. Zawiera 100 przedmiotów.",
             [MELocalization.RUS] = "Загадочный, невероятно масштабный груз: первоклассное снаряжение, элитные оперативники и мощное вооружение — всё это способно полностью преобразить ваш арсенал. Включает 100 предметов.",
+            [MELocalization.ITA] = "Una misteriosa consegna colossale di equipaggiamento di alto livello, agenti elite e armamenti di grande potenza. Probabilmente rivoluzionerà il tuo equipaggiamento. Include 100 articoli.",
         }),
         CreditCost = 1_400_000,
         Image = "Packs.grindbreakerBG",
@@ -170,6 +179,7 @@ public static partial class StorePacks
             [MELocalization.FRA] = "Cargaison Spectre",
             [MELocalization.POL] = "Przesyłka Widm",
             [MELocalization.RUS] = "Груз \"Спектр\"",
+            [MELocalization.ITA] = "Consegna degli Spettri",
         }),
         DescriptionStrRefId = MilanPipelinesShared.AssignTLK(new()
         {
@@ -179,6 +189,7 @@ public static partial class StorePacks
             [MELocalization.FRA] = "Assez pour équipper tout un régiment, livré à votre porte. Contient 200 objets aléatoires, des fournitures aux raretés.",
             [MELocalization.POL] = "Wyposażenie dla całego plutonu dostarczane bezpośrednio pod Twoje drzwi. Zawiera 200 losowych przedmiotów - od środków zaopatrzenia po rzadkie przedmioty.",
             [MELocalization.RUS] = "Снаряжение целого взвода — прямо к вашему порогу. В комплекте 200 случайных предметов: от припасов до редких находок.",
+            [MELocalization.ITA] = "Una consegna di equipaggiamento degna di un plotone direttamente alla tua porta. Include 200 oggetti casuali che vanno dalle munizioni agli oggetti rari.",
         }),
         CreditCost = 400_000,
         Image = "Packs.grindbreakerequipmentBG",

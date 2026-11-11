@@ -50,6 +50,7 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.FRA] = "Coalition",
             [MELocalization.POL] = "Koalicja",
             [MELocalization.RUS] = "Коалиция",
+            [MELocalization.ITA] = "Coalizione",
         }; // Random Wave
         private static readonly LocalizedString RandomWaveAllCapsName = new() {
             [MELocalization.INT] = "COALITION",
@@ -58,6 +59,7 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.FRA] = "COALITION",
             [MELocalization.POL] = "KOALICJA",
             [MELocalization.RUS] = "КОАЛИЦИЯ",
+            [MELocalization.ITA] = "COALIZIONE",
         };
         private static readonly LocalizedString MixedName = new() {
             [MELocalization.INT] = "Unified",
@@ -65,6 +67,8 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.ESN] = "Unificado",
             [MELocalization.FRA] = "Unifié",
             [MELocalization.POL] = "Zjednoczeni",
+            [MELocalization.ITA] = "Unificato",
+            [MELocalization.RUS] = "Объединение",
         }; // Mixed
         private static readonly LocalizedString MixedAllCapsName = new() {
             [MELocalization.INT] = "UNIFIED",
@@ -72,6 +76,8 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.ESN] = "UNFICADO",
             [MELocalization.FRA] = "UNIFIÉ",
             [MELocalization.POL] = "ZJEDNOCZENI",
+            [MELocalization.ITA] = "UNIFICATO",
+            [MELocalization.RUS] = "ОБЪЕДИНЕНИЕ",
         };
 #if !SHIPPING_RELEASE
         private static readonly LocalizedString NoEnemiesName = new() {
@@ -79,6 +85,9 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.DEU] = "Keine",
             [MELocalization.ESN] = "Ningún",
             [MELocalization.FRA] = "Aucun",
+            [MELocalization.ITA] = "Nessuno",
+            [MELocalization.POL] = "Brak",
+            [MELocalization.RUS] = "Нет",
         };
         private static readonly LocalizedString NoEnemiesAllCapsName = new() {
             [MELocalization.INT] = "NONE",
@@ -86,6 +95,8 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.ESN] = "NINGÚN",
             [MELocalization.FRA] = "AUCUN",
             [MELocalization.POL] = "BRAK",
+            [MELocalization.ITA] = "NESSUNO",
+            [MELocalization.RUS] = "НЕТ",
         };
 #endif
 
@@ -102,6 +113,7 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.FRA] = "Diamant",
             [MELocalization.POL] = "Diament",
             [MELocalization.RUS] = "Бриллиантовый",
+            [MELocalization.ITA] = "Diamante",
         };
         private static readonly LocalizedString DiamondDifficultyAllCapsName = new() {
             [MELocalization.INT] = "DIAMOND",
@@ -110,6 +122,7 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.FRA] = "DIAMANT",
             [MELocalization.POL] = "DIAMENT",
             [MELocalization.RUS] = "БРИЛИАНТОВЫЙ",
+            [MELocalization.ITA] = "DIAMANTE",
         };
 #endif
 

@@ -25,6 +25,8 @@ namespace ProjectMilan.Pipelines.TLK
             {
                 var loc = tlk.GetUnrealLocalization();
                 var tlkF = new ME2ME3TalkFile(tlk);
+                // Hardcoded string IDs. They shouldn't be replaced.
+                var milanStringIds = tlkF.StringRefs.Select(f => f.StringID).ToHashSet();
                 MilanLog.Information($"Building TLK {Path.GetFileName(tlk)}", customPrefix: LOG_CATEGORY);
 
                 for (int i = 1; i <= 5; i++)
@@ -32,7 +34,7 @@ namespace ProjectMilan.Pipelines.TLK
                     var dlcTlkS = MilanShared.GetME3SFARFile($"DLC_CON_MP{i}_{loc}.tlk", true);
                     var dlcTlk = new ME2ME3TalkFile(dlcTlkS, $"DLC_CON_MP{i}");
 
-                    foreach (var f in dlcTlk.StringRefs)
+                    foreach (var f in dlcTlk.StringRefs.Where(f => !milanStringIds.Contains(f.StringID)))
                     {
                         tlkF.ReplaceString(f.StringID, f.Data, true); // Todo: Support Male/Female system for non-INT, if necessary.
                     }
@@ -40,20 +42,23 @@ namespace ProjectMilan.Pipelines.TLK
 
                 // Add DLC_Shared
                 var sharedTlk = new ME2ME3TalkFile(Path.Combine(MilanShared.PipelineRoot, "Mod", "Live", "DLC_Shared", $"DLC_Shared_{loc}.tlk"));
-                foreach (var f in sharedTlk.StringRefs)
+                foreach (var f in sharedTlk.StringRefs.Where(f => !milanStringIds.Contains(f.StringID)))
                 {
                     tlkF.ReplaceString(f.StringID, f.Data, true); // Todo: Support Male/Female system for non-INT, if necessary.
                 }
 
                 // Add LiveTLK
                 var liveTLK = new ME2ME3TalkFile(Path.Combine(MilanShared.PipelineRoot, "Mod", "Live", "DLC_LiveIni", "CookedPCConsole", $"ME3TLK_{loc}.tlk"));
-                foreach (var f in liveTLK.StringRefs)
+                foreach (var f in liveTLK.StringRefs.Where(f => !milanStringIds.Contains(f.StringID)))
                 {
                     tlkF.ReplaceString(f.StringID, f.Data, true); // Todo: Support Male/Female system for non-INT, if necessary.
                 }
 
                 mergedFiles.Add((tlk, tlkF));
             }
+
+            // If any strings are missing, fallback to INT
+            ApplyIntFallback(mergedFiles);
 
             // Every vanilla/seed string is now merged in - anything assigned dynamically from here on
             // (any pipeline stage, via MilanPipelinesShared.AssignTLK) must not collide with it.
@@ -87,10 +92,12 @@ namespace ProjectMilan.Pipelines.TLK
 
         /// <summary>
         /// In place of <see cref="FinalizePipeline"/> when the restored checkpoint was taken after it (Texture,
-        /// or any later dev-only stage, dev builds): its .tlk files are already final, so the set is only closed, and nothing appended.
+        /// or any later dev-only stage, dev builds): its dynamic strings are already final.
+        /// Ensure 
         /// </summary>
         public static void CloseForRestoredCheckpoint()
         {
+            CommitPendingStrings("Synchronizing");
             MilanPipelinesShared.TLKSet = null;
             MilanPipelinesShared.TLKStartIndex = 0;
         }
@@ -108,28 +115,37 @@ namespace ProjectMilan.Pipelines.TLK
         /// </summary>
         public static void CommitPendingStrings(string reason = "Committing")
         {
-            if (MilanPipelinesShared.TLKSet == null)
-                return;
-
             var outDir = Path.Combine(Program.Settings.OutputModPath, "CookedPCConsole");
-            foreach (var tlk in Directory.GetFiles(outDir, "*.tlk", SearchOption.TopDirectoryOnly))
+            var mergedFiles = Directory.GetFiles(outDir, "*.tlk", SearchOption.TopDirectoryOnly)
+                .Select(path => (Path: path, File: new ME2ME3TalkFile(path))).ToList();
+            var changedFiles = new HashSet<string>();
+            if (MilanPipelinesShared.TLKSet != null)
             {
-                var loc = tlk.GetUnrealLocalization();
-                var pending = MilanPipelinesShared.TLKSet[loc];
-                if (pending.Count == 0)
-                    continue;
-
-                var tlkF = new ME2ME3TalkFile(tlk);
-                foreach (var str in pending)
+                foreach (var (tlk, tlkF) in mergedFiles)
                 {
-                    tlkF.AddString(new TLKStringRef(str.StringID, str.Data + '\0'));
-                }
+                    var loc = tlk.GetUnrealLocalization();
+                    var pending = MilanPipelinesShared.TLKSet[loc];
+                    if (pending.Count == 0)
+                        continue;
 
-                MilanLog.Information($"  {reason} TLK {Path.GetFileName(tlk)} ({pending.Count} strings)", customPrefix: LOG_CATEGORY);
+                    foreach (var str in pending)
+                        tlkF.AddString(new TLKStringRef(str.StringID, str.Data + '\0'));
+
+                    changedFiles.Add(tlk);
+                    MilanLog.Information($"  {reason} TLK {Path.GetFileName(tlk)} ({pending.Count} strings)", customPrefix: LOG_CATEGORY);
+                }
+            }
+
+            changedFiles.UnionWith(ApplyIntFallback(mergedFiles));
+            foreach (var (tlk, tlkF) in mergedFiles.Where(file => changedFiles.Contains(file.Path)))
+            {
                 var huff = new HuffmanCompression();
                 huff.LoadInputData(tlkF.StringRefs);
                 huff.SaveToFile(tlk);
             }
+
+            if (MilanPipelinesShared.TLKSet == null)
+                return;
 
             MilanPipelinesShared.TLKStartIndex = MilanPipelinesShared.TLKSet.Values.SelectMany(list => list)
                 .Select(x => x.StringID).Append(MilanPipelinesShared.TLKStartIndex).Max();
@@ -137,6 +153,38 @@ namespace ProjectMilan.Pipelines.TLK
             {
                 pending.Clear();
             }
+        }
+
+        private static HashSet<string> ApplyIntFallback(List<(string Path, ME2ME3TalkFile File)> files)
+        {
+            var english = files.SingleOrDefault(file => file.Path.GetUnrealLocalization() == MELocalization.INT).File;
+            var changedFiles = new HashSet<string>();
+            foreach (var (path, file) in files)
+            {
+                if (ReferenceEquals(file, english))
+                {
+                    continue;
+                }
+
+                var result = TLKFallback.Apply(english.StringRefs, file.StringRefs, Path.GetFileName(path));
+                if (result.AddedIds != 0 || result.FilledEntries != 0 || result.RemovedPlaceholders != 0)
+                {
+                    changedFiles.Add(path);
+                    MilanLog.Information($"  INT fallback {Path.GetFileName(path)}: added {result.AddedIds} IDs, filled {result.FilledEntries} null entries, replaced {result.RemovedPlaceholders} negative placeholders", customPrefix: LOG_CATEGORY);
+                }
+            }
+
+            var englishIds = english.StringRefs.Select(entry => entry.StringID).ToHashSet();
+            foreach (var (path, file) in files)
+            {
+                if (!englishIds.SetEquals(file.StringRefs.Select(entry => entry.StringID)))
+                {
+                    // This shouldn't happen but if we goof up the xmls this covers that
+                    throw new InvalidDataException($"TLK ID coverage differs from INT: {path}");
+                }
+            }
+            MilanLog.Information($"  Verified matching TLK ID sets: {files.Count} languages, {englishIds.Count} IDs each", customPrefix: LOG_CATEGORY);
+            return changedFiles;
         }
     }
 }

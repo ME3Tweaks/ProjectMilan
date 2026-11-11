@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <tlkFile TLKToolVersion="4.0.0.0">
     <!--Male entries section begin-->
+    <String id="326824">Arvuna</String>
 	<!-- Project Milan Strings -->
     <String id="49875622">Project Milan DLC</String>
     <String id="49875623">DLC_MOD_ProjectMilan</String>
@@ -265,6 +266,7 @@ Herobrine24</String>
 	<!-- Credits end -->
     
 	<!-- TLK changes -->
+	<String id="49875981">Chat textuel</String>
 	<!-- Tactical Scan rank 5A description - add shield gate -->
     <String id="733112">Augmente tous les dégâts de tir en pleine tête de {Evolve_HeadshotBonus%p} %.
 Réduit l'efficacité du bouclier de la cible de {Evolve_ShieldGateReduction%p} %.</String>

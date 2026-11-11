@@ -45,6 +45,8 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             [MELocalization.ESN] = "Ninguno",
             [MELocalization.FRA] = "Aucune",
             [MELocalization.RUS] = "Отсутствует",
+            [MELocalization.ITA] = "Nessuna",
+            [MELocalization.POL] = "Brak",
         };
         // Might consider seeing if this can be done via config instead.
         private static readonly LocalizedString NoneDescription = new() {
@@ -54,6 +56,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             [MELocalization.FRA] = "Aucune arme lourde équippée. Accorde +5 % de vitesse de mouvement et +10 % de capacité de munitions de réserve.",
             [MELocalization.POL] = "Brak ciężkiej broni. Zapewnia +5% prędkości ruchu oraz +10% pojemności zapasu amunicji.",
             [MELocalization.RUS] = "Без тяжёлого оружия. Дает +5% к скорости передвижения и +10% к боезапасу.",
+            [MELocalization.ITA] = "Nessuna arma pesante equipaggiata. Conferisce +5% alla velocità di movimento e +10% alla capacità delle munizioni di riserva.",
         };
         private static readonly LocalizedString CategoryName = new() {
             [MELocalization.INT] = "Heavy Weapons",
@@ -62,6 +65,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             [MELocalization.FRA] = "Armes lourdes",
             [MELocalization.POL] = "Broń ciężka",
             [MELocalization.RUS] = "Тяжелое Оружие",
+            [MELocalization.ITA] = "Armi pesanti",
         };
         private static readonly LocalizedString HiddenCategoryName = new() {
             [MELocalization.INT] = "Hidden",
@@ -70,6 +74,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             [MELocalization.FRA] = "Cachées",
             [MELocalization.POL] = "Ukryte",
             [MELocalization.RUS] = "Скрытое",
+            [MELocalization.ITA] = "Nascoste",
         };
 
         internal static readonly List<HeavyWeaponEntry> HeavyWeapons =
@@ -89,6 +94,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                     [MELocalization.FRA] = "M-490 Blackstorm (Caché)",
                     [MELocalization.POL] = "M-490 Blackstorm (ukryty)",
                     [MELocalization.RUS] = "M-490 Буря (Скрытое)",
+                    [MELocalization.ITA] = "M-490 Blackstorm (nascosta)",
                 },
                 UnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_Blackstorm,
                 HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_BlackstormHidden,
@@ -104,6 +110,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                     [MELocalization.FRA] = "M-490 Blackstorm",
                     [MELocalization.POL] = "M-490 Blackstorm",
                     [MELocalization.RUS] = "M-490 Буря",
+                    [MELocalization.ITA] = "M-490 Blackstorm",
                 },
                 Description = 361363,
                 ShortDescription = 344479,
@@ -125,6 +132,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                     [MELocalization.FRA] = "Étoile noire de Moissonneurs (Caché)",
                     [MELocalization.POL] = "Blackstar Żniwiarzy (ukryty)",
                     [MELocalization.RUS] = "Черная Звезда (Скрытое)",
+                    [MELocalization.ITA] = "Blackstar dei Razziatori (nascosta)",
                 },
                 UnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_Blackstar,
                 HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_BlackstarHidden,
@@ -140,6 +148,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                     [MELocalization.FRA] = "Étoile noire de Moissonneurs",
                     [MELocalization.POL] = "Blackstar Żniwiarzy",
                     [MELocalization.RUS] = "Черная Звезда (Скрытое)",
+                    [MELocalization.ITA] = "Blackstar dei Razziatori",
                 },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
                 // TODO: We need an actual short text or move hidden to the top.
@@ -157,6 +166,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                     [MELocalization.FRA] = "M-920 Cain (Caché)",
                     [MELocalization.POL] = "M-920 Cain (ukryty)",
                     [MELocalization.RUS] = "M-920 Каин (Скрытое)",
+                    [MELocalization.ITA] = "M-920 Cain (nascosta)",
                 },
                 UnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_Cain,
                 HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_CainHidden,
@@ -172,6 +182,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                     [MELocalization.FRA] = "M-920 Cain",
                     [MELocalization.POL] = "M-920 Cain",
                     [MELocalization.RUS] = "M-920 Каин",
+                    [MELocalization.ITA] = "M-920 Cain",
                 },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
             },

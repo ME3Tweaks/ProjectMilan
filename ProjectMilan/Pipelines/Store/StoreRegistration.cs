@@ -24,6 +24,7 @@ namespace ProjectMilan.Pipelines.Store
             [MELocalization.FRA] = "Bannière",
             [MELocalization.POL] = "Baner",
             [MELocalization.RUS] = "Баннер",
+            [MELocalization.ITA] = "Banner",
         };
         private static readonly LocalizedString BannerCardDescription = new() {
             [MELocalization.INT] = "Unlocks this banner for use in the multiplayer lobby.",
@@ -32,6 +33,7 @@ namespace ProjectMilan.Pipelines.Store
             [MELocalization.FRA] = "Débloque cette bannière pour la salle d'attente multijoueurs.",
             [MELocalization.POL] = "Odblokowuje ten baner do użycia w lobby trybu wieloosobowego.",
             [MELocalization.RUS] = "Открывает данный баннер для использования в многопользовательстком лобби.",
+            [MELocalization.ITA] = "Sblocca questo banner per usarlo nelle lobby multigiocatore",
         };
 
         /// <param name="builtImages">Images ImagePackageBuilder built, to check the packs that use them.</param>

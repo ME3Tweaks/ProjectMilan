@@ -31,6 +31,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Médaille du mérite",
         [MELocalization.POL] = "Medal honoru",
         [MELocalization.RUS] = "Медаль Почета",
+        [MELocalization.ITA] = "Medaglia al valore",
     };
 
     // The $49875828 value is "Earned by obtaining the Legendary Edition acheivement."
@@ -41,6 +42,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Contient la bannière Médaille du mérite. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Medalu honoru\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Медаль Почета. $49875828",
+        [MELocalization.ITA] = "Contiene il banner Medaglia al valore: $49875828",
     };
     private static readonly LocalizedString ColonialSaviorTitle = new() {
         [MELocalization.INT] = "Colonial Savior",
@@ -49,6 +51,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Sauveur des colonies",
         [MELocalization.POL] = "Zbawca kolonii",
         [MELocalization.RUS] = "Спаситель Колоний",
+        [MELocalization.ITA] = "Salvatore di colonie",
     };
 
     private static readonly LocalizedString ColonialSaviorPackDescription = new() {
@@ -58,6 +61,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Contient la bannière Sauveur des colonies. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Zbawca kolonii\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Спаситель Колоний. $49875828",
+        [MELocalization.ITA] = "Contiene il banner Salvatore di colonie: $49875828",
     };
     private static readonly LocalizedString MissionAccomplishedTitle = new() {
         [MELocalization.INT] = "Mission Accomplished",
@@ -66,6 +70,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Mission accomplie",
         [MELocalization.POL] = "Misja zakończona sukcesem",
         [MELocalization.RUS] = "Миссия Выполнена",
+        [MELocalization.ITA] = "Missione completata",
     };
     private static readonly LocalizedString MissionAccomplishedPackDescription = new() {
         [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 2) banner. $49875828",
@@ -74,6 +79,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Contient la bannière Mission accomplie (Mass Effect 2). $49875828",
         [MELocalization.POL] = "Zawiera baner \"Misja zakończona sukcesem (Mass Effect 2)\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Миссия Выполнена (Mass Effect 2). $49875828",
+        [MELocalization.ITA] = "Contiene il banner Missione completata (Mass Effect 2). $49875828",
     };
     private static readonly LocalizedString MercilessTitle = new() {
         [MELocalization.INT] = "Merciless",
@@ -82,6 +88,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Impitoyable",
         [MELocalization.POL] = "Bez litości",
         [MELocalization.RUS] = "Без Пощады",
+        [MELocalization.ITA] = "Spietato",
     };
     private static readonly LocalizedString MercilessPackDescription = new() {
         [MELocalization.INT] = "Contains the Merciless banner. $49875828",
@@ -90,6 +97,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Contient la bannière Impitoyable. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Bez litości\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Без Пощады. $49875828",
+        [MELocalization.ITA] = "Contiene il banner Spietato. $49875828",
     };
     private static readonly LocalizedString MissionAccomplishedLE3PackDescription = new() {
         [MELocalization.INT] = "Contains the Mission Accomplished (Mass Effect 3) banner. $49875828",
@@ -98,6 +106,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Contient la bannière Mission accomplie (Mass Effect 3). $49875828",
         [MELocalization.POL] = "Zawiera baner \"Misja zakończona sukcesem (Mass Effect 3)\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Миссия Выполнена (Mass Effect 3). $49875828",
+        [MELocalization.ITA] = "Contiene il banner Missione completata (Mass Effect 3). $49875828",
     };
     private static readonly LocalizedString TheOneAndOnlyTitle = new() {
         [MELocalization.INT] = "The One and Only",
@@ -106,6 +115,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Le seul, l'unique",
         [MELocalization.POL] = "Jedyny w swoim rodzaju",
         [MELocalization.RUS] = "Великая Победа",
+        [MELocalization.ITA] = "Il Solo e l’Unico",
     };
     private static readonly LocalizedString TheOneAndOnlyPackDescription = new() {
         [MELocalization.INT] = "Contains the The One and Only banner. $49875828",
@@ -114,6 +124,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Contient la bannière Le seul, l'unique. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Jedyny w swoim rodzaju\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Великая Победа. $49875828",
+        [MELocalization.ITA] = "Contiene il banner del Solo e l’Unico: $49875828",
     };
     private static readonly LocalizedString InsaneTitle = new() {
         [MELocalization.INT] = "Insane",
@@ -122,6 +133,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Dément",
         [MELocalization.POL] = "Obłąkany",
         [MELocalization.RUS] = "Безумие",
+        [MELocalization.ITA] = "Follia",
     };
     private static readonly LocalizedString InsanePackDescription = new() {
         [MELocalization.INT] = "Contains the Insane banner. $49875828",
@@ -130,6 +142,7 @@ public static partial class StoreCards
         [MELocalization.FRA] = "Contient la bannière Dément. $49875828",
         [MELocalization.POL] = "Zawiera baner \"Obłąkany\". $49875828",
         [MELocalization.RUS] = "Содержит баннер Безумие. $49875828",
+        [MELocalization.ITA] = "Contiene il banner Follia. $49875828",
     };
 
     // Rare is the reveal frame, not random availability: these never join generic rarity pools.
