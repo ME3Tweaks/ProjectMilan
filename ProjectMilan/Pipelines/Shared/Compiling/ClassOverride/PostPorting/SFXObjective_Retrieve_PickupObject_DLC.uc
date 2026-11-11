@@ -1,4 +1,4 @@
-﻿// MILAN CHANGE - 10/12/2026
+// MILAN CHANGE - 10/12/2026
 // By Mgamerz
 // Increase pickup cooldown every time picked up in rapid succession to prevent exploits
 
@@ -13,6 +13,7 @@ struct ReplicatedPickupObjectDLC
     var SFXPawn_Player PickedUpBy;
     var EPickupObjectEventDLC EPOEvent;
     var byte Trigger;
+    var vector DropLocation;
 };
 // MILAN CHANGE - Mgamerz - Change name to DLC because the non-DLC (broken) version was promoted to BIOP_MP_COMMON causing collision here
 enum EPickupObjectEventDLC
@@ -33,11 +34,15 @@ var Name AttachSocketName;
 var transient repnotify ReplicatedPickupObjectDLC ReplicatedPickupObjectInfo;
 var SFXPawn_Player PickedUpBy;
 var instanced SkeletalMeshComponent PickupMeshComp;
+var transient SkeletalMeshComponent CarriedPickupMesh;
+var transient SFXModule_MarkerObjective CarrierMarker;
 var stringref srPickedUpObject;
 var config float MovementSpeedDecrease;
 var const stringref SrPlayerCarryingObjectiveMarker;
 var SFXEngagement_Retrieve_DLC_Base RetrieveWave;
 var config float CheckForDropFrequency;
+var config float MaxCarrierFloorDistance;
+var transient vector LastValidDropLocation;
 var float PickedUpTimestamp;
 var config float IgnoreStealthFlagTime;
 var WwiseEvent PickupSound;
@@ -47,7 +52,7 @@ var WwiseEvent DroppedLoopStopSound;
 var bool bLoopStarted;
 
 // MILAN CHANGE - Mgamerz - 2026-10-08
-// Penalize rapid drops per pawn while allowing teammate interceptions.
+// Penalize rapid drops per pawn while allowing teammate interceptions
 struct RetrieveDropPenalty
 {
     var SFXPawn_Player Player;
@@ -182,7 +187,7 @@ public simulated function PawnDowned(BioPawn Pawn)
         return;
     }
     // MILAN CHANGE - Mgamerz - 2026-10-08
-    // Downing releases this pawn's lockout without adding or clearing strikes.
+    // Downing releases this pawn's lockout without adding or clearing strikes
     if (Role == ENetRole.ROLE_Authority && SFXPawn_Player(Pawn) != None)
     {
         ClearPickupLockout(SFXPawn_Player(Pawn));
@@ -203,7 +208,7 @@ public function Used(Actor User)
         return;
     }
     // MILAN CHANGE - Mgamerz - 2026-10-08
-    // Reject on authority before starting animation or changing carrier state.
+    // Reject on authority before starting animation or changing carrier state
     if (Role != ENetRole.ROLE_Authority || PickedUpBy != None || IsPickupLocked(Player))
     {
         return;
@@ -224,30 +229,64 @@ public simulated function HideWeapons()
 }
 public simulated function DropObject(bool bPlayDownedVO)
 {
-    local SFXSimpleUseModule UseModule;
-    local SFXModule_MarkerObjective ObjectiveModule;
     local SFXObjective_Retrieve_DropOffLocation_DLC DropOff;
+    local SFXPawn_Player Carrier;
     
-    if (PickedUpBy == None)
+    if (Role != ENetRole.ROLE_Authority || !IsTimerActive('CheckForDrop'))
     {
         return;
     }
-    ClearTimer('CheckForDrop');
+
+    // MILAN CHANGE - 11/11/2026 - Mgamerz
+    // Keep track of the last place to place the object if the player leaves
+    if (PickedUpBy != None && !PickedUpBy.bDeleteMe)
+    {
+        UpdateLastValidDropLocation(PickedUpBy.Location);
+    }
+    // END MILAN CHANGE
+    Carrier = PickedUpBy;
+    RestoreDroppedPickup(LastValidDropLocation);
+    ReplicatedPickupObjectInfo.DropLocation = Location;
+    ReplicatePickupObjectEvent(1, Carrier);
+
+    DropOff = GetDropOffActor();
+    if (DropOff != None)
+    {
+        DropOff.ObjectDropped(bPlayDownedVO);
+    }
+}
+
+// MILAN CHANGE - 11/11/2026 - Mgamerz
+// Track last OK location to drop
+public function UpdateLastValidDropLocation(vector CarrierLocation)
+{
+    local vector HitLocation;
+    local vector HitNormal;
+    local vector TraceEnd;
+
+    // Floor trace in the same way as the game does when moving actor to floor, but also cap distance
+    TraceEnd = CarrierLocation - vect(0.0, 0.0, 1.0) * MaxCarrierFloorDistance;
+    if (Trace(HitLocation, HitNormal, TraceEnd, CarrierLocation, FALSE) != None)
+    {
+        LastValidDropLocation = HitLocation;
+    }
+}
+// END MILAN CHANGE
+
+public simulated function RestoreDroppedPickup(vector DropLocation)
+{
+    local SFXSimpleUseModule UseModule;
+    local SFXModule_MarkerObjective ObjectiveModule;
+
+    if (PickedUpBy != None)
+    {
+        UpdatePlayerDroppedObject();
+    }
+    RemovePickupObject();
+    SetLocation(DropLocation);
     ObjectiveModule = GetModule(Class'SFXModule_MarkerObjective');
     ObjectiveModule.Activate();
-    UpdatePlayerDroppedObject();
     SetHidden(FALSE);
-    if (Role == ENetRole.ROLE_Authority)
-    {
-        ReplicatePickupObjectEvent(1, PickedUpBy);
-        DropOff = GetDropOffActor();
-        if (DropOff != None)
-        {
-            DropOff.ObjectDropped(bPlayDownedVO);
-        }
-    }
-    SetLocation(PickedUpBy.location, );
-    MoveActorToFloor();
     UseModule = GetModule(Class'SFXSimpleUseModule');
     if (UseModule != None)
     {
@@ -258,7 +297,6 @@ public simulated function DropObject(bool bPlayDownedVO)
         bLoopStarted = TRUE;
         PlaySound(DroppedLoopStartSound, TRUE);
     }
-    RemovePickupObject();
 }
 public final simulated function ObjectDroppedOff()
 {
@@ -272,7 +310,6 @@ public final simulated function ObjectDroppedOff()
 public simulated function OnPickedUp(SFXPawn_Player Player)
 {
     local SFXObjective_Retrieve_DropOffLocation_DLC DropOff;
-    local SFXModule_MarkerObjective ObjectiveModule;
     
     if (Player == None)
     {
@@ -285,14 +322,14 @@ public simulated function OnPickedUp(SFXPawn_Player Player)
             RetrieveWave.PlayerPickedUpObject(Player);
             PickUpObject(Player);
             Player.RemoveSFXModule(Player.GetModule(Class'SFXModule_MarkerPlayer'));
-            ObjectiveModule = new (Player) Class'SFXModule_MarkerObjective';
-            ObjectiveModule.PawnWithExclusiveInvisibility = Player;
-            ObjectiveModule.MarkerOffset.Z = 90.0;
-            ObjectiveModule.MarkerIconType = EObjectiveMarkerIconType.EOMIT_None;
-            ObjectiveModule.MarkerLabel = SrPlayerCarryingObjectiveMarker;
-            ObjectiveModule.MarkerType = "RetrievePickup";
-            Player.AddSFXModule(ObjectiveModule);
-            ObjectiveModule.Activate();
+            CarrierMarker = new (Player) Class'SFXModule_MarkerObjective';
+            CarrierMarker.PawnWithExclusiveInvisibility = Player;
+            CarrierMarker.MarkerOffset.Z = 90.0;
+            CarrierMarker.MarkerIconType = EObjectiveMarkerIconType.EOMIT_None;
+            CarrierMarker.MarkerLabel = SrPlayerCarryingObjectiveMarker;
+            CarrierMarker.MarkerType = "RetrievePickup";
+            Player.AddSFXModule(CarrierMarker);
+            CarrierMarker.Activate();
             if (Role == ENetRole.ROLE_Authority)
             {
                 ReplicatePickupObjectEvent(0, Player);
@@ -319,12 +356,14 @@ public simulated function PickUpObject(SFXPawn_Player Player)
     }
     if (Role == ENetRole.ROLE_Authority)
     {
+        LastValidDropLocation = Location;
         SetHidden(TRUE);
         if (RetrieveWave != None)
         {
             RetrieveWave.DeactivateObjectiveCombatZone(Self);
         }
         PickedUpBy = Player;
+        UpdateLastValidDropLocation(Player.Location);
         SetTimer(CheckForDropFrequency, TRUE, 'CheckForDrop', );
     }
     PickedUpTimestamp = WorldInfo.GameTimeSeconds;
@@ -339,7 +378,14 @@ public simulated function PickUpObject(SFXPawn_Player Player)
     {
         UseModule.m_bTargetable = FALSE;
     }
-    Player.Mesh.AttachComponentToSocket(PickupMeshComp, AttachSocketName);
+    // MILAN CHANGE - 11/11/2026 - Mgamerz
+    // Instantiate a new mesh on pickup, cause a player who leaves carrying it seems to
+    // make it so the backup doesn't appear for the next person who picks it up
+    // (but only if the person who picks it up isn't freshly joined after this event... so
+    // not replication related)
+    CarriedPickupMesh = new (Player) Class'SkeletalMeshComponent'(PickupMeshComp);
+    // END MILAN CHANGE
+    Player.Mesh.AttachComponentToSocket(CarriedPickupMesh, AttachSocketName);
     Manager = Player.GetModule(Class'SFXModule_GameEffectManager');
     if (Manager != None)
     {
@@ -376,11 +422,15 @@ public simulated function PickUpObject(SFXPawn_Player Player)
 public simulated function RemovePickupObject()
 {
     local SFXModule_GameEffectManager Manager;
-    local SFXModule_MarkerObjective ObjectiveModule;
     local SFXModule_MarkerPlayer PlayerMarkerModule;
     
-    if (PickedUpBy == None)
+    ClearTimer('CheckForDrop');
+    ClearTimer('HideWeapons');
+    if (PickedUpBy == None || PickedUpBy.bDeleteMe)
     {
+        CarriedPickupMesh = None;
+        CarrierMarker = None;
+        PickedUpBy = None;
         return;
     }
     Manager = PickedUpBy.GetModule(Class'SFXModule_GameEffectManager');
@@ -388,14 +438,11 @@ public simulated function RemovePickupObject()
     {
         Manager.RemoveEffectsByTypeAndCategory(Class'SFXGameEffect_MovementSpeedBonus', Name);
     }
-    while (PickedUpBy.GetModule(Class'SFXModule_MarkerObjective') != None)
+    if (CarrierMarker != None)
     {
-        ObjectiveModule = PickedUpBy.GetModule(Class'SFXModule_MarkerObjective');
-        if (ObjectiveModule != None)
-        {
-            ObjectiveModule.Deactivate();
-            PickedUpBy.RemoveSFXModule(ObjectiveModule);
-        }
+        CarrierMarker.Deactivate();
+        PickedUpBy.RemoveSFXModule(CarrierMarker);
+        CarrierMarker = None;
     }
     if (PickedUpBy.GetModule(Class'SFXModule_MarkerPlayer') == None)
     {
@@ -403,8 +450,11 @@ public simulated function RemovePickupObject()
         PickedUpBy.AddSFXModule(PlayerMarkerModule);
     }
     ShowWeapons(TRUE);
-    ClearTimer('HideWeapons');
-    PickedUpBy.Mesh.DetachComponent(PickupMeshComp);
+    if (PickedUpBy.Mesh != None && CarriedPickupMesh != None)
+    {
+        PickedUpBy.Mesh.DetachComponent(CarriedPickupMesh);
+    }
+    CarriedPickupMesh = None;
     PickedUpBy = None;
 }
 public function ReplicatePickupObjectEvent(EPickupObjectEventDLC EPOEvent, SFXPawn_Player PickupPawn)
@@ -419,8 +469,13 @@ public simulated function CheckForDrop()
     local int idx;
     local bool bDropObject;
     
-    if (PickedUpBy == None)
+    if (Role != ENetRole.ROLE_Authority)
     {
+        return;
+    }
+    if (PickedUpBy == None || PickedUpBy.bDeleteMe)
+    {
+        DropObject(FALSE);
         return;
     }
     if (PickedUpBy.bStorming)
@@ -445,11 +500,17 @@ public simulated function CheckForDrop()
     if (bDropObject)
     {
         // MILAN CHANGE - Mgamerz - 2026-10-08
-        // Record only the authoritative voluntary drop, before carrier is cleared.
+        // Record only the authoritative voluntary drop, before carrier is cleared
         RecordVoluntaryDrop();
         // END MILAN CHANGE
         DropObject(FALSE);
     }
+    // MILAN CHANGE - Update tracked location
+    else
+    {
+        UpdateLastValidDropLocation(PickedUpBy.Location);
+    }
+    // END MILAN CHANGE
 }
 public simulated function SFXObjective_Retrieve_DropOffLocation_DLC GetDropOffActor()
 {
@@ -545,6 +606,7 @@ public simulated function ClientPickupObjectEvent()
         // MILAN CHANGE - Mgamerz - 2026-10-12
         // Compare event ordinals to avoid ambiguous enum identities during cross-game relinking.
         // EPO_PickedUp=0, EPO_Dropped=1, EPO_Retrieved=2; keep in sync with the enum.
+        // What a pain this was... bioware, why
         // END MILAN CHANGE
         switch (ReplicatedPickupObjectInfo.EPOEvent)
         {
@@ -554,12 +616,7 @@ public simulated function ClientPickupObjectEvent()
                 SetHidden(TRUE);
                 break;
             case EPickupObjectEventDLC.EPO_Dropped:
-                if (PickedUpBy == None)
-                {
-                    PickUpObject(PickedUpBy);
-                }
-                DropObject(FALSE);
-                PickedUpBy = None;
+                RestoreDroppedPickup(ReplicatedPickupObjectInfo.DropLocation);
                 break;
             case EPickupObjectEventDLC.EPO_Retrieved:
                 PickedUpBy = ReplicatedPickupObjectInfo.PickedUpBy;
@@ -625,8 +682,8 @@ defaultproperties
     DropObjectCustomActions = ('SFXPowerCustomAction_BioticCharge', 'SFXCustomAction_PlayerEvadeBase')
     // MILAN CHANGE - Mgamerz - 2026-10-08
     RapidHoldWindow = 4.0
-    StrikeForgiveTime = 10.0
-    PickupLockoutLadder = (0.0, 2.0, 3.0, 4.0)
+    StrikeForgiveTime = 8.0
+    PickupLockoutLadder = (0.0, 1.5, 2.5, 3.2)
     // END MILAN CHANGE
     AttachSocketName = 'Socket_07'
     PickupMeshComp = PickupMeshComp0
@@ -634,6 +691,7 @@ defaultproperties
     MovementSpeedDecrease = -0.25
     SrPlayerCarryingObjectiveMarker = $641202
     CheckForDropFrequency = 0.25
+    MaxCarrierFloorDistance = 256.0
     IgnoreStealthFlagTime = 1.5
     PickupSound = WwiseEvent'Wwise_GUI_DLC_MP2.Play_gui_mp_retrieve_start'
     HandedInSound = WwiseEvent'Wwise_GUI_DLC_MP2.Play_gui_mp_retrieve_success'
