@@ -12,6 +12,59 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
+  <Folder Name="/UdkInj/">
+    <Project Path="UdkInj/MinHook/build/VC17/libMinHook.vcxproj" Id="f142a341-5ee0-442d-a15f-98ae9b48dbae">
+      <BuildType Solution="ShippingDebug|*" Project="Release" />
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="UdkInj/SDK/SDK.vcxproj" Id="2bcaea70-4935-4b45-8167-4a6f057aef39">
+      <BuildType Solution="ShippingDebug|*" Project="Release" />
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="UdkInj/UDKAgent/UDKAgent.vcxproj" Id="27c89f9b-68d6-4405-a347-2ff4251978cd">
+      <BuildType Solution="ShippingDebug|*" Project="Release" />
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="UdkInj/UDKInj.LightmassBridge/UDKInj.LightmassBridge.csproj">
+      <BuildType Solution="ShippingDebug|*" Project="Release" />
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+    </Project>
+    <Project Path="UdkInj/UDKInj.Shell/UDKInj.Shell.csproj">
+      <BuildType Solution="ShippingDebug|*" Project="Release" />
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+    </Project>
+    <Project Path="UdkInj/UDKInj/UDKInj.csproj">
+      <BuildType Solution="ShippingDebug|*" Project="Release" />
+      <BuildType Solution="ShippingRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureRelease|*" Project="Release" />
+      <BuildType Solution="WinAzureTest|*" Project="Debug" />
+      <BuildType Solution="WinDebug|*" Project="Debug" />
+      <BuildType Solution="WinRelease|*" Project="Release" />
+    </Project>
+  </Folder>
   <Project Path="BankConverter/BankConverter.csproj">
     <BuildType Solution="ShippingDebug|*" Project="Release" />
     <BuildType Solution="ShippingRelease|*" Project="Release" />
@@ -46,9 +99,9 @@
     <BuildType Solution="WinRelease|*" Project="Debug" />
   </Project>
   <Project Path="JDiffCS/JDiffCS.csproj" Id="6b6abeee-320c-4ea6-9c6b-001a8b39e0b3">
+    <BuildType Solution="Debug|x64" Project="Release" />
     <BuildType Solution="ShippingDebug|*" Project="Release" />
     <BuildType Solution="ShippingRelease|*" Project="Release" />
-    <BuildType Solution="Debug|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Release" />
     <BuildType Solution="WinDebug|*" Project="Release" />
@@ -57,8 +110,6 @@
   <Project Path="LEDecooker/LEDecooker.csproj">
     <BuildType Solution="ShippingDebug|*" Project="Release" />
     <BuildType Solution="ShippingRelease|*" Project="Release" />
-    <BuildType Solution="Debug|x64" Project="Debug" />
-    <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Debug" />
     <BuildType Solution="WinDebug|*" Project="Debug" />
@@ -75,12 +126,10 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="LegendaryExplorer/LegendaryExplorer/LegendaryExplorerCore/LegendaryExplorerCore.csproj">
-    <BuildType Solution="ShippingDebug|*" Project="Release" />
+    <BuildType Solution="ShippingDebug|Any CPU" Project="Release" />
+    <BuildType Solution="ShippingDebug|x64" Project="Debug" />
+    <BuildType Solution="ShippingDebug|x86" Project="Release" />
     <BuildType Solution="ShippingRelease|*" Project="Release" />
-    <BuildType Solution="Debug|x64" Project="Debug" />
-    <BuildType Solution="Release|x64" Project="Release" />
-    <BuildType Solution="WinAzureRelease|*" Project="WinAzureRelease" />
-    <BuildType Solution="WinAzureTest|*" Project="WinAzureTest" />
     <BuildType Solution="WinDebug|*" Project="Debug" />
     <BuildType Solution="WinRelease|*" Project="Release" />
     <Platform Project="x64" />
@@ -184,8 +233,6 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
   </Project>
   <Project Path="ProjectMilan/ProjectMilan.csproj">
-    <BuildType Solution="ShippingDebug|*" Project="ShippingDebug" />
-    <BuildType Solution="ShippingRelease|*" Project="ShippingRelease" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|Any CPU" Project="Release" />
     <BuildType Solution="WinAzureTest|x64" Project="Debug" />
@@ -231,8 +278,6 @@
   <Project Path="RedemptionMapTool/RedemptionMapTool.csproj" Id="2fae0277-39f4-482d-8167-6da191f38d11">
     <BuildType Solution="ShippingDebug|*" Project="Release" />
     <BuildType Solution="ShippingRelease|*" Project="Release" />
-    <BuildType Solution="Debug|x64" Project="Debug" />
-    <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Debug" />
     <BuildType Solution="WinDebug|*" Project="Debug" />
@@ -250,8 +295,6 @@
   <Project Path="ShaderResearchTool/ShaderResearchTool.csproj">
     <BuildType Solution="ShippingDebug|*" Project="Release" />
     <BuildType Solution="ShippingRelease|*" Project="Release" />
-    <BuildType Solution="Debug|x64" Project="Debug" />
-    <BuildType Solution="Release|x64" Project="Release" />
     <BuildType Solution="WinAzureRelease|*" Project="Release" />
     <BuildType Solution="WinAzureTest|*" Project="Debug" />
     <BuildType Solution="WinDebug|*" Project="Debug" />
@@ -285,57 +328,4 @@
     <BuildType Solution="WinRelease|*" Project="Release" />
     <Platform Project="x64" />
   </Project>
-  <Folder Name="/UdkInj/">
-    <Project Path="UdkInj/MinHook/build/VC17/libMinHook.vcxproj" Id="f142a341-5ee0-442d-a15f-98ae9b48dbae">
-      <BuildType Solution="ShippingDebug|*" Project="Release" />
-      <BuildType Solution="ShippingRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureTest|*" Project="Debug" />
-      <BuildType Solution="WinDebug|*" Project="Debug" />
-      <BuildType Solution="WinRelease|*" Project="Release" />
-      <Platform Project="x64" />
-    </Project>
-    <Project Path="UdkInj/SDK/SDK.vcxproj" Id="2bcaea70-4935-4b45-8167-4a6f057aef39">
-      <BuildType Solution="ShippingDebug|*" Project="Release" />
-      <BuildType Solution="ShippingRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureTest|*" Project="Debug" />
-      <BuildType Solution="WinDebug|*" Project="Debug" />
-      <BuildType Solution="WinRelease|*" Project="Release" />
-      <Platform Project="x64" />
-    </Project>
-    <Project Path="UdkInj/UDKAgent/UDKAgent.vcxproj" Id="27c89f9b-68d6-4405-a347-2ff4251978cd">
-      <BuildType Solution="ShippingDebug|*" Project="Release" />
-      <BuildType Solution="ShippingRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureTest|*" Project="Debug" />
-      <BuildType Solution="WinDebug|*" Project="Debug" />
-      <BuildType Solution="WinRelease|*" Project="Release" />
-      <Platform Project="x64" />
-  </Project>
-    <Project Path="UdkInj/UDKInj.LightmassBridge/UDKInj.LightmassBridge.csproj">
-      <BuildType Solution="ShippingDebug|*" Project="Release" />
-      <BuildType Solution="ShippingRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureTest|*" Project="Debug" />
-      <BuildType Solution="WinDebug|*" Project="Debug" />
-      <BuildType Solution="WinRelease|*" Project="Release" />
-    </Project>
-    <Project Path="UdkInj/UDKInj.Shell/UDKInj.Shell.csproj">
-      <BuildType Solution="ShippingDebug|*" Project="Release" />
-      <BuildType Solution="ShippingRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureTest|*" Project="Debug" />
-      <BuildType Solution="WinDebug|*" Project="Debug" />
-      <BuildType Solution="WinRelease|*" Project="Release" />
-    </Project>
-    <Project Path="UdkInj/UDKInj/UDKInj.csproj">
-      <BuildType Solution="ShippingDebug|*" Project="Release" />
-      <BuildType Solution="ShippingRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureRelease|*" Project="Release" />
-      <BuildType Solution="WinAzureTest|*" Project="Debug" />
-      <BuildType Solution="WinDebug|*" Project="Debug" />
-      <BuildType Solution="WinRelease|*" Project="Release" />
-    </Project>
-  </Folder>
 </Solution>
