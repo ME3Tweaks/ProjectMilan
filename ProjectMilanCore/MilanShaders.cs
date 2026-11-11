@@ -387,9 +387,12 @@ namespace ProjectMilanCore
                     var matchingMatBin = ObjectBinary.From<Material>(matchingMat);
                     ObjectBinary.EditBinary<Material>(brokenMat, x => x.SM3MaterialResource.ID = matchingMatBin.SM3MaterialResource.ID);
 
-                    // brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithStaticLighting"));
-                    //brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithVectorLightMaps"));
-                    //brokenMat.WriteProperty(new BoolProperty(true, "bUsedWithSimpleLightMaps"));
+                    // Set used with flags so compiler doesn't try to recompile things
+                    var usedWithFlags = matchingMat.GetProperties().OfType<BoolProperty>().Where(b => b.Value && b.Name.Name.StartsWith("bUsedWith", StringComparison.Ordinal));
+                    foreach (var flag in usedWithFlags)
+                    {
+                        brokenMat.WriteProperty(new BoolProperty(true, flag.Name));
+                    }
                 }
             }
 
