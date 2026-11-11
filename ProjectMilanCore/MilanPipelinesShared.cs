@@ -101,10 +101,13 @@ namespace ProjectMilanCore
                 return 645785; // "I don't know. Not yet"
             }
 
+            // Resolve every language before mutating pending TLKs
+            var localizedText = TLKSet.Keys.ToDictionary(language => language, localizationData.GetText);
+
             // Get the next highest string assignable ID by finding the maximum StringID in the current TLKSet and adding 1.
             var assignedStringId = TLKSet.Values.SelectMany(list => list).Select(tlk => tlk.StringID).DefaultIfEmpty(TLKStartIndex).Max() + 1;
 
-            foreach (var loc in localizationData)
+            foreach (var loc in localizedText)
             {
                 TLKSet[loc.Key].Add(new TLKStringRef(assignedStringId, loc.Value));
             }
@@ -119,10 +122,15 @@ namespace ProjectMilanCore
         /// </summary>
         public static int AssignTLKGenderPair(LocalizedString male, LocalizedString female)
         {
+            // Validate female text before assigning the male entry
+            ArgumentNullException.ThrowIfNull(female);
+            var femaleText = Enum.GetValues<MELocalization>()
+                .Where(language => language != MELocalization.None)
+                .ToDictionary(language => language, female.GetText);
             var id = AssignTLK(male);
-            foreach (var loc in female)
+            foreach (var language in TLKSet.Keys)
             {
-                TLKSet[loc.Key].Add(new TLKStringRef(id, loc.Value));
+                TLKSet[language].Add(new TLKStringRef(id, femaleText[language]));
             }
             return id;
         }
