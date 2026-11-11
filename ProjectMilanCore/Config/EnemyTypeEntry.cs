@@ -38,5 +38,15 @@ namespace ProjectMilanCore.Config
         /// True for the "Random" meta options (faction/wave/enemy) - these aren't real factions.
         /// </summary>
         public bool IsRandomOption { get; set; }
+
+        /// <summary>
+        /// Additive XP bonus for selecting this faction. A value of 0.05 is +5%.
+        /// </summary>
+        public float XPBonus { get; set; }
+
+        /// <summary>
+        /// Additive credit bonus for selecting this faction. A value of 0.05 is +5%.
+        /// </summary>
+        public float CreditBonus { get; set; }
     }
 }

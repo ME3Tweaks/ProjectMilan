@@ -136,11 +136,11 @@ namespace ProjectMilan.Pipelines.Levels
             public readonly List<EnemyTypeEntry> EnemyTypes = new()
             {
                 // Random (Faction)
-                new EnemyTypeEntry { ID = 0, NameStrRefId = 701523, AllCapsNameStrRefId = 701523, Image = "GUI_MPImages.MatchSettings.OptEmyRandom", WaveClass = "", IsRandomOption = true },
+                new EnemyTypeEntry { ID = 0, NameStrRefId = 701523, AllCapsNameStrRefId = 701523, Image = "GUI_MPImages.MatchSettings.OptEmyRandom", WaveClass = "", IsRandomOption = true, XPBonus = 0.15f },
                 // Random (Wave) - MUST STAY AT INDEX 1! Logic depends on it being here
-                new EnemyTypeEntry { ID = 1, NameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveAllCapsName), Image = ImagePackageBuilder.Require($"{WavelistImages}.Coalition", "Coalition faction"), WaveClass = "", IsRandomOption = true },
+                new EnemyTypeEntry { ID = 1, NameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(RandomWaveAllCapsName), Image = ImagePackageBuilder.Require($"{WavelistImages}.Coalition", "Coalition faction"), WaveClass = "", IsRandomOption = true, XPBonus = 0.10f },
                 // Random (Enemy)
-                new EnemyTypeEntry { ID = 2, NameStrRefId = MilanPipelinesShared.AssignTLK(MixedName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(MixedAllCapsName), Image =  ImagePackageBuilder.Require($"{WavelistImages}.Unified", "Unified faction"), WaveClass = "SFXGameContent_Milan.SFXWave_Horde_RandomEnemies", IsRandomOption = true },
+                new EnemyTypeEntry { ID = 2, NameStrRefId = MilanPipelinesShared.AssignTLK(MixedName), AllCapsNameStrRefId = MilanPipelinesShared.AssignTLK(MixedAllCapsName), Image =  ImagePackageBuilder.Require($"{WavelistImages}.Unified", "Unified faction"), WaveClass = "SFXGameContent_Milan.SFXWave_Horde_RandomEnemies", IsRandomOption = true, CreditBonus = 0.10f },
 
                 // MP4 Wavelists
                 new EnemyTypeEntry { ID = 3, NameStrRefId = 683914, AllCapsNameStrRefId = 683908, Image = "GUI_MPImages_MP4.OptEmyCerberus", WaveClass = "SFXGameContentDLC_CON_MP4_Horde.SFXWave_Horde_Cerberus2" },
