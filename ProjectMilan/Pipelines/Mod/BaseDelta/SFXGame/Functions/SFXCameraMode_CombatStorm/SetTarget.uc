@@ -34,6 +34,11 @@ public function SetTarget()
             // Input.CameraSensitivity.X = 0.0;
             // Input.CameraSensitivity.Y = 0.0;
             // MILAN END
+            // MILAN CHANGE - Mgamerz - 2026-11-10
+            // Up sensitivity on controller only
+            Input.CameraSensitivity = Class'MilanCameraSettings'.default.CombatStormControllerSensitivity;
+            // MILAN END
+
         }
         MoveStickAdjusted = PInput.MoveStick;
         MoveStickAdjusted.X = Abs(MoveStickAdjusted.X);
