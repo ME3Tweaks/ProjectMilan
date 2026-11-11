@@ -1,11 +1,6 @@
-// MILAN CHANGE - Mgamerz - 2026-10-10
-// Multiplayer Settings screen: profile name, matchmaking on/off, default/custom matchmaking server and
-// server password. The movie (GUI_SF_MilanNetConfig.NetworkRegistration) is the ME3 EA registration UI
-// with its login panel repurposed; see
-// Pipelines/Shared/ActionScript/GUI_SF_MilanNetConfig.NetworkRegistration/CHANGES.md.
-// Settings are read and saved through MilanNetConfigBridge, which MilanHost implements. They can only be
-// changed from the multiplayer menu; opened from a lobby or a match the screen is read-only, so a name
-// can't change while other players see it.
+// NEW to Milan - Mgamerz - 2026-10-10
+// Multiplayer Settings screen for name, matchmaking, server and password
+// Only usable when not in a lobby
 Class SFXGUI_MilanNetConfig extends SFXGUIMovieLegacyAdapter
     config(UI);
 
@@ -49,7 +44,7 @@ var config stringref srErrorServerPassword;
 var config int nMaxNameLength;
 var config int nMaxServerLength;
 var config int nMaxPasswordLength;
-// Not read at runtime: referencing the movie pulls the donor into BIOP_MP_COMMON so BioUI can load it
+// Reference only to bring into BIOP_MP_COMMON
 var GFxMovieInfo NetConfigMovie;
 
 // Opens the screen. OnClosed runs when it closes, whether the player accepted or cancelled.
@@ -124,7 +119,7 @@ public event function bool HandleInputEvent(BioGuiEvents Event, optional float f
             oPanel.InvokeMethod("ExecuteControl");
             break;
         case BioGuiEvents.BIOGUI_EVENT_BUTTON_B_RELEASE:
-            // Back out of an error message to the form; otherwise B is Cancel
+            // Back out of an error message to the form, or cancel
             if (m_bShowingMessage)
             {
                 ShowForm();
@@ -213,6 +208,7 @@ public function SubmitNetConfig(string sPlayerName, bool bMatchmaking, bool bCus
         ShowError(srErrorServerAddress);
         return;
     }
+    EnsureMPStorage();
     nResult = Class'MilanNetConfigBridge'.static.ApplySettings(sPlayerName, int(bMatchmaking), int(bCustomServer), sCustomServer, sServerPassword);
     if (nResult == Class'MilanNetConfigBridge'.const.APPLY_OK)
     {
@@ -326,8 +322,7 @@ public function GFxScreenVisibilityChange(bool bNewValue);
 
 // --- Helpers ---
 
-// Only from the multiplayer menu, which is a standalone world; any lobby or match, even a 1-player
-// one, is a listen server or a client. MilanHost also refuses while a join is in progress.
+// Only allow changing settings if not in lobby
 private final function bool CanEditSettings()
 {
     local PlayerController PC;
@@ -338,6 +333,30 @@ private final function bool CanEditSettings()
     }
     PC = GetPC();
     return PC != None && PC.WorldInfo.NetMode == ENetMode.NM_Standalone;
+}
+// 11/11/2026 - Mgamerz - ensure storage is initialized so main menu version works too
+private final function EnsureMPStorage()
+{
+    local SFXEngine Engine;
+
+    Engine = Class'SFXEngine'.static.GetSFXEngine();
+    if (Engine == None)
+    {
+        return;
+    }
+    if (Engine.MPSaveManager == None)
+    {
+        Engine.InitializePlayerStorage();
+        if (Engine.MPSaveManager != None)
+        {
+            Engine.MPSaveManager.bInitialized = TRUE;
+        }
+    }
+    else if (Engine.MPSaveManager.OnlineSave == None)
+    {
+        Engine.MPSaveManager.Initialize();
+        Engine.MPSaveManager.bInitialized = TRUE;
+    }
 }
 private final function LoadSettings()
 {
@@ -374,7 +393,7 @@ private final function ShowError(stringref srError)
     AddStringParam(lstParams, GetUIString(srOK));
     oPanel.InvokeMethodArgs("ShowSubscreen_MessageBox", lstParams);
 }
-// The menu's player already has its name; update it so a lobby hosted or joined next shows the new one
+
 private final function RefreshLocalPlayerName(string sPlayerName)
 {
     local SFXPRIMP PRI;
@@ -395,6 +414,7 @@ private final function CloseScreen()
     m_oKeyboard = None;
     Close(TRUE);
 }
+
 // Temporarily allow all keyboard characters in input fields
 private final function AllowAllKeyboardChars()
 {
@@ -420,7 +440,7 @@ private final function bool IsValidServerAddress(string sAddress)
     sLower = Locs(sAddress);
     return (Left(sLower, 7) == "http://" && Len(sLower) > 7) || (Left(sLower, 8) == "https://" && Len(sLower) > 8);
 }
-// The movie's com.XPlatform layout codes: PC = 0, XBox = 1
+// PC = 0, XBox = 1
 private final function int GetPlatformLayout(bool usingGamepad)
 {
     if (usingGamepad)
@@ -506,4 +526,3 @@ defaultproperties
     nMaxPasswordLength = 64
     NetConfigMovie = GFxMovieInfo'GUI_SF_MilanNetConfig.NetworkRegistration'
 }
-// END MILAN CHANGE
