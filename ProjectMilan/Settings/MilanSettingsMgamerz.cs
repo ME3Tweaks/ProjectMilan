@@ -64,8 +64,8 @@ namespace ProjectMilan.Settings
         public bool RunWeaponsPipeline { get; set; } = true;
         public bool RunConformancePipeline { get; set; } = true;
         public bool RunSlashPipeline { get; set; } = true;
-        public bool RunRejectionPipeline { get; set; }
-        public bool RunRedemptionPipeline { get; set; }
+        public bool RunRejectionPipeline { get; set; } = false;
+        public bool RunRedemptionPipeline { get; set; } = false;
         public bool RunAssetFixPipeline { get; set; } = true;
         public bool IsStaticLightingBuild { get; set; } = false;
         public bool ProductionBuild { get; set; } = false;
@@ -109,7 +109,7 @@ namespace ProjectMilan.Settings
 
         // Set when you want to work on the mod folder without it deleting it every time
         public bool DontDeleteModFolder { get; set; } = false;
-        public bool UseCheckpointSystem { get; set; } = true;
+        public bool UseCheckpointSystem { get; set; } = false;
 
         private string _checkPointFolder = null;
 
