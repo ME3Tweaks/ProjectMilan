@@ -295,6 +295,23 @@ defaultproperties
                  Alias = "PC_CoverTurn", 
                  GameMode = EGameModes.GameMode_Default
                 }, 
+                // MILAN CHANGE - Add chat button
+                {
+                 Keys[0] = {Name = 'None'}, 
+                 Keys[1] = {Name = 'None'}, 
+                 Subordinates = ({bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Dying}, 
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Spectator}, 
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Atlas}, 
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Vehicle}, 
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_GUI}, 
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Photo}, 
+                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Lobby}
+                                ), 
+                 Name = $49875981, 
+                 bCategory = FALSE, 
+                 Alias = "PC_Talk", 
+                 GameMode = EGameModes.GameMode_Default
+                }, 
                 // MILAN CHANGE - Remove QuickSave
                 // {
                 //  Keys[0] = {
@@ -996,19 +1013,6 @@ defaultproperties
                  Name = $337980, 
                  bCategory = FALSE, 
                  Alias = "PC_HotKey8", 
-                 GameMode = EGameModes.GameMode_Default
-                }, 
-                {
-                 Keys[0] = {Name = 'None'},
-                 Keys[1] = {Name = 'None'},
-                 Subordinates = ({bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Dying},
-                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Spectator},
-                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Atlas},
-                                 {bAllGameModes = FALSE, Alias = "PC_Talk", GameMode = EGameModes.GameMode_Vehicle}
-                                ),
-                 Name = $49875981,
-                 bCategory = FALSE,
-                 Alias = "PC_Talk",
                  GameMode = EGameModes.GameMode_Default
                 },
                 {
