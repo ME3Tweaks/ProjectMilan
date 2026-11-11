@@ -221,9 +221,9 @@ namespace ProjectMilan.Pipelines.Levels
         /// <summary>
         /// Imports <paramref name="level"/>'s bake from <paramref name="lightmass"/> (default: this build's) into <paramref name="bioP"/>,
         /// which can be a copy outside the pipeline (e.g. the installed game's). Sublevels are saved; <paramref name="bioP"/> is not.
-        /// Returns false if there is no such bake.
+        /// Returns false if there is no such bake. Passing in ignoredSublevels overrides the level's predefined values
         /// </summary>
-        internal static bool ImportStaticLighting(LevelSpecificPipeline level, IMEPackage bioP, bool includeSublevels, LightmassSolver? lightmass = null)
+        internal static bool ImportStaticLighting(LevelSpecificPipeline level, IMEPackage bioP, bool includeSublevels, LightmassSolver? lightmass = null, string[] ignoredSublevels = null)
         {
             if (!StaticLightingCache.HasLevel(level.BioP, lightmass))
                 return false;
@@ -233,7 +233,7 @@ namespace ProjectMilan.Pipelines.Levels
             {
                 IncludeSubLevels = includeSublevels,
                 UDKMapsBasePath = StaticLightingCache.GetLevelFolder(level.BioP, lightmass),
-                IgnoredSublevelNames = level.IgnoredLightingLevels,
+                IgnoredSublevelNames = ignoredSublevels ?? level.IgnoredLightingLevels,
                 ShouldKeepLightMap = KeepPortedLighting(level)
             };
 

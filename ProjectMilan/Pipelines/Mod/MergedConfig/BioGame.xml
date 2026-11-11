@@ -2583,14 +2583,6 @@
 				<!--<Value type="4">(Difficulty=DO_Level4,Multiplier=1.60f)</Value>-->
 				<Value type="3">(Difficulty=DO_Level4,Multiplier=2.00f)</Value>
 			</Property>
-			<Property name="factionbonuses">
-				<!-- Any factions that are added need to have this here. This is list of factions starting with Random -->
-				<Value type="3">(ID=0,XPBonus=0.15f,CreditBonus=0.0f)</Value>
-				<Value type="3">(ID=1,XPBonus=0.f,CreditBonus=0.0f)</Value>
-				<Value type="3">(ID=2,XPBonus=0.f,CreditBonus=0.0f)</Value>
-				<Value type="3">(ID=3,XPBonus=0.f,CreditBonus=0.0f)</Value>
-				<Value type="3">(ID=4,XPBonus=0.f,CreditBonus=0.0f)</Value>
-			</Property>
 			<Property name="mapbonuses">
 				<!-- MP4 Hazard Map bonuses -->
 				<Value type="3">(ID=0,XPBonus=0.25f,CreditBonus=0.0f)</Value>
