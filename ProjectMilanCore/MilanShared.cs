@@ -1159,11 +1159,6 @@ namespace ProjectMilanCore
             var sourceRef = source.Exports.FirstOrDefault(x => x.idxLink == 0 && x.ObjectName == "ObjectReferencer" && x.ClassName == "ObjectReferencer");
             var destRef = target.Exports.FirstOrDefault(x => x.idxLink == 0 && x.ObjectName == "ObjectReferencer" && x.ClassName == "ObjectReferencer");
 
-            if (destRef is null)
-            {
-                destRef = target.CreateObjectReferencer();
-            }
-
             // We are going to do a replace with relink to pull in all referenced content. We don't want to trash 
             // anything if possible, so we will use the existing referencer
             // First we must cache the contents.
