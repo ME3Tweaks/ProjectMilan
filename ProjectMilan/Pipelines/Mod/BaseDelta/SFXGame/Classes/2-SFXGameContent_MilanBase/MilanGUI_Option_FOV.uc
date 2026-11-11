@@ -21,6 +21,7 @@ public event function ApplyOptionValue(int nValue)
         return;
     }
     sliderIndex = nValue;
+    Class'MilanProfile'.static.SetMilanFOV(sliderIndex + MinVal);
 }
 public function UpdateCamera(int nValue)
 {
@@ -63,7 +64,6 @@ public event function SaveOption()
         LogInternal("SET FOV too low (" $ sliderIndex - MaxVal $ "), clamping to " $ MinVal, );
         sliderIndex = MinVal;
     }
-    Class'MilanProfile'.static.SetMilanFOV(sliderIndex + MinVal);
     UpdateCamera(sliderIndex);
     ApplyOptionValue(sliderIndex);
 }

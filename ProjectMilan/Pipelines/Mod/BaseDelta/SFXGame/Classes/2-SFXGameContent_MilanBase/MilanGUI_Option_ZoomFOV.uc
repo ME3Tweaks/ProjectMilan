@@ -19,6 +19,7 @@ public event function ApplyOptionValue(int nValue)
         return;
     }
     sliderIndex = nValue;
+    Class'MilanProfile'.static.SetMilanZoomFOV(sliderIndex + MinVal);
 }
 public function UpdateCamera(int nValue)
 {
@@ -50,7 +51,6 @@ public function UpdateCamera(int nValue)
 }
 public event function SaveOption()
 {
-    local BioWorldInfo BWI;
     local BioPlayerController PC;
     
     if (sliderIndex + MinVal > MaxVal)
@@ -63,7 +63,6 @@ public event function SaveOption()
         LogInternal("SET ZoomFOV too low (" $ sliderIndex - MaxVal $ "), clamping to " $ MinVal, );
         sliderIndex = MinVal;
     }
-    Class'MilanProfile'.static.SetMilanZoomFOV(sliderIndex + MinVal);
     UpdateCamera(sliderIndex);
     ApplyOptionValue(sliderIndex);
 }
