@@ -448,17 +448,127 @@ namespace ProjectMilanCore
             MilanLog.Information($"Overriding function {funcName} in class {classExport.ObjectName} with override", customPrefix: logCategory);
             var ucText = File.ReadAllText(overrideFile);
 
+            //11/11/2026 - Check to make sure function overrides actually apply and aren't named wrong
+            var overrideDescription = $"function override {funcName} in class {classExport.InstancedFullPath} ({overrideFile})";
             if (funcName.Contains('.'))
             {
                 // It's a sub function like a in a state
                 var function = pcc.FindExport($"{classExport.InstancedFullPath}.{funcName}");
-                UnrealScriptCompiler.CompileFunction(function, ucText, fl, usop);
+                if (function == null)
+                {
+                    throw new MilanCompileException($"Override target not found for {overrideDescription}");
+                }
+                // Check to make sure compile succeeded
+                var (_, log) = UnrealScriptCompiler.CompileFunction(function, ucText, fl, usop);
+                ThrowIfOverrideCompileFailed(log, overrideDescription, logCategory);
             }
             else
             {
                 // Add or replace to class
-                UnrealScriptCompiler.AddOrReplaceInClass(classExport, ucText, fl, usop);
+                // Check to make sure compile succeeded
+                var log = UnrealScriptCompiler.AddOrReplaceInClass(classExport, ucText, fl, usop);
+                ThrowIfOverrideCompileFailed(log, overrideDescription, logCategory);
             }
+        }
+
+        /// <summary>
+        /// Packages vanilla script classes live under (mostly)
+        /// </summary>
+        private static readonly string[] VanillaClassPackages = ["SFXGameContent", "SFXGameMPContent", "SFXGame"];
+
+        /// <summary>
+        /// Attempts to port missing dependencies into the target package so an override can reference them
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="package"></param>
+        /// <param name="attempted"></param>
+        /// <param name="logCategory"></param>
+        /// <returns></returns>
+        private static bool TryPortMissingOverrideClasses(MessageLog log, IMEPackage package, HashSet<string> attempted, string logCategory)
+        {
+            bool portedAny = false;
+            foreach (var error in log.AllErrors)
+            {
+                var missingClassName = GetMissingClassName(error.Message);
+                if (missingClassName == null || !attempted.Add(missingClassName))
+                {
+                    continue;
+                }
+
+                var ifp = VanillaClassPackages.Select(x => $"{x}.{missingClassName}").FirstOrDefault(x => LE3ObjectDB.GetFilesContainingObject(x) != null);
+                if (ifp == null)
+                {
+                    // Probably misspelled or compiled out of order
+                    MilanLog.Error($"  Override needs class {missingClassName} but its not in the Object Instance DB", customPrefix: logCategory);
+                    continue;
+                }
+                if (package.FindEntry(ifp) != null)
+                {
+                    // Already here, so the error has some other cause
+                    continue;
+                }
+
+                MilanLog.Information($"  Override needs class {ifp}, porting from singleplayer files", customPrefix: logCategory);
+                if (MissingObjectResolver(package, ifp, false) == null)
+                {
+                    MilanLog.Error($"  Could not port class {ifp} into {package.FileNameNoExtension}", customPrefix: logCategory);
+                    continue;
+                }
+                portedAny = true;
+            }
+            return portedAny;
+        }
+
+        /// <summary>
+        /// Pulls the class name out of an UnrealScript compiler "No type named 'X' exists!" or "No class named 'X'" error
+        /// </summary>
+        /// <returns>The class name, or null if the message is some other error</returns>
+        private static string GetMissingClassName(string message)
+        {
+            // Find the missing class name in the error messages
+            foreach (var prefix in (string[])["No type named '", "No class named '"])
+            {
+                if (message.StartsWith(prefix))
+                {
+                    var end = message.IndexOf('\'', prefix.Length);
+                    if (end > prefix.Length)
+                    {
+                        return message.Substring(prefix.Length, end - prefix.Length);
+                    }
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Matches if the line is a vtable comment which we can just ignore
+        /// </summary>
+        private static bool IsVTableErrorComment(string message)
+        {
+            return message.StartsWith("Error comment:") && message.Contains(" has vtable index ");
+        }
+
+
+        /// <summary>
+        /// Throws an exception if the message log indicates a failure, stopping the Milan build
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="overrideDescription"></param>
+        /// <param name="logCategory"></param>
+        /// <exception cref="MilanCompileException"></exception>
+        public static void ThrowIfOverrideCompileFailed(MessageLog log, string overrideDescription, string logCategory)
+        {
+            if (!log.HasErrors && !log.HasLexErrors)
+            {
+                return;
+            }
+
+            MilanLog.Error($"OVERRIDE COMPILATION FAILED: {overrideDescription}", customPrefix: logCategory);
+            foreach (var error in log.AllErrors)
+            {
+                MilanLog.Error($"  {error}", customPrefix: logCategory);
+            }
+            throw new MilanCompileException($"Override failed to compile: {overrideDescription}");
         }
 
         /// <summary>
@@ -859,13 +969,18 @@ namespace ProjectMilanCore
                             }
 
                             // Recompile class if necessary
+                            bool useOverride = false;
+                            var className = cc.classExp.ObjectName;
                             try
                             {
-                                bool useOverride = false;
-                                var className = cc.classExp.ObjectName;
-
                                 // Check if we have an override already loaded
-                                if (!PostPortingClassOverrides.TryGetValue(className, out var text))
+                                if (PostPortingClassOverrides.TryGetValue(className, out var text))
+                                {
+                                    // Loaded by an earlier package that also contains this class
+                                    useOverride = true;
+                                    MilanLog.Information($"  Recompiling {className} with Milan override", customPrefix: logCategory);
+                                }
+                                else
                                 {
                                     // No loaded override - does it exist on disk?
                                     lock (PostPortingClassOverrides)
@@ -896,18 +1011,59 @@ namespace ProjectMilanCore
                                         // Debug.WriteLine(text);
                                     }
                                 }
-                                UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
+                                var (_, compileLog) = UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
+                                if (useOverride)
+                                {
+                                    // Overrides may name vanilla classes the ported package doesn't contain
+                                    // We must pull them in or compile will fail
+                                    var attemptedClasses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                                    // Iteratively pull in dependencies (like MPCommon does)
+                                    while ((compileLog.HasErrors || compileLog.HasLexErrors) && TryPortMissingOverrideClasses(compileLog, destPackage, attemptedClasses, logCategory))
+                                    {
+                                        if (!lib.ReInitializeFile(usop))
+                                        {
+                                            MilanShared.LogFailedFileLibInit(lib, $"Failed to reinitialize FileLib after porting classes for override {className}", logCategory);
+                                            break;
+                                        }
+                                        MilanLog.Information($"  Recompiling {className} with Milan override after porting missing classes", customPrefix: logCategory);
+                                        (_, compileLog) = UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
+                                    }
+                                    ThrowIfOverrideCompileFailed(compileLog, $"post-porting class override {className} in {destPackage.FileNameNoExtension}", logCategory);
+                                }
+                                else if (compileLog.HasErrors || compileLog.HasLexErrors)
+                                {
+                                    // Decompiled (non-override) recompile failed - not fatal, vtable corrections come later
+                                    var unexpectedErrors = compileLog.AllErrors.Where(x => !IsVTableErrorComment(x.Message) && x.Message != "Parse failed!").ToList();
+                                    if (unexpectedErrors.Count == 0)
+                                    {
+                                        MilanLog.Information($"  Decompiled {className} has stale vtable indexes, leaving it for the VTables pipeline", customPrefix: logCategory);
+                                    }
+                                    else
+                                    {
+                                        MilanLog.Error($"  Recompiling decompiled {className} in {destPackage.FileNameNoExtension} failed:", customPrefix: logCategory);
+                                        foreach (var error in unexpectedErrors)
+                                        {
+                                            MilanLog.Error($"    {error}", customPrefix: logCategory);
+                                        }
+                                    }
+                                }
                             }
-                            catch (Exception e)
+                            catch (Exception e) when (e is not MilanCompileException)
                             {
                                 // destPackage.Save(@"C:\users\public\fail.pcc");
+                                if (useOverride)
+                                {
+                                    // Debug LEC builds throw out of CompileClass instead of logging - still an override failure
+                                    MilanLog.Exception(e, $"  Exception compiling post-porting class override {className}:", customPrefix: logCategory);
+                                    throw new MilanCompileException($"Post-porting class override {className} in {destPackage.FileNameNoExtension} threw while compiling", e);
+                                }
                                 MilanLog.Exception(e, "  Error recompiling function:");
                             }
 
                             cc.Completed = true;
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception e) when (e is not MilanCompileException)
                     {
                         var log = new MessageLog();
                         log.LogError($"Exception while compiling '{completion.classExp.ObjectName}': {e}");
