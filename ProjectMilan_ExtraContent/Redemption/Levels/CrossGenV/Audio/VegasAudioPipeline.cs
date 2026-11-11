@@ -114,12 +114,17 @@ internal static class VegasAudioPipeline
         SharedModel = model;
 
         Directory.CreateDirectory(cookedPcConsolePath);
-        var packagePath = Path.Combine(cookedPcConsolePath, $"{SoundPackageName}.pcc");
-        var afcPath = Path.Combine(cookedPcConsolePath, $"{BankName}.afc");
+        var packagePath = Path.Combine(cookedPcConsolePath, "Levels", "Shared", $"{SoundPackageName}.pcc");
+        var afcPath = Path.Combine(cookedPcConsolePath, "Audio", $"{BankName}.afc");
+        Directory.GetParent(afcPath).Create();
+        Directory.GetParent(packagePath).Create();
 
-        // Both are rebuilt from scratch every run. The AFC especially: the importer opens it OpenOrCreate and appends,
-        // so an existing one from a previous build would grow by the full streamed set each time.
+
+        var importedAfcPath = Path.Combine(Directory.GetParent(packagePath).FullName, $"{BankName}.afc");
+
+        // Clear old package and AFC path
         if (File.Exists(packagePath)) File.Delete(packagePath);
+        if (File.Exists(importedAfcPath)) File.Delete(importedAfcPath);
         if (File.Exists(afcPath)) File.Delete(afcPath);
 
         MEPackageHandler.CreateAndSavePackage(packagePath, MEGame.LE3);
@@ -132,6 +137,7 @@ internal static class VegasAudioPipeline
         }
 
         package.Save();
+        File.Move(importedAfcPath, afcPath);
         SharedPackagePath = packagePath;
         MilanLog.Information($"Imported {BankName} into {packagePath} ({package.ExportCount} exports, AFC {new FileInfo(afcPath).Length / 1024 / 1024} MB)", customPrefix: LOG_CATEGORY);
         return packagePath;

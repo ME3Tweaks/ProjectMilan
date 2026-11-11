@@ -60,7 +60,7 @@ namespace ProjectMilan_ExtraContent.Redemption.Levels.MapPack
         internal static void BuildSingleLevel(MapManifest manifest, CaseInsensitiveDictionary<string> copiedFiles)
         {
             MilanLog.Information($"Building level {manifest.MasterPackage} from manifest {manifest.SourceFile}", customPrefix: LOG_CATEGORY);
-            var outputFolder = Path.Combine(Program.Settings.OutputModPathRED, "CookedPCConsole", "Levels", manifest.MasterPackage);
+            var outputFolder = Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", "Levels", manifest.MasterPackage);
             Directory.CreateDirectory(outputFolder);
             BuildLevelMaster(manifest, outputFolder);
             CopySublevels(manifest, outputFolder, copiedFiles);

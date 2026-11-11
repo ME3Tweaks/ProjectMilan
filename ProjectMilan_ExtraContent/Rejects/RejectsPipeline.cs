@@ -27,7 +27,8 @@ namespace ProjectMilan_ExtraContent.Rejects
     public static class RejectsPipeline
     {
         private static string CookedPCFolder => Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole");
-        private static string MergedContentPath => Path.Combine(CookedPCFolder, "MergedContent.pcc");
+        // Path mirrors ProjectMilan
+        private static string MergedContentPath => Path.Combine(CookedPCFolder, "NonStartup", "Pawns", "MergedContent.pcc");
 
         /// <summary>
         /// Variable container class for passing through. May have nothing in it - do not remove.
@@ -168,7 +169,8 @@ namespace ProjectMilan_ExtraContent.Rejects
                 return;
             }
 
-            GUITextureImporter.AddGUITexture(pcc, null, "OptEmyRejects", imagePath, PixelFormat.BC7);
+            var banner = GUITextureImporter.AddGUITexture(pcc, null, "OptEmyRejects", imagePath, PixelFormat.BC7);
+            banner.AddToObjectReferencer();
             pcc.Save();
         }
 
@@ -180,6 +182,7 @@ namespace ProjectMilan_ExtraContent.Rejects
         {
 
             MilanLog.Information($"Building MergedContent", customPrefix: LOG_CATEGORY);
+            Directory.GetParent(MergedContentPath).Create(); // Ensure the folder exists.
             var mergedPackage = MEPackageHandler.CreateAndOpenPackage(MergedContentPath, MEGame.LE3);
             mergedPackage.LECLTagData.ImportHintFiles.Add(MilanShared.MP_STARTUP_FILENAME); // Hint this is an MP subfile
 
@@ -312,7 +315,7 @@ namespace ProjectMilan_ExtraContent.Rejects
             {
                 MilanLog.Information($"Splitting {ps.Name} to individual package", customPrefix: LOG_CATEGORY);
                 var splitPackage = MEPackageHandler.CreateAndOpenPackage(
-                    Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", $"SFXPawn_{ps.Name}.pcc"),
+                    Path.Combine(MilanPipelinesShared.OutputModPath, "CookedPCConsole", "NonStartup", "Pawns", $"SFXPawn_{ps.Name}.pcc"),
                     MEGame.LE3);
                 EntryExporter.ExportExportToPackage(mergedContent.FindExport(ps.RemappedArchetypeIFP), splitPackage, out var archetype, vars.Cache);
                 PackageTools.AddToObjectReferencer(archetype);
