@@ -18,6 +18,21 @@ class screens.Credits.Credits extends com.SFXInputMovieClip
    var m_nVisibleScrollingFieldsStart;
    var onEnterFrame;
    var m_nTotalHeight = 0;
+   // MILAN CHANGE DropTheSquid 11/11/2026
+   // added to handle controller input better
+   var bUsingGamepad;
+   function RefreshButtonHelp(usingGamepad)
+   {
+      this.bUsingGamepad = usingGamepad;
+   }
+   function ControllerExitCredits()
+   {
+      if (this.bUsingGamepad)
+      {
+         this.ExitCredits();
+      }
+   }
+   // end milan change
    function Credits()
    {
       super();
@@ -41,15 +56,14 @@ class screens.Credits.Credits extends com.SFXInputMovieClip
       this.m_ScrollContainer._visible = false;
       this.m_FadeCreditField = this.attachMovie("FadeCreditField","fadeCreditField",this.getNextHighestDepth());
       this.m_FadeCreditField._alpha = 0;
-      if(_global.SFX.Platform == com.XPlatform.PC || com.XPlatform.IsRunningInEngine() == false)
-      {
-         this.AddKeyUpEvent(27,"onEscape");
-         this.addEventListener("onEscape",this.MakeDelegate(this.ExitCredits));
-      }
-      else
-      {
-         this.addEventListener("onButtonB",this.MakeDelegate(this.ExitCredits));
-      }
+      // MILAN CHANGE DropTheSquid 11/11/2026
+      // these listeners depended on platform previously, so the controller one never got registered; make them unconditional
+      this.AddKeyUpEvent(27,"onEscape");
+      this.addEventListener("onEscape",this.MakeDelegate(this.ExitCredits));
+      this.addEventListener("onButtonB",this.MakeDelegate(this.ControllerExitCredits));
+      // add a handler for controller Start
+      this.addEventListener("onButtonStart",this.MakeDelegate(this.ControllerExitCredits));
+      // end milan change
       if(com.XPlatform.IsRunningInEngine() == false)
       {
          this.DEBUG_TestScrollingCredits();
