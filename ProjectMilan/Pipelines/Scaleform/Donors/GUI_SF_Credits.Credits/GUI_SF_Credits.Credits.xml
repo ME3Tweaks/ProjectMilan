@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?><!--
+WARNING: The structure of this XML is not final.
+In later versions of FFDec it can be changed.
+Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMinor keys.
+--><swf _xmlExportMajor="4" _xmlExportMinor="2" _generator="JPEXS Free Flash Decompiler v.26.4.0" type="SWF" charset="UTF-8" compression="NONE" encrypted="false" frameCount="1" frameRate="60.0" gfx="true" hasEndTag="true" version="8">
+  <displayRect type="RECT" Xmax="25600" Xmin="0" Ymax="20480" Ymin="0" nbits="16"/>
+  <tags>
+    <item type="ExporterInfo" bitmapFormat="13" flags="18" forceWriteAsLong="false" prefix="" swfName="Credits" version="879">
+      <codeOffsets>
+        <item>2545</item>
+        <item>2740</item>
+        <item>4966</item>
+        <item>6709</item>
+        <item>7349</item>
+        <item>10871</item>
+        <item>18704</item>
+        <item>23058</item>
+        <item>24571</item>
+        <item>25572</item>
+      </codeOffsets>
+    </item>
+    <item type="FileAttributesTag" actionScript3="false" brokerLocalConnection="false" brokerProductManager="false" forceWriteAsLong="false" hasMetadata="false" noCrossDomainCache="false" reservedA="false" reservedC="0" swfRelativeUrls="false" useDirectBlit="false" useGPU="false" useNetwork="false"/>
+    <item type="SetBackgroundColorTag" forceWriteAsLong="false">
+      <backgroundColor type="RGB" blue="0" green="0" red="0"/>
+    </item>
+    <item type="ImportAssets2Tag" downloadNow="1" forceWriteAsLong="true" hasDigest="0" url="./fonts/gfxfontlib.swf">
+      <tags>
+        <item>1</item>
+      </tags>
+      <names>
+        <item>AeroLight Shared</item>
+      </names>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="2" fontHeight="560" fontId="1" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;AeroLight Shared&quot; size=&quot;28&quot; color=&quot;#f5f5f5&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Scrolling Body&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="false" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="15960" Xmin="-40" Ymax="720" Ymin="-40" nbits="15"/>
+      <textColor type="RGBA" alpha="255" blue="245" green="245" red="245"/>
+    </item>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="3">
+      <subTags>
+        <item type="PlaceObject2Tag" characterId="2" depth="1" forceWriteAsLong="true" name="bodyTxt" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="true" nRotateBits="0" nScaleBits="18" nTranslateBits="14" scaleX="1.0" scaleY="1.0005493" translateX="-7960" translateY="40"/>
+        </item>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>3</item>
+      </tags>
+      <names>
+        <item>ScrollEntry_1</item>
+      </names>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="4" fontHeight="560" fontId="1" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;AeroLight Shared&quot; size=&quot;28&quot; color=&quot;#f5f5f5&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Scrolling Body&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="false" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="5960" Xmin="-40" Ymax="720" Ymin="-40" nbits="14"/>
+      <textColor type="RGBA" alpha="255" blue="245" green="245" red="245"/>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="5" fontHeight="560" fontId="1" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;AeroLight Shared&quot; size=&quot;28&quot; color=&quot;#f5f5f5&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Scrolling Body&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="false" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="5960" Xmin="-40" Ymax="720" Ymin="-40" nbits="14"/>
+      <textColor type="RGBA" alpha="255" blue="245" green="245" red="245"/>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="6" fontHeight="560" fontId="1" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;AeroLight Shared&quot; size=&quot;28&quot; color=&quot;#f5f5f5&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Scrolling Body&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="false" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="5960" Xmin="-40" Ymax="720" Ymin="-40" nbits="14"/>
+      <textColor type="RGBA" alpha="255" blue="245" green="245" red="245"/>
+    </item>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="7">
+      <subTags>
+        <item type="PlaceObject2Tag" characterId="4" depth="1" forceWriteAsLong="true" name="bodyTxt1" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="true" nRotateBits="0" nScaleBits="18" nTranslateBits="15" scaleX="1.0" scaleY="1.0005493" translateX="-9260" translateY="40"/>
+        </item>
+        <item type="PlaceObject2Tag" characterId="5" depth="2" forceWriteAsLong="true" name="bodyTxt2" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="true" nRotateBits="0" nScaleBits="18" nTranslateBits="13" scaleX="1.0" scaleY="1.0005493" translateX="-2960" translateY="40"/>
+        </item>
+        <item type="PlaceObject2Tag" characterId="6" depth="3" forceWriteAsLong="true" name="bodyTxt3" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="true" nRotateBits="0" nScaleBits="18" nTranslateBits="13" scaleX="1.0" scaleY="1.0005493" translateX="3340" translateY="40"/>
+        </item>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>7</item>
+      </tags>
+      <names>
+        <item>ScrollEntry_3</item>
+      </names>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="8" fontHeight="560" fontId="1" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;AeroLight Shared&quot; size=&quot;28&quot; color=&quot;#f5f5f5&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Scrolling Body&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="false" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="9960" Xmin="-40" Ymax="720" Ymin="-40" nbits="15"/>
+      <textColor type="RGBA" alpha="255" blue="245" green="245" red="245"/>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="9" fontHeight="560" fontId="1" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;AeroLight Shared&quot; size=&quot;28&quot; color=&quot;#f5f5f5&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Scrolling Body&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="false" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="9960" Xmin="-40" Ymax="720" Ymin="-40" nbits="15"/>
+      <textColor type="RGBA" alpha="255" blue="245" green="245" red="245"/>
+    </item>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="10">
+      <subTags>
+        <item type="PlaceObject2Tag" characterId="8" depth="1" forceWriteAsLong="true" name="bodyTxt1" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="true" nRotateBits="0" nScaleBits="18" nTranslateBits="15" scaleX="1.0" scaleY="1.0005493" translateX="-10260" translateY="40"/>
+        </item>
+        <item type="PlaceObject2Tag" characterId="9" depth="2" forceWriteAsLong="true" name="bodyTxt2" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="true" nRotateBits="0" nScaleBits="18" nTranslateBits="10" scaleX="1.0" scaleY="1.0005493" translateX="340" translateY="40"/>
+        </item>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>10</item>
+      </tags>
+      <names>
+        <item>ScrollEntry_2</item>
+      </names>
+    </item>
+    <item type="ImportAssets2Tag" downloadNow="1" forceWriteAsLong="true" hasDigest="0" url="./fonts/gfxfontlib.swf">
+      <tags>
+        <item>11</item>
+      </tags>
+      <names>
+        <item>BioMass Shared</item>
+      </names>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="12" fontHeight="560" fontId="11" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;BioMass Shared&quot; size=&quot;28&quot; color=&quot;#acf5fe&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Scrolling Title&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="true" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="19960" Xmin="-40" Ymax="904" Ymin="-40" nbits="16"/>
+      <textColor type="RGBA" alpha="255" blue="254" green="245" red="172"/>
+    </item>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="13">
+      <subTags>
+        <item type="PlaceObject3Tag" characterId="12" depth="1" forceWriteAsLong="true" name="headingTxt" placeFlagHasBlendMode="false" placeFlagHasCacheAsBitmap="false" placeFlagHasCharacter="true" placeFlagHasClassName="false" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasFilterList="true" placeFlagHasImage="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagHasVisible="false" placeFlagMove="false" placeFlagOpaqueBackground="false" reserved="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="15" translateX="-9960" translateY="40"/>
+          <surfaceFilterList>
+            <item type="GLOWFILTER" blurX="20.0" blurY="20.0" compositeSource="true" id="2" innerGlow="false" knockout="false" passes="3" strength="1.0">
+              <glowColor type="RGBA" alpha="255" blue="255" green="153" red="0"/>
+            </item>
+          </surfaceFilterList>
+        </item>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>13</item>
+      </tags>
+      <names>
+        <item>ScrollCreditHeading</item>
+      </names>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="14" fontHeight="440" fontId="11" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;BioMass Shared&quot; size=&quot;22&quot; color=&quot;#acf5fe&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Scrolling Title&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="true" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="15960" Xmin="-40" Ymax="820" Ymin="-40" nbits="15"/>
+      <textColor type="RGBA" alpha="255" blue="254" green="245" red="172"/>
+    </item>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="15">
+      <subTags>
+        <item type="PlaceObject3Tag" characterId="14" depth="1" forceWriteAsLong="true" name="titleTxt" placeFlagHasBlendMode="false" placeFlagHasCacheAsBitmap="false" placeFlagHasCharacter="true" placeFlagHasClassName="false" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasFilterList="true" placeFlagHasImage="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagHasVisible="false" placeFlagMove="false" placeFlagOpaqueBackground="false" reserved="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="14" translateX="-7960" translateY="40"/>
+          <surfaceFilterList>
+            <item type="GLOWFILTER" blurX="20.0" blurY="20.0" compositeSource="true" id="2" innerGlow="false" knockout="false" passes="3" strength="1.0">
+              <glowColor type="RGBA" alpha="255" blue="255" green="153" red="0"/>
+            </item>
+          </surfaceFilterList>
+        </item>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>15</item>
+      </tags>
+      <names>
+        <item>ScrollCreditField</item>
+      </names>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="16" fontHeight="440" fontId="11" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;BioMass Shared&quot; size=&quot;22&quot; color=&quot;#acf5fe&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Fading Title&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="true" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="15960" Xmin="-40" Ymax="720" Ymin="-40" nbits="15"/>
+      <textColor type="RGBA" alpha="255" blue="254" green="245" red="172"/>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="17" fontHeight="560" fontId="1" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="true" hasTextColor="true" html="true" indent="0" initialText="&lt;p align=&quot;center&quot;&gt;&lt;font face=&quot;AeroLight Shared&quot; size=&quot;28&quot; color=&quot;#f5f5f5&quot; letterSpacing=&quot;0.000000&quot; kerning=&quot;1&quot;&gt;Default Fading Body&lt;/font&gt;&lt;/p&gt;" leading="40" leftMargin="0" multiline="true" noSelect="true" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="true">
+      <bounds type="RECT" Xmax="15960" Xmin="-40" Ymax="2543" Ymin="-40" nbits="15"/>
+      <textColor type="RGBA" alpha="255" blue="245" green="245" red="245"/>
+    </item>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="18">
+      <subTags>
+        <item type="PlaceObject3Tag" characterId="16" depth="1" forceWriteAsLong="true" name="titleTxt" placeFlagHasBlendMode="false" placeFlagHasCacheAsBitmap="false" placeFlagHasCharacter="true" placeFlagHasClassName="false" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasFilterList="true" placeFlagHasImage="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagHasVisible="false" placeFlagMove="false" placeFlagOpaqueBackground="false" reserved="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="14" translateX="-7960" translateY="40"/>
+          <surfaceFilterList>
+            <item type="GLOWFILTER" blurX="20.0" blurY="20.0" compositeSource="true" id="2" innerGlow="false" knockout="false" passes="3" strength="1.0">
+              <glowColor type="RGBA" alpha="255" blue="255" green="153" red="0"/>
+            </item>
+          </surfaceFilterList>
+        </item>
+        <item type="PlaceObject2Tag" characterId="17" depth="2" forceWriteAsLong="true" name="bodyTxt" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="14" translateX="-7960" translateY="800"/>
+        </item>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>18</item>
+      </tags>
+      <names>
+        <item>FadeCreditField</item>
+      </names>
+    </item>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="19">
+      <subTags>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>19</item>
+      </tags>
+      <names>
+        <item>Credits</item>
+      </names>
+    </item>
+    <item type="DoActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/frame_1/DoAction.as" actionBytes="00" forceWriteAsLong="true"/>
+    <item type="PlaceObject2Tag" characterId="19" depth="1" forceWriteAsLong="true" name="credits" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+      <matrix type="MATRIX" hasRotate="false" hasScale="true" nRotateBits="0" nScaleBits="18" nTranslateBits="0" scaleX="1.0" scaleY="0.9999542" translateX="0" translateY="0"/>
+    </item>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="20">
+      <subTags/>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>20</item>
+      </tags>
+      <names>
+        <item>__Packages.com.SFXMovieClip</item>
+      </names>
+    </item>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/__Packages/com/SFXMovieClip.as" actionBytes="00" forceWriteAsLong="true" spriteId="20"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="21">
+      <subTags/>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>21</item>
+      </tags>
+      <names>
+        <item>__Packages.mx.events.EventDispatcher</item>
+      </names>
+    </item>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/__Packages/mx/events/EventDispatcher.as" actionBytes="00" forceWriteAsLong="true" spriteId="21"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="22">
+      <subTags/>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>22</item>
+      </tags>
+      <names>
+        <item>__Packages.mx.utils.Delegate</item>
+      </names>
+    </item>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/__Packages/mx/utils/Delegate.as" actionBytes="00" forceWriteAsLong="true" spriteId="22"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="23">
+      <subTags/>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>23</item>
+      </tags>
+      <names>
+        <item>__Packages.com.SFXInputMovieClip</item>
+      </names>
+    </item>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/__Packages/com/SFXInputMovieClip.as" actionBytes="00" forceWriteAsLong="true" spriteId="23"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="24">
+      <subTags/>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>24</item>
+      </tags>
+      <names>
+        <item>__Packages.screens.Credits.Credits</item>
+      </names>
+    </item>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/__Packages/screens/Credits/Credits.as" actionBytes="00" forceWriteAsLong="true" spriteId="24"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="25">
+      <subTags/>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>25</item>
+      </tags>
+      <names>
+        <item>__Packages.com.SFXScreen</item>
+      </names>
+    </item>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/__Packages/com/SFXScreen.as" actionBytes="00" forceWriteAsLong="true" spriteId="25"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="26">
+      <subTags/>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>26</item>
+      </tags>
+      <names>
+        <item>__Packages.com.Utilities</item>
+      </names>
+    </item>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/__Packages/com/Utilities.as" actionBytes="00" forceWriteAsLong="true" spriteId="26"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="0" hasEndTag="true" spriteId="27">
+      <subTags/>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="true">
+      <tags>
+        <item>27</item>
+      </tags>
+      <names>
+        <item>__Packages.com.XPlatform</item>
+      </names>
+    </item>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/__Packages/com/XPlatform.as" actionBytes="00" forceWriteAsLong="true" spriteId="27"/>
+    <item type="DoInitActionTag" _externalActions="GUI_SF_Credits.Credits_assets/scripts/Credits.as" actionBytes="00" forceWriteAsLong="true" spriteId="19"/>
+    <item type="ShowFrameTag" forceWriteAsLong="false"/>
+  </tags>
+</swf>
