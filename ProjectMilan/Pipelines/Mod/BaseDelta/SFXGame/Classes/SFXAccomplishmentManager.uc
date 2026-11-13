@@ -581,7 +581,13 @@ private final function ResetAchievementStatus()
     
     for (idx = 0; idx < AccomplishmentData.Length; idx++)
     {
-        AccomplishmentIsComplete[AccomplishmentData[idx].Index] = 0;
+        // MILAN CHANGE - d00t - 2026-11-13
+        // Do not reset multiplayer accomplishments.
+        if (!AccomplishmentData[idx].IsMultiplayerOnly)
+        {
+            AccomplishmentIsComplete[AccomplishmentData[idx].Index] = 0;
+        }
+        // END MILAN CHANGE
     }
 }
 public native function ResetChallengeGroupProgress(Name ChallengeGroupName);
