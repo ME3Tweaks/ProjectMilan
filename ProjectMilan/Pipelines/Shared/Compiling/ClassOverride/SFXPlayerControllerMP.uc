@@ -611,13 +611,17 @@ public simulated function OnWaveFinished()
     // END MILAN
     if (IsLocalPlayerController())
     {
-        SFXEngine(Class'Engine'.static.GetEngine()).MPSaveManager.SaveRecords(TRUE);
         GRI = SFXGRIMP(WorldInfo.GRI);
         if (GRI != None && GRI.GameStatus == EGameStatus.GS_MatchInProgress)
         {
             AccomplishmentManager = SFXEngine(Class'Engine'.static.GetEngine()).AccomplishmentManager;
             AccomplishmentManager.UpdateWaveChallenges(Self);
         }
+
+        // MILAN CHANGE - d00t - 2026-11-13
+        // Move this after the challenges get updated so that we persist them to the profile.
+        SFXEngine(Class'Engine'.static.GetEngine()).MPSaveManager.SaveRecords(TRUE);
+        // END MILAN CHANGE
     }
 }
 public function PulsePowerDisplay()

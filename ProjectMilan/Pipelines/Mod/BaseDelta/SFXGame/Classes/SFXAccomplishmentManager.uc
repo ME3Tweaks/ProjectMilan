@@ -189,7 +189,7 @@ public final event function Initialize()
             MaxAccomplishmentIndex = AccomplishmentData[i].Index;
         }
     }
-    if (MaxAccomplishmentIndex > AccomplishmentIsComplete.Length)
+    if (MaxAccomplishmentIndex >= AccomplishmentIsComplete.Length)
     {
         AccomplishmentIsComplete.Length = MaxAccomplishmentIndex + 1;
         AccomplishmentCompletionTimes.Length = MaxAccomplishmentIndex + 1;
@@ -548,7 +548,7 @@ private final function bool PropagateAccomplishmentCompletion(int Index, bool Is
 {
     local int AccomplishmentIndex;
     
-    if (Index < 0 && Index >= AccomplishmentIsComplete.Length)
+    if (Index < 0 || Index >= AccomplishmentIsComplete.Length)
     {
         return FALSE;
     }
@@ -904,7 +904,7 @@ public function bool UnlockReward(Name AccomplishmentName, int PointsEarned, boo
     if (idx != -1)
     {
         Idx2 = AccomplishmentData.Find('Name', AccomplishmentName);
-        if (Idx2 != -1 && AccomplishmentIsComplete[Idx2] <= 1)
+        if (Idx2 != -1 && AccomplishmentIsComplete[AccomplishmentData[Idx2].Index] <= 1)
         {
             if (Rewards[idx].EntitlementIDGranted != 0)
             {
