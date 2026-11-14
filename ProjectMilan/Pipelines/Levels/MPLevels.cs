@@ -43,7 +43,8 @@ namespace ProjectMilan.Pipelines.Levels
         internal static int DefaultStaticMeshLightingRes => (int)(128 * (Program.Settings.ProductionBuild ? ProductionLightmapResolutionMultiplier : 1f));
 
         // Only "Random waves"/"Mixed" need fresh TLK strings - the rest reuse their existing vanilla StrRef IDs.
-        private static readonly LocalizedString RandomWaveName = new() {
+        private static readonly LocalizedString RandomWaveName = new()
+        {
             [MELocalization.INT] = "Coalition",
             [MELocalization.DEU] = "Koalition",
             [MELocalization.ESN] = "Coalición",
@@ -52,7 +53,8 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.RUS] = "Коалиция",
             [MELocalization.ITA] = "Coalizione",
         }; // Random Wave
-        private static readonly LocalizedString RandomWaveAllCapsName = new() {
+        private static readonly LocalizedString RandomWaveAllCapsName = new()
+        {
             [MELocalization.INT] = "COALITION",
             [MELocalization.DEU] = "KOALITION",
             [MELocalization.ESN] = "COALICIÓN",
@@ -61,7 +63,8 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.RUS] = "КОАЛИЦИЯ",
             [MELocalization.ITA] = "COALIZIONE",
         };
-        private static readonly LocalizedString MixedName = new() {
+        private static readonly LocalizedString MixedName = new()
+        {
             [MELocalization.INT] = "Unified",
             [MELocalization.DEU] = "Vereinigt",
             [MELocalization.ESN] = "Unificado",
@@ -70,7 +73,8 @@ namespace ProjectMilan.Pipelines.Levels
             [MELocalization.ITA] = "Unificato",
             [MELocalization.RUS] = "Объединение",
         }; // Mixed
-        private static readonly LocalizedString MixedAllCapsName = new() {
+        private static readonly LocalizedString MixedAllCapsName = new()
+        {
             [MELocalization.INT] = "UNIFIED",
             [MELocalization.DEU] = "VEREINIGT",
             [MELocalization.ESN] = "UNFICADO",
@@ -287,7 +291,9 @@ namespace ProjectMilan.Pipelines.Levels
             if (onlyLevels is { Count: > 0 })
             {
                 foreach (var unknown in onlyLevels.Where(x => !levels.Any(l => l.BioP.Equals(x, StringComparison.OrdinalIgnoreCase))))
+                {
                     MilanLog.ErrorWithSummary($"{unknown} is not a lit level; nothing imported for it", customPrefix: LOG_CATEGORY);
+                }
                 levels = levels.Where(l => onlyLevels.Contains(l.BioP, StringComparer.OrdinalIgnoreCase)).ToList();
             }
 
@@ -313,7 +319,9 @@ namespace ProjectMilan.Pipelines.Levels
                 LevelShared.ImportStaticLighting(level, true);
                 // The importer saves the sublevels it changes, but not the package it was handed.
                 if (bioP.IsModified)
+                {
                     bioP.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                }
                 level.LE3BioP = null;
                 imported++;
             }
@@ -355,7 +363,13 @@ namespace ProjectMilan.Pipelines.Levels
                 {
                     BeginPortingGeneric(level, parent);
                 }
-                
+
+                // Fix Grenade/Ammo container respawns times
+                // Grenade - 8s (Is this right?)
+                // Ammo - 3s
+                CorrectAmmoGrenadeContainers(level);
+
+
                 // Static lighting does not save the source package, so we are now free to modify it now that the final save has occurred
                 if (Program.BuildStaticLighting && level.BuildLighting)
                 {
@@ -415,6 +429,31 @@ namespace ProjectMilan.Pipelines.Levels
             // Redemption (if enabled) run after this stage and may still add their own maps to the same
             // bundle - see their own commit calls.
             MilanPipelinesShared.CommitConfigBundle();
+        }
+
+        /// <summary>
+        /// Corrects the grenade/ammo container respawn times for all levels
+        /// </summary>
+        /// <param name="level"></param>
+        private static void CorrectAmmoGrenadeContainers(LevelSpecificPipeline level)
+        {
+            foreach (var sl in level.LE3Packages.Values)
+            {
+                foreach (var export in sl.Exports.Where(x => !x.IsDefaultObject))
+                {
+                    if (export.ClassName == "SFXAmmoContainer")
+                    {
+                        MilanLog.Information($"Setting {export.ObjectName.Instanced} respawn time to 3.0s", customPrefix: level.LogCategory);
+                        export.WriteProperty(new FloatProperty(3.0f, "RespawnTime"));
+                    }
+                    // All containers have defaults set so this might not actually be what it should be
+                    //else if (export.ClassName == "SFXGrenadeContainer")
+                    //{
+                    //    MilanLog.Information($"Setting {export.ObjectName.Instanced} respawn time to 8.0s", customPrefix: level.LogCategory);
+                    //    export.WriteProperty(new FloatProperty(8.0f, "RespawnTime"));
+                    //}
+                }
+            }
         }
 
 
@@ -676,7 +715,7 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Set AdditionalPackagesToCook
             (levelPipeline.LE3BioP as MEPackage).AdditionalPackagesToCook.ReplaceAll(levelPipeline.LE3Packages.Where(x => x.Value != levelPipeline.ME3BioP).Select(x => x.Value.FileNameNoExtension));
-            
+
             MilanLevelTools.RebuildPersistentLevelChildren(destPersistentLevel);
         }
 
