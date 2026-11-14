@@ -666,7 +666,13 @@ public function bool ChangeMatchSettings(int privacy, int MapId, bool bRandomMap
     GRI.bRandomEnemy = bRandomEnemy;
     GRI.DifficultySetting = NewDifficulty;
      // MILAN Patched: Remove calls to Engine.Telemetry.GameSession.SetMPMatchSettings()
-    GetPC().LobbyFlow.OnMatchSettingsChanged();
+    // MILAN CHANGE - 11/14/2026 - Mgamerz
+    // Add null guards
+    if (GetPC() != None && GetPC().LobbyFlow != None)
+    {
+        GetPC().LobbyFlow.OnMatchSettingsChanged();
+    }
+    // END MILAN CHANGE
     // MILAN CHANGE - 10/09/2026 - Mgamerz
     // A 1-player lobby is a private match. Leaving Private (1), for Public or Friends, opens it to
     // the default size.

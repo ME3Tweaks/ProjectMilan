@@ -714,7 +714,13 @@ public reliable server function ServerSetMapArray(byte MapArray[255])
         LocalMapArray[idx] = MapArray[idx];
     }
     bLocalMapsSent = TRUE;
-    SFXGRIMP_Lobby(WorldInfo.GRI).UpdateMapArrays();
+    // MILAN CHANGE - 11/14/2026 - Mgamerz
+    // Add null guards - in-match is not lobby
+    if (SFXGRIMP_Lobby(WorldInfo.GRI) != None)
+    {
+        SFXGRIMP_Lobby(WorldInfo.GRI).UpdateMapArrays();
+    }
+    // END MILAN CHANGE
 }
 // END MILAN CHANGE
 

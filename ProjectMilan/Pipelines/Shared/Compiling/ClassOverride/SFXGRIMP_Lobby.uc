@@ -241,7 +241,14 @@ public final function UpdateMapArrays()
     
     UpdatePlayerListOrder();
     BuildCombinedMapArray();
-    bSelectedMapIsStillAvailable = GetPC().LobbyFlow.DoesEveryoneHaveMap(MapSetting);
+    // MILAN CHANGE - 11/14/2026 - Mgamerz
+    // Add null guards - default to true so it doesn't reset map
+    bSelectedMapIsStillAvailable = TRUE;
+    if (GetPC() != None && GetPC().LobbyFlow != None)
+    {
+        bSelectedMapIsStillAvailable = GetPC().LobbyFlow.DoesEveryoneHaveMap(MapSetting);
+    }
+    // END MILAN CHANGE
     if (!bSelectedMapIsStillAvailable)
     {
         SFXGameInfoMP_Lobby(WorldInfo.Game).ChangeMatchSettings(PrivacySetting, 0, TRUE, EnemySetting, bRandomEnemy, DifficultySetting);

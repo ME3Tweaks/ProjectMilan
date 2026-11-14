@@ -52,7 +52,10 @@ public simulated function Initialize()
     local ShieldLoadout ShieldEntry;
     
     Pawn = BioPawn(Instigator);
-    if (Pawn != None)
+    // MILAN CHANGE - 11/14/2026 - Mgamerz
+    // Add null guard
+    if (Pawn != None && Pawn.Loadout != None)
+    // END MILAN CHANGE
     {
         foreach Pawn.Loadout.ShieldLoadouts(ShieldEntry, )
         {

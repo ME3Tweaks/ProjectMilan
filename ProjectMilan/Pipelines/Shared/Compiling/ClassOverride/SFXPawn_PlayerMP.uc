@@ -410,10 +410,14 @@ public function AutoMapXbox()
     local BioPlayerInput BPI;
     
     BPI = BioPlayerInput(BioPlayerController(Controller).PlayerInput);
-    BPI.m_nmMappedPower4 = 'SFXPowerCustomActionMP_Consumable_Rocket';
-    BPI.m_nmMappedPower5 = 'SFXPowerCustomActionMP_Consumable_Shield';
-    BPI.m_nmMappedPower6 = 'SFXPowerCustomActionMP_Consumable_Revive';
-    BPI.m_nmMappedPower7 = 'SFXPowerCustomActionMP_Consumable_Ammo';
+    // MILAN CHANGE - 11/14/2026 - Mgamerz
+    // Add null guard
+    if (BPI != None) {
+        BPI.m_nmMappedPower4 = 'SFXPowerCustomActionMP_Consumable_Rocket';
+        BPI.m_nmMappedPower5 = 'SFXPowerCustomActionMP_Consumable_Shield';
+        BPI.m_nmMappedPower6 = 'SFXPowerCustomActionMP_Consumable_Revive';
+        BPI.m_nmMappedPower7 = 'SFXPowerCustomActionMP_Consumable_Ammo';
+    }
     Super.AutoMapXbox();
 }
 public simulated function bool CanPlayDeathEffect()
@@ -1234,7 +1238,10 @@ simulated state Downed
         local Class<SFXDamageType> DamageType;
         local bool bInstantDeath;
         local SFXDifficultyHandler DH;
-        
+        // Add variables for null guard defaults
+        local SFXGUIInteraction UIController;
+        local SFXGUI_PlayerCountdown CountdownMovie;
+
         OldController = Controller;
         MPC = SFXPlayerControllerMP(Controller);
         Super.BeginState(PreviousStateName);
@@ -1304,10 +1311,21 @@ simulated state Downed
         }
         if (!bInstantDeath)
         {
+            // MILAN CHANGE - 11/14/2026 - Mgamerz
+            // Add null guards
             if (MPC != None)
             {
-                MPC.GetSFXUIController().CastGetMovie(Class'SFXGUI_PlayerCountdown', MPC, MPC.GetSFXUIController().MovieTag_PlayerCountdown).PlayAnimation(0, fPermaDeathTimer);
+                UIController = MPC.GetSFXUIController();
+                if (UIController != None)
+                {
+                    CountdownMovie = UIController.CastGetMovie(Class'SFXGUI_PlayerCountdown', MPC, UIController.MovieTag_PlayerCountdown);
+                    if (CountdownMovie != None)
+                    {
+                        CountdownMovie.PlayAnimation(0, fPermaDeathTimer);
+                    }
+                }
             }
+            // END MILAN CHANGE
             GetModule(Class'SFXModule_MarkerPlayer').UpdatePlayerDownState(TRUE);
             DH = SFXGRI(WorldInfo.GRI).DifficultyHandler;
             if (DH != None)
