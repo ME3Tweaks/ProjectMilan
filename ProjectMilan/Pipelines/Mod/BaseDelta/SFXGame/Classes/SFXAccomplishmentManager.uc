@@ -189,7 +189,7 @@ public final event function Initialize()
             MaxAccomplishmentIndex = AccomplishmentData[i].Index;
         }
     }
-    if (MaxAccomplishmentIndex > AccomplishmentIsComplete.Length)
+    if (MaxAccomplishmentIndex >= AccomplishmentIsComplete.Length)
     {
         AccomplishmentIsComplete.Length = MaxAccomplishmentIndex + 1;
         AccomplishmentCompletionTimes.Length = MaxAccomplishmentIndex + 1;
@@ -548,7 +548,7 @@ private final function bool PropagateAccomplishmentCompletion(int Index, bool Is
 {
     local int AccomplishmentIndex;
     
-    if (Index < 0 && Index >= AccomplishmentIsComplete.Length)
+    if (Index < 0 || Index >= AccomplishmentIsComplete.Length)
     {
         return FALSE;
     }
@@ -581,7 +581,13 @@ private final function ResetAchievementStatus()
     
     for (idx = 0; idx < AccomplishmentData.Length; idx++)
     {
-        AccomplishmentIsComplete[AccomplishmentData[idx].Index] = 0;
+        // MILAN CHANGE - d00t - 2026-11-13
+        // Do not reset multiplayer accomplishments.
+        if (!AccomplishmentData[idx].IsMultiplayerOnly)
+        {
+            AccomplishmentIsComplete[AccomplishmentData[idx].Index] = 0;
+        }
+        // END MILAN CHANGE
     }
 }
 public native function ResetChallengeGroupProgress(Name ChallengeGroupName);
@@ -904,7 +910,7 @@ public function bool UnlockReward(Name AccomplishmentName, int PointsEarned, boo
     if (idx != -1)
     {
         Idx2 = AccomplishmentData.Find('Name', AccomplishmentName);
-        if (Idx2 != -1 && AccomplishmentIsComplete[Idx2] <= 1)
+        if (Idx2 != -1 && AccomplishmentIsComplete[AccomplishmentData[Idx2].Index] <= 1)
         {
             if (Rewards[idx].EntitlementIDGranted != 0)
             {

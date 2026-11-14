@@ -1129,7 +1129,6 @@ public reliable client function GatherMatchResults(bool bMatchWin, int Extracted
     Engine.MPSaveManager.TotalTimePlayed += MatchDuration;
     // END MILAN CHANGE
     bEndOfMatchRecordsSaved = FALSE;
-    Engine.MPSaveManager.SaveRecords(FALSE, OnSaveRecordsComplete);
     bEndOfMatchScreenShownForLongEnough = FALSE;
     SFXPlayerControllerMP(Owner).ShowMPEndOfMatchScreen();
     SetTimer(EndOfMatchScreenDisplayTime, FALSE, 'EndOfMatchScreenFinished', );
@@ -1137,6 +1136,10 @@ public reliable client function GatherMatchResults(bool bMatchWin, int Extracted
     {
         Engine.AccomplishmentManager.UpdateMatchChallenges(PlayerID, BioPlayerController(Owner));
     }
+    // MILAN CHANGE - d00t - 2026-11-13
+    // Move this after the challenges get updated so that we persist them to the profile.
+    Engine.MPSaveManager.SaveRecords(FALSE, OnSaveRecordsComplete);
+    // END MILAN CHANGE
     Class'SFXTelemetryHooksMP'.static.SendMatchResults(PlayerID);
 }
 public simulated function GetAppearanceData(out int Tint1ID, out int Tint2ID, out int PatternID, out int PatternColorID, out int PhongID, out int EmissiveID, out int SkinToneID)
