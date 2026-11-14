@@ -241,7 +241,11 @@ public simulated function SFXTakeDamage(float Damage, out TraceHitInfo HitInfo, 
     }
     Damage = Damage * Class'SFXDamageType'.static.CalculateDamageMultiplier(DamageCalc);
     DamageCalc.TargetName = ModuleOwner.Name;
-    DamageCalc.DamageClassName = DamageType.Name;
+    // MILAN CHANGE - 11/14/2026 - Mgamerz
+    // Change to damageClass.Name instead of DamageType as some damage types may be null
+    // damageClass is always set at top of this function
+    DamageCalc.DamageClassName = damageClass.Name;
+    // END MILAN CHANGE
     DamageCalc.ActualDamageDealt = Damage;
     if (Damage > float(0))
     {
