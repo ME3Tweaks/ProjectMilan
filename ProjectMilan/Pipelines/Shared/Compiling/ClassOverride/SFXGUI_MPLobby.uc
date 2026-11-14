@@ -274,6 +274,10 @@ public function array<GAWZoneGUIData> GetGAWRatings()
             ZoneData.ZoneID = Class'SFXGAWAssetsHandler'.default.GAWTheatreData[ZoneIndex].ZoneID;
             ZoneData.ZoneName = GetUIString(Class'SFXGAWAssetsHandler'.default.GAWTheatreData[ZoneIndex].srZoneName);
             ZoneData.ZoneDisplayNumber = Class'SFXGAWAssetsHandler'.default.GAWTheatreData[ZoneIndex].ZoneDisplayNumber;
+            // MILAN CHANGE - 11/13/2026 - Mgamerz
+            // Make zones 100% so it isn't red
+            ZoneData.CurrentRating = 100;
+            // END MILAN CHANGE
             GAWRatings.AddItem(ZoneData);
         }
     }
