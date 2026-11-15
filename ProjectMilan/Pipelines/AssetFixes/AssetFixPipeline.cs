@@ -37,7 +37,8 @@ internal static class AssetFixPipeline
             }
         }
         var meshFixes = AssetMeshFixes.DiscoverFixes(FixFolder);
-        if (fixes.Count == 0 && meshFixes.Count == 0 && guiPolicyTextures.Count == 0)
+        var animationFixes = AssetAnimFixes.DiscoverFixes(FixFolder);
+        if (fixes.Count == 0 && meshFixes.Count == 0 && guiPolicyTextures.Count == 0 && animationFixes.Count == 0)
         {
             // Do nothing.
             return;
@@ -45,6 +46,7 @@ internal static class AssetFixPipeline
 
         var matched = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var matchedMeshes = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var matchedAnimations = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var matchedGui = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         int changedPackages = 0, changedExports = 0;
         MilanShared.RefreshMilanFiles = true;
@@ -57,7 +59,7 @@ internal static class AssetFixPipeline
             // Most packages have no matching exports; inspect their tables before loading export data.
             using (var header = MEPackageHandler.UnsafePartialLoad(file, _ => false))
             {
-                if (!header.Exports.Any(e => fixes.ContainsKey(e.InstancedFullPath) || meshFixes.ContainsKey(e.InstancedFullPath) ||
+                if (!header.Exports.Any(e => fixes.ContainsKey(e.InstancedFullPath) || meshFixes.ContainsKey(e.InstancedFullPath) || animationFixes.ContainsKey(e.InstancedFullPath) ||
                     (e.ClassName == "Texture2D" && guiPolicyTextures.Contains(e.InstancedFullPath))))
                 {
                     // Nothing in this file, skip
@@ -77,6 +79,16 @@ internal static class AssetFixPipeline
                 {
                     changed++;
                     MilanLog.Information($"{package.FileNameNoExtension}: replaced mesh {path}", customPrefix: LogCategory);
+                }
+            }
+            foreach (var export in package.Exports.Where(e => animationFixes.ContainsKey(e.InstancedFullPath)).ToArray())
+            {
+                string path = export.InstancedFullPath;
+                matchedAnimations.Add(path);
+                if (AssetAnimFixes.ApplyFix(export, animationFixes[path]))
+                {
+                    changed++;
+                    MilanLog.Information($"{package.FileNameNoExtension}: replaced animation set {path}", customPrefix: LogCategory);
                 }
             }
             if (package.Exports.Any(e => fixes.ContainsKey(e.InstancedFullPath)))
@@ -132,6 +144,10 @@ internal static class AssetFixPipeline
         {
             MilanLog.Warning($"Mesh asset fix matched no exports: {path}", customPrefix: LogCategory);
         }
+        foreach (var path in animationFixes.Keys.Where(path => !matchedAnimations.Contains(path)))
+        {
+            MilanLog.Warning($"Animation asset fix matched no exports: {path}", customPrefix: LogCategory);
+        }
         // Basegame paths live in the BaseDelta packages, not the mod
         var baseDeltaPaths = GUITextureMipper.BaseDeltaTexturePaths.Values.SelectMany(paths => paths).ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var path in GUITextureMipper.ExplicitTexturePaths.Concat(GUITextureMipper.TextureSizeCaps.Keys).Distinct(StringComparer.OrdinalIgnoreCase)
@@ -139,7 +155,7 @@ internal static class AssetFixPipeline
         {
             MilanLog.Warning($"GUI texture policy path matched no Texture2D exports: {path}", customPrefix: LogCategory);
         }
-        MilanLog.Information($"Fixed {changedExports} exports in {changedPackages} packages ({matched.Count}/{fixes.Count} property fix paths, {matchedMeshes.Count}/{meshFixes.Count} mesh fix paths matched)", customPrefix: LogCategory);
+        MilanLog.Information($"Fixed {changedExports} exports in {changedPackages} packages ({matched.Count}/{fixes.Count} property fix paths, {matchedMeshes.Count}/{meshFixes.Count} mesh fix paths matched, {matchedAnimations.Count}/{animationFixes.Count} animation fix paths matched)", customPrefix: LogCategory);
     }
 
     /// <summary>
