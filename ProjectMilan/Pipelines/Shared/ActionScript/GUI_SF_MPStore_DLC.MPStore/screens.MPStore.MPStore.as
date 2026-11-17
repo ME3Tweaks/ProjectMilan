@@ -9,6 +9,8 @@ class screens.MPStore.MPStore extends com.SFXScreen
     var PCPurchaseButton;
     var PCBackButton;
     var PCShowReinforcementsButton;
+    // MILAN CHANGE - Direct Buy store button
+    var PCDirectBuyButton;
     var PCStore;
     var XBoxStore;
     var PS3Store;
@@ -35,6 +37,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
     var srRedeem = "NOLOC:Redeem";
     var srCantPurchaseWhileReady = "NOLOC:You can\'t purchase items while Ready.";
     var srShowReinforcements = "NOLOC:Show Last Award";
+    var srDirectBuy = "NOLOC:Direct Buy";
     static var EXPIRATION_TIMER_INTERVAL = 60000;
     static var CREDITS_ONLY = 0;
     static var PLATFORM_ONLY = 1;
@@ -89,6 +92,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
         this.srRedeem = "$" + _global.SFX.GetIniString("srRedeem");
         this.srCantPurchaseWhileReady = "$" + _global.SFX.GetIniString("srCantPurchaseWhileReady");
         this.srShowReinforcements = "$" + _global.SFX.GetIniString("srShowReinforcements");
+        this.srDirectBuy = "$" + _global.SFX.GetIniString("srDirectBuy");
     }
     function SetupButtons()
     {
@@ -96,6 +100,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
         this.PCPurchaseButton = _root.mcPurchaseButton;
         this.PCBackButton = _root.mcBackButton;
         this.PCShowReinforcementsButton = _root.mcShowReinforcementsButton;
+        this.PCDirectBuyButton = _root.mcDirectBuyButton;
         var _loc4_ = Boolean(flash.external.ExternalInterface.call("CanShowReinforcementsRevealScreen"));
 
 		this.PCBackButton.SetText(this.srBack);
@@ -105,10 +110,13 @@ class screens.MPStore.MPStore extends com.SFXScreen
 		this.PCBackButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnBack));
 		this.PCShowReinforcementsButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnManualReinforcementsReveal));
 		this.PCShowReinforcementsButton.SetEnabled(_loc4_);
+		this.PCDirectBuyButton.SetText(this.srDirectBuy);
+		this.PCDirectBuyButton.addEventListener("SFXButton_onRelease",this.MakeDelegate(this.OnDirectBuy));
 
 		this.ControllerButtons.addEventListener("onButtonA",this.MakeDelegate(this.OnPurchase));
 		this.ControllerButtons.addEventListener("onButtonB",this.MakeDelegate(this.OnBack));
 		this.ControllerButtons.addEventListener("onButtonY",this.MakeDelegate(this.OnManualReinforcementsReveal));
+		this.ControllerButtons.addEventListener("onButtonX",this.MakeDelegate(this.OnDirectBuy));
 		this.ControllerButtons.addEventListener("onDPadUp",this.MakeDelegate(this.OnDPadUp));
 		this.ControllerButtons.addEventListener("onDPadDown",this.MakeDelegate(this.OnDPadDown));
 		this.ControllerButtons.addEventListener("onInvalidInput",this.MakeDelegate(this.OnInvalidInput));
@@ -116,8 +124,8 @@ class screens.MPStore.MPStore extends com.SFXScreen
 		this.ControllerButtons.ControlB.SetText(this.srBack);
 		this.ControllerButtons.ControlY.SetText(this.srShowReinforcements);
 		this.ControllerButtons.ControlY.Active = _loc4_;
-		this.ControllerButtons.ControlX.Active = false;
-		this.ControllerButtons.ControlX.Hidden = true;
+		this.ControllerButtons.ControlX.SetText(this.srDirectBuy);
+		this.ControllerButtons.ControlX.Active = this.m_bInputEnabled;
 		this.ControllerButtons.FitLeft();
 		this.RefreshButtonHelp(flash.external.ExternalInterface.call("IsUsingGamepad"));
     }
@@ -130,6 +138,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
             this.PCPurchaseButton.SetVisible(true);
             this.PCBackButton.SetVisible(true);
             this.PCShowReinforcementsButton.SetVisible(true);
+            this.PCDirectBuyButton.SetVisible(true);
         }
         else
         {
@@ -137,6 +146,7 @@ class screens.MPStore.MPStore extends com.SFXScreen
             this.PCPurchaseButton.SetVisible(false);
             this.PCBackButton.SetVisible(false);
             this.PCShowReinforcementsButton.SetVisible(false);
+            this.PCDirectBuyButton.SetVisible(false);
         }
     }
     function SetupStoreIcons()
@@ -295,6 +305,8 @@ class screens.MPStore.MPStore extends com.SFXScreen
             this.PCBackButton.SetText(this.srBack);
             this.PCShowReinforcementsButton.SetEnabled(_loc3_);
             this.PCShowReinforcementsButton.SetText(this.srShowReinforcements);
+            this.PCDirectBuyButton.SetEnabled(this.m_bInputEnabled);
+            this.PCDirectBuyButton.SetText(this.srDirectBuy);
         // }
         // else
         // {
@@ -304,6 +316,8 @@ class screens.MPStore.MPStore extends com.SFXScreen
             this.ControllerButtons.ControlB.SetText(this.srBack);
             this.ControllerButtons.ControlY.Active = _loc3_;
             this.ControllerButtons.ControlY.SetText(this.srShowReinforcements);
+            this.ControllerButtons.ControlX.Active = this.m_bInputEnabled;
+            this.ControllerButtons.ControlX.SetText(this.srDirectBuy);
             this.ControllerButtons.FitLeft();
         // }
         var _loc6_ = Boolean(flash.external.ExternalInterface.call("IsReady"));
@@ -357,6 +371,17 @@ class screens.MPStore.MPStore extends com.SFXScreen
         if(_loc2_)
         {
             flash.external.ExternalInterface.call("ShowReinforcementsRevealScreen",true);
+        }
+        else
+        {
+            _global.SFX.PlayGUIError();
+        }
+    }
+    function OnDirectBuy()
+    {
+        if(this.m_bInputEnabled)
+        {
+            flash.external.ExternalInterface.call("ShowDirectBuyStoreScreen");
         }
         else
         {

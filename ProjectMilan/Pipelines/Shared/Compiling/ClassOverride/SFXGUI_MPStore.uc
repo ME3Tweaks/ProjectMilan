@@ -37,6 +37,8 @@ var config stringref srFree;
 var config stringref srRedeem;
 var config stringref srOriginIgoDisabled;
 var config stringref srShowReinforcements;
+// MILAN CHANGE - Mgamerz - 11/16/2026 - Direct Buy button
+var config stringref srDirectBuy;
 var config float fDelayPostPurchase;
 var BioSFHandler_MessageBox oMsgBox_Notification;
 var BioSFHandler_MessageBox PurchaseChoiceMessageBox;
@@ -450,6 +452,41 @@ public final function ShowReinforcementsRevealScreen(bool bManualReveal)
     Close();
     GetLobbyFlow().ShowReinforcementsRevealScreeen(bManualReveal);
 }
+// MILAN CHANGE - Mgamerz - 11/16/2026
+// Callback function to show the direct buy store UI
+public final function ShowDirectBuyStoreScreen()
+{
+    local SFXGUIInteraction Manager;
+    local SFXGUIMovie DirectBuyMovie;
+
+    Manager = Class'SFXGUIInteraction'.static.GetInstance();
+    if (Manager == None)
+    {
+        return;
+    }
+    DirectBuyMovie = Manager.OpenMovie(GetPC(), 'MPDirectBuyStore', FALSE);
+    if (DirectBuyMovie == None)
+    {
+        return;
+    }
+    // Must have close delegate so we refresh UI here too
+    DirectBuyMovie.AddOnMovieClosedDelegate(OnDirectBuyStoreClosed);
+    SetInputEnabled(FALSE);
+    SetMovieFocus(FALSE);
+    SetVisible(FALSE);
+    DirectBuyMovie.Start();
+    DirectBuyMovie.SetMovieFocus(TRUE);
+}
+
+function bool OnDirectBuyStoreClosed(SFXGUIMovie ClosedMovie)
+{
+    SetVisible(TRUE);
+    SetInputEnabled(TRUE);
+    SetMovieFocus(TRUE);
+    AS_RefreshCredits();
+    return TRUE;
+}
+
 public function AS_ClearScreen()
 {
     ActionScriptVoid("screen.ClearScreen");

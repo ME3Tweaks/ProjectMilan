@@ -375,7 +375,7 @@ namespace ProjectMilan.Pipelines.Levels
                 var destmodel = destPackage.GetUExport(destModelIdx);
                 MilanLog.Information($"  Porting level model {sourcemodel.InstancedFullPath}",
                     customPrefix: levelPipeline.LogCategory);
-                EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourcemodel,
+                var modelRelinkReport = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.ReplaceSingularWithRelink, sourcemodel,
                     destPackage, destmodel, true, new RelinkerOptionsPackage()
                     {
                         Cache = levelPipeline.Cache,
@@ -400,7 +400,7 @@ namespace ProjectMilan.Pipelines.Levels
                     var sModelComp = sourcePackage.GetUExport(oModelCompIdx);
                     MilanLog.Information($"  Porting level model component {sModelComp.InstancedFullPath}",
                         customPrefix: levelPipeline.LogCategory);
-                    EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, sModelComp,
+                    var modelComponentRelinkReport = EntryImporter.ImportAndRelinkEntries(EntryImporter.PortingOption.CloneAllDependencies, sModelComp,
                         destPackage, destLevel, true, new RelinkerOptionsPackage()
                         {
                             Cache = levelPipeline.Cache,

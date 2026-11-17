@@ -206,6 +206,8 @@
 				<Value type="3">(Tag=MilanNetConfig,\tZOrder=270,\tMovieClass="SFXGameContent_Milan.SFXGUI_MilanNetConfig",\tGFxResource="GUI_SF_MilanNetConfig.NetworkRegistration", bRequiresScaling=true)</Value>
 				<!-- MILAN CHANGE - Mgamerz - 2026-10-21: Banner selector UI -->
 				<Value type="3">(Tag=MilanBannerSelect,\tZOrder=275,\tMovieClass="SFXGameContent_Milan.SFXGUI_MilanBannerSelect",\tGFxResource="GUI_SF_MilanBannerSelect.LoadSave", bRequiresScaling=true)</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/16/2026 Direct Buy Store UI-->
+				<Value type="3">(Tag=MPDirectBuyStore,\tZOrder=163,\tMovieClass="SFXGameContent_Milan.SFXGUI_MPDirectBuyStore",\tGFxResource="GUI_SF_Store.Store", bRequiresScaling=true)</Value>
 				<!-- END MILAN -->
 			</Property>
 		</Section>
@@ -275,6 +277,7 @@
 		<Section name="sfxgamempcontent.sfxgui_mpstore">
 			<Property name="srexpiresindaystext" type="0">751310</Property>
 			<Property name="srshowreinforcements" type="0">757970</Property>
+			<Property name="srdirectbuy" type="0">49875985</Property>
 		</Section>
 		<Section name="sfxgamempcontentdlc_shared_mp.sfxgui_mpchallenges">
 			<Property name="alienchallenges">
