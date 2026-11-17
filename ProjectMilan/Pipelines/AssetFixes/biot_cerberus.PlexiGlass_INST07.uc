@@ -27,7 +27,8 @@
                               // MILAN CHANGE - 11/16/2026 - Mgamerz
                               // Change from 3.0 to 1.0 to make glass less ugly. ME3 used 0.3 but 1.0 looks OK
                               ParameterValue = 1.0
-                              // END MILAN CHANGE                             }
+                              // END MILAN CHANGE
+                             }
                             )
     TextureParameterValues = ({
                                ExpressionGUID = {A = 792883467, B = 1322613627, C = -1945957198, D = 276641014}, 
