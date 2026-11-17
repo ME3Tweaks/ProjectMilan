@@ -2,8 +2,8 @@
 // Add null guards
 public function ShowTappingPrompt(bool bVisible, optional bool bForce = FALSE)
 {
-    local GFxObject DeathRoot;
-    local GFxObject ButtonIcon;
+    local GFxValue DeathRoot;
+    local GFxValue ButtonIcon;
 
     if (bTappingPromptVisible != bVisible || bForce)
     {
