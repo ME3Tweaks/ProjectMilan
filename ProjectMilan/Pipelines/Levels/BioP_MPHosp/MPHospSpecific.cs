@@ -14,6 +14,17 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPHosp
             "BioA_MPHosp" // Empty file
         ];
 
+        public override void PreCorrect(LevelSpecificPipeline pipeline)
+        {
+            // Use ME3 girder package as its UVs have changed in LE3
+            var package = pipeline.ME3Packages["BioA_MPHosp_100"];
+            var railing = package.FindExport("bios_human_ext.Girder01", "StaticMesh");
+
+            // Rename to _ME3
+            // NOTE: you must add this asset to decook or lighting won't build!
+            railing.ObjectName = "Girder01_MPHosp_ME3";
+        }
+
         public override void PostCorrect(LevelSpecificPipeline pipeline)
         {
             // Reported by Ody
