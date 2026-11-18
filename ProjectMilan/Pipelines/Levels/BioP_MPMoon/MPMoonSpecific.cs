@@ -16,6 +16,12 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
         ];
 
 
+        // Extra blocking volumes that bioware seems to have left in and need removed
+        private static readonly (string Package, string ActorIFP)[] StrippedActors =
+        [
+            ("BioD_MPMoon_Bas1", "TheWorld.PersistentLevel.BlockingVolume_41"),
+        ];
+
         // Condor ammo boxes don't have the correct respawn time set which makes it SUCK to get ammo
         public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
@@ -23,10 +29,17 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
             {
                 var bin = package.GetLevelBinary();
 
-                for (int i = 0; i < bin.Actors.Count; i++)
+                for (int i = bin.Actors.Count - 1; i >= 0; i--)
                 {
                     if (package.TryGetUExport(bin.Actors[i], out var actor))
                     {
+                        if (StrippedActors.Contains((package.FileNameNoExtension, actor.InstancedFullPath)))
+                        {
+                            MilanLog.Information($"Stripping actor {actor.InstancedFullPath} from {package.FileNameNoExtension}", customPrefix: pipeline.LogCategory);
+                            bin.Actors.RemoveAt(i);
+                            continue;
+                        }
+
                         if (actor.ClassName == "SFXAmmoContainer")
                         {
                             actor.WriteProperty(new FloatProperty(3.0f, "RespawnTime"));
