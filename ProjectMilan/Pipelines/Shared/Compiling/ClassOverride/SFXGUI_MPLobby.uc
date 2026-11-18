@@ -103,6 +103,10 @@ var config int MaxOnlineImages;
 var bool bPreviouslyInParty;
 var bool bPreviouslyCouldInteract;
 var bool m_bGAWRatingsError;
+// MILAN CHANGE - 11/17/2026 - Mgamerz
+// Add new Join Match menu item
+var config stringref srJoinMatch;
+// END MILAN CHANGE
 
 public final function int GetPrivacy()
 {
@@ -1496,6 +1500,10 @@ defaultproperties
     srFormattedReadiness = $710700
     srGAWGlobalBonus = $724824
     srGAWZoneBonus = $724825
+    // MILAN CHANGE - 11/17/2026 - Mgamerz
+    // Add new Join Match menu item
+    srJoinMatch = $49875830
+    // END MILAN CHANGE
     MaxOnlineImages = 20
     m_UIWorldMPPawnInitialRotation = {Pitch = 0, Yaw = 29000, Roll = 0}
     m_bFocusOnStart = TRUE

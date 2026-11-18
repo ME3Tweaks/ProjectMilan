@@ -159,6 +159,7 @@ Duration: &lt;CUSTOM3&gt; seconds</String>
 	<String id="49875828">Earned by obtaining the Legendary Edition achievement.</String>
 	<!-- Team Betrayal system -->
 	<String id="49875829">{0} attempted to betray the team</String>
+	<String id="49875830">Join Match</String>
 
 	<!-- FOV START -->
     <String id="49875900">-100°</String>

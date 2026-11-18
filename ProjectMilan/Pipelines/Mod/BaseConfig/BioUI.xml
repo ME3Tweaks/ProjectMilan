@@ -3719,6 +3719,8 @@
 				<Value type="2">EReinforcementGUICategory_SMG</Value>
 				<Value type="2">EReinforcementGUICategory_Shotgun</Value>
 			</Property>
+			<!-- MILAN CHANGE - 11/17/2026 - Mgamerz - Add Join Match button -->
+			<Property name="srjoinmatch" type="2">49875830</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mplobbystatusbars">
 			<Property name="srchallenge" type="2">681604</Property>
