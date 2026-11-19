@@ -2357,5 +2357,9 @@
 			<Property name="primecomborank" type="0">3.0</Property>
 			<Property name="primerefreshdelay" type="0">0.5</Property>
 		</Section>
+		<Section name="sfxgamecontent_milan.sfxweapon_heavy_consumablecain">
+			<!-- 11/18/2026 - Mgamerz - Raise from 10000 to 30000 damage -->
+			<Property name="damage" type="2">(X=30000,Y=30000)</Property>
+		</Section>
 	</Sections>
 </CoalesceAsset>
