@@ -25,6 +25,10 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     var m_ArrowLeft;
     var m_ArrowRight;
     var rightPage;
+    // MILAN CHANGE - 11/17/2026 - Mgamerz
+    // Add new Join Match menu item
+    var srJoinMatch;
+    // END MILAN CHANGE
     var tabs;
     static var LSS_None = 0;
     static var LSS_SelectCharacter = 1;
@@ -182,6 +186,10 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         this.srViewInvitations = "$" + _global.SFX.GetIniString("srViewInvitations");
         this.srGalaxyAtWarError = "$" + _global.SFX.GetIniString("srGalaxyAtWarError");
         this.srChallengeTracking = "$" + _global.SFX.GetIniString("srChallengeTracking");
+        // MILAN CHANGE - 11/17/2026 - Mgamerz
+        // Add new Join Match menu item
+        this.srJoinMatch = "$" + _global.SFX.GetIniString("srJoinMatch");
+        // END MILAN CHANGE
     }
     function SetInitialSelectedItem()
     {
@@ -396,20 +404,25 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             }
             PageList.item1.contents.title.text = this.srQuickMatch;
             PageList.item1.action = this.CustomMatch;
-            PageList.item2.contents.title.text = this.srHostNewMission;
-            PageList.item2.action = this.HostNewMission;
-            PageList.item3.contents.title.text = this.srCharacter;
-            PageList.item3.action = this.MakeDelegate(this.ShowCharacterScreen);
-            PageList.item4.contents.title.text = this.srLeaderboards;
-            PageList.item4.action = this.ShowLeaderboardScreen;
-            PageList.item5.contents.title.text = this.srReinforcements;
-            PageList.item5.action = this.ShowStoreScreen;
-            PageList.item5.SetAlert(bCanAffordNewStoreItems,this.srNew);
+            // MILAN CHANGE - 11/17/2026 - Mgamerz
+            // Add new Join Match menu item as item2; the remaining items move down one
+            PageList.item2.contents.title.text = this.srJoinMatch;
+            PageList.item2.action = this.JoinMatch;
+            PageList.item3.contents.title.text = this.srHostNewMission;
+            PageList.item3.action = this.HostNewMission;
+            PageList.item4.contents.title.text = this.srCharacter;
+            PageList.item4.action = this.MakeDelegate(this.ShowCharacterScreen);
+            PageList.item5.contents.title.text = this.srLeaderboards;
+            PageList.item5.action = this.ShowLeaderboardScreen;
+            PageList.item6.contents.title.text = this.srReinforcements;
+            PageList.item6.action = this.ShowStoreScreen;
+            PageList.item6.SetAlert(bCanAffordNewStoreItems,this.srNew);
             if(IsChallengeSystemEnabled)
             {
-                PageList.item6.contents.title.text = this.srChallengeTracking;
-                PageList.item6.action = this.MakeDelegate(this.ShowMPChallengeScreen);
+                PageList.item7.contents.title.text = this.srChallengeTracking;
+                PageList.item7.action = this.MakeDelegate(this.ShowMPChallengeScreen);
             }
+            // END MILAN CHANGE
             this.RefreshPlayerInfo(page,false);
         }
         else if(sSymbolName == this.PAGE_CHARACTER)
@@ -1224,6 +1237,14 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         _global.SFX.PlayGUISound("MPMissionSettingsStart");
         flash.external.ExternalInterface.call("CustomMatch");
     }
+    // MILAN CHANGE - 11/17/2026 - Mgamerz
+    // Add new Join Match menu item
+    function JoinMatch()
+    {
+        _global.SFX.PlayGUISound("MPMissionSettingsStart");
+        flash.external.ExternalInterface.call("JoinMatch");
+    }
+    // END MILAN CHANGE
     function HostNewMission()
     {
         _global.SFX.PlayGUISound("MPMissionSettingsStart");
