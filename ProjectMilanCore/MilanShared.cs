@@ -9,6 +9,7 @@ using LegendaryExplorerCore.UnrealScript.Compiling.Errors;
 using LegendaryExplorerCore.UnrealScript;
 using ProjectMilan;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Helpers;
@@ -309,7 +310,7 @@ namespace ProjectMilanCore
         private static CaseInsensitiveDictionary<IMEPackage> TestPatchPackageMap;
         private static readonly object testPatchPackageMapSyncObj = new();
 
-        public static ExportEntry GetTestPatchClass(ExportEntry classExp)
+        private static void EnsureTestPatchPackageMap()
         {
             lock (testPatchPackageMapSyncObj)
             {
@@ -334,7 +335,14 @@ namespace ProjectMilanCore
                         }
                     }
                 }
+            }
+        }
 
+        public static ExportEntry GetTestPatchClass(ExportEntry classExp)
+        {
+            EnsureTestPatchPackageMap();
+            lock (testPatchPackageMapSyncObj)
+            {
                 if (TestPatchPackageMap.TryGetValue(classExp.ObjectName, out var tpClass))
                 {
                     return tpClass.Exports.FirstOrDefault(x => x.IsClass && x.ObjectName == classExp.ObjectName);
@@ -342,6 +350,121 @@ namespace ProjectMilanCore
 
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Every class DLC_TestPatch replaces
+        /// </summary>
+        public static List<ExportEntry> GetAllTestPatchClasses()
+        {
+            EnsureTestPatchPackageMap();
+            lock (testPatchPackageMapSyncObj)
+            {
+                return TestPatchPackageMap.Select(x => x.Value.Exports.FirstOrDefault(e => e.IsClass && e.ObjectName == x.Key)).OfType<ExportEntry>().ToList();
+            }
+        }
+
+        private static readonly object testPatchDecompileSyncObj = new();
+
+        /// <summary>
+        /// Decompiles a DLC_TestPatch class
+        /// </summary>
+        /// <param name="testPatchClass">Class export in a TestPatch package</param>
+        /// <param name="hostPackage">An ME3 package containing the vanilla version of the class</param>
+        /// <param name="cache"></param>
+        /// <param name="logCategory"></param>
+        /// <param name="symbolsResolved">If the FileLib initialized. False means the text may not compile</param>
+        /// <returns>Class text with decompiler error comments removed</returns>
+        public static string DecompileTestPatchClass(ExportEntry testPatchClass, IMEPackage hostPackage, PackageCache cache, string logCategory, out bool symbolsResolved)
+        {
+            var ifp = testPatchClass.InstancedFullPath;
+            symbolsResolved = false;
+
+            // TestPatch packages are shared and FileLib is not thread safe
+            lock (testPatchDecompileSyncObj)
+            {
+                var testPatchPackage = testPatchClass.FileRef;
+                var hostFileName = hostPackage.FilePath is { } hostPath ? Path.GetFileName(hostPath) : null;
+                var hostFileLib = GetTestPatchHostFileLib(hostPackage, cache, logCategory);
+                UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage()
+                {
+                    Cache = cache,
+                    // Hint will look at the actual overriding source file
+                    CustomFileResolver = (fileName, c) => hostFileName != null && fileName.CaseInsensitiveEquals(hostFileName) ? hostPackage : ME3PackageResolver(fileName, c),
+                    BaseFilesFileLib = hostFileLib,
+                };
+
+                // Temporary import hint so the TestPatch class' imports bind against the package it replaces a class in
+                bool addedHint = false;
+                if (hostFileName != null && !testPatchPackage.LECLTagData.ImportHintFiles.Contains(hostFileName, StringComparer.OrdinalIgnoreCase))
+                {
+                    testPatchPackage.LECLTagData.ImportHintFiles.Add(hostFileName);
+                    addedHint = true;
+                }
+
+                var fileLib = new FileLib(testPatchPackage);
+                try
+                {
+                    symbolsResolved = fileLib.Initialize(usop);
+                    if (!symbolsResolved)
+                    {
+                        LogFailedFileLibInit(fileLib, $"Failed to initialize FileLib for DLC_TestPatch class {ifp}", logCategory);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MilanLog.Exception(e, $"  Exception initializing FileLib for DLC_TestPatch class {ifp}:", customPrefix: logCategory);
+                }
+                finally
+                {
+                    if (addedHint)
+                    {
+                        testPatchPackage.LECLTagData.ImportHintFiles.Remove(hostFileName);
+                    }
+                }
+
+                var (_, text) = UnrealScriptCompiler.DecompileExport(testPatchClass, fileLib, usop);
+
+                // The vtable comments are against ME3 classes - remove them so we can recompile
+                return CleanErrorComments(text, out _);
+            }
+        }
+
+        /// <summary>
+        /// Initialized FileLibs of ME3 packages hosting TestPatch classes
+        /// </summary>
+        private static readonly ConditionalWeakTable<IMEPackage, FileLib> TestPatchHostFileLibs = new();
+
+        /// <summary>
+        /// Gets an initialized FileLib for the ME3 package a TestPatch class gets loaded into
+        /// </summary>
+        /// <returns>The FileLib, or null if it could not be initialized</returns>
+        private static FileLib? GetTestPatchHostFileLib(IMEPackage hostPackage, PackageCache cache, string logCategory)
+        {
+            if (hostPackage.FilePath == null)
+            {
+                return null;
+            }
+
+            if (!TestPatchHostFileLibs.TryGetValue(hostPackage, out var hostLib))
+            {
+                hostLib = new FileLib(hostPackage);
+                try
+                {
+                    if (!hostLib.Initialize(new UnrealScriptOptionsPackage() { Cache = cache, CustomFileResolver = ME3PackageResolver }))
+                    {
+                        LogFailedFileLibInit(hostLib, $"Failed to initialize FileLib for {hostPackage.FileNameNoExtension} (DLC_TestPatch host)", logCategory);
+                    }
+                }
+                catch (Exception e)
+                {
+                    MilanLog.Exception(e, $"  Exception initializing FileLib for {hostPackage.FileNameNoExtension} (DLC_TestPatch host):", customPrefix: logCategory);
+                }
+
+                TestPatchHostFileLibs.AddOrUpdate(hostPackage, hostLib);
+            }
+
+            return hostLib.IsInitialized ? hostLib : null;
         }
 
         public static string GetClassOverride(string className)
@@ -858,12 +981,64 @@ namespace ProjectMilanCore
         /// <summary>
         /// LE3-Specific fixes (such as three stage melee) - installed once porting has initially completed
         /// </summary>
-        private static readonly string PostPortingClassOverrideFolder = Path.Combine(MilanShared.PipelineRoot, "Shared", "Compiling", "ClassOverride", "PostPorting");
+        public static readonly string PostPortingClassOverrideFolder = Path.Combine(MilanShared.PipelineRoot, "Shared", "Compiling", "ClassOverride", "PostPorting");
+
+        /// <summary>
+        /// Folder for decompiled testpatch overrides
+        /// </summary>
+        public static readonly string TestPatchClassOverrideFolder = Path.Combine(PostPortingClassOverrideFolder, "TestPatch");
 
         /// <summary>
         /// List of classes to override after porting
         /// </summary>
         private static CaseInsensitiveConcurrentDictionary<string> PostPortingClassOverrides { get; } = new();
+
+        private static CaseInsensitiveDictionary<string>? _postPortingClassOverrideIndex;
+        private static readonly object PostPortingClassOverrideIndexLock = new();
+
+        /// <summary>
+        /// Class name -> override file for the postporting folder
+        /// </summary>
+        public static CaseInsensitiveDictionary<string> GetPostPortingClassOverrideIndex()
+        {
+            lock (PostPortingClassOverrideIndexLock)
+            {
+                if (_postPortingClassOverrideIndex == null)
+                {
+                    var classOverrideFolder = Path.GetDirectoryName(PostPortingClassOverrideFolder)!;
+                    var allOverrides = new CaseInsensitiveDictionary<string>();
+                    var index = new CaseInsensitiveDictionary<string>();
+                    var duplicates = new List<string>();
+                    if (Directory.Exists(classOverrideFolder))
+                    {
+                        foreach (var file in Directory.GetFiles(classOverrideFolder, "*.uc", SearchOption.AllDirectories))
+                        {
+                            var className = Path.GetFileNameWithoutExtension(file);
+                            if (allOverrides.TryGetValue(className, out var existing))
+                            {
+                                duplicates.Add($"  {className}: {Path.GetRelativePath(classOverrideFolder, existing)} and {Path.GetRelativePath(classOverrideFolder, file)}");
+                                continue;
+                            }
+
+                            allOverrides[className] = file;
+                            if (Path.GetRelativePath(PostPortingClassOverrideFolder, file) is var rel && !rel.StartsWith("..") && !Path.IsPathRooted(rel))
+                            {
+                                index[className] = file;
+                            }
+                        }
+                    }
+
+                    if (duplicates.Count > 0)
+                    {
+                        throw new MilanCompileException($"Class overrides must have unique names across {classOverrideFolder} and all of its subfolders. Duplicates:{Environment.NewLine}{string.Join(Environment.NewLine, duplicates)}");
+                    }
+
+                    _postPortingClassOverrideIndex = index;
+                }
+
+                return _postPortingClassOverrideIndex;
+            }
+        }
 
 
         private record CompilationCompletion(ExportEntry classExp, string SuperClassName)
@@ -985,11 +1160,11 @@ namespace ProjectMilanCore
                                     // No loaded override - does it exist on disk?
                                     lock (PostPortingClassOverrides)
                                     {
-                                        if (File.Exists(Path.Combine(PostPortingClassOverrideFolder, $"{className}.uc")))
+                                        if (GetPostPortingClassOverrideIndex().TryGetValue(className, out var overridePath))
                                         {
                                             // It exists - load and cache it
-                                            MilanLog.Information($"  Recompiling {className} with Milan override", customPrefix: logCategory);
-                                            text = File.ReadAllText(Path.Combine(PostPortingClassOverrideFolder, $"{className}.uc"));
+                                            MilanLog.Information($"  Recompiling {className} with Milan override ({Path.GetRelativePath(PostPortingClassOverrideFolder, overridePath)})", customPrefix: logCategory);
+                                            text = File.ReadAllText(overridePath);
                                             PostPortingClassOverrides[className] = text;
                                             useOverride = true;
                                         }
@@ -1014,20 +1189,7 @@ namespace ProjectMilanCore
                                 var (_, compileLog) = UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
                                 if (useOverride)
                                 {
-                                    // Overrides may name vanilla classes the ported package doesn't contain
-                                    // We must pull them in or compile will fail
-                                    var attemptedClasses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                                    // Iteratively pull in dependencies (like MPCommon does)
-                                    while ((compileLog.HasErrors || compileLog.HasLexErrors) && TryPortMissingOverrideClasses(compileLog, destPackage, attemptedClasses, logCategory))
-                                    {
-                                        if (!lib.ReInitializeFile(usop))
-                                        {
-                                            MilanShared.LogFailedFileLibInit(lib, $"Failed to reinitialize FileLib after porting classes for override {className}", logCategory);
-                                            break;
-                                        }
-                                        MilanLog.Information($"  Recompiling {className} with Milan override after porting missing classes", customPrefix: logCategory);
-                                        (_, compileLog) = UnrealScriptCompiler.CompileClass(destPackage, text, lib, usop, cc.classExp);
-                                    }
+                                    compileLog = RecompileWithMissingClasses(compileLog, text, "Milan override");
                                     ThrowIfOverrideCompileFailed(compileLog, $"post-porting class override {className} in {destPackage.FileNameNoExtension}", logCategory);
                                 }
                                 else if (compileLog.HasErrors || compileLog.HasLexErrors)
@@ -1061,6 +1223,25 @@ namespace ProjectMilanCore
                             }
 
                             cc.Completed = true;
+
+                            // Overrides may name vanilla classes the ported package doesn't contain
+                            // We must pull them in or compile will fail
+                            MessageLog RecompileWithMissingClasses(MessageLog log, string classText, string description)
+                            {
+                                var attemptedClasses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                                // Iteratively pull in dependencies (like MPCommon does)
+                                while ((log.HasErrors || log.HasLexErrors) && TryPortMissingOverrideClasses(log, destPackage, attemptedClasses, logCategory))
+                                {
+                                    if (!lib.ReInitializeFile(usop))
+                                    {
+                                        MilanShared.LogFailedFileLibInit(lib, $"Failed to reinitialize FileLib after porting classes for {description} of {className}", logCategory);
+                                        break;
+                                    }
+                                    MilanLog.Information($"  Recompiling {className} with {description} after porting missing classes", customPrefix: logCategory);
+                                    (_, log) = UnrealScriptCompiler.CompileClass(destPackage, classText, lib, usop, cc.classExp);
+                                }
+                                return log;
+                            }
                         }
                     }
                     catch (Exception e) when (e is not MilanCompileException)
@@ -1472,6 +1653,12 @@ namespace ProjectMilanCore
                 // ME3 port
                 MilanLog.Error($"Object '{ifp}' does not exist in LE3! We need to make a donor for this.", customPrefix: LOG_CATEGORY_MOR);
                 var originalGameDonors = MilanShared.ME3ObjectDB.GetFilesContainingObject(ifp, package.Localization);
+                if (originalGameDonors == null)
+                {
+                    // Not in ME3 either, e.g. a Milan-made asset that isn't in the package being compiled yet
+                    MilanLog.Error($"  Object '{ifp}' does not exist in ME3 either! Returning null!!", customPrefix: LOG_CATEGORY_MOR);
+                    return null;
+                }
                 originalGameDonors = originalGameDonors.Select(x => Path.GetFileName(x)).ToList(); // we don't care about paths.
                 originalGameDonors.Sort(new ObjectSourceTierComparer(MEGame.ME3, package.FilePath));
                 foreach (var possibleDonor in originalGameDonors)
