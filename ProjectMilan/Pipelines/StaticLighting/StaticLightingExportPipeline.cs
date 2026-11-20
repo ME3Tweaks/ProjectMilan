@@ -43,6 +43,7 @@ namespace ProjectMilan.Pipelines.StaticLighting
                 using IMEPackage udk = MEPackageHandler.OpenUDKPackage(path);
                 ClearForceDirectLightMap(udk);
                 ConvertShadowMappedLightsToToggleable(udk);
+                BakeVertexLighting.Apply(level, udk);
                 level.SpecialFixes?.CorrectUDKExport(level, udk);
                 if (udk.IsModified)
                     udk.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
