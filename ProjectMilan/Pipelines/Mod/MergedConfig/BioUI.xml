@@ -208,6 +208,8 @@
 				<Value type="3">(Tag=MilanBannerSelect,\tZOrder=275,\tMovieClass="SFXGameContent_Milan.SFXGUI_MilanBannerSelect",\tGFxResource="GUI_SF_MilanBannerSelect.LoadSave", bRequiresScaling=true)</Value>
 				<!-- MILAN CHANGE - Mgamerz - 11/16/2026 Direct Buy Store UI-->
 				<Value type="3">(Tag=MPDirectBuyStore,\tZOrder=163,\tMovieClass="SFXGameContent_Milan.SFXGUI_MPDirectBuyStore",\tGFxResource="GUI_SF_Store.Store", bRequiresScaling=true)</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/17/2026 Text entry box - custom instance so another dialog can go over the top of it -->
+				<Value type="3">(Tag=MilanTextEntry,\tZOrder=365,\tMovieClass="SFXGameContent_Milan.SFXGUI_MilanTextEntryBox",\tGFxResource="GUI_SF_MessageBox_Milan.MessageBox")</Value>
 				<!-- END MILAN -->
 			</Property>
 		</Section>

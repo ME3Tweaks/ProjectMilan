@@ -12,6 +12,12 @@ const APPLY_INVALID_SERVER = 2;
 const APPLY_SAVE_FAILED = 3;
 const APPLY_INVALID_PASSWORD = 4;
 
+const JOIN_QUEUED = 0;
+const JOIN_INVALID_CODE = 1;
+const JOIN_UNAVAILABLE = 2;
+// Same limit as MilanHost's matchmaker requests
+const MAX_JOIN_CODE_LENGTH = 64;
+
 public static function bool IsAvailable()
 {
     return FALSE;
@@ -52,5 +58,12 @@ public static function int ApplySettings(string PlayerName, int Matchmaking, int
 {
     LogInternal("Multiplayer settings bridge requires the matching MilanHost ASI", );
     return APPLY_SAVE_FAILED;
+}
+// MILAN CHANGE - Mgamerz - 11/17/2026
+// Native bridge to C++ join queuing
+public static function int JoinByCode(string Code)
+{
+    LogInternal("Joining by code requires the matching MilanHost ASI", );
+    return JOIN_UNAVAILABLE;
 }
 // END MILAN CHANGE

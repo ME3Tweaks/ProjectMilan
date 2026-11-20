@@ -107,6 +107,14 @@ var bool m_bGAWRatingsError;
 // Add new Join Match menu item
 var config stringref srJoinMatch;
 // END MILAN CHANGE
+// MILAN CHANGE - 11/17/2026 - Mgamerz
+// Join Match asks for a join code (SFXGUI_MilanTextEntryBox) and hands it to MilanHost
+var config stringref srJoinCodePrompt;
+var config stringref srJoinCodeTitle;
+var config stringref srJoinCodeAccept;
+var config stringref srJoinCodeInvalid;
+var config stringref srJoinCodeUnavailable;
+// END MILAN CHANGE
 
 public final function int GetPrivacy()
 {
@@ -1472,6 +1480,94 @@ public final function InviteParty()
         Class'GameEngine'.static.GetOnlineSubsystem().PlayerInterfaceEx.ShowInviteUI(byte(LocalUserNum));
     }
 }
+// MILAN CHANGE - 11/17/2026 - Mgamerz
+// Shows text entry for JoinMatch(), called by the scaleform for MPNewLobby
+public final function JoinMatch()
+{
+    local SFXGUI_MilanTextEntryBoxBase Box;
+
+    if (!Class'MilanNetConfigBridge'.static.IsAvailable())
+    {
+        ShowJoinCodeError(srJoinCodeUnavailable);
+        return;
+    }
+    Box = Class'SFXGUI_MilanTextEntryBoxBase'.static.ShowTextEntry(GetPC(), GetUIString(srJoinCodePrompt), GetUIString(srJoinCodeAccept), GetUIString(srCancel), OnJoinCodeEntered, "", Class'MilanNetConfigBridge'.const.MAX_JOIN_CODE_LENGTH, srJoinCodeTitle);
+    if (Box != None)
+    {
+        // Pasting a join link puts just its code in the field
+        Box.OnFilterPastedText = JoinCodeFromLink;
+    }
+}
+
+// Parses a join link for its code. Does not handle matchmaking server part right now
+public final function string JoinCodeFromLink(string sText)
+{
+    local int nQuery;
+    local int nFragment;
+    local string sCode;
+
+    nQuery = InStr(sText, "?");
+    if (nQuery == -1)
+    {
+        // No parameters
+        return sText;
+    }
+    // Use in-game parse option - requires ? not & like http urls do
+    sCode = Class'GameInfo'.static.ParseOption(Repl(Mid(sText, nQuery), "&", "?"), "code");
+    nFragment = InStr(sCode, "#");
+    if (nFragment != -1)
+    {
+        sCode = Left(sCode, nFragment);
+    }
+    if (sCode == "")
+    {
+        return sText;
+    }
+    return sCode;
+}
+
+
+public final function OnJoinCodeEntered(bool bAccepted, string sCode)
+{
+    local int nResult;
+
+    if (!bAccepted)
+    {
+        return;
+    }
+
+    sCode = JoinCodeFromLink(sCode);
+    if (sCode == "")
+    {
+        ShowJoinCodeError(srJoinCodeInvalid);
+        return;
+    }
+
+    // Attempt to join via native bridge
+    nResult = Class'MilanNetConfigBridge'.static.JoinByCode(sCode);
+    if (nResult == Class'MilanNetConfigBridge'.const.JOIN_INVALID_CODE)
+    {
+        ShowJoinCodeError(srJoinCodeInvalid);
+    }
+    else if (nResult != Class'MilanNetConfigBridge'.const.JOIN_QUEUED)
+    {
+        ShowJoinCodeError(srJoinCodeUnavailable);
+    }
+}
+
+private final function ShowJoinCodeError(stringref srMessage)
+{
+    local BioSFHandler_MessageBox messageBox;
+    local BioMessageBoxOptionalParams messageParams;
+
+    messageParams.srAText = Class'SFXGUI_MainMenu_RTT'.default.srOK;
+    messageBox = GetSFXUIController().CreateMessageBox(GetPC());
+    if (messageBox != None)
+    {
+        messageBox.DisplayMessageBox(srMessage, messageParams);
+    }
+}
+// END MILAN CHANGE
 private final function bool IsChallengeSystemEnabled()
 {
     return SFXEngine(Class'Engine'.static.GetEngine()).AccomplishmentManager.bChallengeSystemEnabled;
@@ -1503,6 +1599,13 @@ defaultproperties
     // MILAN CHANGE - 11/17/2026 - Mgamerz
     // Add new Join Match menu item
     srJoinMatch = $49875830
+    // END MILAN CHANGE
+    // MILAN CHANGE - 11/17/2026 - Mgamerz - Join Match dialog strings
+    srJoinCodePrompt = $49875986
+    srJoinCodeTitle = $49875987
+    srJoinCodeAccept = $49875988
+    srJoinCodeInvalid = $49875989
+    srJoinCodeUnavailable = $49875990
     // END MILAN CHANGE
     MaxOnlineImages = 20
     m_UIWorldMPPawnInitialRotation = {Pitch = 0, Yaw = 29000, Roll = 0}

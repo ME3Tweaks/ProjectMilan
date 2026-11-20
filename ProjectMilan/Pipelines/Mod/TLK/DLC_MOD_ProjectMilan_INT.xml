@@ -274,6 +274,12 @@ Herobrine24</String>
 	<String id="49875981">Text Chat</String>
 	<!-- MP Store - 'Direct Buy' button (in packs view) -->
 	<String id="49875985">Direct Buy</String>
+	<!-- Join Match strings -->
+	<String id="49875986">Enter the invite code from the host:</String>
+	<String id="49875987">Join Code</String>
+	<String id="49875988">Join</String>
+	<String id="49875989">Invalid valid join code.</String>
+	<String id="49875990">Joining with a code isn't available. Check that Legendary Edition Multiplayer is installed correctly.</String>
 	<!-- Tactical Scan rank 5A description - add shield gate -->
     <String id="733112">Increase all headshot damage by {Evolve_HeadshotBonus%p}%.
 Reduces target shield gate effectiveness by {Evolve_ShieldGateReduction%p}%.</String>
