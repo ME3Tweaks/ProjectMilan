@@ -91,6 +91,10 @@ public enum MilanPlayerVariable
     HeavyUnlock_BlackstarHidden = 804,
     HeavyUnlock_Cain = 805,
     HeavyUnlock_CainHidden = 806,
+    HeavyUnlock_GrenadeLauncher = 807,
+    HeavyUnlock_GrenadeLauncherHidden = 808,
+    HeavyUnlock_Firestorm = 809,
+    HeavyUnlock_FirestormHidden = 810,
 }
 
 /// <summary>
@@ -158,6 +162,7 @@ public enum MilanBannerId
     DA_Trespasser = 256,
     SaveMassEffect = 257,
     MassEffectModding = 258,
+    AllianceMastery = 259, // Challenge reward, not a store card. Registered by OnlineContentRegistration; MergedConfig BioGame.xml Rewards uses 259 too
 }
 
 /// <summary>
@@ -175,6 +180,10 @@ public enum MilanHeavyWeaponId
     BlackstarHidden = 6,
     Cain = 7,
     CainHidden = 8,
+    GrenadeLauncher = 9,
+    GrenadeLauncherHidden = 10,
+    Firestorm = 11,
+    FirestormHidden = 12,
 }
 
 public static class MilanIds
