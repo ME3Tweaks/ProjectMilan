@@ -9,7 +9,8 @@ namespace ProjectMilanCore.Config.Store;
 public static partial class StoreImageValidator
 {
     public static IReadOnlyList<string> Validate(CoalesceAsset baseEngine, CoalesceAsset dlcEngine,
-        CoalesceAsset game, Func<string, IReadOnlySet<string>?> loadPackageTextures)
+        CoalesceAsset game, Func<string, IReadOnlySet<string>?> loadPackageTextures,
+        IEnumerable<(string Owner, string Image)>? extraImages = null)
     {
         var errors = new List<string>();
         var mappings = ReadArray(GetValues(baseEngine, "sfxgame.sfxengine", "dynamicloadmapping")
@@ -22,10 +23,11 @@ public static partial class StoreImageValidator
         {
             errors.Add("Store image validation found no generated CardData entries.");
         }
+        var images = cards.Select(value => (Owner: Field(value, "UniqueName"), Image: Field(value, "GUITextureRef"))).Concat(extraImages ?? []);
         var packages = new Dictionary<string, IReadOnlySet<string>?>(StringComparer.OrdinalIgnoreCase);
-        foreach (var group in cards.GroupBy(value => Field(value, "GUITextureRef"), StringComparer.OrdinalIgnoreCase))
+        foreach (var group in images.GroupBy(value => value.Image, StringComparer.OrdinalIgnoreCase))
         {
-            var owners = string.Join(", ", group.Select(value => Field(value, "UniqueName")));
+            var owners = string.Join(", ", group.Select(value => value.Owner).Distinct(StringComparer.OrdinalIgnoreCase));
             var image = group.Key;
             if (string.IsNullOrWhiteSpace(image))
             {
@@ -58,6 +60,13 @@ public static partial class StoreImageValidator
             }
         }
         return errors;
+    }
+
+    public static IEnumerable<(string Owner, string Image)> ReadImages(CoalesceAsset asset, string section, string property, string ownerField, string imageField)
+    {
+        return ReadArray(GetValues(asset, section, property))
+            .Select(value => (Owner: Field(value, ownerField), Image: Field(value, imageField)))
+            .Where(value => value.Image.Length > 0);
     }
 
     private static IEnumerable<CoalesceValue> GetValues(CoalesceAsset asset, string section, string property)
