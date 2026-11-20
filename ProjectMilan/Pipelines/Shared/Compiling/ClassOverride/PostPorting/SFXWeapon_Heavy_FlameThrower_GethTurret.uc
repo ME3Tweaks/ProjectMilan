@@ -103,6 +103,11 @@ public simulated function PlayWindUpEffects()
 {
     WeaponPlayWwiseEvent(WindUpSound);
 }
+public event simulated function Destroyed()
+{
+    Super(SFXWeapon).Destroyed();
+    PlayWindDownEffects();
+}
 
 simulated state WeaponFiring 
 {

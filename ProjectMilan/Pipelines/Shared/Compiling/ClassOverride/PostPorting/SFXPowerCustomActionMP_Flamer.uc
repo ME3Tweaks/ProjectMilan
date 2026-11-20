@@ -6,6 +6,9 @@
 Class SFXPowerCustomActionMP_Flamer extends SFXPowerCustomAction
     config(Game);
 
+var array<Actor> ComboActorTracker;
+var config int MaxCombosPerCast;
+
 var Class<SFXDamageType> DamageType_ImprovedAntiArmor;
 var Class<SFXDamageType> DamageType_ImprovedAntiShield;
 var Object.Guid GUID_OmniFlamer;
@@ -89,9 +92,10 @@ public function bool OnImpact(Actor.EPowerResistance Resistance, Actor oImpacted
         {
             FireComboEffect.CurrentTime = 0.0;
         }
-        else
+        else if (ComboActorTracker.Find(oImpacted) == -1 && ComboActorTracker.Length < MaxCombosPerCast)
         {
             AddComboEffect(oImpacted, Class'SFXGameEffect_PowerCombo_Fire', DOTDuration);
+            ComboActorTracker.AddItem(oImpacted);
         }
         CETarget.Instigator = oImpacted;
         CETarget.SpawnValue.X = DOTDuration;
@@ -127,6 +131,7 @@ public function StartCustomAction()
             PC.m_bPermanentWalk = TRUE;
         }
         bActive = TRUE;
+        ComboActorTracker.Length = 0;
         if (m_oPawn != None)
         {
             CETarget.Instigator = m_oPawn;
@@ -413,6 +418,7 @@ defaultproperties
     DOTDuration = 5.0
     DotPercent = 0.25
     MinimumCooldown = 1.0
+    MaxCombosPerCast = 3
     PSC_Flamer = PSCFlamer0
     PSC_ElectricFlamer = PSCFlamer1
     FlamerPSScale = 500.0

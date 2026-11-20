@@ -63,10 +63,7 @@ public function bool OnImpact(EPowerResistance Resistance, Actor oImpacted, int 
             Effect = SFXGameEffect_BatarianBladeDamageOverTime(Manager.CreateEffect(Class'SFXGameEffect_BatarianBladeDamageOverTime', Name, DOTDuration, 1, fDamagePerSecond, m_oPawn.Controller));
             if (Effect != None)
             {
-                Effect.DamageType = DefaultDamageType;
-                Effect.ExplosionDelay = ExplosionDelay;
-                Effect.Power = Self;
-                Effect.Caster = SFXPawn(m_oPawn);
+                SetupEffect(Effect);
                 Effect.ShouldExplode = ShouldExplode;
                 Effect.OnApplied();
             }
@@ -97,6 +94,43 @@ public function bool OnImpact(EPowerResistance Resistance, Actor oImpacted, int 
         }
     }
     return TRUE;
+}
+public function SetupEffect(SFXGameEffect_BatarianBladeDamageOverTime Effect)
+{
+    Effect.DamageType = DefaultDamageType;
+    Effect.ExplosionDelay = ExplosionDelay;
+    Effect.Power = Self;
+    Effect.Caster = SFXPawn(m_oPawn);
+}
+public function ClientDoPowerSubsequentImpact(Actor oActor, optional int CustomActionReactionType, optional float Duration, optional int ImpactCount, optional float Delay, optional bool DoCallback)
+{
+    local SFXGameEffect_BatarianBladeDamageOverTime Effect;
+    local SFXModule_GameEffectManager Manager;
+    local BioPawn PawnImpacted;
+
+    PawnImpacted = BioPawn(oActor);
+    if (PawnImpacted == None)
+    {
+        return;
+    }
+    Manager = PawnImpacted.GetModule(Class'SFXModule_GameEffectManager');
+    if (Manager != None)
+    {
+        if (!Manager.HasEffectOfType(Class'SFXGameEffect_BatarianBladeDamageOverTime'))
+        {
+            Effect = SFXGameEffect_BatarianBladeDamageOverTime(Manager.CreateEffect(Class'SFXGameEffect_BatarianBladeDamageOverTime', Name, 0.01, 1, 0.0, m_oPawn.Controller));
+            if (Effect != None)
+            {
+                SetupEffect(Effect);
+            }
+        }
+        Effect = SFXGameEffect_BatarianBladeDamageOverTime(Manager.GetFirstEffectOfType(Class'SFXGameEffect_BatarianBladeDamageOverTime'));
+        if (Effect != None && Effect.Owner != None && Effect.Power != None)
+        {
+            Effect.Power.DoAreaExplosionForActor(oActor, Effect.Owner.location, ImpactCount, Effect.Power.ExplosionDamage.CurrentValue, Effect.ExplosionDamageType, Effect.Power.ExplosionForce.CurrentValue, Effect.Power.ExplosionParameters, 0, None);
+        }
+    }
+    PawnImpacted.ClientPlayAnimatedReaction(CustomActionReactionType);
 }
 public function bool ShouldUsePower(Actor Target, out string sOptionalInfo)
 {
