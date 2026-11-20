@@ -949,6 +949,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         else
         {
             this.RefreshButton(_root.m_ControlY, 0, "", undefined, false, true);
+            this.RefreshButton(this.m_ControllerLegend.ControlStart, 0, "", undefined, false, true);
             this.RefreshButton(this.m_ControllerLegend.ControlBack, 0, "", undefined, false, true);
             this.RefreshButton(this.m_ControllerLegend.ControlY, com.XInput.ButtonY, "",undefined,false, true);
             this.RefreshButton(this.m_ControllerLegend.ControlX, com.XInput.ButtonX, "",undefined,false, true);
