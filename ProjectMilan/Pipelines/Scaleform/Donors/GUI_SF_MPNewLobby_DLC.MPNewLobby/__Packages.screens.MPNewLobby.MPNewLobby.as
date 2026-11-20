@@ -405,7 +405,7 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             PageList.item1.contents.title.text = this.srQuickMatch;
             PageList.item1.action = this.CustomMatch;
             // MILAN CHANGE - 11/17/2026 - Mgamerz
-            // Add new Join Match menu item as item2; the remaining items move down one
+            // Add new Join Match menu item as item2, shift the remaining items move down one
             PageList.item2.contents.title.text = this.srJoinMatch;
             PageList.item2.action = this.JoinMatch;
             PageList.item3.contents.title.text = this.srHostNewMission;
