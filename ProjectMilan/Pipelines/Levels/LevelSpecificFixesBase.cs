@@ -22,6 +22,14 @@ namespace ProjectMilan.Pipelines.Levels
         public virtual bool KeepPortedLighting(ExportEntry component) => false;
 
         /// <summary>
+        /// Return true to bake a component with vertex lighting instead of a lightmap texture
+        /// </summary>
+        /// <param name="packageName">The level package the component is in</param>
+        /// <param name="componentPath">Instanced full path of the component in the level package</param>
+        /// <param name="meshPath">Instanced full path of the component's static mesh</param>
+        public virtual bool BakeWithVertexLighting(string packageName, string componentPath, string meshPath) => false;
+
+        /// <summary>
         /// Ports the level in place of the generic level port. Return false to use the generic port, which is the one that runs
         /// <see cref="PreCorrect"/> and <see cref="PostCorrect"/>.
         /// </summary>

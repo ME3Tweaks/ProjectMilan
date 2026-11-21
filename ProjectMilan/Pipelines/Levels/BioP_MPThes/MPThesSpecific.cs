@@ -36,25 +36,57 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPThes
         // in IrrelevantLights on every pane; the UDK bake gives four of them sunlit slivers and a shadow map instead.
         private const string AtriumGlassMeshIFP = "bios_thessia_monastery.WindowEnd_Window01";
 
-        // Beam above the fire near spawn lives in this package
-        private const string FireCoverBeamPackage = "BioA_MPThes_110";
-        private const string FireCoverBeamIFP = "TheWorld.PersistentLevel.StaticMeshCollectionActor_40.StaticMeshActor_SMC_1112";
-
         public override bool KeepPortedLighting(ExportEntry component)
         {
             if (!component.IsA("StaticMeshComponent"))
             {
                 return false;
             }
-            if (component.FileRef.FileNameNoExtension.Equals(FireCoverBeamPackage, StringComparison.OrdinalIgnoreCase) && component.InstancedFullPath == FireCoverBeamIFP)
+
+            if (component.GetProperty<ObjectProperty>("StaticMesh") is { Value: not 0 } mesh && component.FileRef.GetEntry(mesh.Value).InstancedFullPath == AtriumGlassMeshIFP)
             {
+                // Atrium glass
                 return true;
             }
-            // Is this firebeam mesh?
-            return component.GetProperty<ObjectProperty>("StaticMesh") is { Value: not 0 } mesh &&
-               component.FileRef.GetEntry(mesh.Value).InstancedFullPath == AtriumGlassMeshIFP;
+
+            // Not atrium glass
+            return false;
         }
 
+        /// <summary>
+        /// Meshes that need to be vertex lit that sit near the fire
+        /// </summary>
+        private static readonly string[] FireVertexLitMeshes =
+        [
+            "BioS_Thessia.CoverBeamA1",
+            "bios_thessia_monastery.MonasteryDoorBusted_Half_A",
+        ];
+
+        /// <summary>
+        /// Components near the fire that need to be vertex lit
+        /// </summary>
+        private static readonly string[] FireVertexLitComponents =
+        [
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_40.StaticMeshActor_SMC_247", // Wall_Break_Venti
+            "TheWorld.PersistentLevel.StaticMeshActor_19.StaticMeshComponent_28", // Wall_Break_Venti
+            "TheWorld.PersistentLevel.StaticMeshCollectionActor_40.StaticMeshActor_SMC_29", // Balcony_Roof_B1
+        ];
+
+        /// <summary>
+        /// Returns if the given package name/component/mesh should be vertex lit
+        /// </summary>
+        /// <param name="packageName"></param>
+        /// <param name="componentPath"></param>
+        /// <param name="meshPath"></param>
+        /// <returns></returns>
+        public override bool BakeWithVertexLighting(string packageName, string componentPath, string meshPath)
+        {
+            if (!packageName.Equals(@"BioA_MPThes_110", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+            return (FireVertexLitMeshes.Contains(meshPath, StringComparer.OrdinalIgnoreCase) || FireVertexLitComponents.Contains(componentPath, StringComparer.OrdinalIgnoreCase));
+        }
         public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
             FixCrackedGlassUV(pipeline);
