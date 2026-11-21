@@ -168,7 +168,11 @@ public class ScaleformBuilder
             movie.WriteProperty(swfData);
 
             var references = new ArrayProperty<ObjectProperty>("References");
-            foreach (var texPath in new DirectoryInfo(Path.Combine(swfDir.FullName, "Textures")).GetFiles("*.png").OrderBy(f => f.Name))
+            var textureDirectory = Path.Combine(swfDir.FullName, "Textures");
+            var textureFiles = Directory.Exists(textureDirectory)
+                ? new DirectoryInfo(textureDirectory).GetFiles("*.png")
+                : Array.Empty<FileInfo>();
+            foreach (var texPath in textureFiles.OrderBy(f => f.Name))
             {
                 string texName;
                 if (texPath.Name.Contains('-'))
