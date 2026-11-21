@@ -102,6 +102,7 @@ namespace ProjectMilan.Settings
         public bool RunResynthesis { get; set; } = true;
         public bool RunShaderPipeline { get; set; } = true;
         public string DecookedLE3Path => @"E:\Decooked\LE3";
+        public string DecookedLE1Path => @"E:\Decooked\LE1";
 
 
         // Defined in my launch profiles

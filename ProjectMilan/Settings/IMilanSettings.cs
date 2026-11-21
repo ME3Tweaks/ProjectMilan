@@ -170,6 +170,11 @@
         /// every material from its decooked copy here (the decooker skips EngineMaterials).
         /// </summary>
         string DecookedLE3Path => null;
+
+        /// <summary>
+        /// Folder of decooked LE1 packages, for materials from LE1
+        /// </summary>
+        string DecookedLE1Path => null;
         #endregion
 
         #region Performance tuning
