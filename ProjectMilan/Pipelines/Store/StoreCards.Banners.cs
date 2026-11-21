@@ -278,6 +278,39 @@ public static partial class StoreCards
         [MELocalization.RUS] = "Нарушитель",
         [MELocalization.ITA] = "Intruso",
     };
+    private static readonly LocalizedString FrostKnightTitle = new() {
+        [MELocalization.INT] = "Frost Knight",
+    };
+    private static readonly LocalizedString GethPlatformTitle = new() {
+        [MELocalization.INT] = "Geth Platform",
+    };
+    private static readonly LocalizedString HeavyWeaponsGuyTitle = new() {
+        [MELocalization.INT] = "Heavy Weapons Guy",
+    };
+    private static readonly LocalizedString HereComesHavocTitle = new() {
+        [MELocalization.INT] = "Here Comes Havoc",
+    };
+    private static readonly LocalizedString MastermindTitle = new() {
+        [MELocalization.INT] = "Mastermind",
+    };
+    private static readonly LocalizedString ParagadeTitle = new() {
+        [MELocalization.INT] = "Paragade",
+    };
+    private static readonly LocalizedString ParagonTitle = new() {
+        [MELocalization.INT] = "Paragon",
+    };
+    private static readonly LocalizedString RenegadeTitle = new() {
+        [MELocalization.INT] = "Renegade",
+    };
+    private static readonly LocalizedString SpaceHamsterTitle = new() {
+        [MELocalization.INT] = "Space Hamster's Night Out",
+    };
+    private static readonly LocalizedString ProudOfYouTitle = new() {
+        [MELocalization.INT] = "... I'm Proud of You",
+    };
+    private static readonly LocalizedString CheeseburgerTitle = new() {
+        [MELocalization.INT] = "Delicious",
+    };
 
     // Add custom milan banners here that have drops.
     private static IEnumerable<StoreCard> Banners =>
@@ -321,6 +354,21 @@ public static partial class StoreCards
         Banner(MilanBannerId.DA_Trespasser, "MilanBanner_DA_Trespasser", MilanPlayerVariable.Banner_DA_Trespasser, DATrespasserTitle, "ThedasBanners.Trespasser", CardRarity.Rare, StorePools.RareBanner, StorePools.DragonAgeBanner),
         // Only drops from the free Save Mass Effect pack
         Banner(MilanBannerId.SaveMassEffect, "MilanBanner_SaveMassEffect", MilanPlayerVariable.Banner_SaveMassEffect, SaveMassEffectTitle, "Groups.SME", CardRarity.Rare, StorePools.SaveMassEffectBanner),
+
+        // Banner pack 1 (community art, MilanBannersPack1)
+        Banner(MilanBannerId.FrostKnight, "MilanBanner_FrostKnight", MilanPlayerVariable.Banner_FrostKnight, FrostKnightTitle, "Banners.FrostKnight", CardRarity.Rare),
+        Banner(MilanBannerId.GethPlatform, "MilanBanner_GethPlatform", MilanPlayerVariable.Banner_GethPlatform, GethPlatformTitle, "Banners.GethPlatform", CardRarity.Rare),
+        Banner(MilanBannerId.HeavyWeaponsGuy, "MilanBanner_HeavyWeaponsGuy", MilanPlayerVariable.Banner_HeavyWeaponsGuy, HeavyWeaponsGuyTitle, "Banners.HeavyWeaponsGuy", CardRarity.Rare),
+        Banner(MilanBannerId.HereComesHavoc, "MilanBanner_HereComesHavoc", MilanPlayerVariable.Banner_HereComesHavoc, HereComesHavocTitle, "Banners.HereComesHavoc", CardRarity.Rare),
+        Banner(MilanBannerId.Mastermind, "MilanBanner_Mastermind", MilanPlayerVariable.Banner_Mastermind, MastermindTitle, "Banners.Mastermind", CardRarity.Rare),
+        Banner(MilanBannerId.Paragade, "MilanBanner_Paragade", MilanPlayerVariable.Banner_Paragade, ParagadeTitle, "Banners.Paragade", CardRarity.Rare),
+        Banner(MilanBannerId.Paragon, "MilanBanner_Paragon", MilanPlayerVariable.Banner_Paragon, ParagonTitle, "Banners.Paragon", CardRarity.Uncommon),
+        Banner(MilanBannerId.Renegade, "MilanBanner_Renegade", MilanPlayerVariable.Banner_Renegade, RenegadeTitle, "Banners.Renegade", CardRarity.Uncommon),
+        Banner(MilanBannerId.SpaceHamster, "MilanBanner_SpaceHamster", MilanPlayerVariable.Banner_SpaceHamster, SpaceHamsterTitle, "Banners.SpaceHamster", CardRarity.Rare),
+
+        // These don't drop via store
+        Banner(MilanBannerId.Cheeseburger, "MilanBanner_Cheeseburger", MilanPlayerVariable.Banner_Cheeseburger, CheeseburgerTitle, "Groups.Cheeseburger", CardRarity.Rare) with { Pools = [] },
+        Banner(MilanBannerId.ProudOfYou, "MilanBanner_ProudOfYou", MilanPlayerVariable.Banner_ProudOfYou, ProudOfYouTitle, "Banners.ProudOfYou", CardRarity.Rare) with { Pools = [] },
     ];
 
     public static StoreCard Banner(int emblemId, string uniqueName, int playerVariableId, int titleStrRefId,

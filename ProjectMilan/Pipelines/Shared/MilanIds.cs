@@ -82,6 +82,17 @@ public enum MilanPlayerVariable
     Pack_SaveMassEffect = 753,
     Banner_MassEffectModding = 754,
     Banner_ME3Tweaks = 755,
+    Banner_FrostKnight = 756,
+    Banner_GethPlatform = 757,
+    Banner_HeavyWeaponsGuy = 758,
+    Banner_HereComesHavoc = 759,
+    Banner_Mastermind = 760,
+    Banner_Paragade = 761,
+    Banner_Paragon = 762,
+    Banner_Renegade = 763,
+    Banner_SpaceHamster = 764,
+    Banner_ProudOfYou = 765,
+    Banner_Cheeseburger = 766,
 
     // Heavy weapon unlock cards
     HeavyUnlock_CobraHidden = 800,
@@ -163,6 +174,21 @@ public enum MilanBannerId
     SaveMassEffect = 257,
     MassEffectModding = 258,
     AllianceMastery = 259, // Challenge reward, not a store card. Registered by OnlineContentRegistration; MergedConfig BioGame.xml Rewards uses 259 too
+
+    // Banner pack 1 (community art)
+    FrostKnight = 260,
+    GethPlatform = 261,
+    HeavyWeaponsGuy = 262,
+    HereComesHavoc = 263,
+    Mastermind = 264,
+    Paragade = 265,
+    Paragon = 266,
+    Renegade = 267,
+    SpaceHamster = 268,
+    ProudOfYou = 269,
+
+    // Internal only
+    Cheeseburger = 270,
 }
 
 /// <summary>
