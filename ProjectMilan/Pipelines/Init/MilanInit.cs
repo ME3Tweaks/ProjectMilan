@@ -36,6 +36,8 @@ namespace ProjectMilan.Pipelines.Init
         public static void Init()
         {
             CheckSettings();
+            // Fail now rather than mid-port if two post-porting class overrides share a name
+            MilanShared.GetPostPortingClassOverrideIndex();
             // Install all custom classes that are used for porting
             InventoryCustomPackages();
 
