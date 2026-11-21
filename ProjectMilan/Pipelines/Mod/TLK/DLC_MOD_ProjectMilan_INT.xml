@@ -280,6 +280,8 @@ Herobrine24</String>
 	<String id="49875988">Join</String>
 	<String id="49875989">Invalid valid join code.</String>
 	<String id="49875990">Joining with a code isn't available. Check that Legendary Edition Multiplayer is installed correctly.</String>
+	<!-- Alliance Mastery banner title (emblem 221). N7HQ used this name; ME3 never defined the banner -->
+	<String id="49875991">Alliance Commander</String>
 	<!-- Tactical Scan rank 5A description - add shield gate -->
     <String id="733112">Increase all headshot damage by {Evolve_HeadshotBonus%p}%.
 Reduces target shield gate effectiveness by {Evolve_ShieldGateReduction%p}%.</String>

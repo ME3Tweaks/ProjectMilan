@@ -395,6 +395,12 @@
 				<Value type="3">(AccomplishmentIndex=687, Parent=123)</Value>
 				<Value type="3">(AccomplishmentIndex=688, Parent=124)</Value>
 				<Value type="3">(AccomplishmentIndex=689, Parent=675)</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/19/2026: Alliance Mastery (675) -->
+				<Value type="3">(AccomplishmentIndex=675)</Value>
+				<Value type="3">(AccomplishmentIndex=676, Parent=675)</Value>
+				<Value type="3">(AccomplishmentIndex=677, Parent=675)</Value>
+				<Value type="3">(AccomplishmentIndex=678, Parent=675)</Value>
+				<!-- END MILAN -->
 				<Value type="3">(AccomplishmentIndex=580,Parent=121)</Value>
 				<Value type="3">(AccomplishmentIndex=588,Parent=122)</Value>
 				<Value type="3">(AccomplishmentIndex=593,Parent=121)</Value>
