@@ -6,11 +6,22 @@
     },
     "LEDecooker - LE1 - Decook DT": {
       "commandName": "Project",
-      "commandLineArgs": "--t3dinputfolder \"Z:\\MaterialExport\" --outputfolder \"S:\\Decooked\" --game LE1"
+      "commandLineArgs": "-c --outputfolder \"E:\\Decooked\" --game LE1"
     },
     "LEDecooker - LE3 - Decook LT": {
       "commandName": "Project",
       "commandLineArgs": "--outputfolder \"E:\\Decooked\" -m \"E:\\UDK2015\\UDKGame\\Content\\Shared\" -u --game LE3"
+    },
+    "LEDecooker - LE3 - Decook DT": {
+      "commandName": "Project",
+      "commandLineArgs": "--outputfolder \"E:\\Decooked\" --udkoutputfolder \"S:\\Milan\\UDK\\UDKGame\\Content\\Shared\" --compileassets --game LE3 --allpackages"
+    },
+    "LEDecooker - LE3 - Convert DT": {
+      "commandName": "Project",
+      "commandLineArgs": "--outputfolder \"E:\\Decooked\" --udkoutputfolder \"S:\\Milan\\UDK\\UDKGame\\Content\\Shared\" --convert --game LE3"
+    },
+    "LEDecooker - Generate Support Files": {
+      "commandName": "Project"
     }
   }
 }
