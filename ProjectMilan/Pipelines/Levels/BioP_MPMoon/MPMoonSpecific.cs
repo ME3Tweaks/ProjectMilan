@@ -2,8 +2,7 @@
 using LegendaryExplorerCore.Packages;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
-using ProjectMilanCore;
-using System.ComponentModel;
+using System.Numerics;
 
 namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 {
@@ -55,11 +54,20 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
         // DebrisShip01_C's 4th material is empty after porting and needs to be set to the same as the third slot
         private const string DebrisShipMeshIFP = "BioApl_Ind_DebrisShip01.Meshes.DebrisShip01_C";
 
+        /// <summary>
+        /// List of meshes to change position data of
+        /// </summary>
+        private static readonly (string ComponentIFP, Vector3 Corrected)[] MeshPositionFixes =
+        [
+            ("TheWorld.PersistentLevel.StaticMeshCollectionActor_28.StaticMeshActor_SMC_208",  new Vector3(-11796.001f, -299.98242f, -2200f)),
+        ];
+
         public override void PostCorrect(LevelSpecificPipeline pipeline)
         {
             foreach (var package in pipeline.LE3Packages.Values)
             {
                 FixContainerMaterialOverrides(package);
+                FixMeshPositions(package, pipeline.LogCategory);
 
                 foreach (var export in package.Exports)
                 {
@@ -86,6 +94,30 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
                         export.WriteBinary(mesh);
                     }
                 }
+            }
+        }
+
+        private static void FixMeshPositions(IMEPackage package, string logCategory)
+        {
+            if (package.FileNameNoExtension != "BioA_MPMoon_100")
+            {
+                return;
+            }
+
+            foreach (var (componentIFP, corrected) in MeshPositionFixes)
+            {
+                var component = package.FindExport(componentIFP, "StaticMeshComponent");
+                if (component?.Parent is not ExportEntry collectionActor || !StaticCollectionActor.TryGetStaticCollectionActorAndIndex(component, out var sca, out int index))
+                {
+                    MilanLog.Warning($"Mesh position fix: couldn't find {componentIFP} in a collection actor in {package.FileNameNoExtension}", customPrefix: logCategory);
+                    continue;
+                }
+
+                var transform = sca.LocalToWorldTransforms[index];
+                transform.Translation = corrected;
+                sca.LocalToWorldTransforms[index] = transform;
+                collectionActor.WriteBinary(sca);
+                MilanLog.Information($"Moved {componentIFP} to {corrected}", customPrefix: logCategory);
             }
         }
 
