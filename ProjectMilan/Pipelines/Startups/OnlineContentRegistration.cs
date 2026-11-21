@@ -67,6 +67,8 @@ namespace ProjectMilan.Pipelines.Startups
             Banner(218, "ContestWinner10", 778539),
             Banner(219, "VolusLover", 817851),
             Banner(220, "FullTeam", 817847),
+            // Alliance Mastery (675). Added now that there is art from N7HQ
+            Banner((int)MilanBannerId.AllianceMastery, "MstrAlliance", 49875991),
         ];
     }
 }

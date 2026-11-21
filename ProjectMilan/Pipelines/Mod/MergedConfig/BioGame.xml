@@ -582,6 +582,13 @@
 				<Value type="3">(Index=702,Name=RECKONINGMASTERY_13,Title=814575,Incomplete=814582,Complete=814582,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=RECKONINGMASTERY_1GROUP,GrinderAccomplishmentName=RECKONINGMASTERY_1GROUP_PROGRESS,bRepeatableChallenge=TRUE)</Value>
 				<Value type="3">(Index=697,Name=RECKONINGMASTERY_8,Title=814570,Incomplete=814577,Complete=814577,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=RECKONINGMASTERY_1GROUP,GrinderAccomplishmentName=RECKONINGMASTERY_1GROUP_PROGRESS,bRepeatableChallenge=TRUE)</Value>
 				<Value type="3">(Index=703,Name=RECKONINGMASTERY_14,Title=814576,Incomplete=814583,Complete=814583,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=RECKONINGMASTERY_1GROUP,GrinderAccomplishmentName=RECKONINGMASTERY_1GROUP_PROGRESS,bRepeatableChallenge=TRUE)</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/19/2026 - Alliance Mastery (675)  -->
+				<Value type="3">(Index=675,Name=ALLIANCEMASTERY,Title=814513,Incomplete=814514,Complete=814514,PointValue=200,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=ALLIANCEMASTERY,bRepeatableChallenge=TRUE)</Value>
+				<Value type="3">(Index=689,Name=ALLIANCEMASTERY_1,Title=814551,Incomplete=814557,Complete=814557,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=ALLIANCEMASTERY,GrinderAccomplishmentName=ALLIANCEMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
+				<Value type="3">(Index=676,Name=ALLIANCEMASTERY_2,Title=814516,Incomplete=814517,Complete=814517,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=ALLIANCEMASTERY,GrinderAccomplishmentName=ALLIANCEMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
+				<Value type="3">(Index=677,Name=ALLIANCEMASTERY_3,Title=814518,Incomplete=814519,Complete=814519,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=ALLIANCEMASTERY,GrinderAccomplishmentName=ALLIANCEMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
+				<Value type="3">(Index=678,Name=ALLIANCEMASTERY_4,Title=814520,Incomplete=814521,Complete=814521,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=ALLIANCEMASTERY,GrinderAccomplishmentName=ALLIANCEMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
+				<!-- END MILAN -->
 				<Value type="3">(Index=600,Name=WEEKLY1GROUP,Title=774519,PointValue=10,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=WEEKLY1GROUP,GrinderAccomplishmentName=WEEKEND_PROGRESS,bRepeatableChallenge=FALSE)</Value>
 				<Value type="3">(Index=601,Name=WEEKLY1,Title=796076,Incomplete=796077,Complete=796077,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=WEEKLY1GROUP,GrinderAccomplishmentName=WEEKLY1GROUP_PROGRESS,bRepeatableChallenge=FALSE)</Value>
 				<Value type="3">(Index=602,Name=WEEKLY2GROUP,Title=774519,PointValue=10,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=WEEKLY2GROUP,GrinderAccomplishmentName=WEEKEND_PROGRESS,bRepeatableChallenge=FALSE)</Value>
@@ -1005,6 +1012,13 @@
 				<Value type="3">(Index=702,Name=RECKONINGMASTERY_13_PROGRESS)</Value>
 				<Value type="3">(Index=697,Name=RECKONINGMASTERY_8_PROGRESS)</Value>
 				<Value type="3">(Index=703,Name=RECKONINGMASTERY_14_PROGRESS)</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/19/2026 - Alliance Mastery (675)  -->
+				<Value type="3">(Index=675,Name=ALLIANCEMASTERY_PROGRESS)</Value>
+				<Value type="3">(Index=689,Name=ALLIANCEMASTERY_1_PROGRESS)</Value>
+				<Value type="3">(Index=676,Name=ALLIANCEMASTERY_2_PROGRESS)</Value>
+				<Value type="3">(Index=677,Name=ALLIANCEMASTERY_3_PROGRESS)</Value>
+				<Value type="3">(Index=678,Name=ALLIANCEMASTERY_4_PROGRESS)</Value>
+				<!-- END MILAN -->
 				<Value type="3">(Index=600,Name=WEEKLY1GROUP_PROGRESS)</Value>
 				<Value type="3">(Index=601,Name=WEEKLY1_PROGRESS)</Value>
 				<Value type="3">(Index=602,Name=WEEKLY2GROUP_PROGRESS)</Value>
@@ -1581,6 +1595,47 @@
 				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=RECKONINGMASTERY_13_PROGRESS,DamageSource=788082)</Value>
 				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=RECKONINGMASTERY_8_PROGRESS,DamageSource=793101)</Value>
 				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=RECKONINGMASTERY_14_PROGRESS,DamageSource=793182)</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/19/2026 - Alliance Mastery (675)  -->
+				<Value type="3">(ChallengeType=CET_None,AccomplishmentProgressName=ALLIANCEMASTERY_PROGRESS)</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_1_PROGRESS,PlayerKit="InfiltratorFembot")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="AdeptHumanMale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="AdeptHumanFemale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="SoldierHumanMale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="SoldierHumanFemale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="EngineerHumanMale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="EngineerHumanFemale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="SentinelHumanMale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="SentinelHumanFemale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="InfiltratorHumanMale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="InfiltratorHumanFemale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="VanguardHumanMale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="VanguardHumanFemale")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="AdeptN7")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="SoldierN7")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="EngineerN7")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="SentinelN7")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="InfiltratorN7")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,PlayerKit="VanguardN7")</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,DamageSource=744335)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,DamageSource=573098)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,DamageSource=573100)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,DamageSource=650898)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,DamageSource=573102)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,DamageSource=744389)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,DamageSource=573104)</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPNov")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPSlum")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPOcean")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPHosp")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPRoad")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPNov3")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPNov2")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPSlum2")</Value>
+				<!-- Eventual hazard map variants -->
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPOcean2")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPHosp2")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPRoad2")</Value>
+				<!-- END MILAN -->
 				<Value type="3">(ChallengeType=CET_None,AccomplishmentProgressName=WEEKLY1GROUP_PROGRESS, EventStartTime=1350072000, EventEndTime=1350907200)</Value>
 				<Value type="3">(ChallengeType=CET_None,AccomplishmentProgressName=WEEKLY2GROUP_PROGRESS,EventStartTime=1350845952,EventEndTime=1351537280)</Value>
 				<Value type="3">(ChallengeType=CET_None,AccomplishmentProgressName=WEEKLY3GROUP_PROGRESS,EventStartTime=1351493888,EventEndTime=1352141952)</Value>
@@ -2038,6 +2093,13 @@
 				<Value type="3">(AccomplishmentName=RECKONINGMASTERY_13,AccomplishmentProgressName=RECKONINGMASTERY_13_PROGRESS,Goal=200000,Interval=50000,Title=814575,Description=814582)</Value>
 				<Value type="3">(AccomplishmentName=RECKONINGMASTERY_8,AccomplishmentProgressName=RECKONINGMASTERY_8_PROGRESS,Goal=200000,Interval=50000,Title=814570,Description=814577)</Value>
 				<Value type="3">(AccomplishmentName=RECKONINGMASTERY_14,AccomplishmentProgressName=RECKONINGMASTERY_14_PROGRESS,Goal=200000,Interval=50000,Title=814576,Description=814583)</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/19/2026 - Alliance Mastery (675). Using shipped strings that were unused in MP5 -->
+				<Value type="3">(AccomplishmentName=ALLIANCEMASTERY,AccomplishmentProgressName=ALLIANCEMASTERY_PROGRESS,Goal=4,Interval=1,Title=814513,Description=814514)</Value>
+				<Value type="3">(AccomplishmentName=ALLIANCEMASTERY_1,AccomplishmentProgressName=ALLIANCEMASTERY_1_PROGRESS,Goal=200,Interval=50,Title=814551,Description=814557)</Value>
+				<Value type="3">(AccomplishmentName=ALLIANCEMASTERY_2,AccomplishmentProgressName=ALLIANCEMASTERY_2_PROGRESS,Goal=500,Interval=125,Title=814516,Description=814517)</Value>
+				<Value type="3">(AccomplishmentName=ALLIANCEMASTERY_3,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,Goal=500000,Interval=125000,Title=814518,Description=814519)</Value>
+				<Value type="3">(AccomplishmentName=ALLIANCEMASTERY_4,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,Goal=200,Interval=50,Title=814520,Description=814521)</Value>
+				<!-- END MILAN -->
 				<Value type="3">(AccomplishmentName=WEEKLY1GROUP,AccomplishmentProgressName=WEEKLY1GROUP_PROGRESS,Goal=1,Interval=1,Title=774519,Description=770839)</Value>
 				<Value type="3">(AccomplishmentName=WEEKLY1,AccomplishmentProgressName=WEEKLY1_PROGRESS,Goal=1,Interval=0,Title=796076,Description=796077)</Value>
 				<Value type="3">(AccomplishmentName=WEEKLY2GROUP,AccomplishmentProgressName=WEEKLY2GROUP_PROGRESS,Goal=1,Interval=1,Title=774519,Description=770839)</Value>
@@ -2132,6 +2194,9 @@
 				<Value type="3">(RewardIDGranted=127,AccomplishmentName=BIOTICMASTERY)</Value>
 				<Value type="3">(RewardIDGranted=128,AccomplishmentName=TECHMASTERY)</Value>
 				<Value type="3">(RewardIDGranted=206, AccomplishmentName=RECKONINGMASTERY_1GROUP); GRANT A BANNER</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/19/2026 - Alliance Mastery (675) -->
+				<Value type="3">(RewardIDGranted=259, AccomplishmentName=ALLIANCEMASTERY)</Value>
+				<!-- END MILAN -->
 				<Value type="3">(AccomplishmentName=WEEKLY1GROUP, EntitlementIDGranted=1500101, bUseNucleusCheck=TRUE )</Value>
 				<Value type="3">(AccomplishmentName=WEEKLY2GROUP, EntitlementIDGranted=1500102, bUseNucleusCheck=TRUE )</Value>
 				<Value type="3">(AccomplishmentName=WEEKLY3GROUP, EntitlementIDGranted=1500104, bUseNucleusCheck=TRUE )</Value>

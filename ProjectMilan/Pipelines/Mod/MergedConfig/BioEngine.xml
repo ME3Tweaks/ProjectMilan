@@ -1393,6 +1393,18 @@
 				<Value type="3">RECKONINGMASTERY_13_PROGRESS</Value>
 				<Value type="3">RECKONINGMASTERY_14</Value>
 				<Value type="3">RECKONINGMASTERY_14_PROGRESS</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/19/2026: Alliance Mastery -->
+				<Value type="3">ALLIANCEMASTERY</Value>
+				<Value type="3">ALLIANCEMASTERY_PROGRESS</Value>
+				<Value type="3">ALLIANCEMASTERY_1</Value>
+				<Value type="3">ALLIANCEMASTERY_1_PROGRESS</Value>
+				<Value type="3">ALLIANCEMASTERY_2</Value>
+				<Value type="3">ALLIANCEMASTERY_2_PROGRESS</Value>
+				<Value type="3">ALLIANCEMASTERY_3</Value>
+				<Value type="3">ALLIANCEMASTERY_3_PROGRESS</Value>
+				<Value type="3">ALLIANCEMASTERY_4</Value>
+				<Value type="3">ALLIANCEMASTERY_4_PROGRESS</Value>
+				<!-- END MILAN -->
 				<Value type="3">OUTSIDERMASTERY_1</Value>
 				<Value type="3">OUTSIDERMASTERY_1_PROGRESS</Value>
 				<Value type="3">OUTSIDERMASTERY_2</Value>
