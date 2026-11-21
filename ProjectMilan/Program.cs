@@ -190,7 +190,7 @@ namespace ProjectMilan
         /// checkpoints are never shipped, and a full rebuild is exactly the cost they exist to avoid. A change to one
         /// of those pipelines just makes a checkpoint taken at or after it stale - retake it.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 32; // 32: Correct store mod-image seek-free mappings in the base Coalesced delta
+        public const int MIN_CHECKPOINT_VERSION = 35;
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
         /// </summary>
@@ -511,7 +511,6 @@ namespace ProjectMilan
             // Initialize LEC
             LegendaryExplorerCoreLib.InitLib(TaskScheduler.Current, x => MilanLog.Error($"Error saving package: {x}"), Log.Logger, objectDBsToLoad: [MEGame.ME3, MEGame.LE3]);
             MEPackageHandler.GlobalSharedCacheEnabled = false; // Do not use package cache
-            FileAccessTracker.Enabled = true; // So a sharing violation can name the thread in this process it collided with
 
 #if DEBUG
             LECLog.LogDebug = true;
@@ -548,7 +547,7 @@ namespace ProjectMilan
 
         /// <summary>
         /// Production builds never restore a checkpoint - they always build from scratch - but they do
-        /// write a fresh one at the last checkpointable pipeline that runs this build, so later dev
+        /// write a fresh one after Levels, so later dev
         /// builds can pick up from the release's output. See <see cref="ProductionCheckpointBeforeLevels"/>
         /// for the temporary exception.
         /// </summary>
@@ -592,7 +591,7 @@ namespace ProjectMilan
                 return;
             }
 
-            var lastEnabledStage = OfferedCheckpointStages.LastOrDefault(x => x.Enabled() && (!ProductionCheckpointBeforeLevels || x.Stage < ECheckpointStage.Levels));
+            var lastEnabledStage = OfferedCheckpointStages.LastOrDefault(x => x.Enabled() && x.Stage <= ECheckpointStage.Levels && (!ProductionCheckpointBeforeLevels || x.Stage < ECheckpointStage.Levels));
             if (lastEnabledStage.Name == null)
             {
                 MilanLog.Warning("Production build: no checkpointable pipelines are enabled, no checkpoint will be created.");
