@@ -65,6 +65,20 @@ var config float RapidHoldWindow;
 var config float StrikeForgiveTime;
 var config array<float> PickupLockoutLadder;
 
+// MILAN CHANGE - 11/21/2026 - Mgamerz
+// Players can run with the pizza, but it makes the player a high priority target
+// which significantly increases danger of doing it
+var config float CarrierSprintPriorityScale;
+var config int PriorityBasePlayerCount;
+var config float CarrierSprintSoundCheckFrequency;
+var transient SFXGameEffect CarrierPriorityEffect;
+var transient SFXPawn_Player CarrierLoopPawn;
+var transient bool bCarrierLoopStarted;
+// Custom beep-loop events that cut out the drop/pickup noise
+var WwiseEvent CarrierSprintLoopStartSound;
+var WwiseEvent CarrierSprintLoopStopSound;
+// END MILAN CHANGE
+
 public function int FindDropPenalty(SFXPawn_Player Player, bool bCreate)
 {
     local int i;
@@ -140,6 +154,96 @@ public function RecordVoluntaryDrop()
     }
     DropPenalties[i].Count = Min(DropPenalties[i].Count + 1, PickupLockoutLadder.Length);
     DropPenalties[i].LockoutUntil = Now + FMax(0.0, PickupLockoutLadder[DropPenalties[i].Count - 1]);
+}
+// END MILAN CHANGE
+
+// MILAN CHANGE - 11/21/2026 - Mgamerz
+// Carrier priority defaults to 0 (no change), applied as a mulitplier for target rating
+// Changes according to this algorithm:
+// Running: +4
+// Player count: Every player over 4 adds 1 regardless of running (e.g. 8 player run has 8x multiplier, 8 player walk has 4x)
+public function float GetCarrierPriorityValue(bool bSprinting)
+{
+    local int Extra;
+
+    if (SFXGRI(WorldInfo.GRI) != None)
+    {
+        Extra = Max(0, SFXGRI(WorldInfo.GRI).NumPlayersInGame() - PriorityBasePlayerCount);
+    }
+    if (bSprinting)
+    {
+        return float(Extra) + CarrierSprintPriorityScale;
+    }
+    if (Extra > 0)
+    {
+        return float(Extra + 1);
+    }
+    return 0.0;
+}
+
+// Changes the effect level
+public function UpdateCarrierPriority()
+{
+    local SFXModule_GameEffectManager Manager;
+    local float DesiredValue;
+
+    if (Role != ENetRole.ROLE_Authority || PickedUpBy == None || PickedUpBy.bDeleteMe)
+    {
+        return;
+    }
+    Manager = PickedUpBy.GetModule(Class'SFXModule_GameEffectManager');
+    if (Manager == None)
+    {
+        return;
+    }
+    DesiredValue = GetCarrierPriorityValue(PickedUpBy.bStorming);
+    if (DesiredValue <= 1.0)
+    {
+        if (CarrierPriorityEffect != None)
+        {
+            Manager.RemoveEffectsByTypeAndCategory(Class'SFXGameEffect_PriorityTarget', 'MilanObjectivePriority');
+            CarrierPriorityEffect = None;
+        }
+        return;
+    }
+    if (CarrierPriorityEffect != None && Manager.GameEffects.Find(CarrierPriorityEffect) != -1)
+    {
+        CarrierPriorityEffect.EffectValue = DesiredValue;
+        return;
+    }
+    CarrierPriorityEffect = Manager.CreateAndApplyEffect(Class'SFXGameEffect_PriorityTarget', 'MilanObjectivePriority', 0.0, 2, DesiredValue, PickedUpBy.Controller);
+}
+
+// Turns on/off beep sound when running
+public simulated function UpdateCarrierSprintSound()
+{
+    if (PickedUpBy == None || PickedUpBy.bDeleteMe)
+    {
+        StopCarrierSprintSound();
+        return;
+    }
+    if (PickedUpBy.bStorming)
+    {
+        if (!bCarrierLoopStarted)
+        {
+            bCarrierLoopStarted = TRUE;
+            CarrierLoopPawn = PickedUpBy;
+            CarrierLoopPawn.PlaySound(CarrierSprintLoopStartSound, TRUE);
+        }
+    }
+    else if (bCarrierLoopStarted)
+    {
+        StopCarrierSprintSound();
+    }
+}
+public simulated function StopCarrierSprintSound()
+{
+    if (bCarrierLoopStarted && CarrierLoopPawn != None && !CarrierLoopPawn.bDeleteMe)
+    {
+        CarrierLoopPawn.PlaySound(CarrierSprintLoopStopSound, TRUE);
+    }
+    bCarrierLoopStarted = FALSE;
+    CarrierLoopPawn = None;
 }
 // END MILAN CHANGE
 public event simulated function Destroyed()
@@ -418,6 +522,14 @@ public simulated function PickUpObject(SFXPawn_Player Player)
     }
     HideWeapons();
     SetTimer(0.5, TRUE, 'HideWeapons', );
+    // MILAN CHANGE - 11/22/2026 - Mgamerz
+    // Sprint beep runs on all clients, effect only matters to authority
+    SetTimer(CarrierSprintSoundCheckFrequency, TRUE, 'UpdateCarrierSprintSound', );
+    if (Role == ENetRole.ROLE_Authority)
+    {
+        UpdateCarrierPriority();
+    }
+    // END MILAN CHANGE
 }
 public simulated function RemovePickupObject()
 {
@@ -426,18 +538,31 @@ public simulated function RemovePickupObject()
     
     ClearTimer('CheckForDrop');
     ClearTimer('HideWeapons');
+    // MILAN CHANGE - 11/22/2026 - Mgamerz
+    ClearTimer('UpdateCarrierSprintSound');
+    StopCarrierSprintSound();
+    // END MILAN CHANGE
     if (PickedUpBy == None || PickedUpBy.bDeleteMe)
     {
         CarriedPickupMesh = None;
         CarrierMarker = None;
         PickedUpBy = None;
+        // MILAN CHANGE - 11/22/2026 - Mgamerz
+        CarrierPriorityEffect = None;
+        // END MILAN CHANGE
         return;
     }
     Manager = PickedUpBy.GetModule(Class'SFXModule_GameEffectManager');
     if (Manager != None)
     {
         Manager.RemoveEffectsByTypeAndCategory(Class'SFXGameEffect_MovementSpeedBonus', Name);
+        // MILAN CHANGE - 11/22/2026 - Mgamerz
+        Manager.RemoveEffectsByTypeAndCategory(Class'SFXGameEffect_PriorityTarget', 'MilanObjectivePriority');
+        // END MILAN CHANGE
     }
+    // MILAN CHANGE - 11/22/2026 - Mgamerz
+    CarrierPriorityEffect = None;
+    // END MILAN CHANGE
     if (CarrierMarker != None)
     {
         CarrierMarker.Deactivate();
@@ -478,11 +603,10 @@ public simulated function CheckForDrop()
         DropObject(FALSE);
         return;
     }
-    if (PickedUpBy.bStorming)
-    {
-        bDropObject = TRUE;
-    }
-    else if (PickedUpBy.bIsStealthed && WorldInfo.GameTimeSeconds - PickedUpTimestamp > IgnoreStealthFlagTime)
+    // MILAN CHANGE - 11/22/2026 - Mgamerz
+    // Sprinting no longer drops the object (code removed)
+    // END MILAN CHANGE
+    if (PickedUpBy.bIsStealthed && WorldInfo.GameTimeSeconds - PickedUpTimestamp > IgnoreStealthFlagTime)
     {
         bDropObject = TRUE;
     }
@@ -509,6 +633,9 @@ public simulated function CheckForDrop()
     else
     {
         UpdateLastValidDropLocation(PickedUpBy.Location);
+        // MILAN CHANGE - 11/22/2026 - Mgamerz
+        UpdateCarrierPriority();
+        // END MILAN CHANGE
     }
     // END MILAN CHANGE
 }
@@ -684,6 +811,13 @@ defaultproperties
     RapidHoldWindow = 4.0
     StrikeForgiveTime = 8.0
     PickupLockoutLadder = (0.0, 1.5, 2.5, 3.2)
+    // END MILAN CHANGE
+    // MILAN CHANGE - 11/22/2026 - Mgamerz
+    CarrierSprintPriorityScale = 4.0
+    PriorityBasePlayerCount = 4
+    CarrierSprintSoundCheckFrequency = 0.1
+    CarrierSprintLoopStartSound = WwiseEvent'Wwise_GUI_DLC_MP2.Play_gui_milan_retrieve_carrier_beep'
+    CarrierSprintLoopStopSound = WwiseEvent'Wwise_GUI_DLC_MP2.Stop_gui_milan_retrieve_carrier_beep'
     // END MILAN CHANGE
     AttachSocketName = 'Socket_07'
     PickupMeshComp = PickupMeshComp0
