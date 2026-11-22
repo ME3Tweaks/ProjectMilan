@@ -28,7 +28,7 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         /// <summary>
         /// Latent action class that fires Inside or Outside as the player's view enters or leaves its volumes
         /// </summary>
-        private const string CameraInVolumesClass = "SFXGameContent_Milan.SFXSeqAct_CameraInVolumes";
+        private const string CameraInVolumesClass = $"{MilanPackages.SFXGameContentMilan}.SFXSeqAct_CameraInVolumes";
 
         private static string ScenesFolder => Path.Combine(MilanShared.PipelineRoot, "EntryMenu", "Scenes");
 

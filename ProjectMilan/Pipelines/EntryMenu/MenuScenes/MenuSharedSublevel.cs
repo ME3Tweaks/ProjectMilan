@@ -28,7 +28,7 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         /// Latent action (BIOP_MP_COMMON) that moves the splash camera to the end camera: steady speed, then slows to rest.
         /// LE3's camera blends can't do this, as the ones that come to rest also start from rest.
         /// </summary>
-        private const string MenuCameraDriftClass = "SFXGameContent_Milan.SFXSeqAct_MenuCameraDrift";
+        private const string MenuCameraDriftClass = $"{MilanPackages.SFXGameContentMilan}.SFXSeqAct_MenuCameraDrift";
 
         /// <summary>
         /// How long the splash drift runs at a steady speed, then how long it takes to slow to rest
@@ -61,7 +61,7 @@ namespace ProjectMilan.Pipelines.EntryMenu.MenuScenes
         /// Latent action (BIOP_MP_COMMON) that holds the Volume_Sound_Effects RTPC at the player's setting or MaxVolume,
         /// whichever is lower. The next map's player controller resets it.
         /// </summary>
-        private const string CapSoundEffectsVolumeClass = "SFXGameContent_Milan.SFXSeqAct_CapSoundEffectsVolume";
+        private const string CapSoundEffectsVolumeClass = $"{MilanPackages.SFXGameContentMilan}.SFXSeqAct_CapSoundEffectsVolume";
 
         /// <summary>
         /// Highest sound effects volume in the menu, 0-1. The RTPC is linear gain, so 0.5 is only -6 dB; 0.2 is about -14 dB.
