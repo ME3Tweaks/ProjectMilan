@@ -4,6 +4,8 @@
 // Change: Quick Slot 7 (PC_HotKey7) propagates its keys to PC_UseRevivePower in GameMode_Dying,
 // so secondary medigel binding works.
 // As described in MILAN-BUG-0001
+// Change: Omni-key split - Use/Cover/Storm (Shared_Action) is split into PC_Use, PC_Cover and PC_Sprint (Storm / Evade) 
+// Requires MilanHost to handle multiple binds to one key and intercept it as a single chain
 defaultproperties
 {
     AliasMap = ({
@@ -223,15 +225,70 @@ defaultproperties
                            }, 
                  KeysLocName[0] = "", 
                  KeysLocName[1] = "", 
-                 Subordinates = ({bAllGameModes = FALSE, Alias = "Shared_Action", GameMode = EGameModes.GameMode_Vehicle}, 
-                                 {bAllGameModes = FALSE, Alias = "Shared_Action", GameMode = EGameModes.GameMode_Atlas}, 
-                                 {bAllGameModes = FALSE, Alias = "Shared_Action", GameMode = EGameModes.GameMode_InjuredShepard}
-                                ), 
-                 Name = $337962, 
-                 bCategory = FALSE, 
-                 Alias = "Shared_Action", 
+                 Subordinates = (),
+                 Name = $229512,
+                 bCategory = FALSE,
+                 Alias = "PC_Use",
                  GameMode = EGameModes.GameMode_Default
-                }, 
+                },
+                {
+                 Keys[0] = {
+                            Command = "",
+                            Name = 'None',
+                            Control = FALSE,
+                            Shift = FALSE,
+                            Alt = FALSE,
+                            bIgnoreCtrl = FALSE,
+                            bIgnoreShift = FALSE,
+                            bIgnoreAlt = FALSE
+                           },
+                 Keys[1] = {
+                            Command = "",
+                            Name = 'None',
+                            Control = FALSE,
+                            Shift = FALSE,
+                            Alt = FALSE,
+                            bIgnoreCtrl = FALSE,
+                            bIgnoreShift = FALSE,
+                            bIgnoreAlt = FALSE
+                           },
+                 KeysLocName[0] = "",
+                 KeysLocName[1] = "",
+                 Subordinates = (),
+                 Name = $652940,
+                 bCategory = FALSE,
+                 Alias = "PC_Cover",
+                 GameMode = EGameModes.GameMode_Default
+                },
+                {
+                 Keys[0] = {
+                            Command = "",
+                            Name = 'None',
+                            Control = FALSE,
+                            Shift = FALSE,
+                            Alt = FALSE,
+                            bIgnoreCtrl = FALSE,
+                            bIgnoreShift = FALSE,
+                            bIgnoreAlt = FALSE
+                           },
+                 Keys[1] = {
+                            Command = "",
+                            Name = 'None',
+                            Control = FALSE,
+                            Shift = FALSE,
+                            Alt = FALSE,
+                            bIgnoreCtrl = FALSE,
+                            bIgnoreShift = FALSE,
+                            bIgnoreAlt = FALSE
+                           },
+                 KeysLocName[0] = "",
+                 KeysLocName[1] = "",
+                 Subordinates = (),
+                 Name = $49875992,
+                 bCategory = FALSE,
+                 Alias = "PC_Sprint",
+                 GameMode = EGameModes.GameMode_Default
+                },
                 {
                  Keys[0] = {
                             Command = "", 

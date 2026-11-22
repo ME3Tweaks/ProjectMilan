@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <CoalesceAsset id="BioInput" name="bioinput.ini" source="..\..\biogame\config\bioinput.ini">
 	<Sections>
 		<Section name="engine.console">
@@ -301,6 +301,11 @@
 				<Value type="2">( Name="Console_WeaponWheelAndQuickPower1", Command="OnTap 0.3 TryUsePower 0 | OnHold 0.3 EnterWeaponWheel" )</Value>
 				<Value type="2">( Name="Console_PowerWheelAndQuickPower2", Command="OnTap 0.3 TryUsePower 1 | OnHold 0.3 EnterPowerWheel" )</Value>
 				<Value type="2">( Name="Shared_Action", Command="Exclusive TryStandingJump | Exclusive Used | OnRelease StormOff | OnHold 0.2 StormOn | Exclusive PressAction | OnTap 0.3 TapAction | OnHold 0.3 HoldAction")</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/16/2026 - Shared_Action split - requires milanhost to intercept chains -->
+				<Value type="2">( Name="PC_Use", Command="Exclusive Used" )</Value>
+				<Value type="2">( Name="PC_Sprint", Command="OnRelease StormOff | OnHold 0.2 StormOn | Exclusive MilanSprintPressAction | OnTap 0.3 MilanSprintTapAction" )</Value>
+				<Value type="2">( Name="PC_Cover", Command="Exclusive TryStandingJump | Exclusive MilanCoverPressAction | OnTap 0.3 MilanCoverTapAction | OnHold 0.3 HoldAction" )</Value>
+				<!-- END MILAN CHANGE -->
 				<Value type="2">( Name="Shared_Melee", Command="OnTap 0.3 TryMelee | LeaveWorld | OnHold 0.3 TryHeavyMelee" )</Value>
 				<Value type="2">( Name="Console_Weapon", Command="OnTap 0.3 SwapWeaponIfEmpty | OnTap 0.3 TryReload | OnHold 0.3 TrySwapWeapon" )</Value>
 				<Value type="2">( Name="Console_ExitPowerWheel", Command="OnRelease ExitPowerWheel" )</Value>
@@ -451,7 +456,11 @@
 				<Value type="2">( Name="RightMouseButton", Command="Shared_Aim" )</Value>
 				<Value type="2">( Name="MouseX", Command="PC_LookX" )</Value>
 				<Value type="2">( Name="MouseY", Command="PC_LookY" )</Value>
-				<Value type="2">( Name="SpaceBar", Command="Shared_Action" )</Value>
+				<!-- MILAN CHANGE - Mgamerz - 11/17/2026 - Default binds for sprint/cover/use all are on spacebar so by default its still the original omnikey -->
+				<Value type="2">( Name="SpaceBar", Command="PC_Use" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="PC_Sprint" )</Value>
+				<Value type="2">( Name="SpaceBar", Command="PC_Cover" )</Value>
+				<!-- END MILAN CHANGE -->
 				<Value type="2">( Name="MouseScrollUp", Command="PC_PrevWeapon" )</Value>
 				<Value type="2">( Name="MouseScrollDown",\tCommand="PC_NextWeapon" )</Value>
 				<Value type="2">( Name="Escape", Command="Shared_Menu" )</Value>

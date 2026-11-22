@@ -45,6 +45,27 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             return map;
         }
 
+        /// <summary>
+        /// String remapping to point to correct omni-key split input alias
+        /// </summary>
+        private static readonly Dictionary<int, string> PcActionRetarget = new()
+        {
+            // Use
+            [339230] = "PC_Use", [339251] = "PC_Use", [705044] = "PC_Use", [705045] = "PC_Use",
+            // Storm, evade roll
+            [339280] = "PC_Sprint", [344119] = "PC_Sprint", [349583] = "PC_Sprint", [351464] = "PC_Sprint",
+            [554190] = "PC_Sprint", [562474] = "PC_Sprint", [675661] = "PC_Sprint", [722322] = "PC_Sprint",
+            [722407] = "PC_Sprint", [562479] = "PC_Sprint", [722326] = "PC_Sprint",
+            // Cover, vault, climb, cover-to-cover roll, gap jump
+            [339231] = "PC_Cover", [339243] = "PC_Cover", [339246] = "PC_Cover", [344126] = "PC_Cover",
+            [344136] = "PC_Cover", [554205] = "PC_Cover", [554215] = "PC_Cover", [554219] = "PC_Cover",
+            [554220] = "PC_Cover", [555204] = "PC_Cover", [562483] = "PC_Cover",
+            [675662] = "PC_Cover", [675841] = "PC_Cover", [718564] = "PC_Cover",
+            [722401] = "PC_Cover", [722405] = "PC_Cover",
+        };
+
+        private static readonly Regex PcActionRegex = new(@"\bPC_Action\b", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
         // Whole tokens only, in case one token shadows another longer one.
         private static readonly Regex TokenRegex = new(
             @"\b(?:" + string.Join("|", TokenMap.Keys.OrderByDescending(k => k.Length).Select(Regex.Escape)) + @")\b",
@@ -70,7 +91,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
 
         public string GameFile => $"BIOGame_{localization}.tlk";
 
-        public string Comment => $"Basegame TLK ({localization}): PC_/Console_ control tokens reverted to Shared_";
+        public string Comment => $"Basegame TLK ({localization}): PC_/Console_ control tokens reverted to Shared_, omnikey prompts split";
 
         public string DeltaFormat => TlkDeltaXml.Format;
 
@@ -90,7 +111,12 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 if (string.IsNullOrEmpty(str.Data))
                     continue;
 
-                var replaced = TokenRegex.Replace(str.Data, m => TokenMap[m.Value]);
+                var replaced = str.Data;
+                if (PcActionRetarget.TryGetValue(str.CalculatedID, out var pcAlias))
+                {
+                    replaced = PcActionRegex.Replace(replaced, pcAlias);
+                }
+                replaced = TokenRegex.Replace(replaced, m => TokenMap[m.Value]);
                 if (replaced != str.Data)
                 {
                     str.Data = replaced;
