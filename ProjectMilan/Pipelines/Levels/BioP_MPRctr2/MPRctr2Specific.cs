@@ -33,8 +33,7 @@ internal class MPRctr2Specific : LevelSpecificFixesBase
         "PathNode_628"                    // E1, outside end of CoverLink_203's spec
     ];
     // Milan Kismet action that blocks/unblocks the nav points, re-paths AIs routed through them and raises
-    // SFXGameInfoMP.HasTemporaryNavBlocks() (which the escort drone waits on). Lives in BIOP_MP_COMMON.
-    private const string NavBlockPackageName = "SFXGameContent_Milan";
+    // SFXGameInfoMP.HasTemporaryNavBlocks() (which the escort drone waits on)
     private const string NavBlockClassName = "SFXSeqAct_TemporaryNavBlock";
     
     // Fires when the doors start dropping
@@ -65,7 +64,7 @@ internal class MPRctr2Specific : LevelSpecificFixesBase
         var navPoints = DoorwayNavPoints.Select(name => package.FindExport($"TheWorld.PersistentLevel.{name}"));
 
         // Nav block class is added to biop_mp_common
-        var navBlockClass = MilanLevelTools.GetOrAddForcedExportClassImport(package, $"{NavBlockPackageName}.{NavBlockClassName}");
+        var navBlockClass = MilanLevelTools.GetOrAddForcedExportClassImport(package, $"{MilanPackages.SFXGameContentMilan}.{NavBlockClassName}");
 
         // Copy SeqAct_Toggle links
         var targetLink = KismetHelper.GetSequenceObjects(sequence).OfType<ExportEntry>()

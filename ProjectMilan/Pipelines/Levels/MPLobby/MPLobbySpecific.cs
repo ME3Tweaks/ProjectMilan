@@ -9,8 +9,6 @@ namespace ProjectMilan.Pipelines.Levels.MPLobby
 {
     internal class MPLobbySpecific : LevelSpecificFixesBase
     {
-        private const string LobbyClassPackageName = "SFXGameContent_Milan";
-
         public override void PreCorrect(LevelSpecificPipeline pipeline)
         {
             var biop = pipeline.ME3BioP;
@@ -73,22 +71,22 @@ namespace ProjectMilan.Pipelines.Levels.MPLobby
                 throw new InvalidDataException($"Unable to initialize the FileLib for {package.FileNameNoExtension}");
             }
 
-            var parent = package.CreatePackageExport(LobbyClassPackageName);
+            var parent = package.CreatePackageExport(MilanPackages.SFXGameContentMilan);
             var compiledClasses = new List<ExportEntry>();
             foreach (var source in sources)
             {
                 var className = Path.GetFileNameWithoutExtension(source);
-                var existing = package.FindExport($"{LobbyClassPackageName}.{className}");
+                var existing = package.FindExport($"{MilanPackages.SFXGameContentMilan}.{className}");
                 var (_, log) = UnrealScriptCompiler.CompileClass(package, File.ReadAllText(source), lib, options, export: existing, parent: parent, intendedClassName: className);
                 if (log.HasErrors)
                 {
                     throw new InvalidDataException($"Could not compile lobby class {className}: {string.Join(Environment.NewLine, log.AllErrors)}");
                 }
 
-                var classExport = package.FindExport($"{LobbyClassPackageName}.{className}");
+                var classExport = package.FindExport($"{MilanPackages.SFXGameContentMilan}.{className}");
                 if (classExport == null)
                 {
-                    throw new InvalidDataException($"Compiled class not found: {LobbyClassPackageName}.{className}");
+                    throw new InvalidDataException($"Compiled class not found: {MilanPackages.SFXGameContentMilan}.{className}");
                 }
                 compiledClasses.Add(classExport);
                 MilanLog.Information($"Compiled lobby class {classExport.InstancedFullPath}", customPrefix: pipeline.LogCategory);

@@ -100,8 +100,8 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_BlackstormHidden,
                 Rarity = "ultrarare",
                 DisplayOrder = 10,
-                ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstorm",
-                NonConsumableClassPath = "SFXGameContent_Milan.SFXHeavyWeapon_Blackstorm",
+                ClassPath = $"{MilanPackages.SFXGameContentMilan}.SFXWeapon_Heavy_ConsumableBlackstorm",
+                NonConsumableClassPath = $"{MilanPackages.SFXGameContentMilan}.SFXHeavyWeapon_Blackstorm",
                 Name = 361364, // M-490 Blackstorm
                 ShortName = new LocalizedString {
                     [MELocalization.INT] = "M-490 Blackstorm",
@@ -138,7 +138,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_BlackstarHidden,
                 Rarity = "rare",
                 DisplayOrder = 20,
-                ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableBlackstar",
+                ClassPath = $"{MilanPackages.SFXGameContentMilan}.SFXWeapon_Heavy_ConsumableBlackstar",
                 InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Blackstar",
                 // Vanilla has no ShortPrettyName for it
                 ShortName = new LocalizedString {
@@ -173,7 +173,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 // Drop from ultrarare pool, cain is special
                 Rarity = "ultrarare",
                 DisplayOrder = 30,
-                ClassPath = "SFXGameContent_Milan.SFXWeapon_Heavy_ConsumableCain",
+                ClassPath = $"{MilanPackages.SFXGameContentMilan}.SFXWeapon_Heavy_ConsumableCain",
                 InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Cain",
                 ShortName = new LocalizedString {
                     [MELocalization.INT] = "M-920 Cain",
@@ -327,8 +327,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
         internal static void CompileResolver(IMEPackage package, IEnumerable<HeavyWeaponCatalogEntry> catalog)
         {
             var source = HeavyWeaponResolverSource.Build(catalog);
-            var function = package.FindExport("SFXGameContent_Milan.SFXMilanHeavyWeaponCatalog.ResolveClass")
-                ?? throw new InvalidOperationException("MPCommon is missing the heavy resolver; rebuild its checkpoint.");
+            var function = package.FindExport($"{MilanPackages.SFXGameContentMilan}.SFXMilanHeavyWeaponCatalog.ResolveClass");
             using var cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(debugName: "Heavy resolver");
             var options = new UnrealScriptOptionsPackage { Cache = cache, CustomFileResolver = MilanShared.LE3PackageResolver };
             using var library = new FileLib(package);

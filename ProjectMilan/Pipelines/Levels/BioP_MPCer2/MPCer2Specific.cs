@@ -16,8 +16,7 @@ internal class MPCer2Specific : LevelSpecificFixesBase
     
     // InterpActor subclass that powers can impact (see SFXPowerCustomAction.CanImpactActor's BaseDelta).
     // Built into MPCommon
-    private const string PowerTargetClassName = "MilanPowerTargetInterpActor";
-    private const string PowerTargetClassPath = $"SFXGameContent_Milan.{PowerTargetClassName}";
+    private const string PowerTargetClass = $"{MilanPackages.SFXGameContentMilan}.MilanPowerTargetInterpActor";
 
     // UDK can't resolve the Milan class, and the swarm is hidden so it doesn't take part in it anyway, so we just do this here
     public override void PostLightingCorrect(LevelSpecificPipeline pipeline)
@@ -43,11 +42,11 @@ internal class MPCer2Specific : LevelSpecificFixesBase
         // Change who triggers
         var components = swarm.GetChildren<ExportEntry>().ToList();
         damageEvent.WriteProperty(new EnumProperty(SwarmDamageWhoTriggers, "EWhoTriggers", package.Game, "WhoTriggers"));
-        swarm.Class = MilanLevelTools.GetOrAddForcedExportClassImport(package, PowerTargetClassPath);
+        swarm.Class = MilanLevelTools.GetOrAddForcedExportClassImport(package, PowerTargetClass);
         foreach (var component in components)
         {
             // Change over archetype
-            component.Archetype = MilanLevelTools.GetOrAddForcedExportComponentTemplateImport(package, PowerTargetClassPath, component.Archetype!.ObjectName.Instanced, component.ClassName);
+            component.Archetype = MilanLevelTools.GetOrAddForcedExportComponentTemplateImport(package, PowerTargetClass, component.Archetype!.ObjectName.Instanced, component.ClassName);
         }
 
         MilanLog.Information($"Bees now punish stormtrooper aim", customPrefix: logCategory);
