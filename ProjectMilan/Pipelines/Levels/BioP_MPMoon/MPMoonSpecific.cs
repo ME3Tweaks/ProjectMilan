@@ -1,8 +1,13 @@
 ﻿using LegendaryExplorerCore.Gammtek.Extensions;
 using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Textures;
 using LegendaryExplorerCore.Unreal;
 using LegendaryExplorerCore.Unreal.BinaryConverters;
+using LegendaryExplorerCore.Unreal.Classes;
+using ProjectMilan.Pipelines.Texture;
+using ProjectMilanCore;
 using System.Numerics;
+using Image = LegendaryExplorerCore.Textures.Image;
 
 namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 {
@@ -121,6 +126,53 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
             }
         }
 
+        public override void PostLightingCorrect(LevelSpecificPipeline pipeline)
+        {
+            // This is done here because if done before lighting bake UDK export will fail as this asset isn't in decook
+            FixMistTexture(pipeline);
+        }
+
+        private void FixMistTexture(LevelSpecificPipeline pipeline)
+        {
+            var mistTextureIFP = @"BioT_RedRock_Ter.Textures.Diff.SkyCloud_DIFF";
+            var newTextureName = "SkyCloud_DIFF_Milan";
+
+            var levelPackages = Directory.GetFiles(pipeline.LevelOutputDir, "*.pcc");
+            var artMasterF = levelPackages.FirstOrDefault(x => Path.GetFileNameWithoutExtension(x) == @"BioA_MPMoon");
+            using (var artMasterP = MEPackageHandler.OpenMEPackage(artMasterF, diskIOSyncLock: MilanShared.DiskIOSyncLock))
+            {
+                // Replace texture in the art master
+                // Package stored will make it externalize in TFC build
+                var texture = artMasterP.FindExport(mistTextureIFP, "Texture2D");
+                var image = Image.LoadFromFile(Path.Combine(MilanShared.PipelineRoot, "Levels", "BioP_MPMoon", $"{mistTextureIFP}.png"), PixelFormat.ARGB);
+                new Texture2D(texture).Replace(image, texture.GetProperties(), isPackageStored: true);
+                TFCBuild.ClearNeverStreamForExternalization(texture);
+
+                // Change name for clarity this asset has changed
+                texture.ObjectName = new NameReference(newTextureName);
+                artMasterP.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                MilanLog.Information($"Updated Mist texture object", customPrefix: pipeline.LogCategory);
+            }
+
+            // Other levels import it by path, so we have to make sure names are updated too
+            foreach (var packagePath in levelPackages.Where(x => x != artMasterF))
+            {
+                using var package = MEPackageHandler.OpenMEPackage(packagePath, diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                var import = package.FindImport(mistTextureIFP);
+                if (import == null)
+                {
+                    // Not in this file
+                    continue;
+                }
+
+                import.ObjectName = new NameReference(newTextureName);
+                package.Save(diskIOSyncLock: MilanShared.DiskIOSyncLock);
+                MilanLog.Information($"Renamed {mistTextureIFP} import in {package.FileNameNoExtension}", customPrefix: pipeline.LogCategory);
+            }
+
+            MilanShared.RefreshMilanFiles = true;
+        }
+
         // LE asset for the supply tank/crate thing
         // changes UVs and mesh but our override uses old ME3
         // version, so we take that instead
@@ -132,7 +184,7 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
             }
 
             var material = package.FindExport("bioapl_con_container03.Container03_MatInst");
-            foreach (var component in package.Exports.Where(x=> x.ClassName == "StaticMeshComponent"))
+            foreach (var component in package.Exports.Where(x => x.ClassName == "StaticMeshComponent"))
             {
                 if (component.GetProperty<ObjectProperty>("StaticMesh")?.ResolveToEntry(package)?.InstancedFullPath != "bioapl_con_container03.Container03")
                 {
