@@ -40,6 +40,12 @@ namespace ProjectMilanCore
         // DEV MODE ONLY!!!
         public static string REDEMPTION_DLC_NAME { get; } = @"DLC_MOD_PMR3";
 
+        /// <summary>
+        /// Content containing package for most classes (for config names)
+        /// </summary>
+        public const string GAMECONTENT_MILAN_CONFIG = @"sfxgamecontent_milan";
+
+
         private const string ROOT_FOLDER_NAME = @"ProjectMilan";
         private const string EXTRA_CONTENT_ROOT_FOLDER_NAME = @"ProjectMilan_ExtraContent";
         public static ObjectInstanceDB LE3ObjectDB { get; set; }

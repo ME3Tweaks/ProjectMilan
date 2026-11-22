@@ -15,7 +15,7 @@ namespace ProjectMilanCore
         /// <summary>
         /// Gameplay content and classes
         /// </summary>
-        public static string SFXGameContentMilan => @"SFXGameContent_Milan";
+        public const string SFXGameContentMilan = @"SFXGameContent_Milan";
 
         /// <summary>
         /// Enemy archetypes
