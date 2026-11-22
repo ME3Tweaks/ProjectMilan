@@ -4296,6 +4296,13 @@ simulated state WeaponFiring
         {
             bInCover = SFXPawn_Player(Instigator).IsInCover();
             bInLeanout = SFXPawn_Player(Instigator).IsLeaning();
+            // MILAN CHANGE
+            // 2026/11/22 - Stumpy - Force exit storm when firing a charge weapon (prevents the user from firing *while* storming)
+            if (SFXPawn_Player(Instigator).bStorming)
+            {
+                SFXPlayerController(BioWorldInfo(WorldInfo).GetLocalPlayerController()).GetGameModeDefault().TurnStormOff();
+            }
+            // MILAN END
             return !bInCover || bInLeanout;
         }
         return FALSE;
