@@ -221,6 +221,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             }
 
             GenerateHiddenVariants(package, consumableClasses);
+            HeavyWeaponCloakMaterials.Apply(package);
 
             // Change its licensee to LE3 so TFC compaction doesn't die on it
             var outFile = Path.Combine(OutputFolder, package.FileNameNoExtension + ".pcc");
@@ -332,9 +333,12 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             var options = new UnrealScriptOptionsPackage { Cache = cache, CustomFileResolver = MilanShared.LE3PackageResolver };
             using var library = new FileLib(package);
             if (!library.Initialize(options))
+            {
                 throw new InvalidOperationException($"Cannot initialize heavy resolver: {string.Join(Environment.NewLine, library.InitializationLog.AllErrors)}");
+            }
             var (_, log) = UnrealScriptCompiler.CompileFunction(function, source, library, options);
             if (log.HasErrors)
+            {
                 throw new InvalidOperationException($"Cannot compile heavy resolver: {string.Join(Environment.NewLine, log.AllErrors)}");
         }
 
@@ -406,7 +410,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
         }
 
         /// <param name="nonConsumableClasses">Every non-consumable heavy weapon class found, to the package it is in.</param>
-        /// <param name="loadableImages">Images we built, and every object a dynamic load mapping covers.</param>
+        /// <param name="loadableImages">Images built in this pipeline session</param>
         private static HeavyWeaponCatalogEntry RegisterHeavyWeapon(HeavyWeaponEntry entry, string packageName, Dictionary<string, string> nonConsumableClasses, IReadOnlySet<string> loadableImages)
         {
             // Weapon classes are replicated, as every MP weapon's mapping is in vanilla
