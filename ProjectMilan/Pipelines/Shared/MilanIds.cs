@@ -93,6 +93,26 @@ public enum MilanPlayerVariable
     Banner_SpaceHamster = 764,
     Banner_ProudOfYou = 765,
     Banner_Cheeseburger = 766,
+    Banner_FrontierDivision = 767,
+    Banner_SoleSurvivor = 768,
+
+    // Promo banner packs ownership variables (claimed)
+    PromoPack_Jedore = 769,
+    PromoPack_ME1Randomizer = 770,
+    PromoPack_LE2Randomizer = 771,
+    PromoPack_Pinnacle = 772,
+
+    // Promo banner packs unlock variables (available)
+    PromoUnlock_Jedore = 773,
+    PromoUnlock_ME1Randomizer = 774,
+    PromoUnlock_LE2Randomizer = 775,
+    PromoUnlock_Pinnacle = 776,
+
+    // Promo banner ownership (ownership of card)
+    PromoBanner_Jedore = 777,
+    PromoBanner_ME1Randomizer = 778,
+    PromoBanner_LE2Randomizer = 779,
+    PromoBanner_Pinnacle = 780,
 
     // Heavy weapon unlock cards
     HeavyUnlock_CobraHidden = 800,
@@ -112,7 +132,7 @@ public enum MilanPlayerVariable
 }
 
 /// <summary>
-/// Store pack nIDs (StoreInfoArray) Milan adds. Vanilla nIDs go up to 657; Milan nIDs start at 700.
+/// Store pack nIDs (StoreInfoArray) Milan adds. Vanilla nIDs go up to 657. Milan nIDs start at 700.
 /// </summary>
 public enum MilanStorePackId
 {
@@ -127,6 +147,10 @@ public enum MilanStorePackId
     SpectreShipment = 708,
     SpectreShipmentEquipment = 709,
     SaveMassEffect = 710,
+    Promo_Jedore = 711,
+    Promo_ME1Randomizer = 712,
+    Promo_LE2Randomizer = 713,
+    Promo_Pinnacle = 714,
 }
 
 /// <summary>
@@ -193,7 +217,17 @@ public enum MilanBannerId
     // Internal only
     Cheeseburger = 270,
 
-    SyntheticMastery = 271,
+    SyntheticMastery = 271, // Challenge reward
+
+    // Banner pack 1 (community art), continued
+    FrontierDivision = 272,
+    SoleSurvivor = 273,
+
+    // Promo banners IDs
+    Promo_Jedore = 274,
+    Promo_ME1Randomizer = 275,
+    Promo_LE2Randomizer = 276,
+    Promo_Pinnacle = 277,
 }
 
 /// <summary>

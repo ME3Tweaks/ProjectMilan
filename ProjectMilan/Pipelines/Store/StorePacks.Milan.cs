@@ -32,6 +32,34 @@ public static partial class StorePacks
         Contents = [Slot(banner.Pool)],
     };
 
+    /// <summary>
+    /// Free, one-per-player promo pack containing exactly its banner. 
+    /// Hidden until an external tool sets its unlock variable.
+    /// </summary>
+    private static StorePackEntry PromoPack(PromoBannerDefinition banner) => new()
+    {
+        ID = (int)banner.PackId,
+        PackName = banner.PackName,
+        TitleStrRefId = MilanPipelinesShared.AssignTLK(banner.Title),
+        DescriptionStrRefId = MilanPipelinesShared.AssignTLK(banner.PackDescription),
+        CreditCost = 0,
+        PromoStrRefId = 703324,
+        PerPlayerMax = 1,
+        PlayerVariableId = (int)banner.CounterId,
+        UnlockInfo = new AchievementUnlockInfo
+        {
+            AchievementId = LEAchievementIds.None,
+            UnlockVariableName = $"{banner.PackName}_unlock",
+            UnlockVariableId = (int)banner.UnlockId,
+        },
+        BannerRewardID = (int)banner.EmblemId,
+        Image = banner.PackImage,
+        RevealIntroTextureRef = "GUI_MPImages.Creates.box",
+        RevealIntroHoloTextureRef = "GUI_MPImages.Creates.boxHolo",
+        RevealIntroSound = "MPRevealCrate1",
+        Contents = [Slot(banner.Pool)],
+    };
+
     private static readonly LocalizedString LegendaryBannerPackTitle = new() {
         [MELocalization.INT] = "Legendary Pack",
         [MELocalization.DEU] = "Legendäres Pack",
@@ -207,6 +235,7 @@ public static partial class StorePacks
     [
         // Evaluated during registration because titles/descriptions assign TLK entries.
         ..StoreCards.AchievementBanners.Select(AchievementPack),
+        ..StoreCards.PromoBanners.Select(PromoPack),
         LegendaryBannerPack(),
         SaveMassEffectPack(),
         BigBadSbectreBack(),

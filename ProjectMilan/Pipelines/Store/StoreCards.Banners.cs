@@ -305,6 +305,12 @@ public static partial class StoreCards
     private static readonly LocalizedString SpaceHamsterTitle = new() {
         [MELocalization.INT] = "Space Hamster's Night Out",
     };
+    private static readonly LocalizedString FrontierDivisionTitle = new() {
+        [MELocalization.INT] = "Frontier Division",
+    };
+    private static readonly LocalizedString SoleSurvivorTitle = new() {
+        [MELocalization.INT] = "Sole Survivor",
+    };
     private static readonly LocalizedString ProudOfYouTitle = new() {
         [MELocalization.INT] = "... I'm Proud of You",
     };
@@ -365,6 +371,8 @@ public static partial class StoreCards
         Banner(MilanBannerId.Paragon, "MilanBanner_Paragon", MilanPlayerVariable.Banner_Paragon, ParagonTitle, "Banners.Paragon", CardRarity.Uncommon),
         Banner(MilanBannerId.Renegade, "MilanBanner_Renegade", MilanPlayerVariable.Banner_Renegade, RenegadeTitle, "Banners.Renegade", CardRarity.Uncommon),
         Banner(MilanBannerId.SpaceHamster, "MilanBanner_SpaceHamster", MilanPlayerVariable.Banner_SpaceHamster, SpaceHamsterTitle, "Banners.SpaceHamster", CardRarity.Rare),
+        Banner(MilanBannerId.FrontierDivision, "MilanBanner_FrontierDivision", MilanPlayerVariable.Banner_FrontierDivision, FrontierDivisionTitle, "Banners.FrontierDivision", CardRarity.Rare),
+        Banner(MilanBannerId.SoleSurvivor, "MilanBanner_SoleSurvivor", MilanPlayerVariable.Banner_SoleSurvivor, SoleSurvivorTitle, "Banners.SoleSurvivor", CardRarity.Rare),
 
         // These don't drop via store
         Banner(MilanBannerId.Cheeseburger, "MilanBanner_Cheeseburger", MilanPlayerVariable.Banner_Cheeseburger, CheeseburgerTitle, "Groups.Cheeseburger", CardRarity.Rare) with { Pools = [] },
