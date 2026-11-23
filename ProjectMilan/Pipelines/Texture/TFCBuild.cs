@@ -489,7 +489,7 @@ namespace ProjectMilan.Pipelines.Texture
         /// 6 or fewer, so a texture sitting at exactly 6 keeps the flag - nothing would move out of it, and it does need
         /// NeverStream while it stays package stored (streaming only works for external mips).
         /// </summary>
-        private static void ClearNeverStreamForExternalization(ExportEntry tex)
+        internal static void ClearNeverStreamForExternalization(ExportEntry tex)
         {
             var props = tex.GetProperties();
             // UI textures must stay package-resident, including after upscaling or format conversion.

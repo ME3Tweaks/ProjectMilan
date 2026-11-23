@@ -69,6 +69,8 @@ namespace ProjectMilan.Pipelines.Startups
             Banner(220, "FullTeam", 817847),
             // Alliance Mastery (675). Added now that there is art from N7HQ
             Banner((int)MilanBannerId.AllianceMastery, "MstrAlliance", 49875991),
+            // Synthetic Mastery (671). ME3 shipped the challenge and banner strings ("Geth Prime") but never the challenge
+            Banner((int)MilanBannerId.SyntheticMastery, "GethPrime", 814505),
         ];
     }
 }

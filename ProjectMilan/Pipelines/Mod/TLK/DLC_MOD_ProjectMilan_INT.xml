@@ -5,6 +5,8 @@
 	<!-- 11/09/2026 - Add Firebase Hydra's location. It was stripped from LE3 Basegame TLK -->
 	<String id="326824">Arvuna</String>
 
+	<!-- 11/22/2026 - Store purchase error no longer says to contact customer support -->
+	<String id="715826">Your purchase could not be completed. Please try again.</String>
 	<!-- Project Milan Strings -->
 	<String id="49875622">Project Milan DLC</String>
 	<String id="49875623">DLC_MOD_ProjectMilan</String>
