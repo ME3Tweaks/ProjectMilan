@@ -69,6 +69,9 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPMoon
 
         public override void PostCorrect(LevelSpecificPipeline pipeline)
         {
+            // BioP's PlayerStart_4 is NetworkID 143, but the BioD_MPMoon_Bas1 network it links to is 142, pawns can get stuck on it
+            FixPlayerStartNetworkIDs(pipeline, 142);
+
             foreach (var package in pipeline.LE3Packages.Values)
             {
                 FixContainerMaterialOverrides(package);

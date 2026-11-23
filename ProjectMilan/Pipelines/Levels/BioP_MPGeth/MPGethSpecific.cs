@@ -28,5 +28,11 @@ namespace ProjectMilan.Pipelines.Levels.BioP_MPGeth
             bin.BodySetup = newRb.UIndex;
             dreadGeth.WriteBinary(bin);
         }
+
+        public override void PostCorrect(LevelSpecificPipeline pipeline)
+        {
+            // BioP's PlayerStarts are NetworkID 33, but the BioD network they link to is 31 - Ravagers and others get stuck on these nodes
+            FixPlayerStartNetworkIDs(pipeline, 31);
+        }
     }
 }

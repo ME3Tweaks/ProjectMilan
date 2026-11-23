@@ -1,4 +1,5 @@
 ﻿using LegendaryExplorerCore.Packages;
+using LegendaryExplorerCore.Unreal;
 using ProjectMilanCore;
 using ProjectMilanCore.Config;
 
@@ -80,6 +81,24 @@ namespace ProjectMilan.Pipelines.Levels
         {
             MapListConfigWriter.RegisterFlashlightMap(pipeline.BioP);
             MilanLog.Information($"Weapon flashlights enabled on {pipeline.BioP}", customPrefix: pipeline.LogCategory);
+        }
+
+
+        /// <summary>
+        /// Sets every playerstart to the given network ID. Fixes Resurgence maps.
+        /// </summary>
+        /// <param name="pipeline"></param>
+        /// <param name="networkID"></param>
+        protected static void FixPlayerStartNetworkIDs(LevelSpecificPipeline pipeline, int networkID)
+        {
+            foreach (var package in pipeline.LE3Packages.Values)
+            {
+                foreach (var playerStart in package.Exports.Where(x => x.ClassName == "PlayerStart" && !x.IsDefaultObject))
+                {
+                    playerStart.WriteProperty(new IntProperty(networkID, "NetworkID"));
+                    MilanLog.Information($"Set {package.FileNameNoExtension} {playerStart.ObjectName.Instanced} NetworkID to {networkID}", customPrefix: pipeline.LogCategory);
+                }
+            }
         }
     }
 }
