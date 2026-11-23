@@ -7,7 +7,7 @@ public final exec function MilanCoverTapAction()
         return;
     }
     TryCoverSlip();
-    if (BioPlayerInput(Outer.PlayerInput).MilanSprintSharesCover())
+    if (BioPlayerInput(Outer.PlayerInput).SprintSharesCover())
     {
         TryForwardRoll();
     }

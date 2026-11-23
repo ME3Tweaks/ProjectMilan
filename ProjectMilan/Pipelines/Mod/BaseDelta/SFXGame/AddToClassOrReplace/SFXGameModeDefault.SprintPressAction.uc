@@ -2,7 +2,7 @@
 // OmniKey-Split - Roll behavior unless sprint/cover are on the same key (handled elsewhere in that case)
 public final exec function bool MilanSprintPressAction()
 {
-    if (BioPlayerInput(Outer.PlayerInput).MilanSprintSharesCover())
+    if (BioPlayerInput(Outer.PlayerInput).SprintSharesCover())
     {
         return FALSE;
     }

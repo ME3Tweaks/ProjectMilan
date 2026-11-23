@@ -26,7 +26,7 @@ public function RegisterInputOverride(string Alias, delegate<BioPlayerInput.Inpu
     if (Alias == "Shared_Action")
     {
         RegisterInputOverride("PC_Cover", InputDelegate, bExclusive, bPress);
-        if (!MilanSprintSharesCover())
+        if (!SprintSharesCover())
         {
             RegisterInputOverride("PC_Sprint", InputDelegate, bExclusive, bPress);
         }

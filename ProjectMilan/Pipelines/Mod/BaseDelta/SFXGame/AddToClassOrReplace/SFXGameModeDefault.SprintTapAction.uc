@@ -2,7 +2,7 @@
 // OmniKey-Split - Forward rold when sprinting (only if cover is on a different key)
 public final exec function MilanSprintTapAction()
 {
-    if (BioPawn(Outer.Pawn) == None || BioPawn(Outer.Pawn).bStorming || BioPlayerInput(Outer.PlayerInput).MilanSprintSharesCover())
+    if (BioPawn(Outer.Pawn) == None || BioPawn(Outer.Pawn).bStorming || BioPlayerInput(Outer.PlayerInput).SprintSharesCover())
     {
         return;
     }

@@ -6,5 +6,5 @@ public final function bool IsCoverKeyHeld()
     {
         return TRUE;
     }
-    return MilanIsAliasKeyHeld("PC_Cover") || MilanIsAliasKeyHeld("Shared_Action");
+    return IsAliasKeyHeld("PC_Cover") || IsAliasKeyHeld("Shared_Action");
 }

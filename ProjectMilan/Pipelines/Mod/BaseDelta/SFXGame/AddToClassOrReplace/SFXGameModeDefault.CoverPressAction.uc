@@ -8,8 +8,11 @@ public final exec function bool MilanCoverPressAction()
     }
     if (TryCoverAction())
     {
-        MilanCoverResumeStorm();
+        if (!BioPlayerInput(Outer.PlayerInput).SprintSharesCover() && BioPlayerInput(Outer.PlayerInput).IsAliasKeyHeld("PC_Sprint"))
+        {
+            SetTimer(0.2, FALSE, 'ResumeStormIfSprintHeld');
+        }
         return TRUE;
     }
-    return BioPlayerInput(Outer.PlayerInput).MilanSprintSharesCover() && TryRoll();
+    return BioPlayerInput(Outer.PlayerInput).SprintSharesCover() && TryRoll();
 }
