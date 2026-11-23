@@ -13,6 +13,7 @@ using ProjectMilan.Pipelines.Audio;
 using ProjectMilan.Pipelines.EntryMenu;
 using ProjectMilan.Pipelines.EntryMenu.MenuScenes;
 using ProjectMilan.Pipelines.Finalize;
+using ProjectMilan.Pipelines.Gear;
 using ProjectMilan.Pipelines.HeavyWeapons;
 using ProjectMilan.Pipelines.Init;
 using ProjectMilan.Pipelines.Kits;
@@ -118,6 +119,7 @@ namespace ProjectMilan
             (ECheckpointStage.Kits, "Kits", () => ShouldRunKitsPipeline),
             (ECheckpointStage.Weapons, "Weapons", () => ShouldRunWeaponsPipeline),
             (ECheckpointStage.HeavyWeapons, "HeavyWeapons", () => true), // Always runs
+            (ECheckpointStage.Gear, "Gear", () => true), // Always runs
             (ECheckpointStage.MP4Enemies, "MP4Enemies", () => ShouldRunWeaponsPipeline && Settings.RunMP4EnemiesPipeline),
             (ECheckpointStage.Levels, "Levels", () => ShouldRunLevelsPipeline),
             (ECheckpointStage.MenuScenes, "MenuScenes", () => ShouldRunLevelsPipeline),
@@ -190,7 +192,7 @@ namespace ProjectMilan
         /// checkpoints are never shipped, and a full rebuild is exactly the cost they exist to avoid. A change to one
         /// of those pipelines just makes a checkpoint taken at or after it stale - retake it.
         /// </summary>
-        public const int MIN_CHECKPOINT_VERSION = 35;
+        public const int MIN_CHECKPOINT_VERSION = 36;
         /// <summary>
         /// Prefix used for the console window title, so the current status is visible at a glance.
         /// </summary>
@@ -806,6 +808,7 @@ namespace ProjectMilan
         weaponsBuild:
             RunPipeline(ECheckpointStage.Weapons, ShouldRunWeaponsPipeline, SFXWeapons.RunPipeline, "Weapons"); // Builds DLC weapon packages
             RunPipeline(ECheckpointStage.HeavyWeapons, true, HeavyWeaponsPipeline.RunPipeline, "HeavyWeapons"); // Installs the prebuilt heavy weapon packages and registers their consumable classes
+            RunPipeline(ECheckpointStage.Gear, true, GearPipeline.RunPipeline, "Gear"); // Compiles our new gear into SFXMilanGear; the store registration in NonStartup adds its cards and config
 
             // This pipeline must come after weapons as it depends on Collector SMG.
             if (Settings.RunMP4EnemiesPipeline && !ShouldRunWeaponsPipeline)
