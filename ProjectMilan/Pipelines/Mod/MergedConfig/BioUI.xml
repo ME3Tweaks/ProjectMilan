@@ -401,6 +401,12 @@
 				<Value type="3">(AccomplishmentIndex=677, Parent=675)</Value>
 				<Value type="3">(AccomplishmentIndex=678, Parent=675)</Value>
 				<!-- END MILAN -->
+				<!-- MILAN CHANGE - Mgamerz - 11/21/2026 - Synthetic Mastery (671) -->
+				<Value type="3">(AccomplishmentIndex=671)</Value>
+				<Value type="3">(AccomplishmentIndex=672, Parent=671)</Value>
+				<Value type="3">(AccomplishmentIndex=673, Parent=671)</Value>
+				<Value type="3">(AccomplishmentIndex=674, Parent=671)</Value>
+				<!-- END MILAN -->
 				<Value type="3">(AccomplishmentIndex=580,Parent=121)</Value>
 				<Value type="3">(AccomplishmentIndex=588,Parent=122)</Value>
 				<Value type="3">(AccomplishmentIndex=593,Parent=121)</Value>

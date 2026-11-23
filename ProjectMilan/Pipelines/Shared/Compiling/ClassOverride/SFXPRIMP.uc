@@ -76,6 +76,12 @@ const MAX_POWER_EVOLVED_CHOICES = 6;
 const MAX_WEAPON_MODS = 2;
 const MAX_WEAPONS = 2;
 const MAX_POWERS = 6;
+// MILAN CHANGE - Mgamerz - 11/21/2026
+// Name limits, keep in step with MilanHost's Online/PlayerNamePolicy.hpp
+const MAX_PLAYER_NAME_LENGTH = 22;
+const MAX_CHARACTER_NAME_LENGTH = 15;
+const MAX_NAME_SCAN_LENGTH = 256;
+// END MILAN CHANGE
 
 var repnotify UniqueNetId KickVotePlayerId;
 var repnotify MPCharacterData CharacterData;
@@ -162,7 +168,32 @@ public simulated function PostBeginPlay()
 public event simulated function ReplicatedEvent(Name VarName)
 {
     local int i;
-    
+
+    // MILAN CHANGE - Mgamerz - 11/21/2026
+    // Client-side name sanitization
+    if (VarName == 'PlayerName')
+    {
+        PlayerName = SanitizePlayerName(PlayerName);
+        if (PlayerName == "")
+        {
+            PlayerName = GetFallbackPlayerName();
+        }
+    }
+    else if (VarName == 'DisplayName')
+    {
+        DisplayName = SanitizePlayerName(DisplayName);
+        if (DisplayName == "")
+        {
+            DisplayName = GetFallbackPlayerName();
+        }
+    }
+    else if (VarName == 'CharacterData')
+    {
+        // CharacterName is replicated but not used currently by Project Milan
+        // In the event we ever show their name... this will matter
+        CharacterData.CharacterName = SanitizeCharacterName(CharacterData.CharacterName);
+    }
+    // END MILAN CHANGE
     Super.ReplicatedEvent(VarName);
     if (VarName == 'CharacterData')
     {
@@ -648,6 +679,13 @@ public final simulated function SendCharacterDataToServer(optional bool bCharact
 }
 public reliable server function ServerSetCharacterSelection(MPCharacterData Data)
 {
+    // MILAN CHANGE - Mgamerz - 11/21/2026
+    // Sanitize remote player character names before replicating them
+    if (!IsLocalPlayerPRI())
+    {
+        Data.CharacterName = SanitizeCharacterName(Data.CharacterName);
+    }
+    // END MILAN CHANGE
     CharacterData = Data;
     OnCharacterChanged();
 }
@@ -804,6 +842,14 @@ public simulated function SetCharacterName(string CharacterName)
 }
 public simulated function SetComputerName(string sComputerName)
 {
+    // MILAN CHANGE - Mgamerz - 11/21/2026
+    // Sanitize player name
+    sComputerName = SanitizePlayerName(sComputerName);
+    if (sComputerName == "")
+    {
+        sComputerName = GetFallbackPlayerName();
+    }
+    // END MILAN CHANGE
     ComputerName = sComputerName;
     if (ComputerName == "Local Profile" || ComputerName == "Player")
     {
@@ -819,6 +865,117 @@ public simulated function SetComputerName(string sComputerName)
         ServerSetComputerName(sComputerName);
     }
 }
+// MILAN CHANGE - Mgamerz - 11/21/2026
+// Sanitize player name
+public event function SetPlayerName(string S)
+{
+    S = SanitizePlayerName(S);
+    if (S == "")
+    {
+        S = GetFallbackPlayerName();
+    }
+    Super.SetPlayerName(S);
+}
+public simulated final function bool IsLocalPlayerPRI()
+{
+    return PlayerController(Owner) != None && PlayerController(Owner).IsLocalPlayerController();
+}
+
+public simulated final function string GetFallbackPlayerName()
+{
+    return Class'GameInfo'.default.DefaultPlayerName $ PlayerID;
+}
+
+public static final function string SanitizePlayerName(string S)
+{
+    return SanitizeName(S, MAX_PLAYER_NAME_LENGTH);
+}
+
+public static final function string SanitizeCharacterName(string S)
+{
+    return SanitizeName(S, MAX_CHARACTER_NAME_LENGTH);
+}
+
+// Name sanitization
+// Drops disallowed characters, turns each run of spaces into one, trims both ends,
+// and stops at MaxLength. Empty when nothing usable is left.
+public static final function string SanitizeName(string S, int MaxLength)
+{
+    local string Result;
+    local int ScanLength;
+    local int Count;
+    local int Code;
+    local int i;
+    local bool bPendingSpace;
+
+    ScanLength = Min(Len(S), MAX_NAME_SCAN_LENGTH);
+    for (i = 0; i < ScanLength && Count < MaxLength; ++i)
+    {
+        Code = Asc(Mid(S, i, 1));
+        if (IsNameSpace(Code))
+        {
+            bPendingSpace = Count > 0;
+            continue;
+        }
+        if (!IsAllowedNameCharacter(Code))
+        {
+            continue;
+        }
+        if (bPendingSpace)
+        {
+            if (Count + 1 >= MaxLength)
+            {
+                break;
+            }
+            Result $= " ";
+            ++Count;
+            bPendingSpace = FALSE;
+        }
+        Result $= Chr(Code);
+        ++Count;
+    }
+    return Result;
+}
+
+// Utility methods - character code checks
+public static final function bool IsNameSpace(int Code)
+{
+    // 0020, 00A0, 1680, 2000-200A, 202F, 205F, 3000
+    return Code == 32 || Code == 160 || Code == 5760 || (Code >= 8192 && Code <= 8202) || Code == 8239 || Code == 8287 || Code == 12288;
+}
+
+public static final function bool IsAllowedNameCharacter(int Code)
+{
+    // Control characters: 0000-001F, 007F-009F
+    if (Code < 32 || (Code >= 127 && Code <= 159))
+    {
+        return FALSE;
+    }
+    // Invisible and direction-changing characters: 00AD, 034F, 061C, 115F, 1160, 17B4, 17B5,
+    // 180B-180E, 200B-200F, 2028-202E, 2060-206F, 3164, FEFF, FFA0
+    if (Code == 173 || Code == 847 || Code == 1564 || Code == 4447 || Code == 4448 || Code == 6068 || Code == 6069 || (Code >= 6155 && Code <= 6158) || (Code >= 8203 && Code <= 8207) || (Code >= 8232 && Code <= 8238) || (Code >= 8288 && Code <= 8303) || Code == 12644 || Code == 65279 || Code == 65440)
+    {
+        return FALSE;
+    }
+    // Combining marks and variation selectors: 0300-036F, 1AB0-1AFF, 1DC0-1DFF, 20D0-20FF, FE00-FE0F, FE20-FE2F
+    if ((Code >= 768 && Code <= 879) || (Code >= 6832 && Code <= 6911) || (Code >= 7616 && Code <= 7679) || (Code >= 8400 && Code <= 8447) || (Code >= 65024 && Code <= 65039) || (Code >= 65056 && Code <= 65071))
+    {
+        return FALSE;
+    }
+    // Surrogates and private use: D800-F8FF; specials: FFF0-FFFF
+    if ((Code >= 55296 && Code <= 63743) || Code >= 65520)
+    {
+        return FALSE;
+    }
+    // Technical symbols 2300-23FF; enclosed alphanumerics, box drawing, blocks, shapes, miscellaneous
+    // symbols, dingbats 2460-27BF; Braille 2800-28FF; symbols and arrows 2B00-2BFF; CJK emoji 3030, 303D, 3297, 3299
+    if ((Code >= 8960 && Code <= 9215) || (Code >= 9312 && Code <= 10175) || (Code >= 10240 && Code <= 10495) || (Code >= 11008 && Code <= 11263) || Code == 12336 || Code == 12349 || Code == 12951 || Code == 12953)
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
+// END MILAN CHANGE
 public simulated function SetKickVote(UniqueNetId KickVote)
 {
     ServerSetKickVote(KickVote);

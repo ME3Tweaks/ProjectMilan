@@ -521,7 +521,8 @@ defaultproperties
     srErrorServerAddress = $49875747
     srErrorSaveFailed = $49875748
     srErrorServerPassword = $49875753
-    nMaxNameLength = 32
+    // MILAN CHANGE - Mgamerz - 11/21/2026 - SFXPRIMP.MAX_PLAYER_NAME_LENGTH
+    nMaxNameLength = 22
     nMaxServerLength = 256
     nMaxPasswordLength = 64
     NetConfigMovie = GFxMovieInfo'GUI_SF_MilanNetConfig.NetworkRegistration'

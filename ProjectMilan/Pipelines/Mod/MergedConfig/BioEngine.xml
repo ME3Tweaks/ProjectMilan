@@ -1405,6 +1405,16 @@
 				<Value type="3">ALLIANCEMASTERY_4</Value>
 				<Value type="3">ALLIANCEMASTERY_4_PROGRESS</Value>
 				<!-- END MILAN -->
+				<!-- MILAN CHANGE - Mgamerz - 11/21/2026 - Synthetic Mastery -->
+				<Value type="3">SYNTHETICMASTERY</Value>
+				<Value type="3">SYNTHETICMASTERY_PROGRESS</Value>
+				<Value type="3">SYNTHETICMASTERY_1</Value>
+				<Value type="3">SYNTHETICMASTERY_1_PROGRESS</Value>
+				<Value type="3">SYNTHETICMASTERY_2</Value>
+				<Value type="3">SYNTHETICMASTERY_2_PROGRESS</Value>
+				<Value type="3">SYNTHETICMASTERY_3</Value>
+				<Value type="3">SYNTHETICMASTERY_3_PROGRESS</Value>
+				<!-- END MILAN -->
 				<Value type="3">OUTSIDERMASTERY_1</Value>
 				<Value type="3">OUTSIDERMASTERY_1_PROGRESS</Value>
 				<Value type="3">OUTSIDERMASTERY_2</Value>

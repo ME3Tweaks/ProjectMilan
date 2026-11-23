@@ -589,6 +589,12 @@
 				<Value type="3">(Index=677,Name=ALLIANCEMASTERY_3,Title=814518,Incomplete=814519,Complete=814519,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=ALLIANCEMASTERY,GrinderAccomplishmentName=ALLIANCEMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
 				<Value type="3">(Index=678,Name=ALLIANCEMASTERY_4,Title=814520,Incomplete=814521,Complete=814521,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=ALLIANCEMASTERY,GrinderAccomplishmentName=ALLIANCEMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
 				<!-- END MILAN -->
+				<!-- MILAN CHANGE - Mgamerz - 11/21/2026 - Synthetic Mastery (671)  -->
+				<Value type="3">(Index=671,Name=SYNTHETICMASTERY,Title=814503,Incomplete=814504,Complete=814504,PointValue=200,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=SYNTHETICMASTERY,bRepeatableChallenge=TRUE)</Value>
+				<Value type="3">(Index=672,Name=SYNTHETICMASTERY_1,Title=814506,Incomplete=814507,Complete=814507,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=SYNTHETICMASTERY,GrinderAccomplishmentName=SYNTHETICMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
+				<Value type="3">(Index=673,Name=SYNTHETICMASTERY_2,Title=814508,Incomplete=814509,Complete=814509,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=SYNTHETICMASTERY,GrinderAccomplishmentName=SYNTHETICMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
+				<Value type="3">(Index=674,Name=SYNTHETICMASTERY_3,Title=814510,Incomplete=814511,Complete=814511,PointValue=20,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=SYNTHETICMASTERY,GrinderAccomplishmentName=SYNTHETICMASTERY_PROGRESS,bRepeatableChallenge=TRUE)</Value>
+				<!-- END MILAN -->
 				<Value type="3">(Index=600,Name=WEEKLY1GROUP,Title=774519,PointValue=10,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=WEEKLY1GROUP,GrinderAccomplishmentName=WEEKEND_PROGRESS,bRepeatableChallenge=FALSE)</Value>
 				<Value type="3">(Index=601,Name=WEEKLY1,Title=796076,Incomplete=796077,Complete=796077,PointValue=0,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=WEEKLY1GROUP,GrinderAccomplishmentName=WEEKLY1GROUP_PROGRESS,bRepeatableChallenge=FALSE)</Value>
 				<Value type="3">(Index=602,Name=WEEKLY2GROUP,Title=774519,PointValue=10,Icon="GUI_MPImages_SMP.ChallengeNotifi",IsMultiplayerOnly=TRUE,ChallengeGroupName=WEEKLY2GROUP,GrinderAccomplishmentName=WEEKEND_PROGRESS,bRepeatableChallenge=FALSE)</Value>
@@ -1018,6 +1024,12 @@
 				<Value type="3">(Index=676,Name=ALLIANCEMASTERY_2_PROGRESS)</Value>
 				<Value type="3">(Index=677,Name=ALLIANCEMASTERY_3_PROGRESS)</Value>
 				<Value type="3">(Index=678,Name=ALLIANCEMASTERY_4_PROGRESS)</Value>
+				<!-- END MILAN -->
+				<!-- MILAN CHANGE - Mgamerz - 11/21/2026 - Synthetic Mastery (671)  -->
+				<Value type="3">(Index=671,Name=SYNTHETICMASTERY_PROGRESS)</Value>
+				<Value type="3">(Index=672,Name=SYNTHETICMASTERY_1_PROGRESS)</Value>
+				<Value type="3">(Index=673,Name=SYNTHETICMASTERY_2_PROGRESS)</Value>
+				<Value type="3">(Index=674,Name=SYNTHETICMASTERY_3_PROGRESS)</Value>
 				<!-- END MILAN -->
 				<Value type="3">(Index=600,Name=WEEKLY1GROUP_PROGRESS)</Value>
 				<Value type="3">(Index=601,Name=WEEKLY1_PROGRESS)</Value>
@@ -1636,6 +1648,26 @@
 				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPHosp2")</Value>
 				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,MapName="BioP_MPRoad2")</Value>
 				<!-- END MILAN -->
+				<!-- MILAN CHANGE - Mgamerz - 11/21/2026 - Synthetic Mastery (671)  -->
+				<Value type="3">(ChallengeType=CET_None,AccomplishmentProgressName=SYNTHETICMASTERY_PROGRESS)</Value>
+				<!-- Geth Waves Completed on every playable geth kit -->
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=SYNTHETICMASTERY_1_PROGRESS,PlayerKit="SoldierGeth")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=SYNTHETICMASTERY_1_PROGRESS,PlayerKit="EngineerGeth")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=SYNTHETICMASTERY_1_PROGRESS,PlayerKit="InfiltratorGeth")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=SYNTHETICMASTERY_1_PROGRESS,PlayerKit="SoldierGethDestroyer")</Value>
+				<!-- Geth Weapon Use on Geth Pulse Rifle, Geth Plasma Shotgun, Geth Plasma SMG, Geth Spitfire, Javelin -->
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=SYNTHETICMASTERY_2_PROGRESS,DamageSource=546169)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=SYNTHETICMASTERY_2_PROGRESS,DamageSource=560869)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=SYNTHETICMASTERY_2_PROGRESS,DamageSource=728037)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=SYNTHETICMASTERY_2_PROGRESS,DamageSource=814438)</Value>
+				<Value type="3">(ChallengeType=CET_DamageScore,AccomplishmentProgressName=SYNTHETICMASTERY_2_PROGRESS,DamageSource=551047)</Value>
+				<!-- Attican Traverse Defense (Dagger, Hydra) and their hazard variants, matching the MP5 string -->
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=SYNTHETICMASTERY_3_PROGRESS,MapName="BioP_MPDish")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=SYNTHETICMASTERY_3_PROGRESS,MapName="BioP_MPGeth")</Value>
+				<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=SYNTHETICMASTERY_3_PROGRESS,MapName="BioP_MPDish2")</Value>
+				<!-- Eventual hazard map variant -->
+				<!--<Value type="3">(ChallengeType=CET_WavesCompleted,AccomplishmentProgressName=SYNTHETICMASTERY_3_PROGRESS,MapName="BioP_MPGeth2")</Value>-->
+				<!-- END MILAN -->
 				<Value type="3">(ChallengeType=CET_None,AccomplishmentProgressName=WEEKLY1GROUP_PROGRESS, EventStartTime=1350072000, EventEndTime=1350907200)</Value>
 				<Value type="3">(ChallengeType=CET_None,AccomplishmentProgressName=WEEKLY2GROUP_PROGRESS,EventStartTime=1350845952,EventEndTime=1351537280)</Value>
 				<Value type="3">(ChallengeType=CET_None,AccomplishmentProgressName=WEEKLY3GROUP_PROGRESS,EventStartTime=1351493888,EventEndTime=1352141952)</Value>
@@ -2100,6 +2132,12 @@
 				<Value type="3">(AccomplishmentName=ALLIANCEMASTERY_3,AccomplishmentProgressName=ALLIANCEMASTERY_3_PROGRESS,Goal=500000,Interval=125000,Title=814518,Description=814519)</Value>
 				<Value type="3">(AccomplishmentName=ALLIANCEMASTERY_4,AccomplishmentProgressName=ALLIANCEMASTERY_4_PROGRESS,Goal=200,Interval=50,Title=814520,Description=814521)</Value>
 				<!-- END MILAN -->
+				<!-- MILAN CHANGE - Mgamerz - 11/21/2026 - Synthetic Mastery (671). Using shipped strings that were unused in MP5 -->
+				<Value type="3">(AccomplishmentName=SYNTHETICMASTERY,AccomplishmentProgressName=SYNTHETICMASTERY_PROGRESS,Goal=3,Interval=1,Title=814503,Description=814504)</Value>
+				<Value type="3">(AccomplishmentName=SYNTHETICMASTERY_1,AccomplishmentProgressName=SYNTHETICMASTERY_1_PROGRESS,Goal=200,Interval=50,Title=814506,Description=814507)</Value>
+				<Value type="3">(AccomplishmentName=SYNTHETICMASTERY_2,AccomplishmentProgressName=SYNTHETICMASTERY_2_PROGRESS,Goal=500000,Interval=125000,Title=814508,Description=814509)</Value>
+				<Value type="3">(AccomplishmentName=SYNTHETICMASTERY_3,AccomplishmentProgressName=SYNTHETICMASTERY_3_PROGRESS,Goal=200,Interval=50,Title=814510,Description=814511)</Value>
+				<!-- END MILAN -->
 				<Value type="3">(AccomplishmentName=WEEKLY1GROUP,AccomplishmentProgressName=WEEKLY1GROUP_PROGRESS,Goal=1,Interval=1,Title=774519,Description=770839)</Value>
 				<Value type="3">(AccomplishmentName=WEEKLY1,AccomplishmentProgressName=WEEKLY1_PROGRESS,Goal=1,Interval=0,Title=796076,Description=796077)</Value>
 				<Value type="3">(AccomplishmentName=WEEKLY2GROUP,AccomplishmentProgressName=WEEKLY2GROUP_PROGRESS,Goal=1,Interval=1,Title=774519,Description=770839)</Value>
@@ -2196,6 +2234,9 @@
 				<Value type="3">(RewardIDGranted=206, AccomplishmentName=RECKONINGMASTERY_1GROUP); GRANT A BANNER</Value>
 				<!-- MILAN CHANGE - Mgamerz - 11/19/2026 - Alliance Mastery (675) -->
 				<Value type="3">(RewardIDGranted=259, AccomplishmentName=ALLIANCEMASTERY)</Value>
+				<!-- END MILAN -->
+				<!-- MILAN CHANGE - Mgamerz - 11/21/2026 - Synthetic Mastery (671): Geth Prime banner -->
+				<Value type="3">(RewardIDGranted=271, AccomplishmentName=SYNTHETICMASTERY)</Value>
 				<!-- END MILAN -->
 				<Value type="3">(AccomplishmentName=WEEKLY1GROUP, EntitlementIDGranted=1500101, bUseNucleusCheck=TRUE )</Value>
 				<Value type="3">(AccomplishmentName=WEEKLY2GROUP, EntitlementIDGranted=1500102, bUseNucleusCheck=TRUE )</Value>

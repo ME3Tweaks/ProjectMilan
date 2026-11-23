@@ -240,7 +240,17 @@ private function AS_ControllerFaceButton(string button)
 public final function ConfirmButtonPressed()
 {
     local ECharacterNameResult eResult;
-    
+    local string CleanName;
+
+    // MILAN CHANGE - Mgamerz - 11/21/2026
+    // Sanitize user names
+    CleanName = Class'SFXPRIMP'.static.SanitizeCharacterName(SelectedCharacterName);
+    if (CleanName != SelectedCharacterName)
+    {
+        SelectedCharacterName = CleanName;
+        AS_RefreshCharacterName(SelectedCharacterName);
+    }
+    // END MILAN CHANGE
     if (SelectedCharacterName == GetUIString(srDefaultPlaceholderName))
     {
         eResult = ECharacterNameResult.ECharacterNameResult_NotUnique;
@@ -298,17 +308,20 @@ public final function KeyboardNameEntryComplete(bool bOK, const string sName)
     
     if (bOK)
     {
-        if (sName == "")
+        // MILAN CHANGE - Mgamerz - 11/21/2026
+        // Sanitize username - if empty, force keyboard back open
+        CharacterName = Class'SFXPRIMP'.static.SanitizeCharacterName(Repl(sName, ";", "", FALSE));
+        if (CharacterName == "")
         {
             Keyboard.DisplayKeyboard(srNameTitle, $0, 0, nMaxNameLength, SelectedCharacterName);
         }
         else
         {
-            CharacterName = Repl(sName, ";", "", FALSE);
             SetCharacterName(CharacterName);
             AS_RefreshCharacterName(CharacterName);
             Keyboard = None;
         }
+        // END MILAN CHANGE
     }
 }
 public function bool IsInDeployFlow()

@@ -106,6 +106,9 @@ public enum MilanPlayerVariable
     HeavyUnlock_GrenadeLauncherHidden = 808,
     HeavyUnlock_Firestorm = 809,
     HeavyUnlock_FirestormHidden = 810,
+
+    // New gear cards (GearPipeline)
+    Card_GearRegen = 820,
 }
 
 /// <summary>
@@ -189,6 +192,8 @@ public enum MilanBannerId
 
     // Internal only
     Cheeseburger = 270,
+
+    SyntheticMastery = 271,
 }
 
 /// <summary>
