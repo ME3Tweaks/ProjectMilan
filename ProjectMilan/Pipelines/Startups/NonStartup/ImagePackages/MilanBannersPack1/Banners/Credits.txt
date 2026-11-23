@@ -3,3 +3,4 @@ JOLTBOLT Drawings
 Spookable
 beckaboo
 Rey
+Strider
