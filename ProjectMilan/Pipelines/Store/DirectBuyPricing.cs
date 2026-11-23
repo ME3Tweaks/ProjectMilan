@@ -36,30 +36,36 @@ namespace ProjectMilan.Pipelines.Store
         public const string Banner = "Banner";
 
         /// <summary>
-        /// Match consumables and supplies are sold in threes.
+        /// Match consumables are sold in threes
         /// </summary>
         private const int ConsumableBundleSize = 3;
 
+        /// <summary>
+        /// Supplies are sold in packs of six. This way a single purchase covers an entire round when your consumable count is maxed out.
+        /// </summary>
+        private const int SupplyBundleSize = 6;
+
         public static IReadOnlyList<PriceGroup> GetPriceGroups() =>
         [
-            new(Weapon, [15000, 40000, 100000, 250000], [1500, 4000, 10000, 25000]),
-            new(HeavyWeapon, [15000, 40000, 100000, 250000], [1500, 4000, 10000, 25000]),
-            new(WeaponMod, [10000, 25000, 60000, 150000], [1000, 2500, 6000, 15000]),
-            new(Character, [20000, 50000, 120000, 300000], [0, 0, 0, 0]),
-            new(MatchConsumable, [2000, 4000, 10000, 25000], [0, 0, 0, 0], ConsumableBundleSize),
-            new(Gear, [20000, 40000, 80000, 150000], [2000, 4000, 8000, 15000]),
-            new(Supply, [3000, 3000, 3000, 3000], [0, 0, 0, 0], ConsumableBundleSize),
-            new(Capacity, [50000, 50000, 50000, 50000], [25000, 25000, 25000, 25000]),
-            new(Respec, [50000, 50000, 50000, 50000], [0, 0, 0, 0]),
-            new(Banner, [10000, 25000, 50000, 100000], [0, 0, 0, 0]),
+            // Rarity - Common, Uncommon, Rare, UltraRare
+            // new (Category, [Cost per rarity], [Cost per Rank], [Optional bundle count])
+            new(Weapon,            [15000, 40000, 100000, 250000], [1500, 4000, 10000, 25000]),
+            new(HeavyWeapon,       [15000, 40000, 100000, 250000], [1500, 4000, 10000, 25000]),
+            new(WeaponMod,         [10000, 25000, 60000, 150000],  [1000, 2500, 6000, 15000]),
+            new(Character,         [20000, 50000, 120000, 300000], [0, 0, 0, 0]), // These don't have ranks in the level up sense
+            new(MatchConsumable,   [2000, 4000, 10000, 25000],     [0, 0, 0, 0], ConsumableBundleSize), // These don't have ranks in the level up sense
+            new(Gear,              [20000, 40000, 80000, 150000],  [2000, 4000, 8000, 15000]),
+            new(Supply,            [3000, 3000, 3000, 3000],       [0, 0, 0, 0], SupplyBundleSize), // Supplies don't have ranks
+            new(Capacity,          [50000, 50000, 50000, 50000],   [25000, 25000, 25000, 25000]),
+            new(Respec,            [50000, 50000, 50000, 50000],   [0, 0, 0, 0]), // These don't have ranks
+            new(Banner,            [10000, 25000, 50000, 100000],  [0, 0, 0, 0]), // These don't have ranks
         ];
 
         /// <summary>
-        /// Per-card prices that replace the card's group price: UniqueName -> (Cost, CostPerRank). Empty for now; for
+        /// Per-card prices that replace the card's group price: UniqueName -> (Cost, CostPerRank). Used for edge case
         /// cards that are worth much more or less than the rest of their rarity.
         /// </summary>
-        public static IReadOnlyDictionary<string, (int Cost, int CostPerRank)> GetPriceOverrides() =>
-            new Dictionary<string, (int, int)>(StringComparer.OrdinalIgnoreCase);
+        public static IReadOnlyDictionary<string, (int Cost, int CostPerRank)> GetPriceOverrides() => new Dictionary<string, (int, int)>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The price group of a card, from its GUIType.
@@ -76,7 +82,7 @@ namespace ProjectMilan.Pipelines.Store
             "capacity" => Capacity,
             "respec" => Respec,
             "banner" => Banner,
-            _ => throw new Exception($"Card {card.UniqueName} has GUIType {card.GUIType}, which has no Direct Buy price group"),
+            _ => throw new Exception($"Card {card.UniqueName} has GUIType {card.GUIType} which does not exist!"),
         };
 
         public static string SerializePriceGroup(PriceGroup group) =>
