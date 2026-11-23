@@ -3,6 +3,7 @@ using LegendaryExplorerCore.Packages;
 using ProjectMilanCore.Utility;
 using ProjectMilanCore;
 using ProjectMilanCore.Config.Store;
+using ProjectMilan.Pipelines.Gear;
 using ProjectMilan.Pipelines.HeavyWeapons;
 
 namespace ProjectMilan.Pipelines.Store
@@ -43,6 +44,7 @@ namespace ProjectMilan.Pipelines.Store
             var catalog = new StoreCatalog();
             catalog.Cards.AddRange(StoreCards.All);
             HeavyWeaponStoreRegistration.Configure(catalog);
+            GearStoreRegistration.Configure(catalog);
             catalog.Packs.AddRange(StorePacks.GetAll());
             var unassignedIds = MilanIds.FindUnassignedIds(catalog).ToList();
             if (unassignedIds.Count > 0)
@@ -76,8 +78,8 @@ namespace ProjectMilan.Pipelines.Store
                 bannerType = MilanPipelinesShared.AssignTLK(BannerCardType);
                 bannerDescription = MilanPipelinesShared.AssignTLK(BannerCardDescription);
             }
-            catalog.CommitBannerConfig(game, MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine"),
-                MilanPipelinesShared.ConfigBundle.GetAsset("BioUI"), bannerType, bannerDescription, bannerImages);
+            catalog.CommitBannerConfig(game, MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine"), MilanPipelinesShared.ConfigBundle.GetAsset("BioUI"), bannerType, bannerDescription, bannerImages);
+            StoreDirectBuy.Commit(catalog, MilanPipelinesShared.ConfigBundle.GetAsset("BioUI"), bannerDescription, builtImages, dynamicObjects);
             foreach (var warning in warnings)
             {
                 MilanLog.Warning(warning, customPrefix: LOG_CATEGORY);
