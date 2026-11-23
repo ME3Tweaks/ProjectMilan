@@ -61,6 +61,10 @@ namespace ProjectMilan.Pipelines.Store
         private static readonly LocalizedString RequiresText = new() {
             [MELocalization.INT] = "Requires <CUSTOM0>.",
         };
+        // Bundled offers. <CUSTOM0> is the name, <CUSTOM1> the count.
+        private static readonly LocalizedString BundleNameText = new() {
+            [MELocalization.INT] = "<CUSTOM0> x<CUSTOM1>",
+        };
         private static readonly LocalizedString RespecDescription = new() {
             [MELocalization.INT] = "Resets one character's powers, allowing their power points to be reassigned.",
         };
@@ -112,17 +116,20 @@ namespace ProjectMilan.Pipelines.Store
                 }
             }
 
-            // Achievement banners cannot be purchased
-            var achievementBanners = StoreCards.AchievementBanners.Select(b => b.UniqueName).ToHashSet(StringComparer.OrdinalIgnoreCase);
             var offers = new List<(int Category, StoreCard Card)>();
             foreach (var card in catalog.Cards)
             {
-                if (card.Kind == ReinforcementKind.Credits || achievementBanners.Contains(card.UniqueName))
+                if (card.Kind == ReinforcementKind.Credits)
                 {
                     continue;
                 }
                 // Cards that can't drop aren't sold
                 if (card.Pools.Count == 0)
+                {
+                    continue;
+                }
+                // Buying these would empty their reward pack
+                if (IsPackExclusive(catalog, card))
                 {
                     continue;
                 }
@@ -146,10 +153,22 @@ namespace ProjectMilan.Pipelines.Store
             ReplaceArray(section, "pricegroups", DirectBuyPricing.GetPriceGroups().Select(DirectBuyPricing.SerializePriceGroup));
             ReplaceArray(section, "priceoverrides", DirectBuyPricing.GetPriceOverrides().Select(o => DirectBuyPricing.SerializePriceOverride(o.Key, o.Value.Cost, o.Value.CostPerRank)));
             SetValue(section, "srrequires", MilanPipelinesShared.AssignTLK(RequiresText));
+            SetValue(section, "srbundlename", MilanPipelinesShared.AssignTLK(BundleNameText));
             // Read by the movie via GetIniString
             SetValue(section, "srcreditstitle", 346393);
             SetValue(section, "srcosttitle", 341340);
             MilanLog.Information($"Direct Buy: {offers.Count} cards ({rows.Count} offer rows) in {categories.Count} categories", customPrefix: LOG_CATEGORY);
+        }
+
+        /// <summary>
+        /// Whether the card only drops from one-slot packs whose pool holds just that card
+        /// </summary>
+        private static bool IsPackExclusive(StoreCatalog catalog, StoreCard card)
+        {
+            var pools = card.Pools.Select(p => p.Pool).ToHashSet();
+            var packs = catalog.Packs.Where(pack => pack.Contents.Any(s => s.Pools.Any(p => pools.Contains(p.Pool)) || (s.BackupPool != null && pools.Contains(s.BackupPool)))).ToList();
+            return packs.Count > 0 && packs.All(pack => pack.Contents is [{ Pools: [var only], BackupPool: null }]
+                && catalog.Cards.All(c => c == card || c.Pools.All(p => p.Pool != only.Pool)));
         }
 
         /// <summary>
