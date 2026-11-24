@@ -163,10 +163,6 @@ public event function OnClose()
 
 public event function stringref GetBButtonText()
 {
-    if (Pages.Length > 0 && Pages.Length == 1 && Pages[0].Data.m_srBText != 0)
-    {
-        return Pages[0].Data.m_srBText;
-    }
     return srBack;
 }
 
@@ -221,13 +217,16 @@ public function ExExitStore()
     {
         return;
     }
-    PageIndex = Pages.Length - 1;
-    Item = StoreItems[RowIndex];
-    if (Item.ItemType == EItemType.TYPE_RETURN)
+    if (CurrentCategory >= 0)
     {
-        ExExitStore();
+        CurrentCategory = -1;
+        RefreshStoreGUI();
+        return;
     }
-    else if (Item.ItemType == EItemType.TYPE_NESTEDCATEGORY && !Item.ChoiceEntry.bDisabled)
+    bClosing = TRUE;
+    Close();
+}
+
 private final function SFXGAWReinforcementManager GetGAWManager()
     {
     local SFXLocalPlayer LP;
@@ -414,6 +413,29 @@ private final function bool IsOfferShown(int OfferIndex)
 {
     return !Offers[OfferIndex].bLevel || Offers[OfferIndex].Rank == GetOfferRank(OfferIndex);
 }
+
+// Fills the custom tokens for the next string interpolation
+// <CUSTOM2> is how many one purchase gives (bundle size)
+private final function SetRankTokens(int Rank, optional int Quantity = 1)
+{
+    ClearCustomTokens();
+    SetCustomToken(0, Class'SFXWeaponUIDataManager'.static.GetRomanNumeral(Rank));
+    SetCustomToken(1, string(Rank));
+    SetCustomToken(2, string(Quantity));
+}
+
+private final function int GetPriceGroupIndex(int OfferIndex)
+{
+    local int GroupIndex;
+
+    for (GroupIndex = 0; GroupIndex < PriceGroups.Length; ++GroupIndex)
+    {
+        if (PriceGroups[GroupIndex].Group == Offers[OfferIndex].PriceGroup)
+        {
+            return GroupIndex;
+        }
+    }
+    return -1;
 }
 
 private final function int GetOfferBundleSize(int OfferIndex)
@@ -459,6 +481,81 @@ private final function string GetOfferName(int OfferIndex)
     return Result;
 }
 
+private final function bool IsOfferLocked(int OfferIndex)
+{
+    return Offers[OfferIndex].Requires != "" && Class'SFXEngine'.static.GetSFXEngine().GetPlayerVariable(Name(Offers[OfferIndex].Requires)) <= 0;
+}
+
+private final function string GetOfferDescription(int OfferIndex)
+{
+    local string Result;
+
+    Result = GetOfferBaseDescription(OfferIndex);
+    if (IsOfferLocked(OfferIndex))
+    {
+        ClearCustomTokens();
+        SetCustomToken(0, GetUIString(Offers[OfferIndex].RequiresName));
+        if (Result != "")
+        {
+            Result $= "\n\n";
+        }
+        Result $= GetTokenisedString(srRequires);
+        ClearCustomTokens();
+    }
+    return Result;
+}
+
+private final function string GetKitDescription(int OfferIndex)
+{
+    local string Result;
+    local int LineIndex;
+
+    for (LineIndex = 0; LineIndex < Offers[OfferIndex].KitStrings.Length; ++LineIndex)
+    {
+        if (Offers[OfferIndex].KitStrings[LineIndex] == 0)
+        {
+            continue;
+        }
+        // Insert a new line to match card description
+        if (LineIndex >= 2 && LineIndex <= 4)
+        {
+            Result $= "\n";
+        }
+        Result $= GetUIString(Offers[OfferIndex].KitStrings[LineIndex]) $ "\n";
+    }
+    return Result;
+}
+
+private final function string GetOfferBaseDescription(int OfferIndex)
+{
+    local string Result;
+    local int TokenIndex;
+
+    if (Offers[OfferIndex].KitStrings.Length > 0)
+    {
+        return GetKitDescription(OfferIndex);
+    }
+    if (Offers[OfferIndex].GUIDescription == 0)
+    {
+        return "";
+    }
+    if (Offers[OfferIndex].DescTokens.Length > 0)
+    {
+        ClearCustomTokens();
+        for (TokenIndex = 0; TokenIndex < Offers[OfferIndex].DescTokens.Length; ++TokenIndex)
+        {
+            SetCustomToken(TokenIndex, Offers[OfferIndex].DescTokens[TokenIndex]);
+        }
+    }
+    else
+    {
+        SetRankTokens(GetOfferRank(OfferIndex));
+    }
+    Result = GetTokenisedString(Offers[OfferIndex].GUIDescription);
+    ClearCustomTokens();
+    return Result;
+}
+
 // The first offer in a category, or -1 if it has none
 private final function int GetFirstOffer(int CategoryIndex)
 {
@@ -473,6 +570,23 @@ private final function int GetFirstOffer(int CategoryIndex)
     }
     return -1;
 }
+
+// Adds a row to the store GUI
+private final function AddRow(int RowIndex, string RowName, string Description, string Cost, string Image, bool bSelected, bool bDisabled, bool bNested)
+{
+    local SFXGameChoiceGUIData.EChoiceDisplayType DisplayType;
+
+    if (bNested)
+    {
+        DisplayType = EChoiceDisplayType.EChoiceDisplayType_Nested;
+    }
+    else
+    {
+        DisplayType = EChoiceDisplayType.EChoiceDisplayType_Normal;
+    }
+    ASAddChoiceEntry(RowIndex, RowName, "", "", Description, Cost, 0, 0, "", Image, bSelected, bDisabled, DisplayType, "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0);
+}
+
 public function RefreshStoreGUI()
 {
     local int Index;
@@ -529,10 +643,6 @@ public function RefreshStoreGUI()
         {
             AddRow(Index, GetOfferName(RowEntries[Index]), GetOfferDescription(RowEntries[Index]), GetOfferCostText(RowEntries[Index]), LoadRowImage(Offers[RowEntries[Index]].Image), Index == Selection, IsOfferLocked(RowEntries[Index]) || GetOfferCost(RowEntries[Index]) < 0, FALSE);
         }
-        ASAddChoiceEntry(RowIndex, ChoiceName, GetUIString(Choice.srChoiceTitle), GetUIString(Choice.srChoiceImageTitle),
-            ChoiceDescription, Cost, int(Choice.ChoiceColor), int(Choice.eResource), Choice.sActionText, Item.LargeImage,
-            RowIndex == Pages[PageIndex].Selection, bDisabled, Choice.eDisplayType,
-            "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0);
     }
     if (!bStageInitialized)
     {
