@@ -186,6 +186,45 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
             },
+            // M-100 Grenade Launcher
+            new()
+            {
+                Id = MilanHeavyWeaponId.GrenadeLauncher,
+                HiddenId = MilanHeavyWeaponId.GrenadeLauncherHidden,
+                UnlockName = "MilanHeavy_GrenadeLauncher",
+                HiddenUnlockTitle = new LocalizedString {
+                    [MELocalization.INT] = "M-100 Grenade Launcher (Hidden)",
+                },
+                UnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_GrenadeLauncher,
+                HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_GrenadeLauncherHidden,
+                Rarity = "rare",
+                DisplayOrder = 40,
+                ClassPath = $"{MilanPackages.SFXGameContentMilan}.SFXWeapon_Heavy_ConsumableGrenadeLauncher",
+                Name = 212281,
+                Description = 338224,
+                ShortDescription = 339325,
+                Image = "GUI_Codex_Weapons_Images.Weapons.hvy_grenade_512x256",
+                NotificationImage = "GUI_Icons.Weapons.hvy_grenade_256x128",
+                IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
+                IconIndex = 15,
+            },
+            // M-451 Firestorm
+            new()
+            {
+                Id = MilanHeavyWeaponId.Firestorm,
+                HiddenId = MilanHeavyWeaponId.FirestormHidden,
+                UnlockName = "MilanHeavy_Firestorm",
+                HiddenUnlockTitle = new LocalizedString {
+                    [MELocalization.INT] = "M-451 Firestorm (Hidden)",
+                },
+                UnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_Firestorm,
+                HiddenUnlockPlayerVariableId = MilanPlayerVariable.HeavyUnlock_FirestormHidden,
+                Rarity = "rare",
+                DisplayOrder = 50,
+                ClassPath = $"{MilanPackages.SFXGameContentMilan}.SFXWeapon_Heavy_ConsumableFirestorm",
+                InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Flamethrower_Player",
+                IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
+            },
         ];
 
         /// <summary>
@@ -220,6 +259,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 
             }
 
+            CompilePreparedClasses(package, consumableClasses);
             GenerateHiddenVariants(package, consumableClasses);
             HeavyWeaponCloakMaterials.Apply(package);
 
@@ -340,6 +380,39 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             if (log.HasErrors)
             {
                 throw new InvalidOperationException($"Cannot compile heavy resolver: {string.Join(Environment.NewLine, log.AllErrors)}");
+            }
+        }
+
+        private static void CompilePreparedClasses(IMEPackage package, IEnumerable<ExportEntry> consumables)
+        {
+            var sources = consumables.Select(weaponClass => (Class: weaponClass, Path: Path.Combine(SourceFolder, "Classes", weaponClass.ObjectName.Name + ".uc")))
+                .Where(source => File.Exists(source.Path)).ToList();
+            if (sources.Count == 0)
+            {
+                return;
+            }
+
+            using var cache = MilanShared.GetMPCommonTieredPackageCache().ChainNewCache(debugName: $"Heavy weapon classes ({package.FileNameNoExtension})");
+            var options = new UnrealScriptOptionsPackage
+            {
+                Cache = cache,
+                CustomFileResolver = MilanShared.LE3PackageResolver,
+                MissingObjectResolver = MilanShared.MissingObjectResolver,
+            };
+            using var library = new FileLib(package);
+            foreach (var (weaponClass, sourcePath) in sources)
+            {
+                if (!library.Initialize(options))
+                {
+                    throw new InvalidOperationException($"Cannot initialize {package.FileNameNoExtension}: {string.Join(Environment.NewLine, library.InitializationLog.AllErrors)}");
+                }
+                var (_, log) = UnrealScriptCompiler.CompileClass(package, File.ReadAllText(sourcePath), library, options, export: weaponClass, parent: weaponClass.Parent, intendedClassName: weaponClass.ObjectName.Name);
+                if (log.HasErrors)
+                {
+                    throw new InvalidOperationException($"Cannot compile {weaponClass.InstancedFullPath}: {string.Join(Environment.NewLine, log.AllErrors)}");
+                }
+                MilanLog.Information($"Compiled {weaponClass.InstancedFullPath} from {Path.GetFileName(sourcePath)}", customPrefix: LOG_CATEGORY);
+            }
         }
 
         private static void GenerateHiddenVariants(IMEPackage package, IEnumerable<ExportEntry> consumables)

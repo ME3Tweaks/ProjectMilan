@@ -14,6 +14,22 @@ var transient bool bHiddenVariantStowed;
 var transient bool bHiddenVariantRequestedHidden;
 // END MILAN CHANGE
 
+// MILAN CHANGE - Mgamerz - 11/21/2026
+// Subclasses can change their ammo scaling
+var name ScaledHeavyAmmoFamily;
+var config int HeavyAmmoRoundsPerCharge;
+
+public final simulated function bool UsesScaledHeavyAmmo()
+{
+    return ScaledHeavyAmmoFamily != 'None';
+}
+
+public final simulated function int GetHeavyAmmoRoundsPerCharge()
+{
+    return Clamp(HeavyAmmoRoundsPerCharge, 1, 1000);
+}
+// END MILAN CHANGE
+
 public simulated function int AddAmmo(int Amount)
 {
     return 0;
