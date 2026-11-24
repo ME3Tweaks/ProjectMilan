@@ -199,12 +199,25 @@ public event function bool GetWeaponDataStats(Name WeaponClassPath, out array<SF
 
 public function ExBuy(int RowIndex)
 {
-    local int PageIndex;
-    local SFXGUIData_Store.StoreItemData Item;
-    local Class<SFXGUIData_Store> CategoryClass;
-    local SFXGUIData_Store CategoryData;
+    if (bClosing || PendingOffer >= 0 || RowIndex < 0 || RowIndex >= RowEntries.Length || !IsNewAction())
+    {
+        return;
+    }
+    if (CurrentCategory < 0)
+    {
+        CategoryListSelection = RowIndex;
+        OfferListSelection = 0;
+        CurrentCategory = RowEntries[RowIndex];
+        RefreshStoreGUI();
+        return;
+    }
+    OfferListSelection = RowIndex;
+    StartPurchase(RowEntries[RowIndex]);
+}
 
-    if (bClosing || Pages.Length == 0 || RowIndex < 0 || RowIndex >= StoreItems.Length)
+public function ExExitStore()
+    {
+    if (bClosing || PendingOffer >= 0 || !IsNewAction())
     {
         return;
     }
@@ -218,15 +231,49 @@ public function ExBuy(int RowIndex)
     {
         CategoryClass = Class<SFXGUIData_Store>(Class'SFXEngine'.static.GetSeekFreeObject(Item.ItemClassName, Class'Class'));
         if (CategoryClass != None)
+private final function int GetCredits()
         {
-            CategoryData = new (Self) CategoryClass;
-            if (CategoryData != None)
+    local SFXSaveManagerMP SaveManager;
+
+    SaveManager = Class'SFXEngine'.static.GetSFXEngine().MPSaveManager;
+    if (SaveManager == None)
             {
-                Pages[PageIndex].Selection = RowIndex;
-                PushPage(CategoryData);
+        return 0;
             }
+    return SaveManager.GetCredits();
         }
+
+// Opens the confirmation dialog for an offer
+private final function StartPurchase(int OfferIndex)
+{
+    local BioSFHandler_MessageBox ConfirmationBox;
+    local BioMessageBoxOptionalParams Params;
+    local string Message;
+
+    PendingCost = GetOfferCost(OfferIndex);
+    PendingUnits = GetOfferUnits(OfferIndex);
+    if (IsOfferLocked(OfferIndex) || PendingCost < 0 || PendingUnits <= 0 || PendingCost > GetCredits())
+    {
+        PlayGuiSound('Error');
+        return;
     }
+    PendingOffer = OfferIndex;
+    PendingName = GetOfferName(OfferIndex);
+    PendingImage = Offers[OfferIndex].Image;
+    PlayGuiSound('MPStorePurchase');
+    SetCustomToken(0, PendingName);
+    Message = GetUIString(srPurchaseConfirmation, TRUE);
+    ClearCustomTokens();
+    Params.srAText = srPurchase;
+    Params.srBText = srCancel;
+    ConfirmationBox = Class'SFXGUIInteraction'.static.GetInstance().CreateMessageBox(GetPC());
+    if (ConfirmationBox == None)
+    {
+        PendingOffer = -1;
+        return;
+    }
+    ConfirmationBox.SetInputDelegate(OnPurchaseConfirmed);
+    ConfirmationBox.DisplayMessageBoxEx(Message, Params);
 }
 
 public function ExExitStore()
@@ -238,11 +285,36 @@ public function ExExitStore()
     if (Pages.Length > 1)
     {
         Pages.Remove(Pages.Length - 1, 1);
+public function OnPurchaseSaved(int nResult)
+{
+    PendingOffer = -1;
+    if (nResult != 0 && nResult != -1)
+    {
+        WarnInternal("Direct Buy: purchase saving failed! SaveRecords result:"@ nResult);
+        ShowPurchaseError();
+        return;
+    }
+    ShowPurchaseNotification();
         RefreshStoreGUI();
+}
         return;
     }
     bClosing = TRUE;
     Close();
+private final function ShowPurchaseError()
+{
+    local BioMessageBoxOptionalParams Params;
+
+    Params.bNoFade = TRUE;
+    Params.srAText = srOK;
+    Class'SFXGUIInteraction'.static.GetInstance().QueueNamedMessageBox('DirectBuyError', 2, srPurchaseError, Params, OnPurchaseErrorClosed);
+    RefreshStoreGUI();
+}
+
+public function OnPurchaseErrorClosed(bool bAPressed, int nContext)
+{
+    Class'SFXGUIInteraction'.static.GetInstance().RemoveNamedMessageBox('DirectBuyError', GetPC());
+}
 }
 
 public function RefreshStoreGUI()
