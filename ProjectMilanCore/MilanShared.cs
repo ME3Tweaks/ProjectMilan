@@ -601,9 +601,9 @@ namespace ProjectMilanCore
         }
 
         /// <summary>
-        /// Packages vanilla script classes live under (mostly)
+        /// Packages vanilla script classes (and Milan donor classes) live under
         /// </summary>
-        private static readonly string[] VanillaClassPackages = ["SFXGameContent", "SFXGameMPContent", "SFXGame"];
+        private static readonly string[] VanillaClassPackages = ["SFXGameContent", "SFXGameMPContent", "SFXGame", "SFXGameContent_Milan"];
 
         /// <summary>
         /// Attempts to port missing dependencies into the target package so an override can reference them
