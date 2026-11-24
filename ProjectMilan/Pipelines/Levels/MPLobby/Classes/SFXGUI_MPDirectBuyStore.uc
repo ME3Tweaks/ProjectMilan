@@ -132,7 +132,7 @@ public event function HandleButtonRefresh(bool usingGamepad)
     if (!bMovieReady || bClosing)
     {
         return;
-}
+    }
     ASRefreshButtonHelp(usingGamepad);
 }
 
@@ -212,7 +212,7 @@ public function ExBuy(int RowIndex)
 }
 
 public function ExExitStore()
-    {
+{
     if (bClosing || PendingOffer >= 0 || !IsNewAction())
     {
         return;
@@ -228,7 +228,7 @@ public function ExExitStore()
 }
 
 private final function SFXGAWReinforcementManager GetGAWManager()
-    {
+{
     local SFXLocalPlayer LP;
 
     LP = SFXLocalPlayer(GetPC().Player);
@@ -238,17 +238,65 @@ private final function SFXGAWReinforcementManager GetGAWManager()
     }
     return SFXGAWReinforcementManager(LP.GAWReinforcementManager);
 }
-private final function int GetCredits()
+
+private final function bool FindOfferCard(int OfferIndex, out SFXGAWReinforcementBase Reinforcement, out int CardIndex)
+{
+    local SFXGAWReinforcementManager GAWManager;
+    local SFXGAWReinforcementBase Pool;
+    local int DeckIndex;
+    local int EntryIndex;
+    local bool bMatchVersion;
+    local string WantedName;
+
+    Reinforcement = None;
+    CardIndex = -1;
+    GAWManager = GetGAWManager();
+    if (GAWManager == None)
+    {
+        return FALSE;
+    }
+    WantedName = Locs(Offers[OfferIndex].UniqueName);
+    for (DeckIndex = 0; DeckIndex < GAWManager.Deck.Length; ++DeckIndex)
+    {
+        Pool = GAWManager.Deck[DeckIndex];
+        if (Pool == None)
         {
+            continue;
+        }
+        bMatchVersion = FALSE;
+        if (Pool.IsA('SFXGAWReinforcementMatchConsumable') && !Offers[OfferIndex].bLevel && Offers[OfferIndex].Rank > 0)
+        {
+            bMatchVersion = TRUE;
+        }
+        for (EntryIndex = 0; EntryIndex < Pool.CardList.Length; ++EntryIndex)
+        {
+            if (Locs(Pool.CardList[EntryIndex].UniqueName) != WantedName)
+            {
+                continue;
+            }
+            if (bMatchVersion && Pool.CardList[EntryIndex].VersionIdx != Offers[OfferIndex].Rank - 1)
+            {
+                continue;
+            }
+            Reinforcement = Pool;
+            CardIndex = EntryIndex;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+private final function int GetCredits()
+{
     local SFXSaveManagerMP SaveManager;
 
     SaveManager = Class'SFXEngine'.static.GetSFXEngine().MPSaveManager;
     if (SaveManager == None)
-            {
+    {
         return 0;
-            }
+    }
     return SaveManager.GetCredits();
-        }
+}
 
 // Opens the confirmation dialog for an offer
 private final function StartPurchase(int OfferIndex)
@@ -352,7 +400,7 @@ public function OnPurchaseSaved(int nResult)
         return;
     }
     ShowPurchaseNotification();
-        RefreshStoreGUI();
+    RefreshStoreGUI();
 }
 
 // Shows the SP purchase notification
@@ -408,6 +456,26 @@ private final function string LoadRowImage(string Path)
     return Path;
 }
 
+private final function int GetOfferRank(int OfferIndex)
+{
+    local int NextRank;
+
+    if (Offers[OfferIndex].Rank > 0 && !Offers[OfferIndex].bLevel)
+    {
+        return Offers[OfferIndex].Rank;
+    }
+    NextRank = 1;
+    if (Offers[OfferIndex].Counter != "")
+    {
+        NextRank = Class'SFXEngine'.static.GetSFXEngine().GetPlayerVariable(Name(Offers[OfferIndex].Counter)) + 1;
+    }
+    if (Offers[OfferIndex].MaxCount > 0)
+    {
+        NextRank = Min(NextRank, Offers[OfferIndex].MaxCount);
+    }
+    return NextRank;
+}
+
 // Level rows are only shown for the level the player would buy next (if they can)
 private final function bool IsOfferShown(int OfferIndex)
 {
@@ -449,6 +517,75 @@ private final function int GetOfferBundleSize(int OfferIndex)
     }
     return Max(1, PriceGroups[GroupIndex].BundleSize);
 }
+
+// Has the player maxed out this card?
+private final function bool IsOfferMaxed(int OfferIndex)
+{
+    if (Offers[OfferIndex].Counter == "" || Offers[OfferIndex].MaxCount <= 0)
+    {
+        return FALSE;
+    }
+    return Class'SFXEngine'.static.GetSFXEngine().GetPlayerVariable(Name(Offers[OfferIndex].Counter)) >= Offers[OfferIndex].MaxCount;
+}
+
+// Clamped bundle size
+private final function int GetOfferUnits(int OfferIndex)
+{
+    local int Units;
+
+    Units = GetOfferBundleSize(OfferIndex);
+    if (Offers[OfferIndex].Counter != "" && Offers[OfferIndex].MaxCount > 0)
+    {
+        Units = Min(Units, Offers[OfferIndex].MaxCount - Class'SFXEngine'.static.GetSFXEngine().GetPlayerVariable(Name(Offers[OfferIndex].Counter)));
+    }
+    return Max(0, Units);
+}
+
+// Clamped bundle-size aware purchase price - if bundle puts you over the max, you get a prorated price
+private final function int GetOfferCost(int OfferIndex)
+{
+    local int GroupIndex;
+    local int OverrideIndex;
+    local int Rarity;
+    local int Cost;
+    local int CostPerRank;
+    local int Steps;
+
+    if (IsOfferMaxed(OfferIndex))
+    {
+        return -1;
+    }
+    OverrideIndex = PriceOverrides.Find('UniqueName', Offers[OfferIndex].UniqueName);
+    if (OverrideIndex >= 0)
+    {
+        Cost = PriceOverrides[OverrideIndex].Cost;
+        CostPerRank = PriceOverrides[OverrideIndex].CostPerRank;
+    }
+    else
+    {
+        GroupIndex = GetPriceGroupIndex(OfferIndex);
+        if (GroupIndex < 0)
+        {
+            return -1;
+        }
+        Rarity = Offers[OfferIndex].Rarity;
+        if (Rarity < 0 || Rarity >= PriceGroups[GroupIndex].Cost.Length)
+        {
+            return -1;
+        }
+        Cost = PriceGroups[GroupIndex].Cost[Rarity];
+        if (Rarity < PriceGroups[GroupIndex].CostPerRank.Length)
+        {
+            CostPerRank = PriceGroups[GroupIndex].CostPerRank[Rarity];
+        }
+    }
+    if (Offers[OfferIndex].Rank == 0 || Offers[OfferIndex].bLevel)
+    {
+        Steps = Max(0, GetOfferRank(OfferIndex) - 1);
+    }
+    return (Cost + CostPerRank * Steps) * GetOfferUnits(OfferIndex);
+}
+
 private final function string GetOfferCostText(int OfferIndex)
 {
     local int Cost;
@@ -604,24 +741,24 @@ public function RefreshStoreGUI()
     if (CurrentCategory < 0)
     {
         for (Index = 0; Index < Categories.Length; ++Index)
-    {
-            if (GetFirstOffer(Index) >= 0)
         {
+            if (GetFirstOffer(Index) >= 0)
+            {
                 RowEntries.AddItem(Index);
-        }
+            }
         }
         Subtitle = "";
         AText = srSelect;
         Selection = CategoryListSelection;
     }
     else
-        {
+    {
         for (Index = 0; Index < Offers.Length; ++Index)
         {
             if (Offers[Index].Category == CurrentCategory && IsOfferShown(Index))
             {
                 RowEntries.AddItem(Index);
-        }
+            }
         }
         Subtitle = GetUIString(Categories[CurrentCategory].Title);
         AText = srPurchase;
@@ -631,14 +768,14 @@ public function RefreshStoreGUI()
     ASSetTitles(GetUIString(srTitle), Subtitle, GetUIString(AText), GetUIString(GetBButtonText()), "", GetResourceCount(0));
     ASSetInitialListSize(RowEntries.Length);
     for (Index = 0; Index < RowEntries.Length; ++Index)
-        {
+    {
         if (CurrentCategory < 0)
-            {
+        {
             // A category shows its first offer's image
             // We might consider hardcoding a different value as some weapon mods have the same image across categories
             FirstOffer = GetFirstOffer(RowEntries[Index]);
             AddRow(Index, GetUIString(Categories[RowEntries[Index]].Title), "", "", LoadRowImage(Offers[FirstOffer].Image), Index == Selection, FALSE, TRUE);
-            }
+        }
         else
         {
             AddRow(Index, GetOfferName(RowEntries[Index]), GetOfferDescription(RowEntries[Index]), GetOfferCostText(RowEntries[Index]), LoadRowImage(Offers[RowEntries[Index]].Image), Index == Selection, IsOfferLocked(RowEntries[Index]) || GetOfferCost(RowEntries[Index]) < 0, FALSE);
@@ -647,7 +784,7 @@ public function RefreshStoreGUI()
     if (!bStageInitialized)
     {
         bStageInitialized = TRUE;
-    ASInitializationFinished();
+        ASInitializationFinished();
     }
     CenterItemImage();
     if (RowEntries.Length > 0)
