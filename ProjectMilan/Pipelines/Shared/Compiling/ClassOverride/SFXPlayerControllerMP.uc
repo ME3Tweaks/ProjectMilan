@@ -1046,15 +1046,15 @@ public exec function AFK()
     {
         if (!IsTimerActive('DoAFKTick'))
         {
-            ClientMessage("AFK timer - INACTIVE");
+            LogInternal("AFK timer - INACTIVE");
         }
         else if (IsAFKPostponementActive)
         {
-            ClientMessage("AFK timer - PAUSED: if no reset occurs, will be kicked in" @ AFKTimeLimitSeconds - (AFKPostponementStartTime - AFKLastActionTime) @ "seconds.");
+            LogInternal("AFK timer - PAUSED: if no reset occurs, will be kicked in" @ AFKTimeLimitSeconds - (AFKPostponementStartTime - AFKLastActionTime) @ "seconds.");
         }
         else
         {
-            ClientMessage("AFK timer - ACTIVE: will be kicked in" @ AFKTimeLimitSeconds - (WorldInfo.TimeSeconds - AFKLastActionTime) @ "seconds.");
+            LogInternal("AFK timer - ACTIVE: will be kicked in" @ AFKTimeLimitSeconds - (WorldInfo.TimeSeconds - AFKLastActionTime) @ "seconds.");
         }
     }
 }
@@ -1144,12 +1144,14 @@ public function DoAFKTick()
     local BioPlayerInput BPI;
     local SFXOnlineSubsystem oOnlineSubsystem;
     local ISFXOnlineComponentGame oOnlineGame;
-    // MILAN CHANGE - Add GRIMP
+    // MILAN CHANGE - Add GRIMP, player count vars
     local SFXGRIMP GRIMP;
+    local PlayerReplicationInfo PRI;
+    local int nCount;
     // END MILAN CHANGE
 
     BPI = BioPlayerInput(PlayerInput);
-    if (BPI != None)
+    if (BPI != None && WorldInfo != None)
     {
         if (BPI.MoveStick.X != AFKLastMoveStick.X || BPI.MoveStick.Y != AFKLastMoveStick.Y)
         {
@@ -1162,11 +1164,28 @@ public function DoAFKTick()
             return;
         }
 
-        // MILAN CHANGE - Mgamerz - 2026-10-31
+        // MILAN CHANGE - Mgamerz - 10/31/2026
         // If there's only 1 player (you), don't AFK kick.
         // Why should we do that? You can idle in your own game all you want.
+        // 11/23/2026 - PRIArray count is not accurate, seems to fill with other stuff too
         GRIMP = SFXGRIMP(WorldInfo.GRI);
-        if (GRIMP != None && GRIMP.PRIArray.Length <= 1)
+        if (GRIMP == None)
+        {
+            nCount = 0;
+        }
+        else
+        {
+            foreach WorldInfo.GRI.PRIArray(PRI, )
+            {
+                // Count players, skip not-actual players
+                if (PRI == None || PRI.bDeleteMe || PRI.bIsInactive || PRI.bOnlySpectator || PRI.bBot)
+                {
+                    continue;
+                }
+                nCount++;
+            }
+        }
+        if (nCount <= 0)
         {
             if (!IsAFKPostponementActive)
             {
@@ -1175,7 +1194,7 @@ public function DoAFKTick()
             }
         }
         // END MILAN CHANGE
-        // MILAN CHANGE - Mgamerz - 2026-10-31
+        // MILAN CHANGE - Mgamerz - 10/31/2026
         // MilanPhotoMode extends BaseSpectating, not Spectating, so it needs its own entry
         // or players get kicked for being AFK even though they're technically spectating
         else if (IsInState('Dead', ) || IsInState('Dying', ) || IsInState('SpectateCam', ) || IsInState('Spectating', ) || IsInState('MilanPhotoMode', ))
