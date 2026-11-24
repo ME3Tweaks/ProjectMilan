@@ -40,7 +40,7 @@ namespace ProjectMilanCore.Config
         /// <param name="packageName">The map's BioP package name</param>
         public static void RegisterFlashlightMap(string packageName)
         {
-            var flashlights = MilanPipelinesShared.ConfigBundle.GetAsset("BioGame").GetOrAddSection("sfxgamecontent_milan.milanweaponflashlight");
+            var flashlights = MilanPipelinesShared.ConfigBundle.GetAsset("BioGame").GetOrAddSection($"{MilanShared.GAMECONTENT_MILAN_CONFIG}.milanweaponflashlight");
             flashlights.AddEntry(new CoalesceProperty("flashlightmaps", new CoalesceValue(packageName, CoalesceParseAction.AddUnique)));
         }
 

@@ -23,7 +23,7 @@ public sealed record HeavyWeaponCatalogEntry
 
 public static class HeavyWeaponCatalogRegistration
 {
-    public const string SectionName = "sfxgamecontent_milan.sfxmilanheavyweaponcatalog";
+    public const string SectionName = $"{MilanShared.GAMECONTENT_MILAN_CONFIG}.sfxmilanheavyweaponcatalog";
 
     // Validation code
     public static IReadOnlyList<HeavyWeaponCatalogEntry> ValidateAndOrder(IEnumerable<HeavyWeaponCatalogEntry> source)

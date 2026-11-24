@@ -5,7 +5,7 @@ namespace ProjectMilanCore.Config.Store;
 
 public sealed partial class StoreCatalog
 {
-    public const string BannerRewardsSection = "sfxgamecontent_milan.sfxmilanbannerrewards";
+    public const string BannerRewardsSection = $"{MilanShared.GAMECONTENT_MILAN_CONFIG}.sfxmilanbannerrewards";
     public const string BannerEmblemsSection = "sfxgamempcontent.sfxprimp";
     public IEnumerable<StoreCard> Banners => Cards.Where(c => c.BannerID != null);
 

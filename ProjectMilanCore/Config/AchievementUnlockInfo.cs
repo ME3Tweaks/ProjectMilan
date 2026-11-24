@@ -31,6 +31,7 @@ namespace ProjectMilanCore.Config
     /// </summary>
     public static class LEAchievementIds
     {
+        public const int None = 0; // Unlocked via other means - does not query origin for unlock
         public const int ME1_MedalOfHonor = 1; // LE1 ACHIEVEMENT_00_HONORMEDAL
         public const int ME1_ColonialSurvival = 34; // LE1 ACHIEVEMENT_33_BRINGDOWNTHESKY
         public const int ME2_MissionAccomplished = 35; // LE2 ACHIEVEMENT_00_COMPLETE
