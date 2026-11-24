@@ -165,6 +165,13 @@ private final function RefreshMilanAchievementPacks()
         {
             continue;
         }
+        // MILAN CHANGE - 11/23/2026 - Mgamerz
+        // Entitlement packs unlock variable is only set externally
+        if (AchPack.AchievementId <= 0)
+        {
+            continue;
+        }
+        // END MILAN CHANGE
         StoreInfoIdx = StoreInfoArray.Find('PackName', AchPack.PackName);
         if (StoreInfoIdx >= 0 && StoreInfoArray[StoreInfoIdx].PerPlayerMax > 0 && Engine.GetPlayerVariable(Name(AchPack.PackName)) >= StoreInfoArray[StoreInfoIdx].PerPlayerMax)
         {
