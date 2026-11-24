@@ -284,15 +284,65 @@ private final function StartPurchase(int OfferIndex)
     ConfirmationBox.DisplayMessageBoxEx(Message, Params);
 }
 
-public function ExExitStore()
+public function OnPurchaseConfirmed(bool bAPressed, int nContext)
 {
-    if (bClosing)
+    if (!bAPressed || bClosing || PendingOffer < 0)
     {
+        PendingOffer = -1;
         return;
     }
-    if (Pages.Length > 1)
+    PlayGuiSound('MPStorePurchaseConfirm');
+    if (!CompletePurchase(PendingOffer))
     {
-        Pages.Remove(Pages.Length - 1, 1);
+        PendingOffer = -1;
+        ShowPurchaseError();
+    }
+}
+
+private final function bool CompletePurchase(int OfferIndex)
+{
+    local SFXSaveManagerMP SaveManager;
+    local SFXGAWReinforcementBase Reinforcement;
+    local int CardIndex;
+    local array<SFXGAWReinforcementBase.CardInfoData> SavedCardList;
+    local SFXGAWReinforcementBase.CardInfoData Entry;
+    local SFXGAWReinforcementBase.CardInfoData Awarded;
+    local bool bAwarded;
+
+    SaveManager = Class'SFXEngine'.static.GetSFXEngine().MPSaveManager;
+    if (SaveManager == None)
+    {
+        WarnInternal("Direct Buy: purchase of" @ Offers[OfferIndex].UniqueName @ "failed, no MPSaveManager");
+        return FALSE;
+    }
+    if (PendingCost > SaveManager.GetCredits())
+    {
+        WarnInternal("Direct Buy: purchase of" @ Offers[OfferIndex].UniqueName @ "failed, user is too poor. Item costs" @ PendingCost @ "but only has" @ SaveManager.GetCredits() @ "credits");
+        return FALSE;
+    }
+    if (!FindOfferCard(OfferIndex, Reinforcement, CardIndex))
+    {
+        // Card isn't properly defined
+        WarnInternal("Direct Buy: purchase of" @ Offers[OfferIndex].UniqueName @ "(rank" @ Offers[OfferIndex].Rank $ ") failed, no reinforcement pool in the deck system has this card");
+        return FALSE;
+    }
+    SavedCardList = Reinforcement.CardList;
+    Entry = SavedCardList[CardIndex];
+    Entry.PVIncrementBonus = PendingUnits - 1;
+    Reinforcement.CardList.Length = 0;
+    Reinforcement.CardList.AddItem(Entry);
+    bAwarded = Reinforcement.OnAwarded(Awarded);
+    Reinforcement.CardList = SavedCardList;
+    if (!bAwarded)
+    {
+        WarnInternal("Direct Buy: purchase of" @ Offers[OfferIndex].UniqueName @ "failed, OnAwarded failed for entry" @ CardIndex);
+        return FALSE;
+    }
+    SaveManager.SubtractCredits(PendingCost, "DirectBuy_" $ Offers[OfferIndex].UniqueName);
+    SaveManager.SaveRecords(FALSE, OnPurchaseSaved);
+    return TRUE;
+}
+
 public function OnPurchaseSaved(int nResult)
 {
     PendingOffer = -1;
@@ -336,63 +386,163 @@ public function OnPurchaseErrorClosed(bool bAPressed, int nContext)
 {
     Class'SFXGUIInteraction'.static.GetInstance().RemoveNamedMessageBox('DirectBuyError', GetPC());
 }
+
+// Preloads texture so img:// finds it
+private final function string LoadRowImage(string Path)
+{
+    local Texture2D Image;
+
+    if (Path == "")
+    {
+        return "";
+    }
+    Image = Texture2D(FindObject(Path, Class'Texture2D'));
+    if (Image == None)
+    {
+        Image = Texture2D(Class'SFXEngine'.static.GetSeekFreeObject(Path, Class'Texture2D'));
+    }
+    if (Image == None)
+    {
+        return "";
+    }
+    PageImages.AddItem(Image);
+    return Path;
 }
 
+// Level rows are only shown for the level the player would buy next (if they can)
+private final function bool IsOfferShown(int OfferIndex)
+{
+    return !Offers[OfferIndex].bLevel || Offers[OfferIndex].Rank == GetOfferRank(OfferIndex);
+}
+}
+
+private final function int GetOfferBundleSize(int OfferIndex)
+{
+    local int GroupIndex;
+
+    GroupIndex = GetPriceGroupIndex(OfferIndex);
+    if (GroupIndex < 0)
+    {
+        return 1;
+    }
+    return Max(1, PriceGroups[GroupIndex].BundleSize);
+}
+private final function string GetOfferCostText(int OfferIndex)
+{
+    local int Cost;
+
+    Cost = GetOfferCost(OfferIndex);
+    if (Cost < 0)
+    {
+        return "";
+    }
+    return string(Cost);
+}
+
+private final function string GetOfferName(int OfferIndex)
+{
+    local string Result;
+
+    local int Units;
+
+    Units = Max(1, GetOfferUnits(OfferIndex));
+    SetRankTokens(GetOfferRank(OfferIndex), Units);
+    Result = GetTokenisedString(Offers[OfferIndex].GUIName);
+    ClearCustomTokens();
+    if (GetOfferBundleSize(OfferIndex) > 1 && srBundleName != $0)
+    {
+        SetCustomToken(0, Result);
+        SetCustomToken(1, string(Units));
+        Result = GetTokenisedString(srBundleName);
+        ClearCustomTokens();
+    }
+    return Result;
+}
+
+// The first offer in a category, or -1 if it has none
+private final function int GetFirstOffer(int CategoryIndex)
+{
+    local int OfferIndex;
+
+    for (OfferIndex = 0; OfferIndex < Offers.Length; ++OfferIndex)
+    {
+        if (Offers[OfferIndex].Category == CategoryIndex)
+        {
+            return OfferIndex;
+        }
+    }
+    return -1;
+}
 public function RefreshStoreGUI()
 {
-    local int PageIndex;
-    local int RowIndex;
-    local SFXGUIData_Store Data;
-    local SFXGUIData_Store.StoreItemData Item;
-    local SFXGameChoiceGUIData.SFXChoiceEntry Choice;
-    local string ChoiceName;
-    local string ChoiceDescription;
-    local string Cost;
-    local bool bDisabled;
+    local int Index;
+    local int FirstOffer;
+    local int Selection;
+    local string Subtitle;
+    local stringref AText;
 
-    if (!bMovieReady || Pages.Length == 0 || bClosing)
+    if (!bMovieReady || bClosing)
     {
         return;
     }
-    PageIndex = Pages.Length - 1;
-    Data = Pages[PageIndex].Data;
-    StoreItems = Data.StoreItemArray;
-    ASSetPlatformLayout(int(GetScreenLayout()));
-    ASSetTitles(GetUIString(Data.m_srTitle), GetUIString(Data.m_srSubTitle), GetUIString(Data.m_srAText), GetUIString(GetBButtonText()), "", GetResourceCount(0));
-    ASSetInitialListSize(StoreItems.Length);
-    for (RowIndex = 0; RowIndex < StoreItems.Length; ++RowIndex)
+    RowEntries.Length = 0;
+    PageImages.Length = 0;
+    if (CurrentCategory < 0)
     {
-        Item = StoreItems[RowIndex];
-        Choice = Item.ChoiceEntry;
-        ChoiceName = Choice.sChoiceName;
-        if (ChoiceName == "")
+        for (Index = 0; Index < Categories.Length; ++Index)
+    {
+            if (GetFirstOffer(Index) >= 0)
         {
-            ChoiceName = GetUIString(Choice.srChoiceName);
+                RowEntries.AddItem(Index);
         }
-        ChoiceDescription = Choice.sChoiceDescription;
-        if (ChoiceDescription == "")
-        {
-            ChoiceDescription = GetUIString(Choice.srChoiceDescription);
         }
-        Cost = "";
-        bDisabled = Choice.bDisabled;
-        if (Item.ItemType != EItemType.TYPE_NESTEDCATEGORY && Item.ItemType != EItemType.TYPE_RETURN)
+        Subtitle = "";
+        AText = srSelect;
+        Selection = CategoryListSelection;
+    }
+    else
         {
-            if (!Choice.bOptionalPaneHideCost && Item.BaseCost >= 0)
+        for (Index = 0; Index < Offers.Length; ++Index)
+        {
+            if (Offers[Index].Category == CurrentCategory && IsOfferShown(Index))
             {
-                Cost = string(Item.BaseCost);
+                RowEntries.AddItem(Index);
+        }
+        }
+        Subtitle = GetUIString(Categories[CurrentCategory].Title);
+        AText = srPurchase;
+        Selection = OfferListSelection;
+    }
+
+    ASSetTitles(GetUIString(srTitle), Subtitle, GetUIString(AText), GetUIString(GetBButtonText()), "", GetResourceCount(0));
+    ASSetInitialListSize(RowEntries.Length);
+    for (Index = 0; Index < RowEntries.Length; ++Index)
+        {
+        if (CurrentCategory < 0)
+            {
+            // A category shows its first offer's image
+            // We might consider hardcoding a different value as some weapon mods have the same image across categories
+            FirstOffer = GetFirstOffer(RowEntries[Index]);
+            AddRow(Index, GetUIString(Categories[RowEntries[Index]].Title), "", "", LoadRowImage(Offers[FirstOffer].Image), Index == Selection, FALSE, TRUE);
             }
-            bDisabled = TRUE;
+        else
+        {
+            AddRow(Index, GetOfferName(RowEntries[Index]), GetOfferDescription(RowEntries[Index]), GetOfferCostText(RowEntries[Index]), LoadRowImage(Offers[RowEntries[Index]].Image), Index == Selection, IsOfferLocked(RowEntries[Index]) || GetOfferCost(RowEntries[Index]) < 0, FALSE);
         }
         ASAddChoiceEntry(RowIndex, ChoiceName, GetUIString(Choice.srChoiceTitle), GetUIString(Choice.srChoiceImageTitle),
             ChoiceDescription, Cost, int(Choice.ChoiceColor), int(Choice.eResource), Choice.sActionText, Item.LargeImage,
             RowIndex == Pages[PageIndex].Selection, bDisabled, Choice.eDisplayType,
             "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0, "", 0, 0, 0);
     }
-    ASInitializationFinished();
-    if (StoreItems.Length > 0)
+    if (!bStageInitialized)
     {
-        ASSetSelectionIndex(Clamp(Pages[PageIndex].Selection, 0, StoreItems.Length - 1));
+        bStageInitialized = TRUE;
+    ASInitializationFinished();
+    }
+    CenterItemImage();
+    if (RowEntries.Length > 0)
+    {
+        ASSetSelectionIndex(Clamp(Selection, 0, RowEntries.Length - 1));
     }
 }
 
@@ -435,6 +585,19 @@ public event function bool HandleInputEvent(BioDefine.BioGuiEvents Event, option
 public function onScreenClosed()
 {
     ExExitStore();
+}
+
+// Used to vertically center banners which have a different aspect ratio
+private final function CenterItemImage()
+{
+    SetVariableNumber("_root.StoreStage.storeItemBox.StoreItemImage.screenShotLoader._RegistrationPoint", 0);
+    SetVariableNumber("_root.StoreStage.storeItemBox.StoreItemImage.screenShotLoader._HAlign", 1);
+    SetVariableNumber("_root.StoreStage.storeItemBox.StoreItemImage.screenShotLoader._VAlign", 1);
+}
+
+public function ASRefreshButtonHelp(bool usingGamepad)
+{
+    ActionScriptVoid("StoreStage.RefreshButtonHelp");
 }
 
 public function ASInitializationFinished()
