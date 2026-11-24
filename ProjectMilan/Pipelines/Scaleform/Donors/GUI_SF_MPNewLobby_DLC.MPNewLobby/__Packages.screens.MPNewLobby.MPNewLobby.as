@@ -29,6 +29,10 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     // Add new Join Match menu item
     var srJoinMatch;
     // END MILAN CHANGE
+    // MILAN CHANGE - 11/23/2026 - Mgamerz
+    // Matchmaking settings button on the Quick Match screen
+    var srMatchmakingSettings;
+    // END MILAN CHANGE
     var tabs;
     static var LSS_None = 0;
     static var LSS_SelectCharacter = 1;
@@ -189,6 +193,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         // MILAN CHANGE - 11/17/2026 - Mgamerz
         // Add new Join Match menu item
         this.srJoinMatch = "$" + _global.SFX.GetIniString("srJoinMatch");
+        // END MILAN CHANGE
+        // MILAN CHANGE - 11/23/2026 - Mgamerz
+        this.srMatchmakingSettings = "$" + _global.SFX.GetIniString("srMatchmakingSettings");
         // END MILAN CHANGE
     }
     function SetInitialSelectedItem()
@@ -940,7 +947,17 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         {
             this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,"",undefined,false);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
+            // MILAN CHANGE - 11/23/2026 - Mgamerz
+            // Matchmaking settings on the Quick Match screen only
+            if(!bIsHostingNewMission)
+            {
+                this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srMatchmakingSettings,this.ShowMatchmakingSettings,bCanInteract);
+            }
+            else
+            {
+                this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
+            }
+            // END MILAN CHANGE
             // Enter will confirm match settings, so will the button
             this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ConfirmMatchSettings,bCanInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,!bIsHostingNewMission ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,bCanInteract);
@@ -952,7 +969,17 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.RefreshButton(this.m_ControllerLegend.ControlStart, 0, "", undefined, false, true);
             this.RefreshButton(this.m_ControllerLegend.ControlBack, 0, "", undefined, false, true);
             this.RefreshButton(this.m_ControllerLegend.ControlY, com.XInput.ButtonY, "",undefined,false, true);
-            this.RefreshButton(this.m_ControllerLegend.ControlX, com.XInput.ButtonX, "",undefined,false, true);
+            // MILAN CHANGE - 11/23/2026 - Mgamerz
+            // Matchmaking settings on the Quick Match screen only
+            if(!bIsHostingNewMission)
+            {
+                this.RefreshButton(this.m_ControllerLegend.ControlX, com.XInput.ButtonX, this.srMatchmakingSettings, this.ShowMatchmakingSettings, bCanInteract, true);
+            }
+            else
+            {
+                this.RefreshButton(this.m_ControllerLegend.ControlX, com.XInput.ButtonX, "",undefined,false, true);
+            }
+            // END MILAN CHANGE
             this.RefreshButton(this.m_ControllerLegend.ControlA, com.XInput.ButtonA, !bIsHostingNewMission ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,bCanInteract,true);
             this.RefreshButton(this.m_ControllerLegend.ControlB, com.XInput.ButtonB, this.srCancel, this.CancelMatchSettings,bCanInteract,true);
         }
@@ -1244,6 +1271,13 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     {
         _global.SFX.PlayGUISound("MPMissionSettingsStart");
         flash.external.ExternalInterface.call("JoinMatch");
+    }
+    // END MILAN CHANGE
+    // MILAN CHANGE - 11/23/2026 - Mgamerz
+    function ShowMatchmakingSettings()
+    {
+        _global.SFX.PlayGUISound("MPMissionSettingsStart");
+        flash.external.ExternalInterface.call("ShowMatchmakingSettings");
     }
     // END MILAN CHANGE
     function HostNewMission()

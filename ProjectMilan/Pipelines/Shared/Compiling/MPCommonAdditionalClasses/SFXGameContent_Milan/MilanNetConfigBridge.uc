@@ -67,3 +67,9 @@ public static function int JoinByCode(string Code)
     return JOIN_UNAVAILABLE;
 }
 // END MILAN CHANGE
+// MILAN CHANGE - 11/23/2026 - Mgamerz
+// Expanded lobby preference setter
+public static function SetQuickMatchExpandedLobbies(int IncludeExpanded)
+{
+}
+// END MILAN CHANGE

@@ -115,6 +115,14 @@ var config stringref srJoinCodeAccept;
 var config stringref srJoinCodeInvalid;
 var config stringref srJoinCodeUnavailable;
 // END MILAN CHANGE
+// MILAN CHANGE - 11/23/2026 - Mgamerz
+// Temporary matchmaking settings dialog until we have better UI
+var config stringref srMatchmakingSettings;      // Button text
+var config stringref srMatchmakingExpandedOffBody; // String for when it's off currently
+var config stringref srMatchmakingExpandedOnBody;  // String for when it's on currently
+var config stringref srIncludeExpandedLobbies; // Button A
+var config stringref srClassicLobbiesOnly;     // Button B
+// END MILAN CHANGE
 
 public final function int GetPrivacy()
 {
@@ -1567,7 +1575,50 @@ private final function ShowJoinCodeError(stringref srMessage)
         messageBox.DisplayMessageBox(srMessage, messageParams);
     }
 }
+
+// MILAN CHANGE - 11/23/2026 - Mgamerz
+// Temporary matchmaking settings dialog
+// REMOVE THIS LATER
+public final function ShowMatchmakingSettings()
+{
+    local BioSFHandler_MessageBox messageBox;
+    local BioMessageBoxOptionalParams Params;
+
+    messageBox = GetSFXUIController().CreateMessageBox(GetPC());
+    if (messageBox == None)
+    {
+        return;
+    }
+    messageBox.SetInputDelegate(MatchmakingSettingsInputDelegate);
+    Params.srAText = srIncludeExpandedLobbies;
+    Params.srBText = srClassicLobbiesOnly;
+    if (Class'MilanMatchmakingPrefs'.static.GetExpandedLobbies())
+    {
+        messageBox.DisplayMessageBox(srMatchmakingExpandedOnBody, Params);
+    }
+    else
+    {
+        messageBox.DisplayMessageBox(srMatchmakingExpandedOffBody, Params);
+    }
+}
+
+public final function MatchmakingSettingsInputDelegate(bool bAPressed, int nContext)
+{
+    local SFXPlayerControllerMP PC;
+
+    if (bAPressed == Class'MilanMatchmakingPrefs'.static.GetExpandedLobbies())
+    {
+        // Settings not changed
+        return;
+    }
+    PC = SFXPlayerControllerMP(GetPC());
+    if (PC != None && Class'MilanMatchmakingPrefs'.static.SetExpandedLobbies(bAPressed))
+    {
+        PC.SaveProfile();
+    }
+}
 // END MILAN CHANGE
+
 private final function bool IsChallengeSystemEnabled()
 {
     return SFXEngine(Class'Engine'.static.GetEngine()).AccomplishmentManager.bChallengeSystemEnabled;
@@ -1606,6 +1657,12 @@ defaultproperties
     srJoinCodeAccept = $49875988
     srJoinCodeInvalid = $49875989
     srJoinCodeUnavailable = $49875990
+    // MILAN CHANGE - 11/23/2026 - Mgamerz - Matchmaking settings strings
+    srMatchmakingSettings = $49875993
+    srMatchmakingExpandedOffBody = $49875994
+    srMatchmakingExpandedOnBody = $49875995
+    srIncludeExpandedLobbies = $49875996
+    srClassicLobbiesOnly = $49875997
     // END MILAN CHANGE
     MaxOnlineImages = 20
     m_UIWorldMPPawnInitialRotation = {Pitch = 0, Yaw = 29000, Roll = 0}

@@ -7,6 +7,7 @@
 
 	<!-- 11/22/2026 - Store purchase error no longer says to contact customer support -->
 	<String id="715826">Your purchase could not be completed. Please try again.</String>
+
 	<!-- Project Milan Strings -->
 	<String id="49875622">Project Milan DLC</String>
 	<String id="49875623">DLC_MOD_ProjectMilan</String>
@@ -286,6 +287,16 @@ Herobrine24</String>
 	<String id="49875991">Alliance Commander</String>
 	<!-- Keybinding title for for PC_Sprint (sprint + dodge) -->
 	<String id="49875992">Storm / Evade</String>
+	<!-- Quick Match matchmaking settings -->
+	<String id="49875993">Matchmaking settings</String>
+	<String id="49875994">Expanded lobbies allow more than four players in a match and vary in performance, stability, and difficulty.
+	
+Your current setting searches classic lobbies only.</String>
+	<String id="49875995">Expanded lobbies allow more than four players in a match and vary in performance, stability, and difficulty.
+	
+Your current setting includes expanded lobbies.</String>
+	<String id="49875996">Include expanded lobbies</String>
+	<String id="49875997">Classic lobbies only</String>
 	<!-- Tactical Scan rank 5A description - add shield gate -->
     <String id="733112">Increase all headshot damage by {Evolve_HeadshotBonus%p}%.
 Reduces target shield gate effectiveness by {Evolve_ShieldGateReduction%p}%.</String>

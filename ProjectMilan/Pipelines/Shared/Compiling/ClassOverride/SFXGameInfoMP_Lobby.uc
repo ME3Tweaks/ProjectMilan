@@ -202,6 +202,10 @@ public function bool QuickMatch(optional SFXOnlineGameSettings GameSettings)
         {
             GameInterface.AddDestroyOnlineGameCompleteDelegate(OnMultiplayerGameDestroyed);
             GameInterface.AddQuickMatchCompleteDelegate(OnQuickMatchComplete);
+            // MILAN CHANGE - 11/23/2026 - Mgamerz
+            // Ensure MilanHost knows what our preference is before issuing QuickMatch request
+            Class'MilanNetConfigBridge'.static.SetQuickMatchExpandedLobbies(Class'MilanMatchmakingPrefs'.static.GetExpandedLobbies() ? 1 : 0);
+            // END MILAN CHANGE
             bMatchRequestSent = GameInterface.QuickMatch(GameSettings);
             if (!bMatchRequestSent)
             {
