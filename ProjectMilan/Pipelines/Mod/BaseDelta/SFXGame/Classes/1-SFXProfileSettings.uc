@@ -31,7 +31,7 @@ enum EProfileSetting
     Setting_AutoAim,
     Setting_AutoCenter,
     Setting_MovementControl,
-    Setting_RaceTransmission,
+    Setting_MilanMatchmaking, // CHANGE TO MILAN MATCHMAKING
     Setting_RaceCameraLocation,
     Setting_RaceBrakeControl,
     Setting_RaceAcceleratorControl,

@@ -120,7 +120,11 @@
                          // 2026/10/23 - Stumpy
                          // Add ID for FOV settings 
                          3,
-                         // MILAN END 
+                         // MILAN END
+                         // MILAN CHANGE - 11/23/2026 - Mgamerz
+                         // Matchmaking preferences
+                         19,
+                         // END MILAN CHANGE
                          60
                         )
     DefaultSettings = ({
@@ -934,8 +938,20 @@
                                           AdvertisementType = EOnlineDataAdvertisementType.ODAT_DontAdvertise
                                          }, 
                         Owner = EOnlineProfilePropertyOwner.OPPO_OnlineService
-                       }
+                       },
                        // MILAN END
+                       // MILAN CHANGE - 11/23/2026 - Mgamerz
+                       // Matchmaking preferences (MilanMatchmakingPrefs)
+                       // 0 is classic lobbies only (will be later bitpacked)
+                       {
+                        ProfileSetting = {
+                                          Data = {Value1 = 0, Type = ESettingsDataType.SDT_Int32},
+                                          PropertyId = 19,
+                                          AdvertisementType = EOnlineDataAdvertisementType.ODAT_DontAdvertise
+                                         },
+                        Owner = EOnlineProfilePropertyOwner.OPPO_Game
+                       }
+                       // END MILAN CHANGE
                       )
     ProfileMappings = ({
                         ColumnHeaderText = "", 
@@ -2147,8 +2163,15 @@
                         MaxVal = 0.0, 
                         RangeIncrement = 0.0, 
                         MappingType = EPropertyValueMappingType.PVMT_RawValue
-                       }
+                       },
                        // MILAN END
+                       // MILAN CHANGE - 11/23/2026 - Mgamerz
+                       {
+                        Name = 'MilanMatchmaking',
+                        Id = 19,
+                        MappingType = EPropertyValueMappingType.PVMT_RawValue
+                       }
+                       // END MILAN CHANGE
                       )
     // MILAN CHANGE START
     VersionNumber = 50
