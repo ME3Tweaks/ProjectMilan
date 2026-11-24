@@ -228,9 +228,17 @@ public function ExExitStore()
         ExExitStore();
     }
     else if (Item.ItemType == EItemType.TYPE_NESTEDCATEGORY && !Item.ChoiceEntry.bDisabled)
+private final function SFXGAWReinforcementManager GetGAWManager()
     {
-        CategoryClass = Class<SFXGUIData_Store>(Class'SFXEngine'.static.GetSeekFreeObject(Item.ItemClassName, Class'Class'));
-        if (CategoryClass != None)
+    local SFXLocalPlayer LP;
+
+    LP = SFXLocalPlayer(GetPC().Player);
+    if (LP == None)
+    {
+        return None;
+    }
+    return SFXGAWReinforcementManager(LP.GAWReinforcementManager);
+}
 private final function int GetCredits()
         {
     local SFXSaveManagerMP SaveManager;
@@ -297,10 +305,23 @@ public function OnPurchaseSaved(int nResult)
     ShowPurchaseNotification();
         RefreshStoreGUI();
 }
+
+// Shows the SP purchase notification
+private final function ShowPurchaseNotification()
+{
+    local BioHintSystem HintSystem;
+
+    if (BioPlayerController(GetPC()) == None)
+    {
         return;
     }
-    bClosing = TRUE;
-    Close();
+    HintSystem = BioHintSystem(BioPlayerController(GetPC()).HintSystem);
+    if (HintSystem != None)
+    {
+        HintSystem.AddNotification_StorePurchase(PendingName, "", PendingImage);
+    }
+}
+
 private final function ShowPurchaseError()
 {
     local BioMessageBoxOptionalParams Params;
@@ -428,6 +449,17 @@ public function ScrollText(float Value)
 
 defaultproperties
 {
+    CurrentCategory = -1
+    srTitle = $49875985
+    srSelect = $591479
+    srPurchase = $664930
     srBack = $338459
     m_srResourceTextCredits = $665454
+    srCreditsTitle = $346393
+    srCostTitle = $341340
+    srPurchaseConfirmation = $665536
+    srCancel = $665537
+    srOK = $152938
+    srPurchaseError = $715826
+    PendingOffer = -1
 }
