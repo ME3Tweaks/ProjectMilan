@@ -115,13 +115,13 @@ defaultproperties
                            None, 
                            None, 
                            None, 
-                           Class'SFXCustomAction_InfiltratorEvadeLeft', 
-                           Class'SFXCustomAction_InfiltratorEvadeRight', 
                            // MILAN CHANGE
                            // Replace forwards evade
-                           Class'SFXCustomAction_AcrobaticEvadeForward',
+                           Class'SFXCustomAction_AcrobaticEvadeLeft', 
+                           Class'SFXCustomAction_AcrobaticEvadeRight', 
+                           Class'SFXCustomAction_AcrobaticEvadeForward', 
+                           Class'SFXCustomAction_AcrobaticEvadeBackwards', 
                            // MILAN END 
-                           Class'SFXCustomAction_InfiltratorEvadeBackwards', 
                            Class'SFXCustomAction_PhantomPunch', 
                            Class'SFXCustomAction_MantleMelee', 
                            None, 
