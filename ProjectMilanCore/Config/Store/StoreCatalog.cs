@@ -161,7 +161,7 @@ namespace ProjectMilanCore.Config.Store
             ReplaceArray(manager, "milanachievementpacks", Packs.Where(p => p.UnlockInfo != null)
                 .Select(p => $"(PackName=\"{p.PackName}\", AchievementId={p.UnlockInfo!.AchievementId}, UnlockVariable={p.UnlockInfo.UnlockVariableName})"));
 
-            var requirements = bioGame.GetOrAddSection("sfxgamecontent_milan.sfxmilanstoreprerequisites");
+            var requirements = bioGame.GetOrAddSection($"{MilanShared.GAMECONTENT_MILAN_CONFIG}.sfxmilanstoreprerequisites");
             ReplaceArray(requirements, "requirements", Cards.Where(c => c.RequiresCard != null).Select(c =>
                 $"(CardName=\"{c.UniqueName}\",RequiredVariable={Cards.Single(p => p.UniqueName.Equals(c.RequiresCard, StringComparison.OrdinalIgnoreCase)).PlayerVariables.Single().Name})"));
 

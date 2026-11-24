@@ -1332,49 +1332,49 @@
 				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.hvy_titan_512x256",SeekFreePackageName="SFXWeaponImages_HeavyWeapons")</Value>
 				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.hvy_disinfectiongun_512x256",SeekFreePackageName="SFXWeaponImages_HeavyWeapons")</Value>
 				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.targeting-laser_512x256",SeekFreePackageName="SFXWeaponImages_HeavyWeapons")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_avenger_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_vindicator_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_gethpulse_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_mattock_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_revenant_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_collector_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_cobra_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_falcon_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_carbine_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_saber_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_valkyrie_512x256",SeekFreePackageName="SFXWeaponImages_AssaultRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_katana_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_claymore_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_scimitar_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_eviscerator_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_gethplasma_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_graal_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_disciple_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_raider_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_crusader_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_striker_512x256",SeekFreePackageName="SFXWeaponImages_Shotguns")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_shuriken_512x256",SeekFreePackageName="SFXWeaponImages_SMGs")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_tempest_512x256",SeekFreePackageName="SFXWeaponImages_SMGs")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_locust_512x256",SeekFreePackageName="SFXWeaponImages_SMGs")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_hornet_512x256",SeekFreePackageName="SFXWeaponImages_SMGs")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_hurricane_512x256",SeekFreePackageName="SFXWeaponImages_SMGs")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_predator_512x256",SeekFreePackageName="SFXWeaponImages_HeavyPistols")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_carniflex_512x256",SeekFreePackageName="SFXWeaponImages_HeavyPistols")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_phalanx_512x256",SeekFreePackageName="SFXWeaponImages_HeavyPistols")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_scorpion_512x256",SeekFreePackageName="SFXWeaponImages_HeavyPistols")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_talon_512x256",SeekFreePackageName="SFXWeaponImages_HeavyPistols")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_thor_512x256",SeekFreePackageName="SFXWeaponImages_HeavyPistols")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_eagle_512x256",SeekFreePackageName="SFXWeaponImages_HeavyPistols")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_ivory_512x256",SeekFreePackageName="SFXWeaponImages_HeavyPistols")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_mantis_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_viper_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_widow_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_incisor_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_javelin_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_raptor_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_indra_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_valiant_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_blackwidow_512x256",SeekFreePackageName="SFXWeaponImages_SniperRifles")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_avenger_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_vindicator_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_gethpulse_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_mattock_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_revenant_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_collector_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_cobra_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_falcon_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_carbine_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_saber_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_valkyrie_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_katana_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_claymore_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_scimitar_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_eviscerator_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_gethplasma_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_graal_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_disciple_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_raider_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_crusader_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_striker_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_shuriken_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_tempest_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_locust_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_hornet_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.smg_hurricane_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_predator_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_carniflex_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_phalanx_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_scorpion_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_talon_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_thor_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_eagle_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_ivory_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_mantis_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_viper_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_widow_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_incisor_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_javelin_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_raptor_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_indra_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_valiant_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_blackwidow_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMerged")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.pst_body_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.smg_body_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.asl_body_256x128",SeekFreePackageName="SFXWeaponImages_Mods")</Value>
@@ -1452,23 +1452,23 @@
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.asl_sco_c_256x128",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.asl_sco_e_256x128",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
 				<Value type="2">(ObjectName="GUI_Icons.Weapons.asl_bar_e_256x128",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_stability-damper_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_bar_a_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_ultralight-material_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_smg_heat-sink-mod_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_tazer-mod_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_shredder-mod_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_bar_a_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_melee_a_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_barrel-choke_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_sco_a_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_bar_a_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_concentration-mod_512x256",SeekFreePackageName="SFXNotification_WeaponUpgrades")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_sco_c_512x256",SeekFreePackageName="SFXNotification_ModLarge")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_penetration-mod_512x256",SeekFreePackageName="SFXNotification_ModLarge")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_ammo-capacity_512x256",SeekFreePackageName="SFXNotification_ModLarge")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_sco_a_512x256",SeekFreePackageName="SFXNotification_ModLarge")</Value>
-				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_bar_a_512x256",SeekFreePackageName="SFXNotification_ModLarge")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_stability-damper_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_bar_a_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_ultralight-material_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_smg_heat-sink-mod_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_tazer-mod_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_shredder-mod_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_bar_a_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.bls_melee_a_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_barrel-choke_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_sco_a_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.snp_bar_a_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_concentration-mod_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_sco_c_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_penetration-mod_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.MOD_ammo-capacity_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.asl_sco_a_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
+				<Value type="2">(ObjectName="GUI_Codex_Weapons_Images.Weapons.pst_bar_a_512x256",SeekFreePackageName="SFXGUI_WeaponUIDataDLC_CON_MPMergedMods")</Value>
 				<Value type="2">(ObjectName="SFXGameContent.SFXWeaponMod_AssaultRifleAccuracy",SeekFreePackageName="SFXWeaponMods_AssaultRifles")</Value>
 				<Value type="2">(ObjectName="SFXGameContent.SFXWeaponMod_AssaultRifleDamage",SeekFreePackageName="SFXWeaponMods_AssaultRifles")</Value>
 				<Value type="2">(ObjectName="SFXGameContent.SFXWeaponMod_AssaultRifleForce",SeekFreePackageName="SFXWeaponMods_AssaultRifles")</Value>
