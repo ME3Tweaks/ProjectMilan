@@ -3,6 +3,7 @@ using LegendaryExplorerCore.Coalesced.Xml;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Packages;
 using ProjectMilan.Pipelines.Mod.BaseDelta;
+using ProjectMilan.Pipelines.Store;
 using ProjectMilanCore;
 using ProjectMilanCore.Config.Store;
 
@@ -35,7 +36,9 @@ internal static class StoreImageVerification
                 .Select(export => export.InstancedFullPath).ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
 
-        var errors = StoreImageValidator.Validate(baseEngine, dlc.GetAsset("BioEngine"), dlc.GetAsset("BioGame"), LoadTextures);
+        // The Direct Buy store's offer images
+        var directBuyImages = StoreImageValidator.ReadImages(dlc.GetAsset("BioUI"), StoreDirectBuy.SectionName, "offers", "UniqueName", "Image").Select(offer => (Owner: $"Direct Buy {offer.Owner}", offer.Image));
+        var errors = StoreImageValidator.Validate(baseEngine, dlc.GetAsset("BioEngine"), dlc.GetAsset("BioGame"), LoadTextures, directBuyImages);
         if (errors.Count > 0)
         {
             throw new InvalidDataException("Store card image validation failed:\n" + string.Join("\n", errors));
