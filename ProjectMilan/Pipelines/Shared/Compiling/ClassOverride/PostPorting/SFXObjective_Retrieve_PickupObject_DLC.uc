@@ -79,6 +79,25 @@ var WwiseEvent CarrierSprintLoopStartSound;
 var WwiseEvent CarrierSprintLoopStopSound;
 // END MILAN CHANGE
 
+// MILAN CHANGE - 11/22/2026 - Mgamerz
+// Sprinting while having object causes nearby enemies to enter berserk mode
+struct CarrierBerserkEntry
+{
+    var SFXAI_Core AI;
+    var Pawn Target;
+    var float ExpireTime;
+    var SFXAI_NativeBase.EAICombatMood OldMood;
+    var bool bOldAvoidDangerLinks;
+    var bool bSetPreferredTarget;
+};
+
+var config float CarrierAwarenessFrequency;
+var config float CarrierAwarenessRadius;
+var config float CarrierBerserkRadius;
+var config float CarrierBerserkDuration;
+var transient array<CarrierBerserkEntry> CarrierBerserkers;
+// END MILAN CHANGE
+
 public function int FindDropPenalty(SFXPawn_Player Player, bool bCreate)
 {
     local int i;
@@ -244,6 +263,121 @@ public simulated function StopCarrierSprintSound()
     }
     bCarrierLoopStarted = FALSE;
     CarrierLoopPawn = None;
+}
+// END MILAN CHANGE
+
+// MILAN CHANGE - 11/22/2026 - Mgamerz
+// Server only: Pizza run - nearby enemies are notified of location and close enemies go berserk
+public function UpdateCarrierAwareness()
+{
+    local SFXGame Game;
+    local SFXAI_Core AI;
+    local float DistSq;
+
+    if (Role != ENetRole.ROLE_Authority)
+    {
+        return;
+    }
+    ExpireCarrierBerserkers(FALSE);
+    if (PickedUpBy == None || PickedUpBy.bDeleteMe || !PickedUpBy.bStorming)
+    {
+        return;
+    }
+    Game = SFXGame(WorldInfo.Game);
+    if (Game == None || Game.PerceptionManager == None)
+    {
+        return;
+    }
+    foreach WorldInfo.AllControllers(Class'SFXAI_Core', AI)
+    {
+        if (AI.MyBP == None || AI.MyBP.IsDead() || !AI.MyBP.IsHostile(PickedUpBy))
+        {
+            continue;
+        }
+        DistSq = VSizeSq(AI.MyBP.Location - PickedUpBy.Location);
+        if (DistSq > CarrierAwarenessRadius * CarrierAwarenessRadius)
+        {
+            continue;
+        }
+        // Parameter '2' helps suppress target reverting to other nearby enemies
+        Game.PerceptionManager.NoticeEnemy(AI, PickedUpBy, 2, TRUE, 'MilanCarrierBeep');
+        if (DistSq <= CarrierBerserkRadius * CarrierBerserkRadius)
+        {
+            StartCarrierBerserk(AI);
+        }
+    }
+}
+
+public function StartCarrierBerserk(SFXAI_Core AI)
+{
+    local CarrierBerserkEntry Entry;
+    local int idx;
+
+    idx = CarrierBerserkers.Find('AI', AI);
+    if (idx != -1)
+    {
+        CarrierBerserkers[idx].ExpireTime = WorldInfo.GameTimeSeconds + CarrierBerserkDuration;
+        return;
+    }
+
+    if (AI.BerserkCommand == None || AI.CombatMood == EAICombatMood.AI_Berserk)
+    {
+        return;
+    }
+    Entry.AI = AI;
+    Entry.Target = PickedUpBy;
+    Entry.ExpireTime = WorldInfo.GameTimeSeconds + CarrierBerserkDuration;
+    Entry.OldMood = AI.CombatMood;
+    Entry.bOldAvoidDangerLinks = AI.m_bAvoidDangerLinks;
+
+    if (!AI.SetCombatMood(EAICombatMood.AI_Berserk))
+    {
+        return;
+    }
+
+    if (AI.PreferredTarget == None)
+    {
+        AI.SetPreferredTarget(PickedUpBy);
+        Entry.bSetPreferredTarget = TRUE;
+    }
+    CarrierBerserkers.AddItem(Entry);
+    AI.SelectTarget();
+}
+
+// Failsafe to make it so enemies stop going berserk
+public function ExpireCarrierBerserkers(bool bAll)
+{
+    local int i;
+
+    for (i = CarrierBerserkers.Length - 1; i >= 0; i--)
+    {
+        if (bAll || WorldInfo.GameTimeSeconds >= CarrierBerserkers[i].ExpireTime)
+        {
+            EndCarrierBerserk(i);
+        }
+    }
+}
+
+public function EndCarrierBerserk(int idx)
+{
+    local SFXAI_Core AI;
+
+    AI = CarrierBerserkers[idx].AI;
+    if (AI != None && !AI.bDeleteMe && AI.MyBP != None && !AI.MyBP.IsDead())
+    {
+        if (CarrierBerserkers[idx].bSetPreferredTarget && AI.PreferredTarget == CarrierBerserkers[idx].Target)
+        {
+            AI.SetPreferredTarget(None);
+        }
+
+        if (AI.CombatMood == EAICombatMood.AI_Berserk)
+        {
+            AI.CombatMood = CarrierBerserkers[idx].OldMood;
+            AI.m_bAvoidDangerLinks = CarrierBerserkers[idx].bOldAvoidDangerLinks;
+            AI.BeginDefaultCommand("MilanCarrierBerserkEnd", TRUE);
+        }
+    }
+    CarrierBerserkers.Remove(idx, 1);
 }
 // END MILAN CHANGE
 public event simulated function Destroyed()
@@ -528,6 +662,7 @@ public simulated function PickUpObject(SFXPawn_Player Player)
     if (Role == ENetRole.ROLE_Authority)
     {
         UpdateCarrierPriority();
+        SetTimer(CarrierAwarenessFrequency, TRUE, 'UpdateCarrierAwareness', );
     }
     // END MILAN CHANGE
 }
@@ -541,6 +676,11 @@ public simulated function RemovePickupObject()
     // MILAN CHANGE - 11/22/2026 - Mgamerz
     ClearTimer('UpdateCarrierSprintSound');
     StopCarrierSprintSound();
+    ClearTimer('UpdateCarrierAwareness');
+    if (Role == ENetRole.ROLE_Authority)
+    {
+        ExpireCarrierBerserkers(TRUE);
+    }
     // END MILAN CHANGE
     if (PickedUpBy == None || PickedUpBy.bDeleteMe)
     {
@@ -818,6 +958,10 @@ defaultproperties
     CarrierSprintSoundCheckFrequency = 0.1
     CarrierSprintLoopStartSound = WwiseEvent'Wwise_GUI_DLC_MP2.Play_gui_milan_retrieve_carrier_beep'
     CarrierSprintLoopStopSound = WwiseEvent'Wwise_GUI_DLC_MP2.Stop_gui_milan_retrieve_carrier_beep'
+    CarrierAwarenessFrequency = 0.5
+    CarrierAwarenessRadius = 4000.0
+    CarrierBerserkRadius = 1000.0
+    CarrierBerserkDuration = 8.0
     // END MILAN CHANGE
     AttachSocketName = 'Socket_07'
     PickupMeshComp = PickupMeshComp0
