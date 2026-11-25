@@ -65,11 +65,26 @@ struct PowerDisplayInfo
     var string PowerName;
     var int PowerIconIndex;
 };
-struct LobbyOnlineImageRequest 
+struct LobbyOnlineImageRequest
 {
     var SFXOnlineImageRequest request;
     var bool RecentlyRequested;
 };
+// MILAN CHANGE - 11/24/2026 - Mgamerz
+// GAW data
+struct MilanGalaxyZoneGUIData
+{
+    var int ZoneID;
+    var int Readiness;
+    var string MissionsText;
+};
+struct MilanGalaxyGUIData
+{
+    var bool bAvailable;
+    var string SubtitleText;
+    var array<MilanGalaxyZoneGUIData> Zones;
+};
+// END MILAN CHANGE
 const VOIP_REMOTE_HEADSETOK = 16;
 const VOICE_CHAT_ICON_UPDATE_FREQUENCY = 0.5;
 
@@ -123,6 +138,14 @@ var config stringref srMatchmakingExpandedOnBody;  // String for when it's on cu
 var config stringref srIncludeExpandedLobbies; // Button A
 var config stringref srClassicLobbiesOnly;     // Button B
 // END MILAN CHANGE
+// MILAN CHANGE - 11/24/2026 - Mgamerz
+// Version, GAW text
+var config stringref srLobbyVersion;
+var config stringref srGalaxyCombatants;
+var config stringref srGalaxyMissions;
+var int GalaxyStatsRevision;
+var float GalaxyStatsPollTime;
+// END MILAN CHANGE
 
 public final function int GetPrivacy()
 {
@@ -150,6 +173,10 @@ public event function OnStart()
     GetLobbyFlow().RefreshLobbyStatusBars();
     GAWAssetHandler = Class'SFXGAWAssetsHandler'.static.GetGAWHandler();
     //GAWAssetHandler.RequestGAWRatings(OnGAWRequestFinished); // MILAN Patched: Remove Galaxy At War calls
+    // MILAN CHANGE - 11/24/2026 - Mgamerz
+    GalaxyStatsRevision = Class'MilanNetConfigBridge'.static.RequestGalaxyStats();
+    GalaxyStatsPollTime = 0.0;
+    // END MILAN CHANGE
 }
 public final function QuickMatch()
 {
@@ -250,7 +277,155 @@ public event function Update(float fDeltaT)
         RefreshAllCustomIcons();
         ElapsedTime = 0.0;
     }
+    // MILAN CHANGE - 11/24/2026 - Mgamerz
+    // Poll MilanHost for new Galaxy at War data
+    GalaxyStatsPollTime += fDeltaT;
+    if (GalaxyStatsPollTime >= 1.0)
+    {
+        PollGalaxyStats();
+    }
+    // END MILAN CHANGE
 }
+// MILAN CHANGE - 11/24/2026 - Mgamerz
+// Lobby version text and GAW text
+public final function PollGalaxyStats()
+{
+    local int Revision;
+
+    GalaxyStatsPollTime = 0.0;
+    Revision = Class'MilanNetConfigBridge'.static.RequestGalaxyStats();
+    if (Revision != GalaxyStatsRevision)
+    {
+        // Data updated
+        GalaxyStatsRevision = Revision;
+        AS_OnGalaxyStatsUpdated();
+    }
+}
+
+public final function AS_OnGalaxyStatsUpdated()
+{
+    ActionScriptVoid("screen.OnGalaxyStatsUpdated");
+}
+
+// Gets the text to show under the Multiplayer title of the MP Main Menu
+public final function string GetLobbyVersionText()
+{
+    local string Version;
+    local string VersionText;
+
+    Version = Class'MilanNetConfigBridge'.static.GetModVersion();
+    if (Version == "")
+    {
+        return "";
+    }
+    SetCustomToken(0, Version);
+    VersionText = GetUIString(srLobbyVersion, TRUE);
+    ClearCustomTokens();
+    return VersionText;
+}
+
+// Fetches the galaxy stats shown for GAW
+public final function MilanGalaxyGUIData GetGalaxyStats()
+{
+    local MilanGalaxyGUIData Data;
+    local MilanGalaxyZoneGUIData ZoneData;
+    local array<MPMapInfo> MapList;
+    local int ZoneLobbies[5];
+    local int ZonePlayers[5];
+    local int ZoneMaps[5];
+    local int TotalPlayers;
+    local int SectorPlayers;
+    local int TotalMaps;
+    local int FullPopulation;
+    local int MapIdx;
+    local int SettingsIdx;
+    local int Zone;
+    local int Count;
+    local float Base;
+    local float Fair;
+    local float Share;
+    local float Deficit;
+    local float Red;
+
+    TotalPlayers = Class'MilanNetConfigBridge'.static.GetGalaxyPlayers();
+    if (TotalPlayers < 0)
+    {
+        // Matchmaker off or not connected
+        return Data;
+    }
+
+    MapList = GetMapList();
+    for (MapIdx = 0; MapIdx < MapList.Length; ++MapIdx)
+    {
+        if (MapList[MapIdx].Id <= 0)
+        {
+            // Invalid map ID (local dev)
+            continue;
+        }
+        SettingsIdx = Class'SFXPRIMP'.default.MapSettings.Find('MapName', MapList[MapIdx].PackageName);
+        if (SettingsIdx < 0)
+        {
+            // We don't know about this map
+            continue;
+        }
+        Zone = int(Class'SFXPRIMP'.default.MapSettings[SettingsIdx].ZoneID);
+        if (Zone < 0 || Zone >= 5)
+        {
+            // Somehow the galaxy has another zone
+            continue;
+        }
+
+        // Increment counts for statistical calculation
+        ZoneMaps[Zone] += 1;
+        TotalMaps += 1;
+        Count = Class'MilanNetConfigBridge'.static.GetGalaxyMapLobbies(MapList[MapIdx].Id);
+        if (Count > 0)
+        {
+            ZoneLobbies[Zone] += Count;
+        }
+        Count = Class'MilanNetConfigBridge'.static.GetGalaxyMapPlayers(MapList[MapIdx].Id);
+        if (Count > 0)
+        {
+            ZonePlayers[Zone] += Count;
+            SectorPlayers += Count;
+        }
+    }
+
+    FullPopulation = Class'MilanNetConfigBridge'.static.GetGalaxyFullPopulation();
+    if (FullPopulation > 0)
+    {
+        // Static tint based on population server says is 'good'
+        Base = Class'MilanNetConfigBridge'.static.GetGalaxyMaxBaseTint() * (1.0 - FMin(1.0, float(TotalPlayers) / float(FullPopulation)));
+    }
+    for (Zone = 0; Zone < 5; ++Zone)
+    {
+        ZoneData.ZoneID = Zone;
+        ZoneData.Readiness = 100;
+        if (FullPopulation > 0 && TotalMaps > 0 && ZoneMaps[Zone] > 0)
+        {
+            // Tinting algorithm:
+            // 'Fair' is the the sector's fraction of maps
+            // Redness scales with how far the zone's player share falls short of the 'good' count that sector would have if server evenly was 
+            Fair = float(ZoneMaps[Zone]) / float(TotalMaps);
+            Share = SectorPlayers > 0 ? float(ZonePlayers[Zone]) / float(SectorPlayers) : Fair;
+            Deficit = FClamp(1.0 - Share / Fair, 0.0, 1.0);
+            Red = Base + (1.0 - Base) * Deficit;
+            ZoneData.Readiness = Round(100.0 - 50.0 * Red);
+        }
+        SetCustomToken(0, string(ZoneLobbies[Zone]));
+        ZoneData.MissionsText = GetUIString(srGalaxyMissions, TRUE);
+        ClearCustomTokens();
+        Data.Zones.AddItem(ZoneData);
+    }
+
+    // Set UI data
+    SetCustomToken(0, string(TotalPlayers));
+    Data.SubtitleText = GetUIString(srGalaxyCombatants, TRUE);
+    ClearCustomTokens();
+    Data.bAvailable = TRUE;
+    return Data;
+}
+// END MILAN CHANGE
 public event function OnClose()
 {
     CleanupUIWorldPawn();
@@ -1663,6 +1838,11 @@ defaultproperties
     srMatchmakingExpandedOnBody = $49875995
     srIncludeExpandedLobbies = $49875996
     srClassicLobbiesOnly = $49875997
+    // END MILAN CHANGE
+    // MILAN CHANGE - 11/24/2026 - Mgamerz - Lobby version and Galaxy at War strings
+    srLobbyVersion = $49875998
+    srGalaxyCombatants = $49875999
+    srGalaxyMissions = $49876000
     // END MILAN CHANGE
     MaxOnlineImages = 20
     m_UIWorldMPPawnInitialRotation = {Pitch = 0, Yaw = 29000, Roll = 0}

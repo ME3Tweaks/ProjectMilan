@@ -73,3 +73,31 @@ public static function SetQuickMatchExpandedLobbies(int IncludeExpanded)
 {
 }
 // END MILAN CHANGE
+public static function string GetModVersion()
+{
+    return "";
+}
+public static function int RequestGalaxyStats()
+{
+    return 0;
+}
+public static function int GetGalaxyPlayers()
+{
+    return -1;
+}
+public static function int GetGalaxyMapLobbies(int MapId)
+{
+    return -1;
+}
+public static function int GetGalaxyMapPlayers(int MapId)
+{
+    return -1;
+}
+public static function int GetGalaxyFullPopulation()
+{
+    return 0;
+}
+public static function float GetGalaxyMaxBaseTint()
+{
+    return 0.0;
+}
