@@ -1,6 +1,8 @@
 ﻿// MILAN CHANGE
 // 09/21/2026 - Mgamerz
 // Add a new member to MPEnemyInfo native struct IsRandomOption
+// 11/25/2026 - Mgamerz
+// MPEnemyInfo is no longer native
 Class SFXOnlineGameSettings extends OnlineGameSettings
     native
     config(Game);
@@ -12,7 +14,9 @@ struct native MPChallengeInfo
     var stringref Name;
     var stringref AllCapsName;
 };
-struct native MPEnemyInfo 
+// MILAN CHANGE - 11/25/2026 - Mgamerz
+// Strip native flag
+struct MPEnemyInfo
 {
     var string Image;
     var string WaveClass;

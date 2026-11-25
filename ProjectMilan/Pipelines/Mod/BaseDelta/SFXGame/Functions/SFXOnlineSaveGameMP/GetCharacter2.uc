@@ -59,6 +59,6 @@ private final function string GetCharacter2(const out SFXMPCharacterRecord Chara
     WeaponMods = GetWeaponMods(CharacterRecord.WeaponMods);
     Deployed = string(CharacterRecord.Deployed);
     LeveledUp = string(CharacterRecord.LeveledUp);
-    return CachedOnlinePlayerStorage.VersionNumber $ ";" $ DevelopmentVersionNumber $ ";" $ KitName $ ";" $ CharacterName $ ";" $ Tint1ID $ ";" $ Tint2ID $ ";" $ PatternID $ ";" $ PatternColorID $ ";" $ PhongID $ ";" $ EmissiveID $ ";" $ SkinToneID $ ";" $ SecondsPlayed $ ";" $ TimeStamp $ ";" $ Powers $ ";" $ HotKeys $ ";" $ Weapons $ ";" $ WeaponMods $ ";" $ Deployed $ ";" $ LeveledUp $ ";" $ CharacterRecord.HeavyWeaponId;
+    return CachedOnlinePlayerStorage.VersionNumber $ ";" $ DevelopmentVersionNumber $ ";" $ KitName $ ";" $ CharacterName $ ";" $ Tint1ID $ ";" $ Tint2ID $ ";" $ PatternID $ ";" $ PatternColorID $ ";" $ PhongID $ ";" $ EmissiveID $ ";" $ SkinToneID $ ";" $ SecondsPlayed $ ";" $ TimeStamp $ ";" $ Powers $ ";" $ HotKeys $ ";" $ Weapons $ ";" $ WeaponMods $ ";" $ Deployed $ ";" $ LeveledUp $ ";" $ Class'SFXMilanCharacterRecord'.static.GetHeavyWeaponId(CharacterRecord);
 }
 // END MILAN CHANGE

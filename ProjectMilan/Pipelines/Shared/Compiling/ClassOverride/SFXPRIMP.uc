@@ -1544,7 +1544,7 @@ public simulated function SetHeavyWeaponSelection(int Id)
         return;
     }
     HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Id);
-    Character.HeavyWeaponId = HeavyWeaponId;
+    Class'SFXMilanCharacterRecord'.static.SetHeavyWeaponId(Character, HeavyWeaponId);
     ++HeavySelectionSerial;
     ServerSetHeavyWeaponSelection(HeavyWeaponId, Character.KitName, HeavySelectionSerial);
 }
@@ -1599,7 +1599,7 @@ private simulated function RestoreLocalHeavyWeaponSelection(optional SFXMPCharac
     if (Character != None)
     {
         ++HeavySelectionSerial;
-        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Character.HeavyWeaponId);
+        HeavyWeaponId = Class'SFXMilanHeavyWeaponCatalog'.static.NormalizeOwnedId(Class'SFXMilanCharacterRecord'.static.GetHeavyWeaponId(Character));
     }
 }
 // END MILAN CHANGE

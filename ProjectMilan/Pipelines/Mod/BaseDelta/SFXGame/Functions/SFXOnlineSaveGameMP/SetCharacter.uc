@@ -72,11 +72,11 @@ private final function EMPSerializationResult SetCharacter(int CharacterIndex, c
     }
     // MILAN CHANGE - Ready heavy weapon ID
     // Default to Cobra, then read the heavy weapon ID if parser has more to read
-    CharacterRecord.HeavyWeaponId = 0;
+    Class'SFXMilanCharacterRecord'.static.SetHeavyWeaponId(CharacterRecord, 0);
     if (CharacterCursor < CharacterParts.Length)
     {
         // Advance the cursor so later trailing fields read from the right place
-        CharacterRecord.HeavyWeaponId = Max(0, int(CharacterParts[CharacterCursor++]));
+        Class'SFXMilanCharacterRecord'.static.SetHeavyWeaponId(CharacterRecord, Max(0, int(CharacterParts[CharacterCursor++])));
     }
     // END MILAN CHANGE
     CharacterRecord.bSerializedFromBlaze = TRUE;
