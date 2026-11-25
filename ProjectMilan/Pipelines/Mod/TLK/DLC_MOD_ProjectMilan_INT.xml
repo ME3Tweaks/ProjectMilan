@@ -288,15 +288,24 @@ Herobrine24</String>
 	<!-- Keybinding title for for PC_Sprint (sprint + dodge) -->
 	<String id="49875992">Storm / Evade</String>
 	<!-- Quick Match matchmaking settings -->
-	<String id="49875993">Matchmaking settings</String>
-	<String id="49875994">Expanded lobbies allow more than four players in a match and vary in performance, stability, and difficulty.
+	<String id="49875993">Search settings</String>
+	<String id="49875994">Expanded lobbies allow more than four players in a match and vary in performance, stability, and difficulty. Expanded lobbies are an experimental, incomplete feature.
+	
+Your current setting includes classic lobbies only.
+
+Select your search preference:</String>
+	<String id="49875995">Expanded lobbies allow more than four players in a match and vary in performance, stability, and difficulty. Expanded lobbies are an experimental, incomplete feature.
 	
 Your current setting searches classic lobbies only.</String>
 	<String id="49875995">Expanded lobbies allow more than four players in a match and vary in performance, stability, and difficulty.
 	
-Your current setting includes expanded lobbies.</String>
-	<String id="49875996">Include expanded lobbies</String>
-	<String id="49875997">Classic lobbies only</String>
+Select your search preference:</String>
+	<String id="49875996">Expanded</String>
+	<String id="49875997">Classic</String>
+	<!-- Lobby version under the Multiplayer title, Galaxy at War counts -->
+	<String id="49875998">v&lt;CUSTOM0&gt;</String>
+	<String id="49875999">Active Combatants: &lt;CUSTOM0&gt;</String>
+	<String id="49876000">Missions: &lt;CUSTOM0&gt;</String>
 	<!-- Tactical Scan rank 5A description - add shield gate -->
     <String id="733112">Increase all headshot damage by {Evolve_HeadshotBonus%p}%.
 Reduces target shield gate effectiveness by {Evolve_ShieldGateReduction%p}%.</String>
