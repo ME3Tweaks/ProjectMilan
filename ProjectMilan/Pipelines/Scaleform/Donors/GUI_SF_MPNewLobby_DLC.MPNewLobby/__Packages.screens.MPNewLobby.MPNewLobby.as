@@ -33,6 +33,12 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
     // Matchmaking settings button on the Quick Match screen
     var srMatchmakingSettings;
     // END MILAN CHANGE
+    // MILAN CHANGE - 11/24/2026 - Mgamerz
+    // Version under the Multiplayer title, GAW data
+    var GALAXY_MAP_SHIFT = 14;
+    var GALAXY_MISSIONS_SIZE = 13;
+    var GALAXY_FADE_SEED = 4;
+    // END MILAN CHANGE
     var tabs;
     static var LSS_None = 0;
     static var LSS_SelectCharacter = 1;
@@ -344,6 +350,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             this.LoadPage(this.leftPage,this.PAGE_SQUAD);
             this.LoadPage(this.rightPage,this.PAGE_CHARACTER);
         }
+        // MILAN CHANGE - 11/24/2026 - Mgamerz
+        this.RefreshLobbyVersion(subscreen == LSS_MultiplayerMenu);
+        // END MILAN CHANGE
         if(this.m_PageTransitionType != this.PAGE_TRANSITION_NONE)
         {
             this.StartPageTransition();
@@ -354,6 +363,35 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         this.tabs.mainTab.title.textAutoSize = "shrink";
         this.tabs.mainTab.title.text = sTitle;
     }
+    // MILAN CHANGE - 11/24/2026 - Mgamerz
+    // Installed version under the Multiplayer title
+    function RefreshLobbyVersion(bShow)
+    {
+        var Tab = this.tabs.mainTab;
+        var Title = Tab.title;
+        var Label = Tab.milanVersionText;
+        var VersionText = "";
+        if(bShow)
+        {
+            VersionText = String(flash.external.ExternalInterface.call("GetLobbyVersionText"));
+        }
+        if(VersionText == "" || VersionText == "undefined" || VersionText == "null")
+        {
+            Label._visible = false;
+            return;
+        }
+        if(Label == undefined)
+        {
+            Tab.attachMovie("MilanVersionLabel","milanVersionText",Tab.getNextHighestDepth());
+            Label = Tab.milanVersionText;
+            Label._x = Title._x;
+            Label._y = Title._y + Title._height - 4;
+            Label.field._width = Title._width;
+        }
+        Label.field.text = VersionText;
+        Label._visible = true;
+    }
+    // END MILAN CHANGE
     function StartPageTransition()
     {
         if(this.m_PageTransitionType == this.PAGE_TRANSITION_SLIDE_LEFT)
@@ -588,7 +626,9 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         this.RefreshGalaxyAtWarMapPositionMarker();
     }
 
-    function RefreshGalaxyAtWarRatings()
+    // MILAN CHANGE - 11/24/2026 - Mgamerz
+    // Refreshes galaxy stats
+    function RefreshGalaxyAtWarRatings(bFadeIn)
     {
         var GAWMap;
         var GAWRatings;
@@ -608,8 +648,106 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
             // Hide readiness percentages while retaining their fields and updates.
             GAWMap.SetPercentagesVisible(false);
             // END MILAN CHANGE
+            // MILAN CHANGE - 11/24/2026 - Mgamerz
+            this.RefreshGalaxyStats(bFadeIn == true);
+            // END MILAN CHANGE
         }
     }
+
+    // MILAN CHANGE - 11/24/2026 - Mgamerz
+    // Called by SFXGUI_MPLobby when MilanHost has new counts
+    function OnGalaxyStatsUpdated()
+    {
+        if(this.rightPage.contents.m_symbolName == this.PAGE_GALAXY_AT_WAR)
+        {
+            this.RefreshGalaxyAtWarRatings(true);
+        }
+    }
+
+    // Active combatants subtitle, missions per sector and sector tint
+    function RefreshGalaxyStats(bFadeIn)
+    {
+        var Page = this.rightPage.contents;
+        var GAWMap = Page.map;
+        var Subtitle = Page.milanSubtitle;
+        var Stats;
+        var Zones;
+        var ZoneIdx;
+        var ZoneID;
+        var NameField;
+        var Field;
+        var LabelFmt;
+        var bWasVisible;
+        if(GAWMap.m_MilanShifted != true)
+        {
+            GAWMap._y += this.GALAXY_MAP_SHIFT;
+            GAWMap.m_MilanShifted = true;
+        }
+        if(Subtitle == undefined)
+        {
+            Subtitle = this.CreateGalaxySubtitle(Page);
+        }
+        bWasVisible = Subtitle._visible;
+        Stats = flash.external.ExternalInterface.call("GetGalaxyStats");
+        if(Stats == undefined || !Stats.bAvailable)
+        {
+            com.TweenManager.destroyTween(this.GALAXY_FADE_SEED);
+            Subtitle._visible = false;
+            return;
+        }
+
+        LabelFmt = new TextFormat();
+        LabelFmt.size = this.GALAXY_MISSIONS_SIZE;
+        Zones = com.SFXScreen.ObjectToArray(Stats.Zones);
+        ZoneIdx = 0;
+        while(ZoneIdx < Zones.length)
+        {
+            ZoneID = Zones[ZoneIdx].ZoneID;
+            GAWMap.SetZoneReadiness(ZoneID,Zones[ZoneIdx].Readiness);
+            NameField = GAWMap.TextFieldList[ZoneID];
+            Field = GAWMap.TextFieldRatingList[ZoneID];
+            Field.textAutoSize = "shrink";
+            Field.text = Zones[ZoneIdx].MissionsText;
+            Field.setTextFormat(LabelFmt);
+            // Sector names wrap to different heights
+            Field._y = NameField._y + NameField.textHeight + 4;
+            ZoneIdx += 1;
+        }
+        if(GAWMap.ErrorText._visible != true)
+        {
+            GAWMap.SetPercentagesVisible(true);
+        }
+
+        Subtitle.field.text = Stats.SubtitleText;
+        if(!bWasVisible)
+        {
+            Subtitle._visible = true;
+            if(bFadeIn)
+            {
+                com.TweenManager.createAlphaTween(this.GALAXY_FADE_SEED,Subtitle,0,100,16,20);
+            }
+            else
+            {
+                com.TweenManager.destroyTween(this.GALAXY_FADE_SEED);
+                Subtitle._alpha = 100;
+            }
+        }
+    }
+
+    // Creates the clip that houses the number of players
+    function CreateGalaxySubtitle(Page)
+    {
+        var Title = Page.title;
+        var Clip;
+        Page.attachMovie("MilanGalaxySubtitle","milanSubtitle",Page.getNextHighestDepth());
+        Clip = Page.milanSubtitle;
+        Clip._x = Title._x;
+        Clip._y = Title._y + 29;
+        Clip.field._width = Title._width;
+        Clip._visible = false;
+        return Clip;
+    }
+    // END MILAN CHANGE
 
     function RefreshGalaxyAtWarMapPositionMarker()
     {

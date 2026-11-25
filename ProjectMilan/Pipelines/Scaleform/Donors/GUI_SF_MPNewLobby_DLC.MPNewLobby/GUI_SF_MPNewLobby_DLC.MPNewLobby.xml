@@ -13534,6 +13534,45 @@ Make sure you use compatible reader/writer based on _xmlExportMajor/_xmlExportMi
       </names>
     </item>
     <item type="DoInitActionTag" actionBytes="885200060073637265656e73004d504e65774c6f626279004c617267654172726f77427574746f6e004d696c616e506c617965725363726f6c6c4172726f77004f626a656374007265676973746572436c6173730096020008001c96020008014e96020008024e9602000803960500070200000096020008041c9602000805521700" forceWriteAsLong="true" spriteId="1000"/>
+    <!-- MILAN CHANGE - 11/24/2026 - Mgamerz 
+	Add labels for game version and GAW subtitle for player count -->
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="1010" fontHeight="260" fontId="28" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="false" hasTextColor="true" html="false" indent="0" leading="0" leftMargin="0" multiline="false" noSelect="true" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="false">
+      <bounds type="RECT" Xmax="10500" Xmin="0" Ymax="400" Ymin="0" nbits="15"/>
+      <textColor type="RGBA" alpha="255" blue="184" green="166" red="127"/>
+    </item>
+    <item type="CSMSettingsTag" forceWriteAsLong="true" gridFit="2" reserved="0" reserved2="0" sharpness="0.0" textID="1010" thickness="0.0" useFlashType="1"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="1011">
+      <subTags>
+        <item type="PlaceObject2Tag" characterId="1010" depth="1" forceWriteAsLong="true" name="field" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="0" translateX="0" translateY="0"/>
+        </item>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="DefineEditTextTag" align="2" autoSize="false" border="false" characterID="1012" fontHeight="240" fontId="28" forceWriteAsLong="true" hasFont="true" hasFontClass="false" hasLayout="true" hasMaxLength="false" hasText="false" hasTextColor="true" html="false" indent="0" leading="0" leftMargin="0" multiline="false" noSelect="true" password="false" readOnly="true" rightMargin="0" useOutlines="true" variableName="" wasStatic="false" wordWrap="false">
+      <bounds type="RECT" Xmax="10500" Xmin="0" Ymax="380" Ymin="0" nbits="15"/>
+      <textColor type="RGBA" alpha="255" blue="255" green="229" red="163"/>
+    </item>
+    <item type="CSMSettingsTag" forceWriteAsLong="true" gridFit="2" reserved="0" reserved2="0" sharpness="0.0" textID="1012" thickness="0.0" useFlashType="1"/>
+    <item type="DefineSpriteTag" forceWriteAsLong="true" frameCount="1" hasEndTag="true" spriteId="1013">
+      <subTags>
+        <item type="PlaceObject2Tag" characterId="1012" depth="1" forceWriteAsLong="true" name="field" placeFlagHasCharacter="true" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="true" placeFlagHasRatio="false" placeFlagMove="false">
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="0" translateX="0" translateY="0"/>
+        </item>
+        <item type="ShowFrameTag" forceWriteAsLong="false"/>
+      </subTags>
+    </item>
+    <item type="ExportAssetsTag" forceWriteAsLong="false">
+      <tags>
+        <item>1011</item>
+        <item>1013</item>
+      </tags>
+      <names>
+        <item>MilanVersionLabel</item>
+        <item>MilanGalaxySubtitle</item>
+      </names>
+    </item>
+    <!-- END MILAN CHANGE -->
     <item type="ShowFrameTag" forceWriteAsLong="false"/>
     <item type="DoActionTag" actionBytes="0700" forceWriteAsLong="true"/>
     <item type="PlaceObject2Tag" depth="4" forceWriteAsLong="false" placeFlagHasCharacter="false" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="true" placeFlagHasMatrix="true" placeFlagHasName="false" placeFlagHasRatio="false" placeFlagMove="true">
