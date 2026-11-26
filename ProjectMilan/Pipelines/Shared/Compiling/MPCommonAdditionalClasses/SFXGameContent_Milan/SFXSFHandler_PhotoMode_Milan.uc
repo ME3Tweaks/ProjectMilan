@@ -43,8 +43,27 @@ public function bool HandleInputEvent(BioGuiEvents Event, optional float fValue 
             PC.bPhotoModeCameraUnlocked = FALSE;
         }
     }
+    // MILAN CHANGE - 11/24/2026 - Mgamerz
+    // Supress RMB release reshowing the cursor
+    if (bOptionsHidden)
+    {
+        return TRUE;
+    }
+    // END MILAN CHANGE
     return Super.HandleInputEvent(Event, fValue);
 }
+
+// MILAN CHANGE - 11/24/2026 - Mgamerz
+// Keep mouse hidden when input mode changes and UI is off
+public function HandleButtonRefresh(bool bIsUsingGamepad)
+{
+    Super.HandleButtonRefresh(bIsUsingGamepad);
+    if (bInitialized && bOptionsHidden)
+    {
+        SetMouseShown(FALSE);
+    }
+}
+// END MILAN CHANGE
 
 // Custom MP only items
 // Mgamerz - 2026-10-20
@@ -656,6 +675,10 @@ public final function HidePhotoClip(GFxValue Clip)
 public function ToggleOptions()
 {
     Super.ToggleOptions();
+    // MILAN CHANGE - 11/24/2026 - Mgamerz
+    // Hide cursor with the UI
+    SetMouseShown(!bOptionsHidden && !oPanel.bUsingGamepad);
+    // END MILAN CHANGE
     if (PhotoMode != None && PhotoMode.bMPSpectatorPhoto)
     {
         if (!bOptionsHidden) 
