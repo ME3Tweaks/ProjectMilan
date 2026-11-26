@@ -206,7 +206,9 @@ public function OnPurchaseCreditsCallback(int nResult)
     ClearQueuedNotification('CreditWaiting');
     if (nResult == 0 || nResult == -1) // Writing save data returns -1; accept it in the current development flow.
     {
-        GetLobbyFlow().SetLastSelectedOffer(GAWManager.GetOfferIDFromStoreID(SelectedID));
+        // MILAN CHANGE - 11/25/2026 - Mgamerz
+        // Fix wrong offer being tracked for return to loot store reselection
+        GetLobbyFlow().SetLastSelectedOffer(SelectedID);
         ShowReinforcementsRevealScreen(FALSE);
     }
     else
@@ -633,7 +635,9 @@ public final function FinishInitialization(int nResult)
     ClearQueuedNotification('RefreshingPurchases');
     if (GAWManager != None && GAWManager.LastAwardedCards.Length != 0)
     {
-        GetLobbyFlow().SetLastSelectedOffer(GAWManager.GetOfferIDFromStoreID(SelectedID));
+        // MILAN CHANGE - 11/25/2026 - Mgamerz
+        // Fix wrong offer being tracked for return to loot store reselection
+        GetLobbyFlow().SetLastSelectedOffer(SelectedID);
         ShowReinforcementsRevealScreen(FALSE);
         return;
     }
@@ -655,7 +659,9 @@ private final function FinishPurchase()
     local BioSFHandler_MessageBox oBox;
     local SFXGUIInteraction GUIInteraction;
     
-    GetLobbyFlow().SetLastSelectedOffer(GAWManager.GetOfferIDFromStoreID(SelectedID));
+    // MILAN CHANGE - 11/25/2026 - Mgamerz
+    // Fix wrong offer being tracked for return to loot store reselection
+    GetLobbyFlow().SetLastSelectedOffer(SelectedID);
     GUIInteraction = Class'SFXGUIInteraction'.static.GetInstance();
     if (GUIInteraction != None)
     {
