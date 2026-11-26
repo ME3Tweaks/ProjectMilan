@@ -16,9 +16,16 @@ var(SFXCustomizationInstance_PlayerMP) int SkinToneID;
 // MILAN CHANGE - Set a packed color on the MIC if it has one
 public final function SetColorParameter(MaterialInstanceConstant MIC, Name ParameterName, int Packed)
 {
+    local LinearColor Color;
+
     if (Class'MilanColor'.static.HasColor(Packed))
     {
-        MIC.SetVectorParameterValue(ParameterName, Class'MilanColor'.static.UnpackRGB(Packed));
+        // MILAN CHANGE - 11/25/2026 - Mgamerz
+        // Irradiated hulk fix from RGB conversion of storage
+        // Make object, then pass it as parameter, otherwise game reads from possibly polluted stack in native
+        Color = Class'MilanColor'.static.UnpackRGB(Packed);
+        MIC.SetVectorParameterValue(ParameterName, Color);
+        // END MILAN CHANGE
     }
 }
 // END MILAN CHANGE
