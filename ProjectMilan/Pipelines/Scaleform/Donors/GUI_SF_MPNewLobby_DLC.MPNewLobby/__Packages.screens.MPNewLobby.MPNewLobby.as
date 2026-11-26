@@ -1085,20 +1085,20 @@ class screens.MPNewLobby.MPNewLobby extends com.SFXScreen
         {
             this.RefreshButton(_root.PCBtnCharacter,0,"",undefined,false);
             this.RefreshButton(this.m_PCLegend.PCBtnLeft,com.XInput.ButtonY,"",undefined,false);
+            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ConfirmMatchSettings,bCanInteract);
             // MILAN CHANGE - 11/23/2026 - Mgamerz
             // Matchmaking settings on the Quick Match screen only
             if(!bIsHostingNewMission)
             {
-                this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srMatchmakingSettings,this.ShowMatchmakingSettings,bCanInteract);
+                this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,this.srSearch,this.ConfirmMatchSettings,bCanInteract);
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srMatchmakingSettings,this.ShowMatchmakingSettings,bCanInteract);
             }
             else
             {
                 this.RefreshButton(this.m_PCLegend.PCBtnMid1,com.XInput.ButtonX,"",undefined,false);
+                this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,this.srConfirm,this.ConfirmMatchSettings,bCanInteract);
             }
             // END MILAN CHANGE
-            // Enter will confirm match settings, so will the button
-            this.RefreshButton(undefined,com.XInput.ButtonA,"",this.ConfirmMatchSettings,bCanInteract);
-            this.RefreshButton(this.m_PCLegend.PCBtnMid2,PCMid2Event,!bIsHostingNewMission ? this.srSearch : this.srConfirm,this.ConfirmMatchSettings,bCanInteract);
             this.RefreshButton(this.m_PCLegend.PCBtnRight,com.XInput.ButtonB,this.srCancel,this.CancelMatchSettings,bCanInteract);
         }
         else
