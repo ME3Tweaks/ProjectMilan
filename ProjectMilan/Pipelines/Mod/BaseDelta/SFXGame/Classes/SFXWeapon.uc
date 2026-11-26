@@ -2,6 +2,7 @@
 // By Mgamerz
 // Add flashlight support
 // Fix disappearing weapons when holster action is interrupted
+// Send non-armor pawn hit parts with client instant hits so server knows what was hit
 Class SFXWeapon extends SFXWeapon_NativeBase
     placeable
     abstract
@@ -652,6 +653,13 @@ public simulated function ProcessInstantHit(byte FiringMode, ImpactInfo Impact, 
                         }
                     }
                 }
+                // MILAN CHANGE - 11/23/2026 - Mgamerz
+                // Submit custom index for pawn's hit component so host knows what actually was hit
+                if (ArmourHitIdx == -1 && BioPawn(Impact.HitActor) != None)
+                {
+                    ArmourHitIdx = BioPawn(Impact.HitActor).GetNetHitPartCode(Impact.HitInfo.HitComponent);
+                }
+                // END MILAN CHANGE
             }
             ServerProcessInstantHit(FiringMode, Impact, ArmourHitIdx, bSuppressAudio, NumHits);
         }
@@ -3196,7 +3204,10 @@ public reliable server function ServerProcessInstantHit(byte FiringMode, ImpactI
     {
         Impact.HitActor = Impact.HitInfo.HitComponent.Owner;
     }
-    if (HitArmourIdx != -1 && Impact.HitActor != None && Impact.HitInfo.HitComponent == None)
+    // MILAN CHANGE - 11/23/2026 - Mgamerz
+    // Negative codes are non-armor pawn parts
+    if (HitArmourIdx >= 0 && Impact.HitActor != None && Impact.HitInfo.HitComponent == None)
+    // END MILAN CHANGE
     {
         ArmMod = Impact.HitActor.GetModule(Class'SFXModule_Armour');
         if (ArmMod != None && ArmMod.ActiveArmour[HitArmourIdx].AttachInstance != None)
@@ -3204,6 +3215,12 @@ public reliable server function ServerProcessInstantHit(byte FiringMode, ImpactI
             Impact.HitInfo.HitComponent = ArmMod.ActiveArmour[HitArmourIdx].AttachInstance;
         }
     }
+    // MILAN CHANGE - 11/23/2026 - Mgamerz
+    else if (HitArmourIdx < -1 && BioPawn(Impact.HitActor) != None && Impact.HitInfo.HitComponent == None)
+    {
+        Impact.HitInfo.HitComponent = BioPawn(Impact.HitActor).GetNetHitPart(HitArmourIdx);
+    }
+    // END MILAN CHANGE
     if (Instigator != None)
     {
         PC = PlayerController(Instigator.Controller);
