@@ -364,12 +364,6 @@ namespace ProjectMilan.Pipelines.Levels
                     BeginPortingGeneric(level, parent);
                 }
 
-                // Fix Grenade/Ammo container respawns times
-                // Grenade - 8s (Is this right?)
-                // Ammo - 3s
-                CorrectAmmoGrenadeContainers(level);
-
-
                 // Static lighting does not save the source package, so we are now free to modify it now that the final save has occurred
                 if (Program.BuildStaticLighting && level.BuildLighting)
                 {
@@ -439,21 +433,33 @@ namespace ProjectMilan.Pipelines.Levels
         {
             foreach (var sl in level.LE3Packages.Values)
             {
-                foreach (var export in sl.Exports.Where(x => !x.IsDefaultObject))
-                {
-                    if (export.ClassName == "SFXAmmoContainer")
-                    {
-                        MilanLog.Information($"Setting {export.ObjectName.Instanced} respawn time to 3.0s", customPrefix: level.LogCategory);
-                        export.WriteProperty(new FloatProperty(3.0f, "RespawnTime"));
-                    }
-                    // All containers have defaults set so this might not actually be what it should be
-                    //else if (export.ClassName == "SFXGrenadeContainer")
-                    //{
-                    //    MilanLog.Information($"Setting {export.ObjectName.Instanced} respawn time to 8.0s", customPrefix: level.LogCategory);
-                    //    export.WriteProperty(new FloatProperty(8.0f, "RespawnTime"));
-                    //}
-                }
+                CorrectAmmoGrenadeContainers(sl, level.LogCategory);
             }
+        }
+
+        /// <summary>
+        /// Corrects the grenade/ammo container respawn times in one package
+        /// </summary>
+        /// <returns>True if anything was changed</returns>
+        internal static bool CorrectAmmoGrenadeContainers(IMEPackage package, string logCategory)
+        {
+            bool changed = false;
+            foreach (var export in package.Exports.Where(x => !x.IsDefaultObject))
+            {
+                if (export.ClassName == "SFXAmmoContainer")
+                {
+                    MilanLog.Information($"Setting {export.ObjectName.Instanced} respawn time to 3.0s", customPrefix: logCategory);
+                    export.WriteProperty(new FloatProperty(3.0f, "RespawnTime"));
+                    changed = true;
+                }
+                // All containers have defaults set so this might not actually be what it should be
+                //else if (export.ClassName == "SFXGrenadeContainer")
+                //{
+                //    MilanLog.Information($"Setting {export.ObjectName.Instanced} respawn time to 8.0s", customPrefix: logCategory);
+                //    export.WriteProperty(new FloatProperty(8.0f, "RespawnTime"));
+                //}
+            }
+            return changed;
         }
 
 
@@ -502,13 +508,16 @@ namespace ProjectMilan.Pipelines.Levels
             MilanLevelTools.SetupHordeModes(levelPipeline.LE3BioP, false);
 
 
-            // These maps skip the ME3 port, but still need the extra draw distance fixes
+            // These maps skip the ME3 port, but still need the extra draw distance and ammo container fixes
             LevelShared.MultiplyLevelCullingDistances(levelPipeline.LE3BioP, 2f);
+            CorrectAmmoGrenadeContainers(levelPipeline.LE3BioP, levelPipeline.LogCategory);
             foreach (var sublevel in LevelShared.GetSublevelPackages(levelPipeline.LE3BioP).Distinct(StringComparer.OrdinalIgnoreCase))
             {
                 MELoadedFiles.TryGetHighestMountedFile(MEGame.LE3, $"{sublevel}.pcc", out var sourcePath);
                 using var package = MEPackageHandler.OpenMEPackage(sourcePath, forceLoadFromDisk: true, diskIOSyncLock: MilanShared.DiskIOSyncLock);
-                if (LevelShared.MultiplyLevelCullingDistances(package, 2f) > 0)
+                bool culled = LevelShared.MultiplyLevelCullingDistances(package, 2f) > 0;
+                bool ammoFixed = CorrectAmmoGrenadeContainers(package, levelPipeline.LogCategory);
+                if (culled || ammoFixed)
                 {
                     // These LE3 sublevels can still branch on SP game classes that do not exist in LMP.
                     var sequence = package.FindExport("TheWorld.PersistentLevel.Main_Sequence");
@@ -804,6 +813,8 @@ namespace ProjectMilan.Pipelines.Levels
                 ExtractionShuttleLightEnvironmentFix.Apply(package, levelPipeline.LogCategory);
             }
             levelPipeline.SpecialFixes?.PostCorrect(levelPipeline);
+
+            CorrectAmmoGrenadeContainers(levelPipeline);
 
             foreach (var package in levelPipeline.LE3Packages.Values)
             {

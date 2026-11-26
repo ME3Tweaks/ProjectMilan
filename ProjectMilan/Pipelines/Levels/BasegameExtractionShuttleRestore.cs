@@ -81,6 +81,7 @@ namespace ProjectMilan.Pipelines.Levels
 
             // Shuttle restoration starts from stock too, so keep the longer draw distances.
             LevelShared.MultiplyLevelCullingDistances(package, 2f);
+            MPLevels.CorrectAmmoGrenadeContainers(package, levelPipeline.LogCategory);
             package.Save(Path.Combine(levelPipeline.LevelOutputDir, $"{bioDName}.pcc"), diskIOSyncLock: MilanShared.DiskIOSyncLock);
             MilanShared.RefreshMilanFiles = true;
         }
