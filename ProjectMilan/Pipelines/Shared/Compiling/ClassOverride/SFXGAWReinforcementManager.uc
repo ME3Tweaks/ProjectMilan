@@ -483,6 +483,25 @@ public final function StartConsumptionFlow(bool bRefreshSave)
 }
 public delegate function int StoreItemSort(StoreGUIData Entry_A, StoreGUIData Entry_B)
 {
+    // MILAN CHANGE - 11/25/2026 - Mgamerz
+    // Sort packs by free first
+    local bool bFreeA;
+    local bool bFreeB;
+
+    bFreeA = Entry_A.EPurchaseType == EPurchaseType.EPurchaseType_Free;
+    bFreeB = Entry_B.EPurchaseType == EPurchaseType.EPurchaseType_Free;
+    if (bFreeA != bFreeB)
+    {
+        if (bFreeB)
+        {
+            return -1;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+    // END MILAN CHANGE
     if (Entry_A.nID > Entry_B.nID)
     {
         return -1;
