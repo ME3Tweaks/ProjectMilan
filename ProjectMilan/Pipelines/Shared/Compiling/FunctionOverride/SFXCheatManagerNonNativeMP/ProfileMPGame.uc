@@ -25,6 +25,9 @@ public function ProfileMPGame()
     local SFXPlayerControllerMP C;
     local Color OldColor;
     local Canvas Canvas;
+    local SFXPRIMP LoadPRI;
+    local bool bPollLoadStatus;
+    local int StatusIdx;
 
     Engine = SFXEngine(Class'Engine'.static.GetEngine());
     GRI = SFXGRI(Outer.WorldInfo.GRI);
@@ -151,11 +154,26 @@ public function ProfileMPGame()
     // BEGIN MILAN CHANGE
     // Add player controller states for networking debug
     // Remove the credits previewing as we don't care about that between clients
+    // Must poll occassionally rather than every frame or client channels get overloaded and game stalls for them
+    bPollLoadStatus = Outer.WorldInfo.RealTimeSeconds - LastLoadStatusPollTime >= 0.5 || Outer.WorldInfo.RealTimeSeconds < LastLoadStatusPollTime;
+    if (bPollLoadStatus)
+    {
+        LastLoadStatusPollTime = Outer.WorldInfo.RealTimeSeconds;
+        LoadStatusControllers.Length = 0;
+        LoadStatusResults.Length = 0;
+    }
     foreach Class'BioWorldInfo'.static.GetWorldInfo().AllControllers(Class'SFXPlayerControllerMP', C)
     {
         DrawLine("Player data for controller ", string(C));
         DrawLine("    State: ", string(C.GetStateName()));
         DrawLine("    Pawn loaded: ", string(C.Pawn != None));
-        DrawLine("    Pawn load status: ", string(SFXPRIMP(C.PlayerReplicationInfo).GetAsyncLoadingStatus()));
+        LoadPRI = SFXPRIMP(C.PlayerReplicationInfo);
+        if (bPollLoadStatus && LoadPRI != None)
+        {
+            LoadStatusControllers.AddItem(C);
+            LoadStatusResults.AddItem(LoadPRI.GetAsyncLoadingStatus());
+        }
+        StatusIdx = LoadStatusControllers.Find(C);
+        DrawLine("    Pawn load status: ", StatusIdx != -1 ? string(LoadStatusResults[StatusIdx]) : "None");
     }
 }
