@@ -675,6 +675,7 @@ public simulated function RemovePickupObject()
 {
     local SFXModule_GameEffectManager Manager;
     local SFXModule_MarkerPlayer PlayerMarkerModule;
+    local SFXModule_MarkerObjective ObjectiveModule;
     
     ClearTimer('CheckForDrop');
     ClearTimer('HideWeapons');
@@ -708,12 +709,13 @@ public simulated function RemovePickupObject()
     // MILAN CHANGE - 11/22/2026 - Mgamerz
     CarrierPriorityEffect = None;
     // END MILAN CHANGE
-    if (CarrierMarker != None)
+    while (PickedUpBy.GetModule(Class'SFXModule_MarkerObjective') != None)
     {
-        CarrierMarker.Deactivate();
-        PickedUpBy.RemoveSFXModule(CarrierMarker);
-        CarrierMarker = None;
+        ObjectiveModule = PickedUpBy.GetModule(Class'SFXModule_MarkerObjective');
+        ObjectiveModule.Deactivate();
+        PickedUpBy.RemoveSFXModule(ObjectiveModule);
     }
+        CarrierMarker = None;
     if (PickedUpBy.GetModule(Class'SFXModule_MarkerPlayer') == None)
     {
         PlayerMarkerModule = new (PickedUpBy) Class'SFXModule_MarkerPlayer';
@@ -765,6 +767,8 @@ public simulated function CheckForDrop()
                 bDropObject = TRUE;
                 break;
             }
+        }
+    }
     // MILAN CHANGE - 11/27/2026 - Mgamerz
     // Carrier drop
     if (!bDropObject)
