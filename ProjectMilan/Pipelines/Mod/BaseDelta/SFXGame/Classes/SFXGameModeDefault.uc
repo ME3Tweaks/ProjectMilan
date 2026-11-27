@@ -1009,6 +1009,18 @@ public exec function TryMelee()
             if (Weapon != None)
             {
                 Weapon.CancelReload();
+                // MILAN CHANGE - 11/27/2026 - Mgamerz
+                // Give priority to over-cover grab versus melee (biowear pls)
+                if (oPawn.IsInCover() && oPawn.CoverType == ECoverType.CT_MidLevel && oPawn.CoverAction == ECoverAction.CA_Default && oPawn.VerifyCAHasBeenInstanced(62))
+                {
+                    if (oPawn.CustomActions[62].GetVictimPawn() != None)
+                    {
+                        Outer.StartCustomActionWithSyncPartner(62);
+                        Outer.GenerateTutorialEvent(3);
+                        return;
+                    }
+                }
+                // END MILAN CHANGE
                 Outer.StartCustomAction(132, , , 63);
             }
         }
