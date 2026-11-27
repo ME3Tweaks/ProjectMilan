@@ -978,8 +978,8 @@ defaultproperties
     CarrierSprintLoopStartSound = WwiseEvent'Wwise_GUI_DLC_MP2.Play_gui_milan_retrieve_carrier_beep'
     CarrierSprintLoopStopSound = WwiseEvent'Wwise_GUI_DLC_MP2.Stop_gui_milan_retrieve_carrier_beep'
     CarrierAwarenessFrequency = 0.5
-    CarrierAwarenessRadius = 4000.0
-    CarrierBerserkRadius = 1000.0
+    CarrierAwarenessRadius = 5000.0
+    CarrierBerserkRadius = 2000.0
     DropRequestGraceTime = 0.5
     CarrierBerserkDuration = 8.0
     // END MILAN CHANGE
