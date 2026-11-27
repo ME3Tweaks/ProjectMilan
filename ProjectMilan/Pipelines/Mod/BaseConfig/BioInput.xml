@@ -341,6 +341,9 @@
 				<Value type="2">( Name="Shared_SpectatorPhotoMode", Command="EnterSpectatorPhotoMode")</Value>
 				<Value type="2">( Name="Console_UsePower3", Command="OnRelease TryUsePower 2" )</Value>
 				<Value type="2">( Name="Console_NavAssistanceOrCoverTurn", Command="Exclusive TryCoverTurn | Exclusive ActivatePOI | OnRelease DeactivatePOI | ShowAreaMap " )</Value>
+				<!-- MILAN CHANGE - 11/27/2026 - Mgamerz - Right stick drops retreive object -->
+				<Value type="2">( Name="Console_CoverTurnOrDropObject", Command="Exclusive TryCoverTurn | Exclusive ActivatePOI | OnRelease DeactivatePOI | ShowAreaMap | DropCarriedObject" )</Value>
+				<!-- END MILAN CHANGE -->
 				<Value type="2">( Name="Shared_TogglePhotoOptions", Command="ToggleOptions")</Value>
 				<Value type="2">( Name="Shared_Screenshot", Command="TakePhoto" )</Value>
 				<Value type="2">( Name="Console_PhotoStrafe", Command="Axis aStrafe Speed=1.0 DeadZone=0.1" )</Value>
@@ -377,7 +380,9 @@
 				<Value type="2">( Name="PC_HotKey7", Command="UseAbility 6" )</Value>
 				<Value type="2">( Name="PC_HotKey8", Command="UseAbility 7" )</Value>
 				<Value type="2">( Name="PC_ShowMap", Command="Exclusive ActivatePOI | OnRelease DeactivatePOI | OnTap 0.2 ShowAreaMap | OnHold 0.2 HoldObjectiveDisplay | OnRelease StopObjectiveDisplay " )</Value>
-				<Value type="2">( Name="PC_CoverTurn", Command="TryCoverTurn" )</Value>
+				<!-- MILAN CHANGE - 11/27/2026 - Mgamerz - New way to drop retreive object -->
+				<Value type="2">( Name="PC_CoverTurn", Command="Exclusive TryCoverTurn | DropCarriedObject" )</Value>
+				<!-- END MILAN CHANGE -->
 				<Value type="2">( Name="Walking", Command="EnableWalking | OnRelease DisableWalking" )</Value>
 				<Value type="2">( Name="PC_PushToTalk", Command="VoicePushToTalkStart | OnRelease VoicePushToTalkEnd" )</Value>
 				<Value type="2">( Name="PC_TogglePhotoCamera", Command="EnableCamera | OnRelease DisableCamera" )</Value>
@@ -450,7 +455,9 @@
 				<Value type="2">( Name="XboxTypeS_DPad_Down", Command="Console_SquadFollowAndPower6" )</Value>
 				<Value type="2">( Name="XboxTypeS_DPad_Left", Command="Console_SquadMove1AndPower7" )</Value>
 				<Value type="2">( Name="XboxTypeS_LeftThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
-				<Value type="2">( Name="XboxTypeS_RightThumbstick", Command="Console_NavAssistanceOrCoverTurn" )</Value>
+				<!-- MILAN CHANGE - 11/27/2026 - Mgamerz - Right stick drops retreive object -->
+				<Value type="2">( Name="XboxTypeS_RightThumbstick", Command="Console_CoverTurnOrDropObject" )</Value>
+				<!-- END MILAN CHANGE -->
 				<Value type="2">( Name="LeftControl", Command="Walking" )</Value>
 				<Value type="2">( Name="LeftMouseButton", Command="Shared_Shoot" )</Value>
 				<Value type="2">( Name="RightMouseButton", Command="Shared_Aim" )</Value>

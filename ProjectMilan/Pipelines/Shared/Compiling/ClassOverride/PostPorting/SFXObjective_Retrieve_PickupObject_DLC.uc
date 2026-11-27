@@ -98,6 +98,11 @@ var config float CarrierBerserkDuration;
 var transient array<CarrierBerserkEntry> CarrierBerserkers;
 // END MILAN CHANGE
 
+// MILAN CHANGE - 11/27/2026 - Mgamerz
+// Ignore pickup requests for this amount of time
+var config float DropRequestGraceTime;
+// END MILAN CHANGE
+
 public function int FindDropPenalty(SFXPawn_Player Player, bool bCreate)
 {
     local int i;
@@ -733,6 +738,7 @@ public simulated function CheckForDrop()
     local BioCustomAction oCustomAction;
     local int idx;
     local bool bDropObject;
+    local SFXPlayerControllerMP CarrierPC;
     
     if (Role != ENetRole.ROLE_Authority)
     {
@@ -759,8 +765,17 @@ public simulated function CheckForDrop()
                 bDropObject = TRUE;
                 break;
             }
+    // MILAN CHANGE - 11/27/2026 - Mgamerz
+    // Carrier drop
+    if (!bDropObject)
+    {
+        CarrierPC = SFXPlayerControllerMP(PickedUpBy.Controller);
+        if (CarrierPC != None && CarrierPC.MilanDropRequestTime > PickedUpTimestamp + DropRequestGraceTime)
+        {
+            bDropObject = TRUE;
         }
     }
+    // END MILAN CHANGE
     if (bDropObject)
     {
         // MILAN CHANGE - Mgamerz - 2026-10-08
@@ -961,6 +976,7 @@ defaultproperties
     CarrierAwarenessFrequency = 0.5
     CarrierAwarenessRadius = 4000.0
     CarrierBerserkRadius = 1000.0
+    DropRequestGraceTime = 0.5
     CarrierBerserkDuration = 8.0
     // END MILAN CHANGE
     AttachSocketName = 'Socket_07'

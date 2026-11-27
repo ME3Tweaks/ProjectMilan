@@ -36,6 +36,9 @@ var bool bRestarting;
 var config bool AFKIgnoreMovementCheck;
 var config bool AFKIgnoreWeaponAndPowerCheck;
 var bool IsAFKPostponementActive;
+// MILAN CHANGE - 11/27/2026 - Mgamerz
+var transient float DropRequestTime;
+// END MILAN CHANGE
 
 public event function bool CanSave(out string Reason)
 {
@@ -158,6 +161,24 @@ public exec function Pause()
 {
     Super(PlayerController).Pause();
 }
+// MILAN CHANGE - 11/27/2026 - Mgamerz
+// Drops carried object
+public exec function DropCarriedObject()
+{
+    local BioPawn BP;
+
+    BP = BioPawn(Pawn);
+    if (BP == None || BP.IsDead() || BP.IsInCover())
+    {
+        return;
+    }
+    ServerDropCarriedObject();
+}
+public reliable server function ServerDropCarriedObject()
+{
+    DropRequestTime = WorldInfo.GameTimeSeconds;
+}
+// END MILAN CHANGE
 public event function PlayerTick(float DeltaTime)
 {
     local bool bReadyOnClient;
