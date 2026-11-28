@@ -2142,6 +2142,25 @@
 			<Property name="zoomaccfirepenalty" type="0">(X=2.15f,Y=2.15f)</Property>
 			<Property name="zoomrecoil" type="0">(X=1,Y=1)</Property>
 		</Section>
+		<Section name="sfxgamecontent.sfxprojectile_grenade">
+			<Property name="proximityradius" type="0">250.0</Property>
+			<Property name="proximityarmtime" type="0">0.15</Property>
+			<!-- Ammo power procs roll as a weapon firing this many shots per second -->
+			<Property name="ammobulletspersecond" type="0">1.0</Property>
+			<!-- Trigger detonations -->
+			<Property name="detonatedcombos" type="3">SFXGameEffect_PowerCombo_Electric</Property>
+			<Property name="detonatedcombos" type="3">SFXGameEffect_PowerCombo_Fire</Property>
+			<Property name="detonatedcombos" type="3">SFXGameEffect_PowerCombo_Cryo</Property>
+			<!-- Detonator rank for combo strength (out of 6) -->
+			<Property name="combodetonationrank" type="0">4.0</Property>
+		</Section>
+		<Section name="sfxgamecontent.sfxdamagetype_grenade">
+			<!-- Stagger through shields -->
+			<Property name="hitreactions">
+				<Value type="3">(BodyPart="",Reaction=Reaction_ReactionHeavy,ReactionChance=1.0,bIgnoreShields=true)</Value>
+				<Value type="3">(BodyPart="",Reaction=Reaction_DeathHeavy,ReactionChance=1.0)</Value>
+			</Property>
+		</Section>
 		<Section name="sfxgamecontent.sfxweapon_heavy_grenadelauncher">
 			<Property name="accfireinterpspeed" type="0">(X=3.0f,Y=3.0f)</Property>
 			<Property name="accfirepenalty" type="0">(X=3.3f,Y=3.3f)</Property>
