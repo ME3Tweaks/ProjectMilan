@@ -37,7 +37,7 @@ namespace ProjectMilan.Pipelines.Gear
             [MELocalization.INT] = "Regeneration Module <CUSTOM0>",
         };
         private static readonly LocalizedString RegenDescription = new() {
-            [MELocalization.INT] = "Nanite clusters repair tissue damage while you stay out of enemy fire, restoring lost health one segment at a time.\nRegeneration Delay: <CUSTOM0> seconds",
+            [MELocalization.INT] = "Augment your armor with a timed medigel doser that automatically regenerates your health over time.\nRegeneration Delay: <CUSTOM0> seconds",
         };
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace ProjectMilan.Pipelines.Gear
                 Image = "DLC_MPImages.Cards.DLCHealthRegen",
                 // Custom0 is shown x100. these are PulseInterval[0..4] in seconds
                 // KEEP IN LINE WITH VALUES IN CLASS AND CONFIG!
-                Tokens = "Custom0Tokens[0]=0.06f,Custom0Tokens[1]=0.5f,Custom0Tokens[2]=0.04f,Custom0Tokens[3]=0.03f,Custom0Tokens[4]=0.02f",
+                Tokens = "Custom0Tokens[0]=0.035f,Custom0Tokens[1]=0.03f,Custom0Tokens[2]=0.025f,Custom0Tokens[3]=0.02f,Custom0Tokens[4]=0.015f",
             },
         ];
 

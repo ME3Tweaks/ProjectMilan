@@ -93,9 +93,9 @@ private function float GetPulseInterval()
 
 defaultproperties
 {
-    PulseInterval[0] = 6.0
-    PulseInterval[1] = 5.0
-    PulseInterval[2] = 4.0
-    PulseInterval[3] = 3.0
-    PulseInterval[4] = 2.0
+    PulseInterval[0] = 3.5
+    PulseInterval[1] = 3.0
+    PulseInterval[2] = 2.5
+    PulseInterval[3] = 2.0
+    PulseInterval[4] = 1.5
 }

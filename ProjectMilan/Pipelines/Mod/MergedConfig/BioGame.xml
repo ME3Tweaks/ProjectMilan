@@ -2842,6 +2842,15 @@
 		<Section name="sfxgamecontent.sfxprojectile_powercustomaction_proximitymine">
 			<Property name="bignoremultiplayerwaveendcleanup" type="0">true</Property>
 		</Section>
+		<!-- MILAN CHANGE - 11/27/2026 - Mgamerz - Regeneration Module gear. Keep in line with GearPipeline tokens -->
+		<Section name="sfxgamecontent_milan.sfxgameeffect_matchconsumable_gear_regen">
+			<Property name="pulseinterval[0]" type="0">3.5f</Property>
+			<Property name="pulseinterval[1]" type="0">3.0f</Property>
+			<Property name="pulseinterval[2]" type="0">2.5f</Property>
+			<Property name="pulseinterval[3]" type="0">2.0f</Property>
+			<Property name="pulseinterval[4]" type="0">1.5f</Property>
+		</Section>
+		<!-- END MILAN CHANGE -->
 		<!-- MILAN CHANGE - Mgamerz - Add overlay choice options -->
 		<Section name="sfxgamecontent_milanbase.sfxgui_option_milanchoice">
 			<Property name="choices">
