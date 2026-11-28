@@ -10,6 +10,18 @@ var bool PlayerIsDead;
 
 public event simulated function HandlePostAdd()
 {
+    // MILAN CHANGE - 11/25/2026 - Mgamerz
+    // If player is downed re-attaching the module doesn't work so we must force it here
+    local BioPawn OwnerPawn;
+    local Class<SFXDamageType> DownedDamageType;
+
+    OwnerPawn = BioPawn(ModuleOwner);
+    if (OwnerPawn != None && OwnerPawn.IsInState('Downed'))
+    {
+        DownedDamageType = Class<SFXDamageType>(OwnerPawn.KilledByDamageType);
+        PlayerIsDown = DownedDamageType == None || !DownedDamageType.default.bMPKillDamage;
+    }
+    // END MILAN CHANGE
     UpdatePlayerDownState(PlayerIsDown);
     Super.HandlePostAdd();
 }
