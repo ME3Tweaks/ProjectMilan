@@ -774,7 +774,7 @@ public simulated function CheckForDrop()
     if (!bDropObject)
     {
         CarrierPC = SFXPlayerControllerMP(PickedUpBy.Controller);
-        if (CarrierPC != None && CarrierPC.MilanDropRequestTime > PickedUpTimestamp + DropRequestGraceTime)
+        if (CarrierPC != None && CarrierPC.DropRequestTime > PickedUpTimestamp + DropRequestGraceTime)
         {
             bDropObject = TRUE;
         }
