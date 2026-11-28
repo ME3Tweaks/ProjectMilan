@@ -807,8 +807,20 @@ namespace ProjectMilan.Pipelines.Startups
         {
             var packageOutputPath = Path.Combine(GetMPClassesFolder(), classExp.HasParent ? classExp.ParentName : classExp.FileRef.FileNameNoExtension);
             var ucPath = Path.Combine(packageOutputPath, $"{classExp.ObjectName}.uc");
-            var needsDecompiled = !File.Exists(ucPath);
-            return needsDecompiled;
+            if (!File.Exists(ucPath))
+            {
+                return true;
+            }
+
+            // Injected functions are only added when a class is decompiled, so regenerate it if they were added, edited or removed since
+            var injectionFolder = MilanShared.GetInjectedFunctionsPath(classExp.ObjectName);
+            if (!Directory.Exists(injectionFolder))
+            {
+                return false;
+            }
+            var cachedTime = File.GetLastWriteTimeUtc(ucPath);
+            var lastWriteNewerThanCache = Directory.GetLastWriteTimeUtc(injectionFolder) > cachedTime; // Directory check
+            return lastWriteNewerThanCache || Directory.EnumerateFiles(injectionFolder, "*.uc", SearchOption.TopDirectoryOnly).Any(x => File.GetLastWriteTimeUtc(x) > cachedTime); // File check
         }
 
         /// <summary>
