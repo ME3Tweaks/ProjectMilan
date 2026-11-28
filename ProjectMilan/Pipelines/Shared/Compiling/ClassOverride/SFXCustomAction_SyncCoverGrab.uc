@@ -4,6 +4,8 @@
 // Add non-player wwiseevent for sync cover grab. This requires 
 // the _np soldier cover grab donor which is then set as the sound
 // for it so it attenuates properly.
+// MILAN CHANGE - Mgamerz - 11/21/2026
+// Fix invincible enemies after a desynced grab
 Class SFXCustomAction_SyncCoverGrab extends SFXCustomAction_ClassMelee
     config(Game);
 
@@ -12,6 +14,13 @@ var BioPawn.BodyStance BS_VictimMirror;
 var Actor.BasedPosition VictimLocation;
 var SFXReachSpecPlaceholderCylinder PlaceholderCylinder;
 var transient bool bMirroredAttack;
+// MILAN CHANGE
+// Victim collision cache
+var transient bool bVictimCollisionDisabled;
+var transient bool bVictimOrigCollideActors;
+var transient bool bVictimOrigBlockActors;
+var transient bool bVictimOrigCollideWorld;
+// END MILAN CHANGE
 
 public function StartCustomAction()
 {
@@ -136,6 +145,12 @@ public function StartMeleeAttack()
 }
 public function StopCustomAction()
 {
+    local BioPawn Victim;
+
+    // MILAN CHANGE
+    // Store the victim so we can restore collision if they survive
+    Victim = SyncPartner;
+    // END MILAN CHANGE
     Super.StopCustomAction();
     if (PlaceholderCylinder != None)
     {
@@ -143,10 +158,50 @@ public function StopCustomAction()
         PlaceholderCylinder = None;
     }
     m_oPawn.bDisableAnimatedTransitions = TRUE;
+    // MILAN CHANGE
+    // Restore collisions on enemies that survive a grab for whatever reason
+    if (bVictimCollisionDisabled)
+    {
+        bVictimCollisionDisabled = FALSE;
+        if (Victim != None && !Victim.bDeleteMe && !Victim.IsDead() && Victim.GetCurrentHealth() > 0.0)
+        {
+            Victim.SetCollision(bVictimOrigCollideActors, bVictimOrigBlockActors, );
+            Victim.bCollideWorld = bVictimOrigCollideWorld;
+            Victim.FitCollision();
+        }
+    }
+    // END MILAN CHANGE
 }
+// MILAN CHANGE
+// Clients cannot apply damage to interrupted custom action
+public function InterruptThisCustomAction()
+{
+    if (m_oPawn == None || m_oPawn.Role != ENetRole.ROLE_Authority)
+    {
+        bApplyDamage = FALSE;
+    }
+    Super(BioCustomAction).InterruptThisCustomAction();
+}
+// END MILAN CHANGE
 public function SyncAttack()
 {
+    // MILAN CHANGE
+    if (SyncPartner == None)
+    {
+        return;
+    }
+    // END MILAN CHANGE
     Super.SyncAttack();
+    // MILAN CHANGE
+    // Cache victim collision in case they survive
+    if (!bVictimCollisionDisabled)
+    {
+        bVictimOrigCollideActors = SyncPartner.bCollideActors;
+        bVictimOrigBlockActors = SyncPartner.bBlockActors;
+        bVictimOrigCollideWorld = SyncPartner.bCollideWorld;
+        bVictimCollisionDisabled = TRUE;
+    }
+    // END MILAN CHANGE
     SyncPartner.SetCollision(FALSE, FALSE, );
     SyncPartner.bCollideWorld = FALSE;
 }
