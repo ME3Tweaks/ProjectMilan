@@ -336,14 +336,17 @@ public function PullTarget()
         Resistance = EPowerResistance.Resistance_None;
     }
     PawnToPull.ImpactWithPower(Resistance, m_oPawn, PawnToPull.location, PawnHitNormal, fDamage, vForce, DefaultDamageType);
+    // MILAN CHANGE - 11/27/2026 - Mgamerz
+    // Make lash not play local audio for all players
     if (m_oPawn.IsLocallyControlled() && m_oPawn.IsHumanControlled())
     {
-        PawnToPull.PlaySound(PullSound);
+        PawnToPull.PlaySound(PullSound, TRUE);
     }
     else
     {
-        PawnToPull.PlaySound(NPPullSound);
+        PawnToPull.PlaySound(NPPullSound, TRUE);
     }
+    // END MILAN CHANGE
     bRagdolled = !PawnToPull.HasResistance(3) && (Resistance == EPowerResistance.Resistance_None || Resistance == EPowerResistance.Resistance_Partial && IsEvolvedWithChoice(5));
     if (bIsGuardian)
     {
