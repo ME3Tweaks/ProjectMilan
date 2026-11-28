@@ -106,4 +106,39 @@ enum EGuiOptions
     OPTION_Milan_15,
     OPTION_Milan_16,
     // END MILAN CHANGE
+    // MILAN CHANGE - 11/26/2026 - Mgamerz
+    // GUI visibility toggles
+    OPTION_MilanGUI_1, // Downed Teammate Distance
+    OPTION_MilanGUI_2, // Rest are unused for now
+    OPTION_MilanGUI_3,
+    OPTION_MilanGUI_4,
+    OPTION_MilanGUI_5,
+    OPTION_MilanGUI_6,
+    OPTION_MilanGUI_7,
+    OPTION_MilanGUI_8,
+    OPTION_MilanGUI_9,
+    OPTION_MilanGUI_10,
+    OPTION_MilanGUI_11,
+    OPTION_MilanGUI_12,
+    OPTION_MilanGUI_13,
+    OPTION_MilanGUI_14,
+    OPTION_MilanGUI_15,
+    OPTION_MilanGUI_16,
+    OPTION_MilanGUI_17,
+    OPTION_MilanGUI_18,
+    OPTION_MilanGUI_19,
+    OPTION_MilanGUI_20,
+    OPTION_MilanGUI_21,
+    OPTION_MilanGUI_22,
+    OPTION_MilanGUI_23,
+    OPTION_MilanGUI_24,
+    OPTION_MilanGUI_25,
+    OPTION_MilanGUI_26,
+    OPTION_MilanGUI_27,
+    OPTION_MilanGUI_28,
+    OPTION_MilanGUI_29,
+    OPTION_MilanGUI_30,
+    OPTION_MilanGUI_31,
+    OPTION_MilanGUI_32,
+    // END MILAN CHANGE
 };

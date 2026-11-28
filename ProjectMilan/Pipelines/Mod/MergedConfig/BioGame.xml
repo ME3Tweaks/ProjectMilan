@@ -2849,6 +2849,16 @@
 				<Value type="3">(OptionId=OPTION_Milan_2,SettingId=4,BitOffset=2,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=Bloodlust,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
 				<Value type="3">(OptionId=OPTION_Milan_3,SettingId=4,BitOffset=4,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=RepairMatrix,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
 				<Value type="3">(OptionId=OPTION_Milan_4,SettingId=4,BitOffset=6,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=KroganRage,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
+				<!-- MILAN CHANGE - 11/26/2026 - Mgamerz: GUI visibility toggles. OPTION_MilanGUI_n uses BitOffset 2*(n-1); DefaultChoice must match MilanGUIVisibility Defaults -->
+				<!-- MILAN CHANGE - 11/26/2026 - Mgamerz - GUI visibility toggles -->
+				<Value type="3">(OptionId=OPTION_MilanGUI_1,SettingId=9,BitOffset=0,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=GUIVisibility,Values=((Label=653225,Story=49876002,Value=0),(Label=653223,Story=49876002,Value=1)))</Value>
+			</Property>
+		</Section>
+		<!-- END MILAN CHANGE -->
+		<!-- MILAN CHANGE - 11/26/2026 - Mgamerz - GUI visibility defaults -->
+		<Section name="sfxgamecontent_milanbase.milanguivisibility">
+			<Property name="defaults">
+				<Value type="3">(Element=GUIElement_NearestTeammate,bDefaultVisible=true)</Value>
 			</Property>
 		</Section>
 		<!-- END MILAN CHANGE -->

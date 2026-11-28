@@ -77,7 +77,7 @@
         <item type="DoActionTag" actionBytes="0700" forceWriteAsLong="true"/>
         <item type="FrameLabelTag" forceWriteAsLong="true" name="topright2" namedAnchor="false"/>
         <item type="PlaceObject2Tag" depth="1" forceWriteAsLong="false" placeFlagHasCharacter="false" placeFlagHasClipActions="false" placeFlagHasClipDepth="false" placeFlagHasColorTransform="false" placeFlagHasMatrix="true" placeFlagHasName="false" placeFlagHasRatio="false" placeFlagMove="true">
-          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="15" translateX="8415" translateY="-1622"/>
+          <matrix type="MATRIX" hasRotate="false" hasScale="false" nRotateBits="0" nScaleBits="0" nTranslateBits="15" translateX="8415" translateY="-1482"/>
         </item>
         <item type="ShowFrameTag" forceWriteAsLong="false"/>
       </subTags>

@@ -37,6 +37,23 @@ public event function ConstructTextSliderOption(out TextSliderOption Option)
     }
 }
 
+// MILAN CHANGE - 11/26/2026 - Mgamerz
+// On/Off toggle support
+public event function ConstructRadioGroupOption(out RadioGroupOption Option)
+{
+    local int Index;
+
+    OptionId = Option.Id;
+    Index = default.Choices.Find('OptionId', OptionId);
+    if (Index != -1 && default.Choices[Index].Values.Length >= 2)
+    {
+        Option.Value0 = default.Choices[Index].Values[0];
+        Option.Value1 = default.Choices[Index].Values[1];
+        Option.DefaultVal = GetOptionValue();
+    }
+}
+// END MILAN CHANGE
+
 public event function int GetOptionValue()
 {
     local int Index;
@@ -110,4 +127,10 @@ private function ApplyChange(name Hook)
     {
         Class'MilanScreenOverlaySettings'.static.ApplyAll();
     }
+    // MILAN CHANGE - 11/26/2026 - Mgamerz
+    else if (Hook == 'GUIVisibility')
+    {
+        Class'MilanGUIVisibility'.static.RefreshCache();
+    }
+    // END MILAN CHANGE
 }

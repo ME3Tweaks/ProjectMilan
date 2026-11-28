@@ -11,5 +11,8 @@ public function NotifyProfileReadComplete(byte LocalUserNum, bool bWasSuccessful
         ProfileSettings.AddMissingDefaultSettings();
     }
     // END MILAN CHANGE
+    // MILAN CHANGE - 11/26/2026 - Mgamerz
+    Class'MilanGUIVisibility'.static.RefreshCache();
+    // END MILAN CHANGE
     InitializeGammaCorrectionSettings();
 }

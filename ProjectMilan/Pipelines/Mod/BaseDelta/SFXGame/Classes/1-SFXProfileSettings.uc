@@ -21,8 +21,8 @@ enum EProfileSetting
     Setting_VoiceThruSpeakers,
     Setting_VoiceVolume,
     Setting_GamerPictureKey,
-    Setting_GamerMotto,
-    Setting_GamerTitlesPlayed,
+    Setting_GUIVisibility, // CHANGE TO MILAN GUI VISIBILITY
+    Setting_GUIVisibility2, // CHANGE TO MILAN GUI VISIBILITY
     Setting_GamerAchievementsEarned,
     Setting_GameDifficulty,
     Setting_ControllerSensitivity,

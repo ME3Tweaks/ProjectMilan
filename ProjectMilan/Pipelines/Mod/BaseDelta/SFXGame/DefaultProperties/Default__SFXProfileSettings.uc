@@ -125,6 +125,9 @@
                          // Matchmaking preferences
                          19,
                          // END MILAN CHANGE
+                         // MILAN CHANGE - 11/26/2026 - Mgamerz - GUI visibility
+                         9,
+                         // END MILAN CHANGE
                          60
                         )
     DefaultSettings = ({
@@ -947,6 +950,16 @@
                         ProfileSetting = {
                                           Data = {Value1 = 0, Type = ESettingsDataType.SDT_Int32},
                                           PropertyId = 19,
+                                          AdvertisementType = EOnlineDataAdvertisementType.ODAT_DontAdvertise
+                                         },
+                        Owner = EOnlineProfilePropertyOwner.OPPO_Game
+                       },
+                       // END MILAN CHANGE
+                       // MILAN CHANGE - 11/26/2026 - Mgamerz - GUI visibility
+                       {
+                        ProfileSetting = {
+                                          Data = {Value1 = 0, Type = ESettingsDataType.SDT_Int32},
+                                          PropertyId = 9,
                                           AdvertisementType = EOnlineDataAdvertisementType.ODAT_DontAdvertise
                                          },
                         Owner = EOnlineProfilePropertyOwner.OPPO_Game
@@ -2169,6 +2182,13 @@
                        {
                         Name = 'MilanMatchmaking',
                         Id = 19,
+                        MappingType = EPropertyValueMappingType.PVMT_RawValue
+                       },
+                       // END MILAN CHANGE
+                       // MILAN CHANGE - 11/26/2026 - Mgamerz - GUI visibility
+                       {
+                        Name = 'MilanGUIVisibility',
+                        Id = 9,
                         MappingType = EPropertyValueMappingType.PVMT_RawValue
                        }
                        // END MILAN CHANGE

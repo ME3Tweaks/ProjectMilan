@@ -275,6 +275,12 @@ Herobrine24</String>
     
 	<!-- TLK changes -->
 	<String id="49875981">Text Chat</String>
+	<!-- Nearest Teammate Downed UI -->
+	<String id="49875982">Nearest teammate</String>
+	<!-- Meters suffix -->
+	<String id="49875983">m</String>
+	<!-- No nearby teammates (MUST BE SHORT)-->
+	<String id="49875984">N/A</String>
 	<!-- MP Store - 'Direct Buy' button (in packs view) -->
 	<String id="49875985">Direct Buy</String>
 	<!-- Join Match strings -->
@@ -306,6 +312,9 @@ Select your search preference:</String>
 	<String id="49875998">v&lt;CUSTOM0&gt;</String>
 	<String id="49875999">Active Combatants: &lt;CUSTOM0&gt;</String>
 	<String id="49876000">Missions: &lt;CUSTOM0&gt;</String>
+	<!-- GUI visibility: Nearest teammate option -->
+	<String id="49876001">Nearest teammate distance</String>
+	<String id="49876002">Show the distance to the nearest living teammate while you are downed.</String>
 	<!-- Tactical Scan rank 5A description - add shield gate -->
     <String id="733112">Increase all headshot damage by {Evolve_HeadshotBonus%p}%.
 Reduces target shield gate effectiveness by {Evolve_ShieldGateReduction%p}%.</String>

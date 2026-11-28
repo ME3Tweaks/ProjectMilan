@@ -92,6 +92,10 @@ public simulated function Destroyed()
     // Detach while the pawn's mesh and inventory are still available.
     ShutdownMapFlashlight();
     // END MILAN CHANGE
+    // MILAN CHANGE - Mgamerz - 11/16/2026
+    // When pawn is destroyed also stop the teammate counter
+    StopNearestTeammateCounter();
+    // END MILAN CHANGE
     if (Role == ENetRole.ROLE_Authority)
     {
         Power_Drone = SFXPowerCustomAction_CombatDrone(PowerCustomActions[31]);
@@ -718,6 +722,9 @@ public function PermaDeath()
     {
         movie.AbortAnimation(0);
     }
+    // MILAN CHANGE - Mgamerz - 11/16/2026
+    StopNearestTeammateCounter();
+    // END MILAN CHANGE
 
     // MILAN CHANGE - Mgamerz - 2026-09-23
     // Only clear execution intent for a real bleedout; sync kills use the short death-flourish timer instead
@@ -730,6 +737,104 @@ public function PermaDeath()
 
     ServerPermaDeath();
 }
+// MILAN CHANGE - Mgamerz - 11/16/2026
+// Nearest teammate down counter
+public simulated function StartNearestTeammateCounter()
+{
+    SetTimer(0.25, TRUE, 'UpdateNearestTeammateCounter');
+    UpdateNearestTeammateCounter();
+}
+public simulated function StopNearestTeammateCounter()
+{
+    local PlayerController PC;
+
+    if (!IsTimerActive('UpdateNearestTeammateCounter'))
+    {
+        return;
+    }
+    ClearTimer('UpdateNearestTeammateCounter');
+    PC = PlayerController(Controller);
+    if (PC == None)
+    {
+        PC = WorldInfo.GetALocalPlayerController();
+    }
+    Class'SFXGUI_MilanDownedDistance'.static.HideForPlayer(PC);
+}
+public simulated function UpdateNearestTeammateCounter()
+{
+    local PlayerController PC;
+    local SFXGRIMP GRI;
+    local SFXPRIMP PRI;
+    local SFXPawn_PlayerMP Teammate;
+    local SFXGUI_MilanDownedDistance Counter;
+    local int nIdx;
+    local bool bHasTeammates;
+    local bool bFoundLiving;
+    local float fDistance;
+    local float fNearest;
+
+    PC = PlayerController(Controller);
+    GRI = SFXGRIMP(WorldInfo.GRI);
+    if (bIsDead)
+    {
+        StopNearestTeammateCounter();
+        return;
+    }
+    if (PC == None || GRI == None)
+    {
+        return;
+    }
+    if (!Class'MilanGUIVisibility'.static.IsVisible(EMilanGUIElement.GUIElement_NearestTeammate))
+    {
+        Class'SFXGUI_MilanDownedDistance'.static.HideForPlayer(PC);
+        return;
+    }
+    for (nIdx = 0; nIdx < GRI.PRIArray.Length; nIdx++)
+    {
+        PRI = SFXPRIMP(GRI.PRIArray[nIdx]);
+        // Filter out non-players
+        if (PRI == None || PRI.bDeleteMe || PRI.bIsInactive || PRI.bOnlySpectator || PRI.bBot)
+        {
+            continue;
+        }
+        Teammate = SFXPawn_PlayerMP(PRI.SFXPawn);
+        if (PRI == PlayerReplicationInfo || PRI == PC.PlayerReplicationInfo || Teammate == Self)
+        {
+            continue;
+        }
+        bHasTeammates = TRUE;
+        if (Teammate == None || Teammate.IsDead() || Teammate.IsInState('Dying') || Teammate.IsInState('Downed'))
+        {
+            continue;
+        }
+        fDistance = VSize(Teammate.Location - Location);
+        if (!bFoundLiving || fDistance < fNearest)
+        {
+            fNearest = fDistance;
+            bFoundLiving = TRUE;
+        }
+    }
+    if (!bHasTeammates)
+    {
+        // In solo mode don't show the UI
+        Class'SFXGUI_MilanDownedDistance'.static.HideForPlayer(PC);
+        return;
+    }
+    Counter = Class'SFXGUI_MilanDownedDistance'.static.ShowForPlayer(PC);
+    if (Counter == None)
+    {
+        return;
+    }
+    if (bFoundLiving)
+    {
+        Counter.ShowDistance(int(fNearest / 100.0 + 0.5));
+    }
+    else
+    {
+        Counter.ShowNotAvailable();
+    }
+}
+// END MILAN CHANGE
 public simulated function PlayerRevivedMessage()
 {
     local string TickerMessage;
@@ -906,7 +1011,7 @@ public simulated function LoadWeaponModData()
 public simulated function PermaDeadChanged()
 {
     local string TickerMessage;
-    
+
     if (SFXGRIMP(WorldInfo.GRI).GameStatus != EGameStatus.GS_MatchInProgress)
     {
         return;
@@ -921,6 +1026,10 @@ public simulated function PermaDeadChanged()
         // MILAN CHANGE - Mgamerz - 2026-10-16
         // Permanent-death presentation runs on clients too
         ShutdownMapFlashlight();
+        // END MILAN CHANGE
+        // MILAN CHANGE - 11/27/2026 - Mgamerz
+        // Executions skip PermaDeath which skips the usual route NTC turns off
+        StopNearestTeammateCounter();
         // END MILAN CHANGE
         if (IsLocallyControlled())
         {
@@ -1195,6 +1304,9 @@ simulated state Downed
         
         ClearTimer('PermaDeath');
         ClearTimer('StartSpectatorCam');
+        // MILAN CHANGE - Mgamerz - 11/16/2026
+        StopNearestTeammateCounter();
+        // END MILAN CHANGE
         MPC = SFXPlayerControllerMP(Controller);
         if (MPC != None && MPC.myHUD != None)
         {
@@ -1327,6 +1439,13 @@ simulated state Downed
             }
             // END MILAN CHANGE
             GetModule(Class'SFXModule_MarkerPlayer').UpdatePlayerDownState(TRUE);
+            // MILAN CHANGE - Mgamerz -  11/16/2026
+            // Show the distance to the nearest living teammate while downed
+            if (IsLocallyControlled())
+            {
+                StartNearestTeammateCounter();
+            }
+            // END MILAN CHANGE
             DH = SFXGRI(WorldInfo.GRI).DifficultyHandler;
             if (DH != None)
             {
@@ -1338,7 +1457,7 @@ simulated state Downed
              // MILAN Patched: Remove calls to SFXTelemetry
         }
     }
-    
+
     // State code
     stop;
 };
