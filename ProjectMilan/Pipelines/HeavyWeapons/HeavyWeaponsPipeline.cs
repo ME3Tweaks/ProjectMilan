@@ -114,6 +114,9 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 },
                 Description = 361363,
                 ShortDescription = 344479,
+                CardDescription = new LocalizedString {
+                    [MELocalization.INT] = "Charge weapon that projects a singularity that pulls enemies and rips them apart.",
+                },
                 Image = $"{IconPackage}.Blackstorm_512x256",
                 NotificationImage = $"{IconPackage}.Blackstorm_256x128",
                 IconResource = "GUI_SF_DLC_PRE_Terminus.ME2_Weap_Blackstorm",
@@ -150,6 +153,9 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                     [MELocalization.RUS] = "Черная Звезда (Скрытое)",
                     [MELocalization.ITA] = "Blackstar dei Razziatori",
                 },
+                CardDescription = new LocalizedString {
+                    [MELocalization.INT] = "Quick charge Reaper weapon that devastates a wide area.",
+                },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
                 // TODO: We need an actual short text or move hidden to the top.
             },
@@ -184,6 +190,9 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                     [MELocalization.RUS] = "M-920 Каин",
                     [MELocalization.ITA] = "M-920 Cain",
                 },
+                CardDescription = new LocalizedString {
+                    [MELocalization.INT] = "Long charge weapon that annihilates everything within a huge blast radius.",
+                },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
             },
             // M-100 Grenade Launcher
@@ -201,8 +210,11 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 DisplayOrder = 40,
                 ClassPath = $"{MilanPackages.SFXGameContentMilan}.SFXWeapon_Heavy_ConsumableGrenadeLauncher",
                 Name = 212281,
-                Description = 338224,
+                Description = 338224, // We need to rewrite the description of this
                 ShortDescription = 339325,
+                CardDescription = new LocalizedString {
+                    [MELocalization.INT] = "Rapid-fire grenade launcher that provides excellent crowd control.",
+                },
                 Image = "GUI_Codex_Weapons_Images.Weapons.hvy_grenade_512x256",
                 NotificationImage = "GUI_Icons.Weapons.hvy_grenade_256x128",
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
@@ -223,6 +235,9 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
                 DisplayOrder = 50,
                 ClassPath = $"{MilanPackages.SFXGameContentMilan}.SFXWeapon_Heavy_ConsumableFirestorm",
                 InheritFrom = "SFXGameContent.SFXWeapon_Heavy_Flamethrower_Player",
+                CardDescription = new LocalizedString {
+                    [MELocalization.INT] = "Short-range flamethrower that locks down areas and sets enemies ablaze.",
+                },
                 IconResource = "GUI_SF_ME2_Weapon_Icons.ME2_Weapon_Icons",
             },
         ];
@@ -660,6 +675,11 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
         /// ShortDescription. <see cref="InheritFrom"/>'s, then <see cref="Description"/>, if not set.
         /// </summary>
         public HeavyWeaponString? ShortDescription { get; init; }
+
+        /// <summary>
+        /// Store and reveal card description
+        /// </summary>
+        public required LocalizedString CardDescription { get; init; }
 
         /// <summary>
         /// GUIImage: the 512x256 weapon image. Object path of an image built from Startups\NonStartup\ImagePackages, or
