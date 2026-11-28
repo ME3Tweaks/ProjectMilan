@@ -791,6 +791,7 @@ namespace ProjectMilan
                 return;
             MilanShared.InstallMPCommonClassInfo(mpCommonPath);
             MilanShared.PromoteMPCommonIntoCacheChain(); // BIOP_MP_COMMON now exists on disk - splice it into the shared cache chain (Global -> MPCommon -> Warm) before content pipelines run
+            BaseDeltaHandler.BuildBasePostMPCommonDeltaTargets(); // LE3 basegame packages we modify that need a reference to BIOP_MP_COMMON
 
             // Content pipelines will use the milan ME3 cache
             MilanShared.EnsureTFCsAvailable();

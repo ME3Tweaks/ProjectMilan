@@ -7,6 +7,7 @@ using System.Text.Json;
 using JDiffCS;
 using LegendaryExplorerCore.GameFilesystem;
 using LegendaryExplorerCore.Helpers;
+using LegendaryExplorerCore.Misc;
 using LegendaryExplorerCore.Misc.ME3Tweaks;
 using LegendaryExplorerCore.Packages;
 using ME3TweaksCore.Helpers;
@@ -54,7 +55,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             new PropertyUpdatePatchTarget("SFXGUI_FontsJPN", "Adds the ME3 MP4 U+2623 hazard glyph to both Japanese GUI fonts", preBuild: () => FontPatchBuilder.Build("SFXGUI_FontsJPN", "GUI_SF_FontsJPN")),
             new CoalescedPatchTarget(),
             .. TLKPatchTarget.CreateAll(), // One per localization (BIOGame_INT.tlk, BIOGame_FRA.tlk, ...)
-            new GuidCachePatchTarget() // Keep last: its contents depend on what the package targets above changed
+            new GuidCachePatchTarget() // Built in WriteMilanDeltaOutput
         ];
 
         /// <summary>
@@ -63,12 +64,21 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// </summary>
         internal static string GetVanillaCookedFilePath(string gameFile)
         {
+            return Path.Combine(GetVanillaPath(), gameFile);
+        }
+        
+        /// <summary>
+        /// Returns the directory that we can source files from - preferably backup, falling back to LE3 
+        /// </summary>
+        /// <returns></returns>
+        internal static string GetVanillaPath()
+        {
             var backupPath = ME3TweaksBackups.GetGameBackupPath(MEGame.LE3);
             if (backupPath != null && !Directory.Exists(backupPath))
             {
                 backupPath = null;
             }
-            return Path.Combine(LE3Directory.GetCookedPCPath(rootPathOverride: backupPath), gameFile);
+            return LE3Directory.GetCookedPCPath(rootPathOverride: backupPath);
         }
 
         private static bool restoringFromCheckpoint;
@@ -173,12 +183,134 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             {
                 if (IsCacheTarget(target))
                     continue; // handled via the cache-build hook in ResolvePatchedPackage
+                if (target is GuidCachePatchTarget)
+                {
+                    continue; // Built last, in WriteMilanDeltaOutput
+                }
 
                 if (restoringFromCheckpoint)
                     RestoreFromDelta(target);
                 else
                     BuildAndRecordDelta(target);
             }
+        }
+
+        /// <summary>
+        /// BasePostMPCommonDelta is basegame package patches built after MPCommon (BaseDelta is for startup packages before MPCommon)
+        /// </summary>
+        internal static string BasePostMPCommonDeltaFolder => Path.Combine(MilanShared.PipelineRoot, @"Mod", @"BasePostMPCommonDelta");
+
+        /// <summary>
+        /// Builds every BasePostMPCommonDeltaFolder target from source and records its delta
+        /// </summary>
+        internal static void BuildBasePostMPCommonDeltaTargets()
+        {
+            if (!Directory.Exists(BasePostMPCommonDeltaFolder))
+            {
+                return;
+            }
+
+            var postMPCommonTargets = new List<ScriptPackagePatchTarget>();
+            foreach (var folder in Directory.GetDirectories(BasePostMPCommonDeltaFolder).OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+            {
+                var packageName = Path.GetFileName(folder);
+                var gameFile = $"{packageName}.pcc";
+                if (FindTarget(gameFile) != null)
+                {
+                    // We shouldn't have this already!!
+                    MilanLog.Fatal($"{gameFile} is a BaseDelta target, so it can't also be a BasePostMPCommonDelta target - this is a fatal error.");
+                    Environment.Exit(1);
+                }
+                if (!LMPShippedPackages.Files.Contains(gameFile, StringComparer.OrdinalIgnoreCase))
+                {
+                    // Definitely not a spelling error
+                    MilanLog.Fatal($"BasePostMPCommonDelta has a folder for {gameFile}, but not marked as shipped - this is a fatal error.");
+                    Environment.Exit(1);
+                }
+                if (MilanShared.GetLE3GlobalCache().GetCachedPackage(gameFile, false) != null)
+                {
+                    // Earlier stages already imported from the vanilla copy
+                    MilanLog.Fatal($"{gameFile} is already in the LE3 global package cache - this is a fatal error.");
+                    Environment.Exit(1);
+                }
+
+                var vanillaPath = GetHighestMountedFiles()[gameFile];
+                postMPCommonTargets.Add(new ScriptPackagePatchTarget(packageName, $"{packageName}.pcc BasePostMPCommonDelta script changes", baseDeltaRoot: BasePostMPCommonDeltaFolder, vanillaPath: () => vanillaPath));
+            }
+
+            foreach (var target in postMPCommonTargets)
+            {
+                if (BuildAndRecordDelta(target) == null)
+                {
+                    MilanLog.Fatal($"Failed to build BasePostMPCommonDelta target {target.GameFile} - this is a fatal error.");
+                    Environment.Exit(1);
+                }
+            }
+
+            CheckBasePostMPCommonClassesAreUnique(postMPCommonTargets);
+        }
+
+        /// <summary>
+        /// TEMP - Checks all modified classes in postMPCommon aren't shipped in other, non-patched files, or we would
+        /// have memory consistency issues
+        /// </summary>
+        private static void CheckBasePostMPCommonClassesAreUnique(List<ScriptPackagePatchTarget> postMPCommonTargets)
+        {
+            var edited = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            // Build list of modified classes mapped to the file that modifies them
+            foreach (var target in postMPCommonTargets)
+            {
+                foreach (var classPath in target.EditedClasses)
+                {
+                    edited[classPath] = target.GameFile;
+                }
+            }
+
+            var problems = new List<string>();
+            // For every package we copy from LE3 -> LMP...
+            foreach (var file in LMPShippedPackages.Files)
+            {
+                if (!GetHighestMountedFiles().TryGetValue(file, out var path))
+                {
+                    continue; // Localized fallbacks have no script
+                }
+
+                // Check for modified classes
+                using var package = MEPackageHandler.UnsafePartialLoad(path, x => x.IsClass);
+                foreach (var classExport in package.Exports.Where(x => x.IsClass))
+                {
+                    if (edited.TryGetValue(classExport.InstancedFullPath, out var owner) && !owner.CaseInsensitiveEquals(file))
+                    {
+                        // Edited in one file but not another - we need to change how this pipeline works later to account for this
+                        problems.Add($"{classExport.InstancedFullPath} is edited in {owner} but is also in {file}");
+                    }
+                }
+            }
+
+            if (problems.Count > 0)
+            {
+                foreach (var problem in problems)
+                {
+                    MilanLog.Error(problem);
+                }
+                MilanLog.Fatal($"{problems.Count} classes BasePostMPCommonDelta edits are also in other LE3 packages Milan ships - this is a fatal error.");
+                Environment.Exit(1);
+            }
+        }
+
+        private static CaseInsensitiveDictionary<string>? highestMountedFiles;
+
+        /// <summary>
+        /// Gets highest mounted file in LE3, preferring backup copy if available
+        /// </summary>
+        private static CaseInsensitiveDictionary<string> GetHighestMountedFiles()
+        {
+            if (highestMountedFiles == null)
+            {
+                // Get's game root path - hack to get it from backup
+                highestMountedFiles = MELoadedFiles.GetFilesLoadedInGame(MEGame.LE3, forceReload: true, gameRootOverride: GetVanillaPath(), includeModDLC: false);
+            }
+            return highestMountedFiles;
         }
 
         private static IBasePatchClass FindTarget(string gameFile)
@@ -359,12 +491,19 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         }
 
         /// <summary>
-        /// Writes every recorded delta's .jsf plus a manifest.json into <see cref="MilanDeltaFolder"/>.
+        /// Builds GuidCache.pcc, then writes every recorded delta's .jsf plus a manifest.json into <see cref="MilanDeltaFolder"/>.
         /// Called once the build has actually completed successfully, so a mid-build failure never
         /// leaves stale/partial patch files sitting alongside the rest of the mod output.
         /// </summary>
         internal static void WriteMilanDeltaOutput()
         {
+            // Always fresh, even on a checkpoint restore: restored targets refill GuidCacheAdditions too
+            if (BuildAndRecordDelta(targets.OfType<GuidCachePatchTarget>().Single()) == null)
+            {
+                MilanLog.Fatal("Failed to build GuidCache.pcc - this is a fatal error.");
+                Environment.Exit(1);
+            }
+
             if (deltaRecords.Count == 0)
             {
                 MilanLog.Warning("No BaseDelta patches were recorded this run; skipping MilanDelta output.");
