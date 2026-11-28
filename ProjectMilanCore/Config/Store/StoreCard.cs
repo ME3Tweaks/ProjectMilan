@@ -97,6 +97,11 @@ namespace ProjectMilanCore.Config.Store
         /// </summary>
         public int? GUIDescription { get; init; }
 
+        /// <summary>
+        /// TLK String ID of the direct buy store description, if it differs from the GUIDescription
+        /// </summary>
+        public int? DirectBuyDescription { get; init; }
+
         public CardGUICategory? GUICategory { get; init; }
 
         /// <summary>

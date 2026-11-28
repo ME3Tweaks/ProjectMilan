@@ -187,7 +187,7 @@ namespace ProjectMilan.Pipelines.Store
         /// <returns></returns>
         private static IEnumerable<string> SerializeOffer(int category, StoreCard card, OfferContext context)
         {
-            var description = card.GUIDescription ?? 0;
+            var description = card.DirectBuyDescription ?? card.GUIDescription ?? 0;
             if (description == 0 && card.BannerID != null)
             {
                 // Use banner description
