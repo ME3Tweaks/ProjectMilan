@@ -2161,6 +2161,26 @@
 				<Value type="3">(BodyPart="",Reaction=Reaction_DeathHeavy,ReactionChance=1.0)</Value>
 			</Property>
 		</Section>
+		<!-- 11/25/2026 - Mgamerz - Firestorm -->
+		<Section name="sfxgamecontent_milan.sfxweapon_heavy_consumablefirestorm">
+			<!-- DoT while in flame and how long after leaving flame -->
+			<Property name="burndamagepersecond" type="0">100.0</Property>
+			<Property name="burnduration" type="0">3.0</Property>
+			<Property name="primeduration" type="0">5.0</Property>
+			<Property name="primerank" type="0">6.0</Property>
+			<!-- Stagger times for normal and larger enemies -->
+			<Property name="staggerheat" type="0">1.5</Property>
+			<Property name="largestaggerheat" type="0">2.0</Property>
+			<!-- Window gap time -->
+			<Property name="heathitwindow" type="0">0.25</Property>
+			<!-- Heat lost per second out of the flame -->
+			<Property name="heatdecaypersecond" type="0">1.0</Property>
+			<!-- Firing cone for secondary damage -->
+			<Property name="conehalfangle" type="0">15.0</Property>
+			<Property name="maxconetargets" type="0">5</Property>
+			<!-- Damage scale for cone -->
+			<Property name="conedamagescale" type="0">1.0</Property>
+		</Section>
 		<Section name="sfxgamecontent.sfxweapon_heavy_grenadelauncher">
 			<Property name="accfireinterpspeed" type="0">(X=3.0f,Y=3.0f)</Property>
 			<Property name="accfirepenalty" type="0">(X=3.3f,Y=3.3f)</Property>
@@ -2172,7 +2192,7 @@
 			<Property name="bfrictionenabled" type="0">true</Property>
 			<Property name="binfiniteammo" type="0">false</Property>
 			<Property name="bzoomsnapenabled" type="0">false</Property>
-			<Property name="damage" type="0">(X=500,Y=500)</Property>
+			<Property name="damage" type="0">(X=800,Y=800)</Property>
 			<Property name="damagehench" type="0">0.20f</Property>
 			<Property name="encumbranceweight" type="0">(X=0,Y=0)</Property>
 			<Property name="generaldescription" type="0">338224</Property>
@@ -2377,8 +2397,12 @@
 			<Property name="primerefreshdelay" type="0">0.5</Property>
 		</Section>
 		<Section name="sfxgamecontent_milan.sfxweapon_heavy_consumablecain">
-			<!-- 11/18/2026 - Mgamerz - Raise from 10000 to 30000 damage -->
-			<Property name="damage" type="2">(X=30000,Y=30000)</Property>
+			<!-- 11/18/2026 - Mgamerz - Raise from 10000 to 22000 damage -->
+			<Property name="damage" type="2">(X=22000,Y=22000)</Property>
+		</Section>
+		<!-- 11/26/2026 - Buff from 72 to 100 -->
+		<Section name="sfxgamecontent_milan.sfxweapon_heavy_consumablefirestorm">
+			<Property name="damage" type="2">(X=100,Y=100)</Property>
 		</Section>
 	</Sections>
 </CoalesceAsset>
