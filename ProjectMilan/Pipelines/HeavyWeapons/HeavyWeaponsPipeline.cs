@@ -398,9 +398,12 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             }
         }
 
-        private static void CompilePreparedClasses(IMEPackage package, IEnumerable<ExportEntry> consumables)
+        private static void CompilePreparedClasses(IMEPackage package, IReadOnlyCollection<ExportEntry> consumables)
         {
-            var sources = consumables.Select(weaponClass => (Class: weaponClass, Path: Path.Combine(SourceFolder, "Classes", weaponClass.ObjectName.Name + ".uc")))
+            // Overrides of other classes in the package (projectiles, damage types) go in a folder named after it
+            var supportFolder = Path.Combine(SourceFolder, "Classes", package.FileNameNoExtension);
+            var supporting = package.Exports.Where(x => x.IsClass && !consumables.Contains(x)).Select(supportClass => (Class: supportClass, Path: Path.Combine(supportFolder, supportClass.ObjectName.Name + ".uc")));
+            var sources = supporting.Concat(consumables.Select(weaponClass => (Class: weaponClass, Path: Path.Combine(SourceFolder, "Classes", weaponClass.ObjectName.Name + ".uc"))))
                 .Where(source => File.Exists(source.Path)).ToList();
             if (sources.Count == 0)
             {
@@ -417,7 +420,8 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
             using var library = new FileLib(package);
             foreach (var (weaponClass, sourcePath) in sources)
             {
-                if (!library.Initialize(options))
+                // Earlier compiles leave the binary cache stale
+                if (!(library.IsInitialized ? library.ReInitializeFile(options) : library.Initialize(options)))
                 {
                     throw new InvalidOperationException($"Cannot initialize {package.FileNameNoExtension}: {string.Join(Environment.NewLine, library.InitializationLog.AllErrors)}");
                 }

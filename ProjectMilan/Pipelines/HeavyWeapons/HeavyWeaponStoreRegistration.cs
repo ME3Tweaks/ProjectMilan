@@ -22,7 +22,8 @@ internal static class HeavyWeaponStoreRegistration
     private const string CardType = "heavyweapon";
 
     private const int AmmoName = 335491; // 'Heavy Weapon Ammo'
-    private static readonly LocalizedString AmmoDescriptionText = new() {
+    private static readonly LocalizedString AmmoDescriptionText = new()
+    {
         [MELocalization.INT] = "Ammunition for your equipped heavy weapon.",
         [MELocalization.DEU] = "Munition für deine ausgerüstete schwere Waffe.",
         [MELocalization.ESN] = "Munición de arma pesada equipada.",
@@ -31,7 +32,8 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.RUS] = "Боеприпасы для снаряженного тяжелого оружия.",
         [MELocalization.ITA] = "Munizioni per le armi pesanti che hai equipaggiato.",
     };
-    private static readonly LocalizedString GroupedAmmoText = new() {
+    private static readonly LocalizedString GroupedAmmoText = new()
+    {
         [MELocalization.INT] = "+<CUSTOM2> Heavy Weapon Ammo",
         [MELocalization.DEU] = "+<CUSTOM2> Schwere Munition",
         [MELocalization.ESN] = "+<CUSTOM2> munición de arma pesada",
@@ -40,7 +42,8 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.RUS] = "+<CUSTOM2> Боеприпасы Тяжелого Оружия",
         [MELocalization.ITA] = "+<CUSTOM2> Munizioni per le armi pesanti",
     };
-    private static readonly LocalizedString AmmoCapacityText = new() {
+    private static readonly LocalizedString AmmoCapacityText = new()
+    {
         [MELocalization.INT] = "Heavy Weapon Ammo Capacity +<CUSTOM2>",
         [MELocalization.DEU] = "Reservemunition für schwere Waffen +<CUSTOM2>",
         [MELocalization.ESN] = "Capazidad de municiónes de arma pesada +<CUSTOM2>",
@@ -49,7 +52,8 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.RUS] = "Боезапас Тяжелого Оружия +<CUSTOM2>",
         [MELocalization.ITA] = "Capacità delle munizioni per le armi pesanti +<CUSTOM2>",
     };
-    private static readonly LocalizedString AmmoCapacityDescriptionText = new() {
+    private static readonly LocalizedString AmmoCapacityDescriptionText = new()
+    {
         [MELocalization.INT] = "You can now carry <CUSTOM1> heavy weapon ammo charges into a mission.",
         [MELocalization.DEU] = "Du kannst jetzt <CUSTOM1> Ladungen Munition für schwere Waffen in eine Mission mitnehmen.",
         [MELocalization.ESN] = "Ahora puedes llevar <CUSTOM1> municiónes de arma pesada a una misión.",
@@ -58,7 +62,8 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.RUS] = "Вы теперь можете брать <CUSTOM1> зарядов тяжелого оружия на миссию.",
         [MELocalization.ITA] = "Ora puoi trasportare  <CUSTOM1> munizioni per le armi pesanti in una missione.",
     };
-    private static readonly LocalizedString GearDescriptionText = new() {
+    private static readonly LocalizedString GearDescriptionText = new()
+    {
         [MELocalization.INT] = "Stores additional thermal clips and heavy weapon ammo in armored compartments to shield them from incoming fire.\nHeavy Weapon Ammo Capacity: +<CUSTOM3>\nAmmo Capacity: +<CUSTOM0>%",
         [MELocalization.DEU] = "Lagert zusätzliche Thermomagazine und Munition für schwere Waffen in gepanzerten Fächern, um sie vor eingehendem Feuer zu schützen.\nReservemunition für schwere Waffen: +<CUSTOM3>\nReservemunition: +<CUSTOM0>%",
         [MELocalization.ESN] = "Almacena cargadores térmicos adicionales y munición para armas pesadas en compartimentos blindados para protegerlos del fuego enemigo.\nCapacidad de munición para armas pesadas: +<CUSTOM3>\nCapacidad de munición: +<CUSTOM0>%",
@@ -67,7 +72,8 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.RUS] = "Хранит дополнильные термозаряды и боеприпасы тяжелого оружия в бронированных отсеках для защиты от входящего огня.\nБоезапас Тяжелого Оружия: +<CUSTOM3>\nБоезапас: +<CUSTOM0>%",
         [MELocalization.ITA] = "Immagazzina clip termiche agiuntive e munizioni per le armi pesanti in scomparti corazzati per proteggerle dal fuoco nemico.\nCapacità delle munizioni per le armi pesanti: +<CUSTOM3>\nCapacità delle munizioni: +<CUSTOM0>%",
     };
-    private static readonly LocalizedString HiddenText = new() {
+    private static readonly LocalizedString HiddenText = new()
+    {
         [MELocalization.INT] = "Hidden weapons disappear when holstered.",
         [MELocalization.DEU] = "Versteckte Waffen verschwinden beim Verstauen.",
         [MELocalization.ESN] = "Armas ocultas desaparethen cuando estan enfundadas.",
@@ -76,17 +82,12 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.RUS] = "Тяжелое оружие скрывается при убирании",
         [MELocalization.ITA] = "Le armi nascoste scompaiono quando riposte.",
     };
-    private static readonly LocalizedString UnlockDescriptionText = new() {
-        [MELocalization.INT] = "Unlocks this heavy weapon for selection.",
-        [MELocalization.DEU] = "Schaltet diese schwere Waffe zur Auswahl frei.",
-        [MELocalization.ESN] = "Desbloquea este arma pesado.",
-        [MELocalization.FRA] = "Débloque la sélection de cette arme lourde.",
-        [MELocalization.POL] = "Odblokowuje tę broń ciężką umożliwiając jej wybór.",
-        [MELocalization.RUS] = "Разблокирует выбор тяжелого оружия.",
-        [MELocalization.ITA] = "Sblocca questa arma pesante per la selezione.",
+    private static readonly LocalizedString CobraCardDescriptionText = new()
+    {
+        [MELocalization.INT] = "Fast, reliable missile launcher that destroys everything within a small radius.",
     };
-    private static readonly LocalizedString HiddenUnlockDescriptionText = LocalizedString.Join(UnlockDescriptionText, "\n\n", HiddenText);
-    private static readonly LocalizedString HiddenCobraTitleText = new() {
+    private static readonly LocalizedString HiddenCobraTitleText = new()
+    {
         [MELocalization.INT] = "Cobra Missile Launcher (Hidden)",
         [MELocalization.DEU] = "Raketenwerfer Cobra (Verborgen)",
         [MELocalization.ESN] = "Lanzamisiles Cobra (oculto)",
@@ -95,7 +96,8 @@ internal static class HeavyWeaponStoreRegistration
         [MELocalization.RUS] = "М-560 Кобра",
         [MELocalization.ITA] = "Lanciamissili Cobra (nascosto)",
     };
-    private static readonly LocalizedString CardTypeText = new() {
+    private static readonly LocalizedString CardTypeText = new()
+    {
         [MELocalization.INT] = "Heavy Weapon",
         [MELocalization.DEU] = "Schwere Waffe",
         [MELocalization.ESN] = "Arma pesada",
@@ -142,15 +144,15 @@ internal static class HeavyWeaponStoreRegistration
         Set(section, "ammoname", AmmoName);
         Set(section, "ammodescription", description);
         Set(section, "hiddendescriptionsuffix", MilanPipelinesShared.AssignTLK(HiddenText));
-        int unlockDescription = MilanPipelinesShared.AssignTLK(UnlockDescriptionText);
-        int hiddenDescription = MilanPipelinesShared.AssignTLK(HiddenUnlockDescriptionText);
-        catalog.Cards.Add(Unlock(HiddenCobraUnlock, MilanPlayerVariable.HeavyUnlock_CobraHidden, MilanPipelinesShared.AssignTLK(HiddenCobraTitleText), hiddenDescription, "GUI_Icons.Weapons.hvy_titan_256x128"));
+        catalog.Cards.Add(HiddenUnlock(HiddenCobraUnlock, MilanPlayerVariable.HeavyUnlock_CobraHidden, MilanPipelinesShared.AssignTLK(HiddenCobraTitleText),
+            MilanPipelinesShared.AssignTLK(CobraCardDescriptionText), CobraCardDescriptionText, "GUI_Icons.Weapons.hvy_titan_256x128"));
         foreach (var entry in HeavyWeaponsPipeline.HeavyWeapons)
         {
             var rarity = GetCardRarity(entry);
-            catalog.Cards.Add(Unlock(entry.UnlockName, entry.UnlockPlayerVariableId, entry.ResolveName(), unlockDescription, entry.GetNotificationImage(), rarity));
-            catalog.Cards.Add(Unlock(entry.HiddenUnlockName, entry.HiddenUnlockPlayerVariableId, entry.HiddenUnlockTitle.Resolve(), hiddenDescription,
-                entry.GetNotificationImage(), rarity) with
+            int cardDescription = MilanPipelinesShared.AssignTLK(entry.CardDescription);
+            catalog.Cards.Add(Unlock(entry.UnlockName, entry.UnlockPlayerVariableId, entry.ResolveName(), cardDescription, entry.GetNotificationImage(), rarity));
+            catalog.Cards.Add(HiddenUnlock(entry.HiddenUnlockName, entry.HiddenUnlockPlayerVariableId, entry.HiddenUnlockTitle.Resolve(), cardDescription,
+                entry.CardDescription, entry.GetNotificationImage(), rarity) with
             { RequiresCard = entry.UnlockName });
         }
         var engine = MilanPipelinesShared.ConfigBundle.GetAsset("BioEngine").GetOrAddSection("sfxgame.sfxengine");
@@ -179,6 +181,19 @@ internal static class HeavyWeaponStoreRegistration
         PlayerVariableIds = [(int)ownershipId],
         Pools = [new(rarity == CardRarity.UltraRare ? StorePools.GoldUltraRare : StorePools.GoldPermanent)]
     };
+
+    /// <summary>
+    /// Generates a hidden variants unlock store card (appends hidden text)
+    /// </summary>
+    private static StoreCard HiddenUnlock(string name, MilanPlayerVariable ownershipId, int title, int description, LocalizedString descriptionText, string image, CardRarity rarity = CardRarity.Rare)
+    {
+        var card = Unlock(name, ownershipId, title, description, image, rarity) with
+        {
+            DirectBuyDescription = MilanPipelinesShared.AssignTLK(LocalizedString.Join(descriptionText, "\n\n", HiddenText))
+        };
+        return card;
+    }
+
 
     /// <summary>
     /// The card rarity for a registration's <see cref="HeavyWeaponEntry.Rarity"/>.
