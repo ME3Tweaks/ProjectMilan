@@ -3721,6 +3721,8 @@
 			</Property>
 			<!-- MILAN CHANGE - 11/17/2026 - Mgamerz - Add Join Match button -->
 			<Property name="srjoinmatch" type="2">49875830</Property>
+			<!-- MILAN CHANGE - 11/24/2026 - Mgamerz - Add Matchmaking settings button -->
+			<Property name="srmatchmakingsettings" type="2">49875993</Property>
 		</Section>
 		<Section name="sfxgamempcontent.sfxgui_mplobbystatusbars">
 			<Property name="srchallenge" type="2">681604</Property>
