@@ -130,6 +130,11 @@ var config stringref srJoinCodeAccept;
 var config stringref srJoinCodeInvalid;
 var config stringref srJoinCodeUnavailable;
 // END MILAN CHANGE
+// MILAN CHANGE - 11/26/2026 - Mgamerz
+// Joining UX while MilanHost attempts to join a game via invite
+var config stringref srJoiningGame;
+var transient BioSFHandler_MessageBox m_oJoinCodeMsgBox;
+// END MILAN CHANGE
 // MILAN CHANGE - 11/23/2026 - Mgamerz
 // Temporary matchmaking settings dialog until we have better UI
 var config stringref srMatchmakingSettings;      // Button text
@@ -1736,7 +1741,61 @@ public final function OnJoinCodeEntered(bool bAccepted, string sCode)
     {
         ShowJoinCodeError(srJoinCodeUnavailable);
     }
+    else
+    {
+        ShowJoinCodeMsgBox();
+    }
 }
+// MILAN CHANGE - 11/26/2026 - Mgamerz
+// Joining UX while MilanHost attempts to join a game via invite
+private final function ShowJoinCodeMsgBox()
+{
+    local BioMessageBoxOptionalParams messageParams;
+
+    // Hide existing join box (if any)
+    HideJoinCodeMsgBox();
+    if (GetPC() == None)
+    {
+        return;
+    }
+    m_oJoinCodeMsgBox = GetSFXUIController().CreateMessageBox(GetPC());
+    if (m_oJoinCodeMsgBox == None)
+    {
+        return;
+    }
+    messageParams.bModal = TRUE;
+    messageParams.srBText = srCancel;
+    m_oJoinCodeMsgBox.SetInputDelegate(JoinCodeMsgBoxInputDelegate);
+    m_oJoinCodeMsgBox.DisplayMessageBox(srJoiningGame, messageParams);
+    GetPC().SetTimer(0.25, TRUE, 'PollJoinCode', Self);
+}
+public final function PollJoinCode()
+{
+    if (!Class'MilanNetConfigBridge'.static.IsJoiningByCode())
+    {
+        // If MilanHost stops reporting joining hide this modal
+        HideJoinCodeMsgBox();
+    }
+}
+public final function JoinCodeMsgBoxInputDelegate(bool bAPressed, int nContext)
+{
+    m_oJoinCodeMsgBox = None;
+    HideJoinCodeMsgBox();
+    Class'MilanNetConfigBridge'.static.CancelJoinByCode();
+}
+private final function HideJoinCodeMsgBox()
+{
+    if (GetPC() != None)
+    {
+        GetPC().ClearTimer('PollJoinCode', Self);
+    }
+    if (m_oJoinCodeMsgBox != None)
+    {
+        m_oJoinCodeMsgBox.HideMessageBox(TRUE);
+        m_oJoinCodeMsgBox = None;
+    }
+}
+// END MILAN CHANGE
 
 private final function ShowJoinCodeError(stringref srMessage)
 {
@@ -1832,6 +1891,7 @@ defaultproperties
     srJoinCodeAccept = $49875988
     srJoinCodeInvalid = $49875989
     srJoinCodeUnavailable = $49875990
+    srJoiningGame = $633386
     // MILAN CHANGE - 11/23/2026 - Mgamerz - Matchmaking settings strings
     srMatchmakingSettings = $49875993
     srMatchmakingExpandedOffBody = $49875994

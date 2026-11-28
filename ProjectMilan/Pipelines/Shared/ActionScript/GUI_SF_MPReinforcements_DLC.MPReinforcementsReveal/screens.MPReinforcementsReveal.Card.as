@@ -21,6 +21,10 @@ class screens.MPReinforcementsReveal.Card extends com.SFXMovieClip
    }
    function SetCardData(TitleText, DescriptionText, ItemTextureRef, TypeText, CardType, IsNew, IsBanner)
    {
+      // MILAN CHANGE - 11/26/2026 - Mgamerz
+      // Shrink title of UR cards so they don't overrun onto N7 logo
+      this.Title._width = CardType == screens.MPReinforcementsReveal.Card.CARD_TYPE_ULTRARARE ? 330 : 414;
+      // END MILAN CHANGE
       this.Title.textAutoSize = "shrink";
       this.Title.text = TitleText;
       this.Description.text = DescriptionText;
