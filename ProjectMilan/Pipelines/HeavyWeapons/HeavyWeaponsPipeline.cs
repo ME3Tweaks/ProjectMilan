@@ -276,6 +276,7 @@ namespace ProjectMilan.Pipelines.HeavyWeapons
 
             CompilePreparedClasses(package, consumableClasses);
             GenerateHiddenVariants(package, consumableClasses);
+            HeavyWeaponFlameCollision.Apply(package, consumableClasses);
             HeavyWeaponCloakMaterials.Apply(package);
 
             // Change its licensee to LE3 so TFC compaction doesn't die on it
