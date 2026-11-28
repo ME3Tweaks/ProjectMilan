@@ -520,7 +520,9 @@ public function bool FindTeleportLocation(BioPawn oTarget, out Object.Vector New
         {
             CachedPawnLocation = m_oPawn.location;
             m_oPawn.SetLocation(NewLocation, );
-            bPointReachable = m_oPawn.Controller.PointReachable(oTarget.location);
+            // MILAN CHANGE - 11/27/2026 - Mgamerz
+            // Use ActorReachable instead of PointReachable on target for validating
+            bPointReachable = m_oPawn.Controller.ActorReachable(oTarget);
             m_oPawn.SetLocation(CachedPawnLocation, );
             if (bPointReachable)
             {
@@ -539,7 +541,8 @@ public function bool FindTeleportLocation(BioPawn oTarget, out Object.Vector New
         {
             CachedPawnLocation = m_oPawn.location;
             m_oPawn.SetLocation(NewLocation, );
-            bPointReachable = m_oPawn.Controller.PointReachable(oTarget.location);
+            // MILAN CHANGE - 11/27/2026 - Mgamerz
+            bPointReachable = m_oPawn.Controller.ActorReachable(oTarget);
             m_oPawn.SetLocation(CachedPawnLocation, );
             return bPointReachable;
         }
