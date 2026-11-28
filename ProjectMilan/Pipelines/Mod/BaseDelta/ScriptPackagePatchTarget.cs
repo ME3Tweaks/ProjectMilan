@@ -29,6 +29,13 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         private readonly string logCategory;
         private readonly Action? preBuild;
         private readonly Action<IMEPackage>? postCompile;
+        private readonly string baseDeltaRoot;
+        private readonly Func<string>? vanillaPath;
+
+        /// <summary>
+        /// Class paths this target compiled script into
+        /// </summary>
+        internal HashSet<string> EditedClasses { get; } = new(StringComparer.OrdinalIgnoreCase);
 
         /// <param name="preBuild">
         /// Optional step run before the package is patched - for generating BaseDelta inputs (e.g. Scaleform SWFs).
@@ -39,20 +46,24 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
         /// Optional step run on the package after all UnrealScript has been compiled in, just before it is
         /// serialized - for edits that depend on the compiled script (e.g. registering new functions in defaults).
         /// </param>
-        public ScriptPackagePatchTarget(string packageName, string comment, Action? preBuild = null, Action<IMEPackage>? postCompile = null)
+        /// <param name="baseDeltaRoot">Folder holding a subfolder of sources per package. Defaults to BaseDelta</param>
+        /// <param name="vanillaPath">Where the package to patch is, defaults to the basegame CookedPCConsole copy</param>
+        public ScriptPackagePatchTarget(string packageName, string comment, Action? preBuild = null, Action<IMEPackage>? postCompile = null, string? baseDeltaRoot = null, Func<string>? vanillaPath = null)
         {
             this.packageName = packageName;
             logCategory = $"Milan-{packageName}";
             Comment = comment;
             this.preBuild = preBuild;
             this.postCompile = postCompile;
+            this.baseDeltaRoot = baseDeltaRoot ?? Path.Combine(MilanShared.PipelineRoot, @"Mod", @"BaseDelta");
+            this.vanillaPath = vanillaPath;
         }
 
         public string GameFile => $"{packageName}.pcc";
 
         public string Comment { get; }
 
-        private string GetVanillaLoadPath() => BaseDeltaHandler.GetVanillaCookedFilePath(GameFile);
+        private string GetVanillaLoadPath() => vanillaPath?.Invoke() ?? BaseDeltaHandler.GetVanillaCookedFilePath(GameFile);
 
         public byte[] GetVanillaBytes()
         {
@@ -73,7 +84,8 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
             using var package = MEPackageHandler.OpenMEPackage(GetVanillaLoadPath());
             var vanillaVTables = VTableCascade.ReadAllSlots(package);
 
-            var baseDeltaFolder = Path.Combine(MilanShared.PipelineRoot, @"Mod", @"BaseDelta", packageName);
+            EditedClasses.Clear();
+            var baseDeltaFolder = Path.Combine(baseDeltaRoot, packageName);
 
             UnrealScriptOptionsPackage usop = new UnrealScriptOptionsPackage
             {
@@ -177,6 +189,7 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                         MilanLog.Fatal($"Failed to compile {packageName} class {className} - this is a fatal error.");
                         Environment.Exit(1);
                     }
+                    EditedClasses.Add(classExport?.InstancedFullPath ?? (classParent == null ? className : $"{classParent.InstancedFullPath}.{className}"));
                     compiledClasses = true;
                 }
             }
@@ -214,6 +227,16 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                         MilanLog.LogUSCErrors(log);
                         MilanLog.Fatal($"Failed to compile {packageName} function {functionIFP} - this is a fatal error.");
                         Environment.Exit(1);
+                    }
+
+                    var owner = function.Parent;
+                    while (owner is ExportEntry { IsClass: false })
+                    {
+                        owner = owner.Parent;
+                    }
+                    if (owner is ExportEntry ownerClass)
+                    {
+                        EditedClasses.Add(ownerClass.InstancedFullPath);
                     }
                 }
             }
@@ -279,13 +302,14 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 {
                     atcorName = Path.GetFileNameWithoutExtension(atcor);
                 }
-                var atcorExport = package.FindExport(atcorName.Split(".")[0]);
+                var atcorExport = FindOwningClass(package, atcorName);
                 if (atcorExport == null)
                 {
                     MilanLog.Fatal($"{packageName} has no class for {atcorName} in {folder} - this is a fatal error.");
                     Environment.Exit(1);
                     return false;
                 }
+                EditedClasses.Add(atcorExport.InstancedFullPath);
 
                 // AddOrReplaceInClass reads the whole class through FileLib's binary cache
                 // Refresh before each member so earlier function overrides and added members are visible
@@ -308,6 +332,23 @@ namespace ProjectMilan.Pipelines.Mod.BaseDelta
                 applied = true;
             }
             return applied;
+        }
+
+        /// <summary>
+        /// Extracts the owning class from a member path. Used for things like adding properties or functions directly to a class
+        /// </summary>
+        private static ExportEntry? FindOwningClass(IMEPackage package, string memberPath)
+        {
+            var parts = memberPath.Split('.');
+            for (int i = parts.Length - 1; i > 0; i--)
+            {
+                var classExport = package.FindExport(string.Join('.', parts, 0, i));
+                if (classExport is { IsClass: true })
+                {
+                    return classExport;
+                }
+            }
+            return null;
         }
 
         /// <summary>
