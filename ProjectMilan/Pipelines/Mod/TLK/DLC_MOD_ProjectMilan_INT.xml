@@ -155,6 +155,7 @@
     <String id="49875824">Use the original strength of this screen effect.</String>
     <String id="49875825">Use a less intense version of this screen effect.</String>
     <String id="49875826">Hide the screen effect. The ability and its gameplay bonuses remain active.</String>
+    <String id="49875831">Adjust the intensity of the screen overlay while this ability is active.</String>
 	<!-- Polonium Rounds: total added damage per hit, rather than damage per second. -->
     <String id="49875827">Apply polonium rounds for one mission. Repeated hits stack damage and refresh the duration.
 Damage per Hit: &lt;CUSTOM0&gt;% of weapon damage

@@ -2849,7 +2849,9 @@
 				<Value type="3">(OptionId=OPTION_Milan_2,SettingId=4,BitOffset=2,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=Bloodlust,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
 				<Value type="3">(OptionId=OPTION_Milan_3,SettingId=4,BitOffset=4,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=RepairMatrix,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
 				<Value type="3">(OptionId=OPTION_Milan_4,SettingId=4,BitOffset=6,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=KroganRage,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
-				<!-- MILAN CHANGE - 11/26/2026 - Mgamerz: GUI visibility toggles. OPTION_MilanGUI_n uses BitOffset 2*(n-1); DefaultChoice must match MilanGUIVisibility Defaults -->
+				<Value type="3">(OptionId=OPTION_Milan_5,SettingId=4,BitOffset=8,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=AdrenalineRush,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
+				<Value type="3">(OptionId=OPTION_Milan_6,SettingId=4,BitOffset=10,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=Marksman,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
+				<Value type="3">(OptionId=OPTION_Milan_7,SettingId=4,BitOffset=12,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=ScreenOverlays,Overlay=StimulantPack,Values=((Label=163193,Story=49875824,Value=0),(Label=49875823,Story=49875825,Value=1),(Label=163205,Story=49875826,Value=2)))</Value>
 				<!-- MILAN CHANGE - 11/26/2026 - Mgamerz - GUI visibility toggles -->
 				<Value type="3">(OptionId=OPTION_MilanGUI_1,SettingId=9,BitOffset=0,BitCount=2,DefaultValue=0,DefaultChoice=0,ChangeHook=GUIVisibility,Values=((Label=653225,Story=49876002,Value=0),(Label=653223,Story=49876002,Value=1)))</Value>
 			</Property>
@@ -2868,6 +2870,9 @@
 				<Value type="3">(Overlay=Bloodlust,ProfileIndex=1,DefaultLevel=0,bAllowNone=true)</Value>
 				<Value type="3">(Overlay=RepairMatrix,ProfileIndex=2,DefaultLevel=0,bAllowNone=true)</Value>
 				<Value type="3">(Overlay=KroganRage,ProfileIndex=3,DefaultLevel=0,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=AdrenalineRush,ProfileIndex=4,DefaultLevel=0,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=Marksman,ProfileIndex=5,DefaultLevel=0,bAllowNone=true)</Value>
+				<Value type="3">(Overlay=StimulantPack,ProfileIndex=6,DefaultLevel=0,bAllowNone=true)</Value>
 			</Property>
 			<Property name="targets">
 				<Value type="3">(Overlay=GethVision,Type=OTT_DistributionOutput,ObjectPath="BioVFX_DLC_MP1_Geth.Particles.GethVision_Gui.ParticleModuleColorOverLife_0.DistributionFloatParticleParameter_2310",Field=MaxOutput,Normal=20.0,Reduced=7.0,Off=0.0)</Value>
@@ -2882,6 +2887,13 @@
 				<Value type="3">(Overlay=GethVision,Type=OTT_ScalarParameter,ObjectPath="BioVFX_MP5_Gear.Materials.Geth_Vision_post_Mat_MP5",Field=Milan_SceneAdd,Normal=1.0,Reduced=0.5,Off=0.0)</Value>
 				<Value type="3">(Overlay=KroganRage,Type=OTT_ScalarParameter,ObjectPath="BioVFX_C_KroganBerserk.FrameBuffer.KroganBerserk_FB_INST",Field=Milan_Strength,Normal=1.0,Reduced=1.0,Off=0.0)</Value>
 				<Value type="3">(Overlay=KroganRage,Type=OTT_ScalarParameter,ObjectPath="BioVFX_C_KroganBerserk.FrameBuffer.KroganBerserk_FB_INST",Field=Milan_Gain,Normal=5.0,Reduced=1.5,Off=5.0)</Value>
+				<!-- Adrenaline Rush, Marksman and Stimulant Pack all use curves -->
+				<Value type="3">(Overlay=AdrenalineRush,Type=OTT_EffectCurve,ObjectPath="BioVFX_C_Adrenaline.VCFX.AdrenalineRush_VCFX.RvrCEffectModuleFramebuffer_0",Field=Intensity,Normal=1.0,Reduced=0.3,Off=0.0)</Value>
+				<Value type="3">(Overlay=AdrenalineRush,Type=OTT_EffectCurve,ObjectPath="BioVFX_C_Adrenaline.VCFX.AdrenalineRush_VCFX.RvrCEffectModuleFramebuffer_1",Field=Intensity,Normal=1.0,Reduced=0.3,Off=0.0)</Value>
+				<Value type="3">(Overlay=Marksman,Type=OTT_EffectCurve,ObjectPath="BioVFX_C_Marksmen.VCFX.Marksmen_FB_VCFX.RvrCEffectModuleParameters_0",Field=Color_Burn,Normal=1.0,Reduced=0.25,Off=0.0)</Value>
+				<Value type="3">(Overlay=Marksman,Type=OTT_EffectCurve,ObjectPath="BioVFX_C_Marksmen.VCFX.Marksmen_FB_VCFX.RvrCEffectModuleParameters_1",Field=Color_Burn,Normal=1.0,Reduced=0.25,Off=0.0)</Value>
+				<Value type="3">(Overlay=StimulantPack,Type=OTT_EffectCurve,ObjectPath="BioVFX_MP4_Tur_SP.VCFX.StimulantPack_VCFX.RvrCEffectModuleFramebuffer_0",Field=Intensity,Normal=1.0,Reduced=0.3,Off=0.0)</Value>
+				<Value type="3">(Overlay=StimulantPack,Type=OTT_EffectCurve,ObjectPath="BioVFX_MP4_Tur_SP.VCFX.StimulantPack_VCFX.RvrCEffectModuleFramebuffer_1",Field=Intensity,Normal=1.0,Reduced=0.3,Off=0.0)</Value>
 			</Property>
 		</Section>
 		<!-- MILAN CHANGE - Mgamerz - Kills by these damage types ragdoll pawns that normally can't be -->

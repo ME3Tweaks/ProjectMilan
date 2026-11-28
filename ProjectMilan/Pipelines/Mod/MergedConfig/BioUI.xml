@@ -42,7 +42,7 @@
 				<Value type="3">(label=163265, story=163266, options=(OPTION_MusicVolume, OPTION_SFXVolume, OPTION_DlgVolume, OPTION_AudioDynamicRange<!--, OPTION_MPVoiceChatMode, OPTION_MPVoiceContinueOnLostFocus, OPTION_MPVoiceChatInputDevice, OPTION_MPVoiceChatOutputDevice-->) )</Value>
 				<!-- MILAN CHANGE - Mgamerz - 2026-10-26 - Screen effects accessibilty menu -->
 				<Value type="3">(label=49875812, story=49875813, options=())</Value>
-				<Value type="3">(label=49875814, story=49875815, options=(OPTION_Milan_1, OPTION_Milan_2, OPTION_Milan_3, OPTION_Milan_4))</Value>
+				<Value type="3">(label=49875814, story=49875815, options=(OPTION_Milan_1, OPTION_Milan_2, OPTION_Milan_3, OPTION_Milan_4, OPTION_Milan_5, OPTION_Milan_6, OPTION_Milan_7))</Value>
 				<!-- END MILAN CHANGE -->
 
 				<!-- Telemetry option removed due to telemetry being stripped by Milan build -->
@@ -56,7 +56,6 @@
 				<Value type="3">(id=OPTION_AAT_ZoomSnap, label=49875626, story=49875627, defaultVal=0, UClass="AATGUI.AATGUI_Option_ZoomSnap")</Value>
 				<!-- MILAN CHANGE - 11/26/2026 - Mgamerz - GUI visibility - Nearest downed -->
 				<Value type="3">(id=OPTION_MilanGUI_1, label=49876001, story=49876002, defaultVal=0, value0=(label=653225,story=0,value=0), value1=(label=653223,story=0,value=1), UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
-				<!-- END MILAN CHANGE -->
 			</Property>
 			<Property name="textslideroptions">
 				<Value type="3">(id=OPTION_AAT_Adhesion, label=49875630, story=49875631, defaultVal=10, UClass="AATGUI.AATGUI_Option_Adhesion")</Value>
@@ -68,7 +67,10 @@
 				<Value type="3">(id=OPTION_Milan_2, label=49875818, story=49875819, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
 				<Value type="3">(id=OPTION_Milan_3, label=814233, story=49875820, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
 				<Value type="3">(id=OPTION_Milan_4, label=49875821, story=49875822, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
-				<!-- END MILAN CHANGE -->
+				<!-- Mgamerz - 11/24/2026 - Add additional effects Adrenaline Rush, Marksman, Stimulant Pack -->
+				<Value type="3">(id=OPTION_Milan_5, label=505301, story=49875831, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
+				<Value type="3">(id=OPTION_Milan_6, label=572088, story=49875831, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
+				<Value type="3">(id=OPTION_Milan_7, label=766365, story=49875831, defaultVal=0, UClass="SFXGameContent_MilanBase.SFXGUI_Option_MilanChoice")</Value>
 			</Property>
 			<!-- <Property name="optionpages">
 				<Value type="1">null</Value>

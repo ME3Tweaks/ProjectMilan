@@ -15,6 +15,16 @@ enum EOverlayTargetType
     OTT_VectorParameter,
     // DistributionFloatParameterBase output range: Field is MaxOutput or MinOutput
     OTT_DistributionOutput,
+    // Client effect module (VCFX) curves that drive the parameter named by Field
+    OTT_EffectCurve,
+};
+
+// Vanilla data for a curve we scale
+struct CurveBackup
+{
+    var string ModulePath;
+    var int ParameterIndex;
+    var array<float> LookupTable;
 };
 
 // ProfileIndex selects two bits in the profile setting
@@ -46,6 +56,9 @@ struct OverlayTarget
 var config array<OverlayDefinition> Overlays;
 var config array<OverlayTarget> Targets;
 var config int ProfileSettingId;
+// Effect curves are edited in place on templates that might live for a long time
+// We keep the vanilla version around so we can rescale against it
+var transient array<CurveBackup> CurveBackups;
 
 public static function int GetOverlayLevel(name Overlay)
 {
@@ -91,6 +104,7 @@ public static function ApplyTarget(OverlayTarget Target, int Level)
     local LinearColor Color;
     local MaterialInstanceConstant MIC;
     local DistributionFloatParameterBase Distribution;
+    local RvrClientEffectModule Module;
 
     Value = Level == LEVEL_NONE ? Target.Off : (Level == LEVEL_REDUCED ? Target.Reduced : Target.Normal);
     switch (Target.Type)
@@ -112,6 +126,13 @@ public static function ApplyTarget(OverlayTarget Target, int Level)
                 ApplyLiveMaterials(MIC, Target.Field, Value, Color, TRUE);
             }
             break;
+        case EOverlayTargetType.OTT_EffectCurve:
+            Module = RvrClientEffectModule(FindObject(Target.ObjectPath, Class'RvrClientEffectModule'));
+            if (Module != None)
+            {
+                ScaleEffectCurves(Module, Target.ObjectPath, Target.Field, Value);
+            }
+            break;
         case EOverlayTargetType.OTT_DistributionOutput:
             Distribution = DistributionFloatParameterBase(FindObject(Target.ObjectPath, Class'DistributionFloatParameterBase'));
             if (Distribution != None)
@@ -127,6 +148,57 @@ public static function ApplyTarget(OverlayTarget Target, int Level)
             }
             break;
     }
+}
+
+// Applies a curve scale to the original curve values
+private static function ScaleEffectCurves(RvrClientEffectModule Module, string ModulePath, name Variable, float Scale)
+{
+    local int i;
+    local int j;
+    local int BackupIndex;
+    local RvrClientEffectModule.RvrCEParameterDistribution Parameter;
+    local CurveBackup Backup;
+
+    for (i = 0; i < Module.m_aParameters.Length; i++)
+    {
+        Parameter = Module.m_aParameters[i];
+        if (Parameter.Parameter.Variable != Variable)
+        {
+            // Not our parameter
+            continue;
+        }
+        BackupIndex = FindCurveBackup(ModulePath, i);
+        if (BackupIndex == -1)
+        {
+            // Need to backup this curve so we can edit it later
+            Backup.ModulePath = ModulePath;
+            Backup.ParameterIndex = i;
+            Backup.LookupTable = Parameter.DistributionFloat.LookupTable;
+            BackupIndex = default.CurveBackups.Length;
+            default.CurveBackups[BackupIndex] = Backup;
+        }
+        Backup = default.CurveBackups[BackupIndex];
+        for (j = 0; j < Backup.LookupTable.Length && j < Parameter.DistributionFloat.LookupTable.Length; j++)
+        {
+            // Scale the parameter
+            Parameter.DistributionFloat.LookupTable[j] = Backup.LookupTable[j] * Scale;
+        }
+        Module.m_aParameters[i] = Parameter;
+    }
+}
+// Finds index of the backed up vanilla curve data
+private static final function int FindCurveBackup(string ModulePath, int ParameterIndex)
+{
+    local int i;
+
+    for (i = 0; i < default.CurveBackups.Length; i++)
+    {
+        if (default.CurveBackups[i].ParameterIndex == ParameterIndex && default.CurveBackups[i].ModulePath ~= ModulePath)
+        {
+            return i;
+        }
+    }
+    return -1;
 }
 
 // Helper function to apply changes to live materials such as frame buffer materials
